@@ -2,6 +2,8 @@
 
 This document defines a reusable handoff process among the maintainer, ChatGPT, and Codex. It applies across CaMa-Flood development projects; it is not specific to the current map-parameter work. Repository rules remain authoritative in [`AGENTS.md`](../AGENTS.md), and development evidence is recorded according to [`research/README.md`](../research/README.md).
 
+For architecture, packaging, test-data or contribution-workflow changes, consult [the maintained v5 design](development_and_distribution_design.md) and keep intended requirements distinct from executed implementation evidence. External PRs can be independently checked before main is updated; contributor guidance is in [CONTRIBUTING.md](../CONTRIBUTING.md).
+
 ## Roles and decision authority
 
 1. **Review before implementation:** ChatGPT reviews relevant code, documentation, development plans, risks, and alternatives with the maintainer before implementation is assigned. It should distinguish source-verified facts from inferences and identify unresolved questions.

@@ -1,4 +1,4 @@
-# CaMa-Flood v4
+# CaMa-Flood v5 beta
 
 ## Overview
 
@@ -8,31 +8,17 @@ The repository includes adaptive time stepping, river bifurcations, reservoir op
 
 ## Getting Started
 
-### Downloadable distribution package
+### Development repository and planned user package
 
-**New users who want to run CaMa-Flood should start with the distribution package.** It includes model code, basic river-map datasets, sample runoff forcing, and example experiment configurations.
+This is the `global-hydrodynamics/cmf_v5_beta` development repository, based on `main`. Developers work in a clone or fork, with the tracked Mekong map and runoff samples under `map/` and `inp/`. After installing the compiler/libraries and configuring the build, the intended minimum workflow is compilation and a documented small Mekong test without Package Additional Data. Existing run instructions are in [Tutorial01](tutorial/tutorial01-get_started/manual_tutorial01-get_started.md) and [the developer workflow guide](gosh_test/README.md); a unified fresh-clone model regression command with independently approved references is still under development.
 
-The GitHub-tracked `map/mekong_15min/` directory is a development/test example used for map-tool work; it is not necessarily a fully validated or official production map. See the [map guide](map/README.md).
+The distribution design has three components: **GitHub Repository** (code and approved small test data), **Package Additional Data** (separately versioned larger datasets), and **Distributed Package** (a generated, complete user package without Git history). The v5 package assembler, additional-data manifest and integrated package validation are planned; they are not available commands yet. The [maintained design specification](docs/development_and_distribution_design.md) distinguishes requirements, implementation status and open decisions. General users are the intended audience for the completed package; developers use this repository and [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Visit the [official CaMa-Flood website](https://global-hydrodynamics.github.io/CaMa-Flood/) for downloads and current package information:
+Existing v4 downloads and version-specific manuals remain historical/user references, including the [official CaMa-Flood website](https://global-hydrodynamics.github.io/CaMa-Flood/), [v4.20 manual](doc/Manual_CaMa-Flood_v420.docx), and [legacy user guideline](doc/CaMa-Flood_Guideline.md). They do not establish v5 package availability. The v4 repository is maintained separately; do not apply v5 changes there.
 
-1. Complete the [registration and license-agreement form](https://forms.gle/bhq1qWqybeAk157v9).
-2. Receive the download password by email.
-3. Follow the download-page link on the official website.
+The current v5 model is under `src_main/`, compiler templates under `config/`, execution checks under `gosh_test/`, tutorials under `tutorial/`, and plotting resources under `visualization/`. Legacy v4 `src/`, `gosh/`, and `adm/` are being relocated to the local `legacy/` reference tree; that reorganization is not yet committed. Do not use legacy build instructions as the v5 entry point.
 
-Start with the [main manual](doc/Manual_CaMa-Flood_v420.docx) and [user guideline](doc/CaMa-Flood_Guideline.md). These documents contain version-specific examples; use the instructions and datasets appropriate to your package.
-
-### Source code repository
-
-This repository provides source code, build configurations, execution scripts, and preprocessing and analysis tools for development, customization, and source-code access. **Cloning it alone does not supply all the river-map and forcing datasets needed for the standard simulations.** Obtain the required data separately through the official distribution.
-
-[`variable_table/README.md`](variable_table/README.md) describes the shared variable tables. The three CSVs document map products, model outputs, and Restart state; their distinct schemas remain separate. Future tools should resolve them from `${CMF_BASE}/variable_table/`.
-
-The canonical v5 tutorial collection is under [`tutorial/`](tutorial/). Start with [Tutorial01](tutorial/tutorial01-get_started/manual_tutorial01-get_started.md) for a tested development-branch build and Mekong run; it is not a substitute for the official downloadable distribution package.
-
-[`gosh_test/`](gosh_test/) contains developer-oriented model execution and operational verification workflows. General users should start with `tutorial/`; visualization projects should normally use Git-tracked sample data or prepared visualization inputs rather than depend on `gosh_test/` outputs.
-
-The legacy v4 source and scripts use [adm/Mkinclude](adm/Mkinclude) and the `adm/` templates. The v5 development tree uses a separate, ignored `config/Mkinclude`; its GNU Fortran default enables OpenMP, NetCDF, and single precision. See the [v5 build guide](config/README.md) and [model source guide](src_main/README.md). The legacy [v4 compilation script](gosh/compile.sh) and experiments remain under `gosh/`.
+[`variable_table/README.md`](variable_table/README.md) describes the map, output and Restart inventories. The [map guide](map/README.md) distinguishes the tracked Mekong development/test sample from larger separately supplied maps. Dataset availability does not by itself establish scientific validation or production suitability.
 
 ### Development environment setup
 
@@ -53,9 +39,7 @@ The optional ERA5-Land downloader also requires CDS account credentials and data
 
 | Path | Responsibility |
 | --- | --- |
-| [src/](src/) | Fortran numerical model, drivers, shared state, I/O, and optional extensions. |
-| [gosh/](gosh/) | Compilation and execution scripts, example experiments, and namelist templates. |
-| [adm/](adm/) | Compiler, library, precision, parallelization, and build configuration. |
+| `legacy/` (local relocation in progress) | Historical v4 source, scripts and build settings; not a v5 entry point. |
 | [config/](config/) | Separate v5 compiler and library configuration templates. |
 | [src_main/](src_main/) | v5 model-source tree. |
 | [gosh_test/](gosh_test/) | Developer-oriented v5 build, simulation, and operational verification workflows. |
@@ -63,14 +47,14 @@ The optional ERA5-Land downloader also requires CDS account credentials and data
 | [map/](map/) | River-map preprocessing, regionalization, river parameters, input mapping, and gauge/reservoir allocation. |
 | [inp/](inp/) | Runoff forcing download and preparation tools. |
 | [etc/](etc/) | Optional-scheme workflows, parameter preparation, downscaling, validation, and analysis. |
-| [util/](util/) | Supporting utilities used by scripts. |
+| [tools/](tools/) | Shared utilities: month-length helper and GrADS output/Restart descriptor generators (formerly `util/`). |
 | [doc/](doc/) | Scientific manuals, user documentation, and package-preparation guidance. |
 | [docs/](docs/) | Development coordination information. |
 | [AGENTS.md](AGENTS.md) | Authoritative development rules for human developers and AI coding agents. |
 | [Versions.md](Versions.md) | Source-code change history. |
 | [README.md](README.md) | Introduction and navigation for the repository. |
 
-Within `src/`, `cmf_drv_*` manages initialization, advancement, and finalization; `cmf_ctrl_*` coordinates model components; `cmf_calc_*` implements calculations; and `yos_cmf_*` holds shared configuration, state, map, time, and diagnostic variables. [MAIN_cmf.F90](src/MAIN_cmf.F90) is the stand-alone entry point. The main manual describes the core organization and hydrodynamic calculations.
+Within `src_main/`, `cmf_drv_*` manages initialization, advancement, and finalization; `cmf_ctrl_*` coordinates model components; `cmf_calc_*` implements calculations; and `yos_cmf_*` holds shared configuration, state, map, time, and diagnostic variables. [MAIN_cmf.F90](src_main/MAIN_cmf.F90) is the stand-alone entry point. The main manual describes the core organization and hydrodynamic calculations.
 
 ## Documentation
 
@@ -88,15 +72,15 @@ The existing manuals remain the detailed scientific and workflow references. The
 | MPI/OpenMP, precision, and high-performance computing | [HPC notes (Word)](doc/Note_HighPerformanceComputing.docx); [example workflows](etc/options_HPC/README.md) |
 | River gauge allocation | [Gauge allocation manual (Word)](doc/Manual_AllocateRiverGauges.docx); [attribute-error supplement (Word)](doc/Supp_GaugeAttributeError.docx) |
 | Flood-depth downscaling | [Workflow guide](etc/downscale_flddph/ReadMe.md); [method notes (Word)](doc/Note_Downscaling.docx) |
-| Water temperature and ice | [Heatlink stability and diagnostics](src/heatlink/README.md) |
+| Water temperature and ice | [Heatlink stability and diagnostics](src_main/heatlink/README.md) |
 | Comparison with observations | [Validation examples](etc/validation/ReadMe.md) |
 | Distribution preparation | [Package-creation guide](doc/HowTo_Make_Package.md) |
 
-Small tests are located under [src/common/test/](src/common/test/), [src/mod/test/](src/mod/test/), [src/io/test/](src/io/test/), [src/phys/test/](src/phys/test/), and [src/heatlink/test/](src/heatlink/test/). Check their Makefiles and runners for dependencies and execution steps: some `test` targets only build executables. Native-grid remapping tests and integration-validation instructions are documented in its guide above.
+Small tests are located under [src_main/common/test/](src_main/common/test/), [src_main/mod/test/](src_main/mod/test/), [src_main/io/test/](src_main/io/test/), [src_main/phys/test/](src_main/phys/test/), and [src_main/heatlink/test/](src_main/heatlink/test/). Check their Makefiles and runners for dependencies and execution steps: some `test` targets only build executables. Native-grid remapping tests and integration-validation instructions are documented in its guide above.
 
 ## Development and Contributions
 
-Read [AGENTS.md](AGENTS.md) for development rules, AI-agent behavior, branch management, and contribution procedures. Consult [docs/dev_status.md](docs/dev_status.md) for active-project coordination and the status-publication workflow defined in `AGENTS.md`.
+Start with [CONTRIBUTING.md](CONTRIBUTING.md) for feature branches, focused PRs and testing. Read [AGENTS.md](AGENTS.md) for development rules, AI-agent behavior, shared-project coordination and approval boundaries. Consult [docs/dev_status.md](docs/dev_status.md) for active-project coordination and the status-publication workflow defined in `AGENTS.md`.
 
 For a worked example of designing and refining scientific tutorials with
 conversational AI, repository-aware coding agents, and researcher review, see
@@ -104,7 +88,7 @@ conversational AI, repository-aware coding agents, and researcher review, see
 
 ## Versions and Releases
 
-See [Versions.md](Versions.md) for recorded changes and the [official website](https://global-hydrodynamics.github.io/CaMa-Flood/) for distribution information. Source development and data-rich distribution packages are maintained separately; do not assume that `master` is identical to a particular downloadable package. For reproducible work, record the source commit or tag and the datasets used.
+See [Versions.md](Versions.md) for recorded changes and the [official website](https://global-hydrodynamics.github.io/CaMa-Flood/) for distribution information. Source development and data-rich distribution packages are maintained separately; do not assume that `main` is identical to a particular downloadable package. The v5 package-generation workflow is still planned. For reproducible work, record the source commit or tag and the datasets used.
 
 ## Citation and License
 

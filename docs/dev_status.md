@@ -2,12 +2,46 @@
 
 Development policy: [AGENTS.md](../AGENTS.md).
 
-Authoritative registry and dashboard snapshot: `origin/master:docs/dev_status.md`.
+Authoritative registry and dashboard snapshot for this migrated repository: `origin/main:docs/dev_status.md`.
 Latest progress and work claims: a linked GitHub Issue when one is used; otherwise the project status and plan.
 
-Base snapshot: `origin/master` at `19e2c1a`, 2026-11-06. This branch-local proposal was updated on 2026-11-08; reconcile it with the authoritative origin copy before publication.
+Historical base snapshot: old-repository `origin/master` at `19e2c1a`, 2026-11-06, with branch-local proposals from 2026-11-08 and later. Historical project rows/branch names below are inherited evidence, not automatic registration of those branches in cmf_v5_beta. Reconcile current proposals with origin/main before publication.
 
 ## Registered active projects
+
+### Development and distribution design documentation (DT-0103, 2026-11-15)
+
+Maintainer-assigned bounded documentation task on the current `main` checkout;
+owner: Dai Yamazaki (maintainer), Codex implements. Scope: install the supplied
+[maintained design](development_and_distribution_design.md), align current
+README/policy links and write concise external contribution guidance; append
+evidence under research. Acceptance: preserve the supplied specification,
+separate planned/current behavior, verify documented existing test commands,
+check changed links and research records. No model/workflow implementation,
+package assembler, data relocation, new tests, commit or push is authorized.
+The pre-existing directory relocation and DT-0102 utility changes are preserved.
+Documentation is prepared for review: original specification body preserved;
+19 CTL and eight Mekong checks pass, map registry valid, local links and research
+records checked. Packaging/regression acceptance choices remain in KG-0036.
+See [ADR-0010](../research/records/decisions/ADR-0010-development-and-distribution.md)
+and [VR-0149](../research/records/validation_runs/VR-0149.md).
+
+### Shared utility consolidation (DT-0102)
+
+Maintainer-assigned bounded v5-beta task on the current `main` checkout after
+repository migration; owner: Dai Yamazaki (maintainer), Codex implements.
+Scope: move root `util/Makefile` and `util/igetday.F90` directly into `tools/`,
+update dependent tracked paths and documentation, preserve calendar logic and
+research IDs, and record evidence. No commit or push is authorized. Acceptance:
+compile with v5 `config/Mkinclude`, compare pre/post stdout and calendar results,
+check dependent shell calls, clean/ignore behavior and stale path references.
+Untracked legacy relocation and other existing work remain outside this task.
+This is a task-specific work claim, not a re-registration of historical projects.
+Completed implementation and focused validation: 108 exact pre/post cases and
+eight actual caller invocations passed; executable cleaned; no commit/push.
+Unmanaged legacy callers retain historical paths and remain outside scope.
+See [the utility guide](../tools/README.md) and
+[VR-0148](../research/records/validation_runs/VR-0148.md) for findings and validation.
 
 ### p02-f04 flood-depth visualization (2026-11-14)
 
@@ -167,13 +201,13 @@ The documentation reorganization project was completed and merged to `master` in
 | Decision | Current state | Next action |
 | --- | --- | --- |
 | Comparative study protocol | Four evaluation dimensions are maintainer-approved; concrete comparable tasks, rubrics, and v4 package identity remain to be specified | Define task-based evidence and baseline before comparative claims or participant evaluation |
-| Dashboard publisher | Maintainer responsibility; named publisher not yet assigned | Assign the person responsible for reconciling and publishing rows to `master` |
+| Dashboard publisher | Maintainer responsibility; named publisher not yet assigned | Assign the person responsible for reconciling and publishing rows to `main` |
 | Supported validation configurations | Baseline version, compiler matrix, and required datasets not yet agreed | Record acceptance checks in the project plan and status, or in an Issue if one is used |
 
 ## Approved updates awaiting publication
 
 The v4/v5 build configuration separation is implemented on `feature/gosh-refactor`: legacy Makefiles retain `adm/Mkinclude`, while v5 model and map-tool Makefiles require `config/Mkinclude`. The default v5 templates and setup guide are in `config/`. GitHub Actions now creates the ignored active configuration from the tracked GNU template in its disposable checkout, installs GNU Fortran and NetCDF-Fortran, and requires the v5 model and regional map-tool builds plus existing map checks; a local clean-checkout build passed. The active configuration remains untracked. See the build setup section in `docs/model_source_workflow_plan.md`.
 
-Map data/tool work is tracked by Issue [#122](https://github.com/global-hydrodynamics/CaMa-Flood_v4/issues/122). Research logging is a cross-project activity with no dedicated Issue. This dashboard copy is branch-local until reconciled on `origin/master`. The B2.4 migration records MPI preprocessing and diagnostics; historical `map/src/` tools and tracked Mekong binaries were not modified. Phase C exposes four shared analysis tools under descriptive names (`analysis_river_point_info`, `analysis_upbasin`, `analysis_subbasin`, `analysis_river_node_latlon`) and a portable, explicitly prepared `script_analysis/` bundle alongside independent standard s06/s07 workflows. The Mekong sample uses a 30,000 km2 subbasin threshold, ID 0 for modeled cells below threshold, and station-labeled `upbasin-<GRDC_ID>.bin`; the historical `map/src/` source tree remains unchanged. The Phase C specification update and its 65-test validation are recorded in DR-0043 and VR-0070; the earlier migration and sample-output milestones remain in VR-0068 and VR-0069.
+Map data/tool work is tracked by Issue [#122](https://github.com/global-hydrodynamics/CaMa-Flood_v4/issues/122). Research logging is a cross-project activity with no dedicated Issue. This dashboard copy is an uncommitted proposal until reconciled with `origin/main`. The B2.4 migration records MPI preprocessing and diagnostics; historical `map/src/` tools and tracked Mekong binaries were not modified. Phase C exposes four shared analysis tools under descriptive names (`analysis_river_point_info`, `analysis_upbasin`, `analysis_subbasin`, `analysis_river_node_latlon`) and a portable, explicitly prepared `script_analysis/` bundle alongside independent standard s06/s07 workflows. The Mekong sample uses a 30,000 km2 subbasin threshold, ID 0 for modeled cells below threshold, and station-labeled `upbasin-<GRDC_ID>.bin`; the historical `map/src/` source tree remains unchanged. The Phase C specification update and its 65-test validation are recorded in DR-0043 and VR-0070; the earlier migration and sample-output milestones remain in VR-0068 and VR-0069.
 
 High-resolution area handling contracts are documented in `docs/map_data_tools_plan.md`: allocation is intentionally single-area; matrix and permanent-water aggregation support multiple areas by source inspection. Multi-area package-scale integration validation is pending and is not claimed as completed. The previous wording that treated multi-area allocation itself as an unresolved defect has been narrowed; see `research/records/knowledge_gaps/KG-0014.md`.

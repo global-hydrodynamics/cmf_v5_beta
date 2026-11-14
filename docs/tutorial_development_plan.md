@@ -42,6 +42,8 @@ Tutorial 02 specifies a 2000–2003 Mekong simulation with annual Restart handof
 
 ## Repository and beginner-package policy
 
+The current cross-project architecture is in [the development and distribution design](development_and_distribution_design.md). The beginner selections below are an educational profile of the future generated package, distinct from the GitHub developer tree and Package Additional Data. No v5 assembler is implemented by this plan.
+
 The GitHub repository is for development and should retain the complete validated experiment implementation. Tutorial 02 has its `tutorial_design.md`, four experiment scripts, visualization tools, and verified reference figures. Its manual design and beginner-facing manual are future work. Generated simulation outputs, Restart files, and run logs are not to be tracked.
 
 The downloadable beginner package has a different teaching purpose. Its planned Tutorial 02 contents include the tutorial documentation, visualization tools, verified reference figures, and only `mek_default.sh`. Users will practice creating the No Bifurcation, Kinematic Wave, and No Floodplain scripts by copying and editing the Default configuration. Those three scripts remain in GitHub and are excluded during package assembly, rather than deleted from the repository. Packaging behavior has not been implemented by this plan.

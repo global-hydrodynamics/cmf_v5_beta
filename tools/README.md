@@ -1,6 +1,38 @@
-# CaMa-Flood Output Tools
+# CaMa-Flood Common Utilities
 
-This directory contains standalone tools for inspecting and describing model outputs. They do not modify or rerun the model.
+This directory contains shared standalone utilities: the `igetday` calendar helper and Python tools for describing model outputs. These tools do not rerun the model. `Makefile` and `igetday.F90` were moved here from the root `util/` directory; all utilities live directly under `tools/`.
+
+## Count days in a month with igetday
+
+`igetday.F90` accepts two positional integer arguments, year and month (1–12), and prints the number of days in that month to standard output, with Fortran list-directed whitespace. It uses the Gregorian leap-year rule (divisible by 4, except centuries not divisible by 400), with the existing special case that February in year 0 has 28 days. No input or output data files are used. Supply both arguments and a valid month; the program does not validate the calendar input range.
+
+### Compile and run
+
+From the repository root, first prepare the ignored machine-specific `config/Mkinclude` as described in [the v5 configuration guide](../config/README.md). Then run:
+
+```sh
+make -C tools all
+./tools/igetday 2000 2
+# Prints 29 (with leading whitespace).
+make -C tools clean
+```
+
+The Makefile uses `FC`, `FFLAGS`, `LFLAGS` (and legacy `LFLAG` if supplied), and `INC` from `config/Mkinclude` or make command-line overrides. It has no dependency on model objects, Fortran modules, or NetCDF libraries; the standard `INC` flags may include NetCDF headers. It never falls back to `adm/Mkinclude` and does not edit either configuration. The build creates the ignored `tools/igetday` executable; `clean` removes it and local compiler intermediates, leaving the Python tools and source files intact. Build from `tools/` or use `make -C tools`, since the configuration path is relative to that directory.
+
+### Use from other programs
+
+Use an explicit executable path after building it. For example, in a shell where `CMF_BASE` is the repository root:
+
+```sh
+# Command substitution captures the number printed by igetday.
+NDAY=$("${CMF_BASE}/tools/igetday" 2000 2)
+```
+
+Python callers can use `int(subprocess.check_output([str(cmf_base / "tools" / "igetday"), "2000", "2"], text=True))`. No PATH modification or exported environment variable is required by `igetday` itself.
+
+The tracked Japan forecast example, `gosh_test/legacy/test3-jpn_fcast.sh`, uses this shared executable for its starting and ending month lengths. Its two calls now use `$BASE/tools/igetday`; build the helper separately before using that example. The v5 `gosh_test/compile.sh` builds only the model and does not build this utility. Scripts under `etc/downscale_flddph/`, `etc/n-year_flood_depth/`, and `etc/runoff_preset/` have independent local `src/igetday` sources/targets; they are not redirected by this consolidation. No shared-helper call or PATH dependency was found in current Tutorial, Visualization, map, or runoff-input workflows.
+
+The untracked `legacy/gosh/` reference copy still contains the original `util` build-directory and `$BASE/util/igetday` references. It is preserved unchanged and is not a v5 build/run entry point; using those historical scripts against the new layout would require a separate adaptation. Historical descriptions in development plans and research records likewise retain the old paths. The historical root `archive_src.sh` now copies `tools/` instead of `util/`; its other v4 package assumptions are unchanged, and this consolidation does not establish a v5 packaging workflow.
 
 ## Generate GrADS CTLs for Binary Restart files
 
