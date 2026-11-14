@@ -2,6 +2,8 @@
 
 The `inp/` directory contains tools for preparing runoff forcing used by CaMa-Flood. Runoff supplies water per unit land area over time; CaMa-Flood converts it to a flow rate for routing through the river network. The GitHub repository includes an ERA5-Land download and conversion workflow with small Japan examples. Distribution packages also include sample forcing for selected `gosh/` runs. Obtain or prepare additional forcing when the chosen experiment requires data beyond those supplied with the package.
 
+The GitHub repository also tracks the Binary `test-mek_1deg/` and annual NetCDF `test-mek_1deg_nc/` samples for minimal Mekong development runs; these do not require the larger additional-data package. The current v5 execution examples are under `gosh_test/`. Package Additional Data and the generated user package have distinct roles in [the maintained design](../docs/development_and_distribution_design.md); v5 assembly is planned, not an existing download/build procedure.
+
 For format and compression settings used by NetCDF files generated with v5 tools, see the shared [NetCDF output conventions](../docs/netcdf_output_conventions.md). External NetCDF forcing inputs are not required to use those output settings.
 
 ## Using Your Own Runoff Dataset
@@ -9,7 +11,7 @@ For format and compression settings used by NetCDF files generated with v5 tools
 1. Prepare runoff files in a supported [Binary or NetCDF layout](#supported-input-formats-and-simulation-settings).
 2. Identify the input-grid resolution and geographic boundaries, latitude row order, temporal resolution, runoff units and accumulation meaning, missing-value encoding, and filename pattern from the source data and documentation.
 3. Copy the shared [`s03-generate_inpmat.sh` template](../map/tools/script_params/s03-generate_inpmat.sh) into the target map's `script_params/`, configure its settings, and [generate the Input Matrix](#preparing-the-input-matrix). The runoff grid may have a different spatial resolution and extent from the CaMa-Flood river map.
-4. Configure the relevant `gosh/` simulation script with matching file paths and format, `IFRQ_INP`, `DROFUNIT`, and the matching `CDIMINFO`/`CINPMAT` pair; see [simulation settings](#supported-input-formats-and-simulation-settings).
+4. Configure the relevant v5 `gosh_test/` or tutorial simulation script with matching file paths and format, `IFRQ_INP`, `DROFUNIT`, and the matching `CDIMINFO`/`CINPMAT` pair; see [simulation settings](#supported-input-formats-and-simulation-settings).
 5. Run a short simulation and check the log, dates, and runoff/discharge values for correct loading and reasonable magnitudes.
 6. Optionally document the dataset and its provenance in [`runoff_datasets.csv`](runoff_datasets.csv) when sharing it with other users.
 
@@ -53,7 +55,7 @@ The table below summarizes the sample locations and review state. The CSV is the
 
 ### Data Sources and Acquisition
 
-Package-only data are not added by cloning the GitHub repository. Obtain the v4.30 distribution package or prepare equivalent inputs separately, then check the actual files against the selected run script. For source and acquisition details, see the [Copernicus ERA5-Land dataset page](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-land) and the [ERA5-Land workflow guide](ERA5-Land_download/ReadMe.md). The [sample execution guide](../gosh/README.md) describes the package runs. File spacing alone does not establish physical units or whether values are rates or accumulated depths; see [Choosing `DROFUNIT`](#choosing-drofunit).
+Package-only data are not added by cloning the GitHub repository. Obtain the v4.30 distribution package or prepare equivalent inputs separately, then check the actual files against the selected run script. For source and acquisition details, see the [Copernicus ERA5-Land dataset page](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-land) and the [ERA5-Land workflow guide](ERA5-Land_download/ReadMe.md). The [v5 execution guide](../gosh_test/README.md) describes current maintained runs; the listed package-only examples refer to v4.30 data, not an available v5 package. File spacing alone does not establish physical units or whether values are rates or accumulated depths; see [Choosing `DROFUNIT`](#choosing-drofunit).
 
 ## Preparing the Input Matrix
 
@@ -249,5 +251,5 @@ These checks distinguish configuration mismatches from software defects; a suspi
 - [ERA5-Land download and conversion guide](ERA5-Land_download/ReadMe.md)
 - [Map and Input Matrix overview](../map/README.md)
 - [v5 Input Matrix generation workflow](../map/tools/script_params/s03-generate_inpmat.sh)
-- [Sample execution guide](../gosh/README.md)
-- [Forcing implementation](../src/cmf_ctrl_forcing_mod.F90)
+- [V5 execution guide](../gosh_test/README.md)
+- [V5 forcing implementation](../src_main/cmf_ctrl_forcing_mod.F90)

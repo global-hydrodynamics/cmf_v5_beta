@@ -2,7 +2,7 @@
 
 The `map/` directory connects CaMa-Flood's river and floodplain representation to the datasets and preprocessing tools used to prepare it. The GitHub source repository supplies map-processing code and documentation, plus the official `mekong_15min` development/test sample. Global source maps such as `glb_15min` are distributed separately in CaMa-Flood data packages. Check the map files included with your package and obtain any additional datasets required by the simulation.
 
-For model setup and example runs, see the [sample execution guide](../gosh/README.md). This page is an overview; tool-specific details remain in the component documentation linked below.
+For model setup and example runs, see the [v5 developer execution guide](../gosh_test/README.md). This page is an overview; tool-specific details remain in the component documentation linked below.
 
 ## Development and test sample
 
@@ -22,7 +22,7 @@ Use the [official CaMa-Flood website](https://global-hydrodynamics.github.io/CaM
 
 The official page describes basic map datasets under CC BY 4.0 and notes that some advanced high-resolution data have separate access conditions. Dataset terms can differ. Check the current website and the license or agreement supplied with the exact dataset you use; the source-code license does not automatically apply to map data.
 
-Cloning the GitHub repository provides the legacy v4 source templates under `map/src/` and the developing v5 framework under `map/tools/`; it does not provide the map datasets used by the standard simulations. A distribution package combines code with selected maps and sample inputs. Package contents depend on the release; check its included files and release documentation before downloading additional data or preparing new products.
+The GitHub repository includes the Mekong development/test map and v5 tools under `map/tools/`, plus historical templates under `map/src/`. The tracked Mekong inputs support the intended minimal repository test; larger maps belong to separately supplied data. The planned user package combines a selected source revision with approved Package Additional Data. The v5 assembler and complete fresh-clone regression workflow remain under development; see [the design specification](../docs/development_and_distribution_design.md).
 
 ## Directory organization
 
@@ -47,7 +47,7 @@ The v4.30 package-preparation workflow assembles `glb_15min/`, `conus_06min/`, a
 
 `glb_15min/` is the global 15-minute (0.25-degree) river map; `params.txt` records its dimensions and geographical coverage. Higher-resolution supporting files, such as those under `glb_15min/1min/`, are used by selected preprocessing and downscaling workflows. They do not change the base river-map resolution. Packages may also include prepared working copies such as `glb_15min/src_param/`; check which components and supporting layers are included with your map release.
 
-The v4 and v5 map-processing programs use the repository's active build configuration in [`adm/`](../adm/README.md). The v5 shared Makefile builds executables directly under `map/tools/code/`; regional scripts call them from map-local working directories. Map tools are separate from the numerical model executable in `src/`.
+The v5 map-processing programs use the ignored `config/Mkinclude`, configured through the [v5 build guide](../config/README.md). Historical v4 tools still expect their legacy adm settings. The v5 shared Makefile builds executables directly under `map/tools/code/`; regional scripts call them from map-local working directories. Map tools are separate from the numerical model executable in `src_main/`.
 
 ### Dataset, tools, and products are different things
 
@@ -68,7 +68,7 @@ The legacy v4 regionalization template is under `map/src/src_region/`; the reusa
 
 GitHub-only map-tools checks validate metadata, source functionality, and CTL generation using synthetic fixtures and the committed Mekong binary sample. They do not execute regionalization or require the distribution package's global data. See [GitHub-only automated tests](tools/README.md#github-only-automated-tests).
 
-Examples of maps used by sample runs are listed in [`gosh/README.md`](../gosh/README.md). A regional map must remain consistent with its source resolution and extent, downstream connectivity, metadata, and parameter files. Do not substitute files from a different map tag merely because their filenames match.
+Examples of maps used by sample runs are listed in [the v5 workflow guide](../gosh_test/README.md). A regional map must remain consistent with its source resolution and extent, downstream connectivity, metadata, and parameter files. Do not substitute files from a different map tag merely because their filenames match.
 
 ## Shared map-product registry
 
@@ -127,7 +127,7 @@ Not every feature uses a file generated under `map/`, and some optional products
 1. Obtain a map archive from the official project download page and review its terms.
 2. Extract or reference the map in the location expected by your namelist and execution script.
 3. Check that all required map files, metadata, grid dimensions, and optional products belong to the same map release and resolution.
-4. Configure the map paths in the run namelist or sample script, then follow the appropriate [`gosh/` run guide](../gosh/README.md).
+4. Configure the map paths in the run namelist or sample script, then follow the appropriate [v5 run guide](../gosh_test/README.md).
 
 ### Create a regional map
 
@@ -164,9 +164,9 @@ When combining or generating map products, keep dimensions, grid spacing, geogra
 
 | Directory | Relationship to `map/` |
 | --- | --- |
-| [`src/`](../src/README.md) | Reads the configured network and map parameters and uses them during model initialization and simulation. |
-| [`gosh/`](../gosh/README.md) | Provides sample build/run scripts that point to prepared maps and forcing data. |
-| [`adm/`](../adm/README.md) | Supplies compiler and build configuration for the map tools and model. |
+| [`src_main/`](../src_main/README.md) | Reads the configured network and map parameters and uses them during model initialization and simulation. |
+| [`gosh_test/`](../gosh_test/README.md) | Provides sample build/run scripts that point to prepared maps and forcing data. |
+| [`config/`](../config/README.md) | Supplies compiler and build configuration for the map tools and model. |
 | [`inp/`](../inp/README.md) | Prepares runoff forcing; map input matrices connect that forcing grid to the selected river map. |
 | `etc/` | Contains specialized workflows, some of which consume or prepare additional map-related data. |
 | [`doc/`](../doc/CaMa-Flood_Guideline.md) | Holds user guidance and scientific/technical manuals. |
@@ -179,5 +179,5 @@ When combining or generating map products, keep dimensions, grid spacing, geogra
 - [Reservoir operation manual](../doc/Manual_ReservoirOperation_v420.docx)
 - [Parameter-processing tools](src/src_param/README.md)
 - [Dam/reservoir parameter workflow](src/src_dam/ReadMe.md)
-- [Model source architecture](../src/README.md)
-- [Sample simulation workflows](../gosh/README.md)
+- [Model source architecture](../src_main/README.md)
+- [Sample simulation workflows](../gosh_test/README.md)

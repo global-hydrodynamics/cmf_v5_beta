@@ -25,7 +25,7 @@ cp -r ${BASE}/gosh .
 cp -r ${BASE}/map  .
 cp -r ${BASE}/out  .
 cp -r ${BASE}/src  .
-cp -r ${BASE}/util .
+cp -r ${BASE}/tools .
 
 cp ${BASE}/LICENSE        .
 cp ${BASE}/README.md      .

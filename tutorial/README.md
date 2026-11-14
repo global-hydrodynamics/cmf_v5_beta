@@ -50,6 +50,8 @@ one tutorial per row.
 
 ### 6. Developer references and learner packages
 
+The [development and distribution design](../docs/development_and_distribution_design.md) separates the GitHub developer environment, Package Additional Data and generated user package. The learner-file selections below are an educational package profile, not instructions to remove developer references or research history from Git. V5 package assembly is still planned.
+
 Keep complete runnable reference solutions and developer records in each
 tutorial's `design/` directory. Keep figures used as examples under
 `sample_figure/`; reserve `figure/` for learner-generated figures and leave it

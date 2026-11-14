@@ -1,4 +1,6 @@
 # How to generate/update CaMa-Flood package
+
+> Historical v4 reference. This document preserves the original workflow; it is not the v5 beta setup or package-assembly procedure. See the [v5 development and distribution design](../docs/development_and_distribution_design.md) for the intended three-part architecture and current implementation limits.
 For CaMa-Flood v4.01 on 29Mar, 2021
 Dai Yamazaki
 (This manual is for Yamazaki lab internal use)

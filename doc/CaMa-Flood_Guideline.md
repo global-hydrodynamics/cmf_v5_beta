@@ -1,5 +1,7 @@
 # CaMa-Flood Guideline
 
+> Historical v4 reference. This document preserves the original workflow; it is not the v5 beta setup or package-assembly procedure. See the [v5 development and distribution design](../docs/development_and_distribution_design.md) for the intended three-part architecture and current implementation limits.
+
 This document is prepared to give an example how CaMa-Flood is prepared and how we can analyze the results with given demo scripts. This is especially for the new users of CaMa-Flood from github. In this sample running, we drive CaMa-Flood by E2O_ecmwf runoff (global, 0.25deg, 1980-2014). 
 
 ## 1. CaMa-Flood setup (quick instruction)
