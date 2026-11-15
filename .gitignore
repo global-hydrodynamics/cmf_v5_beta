@@ -6,6 +6,7 @@
 !Makefile
 /Mkinclude
 /config/Mkinclude
+/config/Mkinclude.bak.*
 .DS_Store
 #
 *.bin
@@ -98,3 +99,6 @@ map/tools/**/__pycache__/
 map/tools/**/*.pyc
 # Verified local research backup; never commit this safety copy.
 /research_bak261106/
+
+# Developer simulation project directories (all generated experiment files).
+/gosh_test/out/

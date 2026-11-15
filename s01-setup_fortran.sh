@@ -9,12 +9,20 @@ TMP_DIR=$(mktemp -d "$TMP_ROOT/cmf-fortran-setup.XXXXXX") || {
     exit 1
 }
 STAGED_CONFIG=""
+ACTIVE_STAGED_CONFIG=""
+ACTIVE_UPDATED=no
 
 cleanup() {
     if [ -n "$STAGED_CONFIG" ]; then
         rm -f "$STAGED_CONFIG"
     fi
+    if [ -n "$ACTIVE_STAGED_CONFIG" ]; then
+        rm -f "$ACTIVE_STAGED_CONFIG"
+    fi
     rm -rf "$TMP_DIR"
+    if [ "$ACTIVE_UPDATED" = no ]; then
+        printf '[INFO] Active configuration unchanged\n'
+    fi
 }
 
 trap cleanup 0
@@ -105,17 +113,88 @@ EOF
     fi
 fi
 
+# Compare installation roots, treating Homebrew's separate C/Fortran formulae
+# as one installation. Resolving directory symlinks also handles opt prefixes.
+netcdf_install_root() {
+    prefix=$1
+    if [ -d "$prefix" ]; then
+        prefix=$(CDPATH= cd "$prefix" && pwd -P)
+    fi
+    case "$prefix" in
+        */Cellar/*) printf '%s\n' "${prefix%%/Cellar/*}" ;; # Remove the formula/version suffix.
+        *) printf '%s\n' "$prefix" ;;
+    esac
+}
+
 NETCDF_READY=no
 NETCDF_INFO="nf-config not found"
 NETCDF_FFLAGS=""
 NETCDF_FLIBS=""
 NETCDF_CLIBS=""
-if [ "$GFORTRAN_READY" = yes ] && command -v nf-config >/dev/null 2>&1; then
-    NETCDF_INFO=$(nf-config --version 2>/dev/null || printf 'version unavailable')
-    if NETCDF_FFLAGS=$(nf-config --fflags 2>/dev/null) && \
-       NETCDF_FLIBS=$(nf-config --flibs 2>/dev/null); then
-        if command -v nc-config >/dev/null 2>&1; then
-            NETCDF_CLIBS=$(nc-config --libs 2>/dev/null | sed 's/-lnetcdf//g')
+NETCDF_RPATHS=""
+NETCDF_SELECTION_NOTE=""
+NF_CONFIG_PATH=$(command -v nf-config || :)
+PATH_NC_CONFIG=$(command -v nc-config || :)
+NC_CONFIG_PATH=$PATH_NC_CONFIG
+if [ -n "$NF_CONFIG_PATH" ]; then
+    NF_PREFIX=$("$NF_CONFIG_PATH" --prefix 2>/dev/null || :)
+    NF_INSTALL_ROOT=$(netcdf_install_root "$NF_PREFIX")
+    NF_PHYSICAL_PREFIX=$NF_PREFIX
+    if [ -d "$NF_PREFIX" ]; then
+        NF_PHYSICAL_PREFIX=$(CDPATH= cd "$NF_PREFIX" && pwd -P)
+    fi
+    NF_HOMEBREW_ROOT=""
+    case "$NF_PHYSICAL_PREFIX" in
+        */Cellar/netcdf-fortran/*) NF_HOMEBREW_ROOT=${NF_PHYSICAL_PREFIX%%/Cellar/*} ;;
+    esac
+    if [ -n "$PATH_NC_CONFIG" ]; then
+        PATH_NC_PREFIX=$("$PATH_NC_CONFIG" --prefix 2>/dev/null || :)
+        PATH_NC_ROOT=$(netcdf_install_root "$PATH_NC_PREFIX")
+        if [ -n "$NF_INSTALL_ROOT" ] && [ -n "$PATH_NC_ROOT" ] && \
+           [ "$NF_INSTALL_ROOT" != "$PATH_NC_ROOT" ]; then
+            NETCDF_SELECTION_NOTE="PATH tools use different installation prefixes ($NF_PREFIX / $PATH_NC_PREFIX)."
+        fi
+    fi
+    # Prefer C from the same Homebrew tree, even when Conda leads PATH.
+    # Do not change PATH: the user's Conda Python remains available.
+    if [ -n "$NF_HOMEBREW_ROOT" ]; then
+        NC_CONFIG_PATH=""
+        for candidate in "$NF_HOMEBREW_ROOT/opt/netcdf/bin/nc-config" \
+                         "$NF_HOMEBREW_ROOT/bin/nc-config"; do
+            if [ -x "$candidate" ]; then
+                NC_CONFIG_PATH=$candidate
+                break
+            fi
+        done
+        if [ -z "$NC_CONFIG_PATH" ]; then
+            NETCDF_SELECTION_NOTE="$NETCDF_SELECTION_NOTE Homebrew companion nc-config not found; using nf-config flags only."
+        fi
+    elif [ -x "$NF_PREFIX/bin/nc-config" ]; then
+        NC_CONFIG_PATH="$NF_PREFIX/bin/nc-config"
+    fi
+fi
+
+if [ "$GFORTRAN_READY" = yes ] && [ -n "$NF_CONFIG_PATH" ]; then
+    NETCDF_INFO=$("$NF_CONFIG_PATH" --version 2>/dev/null || printf 'version unavailable')
+    if NETCDF_FFLAGS=$("$NF_CONFIG_PATH" --fflags 2>/dev/null) && \
+       NETCDF_FLIBS=$("$NF_CONFIG_PATH" --flibs 2>/dev/null); then
+        if [ -n "$NC_CONFIG_PATH" ]; then
+            NETCDF_CLIBS=$("$NC_CONFIG_PATH" --libs 2>/dev/null | sed 's/-lnetcdf//g')
+        fi
+        if [ "$OS_NAME" = Darwin ]; then
+            # -L finds libraries at link time; macOS also needs their runtime paths.
+            # Config tools return whitespace-separated flags, as used below.
+            for flag in $NETCDF_FLIBS $NETCDF_CLIBS; do
+                case "$flag" in
+                    -L*)
+                        rpath_flag="-Wl,-rpath,${flag#-L}" # Strip -L to get the directory.
+                        case " $NETCDF_RPATHS " in
+                            *" $rpath_flag "*) ;; # C and Fortran may share one library directory.
+                            *) NETCDF_RPATHS="$NETCDF_RPATHS $rpath_flag" ;;
+                        esac
+                        ;;
+                esac
+            done
         fi
         cat > "$TMP_DIR/netcdf.f90" <<'EOF'
 program netcdf_check
@@ -165,7 +244,7 @@ end program netcdf_check
 EOF
         # nf-config returns compiler flags as a word-separated command-line string.
         if (cd "$TMP_DIR" && gfortran $NETCDF_FFLAGS netcdf.f90 \
-            $NETCDF_FLIBS $NETCDF_CLIBS -o netcdf_check >netcdf.log 2>&1 && \
+            $NETCDF_FLIBS $NETCDF_CLIBS $NETCDF_RPATHS -o netcdf_check >netcdf.log 2>&1 && \
             ./netcdf_check >>netcdf.log 2>&1); then
             NETCDF_READY=yes
         else
@@ -236,6 +315,14 @@ print_component "GNU Make" "$MAKE_READY" "$MAKE_INFO"
 print_component "GNU Fortran" "$GFORTRAN_READY" "$GFORTRAN_INFO"
 print_component "OpenMP" "$OPENMP_READY" "$OPENMP_INFO"
 print_component "NetCDF-Fortran" "$NETCDF_READY" "$NETCDF_INFO"
+printf '    nf-config:    %s\n' "${NF_CONFIG_PATH:-not found}"
+printf '    nc-config:    %s\n' "${NC_CONFIG_PATH:-not found (nf-config flags only)}"
+if [ -n "$NETCDF_SELECTION_NOTE" ]; then
+    printf '    NetCDF selection: %s\n' "$NETCDF_SELECTION_NOTE"
+fi
+if [ "$PATH_NC_CONFIG" != "$NC_CONFIG_PATH" ] && [ -n "$PATH_NC_CONFIG" ]; then
+    printf '    PATH nc-config (not selected): %s\n' "$PATH_NC_CONFIG"
+fi
 print_component "MPI Fortran" "$MPI_READY" "$MPI_INFO"
 if [ -n "$GFORTRAN_PATH" ]; then
     printf '    gfortran path: %s\n' "$GFORTRAN_PATH"
@@ -419,21 +506,28 @@ fi
 printf '  MPI: Disabled by default\n'
 printf '  Precision: SinglePrec_CMF, matching standard GNU templates\n'
 
+TARGET_CONFIG="$SCRIPT_DIR/Mkinclude"
+ACTIVE_CONFIG="$SCRIPT_DIR/config/Mkinclude"
+printf '\nConfiguration files:\n'
+printf '  Generated candidate: %s\n' "$TARGET_CONFIG"
+printf '  Active build configuration: %s\n' "$ACTIVE_CONFIG"
+printf 'Generating the candidate alone does NOT update the active configuration.\n'
+printf 'Activation is a separate, explicit confirmation below.\n'
+
 if [ ! -t 0 ] || [ ! -t 1 ]; then
     printf '\nNo interactive terminal detected; diagnosis only. Run again in a terminal to generate ./Mkinclude.\n'
     exit 0
 fi
 
-printf '\nGenerate ./Mkinclude? [Y/n]: '
+printf '\nGenerate candidate ./Mkinclude? [y/N]: '
 IFS= read -r answer || answer=""
 case "$answer" in
-    ""|Y|y|YES|yes|Yes) ;;
+    Y|y|YES|yes|Yes) ;;
     *) printf 'No configuration file was written.\n'; exit 0 ;;
 esac
 
-TARGET_CONFIG="$SCRIPT_DIR/Mkinclude"
 if [ -e "$TARGET_CONFIG" ]; then
-    printf './Mkinclude already exists. Overwrite it? [y/N]: '
+    printf 'Overwrite generated candidate %s? [y/N]: ' "$TARGET_CONFIG"
     IFS= read -r answer || answer=""
     case "$answer" in
         Y|y|YES|yes|Yes) ;;
@@ -460,14 +554,17 @@ EOF
 FFLAGS = -O3 -Wall -cpp -ffree-line-length-none -fimplicit-none -ftree-vectorize
 LFLAGS =
 
-# NetCDF-Fortran flags come from the active installation.
-NF_CONFIG ?= nf-config
-NC_CONFIG ?= nc-config
-NF_FFLAGS ?= $(shell $(NF_CONFIG) --fflags 2>/dev/null)
-NF_FLIBS ?= $(shell $(NF_CONFIG) --flibs 2>/dev/null)
-NC_LIBS ?= $(shell $(NC_CONFIG) --libs 2>/dev/null | sed 's/-lnetcdf//g')
+# Keep the tested NetCDF pair when a Python environment changes PATH.
+EOF
+    printf 'NF_CONFIG ?= %s\n' "$NF_CONFIG_PATH"
+    printf 'NC_CONFIG ?= %s\n' "$NC_CONFIG_PATH"
+    printf 'NETCDF_RPATHS ?= %s\n' "$NETCDF_RPATHS"
+    cat <<'EOF'
+NF_FFLAGS ?= $(shell "$(NF_CONFIG)" --fflags 2>/dev/null)
+NF_FLIBS ?= $(shell "$(NF_CONFIG)" --flibs 2>/dev/null)
+NC_LIBS ?= $(shell "$(NC_CONFIG)" --libs 2>/dev/null | sed 's/-lnetcdf//g')
 INC ?= $(NF_FFLAGS)
-LIB ?= $(NF_FLIBS) $(NC_LIBS)
+LIB ?= $(NF_FLIBS) $(NC_LIBS) $(NETCDF_RPATHS)
 
 # Preprocessing options
 # DMPI=-DUseMPI_CMF        : activate MPI parallelization
@@ -496,11 +593,62 @@ mv -f "$STAGED_CONFIG" "$TARGET_CONFIG" || {
 }
 STAGED_CONFIG=""
 
-printf '\n[SUCCESS] Generated ./Mkinclude\n\n'
-printf 'To activate this configuration:\n\n'
-if [ -e "$SCRIPT_DIR/config/Mkinclude" ]; then
-    printf 'Existing config/Mkinclude was not changed. Back it up before choosing to replace it.\n'
+printf '\n[SUCCESS] Generated candidate: %s\n' "$TARGET_CONFIG"
+printf 'The candidate is not used by builds until activated as %s.\n' "$ACTIVE_CONFIG"
+
+if [ -e "$ACTIVE_CONFIG" ] || [ -L "$ACTIVE_CONFIG" ]; then
+    if cmp -s "$ACTIVE_CONFIG" "$TARGET_CONFIG"; then
+        printf '[INFO] Active configuration already matches the generated candidate.\n'
+        exit 0
+    else
+        COMPARE_STATUS=$?
+        if [ "$COMPARE_STATUS" -ne 1 ]; then
+            printf '[ERROR] Could not compare active configuration: %s\n' "$ACTIVE_CONFIG" >&2
+            exit 1
+        fi
+    fi
+    printf '\n[INFO] The active configuration differs from the generated candidate.\n'
+    printf 'Overwrite active build configuration: %s\n' "$ACTIVE_CONFIG"
 else
-    printf '  cp Mkinclude config/Mkinclude\n'
+    printf '\nCreate active build configuration: %s\n' "$ACTIVE_CONFIG"
 fi
-printf '\nHistorical v4 files are under legacy/; their original adm/Mkinclude assumptions are not v5 build instructions.\n'
+printf 'Activate the generated candidate at this path? [y/N]: '
+IFS= read -r answer || answer=""
+case "$answer" in
+    Y|y|YES|yes|Yes) ;;
+    *) exit 0 ;;
+esac
+
+if [ -e "$ACTIVE_CONFIG" ]; then
+    # mktemp chooses a unique backup name; never replace an earlier backup.
+    BACKUP_CONFIG=$(mktemp "$ACTIVE_CONFIG.bak.XXXXXX") || {
+        printf '[ERROR] Could not create a backup; active configuration was not updated.\n' >&2
+        exit 1
+    }
+    if cp -p "$ACTIVE_CONFIG" "$BACKUP_CONFIG"; then
+        printf '[INFO] Previous configuration backed up: %s\n' "$BACKUP_CONFIG"
+    else
+        rm -f "$BACKUP_CONFIG"
+        printf '[ERROR] Backup failed; active configuration was not updated.\n' >&2
+        exit 1
+    fi
+fi
+
+# Stage beside the active file, then rename it to avoid a partial update.
+# Renaming also replaces a symlink itself rather than changing its target.
+ACTIVE_STAGED_CONFIG=$(mktemp "$SCRIPT_DIR/config/.Mkinclude.XXXXXX") || {
+    printf '[ERROR] Could not stage the active configuration update.\n' >&2
+    exit 1
+}
+if cp "$TARGET_CONFIG" "$ACTIVE_STAGED_CONFIG" && \
+   chmod 644 "$ACTIVE_STAGED_CONFIG" && \
+   mv -f "$ACTIVE_STAGED_CONFIG" "$ACTIVE_CONFIG"; then
+    ACTIVE_STAGED_CONFIG=""
+    ACTIVE_UPDATED=yes
+else
+    printf '[ERROR] Active configuration update failed.\n' >&2
+    exit 1
+fi
+printf '\n[SUCCESS] Active build configuration updated: %s\n' "$ACTIVE_CONFIG"
+printf 'Recompile the model and any affected tools to use this configuration.\n'
+printf 'Existing executables are not changed by updating Mkinclude.\n'

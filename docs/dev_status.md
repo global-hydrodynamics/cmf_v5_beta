@@ -16,7 +16,10 @@ retain manual checks. Preserve the existing README edit. No physics, data,
 reference outputs, new test framework, directory reorganization, package
 assembler, commit or push is authorized. Acceptance: focused path/syntax and
 existing component tests; local-link and history/data preservation checks;
-no active workflow files. Findings and manual checks are in
+no active workflow files. Implementation appeared in an external commit
+`9f08956e` during validation; the agent did not commit/push. Focused root checks
+and 29 existing unittest cases pass; completion records are appended for review.
+Findings and manual checks are in
 [the migration audit](migration_consistency_audit.md); evidence is in
 [VR-0150](../research/records/validation_runs/VR-0150.md).
 

@@ -1,55 +1,61 @@
 # CaMa-Flood v5 developer test workflows
 
-This directory contains developer-oriented model execution and operational verification scripts. Developers may rely on outputs from these workflows in their working environment, where they generally retain the results. General users should learn CaMa-Flood through [`tutorial/`](../tutorial/), whose manuals provide the learner-facing instructions. Tutorials and visualization examples should not assume outputs from this directory are available; visualization examples should normally use Git-tracked sample data or prepared inputs.
+Maintained v5 simulations are `mek01-default_run.sh` and `mek02-2year_netcdf.sh`. Historical scripts under `legacy/` are not automatically supported v5 workflows. The separate root `legacy/gosh/` retains v4 references. Tutorial workflows are independent, with their own tutorial-local output directories.
 
-This directory contains maintained v5 workflows alongside historical examples under `legacy/`. The older root v4 workflows are tracked in the separate `legacy/gosh/` reference tree; relocation was committed in `29b889c4`. Historical test, option and specialized examples may retain legacy executable paths, package-only inputs, working-directory assumptions and cleanup behavior. Do not treat those examples as validated v5 entry points.
+## Project and output-directory convention
 
-The tracked Mekong map and runoff samples are intended to support the minimal GitHub-only execution test. Larger data support extended tests; a complete independently approved model-regression command and generated user-package validation remain under development. See [the design specification](../docs/development_and_distribution_design.md) and [contribution guide](../CONTRIBUTING.md).
+Each maintained simulation defines `PROJ` in its user settings and defaults to:
 
-## Build the v5 stand-alone model
+```text
+${CMF_BASE}/gosh_test/out/${PROJ}/
+```
 
-Before building, create the ignored v5 `config/Mkinclude` as described in the [build guide](../config/README.md). The v4 `adm/Mkinclude` is not used by these v5 scripts.
+`CMF_BASE` is always the repository root. The project directory contains the copied executable, generated Namelist, model outputs, Restart files, logs and other generated run files. `COUTDIR="./"` and `CRESTDIR="./"` remain relative to the model's working directory, which is `RUNDIR`. The entire `gosh_test/out/` tree is Git-ignored.
 
-From any working directory, run:
+| Script | Default PROJ | Default directory from repository root |
+| --- | --- | --- |
+| `mek01-default_run.sh` | `mek01` | `gosh_test/out/mek01/` |
+| `mek02-2year_netcdf.sh` | `mek02` | `gosh_test/out/mek02/` |
+
+The environment can override `PROJ`. A nonempty explicit `RUNDIR` takes precedence over the PROJ-derived default; existing callers that supply it continue to control the full path. An empty variable uses its default. `${VAR:-default}` in the scripts implements this convention.
+
+From the repository root, build using the reviewed local configuration as described in [config/README.md](../config/README.md):
 
 ```sh
 ./gosh_test/compile.sh
-```
-
-The wrapper resolves the repository location from its own file path and runs `make -C src_main all`. It does not build or clean legacy model or map-tool directories. The output executable is `src_main/MAIN_cmf`. To clean only this v5 build, run `make -C src_main clean` from the repository root.
-
-## Mekong default simulation
-
-[`mek01-default_run.sh`](mek01-default_run.sh) runs one non-MPI simulation from 2000-01-01 00:00 to 2000-02-10 00:00 (40 days; end time exclusive) with adaptive timestep and bifurcation enabled, zero initial storage, and reservoir operation disabled. It uses the daily 1-degree ELSE_GPCC sample with `DROFUNIT=86400000`, the Mekong `rivwth_merit.bin`, and the sample map's authoritative `bifprm.csv`. The one-day CSV and legacy-TXT smoke runs both read 382 paths and 5 layers; their outputs and saved bifurcation flow matched for this sample. Edit the start/end date settings or `RUNDIR` near the top to change the period or experiment directory.
-
-The map-specific runoff matrix was generated with [`map/mekong_15min/script_params/mek03-generate_inpmat-mek1deg.sh`](../map/mekong_15min/script_params/mek03-generate_inpmat-mek1deg.sh). The generated `inpdim_test-mek_1deg.txt` and `inpmat_test-mek_1deg.bin` are retained with the Mekong sample. Run this script from `gosh_test/` so its `cd ..` base-directory setting resolves to the repository root:
-
-```sh
 cd gosh_test
 ./mek01-default_run.sh
+PROJ=mek01-default ./mek01-default_run.sh
+./mek02-2year_netcdf.sh
+PROJ=mek02-custom ./mek02-2year_netcdf.sh
 ```
 
-The script copies `src_main/MAIN_cmf` into `RUNDIR`, changes to that directory, and writes the namelist. For binary output it creates planned output CTLs before the model starts and Restart CTLs after a successful run. The Restart CTL generator reads the generated Binary Restart and writes a Float32 visualization copy when the source Restart is Float64; the original Restart remains unchanged. `COUTDIR="./"` therefore places daily outputs, CTLs, logs, and the final Restart under `out/mek01-default_run/`. The default uses four OpenMP threads. A rerun automatically replaces this sample's known generated files while leaving unrelated files in `RUNDIR` untouched. The latest 40-day run read 40 daily runoff files across January and February (2000-01-01 through 2000-02-09) and wrote 40 records for each gridded daily output, ending at 2000-02-10 00:00. It records model start/end timestamps, elapsed wall-clock seconds, and exit status in `run_time.log`. All checked output values were finite. This is an operational smoke test, not scientific validation or a v4 numerical comparison. Details and limits are in the [workflow plan](../docs/model_source_workflow_plan.md).
-
-The maintained simulation scripts write `CMF_BASE` in `&NOUTPUT` as the resolved repository/package root. `COUTVAR_TABLE` may be left blank to use `${CMF_BASE}/variable_table/output_variables.csv`, or set to a custom registry path. Direct Namelist users can omit both settings for backward compatibility: when `CMF_BASE` is left at `.`, the model derives the repository root from a `CDIMINFO` path under `map/`, or from the executable's standard `src_main/` or `out/bin/` location. If the resolved registry is unavailable, initialization reports the attempted path and stops. All standard output variables use registry metadata; aliases inherit from their canonical rows.
-
-## Mekong two-year NetCDF map tests
-
-[`mek02-2year_netcdf.sh`](mek02-2year_netcdf.sh) and [`legacy02-longterm_netcdf.sh`](legacy02-longterm_netcdf.sh) run the same 2000–2001 Mekong case with yearly NetCDF runoff (`CROFFREQ="YEAR"`), NetCDF model output, a Binary input matrix, and NetCDF annual Restarts. The forcing reader selects `runoffYYYY.nc` from the model calendar and switches files at January 1; both scripts still split the simulation by year to demonstrate the Restart handoff. They carry the 2000 year-end `.nc` Restart into 2001. `mek02` reads the map-specific `${MAPDIR}/netcdf/bifprm.nc` table with the NetCDF-enabled model and individual NetCDF map files with `LMAPCDF=.FALSE.`; `legacy02` reads the consolidated `rivclim.nc` and `rivpar.nc` containers with `LMAPCDF=.TRUE.` and retains its existing bifurcation table configuration. Those containers were generated from the selected `nextxy_noedge` and `rivwth_merit` products. Each script writes to a separate directory: `out/mek02-2year_netcdf/` and `out/legacy02-longterm_netcdf/`.
-
-Build the NetCDF-enabled executable with `./gosh_test/compile_netcdf.sh` from any directory, then run either sample from `gosh_test/`:
-
-These annual samples use `IFRQ_INP=24` and `DROFUNIT=86400000` for daily mm/day values; file grouping is selected separately by `CROFFREQ="YEAR"`. The [runoff input guide](../inp/README.md#supported-input-formats-and-simulation-settings) documents the required `CROFFREQ` setting, four grouping modes, SEQ start-time rules, and CF-time checks.
+The first script retains its existing requirement to launch from `gosh_test/`. For a complete path override:
 
 ```sh
-./gosh_test/compile_netcdf.sh
-cd gosh_test
-./mek02-2year_netcdf.sh
-./legacy02-longterm_netcdf.sh
+PROJ=mek01-custom RUNDIR="/absolute/path/to/my-run" ./mek01-default_run.sh
 ```
 
-The maintained `mek01` example selects `bifprm.csv`; `mek02` selects its equivalent NetCDF-4 representation, `netcdf/bifprm.nc`. `.txt` remains supported for older input decks. The `legacy02` script uses `LMAPCDF=.TRUE.` with `CRIVCLINC` and `CRIVPARNC`; its `&NMAP` does not specify individual-map filenames. The generated `rivclim.nc` contains `lon`, `lat`, `nextx`, `nexty`, `ctmare`, `elevtn`, `nxtdst`, `rivlen`, and 10-layer `fldhgt`, while `rivpar.nc` contains `rivwth`, `rivhgt`, and `rivman`. These containers were generated from the selected `nextxy_noedge` and `rivwth_merit` inputs. The sample leaves `gdwdly`, `elevslope`, `mask_slope`, and `meansl` disabled, so their optional map data are not required. Both scripts otherwise use the same simulation years, runoff, physical settings, outputs, and restart handoff.
+Both scripts keep their existing sample-rerun policy: they replace only their known generated files in the selected RUNDIR, not the entire directory. Choose another project or explicit RUNDIR to retain an earlier run. Existing outputs under the old root `out/` locations are not moved or deleted by this change. Files unrelated to the selected sample and sibling projects are preserved.
 
-`mek02` replaces its known generated sample files in its own `out/mek02-2year_netcdf/` directory. `legacy02` follows the same simple rerun behavior as `mek02`: it removes only the sample-generated outputs in its dedicated run directory before starting a fresh sequence. Each retains year-specific Namelists, runtime and model logs, console output, NetCDF outputs, and NetCDF Restarts in its respective output directory. The scripts do not keep completion markers or resume an earlier partial run.
+## Mekong default experiment
 
-The earlier Binary-Restart validation run completed both years: 2000 produced `restart2001010100.bin`, which 2001 read before producing `restart2002010100.bin`. The current scripts select NetCDF Restart files instead. The prior individual-map versus consolidated-map comparison found all five output variables (`outflw`, `storge`, `sfcelv`, `flddph`, `fldfrc`) matched exactly for both years: zero unequal values, maximum absolute and relative differences of zero, and no NaN/Inf. Missing-value cells were counted separately (2,249,802 of 3,513,600 cells per variable in 2000; 2,243,655 of 3,504,000 in 2001). The scripts start fresh and overwrite only their known generated products in their dedicated output directories. This is operational compatibility evidence for those earlier Binary-Restart runs, Mekong files, and build, not a validation of the newly selected NetCDF-Restart path or every legacy optional path. See the [model workflow plan](../docs/model_source_workflow_plan.md) and dataset [README](../inp/test-mek_1deg_nc/README.md) for earlier comparisons and limitations.
+`mek01-default_run.sh` uses `src_main/MAIN_cmf`, the tracked 15-minute Mekong map, daily Binary `inp/test-mek_1deg/` forcing and its matching input matrix. It runs from 2000-01-01 00:00 to 2000-02-10 00:00 (40 days, end exclusive), with bifurcations and adaptive stepping enabled and reservoir operation disabled. Its default four-thread setup and scientific settings are unchanged. It writes planned output CTLs before the model and Binary Restart CTLs after successful execution; Float64 Restart visualization copies remain explicitly lossy Float32 products.
+
+## Mekong annual NetCDF experiment
+
+`mek02-2year_netcdf.sh` uses the same `src_main/MAIN_cmf`, built with NetCDF support. It runs 2000–2001 with annual NetCDF forcing from `inp/test-mek_1deg_nc/`, individual NetCDF maps, the Binary input matrix and NetCDF output/Restart. Year two reads the prior year's Restart inside the selected RUNDIR. Years, map selection, output-variable list, timestep and physical settings are unchanged. See the [runoff guide](../inp/README.md#supported-input-formats-and-simulation-settings) for grouping and unit conventions.
+
+The former separate `compile_netcdf.sh` and `legacy02-longterm_netcdf.sh` files are absent from the current checkout; this change does not restore them or change the maintained scripts' executable selection. Historical consolidated-map/Binary-Restart comparison results remain in [the model-source plan](../docs/model_source_workflow_plan.md); they do not validate every current configuration.
+
+## Callers, tutorials and visualization
+
+The output-alias test helper explicitly substitutes RUNDIR and remains compatible. Tutorial01, Tutorial02 and Guide01 run independently and keep their existing tutorial-local output paths. They do not delegate their run directory to these GOSH scripts.
+
+Output-analysis f01 and its shared extractor still default to the previous root `out/mek02-2year_netcdf/` location. They are intentionally not updated in this local task; adapting those callers is deferred to integration. Their existing SOURCE_DIR setting or extractor --source-dir option can identify a run when needed. No fallback or compatibility layer is added.
+
+## Validation and implementation status
+
+The tracked Mekong inputs support small developer runs, while larger data support extended tests. Current output metadata are resolved from `CMF_BASE/variable_table/output_variables.csv` unless `COUTVAR_TABLE` overrides it; maintained runners keep CMF_BASE at the repository root.
+
+Validation is limited to syntax, unchanged Namelist templates and short output-directory probes; no full model simulation or numerical validation is claimed. The [development and distribution design](../docs/development_and_distribution_design.md) records broader unfinished regression/package work. Follow [CONTRIBUTING.md](../CONTRIBUTING.md) for proportionate tests and [Tutorial01](../tutorial/README.md) for learner-facing instructions.

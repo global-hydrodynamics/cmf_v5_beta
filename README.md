@@ -53,7 +53,7 @@ source .venv/bin/activate
 
 The setup helpers ask before making local changes and only diagnose without an interactive terminal. Python setup installs `requirements.txt` and the bundled CMF Colormaps package into `.venv/`; existing external environments are supported through the [Python guide](docs/python_environment.md).
 
-The basic experiment uses the tracked `map/mekong_15min/` map, daily Binary forcing in `inp/test-mek_1deg/`, and their matching input matrix. It runs 40 days from 2000-01-01 to 2000-02-10 (end exclusive), without the large additional-data package. Results go to `out/mek01-default_run/`; reruns replace this sample's known generated outputs. The script must run from `gosh_test/`, as shown above.
+The basic experiment uses the tracked `map/mekong_15min/` map, daily Binary forcing in `inp/test-mek_1deg/`, and their matching input matrix. It runs 40 days from 2000-01-01 to 2000-02-10 (end exclusive), without the large additional-data package. Results go to `gosh_test/out/mek01/` (override the project with `PROJ`, or the complete path with `RUNDIR`); reruns replace this sample's known generated outputs. The script must run from `gosh_test/`, as shown above.
 
 For settings and the two-year NetCDF example, see the [developer execution guide](gosh_test/README.md). For an explained first experiment, use the [Tutorial01 manual](tutorial/tutorial01-get_started/manual_tutorial01-get_started.md). Current v5 execution starts in `gosh_test/`, not the historical `legacy/gosh/`. The full current-revision clean-clone build/run/visualization sequence is not yet verified as an integrated procedure.
 

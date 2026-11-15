@@ -92,3 +92,73 @@ verify fresh-clone model/tutorial/visualization execution, and design future
 CI/package assembly. The acceptance decisions remain [KG-0036](../research/records/knowledge_gaps/KG-0036.md).
 The brief knowledge-gap review adds no new scientific question; no scientific
 or architectural choice is made to hide an ambiguous dependency.
+
+## Completion evidence and changed-file inventory
+
+Focused path/syntax checks and 29 existing unittest cases passed; the map
+registry remains valid (91 entries). Changed Markdown navigation resolves.
+Byte checks preserve pre-existing scientific/data/reference/legacy/history
+files, and the only deleted tracked file is the obsolete CI definition.
+Guide01 full numerical/plot execution was not run because its Python scientific
+dependencies are unavailable in the inspected environment. See VR-0150 for
+precise limits.
+
+During this task an external Git operation published initial_cleanup at
+9f08956e. The agent did not issue commit/push and kept that history. Later
+completion-record and navigation edits remain reviewable. Additional ignored
+local build/run artifacts appeared externally and are preserved, not treated
+as this task's model-run evidence.
+
+The following inventory is relative to starting revision 8d557898 and includes
+the preceding README work preserved by this task. It is not an assertion that
+every line in that combined README diff originated in this cleanup.
+
+- `.github/workflows/map-sample-validation.yml` — removed configuration only
+- `AGENTS.md`
+- `CONTRIBUTING.md`
+- `README.md`
+- `Versions.md`
+- `archive_src.sh`
+- `config/README.md`
+- `docs/dev_status.md`
+- `docs/development_and_distribution_design.md`
+- `docs/map_allocation_migration_plan.md`
+- `docs/map_data_inventory.md`
+- `docs/map_data_tools_plan.md`
+- `docs/map_params_migration_plan.md`
+- `docs/migration_consistency_audit.md`
+- `docs/model_source_workflow_plan.md`
+- `docs/runoff_data_inventory.md`
+- `etc/README.md`
+- `etc/downscale_flddph/ReadMe.md`
+- `etc/levee_params/README.md`
+- `etc/n-year_flood_depth/README.md`
+- `etc/options_HPC/README.md`
+- `etc/result_mapping/README.md`
+- `etc/runoff_preset/README.md`
+- `etc/validation/ReadMe.md`
+- `gosh_test/README.md`
+- `inp/ERA5-Land_download/ReadMe.md`
+- `inp/test-glb_1deg/README.md`
+- `inp/test-jpn_6min_1hr/README.md`
+- `inp/test-mek_1deg/README.md`
+- `map/src/src_dam/ReadMe.md`
+- `map/src/src_param/README.md`
+- `map/src/src_region/README.md`
+- `map/src/src_region/README.old.md`
+- `research/development_tasks.csv`
+- `research/events.csv`
+- `research/records/decisions/ADR-0011-retire-transition-ci.md`
+- `research/records/validation_runs/VR-0150.md`
+- `research/validation_runs.csv`
+- `s01-setup_fortran.sh`
+- `src_main/README.md`
+- `tools/README.md`
+- `tutorial/guide01_workflow_example/a01-analyze_outputs.py`
+- `tutorial/guide01_workflow_example/a02-prepare_downscale_input.py`
+- `tutorial/guide01_workflow_example/design/run-experiment-reference.sh`
+- `tutorial/guide01_workflow_example/run-experiment.sh`
+- `tutorial/guide01_workflow_example/s01-prepare_map.py`
+- `tutorial/guide01_workflow_example/s04-downscale_event.sh`
+- `tutorial/guide01_workflow_example/v01-plot_results.py`
+- `variable_table/map_metadata_spec.md`

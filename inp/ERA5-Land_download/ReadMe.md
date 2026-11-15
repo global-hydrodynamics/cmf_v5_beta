@@ -2,7 +2,7 @@
 
 This directory contains a workflow for downloading **ERA5-Land runoff** from the Copernicus Climate Data Store (CDS), converting the accumulated source values to CaMa-Flood forcing files, and writing a configuration summary. It is not a general ERA5 atmospheric-data downloader.
 
-The raw January 2000 Japan NetCDF under `ori_japan/` is a source example. It is not a CaMa-Flood-ready runoff product. The converted products are in `ERA5land-jpn_nc/` and `ERA5land-jpn_bin/`; the binary directory contains a tracked CTL and report, while its binary records are ignored by Git. See [the sample consistency note](#tracked-japan-example-and-validation-status).
+The raw January 2000 Japan NetCDF under `ori_japan/` is a source example. It is not a CaMa-Flood-ready runoff product. The converted products are in `ERA5land-jpn_nc/` and `ERA5land-jpn_bin/`; the binary directory contains a tracked CTL and report, while its binary records are ignored by Git. See [the sample consistency note](#5-tracked-japan-example-and-validation-status).
 
 ## 1. Tools and files
 

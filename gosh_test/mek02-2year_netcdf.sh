@@ -1,16 +1,17 @@
 #!/bin/sh
 # Run yearly Mekong simulations with individual NetCDF maps.
-# NetCDF runoff/output and annual Binary restarts connect the two runs.
-# Run from gosh_test/: ./mek02-longterm_netcdf.sh
+# NetCDF runoff/output and annual NetCDF restarts connect the two runs.
+# Run from gosh_test/: ./mek02-2year_netcdf.sh
 set -eu
 
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 CMF_BASE=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
 
-PROJ="mek02-2year_netcdf"
-RUNDIR="${CMF_BASE}/out/${PROJ}" # Dedicated individual-map test output directory.
-
 # -------------------------- User settings ------------------------------
+# Project/output settings. ${VAR:-default} uses the environment value when nonempty.
+PROJ=${PROJ:-mek02} # Project name; override with PROJ=name when launching.
+RUNDIR=${RUNDIR:-"${CMF_BASE}/gosh_test/out/${PROJ}"} # Explicit RUNDIR takes precedence.
+
 # Simulation years are inclusive; the model ends at January 1 of END_YEAR+1.
 START_YEAR=2000                  # First simulation year; starts at January 1 00:00.
 END_YEAR=2001                    # Last simulation year; extend to continue the annual sequence.
@@ -67,6 +68,7 @@ printf '\n==================================================\n'
 printf '[STEP 1/3] Prepare the individual map test\n'
 printf '==================================================\n'
 printf 'CMF_BASE = %s\n' "$CMF_BASE"
+printf 'PROJ = %s\n' "$PROJ"
 printf 'RUNDIR = %s\n' "$RUNDIR"
 printf 'MAPDIR = %s\n' "$MAPDIR"
 printf 'RUNOFF_DIR = %s\n' "$RUNOFF_DIR"
