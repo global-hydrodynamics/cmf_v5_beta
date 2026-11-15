@@ -13,7 +13,7 @@ New CaMa-Flood-generated NetCDF data use NetCDF-4 with lossless zlib/deflate lev
 | `map/tools/code/convert_highres_binary_to_netcdf.py` | NetCDF-4; configurable level, default 3; shuffle enabled | Existing tile files are skipped; use `--force` to regenerate. |
 | `map/tools/code/create_legacy_netcdf_map.py` | NetCDF-4; deflate level 3, shuffle enabled | Writes consolidated legacy-layout map containers. |
 | `inp/test-mek_1deg_nc/s00-convert_binary_to_netcdf.py` | NetCDF-4 via `ncgen` and `nccopy -d 3 -s` | Preserves source Float32 runoff values, grid, and CF time metadata. |
-| `inp/ERA5-Land_download/convert_CMF_nc.py` | NetCDF-4 via xarray/NetCDF4; deflate level 3, shuffle enabled | Optional ERA5-Land conversion workflow. |
+| `inp/download_ERA5-Land/convert_CMF_nc.py` | NetCDF-4 via xarray/NetCDF4; deflate level 3, shuffle enabled | Optional ERA5-Land conversion workflow. |
 
 ## Format exceptions and excluded writers
 

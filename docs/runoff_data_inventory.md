@@ -1,5 +1,7 @@
 # CaMa-Flood v5 Runoff Input Data Tools: Phase A Inventory
 
+> Current workflow: [ERA5-Land NetCDF tools](../inp/download_ERA5-Land/README.md). The former `ERA5-Land_download/` tool layout and Binary conversion below describe historical inventory evidence; Binary conversion is retired, and current data live in dataset directories under `inp/`.
+
 > Migration note (2026-11-15): Historical branch names, v4 Issue/PR references and dated approvals below are preserved evidence, not current branch assignments. Current v5 development uses cmf_v5_beta/main, src_main/, config/, gosh_test/ and tools/; old root model/build/run files are under legacy/. See [current status](dev_status.md) and [the migration audit](migration_consistency_audit.md).
 
 **Status:** Phase A inventory, 2026-11-01; supplemented by maintainer-assigned Phase B/Phase C registry and ERA5-Land workflow tasks on 2026-11-02.
@@ -182,7 +184,7 @@ The Phase A inventory was completed on 2026-11-01. The maintainer later assigned
 
 The maintainer assigned a bounded initial registry and `inp/README.md` update on `feature/runoff-data-tools`. `inp/runoff_datasets.csv` uses one row per product, with separate rows for the raw ERA5-Land source and the converted CaMa-Flood products. Products on the same grid share a `ROFFTAG`. Package-only v4.30 examples are distinguished from tracked repository samples and ignored workstation-local binary records. No large data were copied or added.
 
-The registry covers the external, CaMa-compatible ELSE_GPCC forcing, its `1deg_test` extraction, the legacy `test_1deg` sample, `test_15min_nc`, `test_jpn_1hr`, the raw ERA5-Land Japan sample, and its converted NetCDF and binary samples. Grid dimensions and cell-edge bounds were checked against CTLs or NetCDF coordinates and the `param_inpmat_generate` edge/resolution arithmetic. Input units and recommended `DROFUNIT` values were checked against data metadata and the existing `gosh/` settings. `inp/validate_runoff_datasets.py` checks CSV structure, unique identifiers, grid dimensions, tag consistency, and configuration values. These checks establish metadata consistency only, not scientific validation.
+The registry covers the external, CaMa-compatible ELSE_GPCC forcing, its `1deg_test` extraction, the legacy `test_1deg` sample, `test_15min_nc`, `test_jpn_1hr`, the raw ERA5-Land Japan sample, and its converted NetCDF and binary samples. Grid dimensions and cell-edge bounds were checked against CTLs or NetCDF coordinates and the `param_inpmat_generate` edge/resolution arithmetic. Input units and recommended `DROFUNIT` values were checked against data metadata and the existing `gosh/` settings. `inp/tools/validate_runoff_datasets.py` checks CSV structure, unique identifiers, grid dimensions, tag consistency, and configuration values. These checks establish metadata consistency only, not scientific validation.
 
 ### Questions for maintainer review
 

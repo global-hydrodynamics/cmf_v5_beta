@@ -4,6 +4,8 @@
 
 set -eu
 
+# User settings
+
 # Source data and target grid. Keep the source path relative and read-only.
 SOURCE_DIR="../test_jpn_1hr"
 WEST=123
@@ -15,6 +17,10 @@ TARGET_RESOLUTION="0.1"
 START_DATE="2007-09-03"
 END_DATE="2007-09-09"
 HOURS_PER_DAY=24
+
+# ================================================================
+# User settings end here
+# ================================================================
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 

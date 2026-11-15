@@ -2,7 +2,7 @@
 
 The `inp/` directory contains tools for preparing runoff forcing used by CaMa-Flood. Runoff supplies water per unit land area over time; CaMa-Flood converts it to a flow rate for routing through the river network. The GitHub repository includes an ERA5-Land download and conversion workflow with small Japan examples. Distribution packages also include sample forcing for selected `gosh/` runs. Obtain or prepare additional forcing when the chosen experiment requires data beyond those supplied with the package.
 
-The GitHub repository also tracks the Binary `test-mek_1deg/` and annual NetCDF `test-mek_1deg_nc/` samples for minimal Mekong development runs; these do not require the larger additional-data package. The current v5 execution examples are under `gosh_test/`. Package Additional Data and the generated user package have distinct roles in [the maintained design](../docs/development_and_distribution_design.md); v5 assembly is planned, not an existing download/build procedure.
+The GitHub repository also tracks the Binary `repo-mek_1deg_bin/` and annual NetCDF `repo-mek_1deg/` samples for minimal Mekong development runs; these do not require the larger additional-data package. The current v5 execution examples are under `gosh_test/`. Package Additional Data and the generated user package have distinct roles in [the maintained design](../docs/development_and_distribution_design.md); v5 assembly is planned, not an existing download/build procedure.
 
 For format and compression settings used by NetCDF files generated with v5 tools, see the shared [NetCDF output conventions](../docs/netcdf_output_conventions.md). External NetCDF forcing inputs are not required to use those output settings.
 
@@ -17,16 +17,19 @@ For format and compression settings used by NetCDF files generated with v5 tools
 
 ## Directory organization
 
+NetCDF is the standard v5 input format: new NetCDF dataset names normally omit `_nc`, while Binary variants use `_bin` where necessary. Existing sample names remain unchanged until their compatibility is reviewed.
+
 | Path | Purpose and contents |
 | --- | --- |
-| `ERA5-Land_download/` | Shell and Python tools to download ERA5-Land runoff from the Copernicus Climate Data Store (CDS), including a configurable global profile, and convert it to CaMa-Flood NetCDF or plain binary. See the [detailed ERA5-Land guide](ERA5-Land_download/ReadMe.md). |
-| `ERA5-Land_download/ERA5land-glb-nc/` | Optional, locally downloaded global ERA5-Land source NetCDF. The two-day format-check sample can be read directly by CaMa-Flood with NetCDF input enabled and a matching input matrix; it is not tracked or distributed. See the ERA5-Land guide and registry entry. |
+| `tools/` | Shared runoff dataset helpers: [`extract_ELSE_GPCC.py`](tools/extract_ELSE_GPCC.py) extracts regional daily data from global annual NetCDF, and [`validate_runoff_datasets.py`](tools/validate_runoff_datasets.py) checks the input registry without reading datasets. Execution examples appear below. |
+| `download_ERA5-Land/` | Shell settings/job control and standalone Python CDS/NetCDF tools. No data are stored here; see the [ERA5-Land guide](download_ERA5-Land/README.md). Binary conversion is retired. |
+| `ERA5land-glb_2day/` | Destination for the optional global two-day sample: source files in `original/`, converted monthly NetCDF and logs in the dataset root/subdirectories. This refactor does not download or validate a new global sample. Git-ignored. |
 | `ERA5_land/daily/` | Canonical north-south half-grid geometry (90° to −90° cell centers; 3,600 × 1,801 at 0.1°). Only one local daily-named binary sample (1960-01-01) is currently present; its units, missing-value meaning, longitude order, and full coverage are unconfirmed. |
 | `ERA5_land/Roff/` | Legacy 1981–2020 daily binary series, 3,600 × 1,800. The maintainer confirms it omits the north-south half-grid shift and is not the canonical geometry. Neither series is tracked or distributed; see both registry entries. |
-| `ELSE_GPCC/` | External long-term global 1-degree daily ELSE_GPCC runoff associated with Kim et al. (2009). The `Roff/` data are not tracked by Git and are not included in the source repository or distribution package; only `Roff.ctl` metadata is tracked. The files are binary float32 runoff in `mm/day`, global 360 × 180, with N-to-S row order and `undef=-999`. The tracked CTL time count conflicts with observed source filenames; see the registry notes. [Kim et al. (2009)](https://doi.org/10.1029/2009GL039006). |
-| `test-glb_1deg/` | Reproducible global 1-degree, daily two-year test extraction (2000–2001) from `ELSE_GPCC/Roff/`. Scripts and metadata are tracked; generated `Roff/` binaries are Git-ignored pending redistribution review. See the [sample README](test-glb_1deg/README.md). |
-| `test-mek_1deg/` | Complete 1-degree Mekong runoff sample, including 11,323 daily binary files, CTL, extraction scripts, and documentation; tracked in GitHub and included in the distribution package. See the [sample README](test-mek_1deg/README.md). |
-| `test-mek_1deg_nc/` | Derived 2000–2005 Mekong annual NetCDF sample, converted from the same daily source files as `test-mek_1deg/`. See the [dataset README](test-mek_1deg_nc/README.md) and registry entry. |
+| `ELSE_GPCC/` | Optional global daily NetCDF runoff, 1979–2010, one `runoffYYYY.nc` file per year. Supplied through the separate additional-data store and ignored by Git; see the [package catalog](../package/package_data.csv). Formerly named `ELSE_GPCC_nc/`; the previous Binary dataset at this path has been removed. Redistribution conditions and model-input validation remain unconfirmed. |
+| `test-glb_1deg/` | Historical global 1-degree, daily two-year test extraction (2000–2001) from the former Binary `ELSE_GPCC/Roff/`. Regeneration requires a separately supplied Binary source; the new NetCDF directory cannot be used directly. Scripts and metadata are tracked; generated `Roff/` binaries are Git-ignored pending redistribution review. See the [sample README](test-glb_1deg/README.md). |
+| `repo-mek_1deg_bin/` | Minimal Git-tracked Mekong Binary sample for mek01: 60 daily fields for January–February 2000, grouped into two monthly files (144,000 bytes total). See the [sample README](repo-mek_1deg_bin/README.md). |
+| `repo-mek_1deg/` | Long-term Mekong NetCDF test data, 1979–2010: 32 annual files extracted from global `ELSE_GPCC/`. See the [dataset README](repo-mek_1deg/README.md) for parallel generation and validation. |
 
 ## Runoff Dataset Registry
 
@@ -40,22 +43,22 @@ The table below summarizes the sample locations and review state. The CSV is the
 
 | Package directory | Format and grid/time coverage | Unit evidence and relevant example |
 | --- | --- | --- |
-| `ELSE_GPCC/Roff/` | External source product: global 360 × 180 1-degree daily binary data, nonempty daily files from 1979-01-01 through 2010-12-31 plus a zero-byte file dated 2011-01-01; `mm/day`, little-endian float32, N-to-S, `undef=-999`. It is associated with Kim et al. (2009). Source files are not in Git or distribution packages. | `Roff.ctl` declares 7,671 records starting 1981-01-01, inconsistent with filename coverage; see registry `notes`. |
+| `ELSE_GPCC/` | Global annual NetCDF runoff for 1979–2010. The inspected 2000 file has `runoff(time, latitude, longitude)`, float32 `mm day-1`, missing value `-999`, and a 180 × 360 grid. | Header inspection only; values and model ingestion have not been validated. This replaces the former Binary directory, not the Binary extraction interfaces. |
 | `test-glb_1deg/` | Regenerable global 360 × 180 daily plain-binary sample (`Roff____YYYYMMDD.one`) for 2000-01-01 through 2001-12-31, extracted byte-for-byte from ELSE_GPCC. | `mm/day`, `IFRQ_INP=24`, `DROFUNIT=86400000`; scripts and metadata are tracked, generated data are ignored. See the sample README. |
 | `test_1deg/` | Legacy package sample on the same global 1-degree grid and dates. The maintainer identifies it as a two-year extraction from ELSE_GPCC. | The `.ctl` declares runoff in `mm/day`. `gosh/test1-glb_15min.sh` uses `IFRQ_INP=24` and `DROFUNIT=86400000`. |
-| `test-mek_1deg/` | Mekong 20 × 30 global-grid subset (90–110°E, 5–35°N); 11,323 daily files for 1980-01-01 through 2010-12-31, generated from `ELSE_GPCC/Roff/`. | Source values remain float32 `mm/day`, `NtoS`, `undef=-999`; use the local README for extraction and model settings. The complete sample is tracked in Git and included in the distribution package. |
-| `test-mek_1deg_nc/` | Derived NetCDF version of the Mekong 1-degree sample, split into annual files for 2000–2005 (366 days in 2000 and 2004; 365 days in other listed years). Each file contains `runoff(time, latitude, longitude)` on the same 20 × 30 grid, with CF daily time bounds. | Float32 `mm day-1`, longitude centers 90.5–109.5°E, descending latitude centers 34.5–5.5°N, missing value `-999`. The initial 2000–2001 conversion was checked for exact float32 round-trip; the current expanded file set is Git-tracked, but its additional years were not numerically revalidated in this documentation task. Inclusion in a future v5 downloadable package remains to be decided because the v5 packaging workflow is not established. |
+| `repo-mek_1deg_bin/` | Mekong 20 × 30 grid (90–110°E, 5–35°N); daily January–February 2000 data in two monthly Binary files. | Float32 `mm/day`, N-to-S, little-endian, missing value `-999`; `CROFFREQ=MON`, `IFRQ_INP=24`, `DROFUNIT=86400000`. Replaces the former long daily Binary collection. |
+| `repo-mek_1deg/` | Mekong 20 × 30 daily NetCDF runoff for 1979–2010, one file per year (32 files, about 15.6 MiB). | Float32 `mm day-1`, longitude centers 90.5–109.5°E, descending latitude 34.5–5.5°N, missing value `-999`, CF daily bounds; `CROFFREQ=YEAR`. All regional values were checked against global NetCDF; this is extraction fidelity, not model/scientific validation. |
 | `test-E2O_15min_nc/` | NetCDF files for 2000 and 2001; `Runoff(time, lat, lon)` on a 0.25-degree grid (1440 × 600; edges 180°W–180°E, 60°S–90°N), daily time coordinate. | The sample NetCDF metadata declares `units="mm day-1"`. `gosh/test2-conus_06min_netcdf.sh` uses `IFRQ_INP=24` and `DROFUNIT=86400000`. |
 | `test_jpn_1hr/` | Original/source reference: daily binary files (`runoff_YYYYMMDD.bin`) plus `runoff.ctl`; Japan 1/60-degree grid (1500 × 1320), 1-hour records for 2007-09-03 through 2007-09-09. Locally available through an ignored symlink; large binaries are not tracked. | Maintainer-confirmed provenance: 1-arcmin simulations using the Today’s Japan system, provided by Yoshimura Laboratory. The maintainer identifies the original CTL `mm/day` label as erroneous and assesses the values as `mm/hour`, consistent with `gosh/test3-jpn_fcast.sh` (`IFRQ_INP=1`, `DROFUNIT=3600000`); this interpretation is not independently verified. |
 | `test-jpn_6min_1hr/` | Compact derived sample: seven daily binary files, 250 × 220 at 0.1° (6 arcmin), 24 hourly records per day for 2007-09-03 through 2007-09-09. Produced by 6 × 6 area-weighted aggregation from `test_jpn_1hr/`. | Maintainer confirms redistribution permission. Values and hourly ordering are retained without unit conversion. The new CTL uses `mm/hour` per the maintainer’s assessment that the original `mm/day` label was erroneous; this interpretation is not independently verified. See the local README for reproduction and validation. |
-| `ERA5-Land_download/ERA5land-jpn_nc/` | Converted monthly CaMa-Flood NetCDF sample with variable `runoff`. | Tracked in the repository; time labels follow ERA5-Land valid-time semantics. First-record attribution and period-boundary coverage are not independently validated (KG-0019). |
-| `ERA5-Land_download/ERA5land-jpn_bin/` | CTL and configuration report for converted daily-file binary output. | The maintainer reports recalculating 31 daily files with one grid per file; this matches the 31 daily NetCDF timestamps and the 24-hour CTL. Binary records remain untracked in Git. |
+| `ERA5land-jpn_1month/` | Japan January 2000 source in `original/`, converted monthly `runoff_200001.nc` and logs outside the tool directory. | Existing sample relocated without regeneration; generated data are Git-ignored. KG-0019 temporal attribution remains unresolved. |
+| `ERA5land-jpn_legacy_bin/` | Preserved historical Binary CTL/report only; no maintained conversion workflow. | Binary conversion was retired; use the NetCDF workflow. These local historical files are Git-ignored. |
 | `ERA5_land/daily/` | Canonical north-south geometry. The only observed local file, `ERA5-Land_Runoff_daily_19600101.bin`, is headerless float32 with 3,600 × 1,801 values (25,934,400 bytes). | Maintainer confirms the half-grid shift: input-grid limits 90.05 to −90.05 produce centers 90 to −90 under the map-tool convention. Units, missing-value meaning, longitude order, provenance, and long-term coverage are unconfirmed; not ready for a configured simulation. |
 | `ERA5_land/Roff/` | Legacy 1981–2020 global daily binary series, 3,600 × 1,800 values per date. | The maintainer confirms the north-south half-grid shift is absent, so this is not the canonical daily geometry. Existing legacy input settings use 90/−90 limits (centers 89.95…−89.95). Metadata and scientific validity remain unverified; see `runoff_datasets.csv`. |
 
 ### Data Sources and Acquisition
 
-Package-only data are not added by cloning the GitHub repository. Obtain the v4.30 distribution package or prepare equivalent inputs separately, then check the actual files against the selected run script. For source and acquisition details, see the [Copernicus ERA5-Land dataset page](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-land) and the [ERA5-Land workflow guide](ERA5-Land_download/ReadMe.md). The [v5 execution guide](../gosh_test/README.md) describes current maintained runs; the listed package-only examples refer to v4.30 data, not an available v5 package. File spacing alone does not establish physical units or whether values are rates or accumulated depths; see [Choosing `DROFUNIT`](#choosing-drofunit).
+Package-only data are not added by cloning the GitHub repository. Obtain the v4.30 distribution package or prepare equivalent inputs separately, then check the actual files against the selected run script. For source and acquisition details, see the [Copernicus ERA5-Land dataset page](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-land) and the [ERA5-Land workflow guide](download_ERA5-Land/README.md). The [v5 execution guide](../gosh_test/README.md) describes current maintained runs; the listed package-only examples refer to v4.30 data, not an available v5 package. File spacing alone does not establish physical units or whether values are rates or accumulated depths; see [Choosing `DROFUNIT`](#choosing-drofunit).
 
 ## Preparing the Input Matrix
 
@@ -80,7 +83,7 @@ Copy the workflow into the target map's `script_params/` directory, edit the set
 The generated pair is linked: set `CDIMINFO` in `NDIMTIME` to `inpdim_<ROFFTAG>.txt` and `CINPMAT` in `NFORCE` to `inpmat_<ROFFTAG>.bin`. The descriptor supplies the map/input dimensions and geographic bounds used with the matrix. Both files are map-specific and must be regenerated for another target map. See the [Map Tools guide](../map/tools/README.md) and [parameter workflow guide](../map/tools/script_params/README.md) for build and map-local setup details. If you optionally add a registry row, check its CSV structure and grid arithmetic with the standard-library-only checker:
 
 ```sh
-python3 inp/validate_runoff_datasets.py
+python3 inp/tools/validate_runoff_datasets.py
 ```
 
 The checker does not require package data, CDS access, or NetCDF Python packages.
@@ -125,7 +128,7 @@ See the [map overview](../map/README.md) and [Map Tools parameter workflow guide
 
 ## ERA5-Land source and conversion workflow
 
-The repository includes ERA5-Land-specific tools to retrieve runoff from CDS and convert it to CaMa-Flood NetCDF or plain-binary forcing. `ERA5-Land_download/t01-download-global.sh` downloads global monthly NetCDF; `ERA5-Land_download/t03-convert-global-2day-bin.sh` demonstrates binary conversion of the local two-day sample. The [ERA5-Land guide](ERA5-Land_download/ReadMe.md) documents the settings, commands, formats, dependencies, time-semantics caveat, and verification limits. The separately linked `ERA5_land/Roff/` lab series is an existing external product, not an output regenerated by these scripts. The term ERA5-Land is used deliberately; standard ERA5 atmospheric reanalysis is a separate product.
+The ERA5-Land-specific [download and NetCDF conversion workflow](download_ERA5-Land/README.md) separates Shell settings/jobs from Python requests and conversion. `sample-global_2day.sh` and `sample-japan_1month.sh` offer complete workflows with `--dry-run`; data and logs belong under `inp/ERA5land-*/`, outside the tool directory. Binary conversion is retired. The separate `ERA5_land/Roff/` laboratory series is not regenerated by these scripts. The term ERA5-Land is deliberate; ERA5 atmospheric reanalysis is a separate product.
 
 ## Supported Input Formats and Simulation Settings
 
@@ -244,12 +247,59 @@ These checks distinguish configuration mismatches from software defects; a suspi
 
 **TODO:** Develop a product-independent tool that inspects runoff files and produces a readable CaMa-Flood configuration summary. Where metadata permit, it should identify the grid, dimensions, spacing, bounds, longitude convention, row order, time interval, variable units, and temporal accumulation semantics; suggest `GRSIZEIN`, `WESTIN`, `EASTIN`, `NORTHIN`, `SOUTHIN`, `OLAT`, `IFRQ_INP`, and `DROFUNIT`; and warn when values cannot be inferred reliably. Users should be able to review and copy the summary into their preprocessing and run scripts.
 
-`ERA5-Land_download/make_CMF_runoff_info.py` already generates related information for the ERA5-Land conversion workflow and can inspect the converted NetCDF or binary/`.ctl` formats it supports. Its settings, assumptions, and call sites are part of that workflow; it is not established as a fully generic analyzer for arbitrary runoff products. The TODO is a future development direction only; no analyzer is implemented here.
+`download_ERA5-Land/make_CMF_runoff_info.py` already generates related information for the ERA5-Land conversion workflow and inspects the converted NetCDF format. Its settings, assumptions, and call sites are part of that workflow; it is not established as a fully generic analyzer for arbitrary runoff products. The TODO is a future development direction only; no analyzer is implemented here.
 
 ## Related documentation
 
-- [ERA5-Land download and conversion guide](ERA5-Land_download/ReadMe.md)
+- [ERA5-Land download and conversion guide](download_ERA5-Land/README.md)
 - [Map and Input Matrix overview](../map/README.md)
 - [v5 Input Matrix generation workflow](../map/tools/script_params/s03-generate_inpmat.sh)
 - [V5 execution guide](../gosh_test/README.md)
 - [V5 forcing implementation](../src_main/cmf_ctrl_forcing_mod.F90)
+
+## Regional extraction from global NetCDF
+
+[`tools/extract_ELSE_GPCC.py`](tools/extract_ELSE_GPCC.py) generalizes the former Binary-window
+extractor to annual global `ELSE_GPCC/runoffYYYY.nc` inputs. NumPy and netCDF4
+are required (see the root requirements). Run from the repository root:
+
+```sh
+python3 inp/tools/extract_ELSE_GPCC.py --input-dir inp/ELSE_GPCC \
+  --output-dir /tmp/mekong-runoff --west 90 --east 110 --south 5 --north 35 \
+  --start-date 2000-01-01 --end-date 2000-02-29 --format binary --file-unit month
+```
+
+All shown arguments are required. `--format` accepts `binary` or `netcdf`;
+`--file-unit` accepts `day`, `month`, or `year`. Dates are inclusive and may span
+years. Grouping never averages daily values. Filenames are
+`Roff____YYYYMMDD.one`, `Roff____YYYYMM.one`, `Roff____YYYY.one` for Binary,
+or `runoffYYYYMMDD.nc`, `runoffYYYYMM.nc`, `runoffYYYY.nc` for NetCDF;
+use the corresponding Reader grouping `DAY`, `MON`, or `YEAR`.
+
+Monthly/yearly files retain the entire calendar group's daily slots. For a
+partial group, dates outside the requested interval are filled with the source
+missing value, never with zero or unrequested source data. This keeps record 1
+at the calendar period start as the Reader requires. Run simulations only within
+the requested interval; padded dates are not valid forcing. NetCDF records have
+midday CF time coordinates and midnight-to-midnight bounds, using a Gregorian
+calendar. Binary records are little-endian float32, longitude fastest and rows
+north-to-south. Configure the compiler/runtime to read little-endian files on
+other architectures. NetCDF uses lossless deflate level 3 and shuffle; runoff
+units and missing values are preserved.
+
+Bounds specify **cell edges**, not center coordinates; all edges must align
+with the regular source grid, otherwise extraction fails without rounding or
+interpolation. Both -180–180 and 0–360 source longitude axes are supported.
+For a dateline-crossing region, give east greater than west on an unwrapped
+branch, for example `--west 170 --east 190`. Output longitudes use that branch
+and increase eastward; latitude always decreases north-to-south. Source daily
+CF time bounds and unpacked float32 runoff are checked. Missing dates, changed
+grids between years, unsupported calendars and existing output filenames are
+errors. Completed files are published without overwriting; inputs are read-only.
+Only a regional daily slice is loaded at once. If a later group fails, earlier
+completed groups remain; inspect them before retrying.
+
+`ELSE_GPCC/` is optional global additional data, ignored by Git. In contrast,
+`repo-mek_1deg_bin/` is the small Git-tracked mek01 fixture. The former Binary
+collection's extraction scripts have been replaced by this shared CLI; historical
+Binary-to-NetCDF regeneration workflows may require separate integration work.

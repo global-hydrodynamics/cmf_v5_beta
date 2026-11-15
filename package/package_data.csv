@@ -1,0 +1,2 @@
+dataset_id,source_path,target_path,file_pattern,format,description
+ELSE_GPCC,inp/ELSE_GPCC,inp/ELSE_GPCC,runoff*.nc,NetCDF-4,"Global ELSE_GPCC daily runoff, 1979-2010 (32 years), one annual file."

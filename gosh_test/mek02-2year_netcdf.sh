@@ -17,7 +17,7 @@ START_YEAR=2000                  # First simulation year; starts at January 1 00
 END_YEAR=2001                    # Last simulation year; extend to continue the annual sequence.
 
 # Runoff dataset and its matching map-specific input matrix.
-ROFFTAG="test-mek_1deg_nc"     # Selects inp/test-mek_1deg_nc/ with one NetCDF file per year.
+ROFFTAG="repo-mek_1deg"     # Selects inp/repo-mek_1deg/ with one NetCDF file per year.
 INPMAT_TAG="test-mek_1deg"     # Selects the existing input matrix for the same 1-degree grid.
 
 # Map input files; LMAPCDF=.FALSE. makes the reader select Binary or NetCDF from each extension.

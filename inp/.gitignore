@@ -1,0 +1,16 @@
+# Additional datasets supplied by the distribution package.
+# These files are managed separately from the Git repository.
+/ELSE_GPCC/
+
+
+# ERA5-Land datasets contain downloaded/converted NetCDF, reports and run logs.
+# Keep them outside the tool directory and out of source-control commits.
+/ERA5land-*/
+# The same ERA5-Land output layout is ignored when users choose a custom dataset name.
+/*/original/
+/*/logs/
+/*/runoff_*.nc
+/*/runoff_info_CaMaFlood.txt
+# Python bytecode from the download tools is a local generated artifact.
+/download_ERA5-Land/**/__pycache__/
+/download_ERA5-Land/**/*.pyc
