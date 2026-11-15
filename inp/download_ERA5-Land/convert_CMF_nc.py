@@ -94,6 +94,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--clip-negative", action="store_true", default=True, help="Clip negative increments to zero.")
     parser.add_argument("--no-clip-negative", action="store_false", dest="clip_negative")
+    parser.add_argument("--require-complete-days", action="store_true", help="Require exactly one record at each expected timestep from 00 UTC through the final day.")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite output file.")
     parser.add_argument("--dry-run", action="store_true", help="List input files and exit.")
 
@@ -409,6 +410,13 @@ def main() -> int:
 
         ds_raw = open_inputs(files)
         ds_out = build_output_dataset(ds_raw, args, start, end)
+        if args.require_complete_days:
+            expected = pd.date_range(start.isoformat(), (end + timedelta(days=1)).isoformat(),
+                                     freq=f"{args.timestep_hours}h", inclusive="left")
+            actual = pd.DatetimeIndex(ds_out["time"].values)
+            if not actual.equals(expected):
+                raise ValueError("Incomplete or duplicate daily time records: expected each timestep "
+                                 "exactly once from 00 UTC; no records are padded or synthesized.")
 
         save_output(
             ds_out,

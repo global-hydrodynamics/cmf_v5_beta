@@ -48,10 +48,8 @@ The table below summarizes the sample locations and review state. The CSV is the
 | `test_1deg/` | Legacy package sample on the same global 1-degree grid and dates. The maintainer identifies it as a two-year extraction from ELSE_GPCC. | The `.ctl` declares runoff in `mm/day`. `gosh/test1-glb_15min.sh` uses `IFRQ_INP=24` and `DROFUNIT=86400000`. |
 | `repo-mek_1deg_bin/` | Mekong 20 × 30 grid (90–110°E, 5–35°N); daily January–February 2000 data in two monthly Binary files. | Float32 `mm/day`, N-to-S, little-endian, missing value `-999`; `CROFFREQ=MON`, `IFRQ_INP=24`, `DROFUNIT=86400000`. Replaces the former long daily Binary collection. |
 | `repo-mek_1deg/` | Mekong 20 × 30 daily NetCDF runoff for 1979–2010, one file per year (32 files, about 15.6 MiB). | Float32 `mm day-1`, longitude centers 90.5–109.5°E, descending latitude 34.5–5.5°N, missing value `-999`, CF daily bounds; `CROFFREQ=YEAR`. All regional values were checked against global NetCDF; this is extraction fidelity, not model/scientific validation. |
-| `test-E2O_15min_nc/` | NetCDF files for 2000 and 2001; `Runoff(time, lat, lon)` on a 0.25-degree grid (1440 × 600; edges 180°W–180°E, 60°S–90°N), daily time coordinate. | The sample NetCDF metadata declares `units="mm day-1"`. `gosh/test2-conus_06min_netcdf.sh` uses `IFRQ_INP=24` and `DROFUNIT=86400000`. |
 | `test_jpn_1hr/` | Original/source reference: daily binary files (`runoff_YYYYMMDD.bin`) plus `runoff.ctl`; Japan 1/60-degree grid (1500 × 1320), 1-hour records for 2007-09-03 through 2007-09-09. Locally available through an ignored symlink; large binaries are not tracked. | Maintainer-confirmed provenance: 1-arcmin simulations using the Today’s Japan system, provided by Yoshimura Laboratory. The maintainer identifies the original CTL `mm/day` label as erroneous and assesses the values as `mm/hour`, consistent with `gosh/test3-jpn_fcast.sh` (`IFRQ_INP=1`, `DROFUNIT=3600000`); this interpretation is not independently verified. |
-| `test-jpn_6min_1hr/` | Compact derived sample: seven daily binary files, 250 × 220 at 0.1° (6 arcmin), 24 hourly records per day for 2007-09-03 through 2007-09-09. Produced by 6 × 6 area-weighted aggregation from `test_jpn_1hr/`. | Maintainer confirms redistribution permission. Values and hourly ordering are retained without unit conversion. The new CTL uses `mm/hour` per the maintainer’s assessment that the original `mm/day` label was erroneous; this interpretation is not independently verified. See the local README for reproduction and validation. |
-| `ERA5land-jpn_1month/` | Japan January 2000 source in `original/`, converted monthly `runoff_200001.nc` and logs outside the tool directory. | Existing sample relocated without regeneration; generated data are Git-ignored. KG-0019 temporal attribution remains unresolved. |
+| `repo-ERA5land-jpn_hourly/` | Planned Japan hourly NetCDF fixture: September 1–10, 2007, 120–150°E/20–50°N, ten daily files. | [Dataset specification](repo-ERA5land-jpn_hourly/README.md); no real download yet. Planned hourly CaMa-Flood input sample; GOSH integration remains future work. Size/license review required before data registration. KG-0019 remains open. |
 | `ERA5land-jpn_legacy_bin/` | Preserved historical Binary CTL/report only; no maintained conversion workflow. | Binary conversion was retired; use the NetCDF workflow. These local historical files are Git-ignored. |
 | `ERA5_land/daily/` | Canonical north-south geometry. The only observed local file, `ERA5-Land_Runoff_daily_19600101.bin`, is headerless float32 with 3,600 × 1,801 values (25,934,400 bytes). | Maintainer confirms the half-grid shift: input-grid limits 90.05 to −90.05 produce centers 90 to −90 under the map-tool convention. Units, missing-value meaning, longitude order, provenance, and long-term coverage are unconfirmed; not ready for a configured simulation. |
 | `ERA5_land/Roff/` | Legacy 1981–2020 global daily binary series, 3,600 × 1,800 values per date. | The maintainer confirms the north-south half-grid shift is absent, so this is not the canonical daily geometry. Existing legacy input settings use 90/−90 limits (centers 89.95…−89.95). Metadata and scientific validity remain unverified; see `runoff_datasets.csv`. |
@@ -67,16 +65,16 @@ The runoff input grid and CaMa-Flood river map are separate grids. They may have
 Configure the runoff-grid settings in the copied script, for example:
 
 ```sh
-ROFFTAG="test-E2O_15min_nc"
-GRSIZEIN=0.25
-WESTIN=-180.0
-EASTIN=180.0
-NORTHIN=90.0
-SOUTHIN=-60.0
+ROFFTAG="repo-mek_1deg"
+GRSIZEIN=1.0
+WESTIN=90.0
+EASTIN=110.0
+NORTHIN=35.0
+SOUTHIN=5.0
 OLAT="NtoS"
 ```
 
-The example describes the `test-E2O_15min_nc` 0.25-degree grid. `GRSIZEIN` is the runoff-cell spacing in degrees; `WESTIN`, `EASTIN`, `NORTHIN`, and `SOUTHIN` are the grid edges. The generator derives dimensions from the edge spans and spacing, and treats cell centers as half a cell inward from each edge. `OLAT` must match stored row order: `NtoS` or `StoN`. It does not read runoff values or validate source coordinates. Generate the matrix only after the product has been converted to the same grid and ordering it will use at runtime.
+The example describes the `repo-mek_1deg` 1-degree Mekong grid. `GRSIZEIN` is the runoff-cell spacing in degrees; `WESTIN`, `EASTIN`, `NORTHIN`, and `SOUTHIN` are the grid edges. The generator derives dimensions from the edge spans and spacing, and treats cell centers as half a cell inward from each edge. `OLAT` must match stored row order: `NtoS` or `StoN`. It does not read runoff values or validate source coordinates. Generate the matrix only after the product has been converted to the same grid and ordering it will use at runtime.
 
 Copy the workflow into the target map's `script_params/` directory, edit the settings, then run it there (or invoke the copied script by path). It writes `inpdim_<ROFFTAG>.txt` and `inpmat_<ROFFTAG>.bin` in the map root. Set `CINPMAT` in the simulation's `NFORCE` group to the map-root path for `inpmat_<ROFFTAG>.bin`. Keep the dataset's actual coordinates and longitude convention consistent between the forcing file and matrix; the model does not compare NetCDF coordinate values against the matrix.
 
@@ -128,7 +126,7 @@ See the [map overview](../map/README.md) and [Map Tools parameter workflow guide
 
 ## ERA5-Land source and conversion workflow
 
-The ERA5-Land-specific [download and NetCDF conversion workflow](download_ERA5-Land/README.md) separates Shell settings/jobs from Python requests and conversion. `sample-global_2day.sh` and `sample-japan_1month.sh` offer complete workflows with `--dry-run`; data and logs belong under `inp/ERA5land-*/`, outside the tool directory. Binary conversion is retired. The separate `ERA5_land/Roff/` laboratory series is not regenerated by these scripts. The term ERA5-Land is deliberate; ERA5 atmospheric reanalysis is a separate product.
+The ERA5-Land-specific [download and NetCDF conversion workflow](download_ERA5-Land/README.md) separates Shell settings/jobs from Python requests and conversion. `sample-global_2day.sh` and `sample-japan_hourly.sh` offer complete workflows with `--dry-run`; data and logs belong under dataset directories outside the tool directory. The planned `repo-ERA5land-jpn_hourly/` daily converted files and README are eligible for Git tracking after size/license review; original downloads and logs remain ignored. Binary conversion is retired. The separate `ERA5_land/Roff/` laboratory series is not regenerated by these scripts. The term ERA5-Land is deliberate; ERA5 atmospheric reanalysis is a separate product.
 
 ## Supported Input Formats and Simulation Settings
 

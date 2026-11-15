@@ -1,5 +1,8 @@
 #!/bin/bash
-# Argument-driven ERA5-Land convert stage; configure products in sample-*.sh.
+# Conversion stage called with arguments from a Product Shell (sample-*.sh).
+# Converts downloaded accumulations to timestep runoff using the Python converter.
+# Can combine input files into daily/monthly/yearly output; does not contact CDS.
+# Can be rerun from retained originals without downloading them again.
 set -eu
 
 # Internal argument placeholders, not independent experiment settings.

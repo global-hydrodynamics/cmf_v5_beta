@@ -1,5 +1,7 @@
 #!/bin/bash
-# Generate one ERA5-Land product: configure here, then download and convert.
+# User-facing configuration for one global ERA5-Land runoff product.
+# Passes settings to s01-download.sh and s02-convert_CMF_nc.sh, in that order.
+# Normally edit only the User settings below; Python performs the data processing.
 set -eu
 
 # User settings

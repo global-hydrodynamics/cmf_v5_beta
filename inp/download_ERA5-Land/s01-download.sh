@@ -1,5 +1,8 @@
 #!/bin/bash
-# Argument-driven ERA5-Land download stage; configure products in sample-*.sh.
+# Download stage called with arguments from a Product Shell (sample-*.sh).
+# Requests daily/monthly chunks to limit failure impact and support retries/reuse.
+# Retains original NetCDF for s02; does not convert runoff values.
+# Choose request size for CDS/network conditions; neither grouping is always best.
 set -eu
 
 # Internal argument placeholders, not independent experiment settings.

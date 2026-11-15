@@ -14,3 +14,14 @@
 # Python bytecode from the download tools is a local generated artifact.
 /download_ERA5-Land/**/__pycache__/
 /download_ERA5-Land/**/*.pyc
+
+# Planned GitHub hourly Japan fixture: track its explanation and converted daily NetCDF.
+# Actual data must pass size, source-license and validation review before git add/push.
+!/repo-ERA5land-jpn_hourly/
+/repo-ERA5land-jpn_hourly/*
+!/repo-ERA5land-jpn_hourly/README.md
+!/repo-ERA5land-jpn_hourly/runoff_????????.nc
+# Raw CDS downloads, run logs and generated information remain reproducible local artifacts.
+/repo-ERA5land-jpn_hourly/original/
+/repo-ERA5land-jpn_hourly/logs/
+/repo-ERA5land-jpn_hourly/runoff_info_CaMaFlood.txt

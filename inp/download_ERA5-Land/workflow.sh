@@ -1,5 +1,6 @@
-# Shared Bash execution flow, sourced by the user-editable wrappers.
-# Settings are supplied by each wrapper; this file does not perform NetCDF calculations.
+# Shared orchestration sourced by s01 (download) and s02 (convert).
+# Product Shells supply configuration to those stages as explicit arguments.
+# Handles jobs/logs only; Python performs CDS requests and scientific processing.
 
 era5_usage() {
     cat <<'HELP'
@@ -9,7 +10,7 @@ Stage options (normally supplied by a product Shell):
   --west N --east N --south N --north N
   --tstep HOURS                    One of 1,2,3,4,6,8,12,24
   --download-unit daily|monthly    Input file grouping
-  --output-unit monthly|yearly     Converted file grouping
+  --output-unit daily|monthly|yearly     Converted file grouping
   --format netcdf                  Output format (Binary is not supported)
   --ncpus N                        Parallel jobs (default 1)
   --python PATH                    Python executable (default python3)
@@ -82,6 +83,7 @@ era5_stage() {
                 --start "$pstart" --end "$pend" --indir "$DATADIR/original" --out "$out" \
                 --input-file-unit "$DOWNLOAD_UNIT" --input-variable runoff --output-variable runoff \
                 --timestep-hours "$TSTEP" --fill-value 1.0e20 --lat-order NtoS)
+            if [ "$OUTPUT_UNIT" = daily ]; then command+=(--require-complete-days); fi
         fi
         if [ "$OVERWRITE" -eq 1 ]; then command+=(--overwrite); fi
         if [ "$DRY_RUN" -eq 1 ]; then
@@ -118,6 +120,10 @@ era5_stage() {
             "${command[@]}" > "$LOGDIR/info.log" 2>&1 || { cat "$LOGDIR/info.log"; return 1; }
         fi
         cat "$DATADIR/runoff_info_CaMaFlood.txt"
+        printf '\n[INFO] Converted files in %s:\n' "$DATADIR"
+        for out in "$DATADIR"/runoff_*.nc; do
+            if [ -f "$out" ]; then printf '  %s\n' "$out"; fi
+        done
     fi
 }
 
@@ -150,7 +156,7 @@ era5_main() {
     case "$TSTEP" in 1|2|3|4|6|8|12|24) ;; *) echo '[ERROR] Invalid TSTEP' >&2; return 2 ;; esac
     if ! [[ "$NCPUS" =~ ^[1-9][0-9]*$ ]] || [ "${#NCPUS}" -gt 6 ]; then echo '[ERROR] NCPUS must be positive' >&2; return 2; fi
     case "$DOWNLOAD_UNIT" in daily|monthly) ;; *) echo '[ERROR] Invalid DOWNLOAD_UNIT' >&2; return 2 ;; esac
-    case "$OUTPUT_UNIT" in monthly|yearly) ;; *) echo '[ERROR] Invalid OUTPUT_UNIT' >&2; return 2 ;; esac
+    case "$OUTPUT_UNIT" in daily|monthly|yearly) ;; *) echo '[ERROR] Invalid OUTPUT_UNIT' >&2; return 2 ;; esac
     # Command substitution and CDPATH avoid dependence on the caller's directory.
     INP_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd -P)
     DATADIR="$INP_ROOT/$DATASET"

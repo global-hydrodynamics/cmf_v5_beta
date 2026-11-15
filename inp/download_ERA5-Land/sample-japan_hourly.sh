@@ -1,29 +1,29 @@
 #!/bin/bash
-# Generate one ERA5-Land product: configure here, then download and convert.
+# User-facing configuration for the Japan ten-day hourly ERA5-Land runoff product.
+# Passes settings to s01-download.sh and s02-convert_CMF_nc.sh, in that order.
+# Normally edit only the User settings below; Python performs the data processing.
 set -eu
 
 # User settings
 
 # Output dataset name under inp/; a single directory name, never a path.
-DATASET="ERA5land-jpn_1month"
+DATASET="repo-ERA5land-jpn_hourly"
 
 # Inclusive period and geographic edges [degrees east/north].
-START_DATE="2000-01-01"
-END_DATE="2000-01-31"
-WEST=122
-EAST=154
-SOUTH=24
-NORTH=46
+START_DATE="2007-09-01"
+END_DATE="2007-09-10"
+WEST=120
+EAST=150
+SOUTH=20
+NORTH=50
 
 # Temporal resolution [hours], file grouping and parallel requests.
-TSTEP=24
-DOWNLOAD_UNIT="monthly"
-OUTPUT_UNIT="monthly"
+TSTEP=1
+DOWNLOAD_UNIT="daily"
+OUTPUT_UNIT="daily"
 FORMAT="netcdf"                 # NetCDF is the only supported output format.
-# Intentional environment interfaces for job resources and Python environment.
-# ${VAR:-default} uses the supplied nonempty value, otherwise the shown default.
-NCPUS=${NCPUS:-1}
-PYTHON_CMD=${PYTHON_CMD:-python3}
+NCPUS=2
+PYTHON_CMD="python3"
 
 # ================================================================
 # User settings end here

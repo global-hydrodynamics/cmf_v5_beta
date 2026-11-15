@@ -30,7 +30,7 @@ def parse_args() -> argparse.Namespace:
     # NetCDF options
     parser.add_argument("--pattern", default="runoff_*.nc", help="NetCDF file pattern. Default: runoff_*.nc")
     parser.add_argument("--variable", default="runoff", help="NetCDF runoff variable name. Default: runoff")
-    parser.add_argument("--merge-unit", choices=["yearly", "monthly"], default="monthly", help="NetCDF output grouping")
+    parser.add_argument("--merge-unit", choices=["daily", "yearly", "monthly"], default="monthly", help="NetCDF output grouping")
 
     # Common options
     parser.add_argument(
@@ -248,7 +248,7 @@ def read_netcdf_metadata(args: argparse.Namespace) -> dict[str, Any] | None:
     fill_value = var.encoding.get("_FillValue", var.attrs.get("_FillValue", var.attrs.get("missing_value", "N/A")))
     time_info = infer_time_info(ds, args.timestep_hours)
 
-    file_rule = "runoff_YYYY.nc" if args.merge_unit == "yearly" else "runoff_YYYYMM.nc"
+    file_rule = {"daily": "runoff_YYYYMMDD.nc", "monthly": "runoff_YYYYMM.nc", "yearly": "runoff_YYYY.nc"}[args.merge_unit]
 
     return {
         "source_format": "netcdf",
@@ -296,7 +296,7 @@ def main() -> int:
 
         args.outfile.parent.mkdir(parents=True, exist_ok=True)
 
-        netcdf_rule = "runoff_YYYY.nc" if args.merge_unit == "yearly" else "runoff_YYYYMM.nc"
+        netcdf_rule = primary["file_rule"]
 
         lines: list[str] = []
         lines.append("#==========================================================")
@@ -341,7 +341,8 @@ def main() -> int:
         lines.append(f"CROFPRE=\"{args.prefix}\"       # runoff file prefix")
         lines.append(f"CROFSUF=\"{args.suffix}\"       # runoff file suffix")
         lines.append('LINPCDF=.TRUE.')
-        lines.append('CROFFREQ="YEAR"' if args.merge_unit == 'yearly' else 'CROFFREQ="MON"')
+        grouping = {"daily": "DAY", "monthly": "MON", "yearly": "YEAR"}[args.merge_unit]
+        lines.append(f'CROFFREQ="{grouping}"')
         lines.append('CVNTIME="time"')
         lines.append(f"CVNROF=\"{args.variable}\"       # netCDF runoff variable name")
         lines.append(f"# File naming rule: {netcdf_rule}")
