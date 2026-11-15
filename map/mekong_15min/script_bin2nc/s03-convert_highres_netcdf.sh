@@ -1,15 +1,9 @@
 #!/bin/sh
 # Convert registered high-resolution Binary map tiles to NetCDF4.
-# This map-local copy calls the shared converter under map/tools/code/.
-# Run it from any working directory; paths are resolved from this script.
+# Run from <map>/script_bin2nc/ or select an external map with --map-dir PATH.
 set -eu
 
-# ----------------------------------------------------------------------
-# User settings: edit these values for the target map.
-SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
-# Map root containing each selected high-resolution directory.
-MAP_DIR="$SCRIPT_DIR/.."
-
+# User settings: select available high-resolution directories and variables.
 # Choose one or more available high-resolution map directories.
 # Each selected directory must contain location.txt and registered tile files.
 #HIRES="1min 15sec 3sec"
@@ -31,15 +25,19 @@ JOBS=8
 # Existing NetCDF outputs are skipped by default. Pass --force to replace them.
 FORCE=0
 
-# Shared converter path: use the local template's code link if present,
-# otherwise resolve map/tools/code/ from this map-local script directory.
-if [ -f "$SCRIPT_DIR/../code/convert_highres_binary_to_netcdf.py" ]; then
-    CONVERTER="$SCRIPT_DIR/../code/convert_highres_binary_to_netcdf.py"
-else
-    CONVERTER="$SCRIPT_DIR/../../tools/code/convert_highres_binary_to_netcdf.py"
-fi
-# User settings end here.
 # ----------------------------------------------------------------------
+# User settings end here. Program paths and processing steps follow.
+# ----------------------------------------------------------------------
+
+# Command substitution locates shared resources independently of the target map.
+SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+REPO_ROOT=$(CDPATH= cd "$SCRIPT_DIR/../../.." && pwd -P)
+TOOL_DIR="$REPO_ROOT/map/tools/code"
+REGISTRY="$REPO_ROOT/variable_table/map_variables.csv"
+CONVERTER="$TOOL_DIR/convert_highres_binary_to_netcdf.py"
+# The physical current directory owns the list and supplies the implicit target.
+RUN_DIR=$(pwd -P)
+MAP_DIR=""
 
 SCRIPT_NAME=${0##*/}
 STEP="Validate high-resolution conversion settings"
@@ -56,19 +54,52 @@ trap 'exit 129' HUP
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-if [ "$#" -gt 1 ] || { [ "$#" -eq 1 ] && [ "$1" != "--force" ]; }; then
-    printf 'Usage: %s [--force]\n' "$SCRIPT_NAME" >&2
-    exit 2
+# --map-dir is explicit; otherwise require a map-local script_bin2nc/ current directory.
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --map-dir)
+            if [ "$#" -lt 2 ] || [ -z "$2" ]; then
+                printf 'ERROR: --map-dir requires a directory.\n' >&2
+                exit 2
+            fi
+            MAP_DIR=$2
+            shift 2
+            ;;
+        --force) FORCE=1; shift ;;
+        --help|-h)
+            printf 'Usage: %s [--map-dir PATH] [--force]\n' "$SCRIPT_NAME"
+            exit 0
+            ;;
+        *)
+            printf 'Usage: %s [--map-dir PATH] [--force]\n' "$SCRIPT_NAME" >&2
+            exit 2
+            ;;
+    esac
+done
+
+if [ -z "$MAP_DIR" ]; then
+    # Shell suffix removal gives the last directory component without invoking basename.
+    if [ "${RUN_DIR##*/}" != script_bin2nc ]; then
+        printf 'ERROR: run from <map>/script_bin2nc/ or supply --map-dir PATH.\n' >&2
+        exit 2
+    fi
+    MAP_DIR="$RUN_DIR/.."
 fi
-if [ "$#" -eq 1 ]; then
-    FORCE=1
-fi
-# Check the user-configured paths before creating output directories.
 if [ ! -d "$MAP_DIR" ]; then
     printf 'ERROR: map directory does not exist: %s\n' "$MAP_DIR" >&2
     exit 1
 fi
-if [ ! -f "$CONVERTER" ]; then
+MAP_DIR=$(CDPATH= cd "$MAP_DIR" && pwd -P)
+if [ "$MAP_DIR" = "$REPO_ROOT/map/tools" ]; then
+    printf 'ERROR: map/tools/script_bin2nc is a template, not a map. Run from a map-local directory or supply --map-dir PATH.\n' >&2
+    exit 2
+fi
+if [ ! -f "$MAP_DIR/params.txt" ]; then
+    printf 'ERROR: target is not a map directory (params.txt missing): %s\n' "$MAP_DIR" >&2
+    exit 1
+fi
+
+if [ ! -f "$CONVERTER" ] || [ ! -f "$REGISTRY" ]; then
     printf 'ERROR: converter not found: %s\n' "$CONVERTER" >&2
     exit 1
 fi
@@ -95,7 +126,7 @@ for re in $HIRES; do
     # Python creates and schedules the registered variable-by-tile tasks.
     if [ "$FORCE" -eq 1 ]; then
         if python3 "$CONVERTER" --map-dir "$MAP_DIR" --hires "$re" --variables "$VARS" \
-            --compression-level "$COMPRESSION_LEVEL" --jobs "$JOBS" --force; then
+            --registry "$REGISTRY" --compression-level "$COMPRESSION_LEVEL" --jobs "$JOBS" --force; then
             :
         else
             EXIT_STATUS=$?
@@ -103,7 +134,7 @@ for re in $HIRES; do
         fi
     else
         if python3 "$CONVERTER" --map-dir "$MAP_DIR" --hires "$re" --variables "$VARS" \
-            --compression-level "$COMPRESSION_LEVEL" --jobs "$JOBS"; then
+            --registry "$REGISTRY" --compression-level "$COMPRESSION_LEVEL" --jobs "$JOBS"; then
             :
         else
             EXIT_STATUS=$?

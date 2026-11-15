@@ -4,22 +4,17 @@
 # Output: bin2nc_list.txt in the current working directory.
 set -eu
 
-# Resolve shared tools from the script location; keep the list in the current directory.
+# No map-name setting is needed; target selection follows the working directory or --map-dir.
+# Command substitution locates shared resources independently of the target map.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
-# Default target when running the shared template; map-local copies use "..".
-MAP_DIR="$SCRIPT_DIR/.."  # Map root containing params.txt and map Binary files.
-LIST_FILE="bin2nc_list.txt"
-REGISTRY="$SCRIPT_DIR/../../../variable_table/map_variables.csv"
-if [ -f "$SCRIPT_DIR/../code/convert_map_binary_to_netcdf.py" ]; then
-    TOOL_DIR="$SCRIPT_DIR/../code"
-else
-    TOOL_DIR="$SCRIPT_DIR/../../tools/code"
-fi
+REPO_ROOT=$(CDPATH= cd "$SCRIPT_DIR/../../.." && pwd -P)
+TOOL_DIR="$REPO_ROOT/map/tools/code"
+REGISTRY="$REPO_ROOT/variable_table/map_variables.csv"
 CONVERTER="$TOOL_DIR/convert_map_binary_to_netcdf.py"
-
-# ----------------------------------------------------------------------
-# User settings end here. Program paths and processing steps follow.
-# ----------------------------------------------------------------------
+# The physical current directory owns the list and supplies the implicit target.
+RUN_DIR=$(pwd -P)
+MAP_DIR=""
+LIST_FILE="$RUN_DIR/bin2nc_list.txt"
 
 SCRIPT_NAME=${0##*/}
 STEP="Check the existing conversion list"
@@ -43,8 +38,51 @@ trap 'exit 143' TERM
 # End of error handling.
 # ----------------------------------------------------------------------
 
+# --map-dir is explicit; otherwise require a map-local script_bin2nc/ current directory.
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --map-dir)
+            if [ "$#" -lt 2 ] || [ -z "$2" ]; then
+                printf 'ERROR: --map-dir requires a directory.\n' >&2
+                exit 2
+            fi
+            MAP_DIR=$2
+            shift 2
+            ;;
+        --help|-h)
+            printf 'Usage: %s [--map-dir PATH]\n' "$SCRIPT_NAME"
+            exit 0
+            ;;
+        *)
+            printf 'Usage: %s [--map-dir PATH]\n' "$SCRIPT_NAME" >&2
+            exit 2
+            ;;
+    esac
+done
+
+if [ -z "$MAP_DIR" ]; then
+    # Shell suffix removal gives the last directory component without invoking basename.
+    if [ "${RUN_DIR##*/}" != script_bin2nc ]; then
+        printf 'ERROR: run from <map>/script_bin2nc/ or supply --map-dir PATH.\n' >&2
+        exit 2
+    fi
+    MAP_DIR="$RUN_DIR/.."
+fi
 if [ ! -d "$MAP_DIR" ]; then
     printf 'ERROR: map directory does not exist: %s\n' "$MAP_DIR" >&2
+    exit 1
+fi
+MAP_DIR=$(CDPATH= cd "$MAP_DIR" && pwd -P)
+if [ "$MAP_DIR" = "$REPO_ROOT/map/tools" ]; then
+    printf 'ERROR: map/tools/script_bin2nc is a template, not a map. Run from a map-local directory or supply --map-dir PATH.\n' >&2
+    exit 2
+fi
+if [ ! -f "$MAP_DIR/params.txt" ]; then
+    printf 'ERROR: target is not a map directory (params.txt missing): %s\n' "$MAP_DIR" >&2
+    exit 1
+fi
+if [ ! -f "$CONVERTER" ] || [ ! -f "$REGISTRY" ]; then
+    printf 'ERROR: shared converter or variable registry not found under %s\n' "$REPO_ROOT" >&2
     exit 1
 fi
 
