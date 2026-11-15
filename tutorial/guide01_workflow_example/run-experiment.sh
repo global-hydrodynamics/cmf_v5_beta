@@ -2,7 +2,7 @@
 # Shared implementation for the controlled 2000 experiments.
 set -eu
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
-CMF_BASE=$(CDPATH= cd "$SCRIPT_DIR/../../.." && pwd -P)
+CMF_BASE=$(CDPATH= cd "$SCRIPT_DIR/../.." && pwd -P)
 PYTHON="$CMF_BASE/.venv/bin/python"
 MODEL="$CMF_BASE/out/bin/MAIN_cmf_netcdf"
 MAPDIR="$CMF_BASE/map/mekong_15min"

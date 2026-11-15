@@ -4,7 +4,7 @@
 specialized workflows for preparing data, analyzing results, validation,
 visualization, and particular computing environments.
 
-These components are generally not required for the standard `gosh/` examples.
+These components are retained legacy workflows, not generally validated v5 entry points. Guide01 and flood-depth visualization still compile the existing downscaler source directly; do not remove it. Old model/build paths in component recipes require separate adaptation before running them against v5.
 Their roles and requirements differ; the directory is not a single installation
 or execution workflow.
 
@@ -45,8 +45,8 @@ selected component's files before choosing which steps to run.
 ## Related documentation
 
 - [Model overview and distribution information](../README.md)
-- [Fortran source architecture and extensions](../src/README.md)
-- [Standard build and execution examples](../gosh/README.md)
-- [Build configuration](../adm/README.md)
+- [Fortran source architecture and extensions](../src_main/README.md)
+- [Standard build and execution examples](../gosh_test/README.md)
+- [Build configuration](../config/README.md)
 - [River maps and preprocessing](../map/README.md)
 - [Runoff forcing preparation](../inp/README.md)

@@ -1,5 +1,7 @@
 # CaMa-Flood Map Data and Tools Modernization
 
+> Migration note (2026-11-15): Historical branch names, v4 Issue/PR references and dated approvals below are preserved evidence, not current branch assignments. Current v5 development uses cmf_v5_beta/main, src_main/, config/, gosh_test/ and tools/; old root model/build/run files are under legacy/. See [current status](dev_status.md) and [the migration audit](migration_consistency_audit.md).
+
 **Status:** Planning proposal. The detailed implementation scope and architecture are not yet approved.
 
 - **Persistent working branch:** `feature/map-data-tools` (based on `master`).

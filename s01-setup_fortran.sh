@@ -503,4 +503,4 @@ if [ -e "$SCRIPT_DIR/config/Mkinclude" ]; then
 else
     printf '  cp Mkinclude config/Mkinclude\n'
 fi
-printf '\nLegacy v4 builds continue to use adm/Mkinclude.\n'
+printf '\nHistorical v4 files are under legacy/; their original adm/Mkinclude assumptions are not v5 build instructions.\n'

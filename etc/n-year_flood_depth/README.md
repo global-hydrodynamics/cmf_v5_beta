@@ -1,5 +1,7 @@
 # Legacy N-year flood-depth workflow
 
+> Retained v4 workflow/reference: original root src/gosh/adm paths in recipes are not supported v5 entry points. See [the migration audit](../../docs/migration_consistency_audit.md) for current paths and deferred optional workflows. This notice does not migrate the calculations or execution scripts.
+
 This directory contains an older post-processing workflow for estimating flood-depth fields at selected return probabilities from CaMa-Flood annual output files. It can fit annual maxima of either `rivdph` or `storge`, downscale the resulting field using high-resolution map data, and produce a figure. The scripts are retained as legacy examples; their assumptions, dependencies, and file handling have not been modernized or comprehensively validated.
 
 The actual top-level entry point is [`script/main.sh`](script/main.sh). Run it with the current working directory set to `etc/n-year_flood_depth/script`; its configuration files, relative paths, helper executables, temporary products, and figures all assume that directory. The workflow is optional post-processing and is not part of the standard CaMa-Flood simulation run.
@@ -12,7 +14,7 @@ The actual top-level entry point is [`script/main.sh`](script/main.sh). Run it w
 4. `downscale_nflddph` maps the coarse flood-depth field to the requested high-resolution domain using catchment, floodplain-height-difference, and river-width maps. It writes a depth grid and a one-byte mask.
 5. `t02-draw_flddph.sh` prepares display-only slope and elevation grids, transforms the downscaled depths with `conv_flood`, and calls `draw_flddph.py` to save a figure.
 
-The shell scripts invoke prebuilt Fortran programs. From the repository root, build the configured targets with `make -C etc/n-year_flood_depth/script/src` after confirming the local compiler settings in [`adm/Mkinclude`](../../adm/Mkinclude). `downscale_nflddph_1deg.F90` is present but is not a target in this Makefile. The currently configured example requests `RES=1min`; the downscaler source also contains branches for `3sec`, `15sec`, and `30sec`. The separate visualization helpers accept additional resolutions in their source, which does not by itself mean the entire workflow has been verified at those resolutions.
+The shell scripts invoke prebuilt Fortran programs. From the repository root, build the configured targets with `make -C etc/n-year_flood_depth/script/src` after confirming the local compiler settings in [`adm/Mkinclude`](../../legacy/adm/Mkinclude). `downscale_nflddph_1deg.F90` is present but is not a target in this Makefile. The currently configured example requests `RES=1min`; the downscaler source also contains branches for `3sec`, `15sec`, and `30sec`. The separate visualization helpers accept additional resolutions in their source, which does not by itself mean the entire workflow has been verified at those resolutions.
 
 ## Example configuration and return probability
 

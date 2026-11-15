@@ -1,5 +1,7 @@
 # Map parameter and input-matrix tools
 
+> Retained v4 workflow/reference: original root src/gosh/adm paths in recipes are not supported v5 entry points. See [the migration audit](../../../docs/migration_consistency_audit.md) for current paths and deferred optional workflows. This notice does not migrate the calculations or execution scripts.
+
 `src_param/` contains Fortran utilities and sample shell workflows for preparing and inspecting products associated with a particular CaMa-Flood map. In the repository, `map/src/src_param/` is a reusable source template. Copy it into the target map directory (for example, `map/glb_15min/src_param/`) before running map-specific workflows. The scripts use relative paths and commonly expect to be launched from the map root or its copied `src_param/`; check each script's `cd` and paths before running it.
 
 The supplied shell scripts are examples with package-specific filenames and settings. Confirm that all input datasets, dimensions, grid orientation, and products match the selected map before use. Building these tools does not provide the external datasets they consume.
@@ -34,4 +36,4 @@ The `s02-generate_inpmat.sh` sample sets input-grid spacing, bounds, latitude or
 
 The sample scripts refer to inputs such as runoff climatology, interpolation weights, gauge/reservoir lists, and high-resolution map layers. Some names and paths are hard-coded examples. Edit them for the target map and verify source-data terms. `s01-channel_params.sh` uses a `diminfo` file and runoff input to calculate climatological discharge; `calc_prmwat` selects available high-resolution data by tag. `s03-mpi_map_setup.sh` includes an optional `MaxMPI` mode whose comments note that some inter-basin connections may be neglected, so inspect that trade-off before selecting it.
 
-Do not combine generated files from different map resolutions or extents based on matching filenames alone. Keep dimensions, grid definitions, and map metadata consistent with the model configuration. The model-side map readers and feature requirements are described in the [map overview](../../README.md) and [model source guide](../../../src/README.md).
+Do not combine generated files from different map resolutions or extents based on matching filenames alone. Keep dimensions, grid definitions, and map metadata consistent with the model configuration. The model-side map readers and feature requirements are described in the [map overview](../../README.md) and [model source guide](../../../legacy/src/README.md).

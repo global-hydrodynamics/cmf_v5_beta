@@ -1,5 +1,7 @@
 # Update Note: CaMa-Flood v4.2
 
+> Historical v4 release notes. The master/v4.20 statements below describe that period, not the current v5 beta main branch. See [README.md](README.md) for current status.
+
 Current official release on webpage is v4.20
 Latest GitHub branch (master)  is v4.20
 

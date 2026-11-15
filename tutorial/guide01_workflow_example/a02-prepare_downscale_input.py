@@ -14,7 +14,7 @@ import pandas as pd
 import xarray as xr
 
 ROOT = Path(__file__).resolve().parent
-REPO = ROOT.parents[2]
+REPO = ROOT.parents[1]
 EVENT_CSV = ROOT / "analysis/event_selection.csv"
 OUTPUT_DIR = ROOT / "out/downscaling"
 

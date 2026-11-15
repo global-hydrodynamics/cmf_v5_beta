@@ -20,7 +20,7 @@ import numpy as np
 import xarray as xr
 
 ROOT = Path(__file__).resolve().parent
-REPO = ROOT.parents[2]
+REPO = ROOT.parents[1]
 OUT = ROOT / "out"
 ANALYSIS = ROOT / "analysis"
 FIGURE = ROOT / "figure"

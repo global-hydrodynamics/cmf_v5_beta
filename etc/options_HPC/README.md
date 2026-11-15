@@ -1,6 +1,8 @@
 # Options for High Performance Computing
 
-This guide covers MPI partitioning, vector-processor calculations, and floating-point reproducibility. For compiler and library setup, see the [build guide](../../adm/README.md); for run configurations, see the [sample execution guide](../../gosh/README.md).
+> Retained v4 workflow/reference: original root src/gosh/adm paths in recipes are not supported v5 entry points. See [the migration audit](../../docs/migration_consistency_audit.md) for current paths and deferred optional workflows. This notice does not migrate the calculations or execution scripts.
+
+This guide covers MPI partitioning, vector-processor calculations, and floating-point reproducibility. For compiler and library setup, see the [build guide](../../legacy/adm/README.md); for run configurations, see the [sample execution guide](../../legacy/gosh/README.md).
 
 1. MPI parallelization
 2. Vector-processor code
@@ -72,7 +74,7 @@ MPI process number is stored as REGIONTHIS, while number of MPI process is srote
 CaMa-Flood converts river network data (nextxy.bin) from 2D map to 1D vector in initialization. Using MPI region file (mpireg.bin), only grids corresponding to REGINTHIS are converted to 1D vector in each node.
 
 ### (3) Sample script:
-[`mpi_test.sh`](mpi_test.sh), [`mpi_netcdf_test.sh`](mpi_netcdf_test.sh), and [`1min_challenge.sh`](1min_challenge.sh) are example scripts in this directory. Review their compiler/library paths, launch commands, map paths, and forcing requirements for your system before running them. The main [`gosh/test5_mpi.sh`](../../gosh/test5_mpi.sh) is another MPI execution example.
+[`mpi_test.sh`](mpi_test.sh), [`mpi_netcdf_test.sh`](mpi_netcdf_test.sh), and [`1min_challenge.sh`](1min_challenge.sh) are example scripts in this directory. Review their compiler/library paths, launch commands, map paths, and forcing requirements for your system before running them. The main [`gosh/test5_mpi.sh`](../../legacy/gosh/test5_mpi.sh) is another MPI execution example.
 Please specify MPI region file (CMPIREG) in the shell script. Other settings are same as the default setting.
 
 Please use MPI related configulations for your server/system.
@@ -93,4 +95,4 @@ DATM=-DNoAtom_CMF
 
 The source tests the preprocessor macro `NoAtom_CMF`; `DATM` is the Make variable that passes the definition into `CFLAGS`. The historical `LBITSAFE` runtime switch is not the control for these paths.
 
-Disabling these atomic updates addresses one source of floating-point ordering differences. It does not establish bitwise identity across compilers, optimization flags, precision modes, thread/process counts, or other reduction orders. Assess reproducibility with an identified baseline, input data, and build/run configuration; see the [numerical and parallel behavior notes](../../src/README.md#numerical-and-parallel-behavior).
+Disabling these atomic updates addresses one source of floating-point ordering differences. It does not establish bitwise identity across compilers, optimization flags, precision modes, thread/process counts, or other reduction orders. Assess reproducibility with an identified baseline, input data, and build/run configuration; see the [numerical and parallel behavior notes](../../legacy/src/README.md#numerical-and-parallel-behavior).

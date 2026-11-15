@@ -21,6 +21,8 @@ Use the current target ref when it differs from local main. Stage only intended 
 
 ## Proportionate tests
 
+GitHub Actions is temporarily disabled while the v5 regression strategy is redesigned. Use the [retained manual checks](docs/migration_consistency_audit.md#manual-checks-retained-from-the-retired-workflow) and report what you actually ran; do not assume an automated PR check has executed.
+
 The intended Level 1 is a fresh-clone build and small Mekong model test with independently approved regression references. Existing [developer workflows](gosh_test/README.md) and [Tutorial01](tutorial/tutorial01-get_started/manual_tutorial01-get_started.md) provide build/run instructions; a unified model regression command is not yet established. Report the actual workflow, revision, configuration, inputs and comparisons you used rather than claiming the planned test environment is complete.
 
 The following existing component checks were executed successfully during this documentation update. Run from the repository root with Python 3; they check metadata/data contracts and CTL generation, not model science or the full Level 1 workflow:
@@ -37,4 +39,4 @@ Choose additional checks for the changed scientific calculation, interface or wo
 
 Describe the problem and resulting behavior, scope/affected components, tests actually run and their results, data/build dependencies, and any numerical/interface effects, limitations or skipped checks. Identify needed additional-data updates with source, terms, destination and whether they are required or optional. Link an Issue when one is used; no custom coordination system is required.
 
-Open the PR against main with a coherent, reviewable diff. Maintainers review code, CI evidence, scientific implications and compatibility, and can run the PR branch in an independent checkout/worktree before merging. Merging is not required for testing. Address failures on the feature branch. Automated tests support scientific review; they do not replace it. Direct changes or merges to the official main require the maintainer authorization described in AGENTS.md.
+Open the PR against main with a coherent, reviewable diff. Maintainers review code, available test evidence, scientific implications and compatibility, and can run the PR branch in an independent checkout/worktree before merging. Merging is not required for testing. Address failures on the feature branch. Automated tests support scientific review; they do not replace it. Direct changes or merges to the official main require the maintainer authorization described in AGENTS.md.

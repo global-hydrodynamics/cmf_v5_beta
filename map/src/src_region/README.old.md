@@ -1,5 +1,7 @@
 # Regional map preparation
 
+> Retained v4 workflow/reference: original root src/gosh/adm paths in recipes are not supported v5 entry points. See [the migration audit](../../../docs/migration_consistency_audit.md) for current paths and deferred optional workflows. This notice does not migrate the calculations or execution scripts.
+
 `src_region/` contains Fortran programs and sample shell scripts for deriving a regional map from an existing source map. The repository copy at `map/src/src_region/` is a reusable template. Copy it into the target map directory and run the workflow from that map-local `src_region/` working directory; its programs use relative paths to read a source map and write regional products in the parent map directory. Review those paths and settings for the actual source and target maps before execution.
 
 The repository provides the processing workflow, and [`map/mekong_15min/`](../../README.md) is a regional development/test example. Creating or regenerating a regional map still requires a compatible source map and, for high-resolution products, the corresponding source high-resolution layers. The supplied scripts contain sample domains and assumptions; they do not establish universal coverage or compatibility.

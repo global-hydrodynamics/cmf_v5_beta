@@ -15,7 +15,7 @@ The defaults in [`s01-extract_ELSE_GPCC.sh`](s01-extract_ELSE_GPCC.sh) are fixed
 Run the script by path from any current directory, for example:
 
 ```sh
-/path/to/CaMa-Flood_v4/inp/test-mek_1deg/s01-extract_ELSE_GPCC.sh
+/path/to/cmf_v5_beta/inp/test-mek_1deg/s01-extract_ELSE_GPCC.sh
 ```
 
 It invokes the adjacent standard-library-only [`extract_ELSE_GPCC.py`](extract_ELSE_GPCC.py) helper. The helper reads the global CTL geometry, verifies the 360 × 180 1-degree little-endian grid and `yrev` layout, calculates the regional window (zero-based columns 270:290 and rows 55:85), checks all source dates and 259,200-byte input sizes, and copies the selected float32 row slices unchanged. It preserves the source order, `mm/day` values, and `-999` sentinel. It does not write to the source directory or substitute values. It checks each output's 2,400-byte size and exact byte equality with the corresponding source window, checks that output values contain no unexpected NaN or infinity, and verifies the final date set and GrADS CTL.

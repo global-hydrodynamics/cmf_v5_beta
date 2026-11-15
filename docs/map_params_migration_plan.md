@@ -1,5 +1,7 @@
 # CaMa-Flood v5 Parameter and Analysis Tools Migration Plan
 
+> Migration note (2026-11-15): Historical branch names, v4 Issue/PR references and dated approvals below are preserved evidence, not current branch assignments. Current v5 development uses cmf_v5_beta/main, src_main/, config/, gosh_test/ and tools/; old root model/build/run files are under legacy/. See [current status](dev_status.md) and [the migration audit](migration_consistency_audit.md).
+
 **Status:** The scoped v5 parameter-tool migration (Phases B2.1–B2.6) and river-network analysis migration (Phase C) are complete. Allocation migration details are in [`docs/map_allocation_migration_plan.md`](map_allocation_migration_plan.md). This records completion of these map-tool workflows, not completion of the broader map data/tools modernization project; further work is deferred in [`docs/map_data_tools_plan.md`](map_data_tools_plan.md). `map/src/` remains the preserved historical v4 tool tree, and `gosh/` simulation scripts remain unchanged. The v5 workflows under `map/tools/` derive `inpdim_<ROFFTAG>.txt` and `inpmat_<ROFFTAG>.bin`; legacy workflows retain `diminfo_` names.
 
 ## Scope and evidence

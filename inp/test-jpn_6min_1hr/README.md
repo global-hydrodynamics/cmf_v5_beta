@@ -15,14 +15,14 @@ The 1-arcmin sample is retained internally as the source/reference dataset. This
 
 ## Unit caveat
 
-The original source `runoff.ctl` says `mm/day`; the maintainer identifies that label as erroneous and assesses the values as `mm/hour`, consistent with [`gosh/test3-jpn_fcast.sh`](../../gosh/test3-jpn_fcast.sh) (`IFRQ_INP=1`, `DROFUNIT=3600000`). The aggregation preserves the numeric values and writes the corrected `mm/hour` label to the new CTL; it performs no unit conversion. This is the maintainer's interpretation and has not been independently verified against additional source metadata.
+The original source `runoff.ctl` says `mm/day`; the maintainer identifies that label as erroneous and assesses the values as `mm/hour`, consistent with [the historical v4 forecast script](../../legacy/gosh/test3-jpn_fcast.sh) (`IFRQ_INP=1`, `DROFUNIT=3600000`). The aggregation preserves the numeric values and writes the corrected `mm/hour` label to the new CTL; it performs no unit conversion. This is the maintainer's interpretation and has not been independently verified against additional source metadata.
 
 ## Reproduce the aggregation
 
 Ensure the source link is present and points to the v4.30 package's `inp/test_jpn_1hr/` directory. NumPy is the only non-standard Python dependency. Run the shell entry point by path from any working directory:
 
 ```sh
-/path/to/CaMa-Flood_v4/inp/test-jpn_6min_1hr/s01-aggregate_runoff.sh
+/path/to/cmf_v5_beta/inp/test-jpn_6min_1hr/s01-aggregate_runoff.sh
 ```
 
 The source directory is configurable at the top of `s01-aggregate_runoff.sh`; its default `../test_jpn_1hr` is resolved relative to the script, not the caller's current directory. The script writes only into this real `inp/test-jpn_6min_1hr/` directory. The adjacent `aggregate_runoff.py` checks the source CTL, dates, grid, byte order, record count, and file sizes before reading. It applies an area-weighted average over each 6 × 6 source-cell block, using latitude-dependent spherical cell areas (`R² Δλ [sin(φnorth) − sin(φsouth)]`). Longitude widths are equal within each block; the complete cell-area weights are used in the mean. No temporal averaging, interpolation, or unit scaling is performed.

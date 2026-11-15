@@ -1,10 +1,12 @@
 # Levee parameter preparation
 
+> Retained v4 workflow/reference: original root src/gosh/adm paths in recipes are not supported v5 entry points. See [the migration audit](../../docs/migration_consistency_audit.md) for current paths and deferred optional workflows. This notice does not migrate the calculations or execution scripts.
+
 ## Overview
 
-This directory prepares map-specific levee parameters and demonstrates simulations with the CaMa-Flood levee scheme. It derives an unprotected fraction (`LEVFRC`) from levee-distance data, then estimates crown height (`LEVHGT`) from simulated river depths and flood-protection return periods. This specialized preparation workflow is additional to the [standard sample simulations](../../gosh/README.md).
+This directory prepares map-specific levee parameters and demonstrates simulations with the CaMa-Flood levee scheme. It derives an unprotected fraction (`LEVFRC`) from levee-distance data, then estimates crown height (`LEVHGT`) from simulated river depths and flood-protection return periods. This specialized preparation workflow is additional to the [standard sample simulations](../../legacy/gosh/README.md).
 
-For scientific rationale, datasets, and illustrations, see the existing [LeveeParameter.docx](LeveeParameter.docx) and [levee-method guide](../../doc/levee.md). The sequence and parameter definitions below follow the current scripts and [model implementation](../../src/cmf_ctrl_levee_mod.F90). Differences from the manual are identified explicitly.
+For scientific rationale, datasets, and illustrations, see the existing [LeveeParameter.docx](LeveeParameter.docx) and [levee-method guide](../../doc/levee.md). The sequence and parameter definitions below follow the current scripts and [model implementation](../../legacy/src/cmf_ctrl_levee_mod.F90). Differences from the manual are identified explicitly.
 
 **Use a dedicated copy of the river map.** Several stages write parameters through the local `map` link and replace files used by later simulations.
 
@@ -133,7 +135,7 @@ The model reads only `CLEVFRC` and `CLEVHGT` as levee maps and derives the other
 ## Running the workflow
 
 1. Obtain external data and a dedicated map copy. Configure `s01` to point to that copy; check all dependent paths and periods before executing any stage.
-2. Build the normal `src/MAIN_cmf` with the [standard build workflow](../../gosh/README.md), then build local utilities. From the model root:
+2. Build the normal `src/MAIN_cmf` with the [standard build workflow](../../legacy/gosh/README.md), then build local utilities. From the model root:
 
    ```sh
    cd etc/levee_params
@@ -209,7 +211,7 @@ The workflow has distributed, partly duplicated settings; a first-tile-only frac
 ## Related documentation
 
 - [Existing levee manual (Word)](LeveeParameter.docx) and [levee-method guide](../../doc/levee.md)
-- [Runtime levee controller](../../src/cmf_ctrl_levee_mod.F90) and [map/topography initialization](../../src/cmf_ctrl_maps_mod.F90)
-- [Map overview](../../map/README.md), [execution guide](../../gosh/README.md), and [runoff units](../../inp/README.md)
+- [Runtime levee controller](../../legacy/src/cmf_ctrl_levee_mod.F90) and [map/topography initialization](../../legacy/src/cmf_ctrl_maps_mod.F90)
+- [Map overview](../../map/README.md), [execution guide](../../legacy/gosh/README.md), and [runoff units](../../inp/README.md)
 - [General flood-downscaling workflow](../downscale_flddph/ReadMe.md)
 - [Additional tools directory guide](../README.md)

@@ -1,5 +1,7 @@
 # CaMa-Flood v5 Allocation Tools Migration Plan
 
+> Migration note (2026-11-15): Historical branch names, v4 Issue/PR references and dated approvals below are preserved evidence, not current branch assignments. Current v5 development uses cmf_v5_beta/main, src_main/, config/, gosh_test/ and tools/; old root model/build/run files are under legacy/. See [current status](dev_status.md) and [the migration audit](migration_consistency_audit.md).
+
 **Phase:** B — legacy characterization, v5 migration, and regression
 **Status:** Phase A assessment and Phase B0–B6 migration, documentation, research reconciliation, and regression are complete and pushed to `feature/map-data-tools` (`ef9fec9`). Independent scientific validation remains outside this migration.
 **Project:** map data/tools modernization, [Issue #122](https://github.com/global-hydrodynamics/CaMa-Flood_v4/issues/122)

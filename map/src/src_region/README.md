@@ -1,5 +1,7 @@
 # Regional map preparation
 
+> Retained v4 workflow/reference: original root src/gosh/adm paths in recipes are not supported v5 entry points. See [the migration audit](../../../docs/migration_consistency_audit.md) for current paths and deferred optional workflows. This notice does not migrate the calculations or execution scripts.
+
 This guide explains how to create a regional CaMa-Flood river map from an existing global map using the reusable tools in `map/src/src_region/`. The normal user workflow is to configure and run `s01-regional_map.sh` once. The script calls the Fortran map-preparation programs and generates GrADS CTL metadata for the regional map and available high-resolution maps at the end.
 
 The source code repository provides these processing tools; it does not contain every global map dataset. Obtain a compatible map dataset separately and follow its access and data-use terms. The [Mekong development/test example](../../README.md#development-and-test-sample) is described in the map overview.
@@ -89,7 +91,7 @@ The copied `Makefile` builds all nine utilities used by the workflow. It reads t
 make
 ```
 
-The required build dependencies are a compatible Fortran compiler and `make`. Review the active compiler settings in `adm/Mkinclude`; the available configurations and compiler selection are described in [`adm/README.md`](../../../adm/README.md). NetCDF and GrADS are not required to build or run this regional map preparation workflow: the CTL programs write text metadata and do not invoke GrADS.
+The required build dependencies are a compatible Fortran compiler and `make`. Review the active compiler settings in `adm/Mkinclude`; the available configurations and compiler selection are described in [`adm/README.md`](../../../legacy/adm/README.md). NetCDF and GrADS are not required to build or run this regional map preparation workflow: the CTL programs write text metadata and do not invoke GrADS.
 
 To remove local executables and build byproducts before rebuilding with changed compiler settings, use `make clean`, then `make`. Do not run `make clean` while a workflow is using those executables.
 

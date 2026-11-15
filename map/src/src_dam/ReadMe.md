@@ -1,5 +1,7 @@
 # Sample dam and reservoir parameter workflow
 
+> Retained v4 workflow/reference: original root src/gosh/adm paths in recipes are not supported v5 entry points. See [the migration audit](../../../docs/migration_consistency_audit.md) for current paths and deferred optional workflows. This notice does not migrate the calculations or execution scripts.
+
 `src_dam/` contains scripts and Python utilities for preparing a map-specific dam parameter table used by the reservoir-operation option. The repository directory `map/src/src_dam/` is a reusable template: copy it into the target map directory (for example, `map/glb_15min/src_dam/`) and use the copied working directory. The scripts rely on relative paths and sample settings, so inspect and adapt them for the selected map, dam allocation, naturalized simulation, and ancillary data.
 
 This README describes the supplied example workflow. For the model's reservoir-operation configuration and parameter interpretation, use the [Reservoir Operation manual](../../../doc/Manual_ReservoirOperation_v420.docx). The map overview also describes [map-specific products](../../README.md).

@@ -1,5 +1,7 @@
 # CaMa-Flood v5 Runoff Input Data Tools: Phase A Inventory
 
+> Migration note (2026-11-15): Historical branch names, v4 Issue/PR references and dated approvals below are preserved evidence, not current branch assignments. Current v5 development uses cmf_v5_beta/main, src_main/, config/, gosh_test/ and tools/; old root model/build/run files are under legacy/. See [current status](dev_status.md) and [the migration audit](migration_consistency_audit.md).
+
 **Status:** Phase A inventory, 2026-11-01; supplemented by maintainer-assigned Phase B/Phase C registry and ERA5-Land workflow tasks on 2026-11-02.
 **Project:** Issue [#126](https://github.com/global-hydrodynamics/CaMa-Flood_v4/issues/126), branch `feature/runoff-data-tools`, based on `master` at `bf8201771b964e1ae8234823b19164200ea97a63` (PR #125 Map Tools merge).  
 **Evidence labels:** “Repository” means files tracked or present in this Git checkout. “Package observation” means read-only files under the separately distributed local v4.30 package; it is not evidence that those files are in a GitHub clone.

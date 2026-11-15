@@ -1,5 +1,7 @@
 # Result map plotting utilities
 
+> Retained v4 workflow/reference: original root src/gosh/adm paths in recipes are not supported v5 entry points. See [the migration audit](../../docs/migration_consistency_audit.md) for current paths and deferred optional workflows. This notice does not migrate the calculations or execution scripts.
+
 `result_mapping/` contains small Python examples for inspecting saved CaMa-Flood output grids. They make one image from an output file; they do not read the map geometry or make publication-ready maps with coastlines.
 
 ## Programs and inputs

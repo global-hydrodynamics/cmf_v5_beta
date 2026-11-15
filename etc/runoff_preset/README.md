@@ -1,5 +1,7 @@
 # Runoff climatology and coastal adjustment utilities
 
+> Retained v4 workflow/reference: original root src/gosh/adm paths in recipes are not supported v5 entry points. See [the migration audit](../../docs/migration_consistency_audit.md) for current paths and deferred optional workflows. This notice does not migrate the calculations or execution scripts.
+
 `runoff_preset/` contains legacy Fortran and Shell preprocessing for ELSE_GPCC-style daily runoff files. It calculates daily climatologies, optionally adjusts runoff at selected coastal input-grid cells, then recalculates the climatology. This is a specialized preprocessing workflow, not a required step in every CaMa-Flood run.
 
 ## Workflow
@@ -17,7 +19,7 @@ The scripts generate `ELSE_GPCC_dayclm-1981-2010.one`, `ELSE_GPCC_aveclm-1981-20
 
 The Shell examples expect source files under `../../inp/ELSE_GPCC/Roff/`, named `Roff____YYYYMMDD.one`. They also expect `map/` to link to a matching map with `diminfo_1deg.txt` and `inpmat-1deg.bin`. These forcing data and support files are not included in this source directory; the repository source checkout alone is insufficient to run the workflow.
 
-Build the programs with `make -C src` using the repository's active [`adm/Mkinclude`](../../adm/Mkinclude). Then, from `etc/runoff_preset/`, configure paths and years in the scripts and run them in sequence:
+Build the programs with `make -C src` using the repository's active [`adm/Mkinclude`](../../legacy/adm/Mkinclude). Then, from `etc/runoff_preset/`, configure paths and years in the scripts and run them in sequence:
 
 ```sh
 sh s01-daily_climatology.sh

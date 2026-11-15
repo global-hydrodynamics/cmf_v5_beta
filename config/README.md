@@ -1,6 +1,6 @@
 # CaMa-Flood v5 build configuration
 
-The legacy v4 source tree continues to use [`adm/Mkinclude`](../adm/Mkinclude). The v5 model and map tools use the separate machine-specific `config/Mkinclude`, so a v5 build cannot silently inherit v4 compiler settings.
+Historical v4 sources and templates are tracked under [`legacy/`](../legacy/); their original adm/Mkinclude assumptions are preserved as references, not v5 build instructions. The v5 model and map tools use the separate machine-specific `config/Mkinclude`, so a v5 build cannot silently inherit v4 compiler settings.
 
 `config/Mkinclude` is intentionally ignored by Git because compiler paths, libraries, and flags depend on the local machine. The tracked templates are the reusable starting points; the active file is created separately on each workstation or disposable CI checkout. Never add the active file to Git.
 
@@ -22,7 +22,7 @@ else
 fi
 ```
 
-The setup script never copies the file automatically and never changes `config/Mkinclude` or `adm/Mkinclude`. It requires a successful NetCDF-Fortran compile, link, and read/write check before offering to generate the v5 configuration. OpenMP is enabled when its compiler check succeeds. Without an interactive terminal, `s01-setup_fortran.sh` runs diagnostics only; it is not the initializer used by CI.
+The setup script never copies the file automatically and never changes `config/Mkinclude` or the legacy configuration. It requires a successful NetCDF-Fortran compile, link, and read/write check before offering to generate the v5 configuration. OpenMP is enabled when its compiler check succeeds. Without an interactive terminal, `s01-setup_fortran.sh` runs diagnostics only; unattended checks must initialize their own disposable configuration.
 
 ## Choosing a template manually
 
@@ -36,7 +36,7 @@ else
 fi
 ```
 
-- [`Mkinclude_gfortran`](Mkinclude_gfortran): tracked GNU Fortran baseline used by Linux CI and a manual starting point for macOS and Linux.
+- [`Mkinclude_gfortran`](Mkinclude_gfortran): tracked GNU Fortran baseline used by the former Linux workflow and a manual starting point for macOS and Linux.
 - [`Mkinclude_gfortran_debug`](Mkinclude_gfortran_debug): GNU Fortran with runtime checks and debug information.
 - [`Mkinclude_linux_ifx`](Mkinclude_linux_ifx): Linux Intel oneAPI `ifx`; load the compiler environment and provide a compatible NetCDF-Fortran `nf-config`.
 
@@ -51,6 +51,6 @@ make -C map/tools/code all
 
 The active `config/Mkinclude` is local and machine-specific. It is ignored by Git; the three templates and this guide are tracked. Keep compiler outputs and local configuration out of commits. Optional MPI, Heatlink, ICI, and sediment configurations require additional setup and are not implied to be validated by the standard templates.
 
-## Automated builds
+## Manual validation while CI is disabled
 
-The GitHub Actions source and map validation job starts from a clean checkout, installs the GNU Fortran and NetCDF-Fortran dependencies, and copies the tracked `Mkinclude_gfortran` template to `config/Mkinclude` in that disposable runner. It then builds the v5 model and regional map tools and runs the relevant checks. The generated active file remains ignored and is discarded with the runner. Local setup does not replace an existing active file. V5 builds must never use `adm/Mkinclude` as a fallback; that file remains the legacy v4 configuration.
+The former source/map GitHub Actions workflow has been removed from the active workflows directory by maintainer instruction. Automated CI is temporarily disabled pending a small, reproducible v5 regression suite; this does not remove the tests or establish scientific validation. See [the migration audit](../docs/migration_consistency_audit.md#manual-checks-retained-from-the-retired-workflow) for its previous coverage and retained manual commands. Use a reviewed local configuration or an independent disposable checkout, and never overwrite an existing active configuration automatically. The GNU template remains available for macOS/Linux setup; historical optional configurations are not thereby validated.

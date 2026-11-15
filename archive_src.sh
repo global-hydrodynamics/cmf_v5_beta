@@ -1,4 +1,6 @@
 #!/bin/sh
+# Historical v4 archiver; original root paths are retained for reference.
+# Not a v5 package-assembly entry point. See docs/development_and_distribution_design.md.
 # Archiving source code/script 
 # To be used in GitHub branch dir. Only codes are archivd.
 # Make sure only required files are included in Git Repo.

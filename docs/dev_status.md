@@ -1,13 +1,45 @@
 # Development status
 
-Development policy: [AGENTS.md](../AGENTS.md).
+Development policy: [AGENTS.md](../AGENTS.md). Authoritative published registry:
+`origin/main:docs/dev_status.md` in `global-hydrodynamics/cmf_v5_beta`.
+Working-tree updates remain proposals until published. V4 maintenance is separate.
 
-Authoritative registry and dashboard snapshot for this migrated repository: `origin/main:docs/dev_status.md`.
-Latest progress and work claims: a linked GitHub Issue when one is used; otherwise the project status and plan.
+## Current v5 work
 
-Historical base snapshot: old-repository `origin/master` at `19e2c1a`, 2026-11-06, with branch-local proposals from 2026-11-08 and later. Historical project rows/branch names below are inherited evidence, not automatic registration of those branches in cmf_v5_beta. Reconcile current proposals with origin/main before publication.
+### Repository migration consistency cleanup (DT-0104, 2026-11-15)
 
-## Registered active projects
+Maintainer-approved working branch: `main`; owner: Dai Yamazaki (maintainer),
+Codex implements. Starting revision: `8d557898`. Scope: classify migration
+references, correct confirmed active path/navigation errors, distinguish
+historical records, remove the obsolete GitHub Actions configuration and
+retain manual checks. Preserve the existing README edit. No physics, data,
+reference outputs, new test framework, directory reorganization, package
+assembler, commit or push is authorized. Acceptance: focused path/syntax and
+existing component tests; local-link and history/data preservation checks;
+no active workflow files. Findings and manual checks are in
+[the migration audit](migration_consistency_audit.md); evidence is in
+[VR-0150](../research/records/validation_runs/VR-0150.md).
+
+## Published migration baseline
+
+Root src/gosh/adm relocation to tracked legacy/ and util consolidation into
+tools/ were published in `29b889c4` (v5beta_initial_setup), inherited by current
+main at `8d557898`. DT-0102 and DT-0103 documentation/research files are tracked.
+Those completed moves are not pending work. Current model/configuration/run
+paths are src_main/, config/, gosh_test/ and tools/. Optional etc/ and
+map/src/ workflows remain legacy or require individual v5 review.
+
+Automated GitHub Actions is temporarily disabled by this cleanup pending a
+small, reproducible v5 regression suite. Tests and their reference inputs
+remain; use [manual validation](migration_consistency_audit.md#manual-checks-retained-from-the-retired-workflow).
+
+## Historical project and status snapshots
+
+The following inherited task descriptions, old branch assignments, v4 Issues,
+master refs and publication proposals describe their original coordination
+context. They do not register current work on old feature branches or imply
+that formerly uncommitted migrations or CI remain pending/active. Preserve
+this evidence; current assignments and automation status are above.
 
 ### Development and distribution design documentation (DT-0103, 2026-11-15)
 

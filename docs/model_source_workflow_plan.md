@@ -1,5 +1,7 @@
 # CaMa-Flood v5 model source and simulation workflow modernization
 
+> Migration note (2026-11-15): Historical branch names, v4 Issue/PR references and dated approvals below are preserved evidence, not current branch assignments. Current v5 development uses cmf_v5_beta/main, src_main/, config/, gosh_test/ and tools/; old root model/build/run files are under legacy/. See [current status](dev_status.md) and [the migration audit](migration_consistency_audit.md).
+
 ## Status
 
 **Phase 0 and Phase 1 (including NetCDF I/O and the two-year Mekong run) are implemented and operationally validated on the maintainer's macOS workstation.** The complete tracked `src/` and `gosh/` trees were copied to `src_main/` and `gosh_test/`; separate Binary and NetCDF-enabled executables were built. The initial 2000 Mekong annual run, 40-day format comparisons, and 2000–2001 annual-NetCDF/restart workflow completed. These checks establish operational behavior and format consistency for this build and sample, not independent scientific validation or broad platform support.
@@ -39,7 +41,7 @@ The clean default build completed on 2026-11-03 using GNU Fortran 14.2 with the 
 
 ### Existing v4 architecture and copy implications
 
-The stand-alone `src/MAIN_cmf.F90` calls `CMF_DRV_INPUT`, `CMF_DRV_INIT`, `CMF_DRV_ADVANCE`, and `CMF_DRV_END`. Reusable `cmf_ctrl_*`, `cmf_calc_*`, `cmf_opt_*`, and `yos_cmf_*` modules have explicit module and execution-order dependencies; the modules are not independent plug-ins. See [`src/README.md`](../src/README.md) for the verified v4 architecture.
+The stand-alone `src/MAIN_cmf.F90` calls `CMF_DRV_INPUT`, `CMF_DRV_INIT`, `CMF_DRV_ADVANCE`, and `CMF_DRV_END`. Reusable `cmf_ctrl_*`, `cmf_calc_*`, `cmf_opt_*`, and `yos_cmf_*` modules have explicit module and execution-order dependencies; the modules are not independent plug-ins. See [`src/README.md`](../legacy/src/README.md) for the verified v4 architecture.
 
 The complete source inventory includes:
 
@@ -200,7 +202,7 @@ The standard Binary and NetCDF-enabled builds passed. Mekong DAY, MON, YEAR, and
 
 The v5 build settings are isolated under `config/`; the legacy v4 trees continue to use `adm/Mkinclude`. V5 Makefiles in `src_main/` and `map/tools/code/` explicitly require `config/Mkinclude` and report setup instructions if it is absent. The standard GNU templates enable NetCDF, OpenMP, and single precision, with MPI and Heatlink disabled. `nf-config` provides NetCDF compile/link flags. The root setup script requires a successful NetCDF-Fortran compile/link/run check before it offers a reviewed root-level `Mkinclude`; the user manually activates it in `config/`. The local active file is ignored by Git. Linux `ifx` is available as an optional template but has not been tested. See [`config/README.md`](../config/README.md).
 
-The source/map validation workflow initializes a disposable `config/Mkinclude` from the tracked GNU template after installing GNU Fortran and NetCDF-Fortran. It builds the v5 model and regional map tools before running the existing map checks; CI no longer silently skips the regional build when a compiler is absent. This does not change workstation configuration or make the ignored active file part of Git.
+The former source/map validation workflow initialized a disposable `config/Mkinclude` and built the model/regional tools before map checks. That workflow is now removed from active GitHub Actions by maintainer instruction; the underlying build/test commands remain available in [the migration audit](migration_consistency_audit.md#manual-checks-retained-from-the-retired-workflow). No replacement CI or complete scientific validation is claimed.
 
 ## Interactive workstation setup
 

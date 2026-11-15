@@ -134,6 +134,8 @@ The CSV is an evolving source-linked inventory. Category 11 now has the machine-
 
 ## Development/test repository sample
 
+Migration note: source_reader entries beginning with src/ cite the historical v4 readers now preserved under legacy/src/. Current model development is under src_main/; this cleanup does not reinterpret registry values or change workflow_stage.
+
 `map/mekong_15min/` is the official GitHub development/test sample. Its regionalization scripts are maintainer-operated sample-preparation tools used to create or update this distributed sample from source data supplied separately in CaMa-Flood distribution packages. They are not automated tests and do not run in GitHub Actions. Sample inclusion does not establish scientific validation or production suitability. The sample includes the 1-minute high-resolution subdirectory and prepared channel, input-matrix, bifurcation, auxiliary, and MPI-preparation products. Its dimensions and geometry are dataset-specific (`NX=80`, `NY=120`, `NLFP=10`, 0.25°, 90–110°E, 5–35°N); they do not define the general map format.
 
 GitHub-only validation checks the tracked sample's geometry, registered binary types/layout sizes, and base/high-resolution inventory with `map/tests/validate_mekong_sample.py`. `map/tools/tests/test_mekong_ctl_integration.py` invokes the CTL wrapper using a temporary copy of sample inputs, so it never regenerates the tracked CTLs. The Python generator has separate synthetic unit tests. GitHub Actions runs these checks without the distribution package or a model simulation. These checks validate the sample files and CTL metadata/layout consistency, not the river network's scientific correctness.
@@ -303,8 +305,10 @@ High-resolution `downxy` stores two signed 16-bit relative offsets on the high-r
 
 - Variable definitions and common product mappings: [`map_variables.csv`](map_variables.csv).
 - Map-specific geometry and input-matrix workflow: [`params.txt` readers/writers and general input matrix](../map/src/src_param/generate_inpmat.F90), [input-matrix shell configuration](../map/src/src_param/s02-generate_inpmat.sh), [regional default climatology matrix](../map/tools/code/region_default_inpmat.F90), and [regional extraction](../map/src/src_region/cut_domain.F90).
-- Model binary and NetCDF readers: [`cmf_ctrl_maps_mod.F90`](../src/cmf_ctrl_maps_mod.F90#L232); dimension config: [`cmf_ctrl_nmlist_mod.F90`](../src/cmf_ctrl_nmlist_mod.F90#L180).
-- Binary kind definitions: [`parkind1.F90`](../src/parkind1.F90#L20), including the precision switch for `JPRB`.
+- Model binary and NetCDF readers: [`cmf_ctrl_maps_mod.F90`](../legacy/src/cmf_ctrl_maps_mod.F90#L232); dimension config: [`cmf_ctrl_nmlist_mod.F90`](../legacy/src/cmf_ctrl_nmlist_mod.F90#L180).
+- Binary kind definitions: [`parkind1.F90`](../legacy/src/parkind1.F90#L20), including the precision switch for `JPRB`.
 - Channel workflow: [`s01-channel_params.sh`](../map/src/src_param/s01-channel_params.sh), [`calc_outclm.F90`](../map/src/src_param/calc_outclm.F90), [`calc_rivwth.F90`](../map/src/src_param/calc_rivwth.F90), and [`set_gwdlr.F90`](../map/src/src_param/set_gwdlr.F90).
 - Historical map-method overview: [Yamazaki et al. (2011)](https://doi.org/10.1029/2010WR009726).
 - Package examples, inspected read-only: `glb_15min/params.txt`, `glb_15min/mapdim.txt`, CTLs, `diminfo*.txt`, channel maps, `map/data/ELSE_GPCC_clm-1981-2010.one`, and `map/data/width.bin`.
+
+Current automation status: the previous source/map GitHub Actions workflow is removed pending a redesigned v5 suite. The validation scripts cited above remain manually executable; see [the migration audit](../docs/migration_consistency_audit.md#manual-checks-retained-from-the-retired-workflow).

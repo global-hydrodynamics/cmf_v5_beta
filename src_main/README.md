@@ -1,6 +1,6 @@
 # CaMa-Flood v5 model source
 
-This directory is the v5 development copy of the complete legacy model source tree. The legacy reference remains under [`../src/`](../src/); do not edit it as part of v5 work. The copy includes all existing source components, including `ICI/`, `sediment/`, `heatlink/`, and the supporting libraries. Their presence does not mean every optional configuration has been ported or validated.
+This directory is the v5 development copy of the complete legacy model source tree. The legacy reference remains under [`../legacy/src/`](../legacy/src/); do not edit it as part of v5 work. The copy includes all existing source components, including `ICI/`, `sediment/`, `heatlink/`, and the supporting libraries. Their presence does not mean every optional configuration has been ported or validated.
 
 The v5 output-variable inventory is maintained in [`variable_table/output_variables.csv`](../variable_table/output_variables.csv). It supplies metadata for every standard `CVARSOUT` output: long name, units, temporal aggregation, missing value, aliases, and required options. The registry does not select Fortran memory. The output dispatcher explicitly binds each supported name to the array passed to the public generic API, for example `CALL OUTPUT_WRITE('rivout', D2MY_DISCHARGE)`. The caller is responsible for ensuring that the supplied array has the scientific meaning described by the selected metadata. To add an output, add its metadata row and an explicit dispatcher call; no registry parser, conversion, MPI, or writer changes should be needed for an ordinary unit-catchment field.
 
@@ -26,7 +26,7 @@ To remove only the v5 model build products:
 make -C src_main clean
 ```
 
-Do not use the legacy [`../gosh/compile.sh`](../gosh/compile.sh) as a v5 build entry point: it cleans and builds `util/`, legacy `map/src/` tools, and `src/`. The `gosh_test/` build wrapper invokes only this directory's Makefile.
+Do not use the legacy [`../legacy/gosh/compile.sh`](../legacy/gosh/compile.sh) as a v5 build entry point: it cleans and builds `util/`, legacy `map/src/` tools, and `src/`. The `gosh_test/` build wrapper invokes only this directory's Makefile.
 
 ## NetCDF-enabled build
 

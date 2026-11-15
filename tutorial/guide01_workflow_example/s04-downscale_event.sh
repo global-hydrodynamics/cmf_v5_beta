@@ -2,7 +2,7 @@
 # Downscale the common Control-selected event with the existing tributary method.
 set -eu
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
-CMF_BASE=$(CDPATH= cd "$SCRIPT_DIR/../../.." && pwd -P)
+CMF_BASE=$(CDPATH= cd "$SCRIPT_DIR/../.." && pwd -P)
 PYTHON="$CMF_BASE/.venv/bin/python"
 MAPDIR="$CMF_BASE/map/mekong_15min"
 SOURCE="$CMF_BASE/etc/downscale_flddph/src/downscale_flddph_trib.F90"

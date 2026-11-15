@@ -1,10 +1,12 @@
 # CaMa-Flood Map Data Inventory (Review Draft)
 
+> Migration note (2026-11-15): Historical branch names, v4 Issue/PR references and dated approvals below are preserved evidence, not current branch assignments. Current v5 development uses cmf_v5_beta/main, src_main/, config/, gosh_test/ and tools/; old root model/build/run files are under legacy/. See [current status](dev_status.md) and [the migration audit](migration_consistency_audit.md).
+
 **Status:** Phase 1 reference inventory. The packaged v4.30 `glb_15min` map and standard sample run are the verified example, not a universal map specification. Common variable definitions now live in [the shared CSV](../variable_table/map_variables.csv), with schema and design rationale in [map metadata specification](../variable_table/map_metadata_spec.md). This document retains reference-dataset evidence and reader/workflow findings; it does not decide a NetCDF layout or conversion behavior.
 
 ## 1. Scope and reference configuration
 
-The verified sample is [`gosh/test1-glb_15min.sh`](../gosh/test1-glb_15min.sh#L80). It selects binary maps (`LMAPCDF=.FALSE.`), provides file names through the map namelist, selects `rivwth_gwdlr.bin` as `CRIVWTH`, and enables bifurcation input with `LPTHOUT=.TRUE.`. Those choices describe the sample configuration, not mandatory settings for every run.
+The verified sample is [`gosh/test1-glb_15min.sh`](../legacy/gosh/test1-glb_15min.sh#L80). It selects binary maps (`LMAPCDF=.FALSE.`), provides file names through the map namelist, selects `rivwth_gwdlr.bin` as `CRIVWTH`, and enables bifurcation input with `LPTHOUT=.TRUE.`. Those choices describe the sample configuration, not mandatory settings for every run.
 
 This document preserves the source and dataset evidence for the core reference configuration. The broader product register, including package-observed auxiliary/MPI products and traceable source-only outputs, is maintained in [`variable_table/map_variables.csv`](../variable_table/map_variables.csv). Specialized products remain marked provisional where the source evidence does not establish their semantics.
 
@@ -71,10 +73,10 @@ Remaining metadata and conversion questions are grouped in [the `Open Questions`
 
 ## 8. Evidence checked
 
-- Reference map configuration: [`test1-glb_15min.sh`](../gosh/test1-glb_15min.sh#L80).
-- General binary/NetCDF map readers and `NMAP`: [`cmf_ctrl_maps_mod.F90`](../src/cmf_ctrl_maps_mod.F90#L232).
-- Dimension configuration and sentinel constants: [`cmf_ctrl_nmlist_mod.F90`](../src/cmf_ctrl_nmlist_mod.F90#L180).
-- Direct-access runoff input matrix layout: [`cmf_ctrl_forcing_mod.F90`](../src/cmf_ctrl_forcing_mod.F90#L450), [`inpmat_mod.f90`](../src/mod/inpmat_mod.f90#L62).
+- Reference map configuration: [`test1-glb_15min.sh`](../legacy/gosh/test1-glb_15min.sh#L80).
+- General binary/NetCDF map readers and `NMAP`: [`cmf_ctrl_maps_mod.F90`](../legacy/src/cmf_ctrl_maps_mod.F90#L232).
+- Dimension configuration and sentinel constants: [`cmf_ctrl_nmlist_mod.F90`](../legacy/src/cmf_ctrl_nmlist_mod.F90#L180).
+- Direct-access runoff input matrix layout: [`cmf_ctrl_forcing_mod.F90`](../legacy/src/cmf_ctrl_forcing_mod.F90#L450), [`inpmat_mod.f90`](../legacy/src/mod/inpmat_mod.f90#L62).
 - Map dimension and input-matrix metadata generation: [`generate_inpmat.F90`](../map/src/src_param/generate_inpmat.F90#L45) and [`s02-generate_inpmat.sh`](../map/src/src_param/s02-generate_inpmat.sh#L20).
 - Parameter generation and regional processing: [`calc_rivwth.F90`](../map/src/src_param/calc_rivwth.F90#L155), [`set_gwdlr.F90`](../map/src/src_param/set_gwdlr.F90#L1), [`cut_domain.F90`](../map/src/src_region/cut_domain.F90#L1), [`set_map.F90`](../map/src/src_region/set_map.F90#L1).
 - Historical scientific meanings and map conventions: [CaMa-Flood v4.20 manual](../doc/Manual_CaMa-Flood_v420.docx). Public overview of the FLOW-based map-generation approach: [Yamazaki et al. (2011), *A physically based description of floodplain inundation dynamics in a global river routing model*](https://doi.org/10.1029/2010WR009726).

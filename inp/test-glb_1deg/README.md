@@ -22,7 +22,7 @@ sh inp/test-glb_1deg/s01-extract_ELSE_GPCC.sh
 Alternatively, invoke the shell script by its absolute path from any working directory:
 
 ```sh
-/path/to/CaMa-Flood_v4/inp/test-glb_1deg/s01-extract_ELSE_GPCC.sh
+/path/to/cmf_v5_beta/inp/test-glb_1deg/s01-extract_ELSE_GPCC.sh
 ```
 
 The shell workflow invokes the adjacent standard-library-only [`extract_ELSE_GPCC.py`](extract_ELSE_GPCC.py). It checks the source CTL grid, row order, missing-value sentinel, every requested date and file size, then copies each source file byte-for-byte to `Roff/`. It checks the output date set and sizes, compares every output file with its source, verifies the generated CTL geometry/time axis, and confirms source file sizes and modification times did not change. No external Python packages or model executable are required.

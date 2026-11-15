@@ -1,5 +1,7 @@
 # Flood-depth and flood-duration downscaling
 
+> Retained v4 workflow/reference: original root src/gosh/adm paths in recipes are not supported v5 entry points. See [the migration audit](../../docs/migration_consistency_audit.md) for current paths and deferred optional workflows. This notice does not migrate the calculations or execution scripts.
+
 ## Overview
 
 These tools postprocess saved CaMa-Flood floodplain depth (`flddph`) into high-resolution inundation maps. They combine the simulation's river map with its corresponding high-resolution catchment assignments and relative elevations; they do not run another hydrodynamic simulation.
@@ -24,7 +26,7 @@ cd etc/downscale_flddph
 make -C src all
 ```
 
-[`src/Makefile`](src/Makefile) includes `adm/Mkinclude` and uses its `FC`, `FFLAGS`, and include settings. Configure an available Fortran compiler using the [build guide](../../adm/README.md). The targets are `igetday`, `downscale_flddph`, `downscale_flddph_trib`, `calc_depth-duration`, `downscale_fldprd`, `conv_flood`, `conv_slp`, and `conv_slp_dur`; executables are written under `src/`.
+[`src/Makefile`](src/Makefile) includes `adm/Mkinclude` and uses its `FC`, `FFLAGS`, and include settings. Configure an available Fortran compiler using the [build guide](../../legacy/adm/README.md). The targets are `igetday`, `downscale_flddph`, `downscale_flddph_trib`, `calc_depth-duration`, `downscale_fldprd`, `conv_flood`, `conv_slp`, and `conv_slp_dur`; executables are written under `src/`.
 
 ### Input files
 
@@ -170,7 +172,7 @@ Do not run these workflows concurrently in the same directory: they share links,
 
 - [Scientific downscaling note (Word)](../../doc/Note_Downscaling.docx)
 - [River maps and supporting layers](../../map/README.md)
-- [Sample simulations and outputs](../../gosh/README.md)
-- [Compiler configuration](../../adm/README.md)
+- [Sample simulations and outputs](../../legacy/gosh/README.md)
+- [Compiler configuration](../../legacy/adm/README.md)
 - [Additional tools directory guide](../README.md)
 - [Model overview](../../README.md)
