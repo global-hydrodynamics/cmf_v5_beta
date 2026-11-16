@@ -118,7 +118,7 @@ def test_native_assignment_clicks_and_persistent_selection(products):
         assert "ix (1-based)" not in info  # no containing-cell fallback
     app.background.value = "coarse"
     app.inspect(11.25, 21.75)
-    assert app.selected == (0, 0) and app.selection.boundary is not None  # requested background-independent assignment
+    assert app.selected == (1, 1) and app.selection.boundary is not None  # coarse geographic rule
     app.background.value = "elevtn"
     app.inspect(11.25, 21.75)
     assert app.selection.kind == "catchment" and app.selected == (0, 0)
@@ -126,7 +126,7 @@ def test_native_assignment_clicks_and_persistent_selection(products):
 
 def test_presets_catalog_missing_inputs_and_atomic_application(map_dir):
     library = PresetLibrary()
-    assert len(library.presets) == 11 and not library.messages
+    assert len(library.presets) == 12 and not library.messages
     app = Explorer(map_dir, map_dir.parent / "exports")
     before = app.settings()
     missing = library.missing_products("p01-f04b", app.reader, app.scene)
@@ -218,7 +218,7 @@ def test_mekong_presets_native_outline_and_png(tmp_path):
         assert ((rgb[:, :, 0] > 180) & (rgb[:, :, 1] < 30) & ((rgb[:, :, 2] > 130) & (rgb[:, :, 2] < 200))).sum() > 20
 
 
-def test_source_change_clears_old_outline(products):
+def test_source_change_reassesses_outline(products):
     app = Explorer(products, products.parent / "exports")
     app.background.value = "catchment"
     app.inspect(11.25, 21.75)
@@ -229,9 +229,9 @@ def test_source_change_clears_old_outline(products):
     )
     app.hires_source.options = list(app.scene.tiles)
     app.hires_source.value = "another/tile"
-    assert app.selection.boundary is None and app.selected is None
-    assert not len(app.selected_coarse_source.data["x0"])
-    assert "source changed" in app.selection_summary.object
+    assert app.selection.tile_key == 'another/tile' and app.selected == (1,1)
+    assert app.selection.boundary is not None
+    assert len(app.selected_coarse_source.data['x0']) == 4
 
 
 def test_invalid_preset_metadata_is_diagnostic(tmp_path):

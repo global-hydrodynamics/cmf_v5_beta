@@ -1,4 +1,4 @@
-"""Background-independent assignment science and distinct computational geometry."""
+"""Background-dependent selection and distinct computational geometry."""
 
 from pathlib import Path
 
@@ -15,7 +15,7 @@ BACKGROUNDS = ["none", "coarse", "catchment", "elevtn", "difference", "flddif"]
 
 
 @pytest.mark.parametrize("background", BACKGROUNDS)
-def test_background_independent_native_selection_and_overlay(products, background):
+def test_background_dependent_selection_and_independent_overlay(products, background):
     path = products / "fine/tile.catmxy.bin"
     data = np.fromfile(path, dtype="<i2").reshape(2, 6, 8)
     data[:, 2:5, 1:5] = 1  # not the geographically containing coarse cell
@@ -30,9 +30,12 @@ def test_background_independent_native_selection_and_overlay(products, backgroun
     app.scene.build(app.extent, app.variable.value, app.layer, app.network, app.scene_options(), max_side=2)
     info = app.inspect(11.000001, 21.999999)
     assert app.reader.geometry.cell(11.000001, 21.999999) == (1, 1)
-    assert app.selected == (0, 0) and app.selection.native_pixel == (2, 2)
-    assert app.selection.boundary.pixel_count == int(((data[0] == 1) & (data[1] == 1)).sum())
-    expected = np.array([[[10, 23], [11, 23]], [[11, 23], [11, 22]], [[11, 22], [10, 22]], [[10, 22], [10, 23]]])
+    coarse = background in ('none','coarse')
+    assert app.selected == ((1,1) if coarse else (0,0)) and app.selection.native_pixel == (2,2)
+    pair = 2 if coarse else 1
+    assert app.selection.boundary.pixel_count == int(((data[0]==pair)&(data[1]==pair)).sum())
+    expected = np.array([[[11,22],[12,22]],[[12,22],[12,21]],[[12,21],[11,21]],[[11,21],[11,22]]]
+                        if coarse else [[[10,23],[11,23]],[[11,23],[11,22]],[[11,22],[10,22]],[[10,22],[10,23]]])
     np.testing.assert_array_equal(app.selection.coarse_outline, expected)
     assert app.selected_coarse_renderer is not app.selection_boundary_renderer
     assert app.selected_coarse_renderer.glyph.line_dash != []
@@ -42,14 +45,20 @@ def test_background_independent_native_selection_and_overlay(products, backgroun
     state = app.selection
     for other in BACKGROUNDS:
         app.background.value = other
-        assert app.selection is state
+        expected_cell = (1,1) if other in ('none','coarse') else (0,0)
+        assert app.selected == expected_cell
+        if state.method == app.selection.method:
+            assert app.selection is state
         normal = [entry[0] for entry in app.frame.overlays if "assignment boundaries" in entry[3]]
         np.testing.assert_array_equal(normal[0], reference)
         app.inspect(10.25, 22.75)  # -999 land: no stale selection/fallback
-        assert app.selected is None and app.selection.boundary is None
-        assert len(app.selected_coarse_source.data["x0"]) == 0
+        if other in ('none','coarse'):
+            assert app.selected == (0,0) and app.selection.coarse_outline is not None
+        else:
+            assert app.selected is None and app.selection.boundary is None
+            assert len(app.selected_coarse_source.data['x0']) == 0
         app.inspect(11.000001, 21.999999)
-        assert app.selected == (0, 0)
+        assert app.selected == expected_cell
         state = app.selection
     app.overlay_controls["catchment_boundaries"].value = False
     assert len(app.selection_boundary_source.data["x0"]) > 0
@@ -70,7 +79,7 @@ def test_ui_contracts_and_no_hires_fallback(map_dir):
     assert "no catmxy" in app.boundary_status.object
     app.inspect(11.25, 21.75)
     assert app.selected == (1, 1) and app.selection.boundary is None
-    assert "reference" in app.selection.status
+    assert "no catmxy" in app.selection.status
     assert len(app.selected_coarse_source.data["x0"]) == 4
     app.overlay_controls["catchment_boundaries"].value = True
     assert any("need catmxy" in msg for msg in app.frame.diagnostics)
@@ -100,16 +109,16 @@ ROOT = Path(__file__).resolve().parents[3]
 def test_mekong_all_backgrounds_assignment_and_rectangle(tmp_path):
     app = Explorer(ROOT / "map/mekong_15min", tmp_path)
     app.set_extent((104.5, 107, 9.5, 12))
-    boundary = None
     for background in BACKGROUNDS:
         app.background.value = background
         app.overlay_controls["catchment_boundaries"].value = True
         info = app.inspect(105.8, 10.8)
-        assert app.selected == (96, 62) and info["unit catchment assigned pixel count"] == 295
-        assert app.reader.geometry.cell(105.8, 10.8) != (96, 62)
+        coarse = background in ('none','coarse')
+        expected = (96,63) if coarse else (96,62)
+        assert app.selected == expected
+        tile = app.scene.tiles[app.hires_source.value]
+        x,y = tile.mmap('catmxy')
+        assert info['unit catchment assigned pixel count'] == np.count_nonzero((x==expected[1]+1)&(y==expected[0]+1))
         rectangle = app.selection.coarse_outline
-        assert rectangle[0].tolist() == [[105.5, 11.0], [105.75, 11.0]]
-        if boundary is not None:
-            assert app.selection.boundary is boundary
-        boundary = app.selection.boundary
+        assert rectangle[0].tolist() == ([[105.75,11.0],[106.0,11.0]] if coarse else [[105.5,11.0],[105.75,11.0]])
     assert app.export().is_file()

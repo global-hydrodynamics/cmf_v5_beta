@@ -165,7 +165,8 @@ def test_layer_combinations_inspection_and_v1_v2_settings(products):
     app.overlay_controls["channel_pixels"].value = True
     app.overlay_controls["coarse_grid"].value = True
     app.arrows.value = True
-    assert len(app.frame.images) == 1 and len(app.frame.overlays) >= 4
+    assert len(app.frame.images) == 2 and len(app.frame.overlays) >= 4
+    assert (app.frame.images[1][0] != 0).any()  # independent transparent channel-pixel image
     assert len(app.frame.points) > 0 and len(app.frame.arrows["x"]) > 0
     info = app.inspect(10.75, 22.25)
     assert "assignment status" in info and "derived max 8-neighbor elevation difference [m], NOT slope" in info

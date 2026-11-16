@@ -1,5 +1,144 @@
 # Interactive Map Explorer design
 
+## River display controls (DT-0112)
+
+Maintainer authorizes autonomous corrective River controls on current main,
+retaining dirty DT-0109/0110/0111 work; no commit/push, data or Gallery-script edits.
+Conditional color controls and source-area widths remain independent. Ordinary
+sessions default to continuous log mapping and area-dependent widths. Display
+color limits affect only continuous/six-log COLOR; WIDTH retains its complete
+valid-link reference. Quantiles use full-reference log-area quartiles, fixed
+uses historical1..1e6km²; these disable manual color limits. Link populations,
+periodic topology, invalid endpoint handling and stored direction stay unchanged.
+
+Extend area_style with validated area_limits and explicit area_color_style:
+palette (generic), gallery_quartiles (Tutorial02 colors), gallery_continuous
+(f02/f05 continuous color with six width classes). Flat preset CSV references
+canonical Gallery IDs and declares these exceptions without duplicated descriptions.
+Old saved files infer historical style; new GUI palette/mapping edits release a
+Gallery exception and mark the preset custom. Color and width legends state their
+separate applied references. No physical link is removed by a display limit.
+
+Keep old public boolean arrows as a hidden adapter; True maps to old7px, False0.
+Visible Arrow Size0..20px controls main-network triangles only, retaining direction
+and600-visible-segment safeguard. Frame carries numerical sizes for Bokeh and
+Matplotlib; export converts pixels to points using its160dpi, not a fixed marker.
+JSONv2 adds optional area_limits/area_color_style and layers.arrow_size, retaining
+old fields and default interpretation. Reject malformed settings before mutation.
+DT-0112 supersedes earlier descriptions of fixed four-blue colors, a direction
+checkbox, or quartile defaults for ordinary sessions. Verify mathematical
+classes/color-width independence, presets/legacy settings,
+arrow geometry/export and actual Mekong browser controls/PNG.
+
+
+## Background display controls (DT-0111)
+
+The maintainer requires four corrective controls, all verified in actual GUI:
+raster-only 0–100% opacity, high-resolution-only visual channel pixels,
+configurable inherited-uparea palettes, and continuous high-resolution Gallery /
+linear / log normalization with automatic or manual physical limits. Preserve
+background-dependent selection, all scientific source values and old defaults.
+Work continues over retained uncommitted DT-0109/0110 changes, without commit/push.
+
+A shared background_style.py validates high-resolution display options and builds
+DisplayLayer palette/norm/limits used identically by Scene, browser colorbar and
+PNG. Defaults reproduce existing catchment green/log and terrain full-tile P2/P98,
+sqrt/gray-range/pale-gamma exactly. Custom linear/log are distinct choices; log
+masks nonpositive display pixels and uses full-tile positive-reference limits.
+Manual limits are finite, strictly increasing and positive when log. No viewport
+normalization or scientific data mutation. Numerical normalization, palette lookup
+and final image alpha are separate operations.
+
+Keep active coarse and high-resolution controls distinct within one visible Color
+Settings section. New high-resolution fields have per-variable session profiles.
+Legacy coarse/terrain controls remain adapters for old JSON/public calls. Saved
+JSON v2 gains optional layers.highres_style and layers.background_opacity; absent
+fields infer prior behavior. Gallery presets explicitly restore original defaults.
+
+Opacity multiplies existing base-raster alpha only, preserving transparent/missing
+pixels and colorbar values. Channel pixels become a separate transparent RGBA
+image above the raster, so opacity cannot fade them or vector/selection overlays.
+Coarse/blank backgrounds never render them, while their stored high-res preference
+is retained. High-res visual codes 10/7 preserve their meanings and prior valid
+assignment mask when available; without catmxy, visual codes alone may be displayed
+without inventing an assignment. Missing visual disables the high-res control.
+
+DT-0111 supersedes the earlier fixed/hidden high-resolution color controls below.
+Per-variable styles remain session-local; JSON stores only the active style.
+Legacy categorical inherited fields keep their discrete palette and disable
+continuous controls. Native selection state is never changed by opacity, palette,
+scale or limit edits. Re-render errors keep the previous valid image; correction
+clears the error. Log excludes nonpositive values from full-reference statistics
+and masks them in the DisplayLayer, never in the source/inspection arrays.
+
+Acceptance requires automated RGBA/norm/reference-limit/config/export contracts,
+Mekong integration and actual browser comparisons for all four controls, with a
+feature-by-feature verification matrix and honest remaining limitations.
+
+## Background-dependent scientific selection (DT-0110)
+
+The maintainer explicitly replaces background-independent selection with two
+rules, retaining the preceding uncommitted DT-0109 UI/configuration work.
+Coarse Raster and No Background select the params.txt rectangle containing the
+click. High-resolution Raster (all four variables) selects the native catmxy
+assignment. In either case the selected grid, its exact computational rectangle,
+its stored native catchment boundary and downstream link refer to the same cell.
+The clicked native assignment can differ from a coarse geographic selection and
+is reported separately; it never overrides the coarse rule.
+
+SelectionState records the method and geographic containing cell in addition
+to clicked coordinate/native pixel/selected river cell/native geometry. Existing
+CatchmentIndex is reused for either selected cell. No matching native pixels
+or missing selected catmxy leaves a coarse selection valid without a catchment
+outline. A missing/unassigned high-resolution assignment clears all selected
+geometry and markers, retaining clicked/native information and last click.
+There is no geographic fallback in high-resolution mode, even without catmxy.
+
+On rule changes or tile changes, reassess the last geographic click. A variable,
+palette or network change under the same rule/source preserves the grid. The
+actual scientific background mode (including none) determines the rule so that
+legacy/public widgets and saved configurations follow the same contract. PNG
+continues to use the same SelectionState geometry as the browser. Inspector
+explicitly distinguishes method, geographic containing grid, raw native codes
+and selected river-map grid; selected attributes/connectivity use only that grid.
+This supersedes earlier background-independent selection sections below, which
+remain as historical design evidence. No boundary algorithm or source data change.
+
+## Background hierarchy refactoring (DT-0109)
+
+Maintainer authorizes this incremental UI/configuration task on current main
+f78591bd, without commit/push. One two-stage selector chooses Coarse Raster or
+High-resolution Raster, then an independent retained variable for that type.
+A separate No Background toggle does not introduce a third raster type.
+
+background_controls.py adapts the new UI to existing scientific background and
+variable controls; no alternate renderer/reader or algorithm is introduced.
+Coarse fields retain SCHEMA units/categorical treatment. New Unit-Catchment
+means exactly p01-f04 inherited coarse uparea via catmxy, not native high-res
+upstream area. Terrain retains full-tile P2/P98, sqrt and documented palette
+transforms. Common Color Settings only shows applicable controls and explains
+fixed/disabled transforms. Session-local profiles retain styles per variable;
+JSON persists active style plus independent variable/type choices, not every
+inactive profile. Existing JSON versions 1/2 (including v3-created version-2
+files) remain supported with an optional background_ui extension; no forced
+version migration. Legacy non-uparea catchment displays get a clearly labeled
+compatibility choice instead of silently changing scientific variables.
+
+Tile-local availability refreshes choices. A supported high-res variable is
+retained; otherwise a named supported fallback is selected with explanation,
+or background disabled if none exist. Missing optional products never block
+startup. Source selection remains accessible for independent overlays/native
+inspection even with a coarse or blank background. Selection geometry follows
+the existing source-clear rules and is independent of background hierarchy.
+
+Gallery presets still use flat canonical-ID CSV references and existing modes;
+application translates them into the two-stage UI. p01-f05e (terrain maximum
+8-neighbor elevation difference in metres, not slope) is added after checking
+its actual catalog entry. Existing scientific algorithms/data remain unchanged.
+Acceptance: UI state/availability, retained variable/style choices, legacy JSON,
+all presets, exact arrays/masks compared to pre-refactor rendering, native
+selection, actual Mekong modes, PNG and browser inspection.
+
 ## v3 UI refinement and background-independent selection (DT-0108)
 
 The maintainer authorizes this incremental extension on current main bb36a2ec,

@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 
 from scene import OVERLAY_DEFAULTS
+from map_products import AREA_PALETTES, AREA_COLOR_STYLES
 
 BOOLEAN_FIELDS = {
     "arrows",
@@ -27,7 +28,8 @@ CHOICES = {
     "color_mode": {"uniform", "connection_type", "upstream_area"},
     "width_mode": {"uniform", "upstream_area"},
     "classification": {"quartiles", "six_log", "continuous", "fixed"},
-    "area_palette": {"viridis", "shade_rainbow"},
+    "area_palette": set(AREA_PALETTES),
+    "area_color_style": set(AREA_COLOR_STYLES),
     "terrain_palette": {"gray", "pale_terrain"},
 }
 
@@ -59,6 +61,9 @@ class PresetLibrary:
                         row[key] = float(row[key])
                         if not np.isfinite(row[key]):
                             raise ValueError(f"{identity}:{key} must be finite")
+                    row.setdefault('area_color_style', 'gallery_quartiles' if row['classification']=='quartiles'
+                                   else 'gallery_continuous' if row['classification']=='six_log' and row['area_palette']=='shade_rainbow'
+                                   else 'palette')
                     for key, choices in CHOICES.items():
                         if row[key] not in choices:
                             raise ValueError(f"{identity}:{key} unsupported setting")
@@ -136,6 +141,8 @@ class PresetLibrary:
             width=row["line_width"],
             classification=row["classification"],
             area_palette=row["area_palette"],
+            area_color_style=row["area_color_style"],
+            area_limits=None,
             color_area=row["color_mode"] == "upstream_area",
             distinguish=row["color_mode"] == "connection_type",
             scale_width=row["width_mode"] == "upstream_area",
@@ -160,6 +167,10 @@ class PresetLibrary:
             terrain_palette=row["terrain_palette"],
             representation=row["representation"],
             arrows=row["arrows"],
+            arrow_size=7 if row["arrows"] else 0,
             overlays=overlays,
+            background_opacity=1.0,
+            highres_style=dict(palette='gallery',scale='gallery',limits=None),
         )
+        state['background_ui'] = app.background_ui.config_for(row['background'],row['variable'])
         return state

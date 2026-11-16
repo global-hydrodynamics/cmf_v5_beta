@@ -78,74 +78,179 @@ scrolls independently; **Settings panel** hides/shows it. Narrow windows wrap
 settings below the map. Geographic aspect remains corrected at the viewport
 midpoint; a tall geographic extent may require page scrolling to see its south.
 
-### Background
+### Background: Raster Type → Variable
 
-Choose a representation in **Background**:
+First choose **Coarse Raster** or **High-resolution Raster**, then the variable.
+Only the relevant variable selector is shown. **No Background** independently
+hides the raster; it does not introduce a third raster type or hide networks,
+overlays or selection highlights. Each type retains its last variable when you
+switch back. Raster changes keep the map mounted and preserve the viewport.
 
-- **None:** transparent/blank map background, independent of network/overlays.
-- **Coarse raster:** the original scalar/categorical maps; `subcol` now also
-  accepts the distributed `subcol-sample.bin` display categories.
-- **Unit catchments:** each native high-resolution pixel inherits the selected
-  coarse variable from its stored one-based `(catmx,catmy)` assignment. Default
-  `uparea` is m² → km² with logarithmic green coloring. Basin/category fields
-  remain discrete. Inherited width/depth values describe the assigned coarse
-  river cell, not a measurement of every fine pixel. Gray is unassigned land
-  (`catmxy=-999` in both records); other missing/background pixels are white.
-- **High-resolution elevation**, **8-neighbor elevation difference**, and
-  **Floodplain height:** native `elevtn`, max absolute valid eight-neighbor
-  elevation difference, and `flddif`, all in metres. Elevation difference is
-  **not dimensionless slope** and is not divided by horizontal distance.
+**Coarse Raster Variable** lists supported readable fields discovered by the
+existing reader: uparea, basin, bsncol, subcol, coarse elevtn, ctmare, rivlen,
+rivwth, rivhgt, nxtdst, grdare and rivman when supplied. Existing units/masks
+remain; upstream area converts m² → km², and basin/bsncol/subcol remain discrete.
+Colors are display categories, never an inferred basin identity.
 
-Choose the **High-resolution source** from discovered `location.txt` records.
-No `1min/` path or Mekong size is hardcoded. The MVP renders one selected tile;
-select another source for another region. Automatic cross-tile mosaics are not
-implemented. Views outside the selected tile remain blank with a diagnostic.
+**High-resolution Raster Variable** is specific to the selected tile:
 
-**Terrain palette** offers gray and Gallery-equivalent `pale_terrain`. Terrain
-uses exact full-tile P2/P98 clipping and square-root stretch; pale terrain adds
-Gallery's 0.4 display gamma. Limits are cached and do not change on pan/zoom.
-Missing `flddif` with valid elevation receives a neutral display fill; missing
-both stays white. The coarse variable/palette/limits controls apply to coarse
-and inherited-catchment attributes; terrain uses its dedicated palette and
-full-tile normalization instead. The displayed colorbar reports physical units.
+| GUI variable | Existing mode | Required products / meaning |
+| --- | --- | --- |
+| Unit-Catchment (outlet uparea) | catchment | native catmxy plus coarse uparea; assigned coarse-cell contributing area, displayed in km² |
+| Elevation (elevtn) | elevtn | native elevtn, metres |
+| Floodplain Height (flddif) | flddif | native flddif and elevtn, metres; elevation supports the documented missing-fill treatment |
+| Elevation Difference (8-neighbor) | difference | native elevtn; maximum valid eight-neighbor absolute elevation difference in metres, **not slope** |
 
-Enable **Unit Catchment Boundaries** in **Overlays** for actual neighboring
-assignment-pair edges on any background (None, coarse, catchments or terrain),
-not contours of displayed values or coarse rectangles. Without selected catmxy
-the control is disabled and a reason is shown. Boundaries are omitted in sampled views
-and above 100,000 visible edges; zoom in for native geometry. **Channel Pixels**
-adds blue `visual=10` main-channel and lavender `visual=7` small-stream pixels,
-only where assigned to valid river catchments. Other visual codes are not
-reinterpreted. When a fine image is sampled, these colors refer to the sampled
-native pixel, so small features can be omitted until zoomed in.
+The Unit-Catchment view follows Gallery p01-f04: each native pixel inherits the
+uparea of its stored one-based catmx/catmy river-cell assignment. It is a
+high-resolution **representation of a coarse attribute**, not an independently
+computed high-resolution contributing-area field or a new catchment delineation.
+Unassigned land (-999 in both records) is gray; other background/missing pixels
+are white. The new menu always uses uparea for this option. Loading older JSON
+that intentionally inherited another field preserves that exact rendering under
+an explicit **Unit-Catchment (legacy inherited VARIABLE)** compatibility choice.
+
+**High-resolution source** uses existing location.txt discovery, with no Mekong
+or 1min path hardcoding. It also remains accessible when independent native
+assignment inspection/overlays need it, including Coarse Raster or No Background.
+Changing source retains a supported variable; otherwise it selects a named valid
+fallback with a visible explanation, or disables the background if none exists.
+Only supported choices are offered; no optional high-resolution files are needed
+to start. Source changes reassess the last clicked location and replace previous geometry.
+One selected tile is rendered; multi-tile mosaics remain unimplemented.
+
+#### Background Opacity and Color Settings
+
+**Background Opacity** is 0–100%, default 100%, in 5% steps. It multiplies
+only the base raster's existing alpha: originally transparent pixels remain
+transparent. At 0% the raster disappears; networks, bifurcations, ordinary
+boundaries, selected grid/catchment outlines and Channel Pixels retain their
+own opacity. The colorbar keeps its numerical values. PNG uses the same RGBA.
+
+One **Color Settings** section shows the active representation's controls:
+
+- Continuous coarse fields retain their existing palettes, auto/linear/log scale
+  and automatic/manual limits. Categorical fields retain discrete colors and
+  disable continuous normalization with an explanation.
+- Every continuous high-resolution variable has **Colormap**, **Color Scale**,
+  **Automatic Color Limits**, **Color Minimum** and **Color Maximum**. Palettes:
+  Gallery Default, Gray, Pale Terrain, Viridis, YlGn, YlGnBu, Terrain, Plasma,
+  Magma and Blues. Changes apply immediately without applying another preset.
+- Unit-Catchment uparea defaults to the original Gallery yellow-green/log km²
+  rendering. Other palettes, Linear/Log and manual km² limits affect only display;
+  native catmxy, coarse uparea, catchment geometry and network remain unchanged.
+- Terrain defaults retain Gallery full-tile P2/P98, square-root stretch and
+  subdued gray range or pale-terrain gamma. **Linear** and **Log** use their
+  stated numerical normalization without Gallery stretch. Colorbars stay in
+  physical metres (or inherited km²), including for Gallery's nonlinear palette
+  transfer. Elevation Difference is maximum absolute eight-neighbor difference,
+  in metres; it is not physical slope.
+
+Automatic terrain limits use full-tile P2/P98, not the zoomed viewport; catchment
+limits use the full coarse attribute reference. Log uses positive reference
+values and masks nonpositive **display** pixels explicitly, retaining their raw
+values in native inspection. Linear accepts zero/negative terrain. Disable
+Automatic Color Limits to edit finite limits with maximum strictly greater than
+minimum; Log requires positive limits. Invalid input reports an error and keeps
+the last valid image until corrected. An initial full-tile scan may take time;
+statistics are cached, with a separate positive-only cache for Log.
+Missing flddif with valid elevation retains a neutral, non-measured fill;
+missing both remains white. Changing opacity never turns missing data opaque.
+
+Styles are retained per raster type/variable **during the session**, so coarse
+elevtn edits do not overwrite uparea settings, and terrain modes remember their
+own palettes, scales and limits. JSON saves the active style and both type/variable
+choices; inactive profiles are not serialized and restart from defaults after a
+fresh load. No display transform changes scientific source data.
+
+**Channel Pixels** appears in Background only for High-resolution Raster and
+is enabled only if the selected tile has `visual`. It draws native visual=10
+blue main-channel and visual=7 lavender small-stream pixels above the base raster.
+With catmxy, the existing valid-assignment mask is retained; without catmxy,
+visual codes can be shown but no river-cell assignment is inferred. Coarse Raster
+and No Background never render this layer; switching back to high-resolution
+restores the checkbox preference. Sampling may omit small features, without
+category averaging. These pixels are independent of Background Opacity.
+
+Enable **Unit Catchment Boundaries** in **Overlays** for native assignment-pair
+edges on either raster type, independently of Channel Pixels and displayed values.
+Missing selected catmxy disables it with a reason. Ordinary boundaries are omitted
+in sampled views and above 100,000 visible native edges; zoom in. Selected
+catchment boundaries remain independent of that display limit.
 
 ### River Network
 
-Select stored `nextxy` or `nextxy_noedge` and choose **grid_center** or
-**outlet_vector** representation. Off hides the main layer. Connectivity always
-comes from explicit destination indices, including Flexible Downstream links.
-Outlet vectors use stored `outlon/outlat`; straight segments are graphical
-model connections, not observed centerlines or reconstructed high-resolution
-river paths. Regional outlets can lie slightly outside the coarse-grid bounds;
-their stored coordinates are preserved. Only a full 360° map uses periodic
-longitude and split seam segments.
+**Network source** selects stored `nextxy` or `nextxy_noedge`. **Representation**
+selects Grid Center, Outlet Vector (when coordinates exist), or Off. Links come
+from stored indices, not traced centerlines. Outlet vectors preserve actual
+`outlon/outlat`, including valid regional outlets outside coarse bounds. Only
+full360° grids wrap/split longitude seams. Flexible Downstream is defined by
+coarse-grid index displacement (with periodic adjacency), never vector length.
 
-Color and width are independent. Choose uniform, connection-type or upstream-
-area colors; choose uniform or upstream-area width. The source-cell area is
-contributing drainage area, **not discharge**. Classification choices are:
+**COLOR** and **WIDTH** are independent:
 
-| Mode | Full-network reference |
+- **Uniform** shows one **All Links Color** for every main link, including
+  flexible links. **Connection Type** shows **Local Links Color** and
+  **Flexible Links Color**. Area palette/limit controls are hidden in both.
+- **Upstream Area** color hides those pickers and shows **Colormap** and area
+  limits. Palettes: viridis, plasma, magma, cividis, YlGnBu, YlGn, Blues, turbo,
+  shade_rainbow. Discrete classes sample the selected palette; shade_rainbow's
+  approved control colors remain unchanged.
+- **Width Mode** is Uniform or Upstream Area. Fresh sessions default to
+  **Upstream Area** width and **Continuous (log scale)** mapping; without uparea,
+  width defaults Uniform. **Base Line Width [px]** sets uniform width or the
+  overall area-width multiplier. Thinner links render first.
+
+The area is source-cell `uparea`, converted m²→km²: **contributing drainage area,
+not discharge**. Grid centers use complete valid topology; outlet vectors use
+links with valid stored endpoints. Periodic display pieces are counted once.
+References remain fixed during pan/zoom.
+
+**Upstream Area Mapping** appears when color or width uses area:
+
+| GUI option / saved identifier | Meaning |
 | --- | --- |
-| `quartiles` | Four data-derived quartiles of positive log10 area, as p01-f03 |
-| `six_log` | Six equal log intervals between full-network min/max, as p01-f02 |
-| `continuous` | Continuous log min/max of the complete source-link population |
-| `fixed` | Explicit legacy fixed log range 1–10⁶ km² |
+| Continuous (log scale) / `continuous` | Continuous positive log-area normalization; recommended normal default |
+| Quantiles (4 groups) / `quartiles` | 25th/50th/75th percentiles of full-reference log areas: approximately equal counts of links, not equal log intervals; four color/width classes |
+| Logarithmic (6 classes) / `six_log` | Six equal log intervals, not quantiles; six palette colors and six widths in generic use |
+| Fixed log range (legacy) / `fixed` | Historical fixed1–10⁶km² normalization and width formula |
 
-Class boundaries stay fixed when navigating. Thinner main links are drawn
-first; heavier main-channel links remain visible. Optional direction heads
-follow the stored downstream direction and are omitted above 600 visible
-segments; zoom in to enable them. **Legend & diagnostics** supplies colored
-swatches, class ranges and omitted-feature messages.
+**Automatic Area Limits** uses full positive source-link min/max. Disable it
+for finite positive **Area Minimum [km²]** and **Area Maximum [km²]**, with max>min.
+Continuous color clips outside bounds to endpoint colors; six-log color divides
+these limits into six intervals. Physical links and native areas are never
+removed or changed by display limits. These are **color-only limits**: area
+width always keeps its full-reference normalization/classes. Quantile boundaries
+always use full-reference data, and Fixed keeps its historical range; their
+limit controls are disabled. Legends distinguish applied color and width ranges.
+Missing/nonpositive areas retain links, using base width and neutral gray for
+generic area colors (legacy fixed minimum width/color are retained). If no valid
+positive area exists, selecting an area style reports an error without inventing
+values. Color/width mode switches preserve palettes, limits and custom colors.
+
+**Arrow Size [px]** is0–20, step1, default0 (Off). Positive sizes change actual
+main-network triangle geometry; position and direction follow stored downstream
+connections in both representations. Above600 visible segments, arrowheads are
+omitted with an explicit zoom-in diagnostic; all main links remain. PNG uses
+the same positions/angles and converts requested pixels to Matplotlib points
+at160dpi. Export and browser have comparable requested pixel sizes. Independent
+bifurcation arrows/styles are untouched.
+
+Gallery presets explicitly retain historical exceptions in the flat preset CSV:
+p01-f03/f04 use Tutorial02's four blue colors (`gallery_quartiles`); f02c and
+relevant f05 styles use continuous shade-rainbow colors with six width bins
+(`gallery_continuous`). Generic `palette` styles use the chosen discrete palette.
+Applying a preset restores its exception and original arrow preference (True→7px).
+Changing Colormap or Mapping releases that exception and marks the preset custom;
+individual changes never silently replace the scientific method registry.
+
+JSON remains v2. `network_options.area_limits` is null for automatic, or physical
+`[min,max]`; `area_color_style` is `palette`, `gallery_quartiles` or
+`gallery_continuous`. Existing `classification`, colors, width and palette fields
+remain. Old files infer historical quartile/f02 colors; old booleans
+`layers.arrows` map False→0 / True→7px. New files store numerical
+`layers.arrow_size` (and compatible boolean). Explicit saved modes override fresh
+session defaults. v1 and v2/v3-created v2 files remain supported.
 
 ### Overlays
 
@@ -232,7 +337,7 @@ before changes if outside this map. Missing required products are named and
 Apply is disabled; there is no silent substitution of topology or terrain.
 Without the shared catalog, presets are unavailable but exploration still works.
 
-All 11 initial panels are supported:
+All 12 presets are supported (the original 11 plus p01-f05e):
 
 | Canonical panel | Essential Explorer settings |
 | --- | --- |
@@ -245,16 +350,32 @@ All 11 initial panels are supported:
 | p01-f04b | f04a plus visual 10/7 channel pixels |
 | p01-f05a / f05c | Native elevtn / flddif with grayscale P2/P98 stretch and area-colored outlet network |
 | p01-f05d / f05f | Native elevtn / flddif with pale terrain, black outlet network and area widths |
+| p01-f05e | Native maximum 8-neighbor elevation difference [m], pale terrain and black outlet network; no distance-normalized slope |
 
 Presets are initial settings. All individual controls remain editable; deviations
 show **Custom (modified from …)**. Panning alone does not mark a preset modified.
-Complete custom settings still save/load as version-2 JSON; version-1 JSON also
-loads. Selection is ephemeral and is not serialized into user configuration.
+User files remain **JSON version 2**, including files created by the v3 GUI;
+version 1 also loads with its original coarse/grid behavior. No schema-version
+migration is forced. The optional `background_ui` object saves `raster_type`,
+`coarse_variable`, `highres_variable` and `no_background`; active scientific
+`layers.background`, `variable`, coarse palette/limits stay in their original fields.
+Optional `layers.background_opacity` is a fraction from 0 to 1 (default 1).
+Optional `layers.highres_style` holds `palette`, `scale` and `limits`: e.g.
+`{"palette": "YlGnBu", "scale": "log", "limits": [100, 1000000]}`.
+`limits: null` selects automatic limits; palette/scale `gallery` restore Gallery
+behavior, including the legacy `terrain_palette` gray/pale choice. Older files
+without these fields retain opacity 100% and infer their prior linear/log or
+Gallery terrain rendering. Gallery presets reset opacity/style to original defaults.
+Legacy coarse/catchment/elevtn/flddif/difference/none values project into the new
+UI. Conflicting new UI/scientific fields are rejected before mutation. Unsupported
+saved high-resolution variables use an explicitly named fallback; other legacy
+choices, including non-uparea catchments and linear normalization, are preserved.
+Selection is ephemeral and is not serialized into user configuration.
 
 CSV schema: `gallery_id` is a foreign key into `visualization_catalog.csv`;
 `background`, `variable`, `palette`, `terrain_palette` set the background;
 `network_source`, `representation`, `color_mode`, `width_mode`, `classification`,
-`area_palette`, `line_width`, `arrows` set the main network; flat named overlay
+`area_palette`, `area_color_style`, `line_width`, `arrows` set the main network; flat named overlay
 columns mirror the existing layer controls; `west/east/south/north` are suggested
 degree bounds. Boolean fields use true/false; widths use display units. See the
 header and [presets.py](presets.py) for allowed values. CSV is UTF-8 (BOM accepted)
@@ -267,38 +388,60 @@ therefore differ. Overlay widths/heads and typography can also differ. This
 preserves v2 definitions and pan-independent scientific classes. A custom edit
 does not become a newly Gallery-approved method. No two-way synchronization.
 
-## Selecting a stored unit catchment
+## Selecting a Grid and its stored unit catchment
 
-With **any background**, click the map to read the exact native high-resolution
-assignment whenever the map has catmxy. The inspector separates clicked lon/lat,
-native pixel, raw `catmx/catmy`, assigned river cell, attributes, assigned pixel count and
-stored downstream connection. A dedicated bright magenta outline shows all
-native pixels with that exact assignment pair, including holes and disconnected
-components. It stays visible with general boundaries disabled and across style,
-background, network, tab, pan/zoom and same-source preset changes. Changing high-resolution
-source clears it with a message. New valid clicks replace the selection.
-A separate muted blue-gray, 1px dashed rectangle marks the **assigned coarse
-computational cell**, calculated from params.txt edges. It is unfilled and
-visually distinct from the prominent magenta native catchment. The same two
-geometries, selected cell/outlet and downstream link appear in PNG exports.
+Selection depends on the **active raster type**, not the displayed variable:
 
-GUI index labels use **1-based (Fortran)** / `(1-based, Fortran)`, while Python
-arrays use zero-based row/column internally. Programmatic inspector dictionary
-keys remain compatible. Coordinate values update the single fixed **Lon / Lat**
-area above the map; no coordinate Tooltip follows or obscures the pointer.
+| Active background | Selection method | Selected river-map Grid |
+| --- | --- | --- |
+| Coarse Raster | Coarse Grid geographic containment | params.txt rectangle containing the click |
+| High-resolution Raster (all four variables) | High-resolution catmxy assignment | river cell assigned to the exact clicked native pixel |
+| No Background | Coarse Grid geographic containment | same default rule as Coarse Raster |
 
-A coarse grid cell is a regular computational raster rectangle. Its **unit
-catchment** is the irregular collection of fine pixels assigned to it and may
-cross that rectangle. `catmxy` supplies this assignment; `nextxy` supplies only
-downstream river connectivity. The outline follows stored assignments: it is
-not a new watershed delineation, observed basin boundary or recalculated flow
-product. Unassigned land, background and invalid mixed pairs report their raw
-codes, clear the previous outline and never fall back to geographic containment
-or nearest-neighbor assignment. Pixels outside the selected assignment tile also
-clear selection and report their status. With no catmxy anywhere in the map,
-clicking retains coarse geographic selection, explicitly labeled as a reference
-cell rather than an assigned catchment. The background type never changes the
-scientific assignment result. Terrain values are still inspected natively.
+A high-resolution pixel can lie inside geographic Grid A while its catmxy points
+to river Grid B. Coarse Raster selects **A** and outlines all native pixels assigned
+to A; High-resolution Raster selects **B** and outlines B's pixels. The clicked
+native assignment never overrides the geographic rule in coarse/blank mode.
+In either mode the selected rectangle, unit-catchment boundary, attributes,
+cell/outlet marker and downstream link refer to the **same selected river cell**.
+The native assignment shown for the clicked pixel can differ from that selected
+cell and is explicitly labeled separately.
+
+The Inspector shows Selection method, clicked lon/lat, clicked geographic Coarse
+Grid, native pixel, raw catmx/catmy, selected river-map Grid, catchment status/
+pixel count and downstream connectivity. GUI indices use **1-based (Fortran)** /
+`(1-based, Fortran)`; Python row/column values remain zero-based internally.
+Selected-cell attributes come only from the selected river Grid, not a different
+clicked pixel's assigned Grid. Coordinates update the fixed Lon / Lat region;
+there is no pointer-following coordinate Tooltip.
+
+Prominent magenta edges show the complete native unit catchment, with holes and
+components intact. A separate muted blue-gray dashed rectangle shows the selected
+computational cell from params.txt. Neither substitutes for the other. Both
+remain visible when general Unit Catchment Boundaries are off. PNG uses the
+same two geometries plus the selected cell/outlet and downstream connection.
+
+Changing Coarse ↔ High-resolution, including No Background, **re-evaluates the
+last geographic click without another click**. The Inspector and all highlights
+update to the new rule. Changing only variable, color, network, overlays, tabs
+or viewport under the same rule/source preserves the selected Grid. Source/tile
+changes also reassess the last clicked position; unrelated tile geometry is never
+retained. Selection is not saved in JSON; loading a configuration during a session
+reassesses an existing last click if its rule/source changes.
+
+With High-resolution Raster, unassigned/missing/mixed/outside-tile pixels report
+their native information and clear the previous Grid, catchment and link. Missing
+catmxy reports assignment selection unavailable; **no geographic/nearest-cell
+fallback** is allowed. In Coarse Raster/No Background the geographic Grid remains
+selectable without catmxy, or if no pixels in the selected tile are assigned to
+that Grid; only its catchment outline is unavailable, with an explicit status.
+
+catmxy maps native pixels to river-map cells; nextxy defines connectivity between
+those cells. A regular computational rectangle and an irregular unit catchment
+are different spatial regions. Outlines visualize stored assignments, not new
+watershed delineations, observed basin boundaries or recalculated flow products.
+The two selection methods intentionally answer different questions: which
+computational raster cell was clicked, versus which river cell owns a fine pixel.
 
 Display rasters are sampled for speed and may miss small features. Selection
 always uses the native pixel, not the displayed sample. A lazy block-wise index
@@ -371,7 +514,7 @@ python -m pytest visualization/map_explorer/tests -q
 
 The integration test reads the existing Mekong sample if present; otherwise
 it explicitly skips. Synthetic maps are generated in temporary directories.
-See [DESIGN.md](DESIGN.md), [v1 evidence](../../research/records/validation_runs/VR-0151.md) and [v2 evidence](../../research/records/validation_runs/VR-0152.md) and [v3 evidence](../../research/records/validation_runs/VR-0153.md) and [UI refinement evidence](../../research/records/validation_runs/VR-0154.md)
+See [DESIGN.md](DESIGN.md), [v1 evidence](../../research/records/validation_runs/VR-0151.md) and [v2 evidence](../../research/records/validation_runs/VR-0152.md) and [v3 evidence](../../research/records/validation_runs/VR-0153.md) and [UI refinement evidence](../../research/records/validation_runs/VR-0154.md) and [Background UI evidence](../../research/records/validation_runs/VR-0155.md) and [selection-rule evidence](../../research/records/validation_runs/VR-0156.md)
 for scientific conventions, executed checks and limits.
 
 - **Missing GUI dependencies**: check `PYTHON`; install requirements into a

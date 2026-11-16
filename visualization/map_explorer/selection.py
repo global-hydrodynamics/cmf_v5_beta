@@ -35,6 +35,8 @@ class SelectionState:
     status: str = "No selection"
     # Regular computational-cell geometry, distinct from native catchment edges.
     coarse_outline: np.ndarray | None = None
+    method: str = ""
+    geographic_cell: tuple[int, int] | None = None
 
 
 def coarse_cell_outline(geometry, row, col):

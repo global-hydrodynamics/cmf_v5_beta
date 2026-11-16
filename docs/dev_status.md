@@ -6,6 +6,79 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### River display controls (DT-0112, 2026-11-16)
+
+Maintainer authorizes autonomous River refactoring on current main f78591bd;
+Dai Yamazaki owns scope, Codex implements over retained dirty DT-0109/0110/0111.
+No commit/push, branch, scientific-input, model/preprocessing or Gallery changes.
+Implemented conditional color controls;9 palettes; independent color-only limits
+and full-reference area widths; clearer Continuous/Quantiles/Six Log/Fixed mapping;
+fresh continuous-log/area-width defaults; numerical main Arrow Size0–20px with
+pixel-consistent PNG and old boolean7px migration. JSONv2/CSV presets retain
+explicit historical quartile blues and continuous shade-rainbow/six-width styles.
+144 PASS /0 FAIL /0 SKIP; actual Mekong browser modes/limits/classes/arrows0/5/10/20,
+base width, Gallery presets, PNG and numerical JSON confirmed. All12 pre-change
+Gallery main coordinate/color/width arrays exact;251 protected hashes unchanged.
+See [guide](../visualization/map_explorer/README.md),
+[design](../visualization/map_explorer/DESIGN.md), and
+[VR-0158](../research/records/validation_runs/VR-0158.md).
+Windows/global performance remain unclaimed. Local review proposal; uncommitted.
+
+### Working Background display controls (DT-0111, 2026-11-16)
+
+Maintainer authorizes all four corrective controls on current main f78591bd;
+Dai Yamazaki owns scope, Codex implements over retained uncommitted DT-0109/0110.
+No commit/push, branch, source-data, model/preprocessing or Gallery-script changes.
+Implemented raster-only opacity0–100%, high-res-only visual10/7 channel image,
+10 inherited-uparea/terrain palettes and Gallery/Linear/Log with automatic/manual
+physical limits. Gallery defaults remain exact; native selection stays unchanged.
+JSONv2 gains optional active highres_style/background_opacity; older files load.
+116 PASS /0 FAIL /0 SKIP; actual Mekong browser100→30, all four requested
+catchment palettes, channel restriction/restoration, elevation Linear0–50m and
+Log1–50m, independent styles, GUI PNG/JSON checked. 251 protected hashes unchanged.
+Windows execution/global performance remain unclaimed. See
+[design](../visualization/map_explorer/DESIGN.md),
+[guide](../visualization/map_explorer/README.md), and
+[feature matrix/evidence VR-0157](../research/records/validation_runs/VR-0157.md).
+Changes remain uncommitted for review; status is a local proposal.
+
+### Background-dependent Grid selection (DT-0110, 2026-11-16)
+
+Maintainer authorizes this explicit rule change on current main f78591bd with
+DT-0109 still uncommitted and retained; owner Dai Yamazaki, Codex implements.
+No commit/push, branch, scientific-data or model/preprocessing changes.
+Coarse Raster/No Background now select geographic containing grid; every
+High-resolution Raster selects native catmxy. Both use that selected cell's
+native catchment, rectangle, attributes and downstream link. Inspector separates
+method/geographic grid/raw assignment/selected grid. Background-rule and tile
+changes reassess the last click; high-res missing assignments never fall back.
+80 tests pass; actual Mekong and browser switch without re-click verified:
+coarse ix64/iy97 (287 pixels) versus assigned ix63/iy97 (295 pixels). PNG geometry
+matches browser selection; 251 protected files unchanged. See
+[design](../visualization/map_explorer/DESIGN.md),
+[guide](../visualization/map_explorer/README.md), and
+[VR-0156](../research/records/validation_runs/VR-0156.md).
+Changes remain uncommitted for review; this status is a local proposal.
+
+### Map Explorer Background hierarchy (DT-0109, 2026-11-16)
+
+Maintainer authorizes autonomous work on current main f78591bd; Dai Yamazaki
+owns the scope, Codex implements. Scope: map_explorer Background UI/configuration,
+existing CSV presets, tests/docs and evidence. No commit, push, branch change,
+scientific renderer/data, model/preprocessing or Gallery changes.
+
+Implemented two-stage Coarse / High-resolution Raster variable selection,
+retained independent choices and session styles, applicable common Color Settings,
+tile availability/fallbacks, legacy JSON projection and p01-f05e preset. Existing
+native assignment selection/overlays stay independent. JSON remains version 2
+with optional background_ui; active style/choices persist, inactive style profiles
+remain session-local. 74 tests pass; actual Mekong modes, browser switching,
+PNG and browser JSON save/reload reviewed. 251 protected files unchanged.
+See [design](../visualization/map_explorer/DESIGN.md),
+[guide](../visualization/map_explorer/README.md), and
+[VR-0155](../research/records/validation_runs/VR-0155.md).
+Changes remain uncommitted for review; this status is a local proposal.
+
 ### Map Explorer v3 UI refinement (DT-0108, 2026-11-16)
 
 Maintainer authorizes autonomous work on current main bb36a2ec; owner Dai

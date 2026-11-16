@@ -31,6 +31,8 @@ from map_reader import MapReader, SCHEMA
 from river_network import RiverNetwork, intersects
 from selection import SelectionState, CatchmentIndex, coarse_cell_outline
 from presets import PresetLibrary
+from background_controls import BackgroundControls
+from river_controls import RiverControls
 from scene import Scene, OVERLAY_DEFAULTS, export_scene
 
 pn.extension()
@@ -65,7 +67,8 @@ class Explorer:
             "<p>Click a cell to inspect native values and stored downstream indices.</p>", width=320
         )
         self.variable = pn.widgets.Select(
-            name="Raster variable", options={f"{k} · {SCHEMA[k].title}": k for k in self.reader.sources}
+            name="Raster variable", options={f"{k} · {SCHEMA[k].title}": k for k in self.reader.sources},
+            value="uparea" if "uparea" in self.reader.sources else next(iter(self.reader.sources))
         )
         self.scale = pn.widgets.Select(name="Color scale (continuous only)", options=["auto", "linear", "log"])
         self.palette = pn.widgets.Select(
@@ -85,7 +88,7 @@ class Explorer:
         self.flex_color = pn.widgets.ColorPicker(name="Flexible links", value="#e67e22", width=140)
         self.distinguish = pn.widgets.Checkbox(name="Distinguish Flexible Downstream", value=True)
         self.area_width = pn.widgets.Checkbox(
-            name="Width by upstream area (not discharge)", value=False, disabled="uparea" not in self.reader.sources
+            name="Width by upstream area (not discharge)", value="uparea" in self.reader.sources, disabled="uparea" not in self.reader.sources
         )
         self.area_color = pn.widgets.Checkbox(
             name="Color by upstream area (overrides type)", value=False, disabled="uparea" not in self.reader.sources
@@ -114,14 +117,16 @@ class Explorer:
         self.color_mode = pn.widgets.Select(
             name="Network color", options=["uniform", "connection_type", "upstream_area"], value="connection_type"
         )
-        self.width_mode = pn.widgets.Select(name="Network width", options=["uniform", "upstream_area"])
+        self.width_mode = pn.widgets.Select(name="Network width", options=["uniform", "upstream_area"],
+                                           value="upstream_area" if "uparea" in self.reader.sources else "uniform")
         self.classification = pn.widgets.Select(
             name="Full-map contributing-area classes",
             options=["quartiles", "six_log", "continuous", "fixed"],
-            value="quartiles",
+            value="continuous",
         )
         self.area_palette = pn.widgets.Select(name="Network area palette", options=["viridis", "shade_rainbow"])
         self.arrows = pn.widgets.Checkbox(name="Downstream direction heads (zoomed views)", value=False)
+        self.arrow_size = pn.widgets.IntSlider(name="Arrow Size [px]", start=0, end=20, step=1, value=0)
         self.overlay_controls = {}
         for key, value in OVERLAY_DEFAULTS.items():
             if isinstance(value, bool):
@@ -201,7 +206,7 @@ class Explorer:
         self.plot.scatter(
             "x", "y", source=self.outlet_source, size=4, fill_color="white", line_color="#555555", line_width=0.5
         )
-        self.arrow_source = ColumnDataSource(dict(x=[], y=[], angle=[], color=[]))
+        self.arrow_source = ColumnDataSource(dict(x=[], y=[], angle=[], color=[], size=[]))
         self.plot.scatter(
             "x",
             "y",
@@ -210,7 +215,7 @@ class Explorer:
             angle="angle",
             fill_color="color",
             line_color="color",
-            size=7,
+            size="size",
         )
         self.selected_source = ColumnDataSource(dict(x=[], y=[]))
         self.plot.scatter(
@@ -249,8 +254,20 @@ class Explorer:
         self.export_button.on_click(lambda event: self._schedule(self.export))
         self.save_button.on_click(lambda event: self._schedule(self.save))
         self.upload.param.watch(lambda event: self._schedule(lambda: self.load(event.new)), "value")
+        self.background_ui = BackgroundControls(self)
+        self.raster_type = self.background_ui.raster_type
+        self.coarse_variable = self.background_ui.coarse_variable
+        self.highres_variable = self.background_ui.highres_variable
+        self.no_background = self.background_ui.no_background
+        self.background_opacity = self.background_ui.opacity
+        self.highres_palette = self.background_ui.highres_palette
+        self.highres_scale = self.background_ui.highres_scale
+        self.highres_auto_limits = self.background_ui.highres_auto
+        self.highres_low = self.background_ui.highres_low
+        self.highres_high = self.background_ui.highres_high
+        self.river_ui = RiverControls(self)
         for widget in (self.variable, self.scale, self.palette, self.auto_limits, self.low, self.high):
-            widget.param.watch(lambda event: self._schedule(self.update_layer), "value")
+            widget.param.watch(lambda event: self._schedule(lambda: self.background_ui.legacy_changed(event.obj)), "value")
         for widget in (
             self.network_choice,
             self.width,
@@ -265,40 +282,19 @@ class Explorer:
         self._guard(self.update_layer)
         self._guard(self.update_network)
         for widget in (self.background, self.terrain_palette):
-            widget.param.watch(lambda event: self._schedule(self.update_layer), "value")
-        for widget in (self.representation, self.classification, self.area_palette, self.arrows):
+            widget.param.watch(lambda event: self._schedule(lambda: self.background_ui.legacy_changed(event.obj)), "value")
+        for widget in (self.representation,):
             widget.param.watch(lambda event: self._schedule(self.update_network), "value")
         for widget in (self.color_mode, self.width_mode):
             widget.param.watch(lambda event: self._schedule(self._style_modes), "value")
         for widget in self.overlay_controls.values():
             widget.param.watch(lambda event: self._schedule(self.render_view), "value")
+        self.arrows.param.watch(lambda event: self._schedule(self.river_ui.legacy_arrows), "value")
         self.hires_source.param.watch(lambda event: self._schedule(self._hires_changed), "value")
         self.preset_choice.param.watch(lambda event: self._schedule(self._describe_preset), "value")
         self.apply_preset_button.on_click(lambda event: self._schedule(self.apply_preset))
-        background_controls = pn.Column(
-            self.background,
-            self.variable,
-            self.hires_source,
-            self.terrain_palette,
-            self.scale,
-            self.palette,
-            self.auto_limits,
-            pn.Row(self.low, self.high),
-            self.overlay_controls["channel_pixels"],
-            width=330,
-        )
-        network_controls = pn.Column(
-            self.network_choice,
-            self.representation,
-            self.color_mode,
-            self.width_mode,
-            self.classification,
-            self.area_palette,
-            self.width,
-            pn.Row(self.color, self.flex_color),
-            self.arrows,
-            width=330,
-        )
+        background_controls = self.background_ui.view
+        network_controls = self.river_ui.view
         self.boundary_status = pn.pane.Markdown('',sizing_mode='stretch_width')
         self._update_assignment_controls()
         overlay_controls = pn.Column(
@@ -488,11 +484,19 @@ class Explorer:
             self._updating = False
         self._set_colorbar(layer)
         self.plot.title.text = layer.label
-        self.status.object = f"**Source:** `{self.reader.sources[name].path.name}`\n\n" + (
-            "Discrete categories; colors may repeat."
-            if SCHEMA[name].categorical
-            else "Color transforms affect display only."
-        )
+        mode = self.background.value
+        if mode in ('elevtn','flddif','difference'):
+            tile = self.scene.tiles.get(self.hires_source.value)
+            source = tile.files.get('elevtn' if mode == 'difference' else mode) if tile else None
+            self.status.object = f"**Background source:** `{source.name if source else 'unavailable'}` · {mode} [m]. Terrain display transforms affect display only."
+        elif mode == 'none':
+            self.status.object = 'No raster background. Network, overlays and native assignment selection remain independent.'
+        else:
+            self.status.object = f"**Source:** `{self.reader.sources[name].path.name}`\n\n" + (
+                "Discrete categories; colors may repeat."
+                if SCHEMA[name].categorical
+                else "Color transforms affect display only."
+            )
         self.render_view()
 
     def _set_colorbar(self, layer):
@@ -502,7 +506,9 @@ class Explorer:
         cls = LogColorMapper if layer.logarithmic else LinearColorMapper
         self.mapper = cls(palette=layer.palette, low=layer.low, high=layer.high, nan_color='#f5f7fa')
         self.bar.color_mapper = self.mapper
-        self.bar.title = 'Elevation diff. [m]' if layer.label.startswith('Maximum') else layer.label.split(' —')[0]
+        short_name = layer.label.split(' —')[0]
+        self.bar.title = ('Elevation diff. [m]' if layer.label.startswith('Maximum') else
+                          f'{short_name} [{SCHEMA[short_name].display_units}]' if short_name in SCHEMA else short_name)
         if len(layer.categories):
             ticks = np.unique(np.linspace(0, len(layer.categories)-1, min(16, len(layer.categories))).astype(int))
             self.bar.ticker = FixedTicker(ticks=ticks.tolist())
@@ -532,6 +538,8 @@ class Explorer:
             color_area=self.area_color.value,
             classification=self.classification.value,
             area_palette=self.area_palette.value,
+            area_limits=None if self.river_ui.auto.value else [self.river_ui.low.value, self.river_ui.high.value],
+            area_color_style=self.river_ui.color_style,
         )
 
     def update_network(self):
@@ -559,12 +567,17 @@ class Explorer:
 
     def scene_options(self):
         return dict(background=self.background.value,tile=self.hires_source.value,terrain_palette=self.terrain_palette.value,
-                    network_style=self.network_options(),arrows=self.arrows.value,
+                    background_opacity=self.background_ui.opacity.value/100,
+                    highres_style=self.background_ui.highres_options(),
+                    network_style=self.network_options(),arrows=self.arrows.value,arrow_size=self.arrow_size.value,
                     overlays={k:widget.value for k,widget in self.overlay_controls.items()})
 
     def render_view(self):
         if self.layer is None:
             return
+        # Resolve selection before composing layers: even an unavailable overlay
+        # must not leave old grid/catchment highlights from another rule/tile.
+        self._reconcile_selection_source()
         self._size_map()
         self.frame = frame = self.scene.build(
             self.extent, self.variable.value, self.layer, self.network, self.scene_options()
@@ -621,6 +634,10 @@ class Explorer:
 
         self._render_catchment_selection()
         self._check_preset_modified()
+        if hasattr(self,'background_ui'):
+            self.background_ui.refresh_visibility()
+        if hasattr(self, 'river_ui'):
+            self.river_ui.refresh()
 
     def _render_catchment_selection(self):
         rectangle = self.selection.coarse_outline
@@ -646,8 +663,7 @@ class Explorer:
 
     def _hires_changed(self):
         self._update_assignment_controls()
-        self._reconcile_selection_source()
-        self.update_layer()
+        self.background_ui.source_changed()
 
     def _clear_selection(self, message):
         self.selection = SelectionState(status=message)
@@ -662,8 +678,28 @@ class Explorer:
         self.inspection.object = escape(message)
 
     def _reconcile_selection_source(self):
-        if self.selection.tile_key is not None and self.selection.tile_key != self.hires_source.value:
-            self._clear_selection("High-resolution source changed; previous selection cleared. Click to select again.")
+        # Background-type and tile changes reassess the original geographic click.
+        # Variable/style changes under the same rule/source preserve its grid.
+        if hasattr(self, '_last_click') and (
+            self.selection.method != self._selection_method() or self.selection.tile_key != self.hires_source.value
+        ):
+            self.inspect(*self._last_click)
+
+    def _selection_method(self):
+        return ('Coarse Grid geographic containment' if self.background.value in ('coarse','none')
+                else 'High-resolution catmxy assignment')
+
+    def _selected_catchment(self, tile, cell):
+        if tile is None or 'catmxy' not in tile.files:
+            return None, 'Catchment boundary unavailable: no catmxy in selected source'
+        if tile.key not in self._selection_indexes:
+            self._selection_indexes[tile.key] = CatchmentIndex(tile,self.reader.geometry)
+        try:
+            return self._selection_indexes[tile.key].boundary(*cell), 'Stored unit catchment selected'
+        except ValueError as exc:
+            if str(exc).startswith('No native pixels have this assignment'):
+                return None, 'No pixels assigned to selected grid in this tile'
+            raise
 
     def _highlight(self,row,col):
         g=self.reader.geometry
@@ -688,48 +724,49 @@ class Explorer:
                 raise ValueError("Click is outside the map")
             tile = self.scene.tiles.get(self.hires_source.value)
             pixel = tile.geometry.cell(lon, lat) if tile else None
-            # Assignment science is independent of the displayed raster. If a
-            # map has catmxy, an invalid/missing native assignment never falls
-            # back to a geographically containing computational cell.
-            if any('catmxy' in value.files for value in self.scene.tiles.values()):
-                extra, assigned = self.scene.inspect(lon, lat, self.hires_source.value)
-                boundary = None
-                if assigned is not None and tile is not None:
-                    if tile.key not in self._selection_indexes:
-                        self._selection_indexes[tile.key] = CatchmentIndex(tile, self.reader.geometry)
-                    boundary = self._selection_indexes[tile.key].boundary(*assigned)
-                self.selection = SelectionState(
-                    "catchment",
-                    (lon, lat),
-                    self.hires_source.value,
-                    pixel,
-                    assigned,
-                    boundary,
-                    extra.get("assignment status", "Selected high-resolution source has no catmxy"),
-                    coarse_outline=coarse_cell_outline(self.reader.geometry,*assigned) if assigned is not None else None,
-                )
+            method = self._selection_method()
+            extra, assigned = self.scene.inspect(lon,lat,self.hires_source.value)
+            if method == 'Coarse Grid geographic containment':
+                # Geographic computational grid A wins, even if the clicked
+                # native pixel is assigned to another river-map grid B.
+                selected = coarse
+                boundary, status = self._selected_catchment(tile,selected)
+                kind = 'coarse'
             else:
-                terrain = self.background.value in ("elevtn", "flddif", "difference")
-                self.selection = SelectionState(
-                    "terrain" if terrain else "coarse",
-                    (lon, lat),
-                    self.hires_source.value if terrain else None,
-                    pixel if terrain else None,
-                    coarse,
-                    None,
-                    "No catmxy in map; containing coarse grid cell (reference, not assigned catchment)",
-                    coarse_outline=coarse_cell_outline(self.reader.geometry,*coarse),
-                )
+                # Every high-resolution variable uses native catmxy. Missing
+                # codes or products never substitute the containing rectangle.
+                selected = assigned
+                boundary = None
+                status = extra.get('assignment status','Catchment selection unavailable: no catmxy in selected source')
+                if selected is not None:
+                    boundary, status = self._selected_catchment(tile,selected)
+                elif tile is None or 'catmxy' not in tile.files:
+                    status = 'Catchment selection unavailable: no catmxy in selected source'
+                kind = 'catchment'
+            self.selection = SelectionState(
+                kind=kind, clicked=(lon,lat), tile_key=self.hires_source.value,
+                native_pixel=pixel, river_cell=selected, boundary=boundary,status=status,
+                coarse_outline=coarse_cell_outline(self.reader.geometry,*selected) if selected is not None else None,
+                method=method, geographic_cell=coarse,
+            )
             self.selected = self.selection.river_cell
         state = self.selection
         result = {
             "clicked longitude": state.clicked[0] if state.clicked else lon,
             "clicked latitude": state.clicked[1] if state.clicked else lat,
+            "selection method": state.method,
             "selection status": state.status,
         }
-        if state.kind in ("catchment", "terrain") and state.clicked:
+        if state.geographic_cell is not None:
+            result['clicked coarse ix (1-based)'] = state.geographic_cell[1]+1
+            result['clicked coarse iy (1-based)'] = state.geographic_cell[0]+1
+        if state.clicked:
             extra, _ = self.scene.inspect(*state.clicked, state.tile_key)
-            result.update(extra)
+            # Raw native assignment is informative in either mode. Attributes
+            # below belong only to the selected grid, never a different clicked
+            # pixel's assigned grid; catmxy and nextxy have distinct roles.
+            result.update({key:value for key,value in extra.items()
+                           if not key.startswith('assigned ') or key.startswith('assigned coarse ')})
         if state.river_cell is not None:
             row, col = state.river_cell
             g = self.reader.geometry
@@ -781,12 +818,15 @@ class Explorer:
                 'clicked longitude':'Clicked location · Lon [°]',
                 'clicked latitude':'Clicked location · Lat [°]',
                 'selection status':'Selected Unit Catchment status',
+                'selection method':'Selection method',
+                'clicked coarse ix (1-based)':'Clicked Coarse Grid ix (1-based, Fortran)',
+                'clicked coarse iy (1-based)':'Clicked Coarse Grid iy (1-based, Fortran)',
                 'native hires ix (1-based)':'High-resolution ix (1-based, Fortran)',
                 'native hires iy (1-based)':'High-resolution iy (1-based, Fortran)',
                 'assigned coarse ix (1-based)':'Native assignment catmx [stored code]',
                 'assigned coarse iy (1-based)':'Native assignment catmy [stored code]',
-                'ix (1-based)':'Coarse Grid ix (1-based, Fortran)',
-                'iy (1-based)':'Coarse Grid iy (1-based, Fortran)',
+                'ix (1-based)':'Selected river-map Grid ix (1-based, Fortran)',
+                'iy (1-based)':'Selected river-map Grid iy (1-based, Fortran)',
             }
             return labels.get(key,key.replace('(1-based)','(1-based, Fortran)'))
         rows = "".join(
@@ -827,7 +867,8 @@ class Explorer:
         layers['representation']=self.representation.value
         return dict(version=2,map_path=str(self.reader.path),variable=self.variable.value,extent=list(self.extent),
                     scale=self.scale.value,palette=self.palette.value,limits=None if self.auto_limits.value else [self.low.value,self.high.value],
-                    network=self.network_choice.value,network_options=self.network_options(),layers=layers)
+                    network=self.network_choice.value,network_options=self.network_options(),layers=layers,
+                    background_ui=self.background_ui.configuration())
 
     def save(self):
         path = save_settings(self._output('.json'), self.settings())
@@ -857,7 +898,12 @@ class Explorer:
             self.hires_source.value = layers.get("tile", self.hires_source.value)
             self.terrain_palette.value = layers.get("terrain_palette", "gray")
             self.representation.value = layers.get("representation", "grid_center")
-            self.arrows.value = layers.get("arrows", False)
+            self.arrow_size.value = layers.get("arrow_size", 7 if layers.get("arrows", False) else 0)
+            self.arrows.value = self.arrow_size.value > 0
+            self.river_ui.color_style = options.get('area_color_style', 'palette')
+            self.river_ui.auto.value = options.get('area_limits') is None
+            if options.get('area_limits') is not None:
+                self.river_ui.low.value, self.river_ui.high.value = options['area_limits']
             self._auto_channel_initialized = True
             for k, w in self.overlay_controls.items():
                 w.value = layers.get("overlays", {}).get(k, OVERLAY_DEFAULTS[k])
@@ -876,8 +922,8 @@ class Explorer:
                 widget.value = options[key]
         finally:
             self._updating = False
+        self.background_ui.adopt_legacy(data)
         self._update_assignment_controls()
-        self._reconcile_selection_source()
         self.set_extent(data["extent"])
         self.update_layer()
         self.update_network()
@@ -907,6 +953,7 @@ class Explorer:
     def _display_state(self):
         value = self.settings()
         value.pop("extent", None)
+        value.pop("background_ui", None)  # Inactive UI choices are not displayed science.
         return value
 
     def _check_preset_modified(self):

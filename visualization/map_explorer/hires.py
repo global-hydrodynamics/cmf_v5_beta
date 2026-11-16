@@ -111,9 +111,10 @@ class Tile:
             (r1 - r0 <= max_side and c1 - c0 <= max_side),
         )
 
-    def percentiles(self, name):
+    def percentiles(self, name, positive=False):
         """Exact full-tile P2/P98, bounded RAM and disposable disk workspace."""
-        if name not in self._stats:
+        key=(name,'positive') if positive else name
+        if key not in self._stats:
             g = self.geometry
             block = max(1, 500000 // g.nx)
             with tempfile.TemporaryFile() as stream:
@@ -122,15 +123,15 @@ class Tile:
                 count = 0
                 for start in range(0, g.ny, block):
                     values = self.sample(name, np.arange(start, min(g.ny, start + block)), np.arange(g.nx))
-                    finite = values[np.isfinite(values)]
+                    finite = values[np.isfinite(values) & ((values>0) if positive else True)]
                     work[count : count + finite.size] = finite
                     count += finite.size
                 if not count:
-                    raise ValueError(f"{self.key}: no valid {name} values")
+                    raise ValueError(f"{self.key}: no {'positive ' if positive else ''}valid {name} values")
                 low, high = np.percentile(work[:count], (2, 98), overwrite_input=True)
                 del work
-            self._stats[name] = float(low), float(high if high > low else low + 1)
-        return self._stats[name]
+            self._stats[key] = float(low), float(high if high > low else low + 1)
+        return self._stats[key]
 
     def centroids(self, coarse, river):
         """Native pixel-center mean per assigned coarse cell, over the full tile."""

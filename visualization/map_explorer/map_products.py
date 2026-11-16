@@ -177,6 +177,24 @@ class Products:
 AREA_COLORS = ("#5E88BE", "#4F80BF", "#285A9B", "#103A70")
 
 
+AREA_PALETTES = ("viridis", "plasma", "magma", "cividis", "YlGnBu", "YlGn", "Blues", "turbo", "shade_rainbow")
+AREA_COLOR_STYLES = ("palette", "gallery_quartiles", "gallery_continuous")
+
+
+def validate_area_limits(limits):
+    if limits is None:
+        return None
+    if not isinstance(limits, (list, tuple)) or len(limits) != 2:
+        raise ValueError("Area limits require minimum and maximum [km²]")
+    try:
+        low, high = map(float, limits)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Area limits must be numeric") from exc
+    if not np.isfinite([low, high]).all() or not 0 < low < high:
+        raise ValueError("Area limits must be finite and positive, with maximum greater than minimum")
+    return [low, high]
+
+
 def area_style(
     network,
     reader,
@@ -189,35 +207,50 @@ def area_style(
     color_area=False,
     classification="quartiles",
     area_palette="viridis",
+    area_limits=None,
+    area_color_style="palette",
 ):
-    """Full-network classes are independent of viewport, using source uparea."""
+    """Source-area mapping over complete valid links; color limits never change width/topology."""
     from matplotlib import colormaps
-    from matplotlib.colors import to_hex
-    from matplotlib.colors import LinearSegmentedColormap
+    from matplotlib.colors import to_hex, LinearSegmentedColormap
 
-    # Approved cmf_colormap shade_rainbow v1.0.0 linear-sRGB controls. A small
-    # display definition is embedded to keep Gallery code out of runtime imports.
-    if area_palette=='shade_rainbow':
-        cmap=LinearSegmentedColormap.from_list('shade_rainbow',
-            ['#AAAAAA','#C3ADC8','#B49DE3','#6096F4','#00B7E7','#00D5BD',
-             '#1BF607','#D2F500','#F6D800','#FF9914','#F22F29','#EB00ED'])
-    elif area_palette=='viridis':
-        cmap=colormaps['viridis']
-    else:
-        raise ValueError('Unknown network area palette')
-
+    if area_palette not in AREA_PALETTES or area_color_style not in AREA_COLOR_STYLES:
+        raise ValueError("Unknown network area palette/style")
+    limits = validate_area_limits(area_limits)
+    # Approved cmf_colormap shade_rainbow v1.0.0 linear-sRGB controls.
+    cmap = (
+        LinearSegmentedColormap.from_list(
+            "shade_rainbow",
+            [
+                "#AAAAAA",
+                "#C3ADC8",
+                "#B49DE3",
+                "#6096F4",
+                "#00B7E7",
+                "#00D5BD",
+                "#1BF607",
+                "#D2F500",
+                "#F6D800",
+                "#FF9914",
+                "#F22F29",
+                "#EB00ED",
+            ],
+        )
+        if area_palette == "shade_rainbow"
+        else colormaps[area_palette]
+    )
+    if classification not in ("quartiles", "six_log", "continuous", "fixed"):
+        raise ValueError("Unknown area classification")
     if not hasattr(network, "_areas"):
-        raw = (
+        network._areas = (
             reader.read("uparea")[network.rows, network.cols].astype(float).filled(np.nan) * 1e-6
             if "uparea" in reader.sources
             else np.full(len(network.rows), np.nan)
         )
-        network._areas = raw
     raw = network._areas
     good = np.isfinite(raw) & (raw > 0)
-    if classification not in ("quartiles", "six_log", "continuous", "fixed"):
-        raise ValueError("Unknown area classification")
-    # Vector normalization uses links with valid endpoints, as in Gallery f03.
+    # Unique scientific links avoid counting periodic seam display pieces twice.
+    # Outlet views use only valid endpoints, not the grid-center population.
     if not hasattr(network, "_area_summary"):
         present = np.unique(network.link_index)
         full = raw[present][good[present]]
@@ -228,65 +261,93 @@ def area_style(
         raise ValueError("No positive source-cell upstream areas for network style")
     ids = network.link_index[visible]
     a = raw[ids]
-    fraction = np.zeros(len(ids))
     usable = np.isfinite(a) & (a > 0)
-    fraction[usable] = np.clip((np.log10(a[usable]) - lo) / max(hi - lo, 1e-12), 0, 1)
-    labels = []
-    if classification == "quartiles":
-        level = np.zeros(len(ids), dtype=int)
-        level[usable] = np.digitize(np.log10(a[usable]), cuts)
-        positions = level / 3
-        palette = np.array(AREA_COLORS, dtype=object)
-        colors = palette[level]
-        edges = np.r_[lo, cuts, hi]
-        labels = [f"Q{i+1}: {10**edges[i]:.3g}–{10**edges[i+1]:.3g} km²" for i in range(4)]
-    elif classification == "six_log":
-        level = np.minimum((fraction * 6).astype(int), 5)
-        positions = level / 5
-        # f02c uses continuous log color even though shaft widths have six bins.
-        color_positions=fraction if area_palette=='shade_rainbow' else positions
-        colors = np.array([to_hex(cmap(v)) for v in color_positions])
-        edges = np.linspace(lo, hi, 7)
-        labels = [f"L{i+1}: {10**edges[i]:.3g}–{10**edges[i+1]:.3g} km²" for i in range(6)]
-    else:
-        positions = fraction
-        if classification == "fixed":
-            positions = np.zeros(len(ids))
-            positions[usable] = np.clip(np.log10(a[usable]) / 6, 0, 1)
-            lo, hi = 0.0, 6.0
-        colors = np.array([to_hex(cmap(v)) for v in positions])
-        labels = [f"{classification}: log {10**lo:.3g}–{10**hi:.3g} km²"]
-    widths = np.full(len(ids), float(width))
+    logs = np.zeros(len(a))
+    logs[usable] = np.log10(a[usable])
+
+    def mapping(lower, upper):
+        fraction = np.zeros(len(a))
+        fraction[usable] = np.clip((logs[usable] - lower) / max(upper - lower, 1e-12), 0, 1)
+        if classification == "quartiles":
+            levels = np.zeros(len(a), dtype=int)
+            levels[usable] = np.digitize(logs[usable], cuts)
+            positions, edges, prefix = levels / 3, np.r_[lo, cuts, hi], "Q"
+        elif classification == "six_log":
+            positions = np.minimum((fraction * 6).astype(int), 5) / 5
+            edges, prefix = np.linspace(lower, upper, 7), "L"
+        else:
+            positions, edges, prefix = fraction, np.array([lower, upper]), ""
+        labels = (
+            [f"{prefix}{i+1}: {10**edges[i]:.3g}–{10**edges[i+1]:.3g} km²" for i in range(len(edges) - 1)]
+            if prefix
+            else [f"{classification}: log {10**lower:.3g}–{10**upper:.3g} km²"]
+        )
+        return fraction, positions, labels
+
+    width_lo, width_hi = (0.0, 6.0) if classification == "fixed" else (lo, hi)
+    _, positions, width_labels = mapping(width_lo, width_hi)
+    widths = np.full(len(a), float(width))
     if scale_width:
-        widths *= (0.5 + 3 * positions) if classification == "fixed" else (1 + 2 * positions)
+        widths *= 0.5 + 3 * positions if classification == "fixed" else 1 + 2 * positions
+        widths[~usable] = 0.5 * width if classification == "fixed" else width
+    # Manual COLOR limits deliberately do not enter the WIDTH calculation.
+    color_lo, color_hi = (
+        np.log10(limits) if limits is not None and classification in ("continuous", "six_log") else (width_lo, width_hi)
+    )
+    fraction, color_positions, color_labels = mapping(color_lo, color_hi)
+    if area_color_style == "gallery_continuous" and classification == "six_log":
+        color_positions = fraction
+        color_labels = [f"continuous: log {10**color_lo:.3g}–{10**color_hi:.3g} km² (Gallery; six width classes)"]
+    colors = np.array([to_hex(cmap(v)) for v in color_positions], dtype=object)
+    if area_color_style == "gallery_quartiles" and classification == "quartiles":
+        colors = np.asarray(AREA_COLORS, dtype=object)[np.rint(color_positions * 3).astype(int)]
+    if area_color_style == "palette" and classification != "fixed":
+        colors[~usable] = "#888888"
     if not color_area:
-        colors = np.full(len(ids), color, dtype=object)
+        colors = np.full(len(a), color, dtype=object)
         if distinguish:
             colors[network.flexible[ids]] = flexible_color
-    legend = (
-        (["Upstream contributing area (not discharge); " + classification] + labels)
-        if scale_width or color_area
-        else ["Local/all links: " + color] + (["Flexible Downstream: " + flexible_color] if distinguish else [])
-    )
-    swatches = []
-    if scale_width or color_area:
-        count = 4 if classification == "quartiles" else 6 if classification == "six_log" else 5
-        for i, v in enumerate(np.linspace(0, 1, count)):
-            c = AREA_COLORS[i] if classification == "quartiles" else to_hex(cmap(v))
-            label = labels[i] if len(labels) > 1 else f"{10**(lo+v*(hi-lo)):.3g} km²"
-            swatches.append(
-                (
-                    label,
-                    c if color_area else color,
-                    (
-                        float(width) * (1 + 2 * v if classification != "fixed" else 0.5 + 3 * v)
-                        if scale_width
-                        else float(width)
-                    ),
-                )
+    legend, swatches = [], []
+    if color_area or scale_width:
+        legend.append("Upstream contributing drainage area (not discharge); " + classification)
+        if (~usable).any():
+            legend.append(
+                "Missing/nonpositive area: historical minimum width/color; links retained"
+                if classification == "fixed"
+                else "Missing/nonpositive area: base width; gray for generic area colors; links retained"
             )
-    else:
-        swatches = [("Local / all main links", color, float(width))]
+    for kind, enabled, lower, upper, labels in [
+        ("Color", color_area, color_lo, color_hi, color_labels),
+        ("Width", scale_width, width_lo, width_hi, width_labels),
+    ]:
+        if not enabled:
+            continue
+        legend += [kind + ": " + label for label in labels]
+        classes = (
+            4
+            if classification == "quartiles"
+            else (
+                6
+                if classification == "six_log" and not (kind == "Color" and area_color_style == "gallery_continuous")
+                else 5
+            )
+        )
+        for i, v in enumerate(np.linspace(0, 1, classes)):
+            c = (
+                (
+                    AREA_COLORS[i]
+                    if area_color_style == "gallery_quartiles" and classification == "quartiles"
+                    else to_hex(cmap(v))
+                )
+                if kind == "Color"
+                else color
+            )
+            line_width = width * (0.5 + 3 * v if classification == "fixed" else 1 + 2 * v) if kind == "Width" else width
+            label = labels[i] if len(labels) > 1 else f"{10**(lower+v*(upper-lower)):.3g} km²"
+            swatches.append((kind + ": " + label, c, float(line_width)))
+    if not color_area:
+        legend += ["All/local links: " + color] + (["Flexible Downstream: " + flexible_color] if distinguish else [])
+        swatches.insert(0, ("Local / all main links", color, float(width)))
         if distinguish:
-            swatches.append(("Flexible Downstream", flexible_color, float(width)))
+            swatches.insert(1, ("Flexible Downstream", flexible_color, float(width)))
     return widths, colors, legend, swatches
