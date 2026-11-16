@@ -9,7 +9,8 @@ work/
 ├── cmf_v5_beta/                # Git-managed development sources and package tools
 ├── cmf_v5_package_data/        # Authoritative additional datasets (this store)
 │   ├── inp/ELSE_GPCC/
-│   └── map/glb_15min/
+│   ├── map/glb_15min/
+│   └── map/TE-Japan_01min/
 └── cmf_v5b01_pkg/              # Independently generated distribution package
 ```
 
@@ -53,6 +54,23 @@ This registration does not alter the stored data or establish scientific
 validation. Map-product provenance, redistribution permissions and required
 attribution still need to be assembled before distributing a package. A previous
 package's contents alone do not establish redistribution permission.
+
+### map/TE-Japan_01min/
+
+Japan 1-minute model maps are additional package data, with authoritative
+source `cmf_v5_package_data/map/TE-Japan_01min/`. The model grid has 1500 × 1320
+cells over 123–148°E, 24–46°N (`params.txt`). Model-grid Binary, `netcdf/`,
+standard parameter products, station/bifurcation information and auxiliary
+text are included. High-resolution distribution uses compressed `15sec_nc/`
+with `location.txt`; `15sec/` Binary is excluded and restored only when needed.
+Generation directories, scripts and build/log/temporary files are excluded
+according to `cmf_v5_beta/package/README.md`. Map-specific workflows remain
+Git-managed in the development repository; the local data copy is ignored.
+
+This registration does not change the data or validate its contents. The
+upstream source edition, processing provenance, redistribution conditions and
+required attribution are not yet confirmed here and must be recorded before
+package distribution. No new download URL is asserted by this registration.
 
 ## ELSE_GPCC source, conversion and redistribution
 

@@ -18,6 +18,19 @@ scripts remain in GitHub under `map/tools/`. See the
 [package selection policy](../package/README.md#global-15-minute-map-selection)
 and [Binary restoration guide](tools/script_bin2nc/README.md#restore-high-resolution-binary-working-files-s04).
 
+## Japan additional data
+
+`TE-Japan_01min/` is supplied through Package Additional Data, with authoritative
+source `cmf_v5_package_data/map/TE-Japan_01min/`. Its model grid is 1-minute
+(1500 × 1320 cells, 123–148°E, 24–46°N); supporting high-resolution maps are
+15-second. Package selection includes model-grid Binary, `netcdf/`, standard
+parameters and auxiliary text, plus compressed `15sec_nc/` and `location.txt`.
+High-resolution `15sec/` Binary is restored on demand rather than distributed
+in duplicate. Installed data are ignored locally, while map-specific preparation
+scripts and their README files remain in Git. See the
+[Japan selection policy](../package/README.md#japan-1-minute-map-selection).
+Registration does not establish scientific validation or redistribution clearance.
+
 ## Development and test sample
 
 `map/mekong_15min/` is the official GitHub development/test sample. The scripts retained in its map-local preparation directory are maintainer-operated tools to create or refresh this distributed sample from source data in the separate CaMa-Flood distribution package. They are not automated tests; the dataset's presence does not establish scientific validation or production suitability.

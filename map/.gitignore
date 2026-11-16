@@ -5,3 +5,10 @@
 
 # Runoff preset intermediates, exports and reference comparisons are generated locally.
 /tools/script_runoff_preset/output/
+
+# Japan 1-minute additional-package data: retain map-local workflows in Git,
+# but keep installed model/high-resolution data in the external data store.
+/TE-Japan_01min/*
+!/TE-Japan_01min/script_params/
+!/TE-Japan_01min/script_bin2nc/
+!/TE-Japan_01min/script_region/

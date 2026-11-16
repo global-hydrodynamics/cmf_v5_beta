@@ -1,6 +1,6 @@
 # CaMa-Flood v5 Package Builder
 
-Status: planning / under development. This directory is the temporary development workspace for package-building scripts, configuration and documentation. The dataset catalog records runoff and global-map selections; no installer or package-generation script is implemented yet.
+Status: planning / under development. This directory is the temporary development workspace for package-building scripts, configuration and documentation. The dataset catalog records runoff and additional-map selections; no installer or package-generation script is implemented yet.
 
 ## Working-directory layout
 
@@ -119,6 +119,32 @@ GitHub maintains the small Mekong sample and shared generators under `map/tools/
 The ignored `map/glb_15min/` checkout copy is neither authoritative package input
 nor the home for the only copy of a maintained generator. No tracked files were
 found under that path during registration, so no index removal was required.
+
+## Japan 1-minute map selection
+
+`TE-Japan_01min` uses relative source and target `map/TE-Japan_01min`
+and candidate pattern `**/*`. The authoritative source is the external
+`cmf_v5_package_data/map/TE-Japan_01min/`, including when the store is a
+symbolic link. Its `params.txt` specifies 1500 × 1320 model cells, 1-minute
+spacing, 123–148°E and 24–46°N. Supporting high-resolution data use 15 seconds,
+not 1 minute.
+
+Apply the same selection policy as the global map above, substituting
+`15sec_nc/` (include, with `location.txt`) and `15sec/` (exclude). Include
+model-grid Binary, `netcdf/`, standard parameter products, station/bifurcation
+information and auxiliary text. Exclude generation directories and sources,
+build products, logs, caches and temporary files. The six-column catalog
+records this policy in its description; exclusion automation remains planned.
+Do not copy `**/*` without this filtering. Restore high-resolution Binary on
+demand with the shared restoration tool and `HIRES="15sec"`.
+
+The local checkout keeps map-specific `script_params/`, `script_bin2nc/` and
+`script_region/` workflows and their documentation under Git. Installed data
+are excluded by `map/.gitignore`; previously tracked data are removed from
+the index while retained on disk. Existing Git history is preserved. The
+external data store is not modified by this registration. Source edition,
+redistribution conditions and required attribution remain to be confirmed;
+registration and local availability are not validation or permission to publish.
 
 ## Authoritative README for the additional-data store
 
