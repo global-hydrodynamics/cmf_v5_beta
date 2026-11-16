@@ -57,6 +57,7 @@ class Frame:
     legend: list = field(default_factory=list)
     diagnostics: list = field(default_factory=list)
     swatches: list = field(default_factory=list)
+    background_opacity: float = 1.0  # Shared raster/colorbar presentation, independent of overlays.
 
 
 def visible_segments(segments, extent):
@@ -71,7 +72,7 @@ class Scene:
         self.tiles = discover_tiles(reader.path, self.messages)
 
     def build(self, extent, name, coarse_layer, network, options, max_side=1200):
-        frame = Frame()
+        frame = Frame(background_opacity=options.get("background_opacity", 1.0))
         background = options.get("background", "coarse")
         overlays = {**OVERLAY_DEFAULTS, **options.get("overlays", {})}
         selected_tile = options.get("tile")
@@ -100,7 +101,7 @@ class Scene:
             )
         if frame.images:
             rgba, edges = frame.images[0]
-            frame.images[0] = (apply_opacity(rgba, options.get("background_opacity", 1.0)), edges)
+            frame.images[0] = (apply_opacity(rgba, frame.background_opacity), edges)
         if overlays["catchment_boundaries"]:
             self._catchment_boundaries(frame, tile, extent, max_side, overlays["catchment_boundary_color"])
         if network is not None:
@@ -307,7 +308,7 @@ class Scene:
             if SCHEMA[name].categorical:
                 source = coarse_layer.image
             else:
-                # Retain native finite values for custom Linear; Log masking is
+                # Retain native finite values for custom Linear; Log clipping is
                 # a separate display operation, never a source-data edit.
                 source = self.reader.read(name).astype(float).filled(np.nan) * SCHEMA[name].factor
             image[rr, cc] = source[y[rr, cc] - 1, x[rr, cc] - 1]
@@ -345,14 +346,18 @@ class Scene:
                 fill = ~np.isfinite(raw_image) & np.isfinite(elevation)
                 rgba[fill] = neutral_floodplain_color(style, terrain_palette)
                 frame.legend.append("Missing flddif + valid elevation: neutral fill; both missing: blank")
-            reference = "manual limits" if (style or {}).get("limits") is not None else "full-tile P2/P98 reference"
+            reference = (
+                "manual limits" if (style or {}).get("limits") is not None
+                else "Log floor / full-tile positive P98 upper" if layer.logarithmic
+                else "full-tile P2/P98 reference"
+            )
             frame.legend.append(
                 f"{tile.key} {reference}: {layer.low:.4g}/{layer.high:.4g} m; "
                 + (style or {}).get("scale", "gallery")
                 + " display normalization"
             )
         if layer.logarithmic:
-            frame.diagnostics.append("Log display masks nonpositive values; native values remain unchanged")
+            frame.diagnostics.append(f"Log display clips finite values below {layer.low:g}; native values remain unchanged")
         frame.layer = layer
         frame.images.append((rgba, edges))
         if overlays["channel_pixels"]:
@@ -365,6 +370,10 @@ class Scene:
                 # A separate image keeps channel opacity independent of raster alpha.
                 frame.images.append((channel, edges))
                 frame.legend.append("FLOW pixels: blue=main channel (10), lavender=small stream (7)")
+                if not native:
+                    frame.diagnostics.append(
+                        "Channel Pixels are sampled at this zoom; thin channels may be omitted. Zoom in for native pixels."
+                    )
                 if valid is None:
                     frame.diagnostics.append("Visual codes shown without catmxy; no assignment inferred")
             else:
@@ -531,7 +540,8 @@ def export_scene(
         ax.imshow(image, extent=edges, origin="upper", interpolation="nearest")
     if frame.layer is not None:
         cmap, norm = layer_colors(frame.layer)
-        bar = figure.colorbar(ScalarMappable(norm=norm, cmap=cmap), ax=ax, shrink=0.8)
+        bar = figure.colorbar(ScalarMappable(norm=norm, cmap=cmap), ax=ax, shrink=0.8, alpha=frame.background_opacity)
+        bar.ax.set_facecolor(ax.get_facecolor())
         bar.set_label(frame.layer.label)
         if len(frame.layer.categories):
             ticks = np.unique(

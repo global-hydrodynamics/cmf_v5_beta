@@ -8,7 +8,13 @@ plotting scripts, running a Fortran program, or providing model output.
 
 Python 3.10+ with NumPy, netCDF4, Matplotlib, Panel and Bokeh is required.
 Activate the usual CaMa-Flood Python environment if it already contains them.
-The launcher never installs packages or modifies the shared environment.
+If dependencies are missing, an interactive launcher asks **[y/N]** before
+creating/updating the isolated `visualization/map_explorer/.venv/` and installing
+its requirements. Enter `y` or `yes` to continue; Enter, `n`, or no terminal
+means no environment changes. Downloads require network access. After successful
+installation, the launcher restarts using that environment with the same map,
+port and browser options. Failed setup stops with an error and can be retried.
+Conda, system Python and the shared repository `.venv/` are not modified.
 An independent installation, run from the repository root, is:
 
 ```sh
@@ -26,8 +32,10 @@ If dependencies are already in the active environment:
 
 MAP_DIR resolves relative to the caller first, then relative to this repository.
 An absolute path also works from any current directory. The Python selection
-order is explicit `PYTHON`, active `VIRTUAL_ENV`, repository `.venv`, app-local
+order is explicit `PYTHON`, active `VIRTUAL_ENV`, app-local `.venv`, repository
 `.venv`, `python3`. Set `PYTHON` to choose another interpreter explicitly.
+A Conda prompt alone does not override this order; select its interpreter with
+`PYTHON` when that is intended.
 
 The app opens a browser at **http://127.0.0.1:5006/**; the terminal also prints
 the URL. Use `--no-browser` on a headless machine or `--port 5010` if occupied.
@@ -48,22 +56,25 @@ The launcher chooses an available local port and opens the browser. Keep the
 terminal open; Ctrl-C stops the app. Startup errors remain visible in the
 terminal. Existing running instances are not stopped or replaced.
 
-Both launchers use an explicit `PYTHON` if supplied, then an active environment,
-repository `.venv`, and app-local `.venv`. macOS also checks Homebrew locations;
+Both launchers use an explicit `PYTHON` if supplied, then active `VIRTUAL_ENV`,
+app-local `.venv`, then repository `.venv`. macOS also checks Homebrew locations;
 Windows then tries `py -3` and `python`. Optional command-line map paths bypass
 the folder chooser. A `PYTHON` override must name an executable, without flags.
 
-The macOS app-local environment has been prepared on this workstation. A
-Windows machine needs its own Windows Python environment (a macOS `.venv`
-cannot be reused). From **Command Prompt** in the repository root:
+Each machine needs its own environment (a macOS `.venv` cannot be reused on
+Windows). With Python 3.10+ installed, the setup prompt can prepare it; manual
+installation from **Command Prompt** in the repository root is also possible:
 
 ```bat
 py -3 -m venv visualization\map_explorer\.venv
 visualization\map_explorer\.venv\Scripts\python.exe -m pip install -r visualization\map_explorer\requirements.txt
 ```
 
-Dependencies are never installed by double-clicking. If executable permissions
-were lost when copying the Mac launcher, restore them with
+Double-click launchers ask in their terminal before installing missing dependencies.
+If Python itself is unavailable, install Python 3.10+ first; the launcher does not
+install an OS Python distribution. Missing `_tkinter` only changes folder selection
+to terminal input and is not treated as a missing GUI runtime dependency.
+If executable permissions were lost when copying the Mac launcher, restore them with
 `chmod +x visualization/map_explorer/launch_mac.command`.
 The Windows batch wrapper is supplied but has not been executed on Windows
 in this macOS development session.
@@ -160,7 +171,9 @@ One selected tile is rendered; multi-tile mosaics remain unimplemented.
 only the base raster's existing alpha: originally transparent pixels remain
 transparent. At 0% the raster disappears; networks, bifurcations, ordinary
 boundaries, selected grid/catchment outlines and Channel Pixels retain their
-own opacity. The colorbar keeps its numerical values. PNG uses the same RGBA.
+own opacity. The colorbar gradient follows Background Opacity over the same
+canvas color as the raster; its numbers, tick labels and normalization remain
+unchanged and readable. PNG uses the same raster/colorbar opacity rule.
 
 One **Color Settings** section shows the active representation's controls:
 
@@ -182,13 +195,20 @@ One **Color Settings** section shows the active representation's controls:
   in metres; it is not physical slope.
 
 Automatic terrain limits use full-tile P2/P98, not the zoomed viewport; catchment
-limits use the full coarse attribute reference. Log uses positive reference
-values and masks nonpositive **display** pixels explicitly, retaining their raw
-values in native inspection. Linear accepts zero/negative terrain. Disable
-Automatic Color Limits to edit finite limits with maximum strictly greater than
-minimum; Log requires positive limits. Invalid input reports an error and keeps
-the last valid image until corrected. An initial full-tile scan may take time;
-statistics are cached, with a separate positive-only cache for Log.
+limits use the full coarse attribute reference. Log uses a default display
+minimum of **0.01** when limits are automatic or the entered minimum is zero or
+negative. A specified positive minimum is retained. Finite values below that
+threshold, including zero/negative elevation or flddif, use exactly the minimum
+color; raw inspection values and scientific data are unchanged. Missing values
+remain missing. The browser, PNG and saved effective limits use the same rule.
+The upper automatic bound still uses the full reference (positive P98 for native
+terrain, positive maximum for inherited/coarse attributes). If no usable positive
+upper bound exists, the display range is minimum to ten times minimum, so an
+all-zero/negative region remains viewable. Automatic bounds are independent of
+pan, zoom and browser size. Disable **Automatic Color Limits** to enter bounds;
+nonfinite or reversed/equal manual ranges still report an error. Corrected Log
+bounds are reflected in the input fields. An initial full-tile scan may take
+time; statistics, including empty-positive references, are cached.
 Missing flddif with valid elevation retains a neutral, non-measured fill;
 missing both remains white. Changing opacity never turns missing data opaque.
 
@@ -206,8 +226,11 @@ blue main-channel and visual=7 lavender small-stream pixels above the base raste
 With catmxy, the existing valid-assignment mask is retained; without catmxy,
 visual codes can be shown but no river-cell assignment is inferred. Coarse Raster
 and No Background never render this layer; switching back to high-resolution
-restores the checkbox preference. Sampling may omit small features, without
-category averaging. These pixels are independent of Background Opacity.
+restores the checkbox preference. The browser uses a separate image renderer
+above the background and below vector/selection glyphs; toggles and raster
+updates replace or clear this layer independently. These pixels are independent
+of Background Opacity. Sampling may omit small features without category
+averaging; the diagnostics explicitly recommend zooming in when pixels are sampled.
 
 Enable **Unit Catchment Boundaries** in **Overlays** for native assignment-pair
 edges on either raster type, independently of Channel Pixels and displayed values.
@@ -662,7 +685,8 @@ one record per scalar raster and two records (x then y) for nextxy.
 
 Missing-value attributes and `-9999` are masked. There is no universal
 nonpositive-value mask: zero/negative elevation and supplied category values
-are retained. A log view hides nonpositive values **only in the image**.
+are retained. A Log view clips finite values below its display minimum to the
+minimum color; it does not edit the native values or reveal missing pixels.
 Category colors may repeat; the colorbar samples at most 16 labels when there
 are many IDs, and inspection always shows the native ID. Never infer basin
 identity from bsncol or from a displayed color.
@@ -695,7 +719,8 @@ for scientific conventions, executed checks and limits.
 - **Cannot open map / no supported rasters**: check params.txt and the source
   diagnostics. A missing optional file is harmless; a known file with wrong
   geometry, units, type or record count is rejected, never guessed.
-- **Blank log layer**: choose linear scale or valid positive color limits.
+- **Log minimum**: nonpositive minima reset to 0.01; finite values below the
+  effective minimum share its color. Missing pixels remain blank.
   Source values remain accessible through inspection.
 - **Port in use**: choose another `--port`; the app prints its local URL.
 - **Slow very large map**: use a regional map. Rasters load on demand with a

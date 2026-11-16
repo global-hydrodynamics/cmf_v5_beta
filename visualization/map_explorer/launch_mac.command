@@ -1,5 +1,5 @@
 #!/bin/bash
-# Double-click in Finder. Dependencies are never installed automatically.
+# Double-click in Finder or run in Terminal. Missing dependencies trigger a [y/N] setup prompt.
 set -u
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
@@ -10,8 +10,8 @@ if [ -z "${PYTHON:-}" ]; then
     fi
 fi
 if [ -z "${PYTHON:-}" ]; then
-    for candidate in "$REPO_ROOT/.venv/bin/python" \
-        "$SCRIPT_DIR/.venv/bin/python" /opt/homebrew/bin/python3 /usr/local/bin/python3; do
+    for candidate in "$SCRIPT_DIR/.venv/bin/python" \
+        "$REPO_ROOT/.venv/bin/python" /opt/homebrew/bin/python3 /usr/local/bin/python3; do
         if [ -x "$candidate" ]; then
             PYTHON="$candidate"
             break

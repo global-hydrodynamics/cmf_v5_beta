@@ -226,7 +226,15 @@ class Explorer:
         self.plot.toolbar.logo = None
         self.image_source = ColumnDataSource(dict(image=[], x=[], y=[], dw=[], dh=[]))
         self.mapper = LinearColorMapper(palette=["#ffffff", "#000000"], low=0, high=1, nan_color="#f5f7fa")
-        self.raster = self.plot.image_rgba(image="image", x="x", y="y", dw="dw", dh="dh", source=self.image_source)
+        self.raster = self.plot.image_rgba(
+            image="image", x="x", y="y", dw="dw", dh="dh", source=self.image_source, level="image"
+        )
+        # Overlapping rows of a single image glyph do not define semantic layer order.
+        # Keep channel pixels above the background and below vector/selection glyphs.
+        self.channel_image_source = ColumnDataSource(dict(image=[], x=[], y=[], dw=[], dh=[]))
+        self.channel_raster = self.plot.image_rgba(
+            image="image", x="x", y="y", dw="dw", dh="dh", source=self.channel_image_source, level="underlay"
+        )
         self.raster.nonselection_glyph = self.raster.glyph
         self.raster.selection_glyph = self.raster.glyph
         # Tap is an inspection gesture, not a selection of scientific layers.
@@ -624,7 +632,7 @@ class Explorer:
             for widget in (self.scale, self.palette, self.auto_limits):
                 widget.disabled = SCHEMA[name].categorical
             self.low.disabled = self.high.disabled = self.auto_limits.value or SCHEMA[name].categorical
-            if self.auto_limits.value:
+            if self.auto_limits.value or layer.logarithmic:
                 self.low.value, self.high.value = layer.low, layer.high
         finally:
             self._updating = False
@@ -654,6 +662,10 @@ class Explorer:
         cls = LogColorMapper if layer.logarithmic else LinearColorMapper
         self.mapper = cls(palette=layer.palette, low=layer.low, high=layer.high, nan_color="#f5f7fa")
         self.bar.color_mapper = self.mapper
+        self.bar.scale_alpha = self.background_opacity.value / 100
+        # Match the canvas underneath the translucent raster, not a white legend patch.
+        self.bar.background_fill_color = self.plot.background_fill_color
+        self.bar.background_fill_alpha = 1.0
         short_name = layer.label.split(" —")[0]
         self.bar.title = (
             "Elevation diff. [m]"
@@ -751,6 +763,15 @@ class Explorer:
             self.extent, self.variable.value, self.layer, self.network, self.scene_options()
         )
         self._set_colorbar(frame.layer)
+        # Synchronize effective Log bounds only after building the current frame;
+        # visibility/profile restoration can still refer to a previous frame.
+        if self.background_ui.raster_type.value == "highres" and frame.layer is not None and frame.layer.logarithmic:
+            updating = self._updating
+            self._updating = True
+            try:
+                self.highres_low.value, self.highres_high.value = frame.layer.low, frame.layer.high
+            finally:
+                self._updating = updating
         self.plot.title.text = (
             "Unit catchments · " + self.variable.value
             if self.background.value == "catchment"
@@ -764,13 +785,15 @@ class Explorer:
                 )
             )
         )
-        self.image_source.data = dict(
-            image=[np.ascontiguousarray(a[::-1]) for a, e in frame.images],
-            x=[e[0] for a, e in frame.images],
-            y=[e[2] for a, e in frame.images],
-            dw=[e[1] - e[0] for a, e in frame.images],
-            dh=[e[3] - e[2] for a, e in frame.images],
-        )
+        for source, images in ((self.image_source, frame.images[:1]), (self.channel_image_source, frame.images[1:])):
+            # Clear each source on every update, including toggles and unavailable layers.
+            source.data = dict(
+                image=[np.ascontiguousarray(a[::-1]) for a, e in images],
+                x=[e[0] for a, e in images],
+                y=[e[2] for a, e in images],
+                dw=[e[1] - e[0] for a, e in images],
+                dh=[e[3] - e[2] for a, e in images],
+            )
         self.path_source.data = frame.paths
         self.link_source.data = (
             dict(x0=[], y0=[], x1=[], y1=[], width=[], color=[]) if frame.paths["xs"] else frame.main

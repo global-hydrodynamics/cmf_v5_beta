@@ -111,7 +111,7 @@ class Tile:
             (r1 - r0 <= max_side and c1 - c0 <= max_side),
         )
 
-    def percentiles(self, name, positive=False):
+    def percentiles(self, name, positive=False, allow_empty=False):
         """Exact full-tile P2/P98, bounded RAM and disposable disk workspace."""
         key=(name,'positive') if positive else name
         if key not in self._stats:
@@ -126,11 +126,14 @@ class Tile:
                     finite = values[np.isfinite(values) & ((values>0) if positive else True)]
                     work[count : count + finite.size] = finite
                     count += finite.size
-                if not count:
-                    raise ValueError(f"{self.key}: no {'positive ' if positive else ''}valid {name} values")
-                low, high = np.percentile(work[:count], (2, 98), overwrite_input=True)
+                if count:
+                    low, high = np.percentile(work[:count], (2, 98), overwrite_input=True)
+                else:
+                    low = high = np.nan  # Let a Log display choose its documented fallback, not fake percentiles.
                 del work
             self._stats[key] = float(low), float(high if high > low else low + 1)
+        if not allow_empty and not np.isfinite(self._stats[key]).all():
+            raise ValueError(f"{self.key}: no {'positive ' if positive else ''}valid {name} values")
         return self._stats[key]
 
     def centroids(self, coarse, river):

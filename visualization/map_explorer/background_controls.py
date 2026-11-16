@@ -353,7 +353,7 @@ class BackgroundControls:
                 else "Native terrain / 8-neighbor elevation difference [m], not slope. "
             )
             self.color_note.object += (
-                "Log display masks nonpositive values; native values remain unchanged. " if log else ""
+                "Log clips values below its positive minimum (automatic: 0.01); native values remain unchanged. " if log else ""
             )
             self.color_note.object += (
                 "Gallery Default preserves existing log-uparea / full-tile P2/P98 and terrain stretch. "

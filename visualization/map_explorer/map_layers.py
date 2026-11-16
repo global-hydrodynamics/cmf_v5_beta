@@ -25,6 +25,26 @@ class DisplayLayer:
     label: str
 
 
+LOG_DISPLAY_MINIMUM = 0.01
+
+
+def log_display_limits(low, high):
+    """Resolve display bounds only: honor positive manual minima, default to 0.01.
+
+    An all-nonpositive reference still needs a positive, nondegenerate colorbar;
+    its finite data use the lower-end color, never invented scientific values.
+    """
+    low = float(low) if low is not None and np.isfinite(low) and low > 0 else LOG_DISPLAY_MINIMUM
+    high = float(high) if high is not None and np.isfinite(high) and high > low else low * 10
+    return low, high
+
+
+def log_display_values(values, minimum):
+    """Floor finite pixels for LogNorm, retaining missing pixels and native source arrays."""
+    values = np.ma.asarray(values).astype(float).filled(np.nan)
+    return np.where(np.isfinite(values), np.maximum(values, minimum), np.nan)
+
+
 def layer_colors(layer):
     """One normalization contract shared by browser pixels and PNG export."""
     cmap = ListedColormap(layer.palette).with_extremes(bad='#f5f7fa')
@@ -77,15 +97,16 @@ def make_layer(reader, name, scale='auto', palette='viridis', limits=None):
         colors = [to_hex(cmap(int(c) % cmap.N)) for c in categories]
         return DisplayLayer(image, colors, -.5, len(categories)-.5, False, categories, label)
     logarithmic = spec.logarithmic if scale == 'auto' else scale == 'log'
-    if logarithmic:
-        values[values <= 0] = np.nan
     finite = values[np.isfinite(values)]
     if not finite.size:
         raise ValueError(f'{name}: no values usable with this color scale')
     low, high = map(float, (finite.min(), finite.max()) if limits is None else limits)
-    if not np.isfinite([low, high]).all() or low > high or (logarithmic and low <= 0):
-        raise ValueError('Color limits must be finite, ordered, and positive for log scale')
-    if low == high:
+    if not np.isfinite([low, high]).all() or low > high:
+        raise ValueError('Color limits must be finite and ordered')
+    if logarithmic:
+        low, high = log_display_limits(None if limits is None else low, high)
+        values = log_display_values(values, low)
+    elif low == high:
         high = low + max(abs(low)*.01, .01)
     colors = [to_hex(colormaps[palette](i/255)) for i in range(256)]
     return DisplayLayer(values, colors, low, high, logarithmic, np.array([]), label)

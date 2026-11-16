@@ -19,3 +19,7 @@ PyYAML>=6.0
 
 # Optional ERA5-Land download client (also requires CDS credentials and terms acceptance).
 cdsapi>=0.7
+
+# Interactive Map Explorer; keep these bounds aligned with its dedicated requirements.
+panel>=1.5,<2
+bokeh>=3.5,<4

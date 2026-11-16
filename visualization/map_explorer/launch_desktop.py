@@ -5,6 +5,7 @@ import argparse
 import importlib.util
 from pathlib import Path
 import socket
+import subprocess
 import sys
 
 
@@ -39,21 +40,67 @@ def choose_map(default):
     return Path(value.strip('"')) if value else default
 
 
-def main():
+def prepare_environment(directory, argv, missing):
+    """Install only after explicit terminal consent, in the Explorer-local venv.
+
+    Keep Conda, system Python and the repository's shared environment unchanged.
+    Re-launch with the original arguments so folder selection/server startup use
+    the newly installed runtime rather than this process's import state.
+    """
+    environment = directory / ".venv"
+    python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+    print("Missing dependencies: " + ", ".join(missing), file=sys.stderr)
+    print(f"Selected Python: {sys.executable}", file=sys.stderr)
+    print(f"Explorer environment to create/update: {environment}", flush=True)
+    print("Required packages will be downloaded and installed there; other environments are unchanged.", flush=True)
+    if not sys.stdin.isatty():
+        print(f"[INFO] No interactive terminal; no changes made. See {directory / 'README.md'}", file=sys.stderr)
+        return 1
+    try:
+        answer = input("Prepare this environment and launch Map Explorer? [y/N] ").strip().lower()
+    except EOFError:
+        answer = ""
+    if answer not in ("y", "yes"):
+        print("[INFO] Setup cancelled; no environment changes made.")
+        return 0
+
+    try:
+        if environment.is_symlink():
+            raise OSError(f"Refusing to install into a linked environment: {environment}")
+        if not python.is_file() or not (environment / "pyvenv.cfg").is_file():
+            print(f"[STEP] Creating {environment}", flush=True)
+            subprocess.run([sys.executable, "-m", "venv", str(environment)], check=True)
+        # A stale or malformed .venv must not redirect pip into Conda/system Python.
+        subprocess.run([str(python), "-c",
+                        "import sys; from pathlib import Path; "
+                        "assert sys.prefix != sys.base_prefix and "
+                        "Path(sys.prefix).resolve() == Path(sys.argv[1]).resolve(), 'Not the requested isolated venv'",
+                        str(environment)], check=True)
+        print("[STEP] Installing Map Explorer requirements", flush=True)
+        subprocess.run([str(python), "-m", "pip", "install", "-r", str(directory / "requirements.txt")], check=True)
+        subprocess.run([str(python), "-c", "import numpy, netCDF4, matplotlib, panel, bokeh"], check=True)
+    except (OSError, subprocess.CalledProcessError) as exc:
+        print(f"[ERROR] Environment setup failed: {exc}", file=sys.stderr)
+        print("Existing data and other environments were not changed. Re-run the launcher to retry.", file=sys.stderr)
+        return 1
+    print("[SUCCESS] Explorer environment ready; launching.", flush=True)
+    return subprocess.run([str(python), str(directory / "launch_desktop.py"), *argv]).returncode
+
+
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("map_dir", nargs="?", type=Path,
                         help="Optional map path; otherwise choose a folder")
     parser.add_argument("--port", type=int, default=0,
                         help="Local port; 0 chooses an available port")
     parser.add_argument("--no-browser", action="store_true")
-    args = parser.parse_args()
+    argv = sys.argv[1:] if argv is None else argv
+    args = parser.parse_args(argv)
     directory = Path(__file__).resolve().parent
     missing = [name for name in ("numpy", "netCDF4", "matplotlib", "panel", "bokeh")
                if importlib.util.find_spec(name) is None]
     if missing:
-        print("Missing dependencies: " + ", ".join(missing), file=sys.stderr)
-        print(f"Python: {sys.executable}\nSee installation steps in {directory / 'README.md'}", file=sys.stderr)
-        return 1
+        return prepare_environment(directory, argv, missing)
     selected = args.map_dir or choose_map(directory.parents[1]/"map"/"mekong_15min")
     if selected is None:
         print("Launch cancelled.")

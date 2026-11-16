@@ -1,13 +1,13 @@
 @echo off
-rem Double-click in Explorer. Paths with spaces are supported; no automatic installation.
+rem Double-click in Explorer. Paths with spaces are supported; missing dependencies prompt for setup.
 setlocal EnableExtensions DisableDelayedExpansion
 set "SCRIPT_DIR=%~dp0"
 if defined PYTHON goto run_python
 if defined VIRTUAL_ENV if exist "%VIRTUAL_ENV%\Scripts\python.exe" set "PYTHON=%VIRTUAL_ENV%\Scripts\python.exe"
 if defined PYTHON goto run_python
-if exist "%SCRIPT_DIR%..\..\.venv\Scripts\python.exe" set "PYTHON=%SCRIPT_DIR%..\..\.venv\Scripts\python.exe"
-if defined PYTHON goto run_python
 if exist "%SCRIPT_DIR%.venv\Scripts\python.exe" set "PYTHON=%SCRIPT_DIR%.venv\Scripts\python.exe"
+if defined PYTHON goto run_python
+if exist "%SCRIPT_DIR%..\..\.venv\Scripts\python.exe" set "PYTHON=%SCRIPT_DIR%..\..\.venv\Scripts\python.exe"
 if defined PYTHON goto run_python
 where py >nul 2>&1
 if not errorlevel 1 goto run_py

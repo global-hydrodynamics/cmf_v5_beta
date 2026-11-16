@@ -80,7 +80,7 @@ def test_area_units_log_and_categories_preserve_values(map_dir):
     r = MapReader(map_dir)
     display = make_layer(r,'uparea')
     assert display.image[0,0] == 1
-    assert np.isnan(display.image[0,3])
+    assert display.image[0,3] == 0.01
     assert r.read('uparea')[0,3] == 0
     categories = make_layer(r,'basin',scale='log')
     assert not categories.logarithmic
@@ -134,3 +134,21 @@ def test_bad_variable_dimensions_and_coordinate_units(map_dir):
     r=MapReader(map_dir)
     assert 'elevtn' not in r.sources
     assert any('exactly the lon' in message for message in r.messages)
+
+
+def test_coarse_log_floor_preserves_zero_negative_and_missing_source_values(map_dir):
+    from map_layers import colorize
+    values = np.array([[-5, 0, 0.001, 1], [2, -9999, 3, 4], [5, 6, 7, 8]], dtype="<f4")
+    path = map_dir / "elevtn.bin"
+    values.tofile(path)
+    before = path.read_bytes()
+    reader = MapReader(map_dir)
+    layer = make_layer(reader, "elevtn", scale="log", limits=(0.1, 10))
+    np.testing.assert_array_equal(layer.image[0, :3], [0.1]*3)
+    assert np.isnan(layer.image[1, 1])
+    colors = colorize(layer, layer.image)
+    assert np.all(colors[0, :3] == colorize(layer, np.array([[0.1]]))[0, 0])
+    assert make_layer(reader, "elevtn", scale="log").low == 0.01
+    assert make_layer(reader, "elevtn", scale="log", limits=(0, 10)).low == 0.01
+    np.testing.assert_array_equal(reader.read("elevtn")[0, :3], values[0, :3])
+    assert path.read_bytes() == before
