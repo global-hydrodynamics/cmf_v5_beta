@@ -10,7 +10,7 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 Maintainer authorizes Inspector redesign plus orange solid native / subdued
 dashed computational highlights, and explicitly requests commit/push of completed
-accumulated Explorer work on current main75bc362f. This supersedes prior
+accumulated Explorer work on main (starting75bc362f). This supersedes prior
 no-publication requests for DT-0113–0116; retain their historical work/evidence.
 Owner Dai Yamazaki; Codex implements/publishes. No branch, scientific-data or
 core-model changes. Added2x2 native outlet/area/Fortran-ID/click summary,
@@ -19,7 +19,8 @@ renderer-deduplicated bifurcation incidence and persistent collapsed diagnostics
 204 PASS/0 FAIL/0 SKIP; actual browser/PNG, all10 Mekong layers and independent
 1049 total/1 direct upstream check pass;251 protected hashes unchanged.
 Three registry rows gain reader-usage evidence; workflow_stage unchanged.
-Publication references follow after successful commit/push. See
+Published implementation and accumulated DT-0113–0116 work in
+[47cf2574](https://github.com/global-hydrodynamics/cmf_v5_beta/commit/47cf257492f9af53846358bbd6bc12172be972aa); origin/main verified. Existing SSH authentication used; no force-push. See
 [guide](../visualization/map_explorer/README.md),
 [design](../visualization/map_explorer/DESIGN.md),
 [VR-0163](../research/records/validation_runs/VR-0163.md).
