@@ -114,11 +114,11 @@ def test_assigned_only_full_tile_population(products):
     tile._maps.clear()
     valid, _, _ = assignment(*codes, reader.geometry)
     expected = values[valid & np.isfinite(values) & (values != -9999)]
-    assert tile.percentiles("elevtn") == pytest.approx(np.percentile(expected, [2, 98]))
-    assert tile.percentiles("elevtn", positive=True) == pytest.approx(np.percentile(expected[expected > 0], [2, 98]))
+    assert tile.percentiles("elevtn") == pytest.approx(np.percentile(expected, [3, 97]))
+    assert tile.percentiles("elevtn", positive=True) == pytest.approx(np.percentile(expected[expected > 0], [3, 97]))
     before = dict(tile._stats)
     tile.subset((11, 12, 21, 22), max_side=2)
-    assert tile.percentiles("elevtn") == pytest.approx(np.percentile(expected, [2, 98])) and tile._stats == before
+    assert tile.percentiles("elevtn") == pytest.approx(np.percentile(expected, [3, 97])) and tile._stats == before
     tile.files.pop("catmxy")
     with pytest.raises(ValueError, match="manual limits"):
         tile.percentiles("elevtn")
@@ -137,7 +137,7 @@ def test_explicit_selection_legacy_state_and_native_fields(split_assignment):
     info = app.inspect(11.25, 22.25)
     assert app.selected == (1, 0) and app.selection.native_pixel == (1, 2)
     assert info["native hires uparea [km²]"] == 12.5 and info["native hires rivwth [m]"] == 17.25
-    assert "Unavailable" in app.cell_inspector.pixel.object and "Native fldhgt" in app.cell_inspector.pixel.object
+    assert "High-res elevtn" in app.cell_inspector.pixel.object and "fldhgt" not in app.cell_inspector.pixel.object
     for mode in ("coarse", "elevtn", "catchment", "none"):
         app.background.value = mode
         assert app.selected == (1, 0)

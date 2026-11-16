@@ -4,9 +4,47 @@ A standalone, read-only browser for coarse CaMa-Flood river maps. Explore
 rasters, stored downstream connectivity and individual cells without editing
 plotting scripts, running a Fortran program, or providing model output.
 
-## Background, selection and view controls (DT-0119)
+## Visualization and Inspector modes
 
-The map stays mounted on the left; configuration and Inspector tabs remain on
+The right panel starts in **Visualization** mode: Gallery Presets above
+**Background / River / Overlays / View** tabs. The top segmented selector switches
+to **Inspector**, hiding Gallery/settings and showing the existing Point Select
+Grid/Catchment control and Cell Inspector. This only changes the visibility of
+mounted panels: plot, geographic extent, last click, selected geometry, OSM,
+Background/River/Overlays, Gallery selection and Visualization sub-tab all persist.
+A map click updates the current selection in either mode and never switches modes.
+
+River and Floodplain Geometry stays visible. **River Network Connectivity** is now
+an Accordion, collapsed initially, alongside the existing collapsed Floodplain
+Elevation Profile, High-resolution Pixel Information and Advanced / Native Values.
+Each section retains expansion while cells or top-level modes change; values update
+while collapsed. Connectivity definitions and regional graph counts are unchanged.
+
+The ordinary pixel section uses **High-res** labels (1-based Fortran ix/iy), stored
+catmx/catmy, elevtn/flddif[m], signed catmz100 codes, rivwth[m], and genuine High-res
+uparea[km²] where supplied. **Assigned Unit Catchment uparea** is a separate inherited
+coarse attribute. Ordinary pixel rows no longer include Assignment status or
+pixelwise fldhgt. Internal assignment validation and Advanced diagnostics remain;
+invalid/unassigned pixels never report a successful catchment assignment. The
+separate coarse NLFP profile is unchanged and never substituted for pixelwise data.
+
+Above the map, the compact summary distinguishes **Selected Grid** from **Selected
+Unit Catchment** and shows selected 1-based indices, stored Outlet (lat,lon), selected
+coarse uparea converted from m² to km², selection method and assigned High-res pixel
+count where available. It uses validated stored outlat/outlon, never the click or
+cell center. Coordinates use five decimal places; uparea uses nine significant
+digits. Missing values show Unavailable. The pixel count is not a physical area.
+The selected computational rectangle is **pale lavender #D8C8F0, dashed, 3px**;
+the irregular orange native catchment outline remains separate. Both browser and
+PNG share these coordinates and corresponding styles.
+
+Ordinary automatic limits now use full-reference **P3/P97**; see below for Log,
+pixel weighting and explicit Gallery/legacy exceptions. [Validation evidence](../../research/records/validation_runs/VR-0166.md)
+records synthetic, actual Mekong, browser and PNG checks.
+
+## Background, selection and view controls
+
+The map stays mounted on the left; Visualization and Inspector modes remain on
 an independently scrollable right panel. These controls preserve the geographic
 viewport except for explicit navigation and aspect actions.
 
@@ -37,22 +75,24 @@ viewport except for explicit navigation and aspect actions.
   Categorical identities retain discrete colors with cropping disabled. Invalid
   intervals roll back with an explanation. Variable-specific session preferences
   are retained; active intervals are saved in JSON, not the entire profile cache.
-- Terrain automatic limits are full-tile P2/P98 over **valid native paired catmxy
+- Terrain automatic limits are full-tile P3/P97 over **valid native paired catmxy
   assignments only**, using the existing assignment helper and coarse dimensions.
   Unassigned/sea/out-of-range pairs and nonfinite/missing values are excluded;
-  Log statistics additionally exclude nonpositive values. Existing Log display
-  floor semantics remain unchanged. Elevation Difference uses native neighbors
+  Log statistics retain finite nonpositive values until after P3/P97 calculation,
+  then use lower=max(P3,0.01) and upper=P97; nonpositive display pixels are masked. Elevation Difference uses native neighbors
   before this center-pixel assignment mask; this is not a new terrain derivation.
   Limits do not depend on pan/zoom or the sampled display image. Missing/unusable
   catmxy gives an explicit diagnostic and clears the unavailable background;
   use manual physical limits to display such a terrain tile. Inherited catchment
-  uparea retains its coarse contributing-area reference, not the separate native
-  high-resolution uparea. Statistics are cached by tile/variable/positive policy/
+  uparea uses its coarse contributing-area values repeated for every valid assigned
+  high-resolution pixel (pixel-weighted P3/P97), not the genuine native uparea
+  product. Coarse cells with no assignments in the selected tile do not contribute;
+  these are pixel-frequency weights, not physical-area weights. Statistics are cached by tile/variable/positive policy/
   assignment-mask version/coarse dimensions. Blocks bound RAM; disposable disk
   workspace scales with native tile size and initial scans can take time.
 - Ordinary **Unit Catchment Boundaries** default to `#4A4A4A`, 0.65 px. The existing
   color picker and saved colors remain authoritative. Selected native boundaries
-  remain orange solid 3 px; computational rectangles remain subdued dashed gray.
+  remain orange solid 3 px; computational rectangles are pale lavender #D8C8F0, dashed, 3px.
 - **Inspector → Point Select → Grid / Catchment** explicitly selects either the
   containing computational grid or the exact clicked native catmxy assignment,
   independently of background. New sessions default to Catchment when a catmxy
@@ -60,12 +100,12 @@ viewport except for explicit navigation and aspect actions.
   click without another click. Missing/unassigned pixels never fall back to Grid.
   Changing source re-resolves the click and cannot leave an unrelated outline.
 - **High-resolution Pixel Information** is collapsed initially and retains its
-  expansion across updates. It reports native 1-based ix/iy, catmx/catmy and
-  assignment status, native uparea[km²], elevtn[m], rivwth[m] and signed catmz100
+  expansion across updates. It reports High-res 1-based ix/iy, catmx/catmy,
+  genuine High-res uparea[km²], elevtn[m], rivwth[m] and signed catmz100
   codes when supplied. catmz100 is the stored 100-level floodplain profile position;
   -9 is sea/unassigned, not an elevation or converted percentage. Native flddif[m]
-  is explicitly separate. No pixelwise native fldhgt was supplied/verified, so it
-  shows Unavailable; the coarse NLFP profile remains in its existing section.
+  is explicitly separate. No pixelwise native fldhgt is inferred or shown in this ordinary section;
+  the coarse NLFP profile remains in its existing section.
   The clicked pixel's native uparea and assigned coarse catchment uparea are
   separate rows, including in Grid mode when their target differs. Scalar reads
   use read-only memmaps. Supplied location.txt/native Binary formats are supported;
@@ -79,7 +119,10 @@ viewport except for explicit navigation and aspect actions.
 JSON v1/v2 still load. Missing new fields default to OSM off, full palette range
 and the saved background's original Grid/Catchment rule; new files store explicit
 `point_select`, `basemap`, `layers.coarse_palette_range` and
-`layers.highres_style.palette_range`. Gallery presets reset OSM off and palette
+`layers.highres_style.palette_range` plus `layers.auto_limits_policy`. Fresh sessions
+use `percentile`; old JSON without this optional field uses `gallery` for its
+preceding Auto/Gallery reference. Explicit Linear/Log uses ordinary P3/P97 even
+after a preset. Gallery presets reset OSM off and palette
 ranges to [0,1], retaining the user's explicit Point Select preference. Shared
 preset settings remain CSV references to the canonical visualization catalog.
 
@@ -168,7 +211,7 @@ in this macOS development session.
 
 The app keeps navigation, native inspection and export while separating three
 independent groups. The map stays mounted on the left (about 70–75% on desktop),
-with Gallery presets and Background / River / Overlays / Inspector / View tabs
+with Gallery presets and Background / River / Overlays / View tabs in Visualization mode, or Inspector
 on the right. Switching settings tabs never replaces the map. The right panel
 scrolls independently; **Settings panel** hides/shows it. Narrow windows wrap
 settings below the map. The actual Bokeh frame fits both available width and
@@ -269,33 +312,51 @@ One **Color Settings** section shows the active representation's controls:
   **Automatic Color Limits**, **Color Minimum** and **Color Maximum**. Palettes:
   Gallery Default, Gray, Pale Terrain, Viridis, YlGn, YlGnBu, Terrain, Plasma,
   Magma and Blues. Changes apply immediately without applying another preset.
-- Unit-Catchment uparea defaults to the original Gallery yellow-green/log km²
-  rendering. Other palettes, Linear/Log and manual km² limits affect only display;
+- Unit-Catchment uparea uses the Gallery yellow-green palette and Log km²
+  rendering, with ordinary pixel-weighted P3/P97 limits. Other palettes, Linear/Log and manual km² limits affect only display;
   native catmxy, coarse uparea, catchment geometry and network remain unchanged.
-- Terrain defaults retain Gallery full-tile P2/P98, square-root stretch and
+- Ordinary terrain defaults use assigned-pixel full-tile P3/P97 with Gallery square-root stretch and
   subdued gray range or pale-terrain gamma. **Linear** and **Log** use their
   stated numerical normalization without Gallery stretch. Colorbars stay in
   physical metres (or inherited km²), including for Gallery's nonlinear palette
   transfer. Elevation Difference is maximum absolute eight-neighbor difference,
   in metres; it is not physical slope.
 
-Automatic terrain limits use full-tile valid-native-assignment P2/P98, not the zoomed viewport; catchment
-limits use the full coarse attribute reference. Log uses a default display
-minimum of **0.01** when limits are automatic or the entered minimum is zero or
-negative. A specified positive minimum is retained. Finite values below that
-threshold, including zero/negative elevation or flddif, use exactly the minimum
-color; raw inspection values and scientific data are unchanged. Missing values
-remain missing. The browser, PNG and saved effective limits use the same rule.
-The upper automatic bound still uses the full reference (positive P98 for native
-terrain, positive maximum for inherited/coarse attributes). If no usable positive
-upper bound exists, the display range is minimum to ten times minimum, so an
-all-zero/negative region remains viewable. Automatic bounds are independent of
-pan, zoom and browser size. Disable **Automatic Color Limits** to enter bounds;
-nonfinite or reversed/equal manual ranges still report an error. Corrected Log
-bounds are reflected in the input fields. An initial full-tile scan may take
-time; statistics, including empty-positive references, are cached.
-Missing flddif with valid elevation retains a neutral, non-measured fill;
-missing both remains white. Changing opacity never turns missing data opaque.
+Ordinary continuous coarse limits use P3/P97 of all finite source map-cell values
+in physical display units, respecting native missing masks. Terrain uses full-tile
+P3/P97 of finite values with valid paired native catmxy indices within coarse bounds.
+Inherited catchment attributes use every assigned pixel's inherited finite value,
+so large pixel populations have proportionate weight. Neither viewport nor display
+sampling participates. Categorical identifiers retain discrete normalization.
+
+For Log, compute percentiles **before** excluding nonpositive values, then use
+`lower=max(P3,0.01)`, `upper=P97`. If upper<=lower, show a range error and clear the
+unavailable background; never manufacture a positive upper limit. Rendering masks
+nonpositive pixels and saturates positive under-range values. Linear uses P3/P97;
+a constant Linear field retains the existing small display-only expansion for a
+usable colorbar. None of these operations changes scientific data or raw inspection.
+
+Disable Automatic Color Limits to retain exact manual bounds. Manual Log requires
+0<lower<upper; invalid minima are reported rather than reset to0.01. The automatic
+floor does not apply to a valid manual minimum below0.01. Palette Minimum/Maximum
+remain independent, applied after physical normalization and any Gallery transfer;
+colorbar and PNG share the same DisplayLayer. The finite reference/quantile/population
+policy is cached per tile; block processing uses disposable disk workspace and may
+pause on the first large-tile scan.
+
+**Gallery/legacy exception:** applying a catalog preset persists
+`layers.auto_limits_policy="gallery"`. Its Auto/Gallery scales retain preceding
+Explorer coarse extrema, inherited coarse-attribute reference and assigned terrain
+P2/P98, including old Log display-floor/fallback behavior and Gallery transfer.
+Old JSON without the policy field loads through the same explicit compatibility
+policy. Selecting explicit Linear or Log uses ordinary P3/P97; its data-limit
+calculation does not inherit a hidden Gallery exception. Palette/categorical
+scientific definitions and the preset CSV/catalog list are unchanged. This retains
+existing Explorer preset behavior rather than claiming exact Gallery typography
+or correcting previously documented differences from the original plotting scripts.
+
+Missing flddif with valid elevation retains its neutral, non-measured fill;
+missing both remains white. Palette cropping and opacity do not create data.
 
 Styles are retained per raster type/variable **during the session**, so coarse
 elevtn edits do not overwrite uparea settings, and terrain modes remember their
@@ -634,8 +695,8 @@ Its persistent 2×2 summary reads, in row order:
    the selected river-map cell and its outlet.
 
 The selection-method line explicitly says **High-resolution catmxy assignment**
-or **Geographic coarse-grid containment**. Geometry and Connectivity remain
-visible by default; the old long Location & Assignment table is available under
+or **Geographic coarse-grid containment**. Geometry remains visible; Connectivity
+is collapsed by default and retains its expansion while selection or modes change; the old long Location & Assignment table is available under
 **Advanced / Native Values**, collapsed initially. Opening/closing this section
 or the profile survives new clicks; panes update without rebuilding the map.
 
@@ -692,26 +753,22 @@ counts are additionally available. Selection geometry is never derived from
 these formatted summaries.
 
 The native assignment boundary is **orange (`#FF7F00`), solid, 3 px**, preserving
-holes/components. The computational rectangle is a subdued **gray (`#888888`),
-dashed, 1 px at 65% opacity**, without casing. Both remain visible when ordinary
+holes/components. The computational rectangle is **pale lavender (`#D8C8F0`),
+dashed, 3px at full opacity**, without casing. Both remain visible when ordinary
 Unit Catchment Boundaries are disabled and use identical browser/PNG coordinates.
 The selected outlet/link stay yellow with a downstream endpoint arrow. This
 supersedes earlier pink/cased presentation; selection logic is unchanged.
 
-Changing Coarse ↔ High-resolution, including No Background, **re-evaluates the
-last geographic click without another click**. The Inspector and all highlights
-update to the new rule. Changing only variable, color, network, overlays, tabs
-or viewport under the same rule/source preserves the selected Grid. Source/tile
-changes also reassess the last clicked position; unrelated tile geometry is never
-retained. Selection is not saved in JSON; loading a configuration during a session
-reassesses an existing last click if its rule/source changes.
+Changing **Point Select Grid ↔ Catchment** re-evaluates the last geographic click
+without another click. Background/variable/color/network/overlay/panel/viewport
+changes preserve the explicit selection rule. Source changes reassess the same
+click; unrelated tile geometry is never retained. Selection is not serialized;
+loading a configuration reassesses an existing click if its rule/source changes.
 
-With High-resolution Raster, unassigned/missing/mixed/outside-tile pixels report
-their native information and clear the previous Grid, catchment and link. Missing
-catmxy reports assignment selection unavailable; **no geographic/nearest-cell
-fallback** is allowed. In Coarse Raster/No Background the geographic Grid remains
-selectable without catmxy, or if no pixels in the selected tile are assigned to
-that Grid; only its catchment outline is unavailable, with an explicit status.
+In Catchment mode, unassigned/missing/mixed/outside-tile pixels retain raw diagnostic
+information and clear prior selected geometry/link. No geographic or nearest-cell
+fallback is allowed. Grid mode remains selectable without catmxy, even when no
+native pixels are assigned to that grid; only its catchment outline is unavailable.
 
 catmxy maps native pixels to river-map cells; nextxy defines connectivity between
 those cells. A regular computational rectangle and an irregular unit catchment
@@ -803,9 +860,11 @@ for scientific conventions, executed checks and limits.
 - **Cannot open map / no supported rasters**: check params.txt and the source
   diagnostics. A missing optional file is harmless; a known file with wrong
   geometry, units, type or record count is rejected, never guessed.
-- **Log minimum**: nonpositive minima reset to 0.01; finite values below the
-  effective minimum share its color. Missing pixels remain blank.
-  Source values remain accessible through inspection.
+- **Log limits**: ordinary Auto uses max(P3,0.01)/P97 from finite values before
+  Log masking. Nonpositive display values are masked; positive under-range values
+  saturate. Invalid manual bounds or upper<=lower report errors; source values
+  remain accessible through inspection. Explicit Gallery/legacy exceptions above
+  retain previous normalization for compatibility.
 - **Port in use**: choose another `--port`; the app prints its local URL.
 - **Slow very large map**: use a regional map. Rasters load on demand with a
   four-field LRU cache and Binary memory mapping; uncached inspector values use

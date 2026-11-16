@@ -98,6 +98,7 @@ class Scene:
                 options.get("terrain_palette", "gray"),
                 max_side,
                 options.get("highres_style"),
+                options.get("auto_limits_policy", "percentile"),
             )
         if frame.images:
             rgba, edges = frame.images[0]
@@ -278,7 +279,18 @@ class Scene:
         frame.legend.append("Subcol pastel inside valid bsncol coverage; unassigned gray, missing coverage white")
 
     def _background(
-        self, frame, tile, mode, name, coarse_layer, extent, overlays, terrain_palette, max_side, style=None
+        self,
+        frame,
+        tile,
+        mode,
+        name,
+        coarse_layer,
+        extent,
+        overlays,
+        terrain_palette,
+        max_side,
+        style=None,
+        reference_policy="percentile",
     ):
         subset = tile.subset(extent, max_side)
         if subset is None:
@@ -294,7 +306,12 @@ class Scene:
             if np.any(invalid):
                 frame.diagnostics.append(f"{int(invalid.sum())} displayed assignment pairs invalid; excluded")
             rr, cc = np.where(valid)
-            if "uparea" in self.reader.sources:
+            if (
+                "uparea" in self.reader.sources
+                and reference_policy == "gallery"
+                and (style or {}).get("scale", "gallery") == "gallery"
+                and (style or {}).get("limits") is None
+            ):
                 river = self.reader.read("uparea").astype(float).filled(np.nan) > 0
                 nonriver = ~river[y[rr, cc] - 1, x[rr, cc] - 1]
                 if np.any(nonriver):
@@ -323,11 +340,21 @@ class Scene:
                     coarse_layer.label + " inherited by assigned unit catchment",
                 )
             else:
-                layer = highres_layer(image, self.reader, tile, mode, name, coarse_layer, style, terrain_palette)
+                layer = highres_layer(
+                    image, self.reader, tile, mode, name, coarse_layer, style, terrain_palette, reference_policy
+                )
             image = layer.image
             rgba = colorize(layer, image)
             rgba[~np.isfinite(image)] = np.uint32(0xFFFFFFFF)
             rgba[land] = np.array([217, 217, 217, 255], dtype="u1").view("<u4")[0]
+            frame.legend.append(
+                "Inherited-field automatic reference: "
+                + (
+                    "Gallery legacy coarse-cell distribution"
+                    if reference_policy == "gallery" and (style or {}).get("scale", "gallery") == "gallery"
+                    else "pixel-weighted full-tile assigned P3/P97"
+                )
+            )
             frame.legend.append("Unassigned land catmxy=-999: gray; other missing: white")
             frame.legend.append(
                 f"{name}: coarse-cell attribute inherited across catchment, not a local pixel measurement"
@@ -337,7 +364,9 @@ class Scene:
                 raise ValueError("Unknown high-resolution background")
             image = tile.sample(mode, rows, cols)
             raw_image = image
-            layer = highres_layer(image, self.reader, tile, mode, name, coarse_layer, style, terrain_palette)
+            layer = highres_layer(
+                image, self.reader, tile, mode, name, coarse_layer, style, terrain_palette, reference_policy
+            )
             image = layer.image
             rgba = colorize(layer, image)
             rgba[~np.isfinite(image)] = np.uint32(0xFFFFFFFF)
@@ -346,15 +375,15 @@ class Scene:
                 fill = ~np.isfinite(raw_image) & np.isfinite(elevation)
                 rgba[fill] = neutral_floodplain_color(style, terrain_palette)
                 frame.legend.append("Missing flddif + valid elevation: neutral fill; both missing: blank")
-            reference = (
-                "manual limits"
-                if (style or {}).get("limits") is not None
-                else (
-                    "Log floor / full-tile valid-assignment positive P98 upper"
-                    if layer.logarithmic
-                    else "full-tile assigned-pixel P2/P98 reference"
+            legacy = reference_policy == "gallery" and (style or {}).get("scale", "gallery") == "gallery"
+            if (style or {}).get("limits") is not None:
+                reference = "manual limits"
+            elif legacy:
+                reference = "Gallery/legacy full-tile assigned P2/P98 reference"
+            else:
+                reference = "Full-tile assigned-pixel P3/P97" + (
+                    "; Log lower=max(P3,0.01)" if layer.logarithmic else ""
                 )
-            )
             frame.legend.append(
                 f"{tile.key} {reference}: {layer.low:.4g}/{layer.high:.4g} m; "
                 + (style or {}).get("scale", "gallery")
@@ -362,7 +391,7 @@ class Scene:
             )
         if layer.logarithmic:
             frame.diagnostics.append(
-                f"Log display clips finite values below {layer.low:g}; native values remain unchanged"
+                f"Log display saturates positive values below {layer.low:g}; nonpositive values are masked except legacy Gallery; native values unchanged"
             )
         frame.layer = layer
         frame.images.append((rgba, edges))
@@ -617,9 +646,9 @@ def export_scene(
             ax.add_collection(
                 LineCollection(
                     selected_coarse_outline,
-                    colors="#888888",
-                    linewidths=72 / 160,
-                    alpha=0.65,
+                    colors="#D8C8F0",
+                    linewidths=3 * 72 / 160,
+                    alpha=1,
                     linestyles=(0, (6 * 72 / 160, 3 * 72 / 160)),
                     zorder=9,
                 )
@@ -656,9 +685,9 @@ def export_scene(
             Line2D(
                 [],
                 [],
-                color="#888888",
-                lw=72 / 160,
-                alpha=0.65,
+                color="#D8C8F0",
+                lw=3 * 72 / 160,
+                alpha=1,
                 ls="--",
                 label="Selected computational coarse grid cell",
             )

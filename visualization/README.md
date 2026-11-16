@@ -18,7 +18,10 @@ additional overlays can be combined independently. The Unit Catchment Inspector
 shows native outlet/area/IDs, layered fldhgt and cached full-regional upstream
 counts, with raw diagnostics retained in an expandable section. Explicit Grid /
 Catchment selection is background independent; a separate collapsed section
-reports native high-resolution pixel values. Optional correctly reprojected OSM,
+reports High-res pixel values. Visualization/Inspector are separate top-level
+modes with persistent controls and collapsible Connectivity. Ordinary automatic
+limits use full-reference P3/P97 (pixel-weighted inherited catchment values), with
+explicit Gallery/legacy exceptions; selected grids use pale lavender dashed outlines. Optional correctly reprojected OSM,
 independent palette intervals, assignment-only terrain statistics and an explicit
 Apply Aspect Ratio action are documented in the Explorer guide. Local PNG retains
 scientific layers/selection and explicitly excludes online tiles.

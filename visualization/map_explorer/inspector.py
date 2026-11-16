@@ -187,11 +187,14 @@ class CellInspector:
         self.method = pn.pane.Markdown("", margin=(0, 0), sizing_mode="stretch_width")
         self.geometry = pn.pane.HTML("", sizing_mode="stretch_width")
         self.connectivity = pn.pane.HTML("", sizing_mode="stretch_width")
+        self.connectivity_section = pn.Accordion(
+            ("River Network Connectivity", self.connectivity), active=[], sizing_mode="stretch_width"
+        )
         self.profile = pn.pane.HTML("", sizing_mode="stretch_width")
         self.profile_section = pn.Accordion(
             ("Floodplain elevation profile · fldhgt [m]", self.profile), active=[], sizing_mode="stretch_width"
         )
-        self.pixel = pn.pane.HTML("Click the map to inspect its native pixel.", sizing_mode="stretch_width")
+        self.pixel = pn.pane.HTML("Click the map to inspect its high-resolution pixel.", sizing_mode="stretch_width")
         self.pixel_section = pn.Accordion(
             ("High-resolution Pixel Information", self.pixel), active=[], sizing_mode="stretch_width"
         )
@@ -205,8 +208,7 @@ class CellInspector:
             pn.pane.Markdown("#### River and Floodplain Geometry", margin=(5, 0)),
             self.geometry,
             self.profile_section,
-            pn.pane.Markdown("#### River Network Connectivity", margin=(5, 0)),
-            self.connectivity,
+            self.connectivity_section,
             self.pixel_section,
             self.advanced_section,
             sizing_mode="stretch_width",
@@ -263,18 +265,16 @@ class CellInspector:
             ("Clicked Longitude [°]", "clicked longitude"),
             ("Clicked Latitude [°]", "clicked latitude"),
             ("High-resolution source", "high-resolution source"),
-            ("Native ix (1-based)", "native hires ix (1-based)"),
-            ("Native iy (1-based)", "native hires iy (1-based)"),
-            ("catmx [stored code]", "assigned coarse ix (1-based)"),
-            ("catmy [stored code]", "assigned coarse iy (1-based)"),
-            ("Assignment status", "assignment status"),
-            ("Native uparea [km²]", "native hires uparea [km²]"),
-            ("Native elevtn [m]", "native hires elevtn [m]"),
-            ("Native fldhgt [m]", "native hires fldhgt [m]"),
-            ("Native flddif [m] (separate field)", "native hires flddif [m]"),
-            ("Native catmz100 [signed stored code]", "native hires catmz100 [stored code]"),
-            ("Native rivwth [m]", "native hires rivwth [m]"),
-            ("Assigned catchment uparea [km²] (inherited)", "clicked assigned catchment uparea [km²]"),
+            ("High-res ix (1-based)", "native hires ix (1-based)"),
+            ("High-res iy (1-based)", "native hires iy (1-based)"),
+            ("High-res catmx [stored code]", "assigned coarse ix (1-based)"),
+            ("High-res catmy [stored code]", "assigned coarse iy (1-based)"),
+            ("High-res uparea [km²]", "native hires uparea [km²]"),
+            ("High-res elevtn [m]", "native hires elevtn [m]"),
+            ("High-res flddif [m] (separate field)", "native hires flddif [m]"),
+            ("High-res catmz100 [signed stored code]", "native hires catmz100 [stored code]"),
+            ("High-res rivwth [m]", "native hires rivwth [m]"),
+            ("Assigned Unit Catchment uparea [km²]", "clicked assigned catchment uparea [km²]"),
         ]
 
         def pixel_value(key):

@@ -1,8 +1,41 @@
 # Interactive Map Explorer design
 
-## Background/selection/view follow-up (DT-0119, 2026-11-17)
+## Inspector/navigation/statistics refinement (DT-0120, 2026-11-17)
 
-This current policy supersedes historical background-dependent selection and
+Maintainer authorizes implementation, validation, commit and push on the current
+feature/package-builder branch, starting at93e425d0 (equal to fetched origin).
+No overlapping open Issues/PRs. Scope is Explorer UI, raster display statistics,
+selection styling/summary, tests and documentation; source data/Gallery scripts
+and model calculations remain read-only. Acceptance includes synthetic analytical
+population tests, full Explorer regressions, actual Mekong browser/PNG checks.
+
+Keep mounted Visualization and Inspector containers; top RadioButtonGroup toggles
+visibility only. Persistent collapsed connectivity Accordion wraps the existing
+connectivity pane. Simplify ordinary High-res labels without discarding internal
+native diagnostics. Shared stored outlet/selected-cell attributes feed map summary.
+Selected computational rectangle becomes lavender #D8C8F0/3px dashed at full alpha;
+ordinary overlays and orange irregular native catchment remain independent.
+
+Ordinary automatic limits use full-reference P3/P97, including finite zero/negative
+values before Log range construction. Log low=max(P3,.01), high=P97; reject an
+invalid range, never fabricate a positive upper limit. Nonpositive display values
+are masked; positive values below the lower bound saturate. Manual limits remain
+explicit and strictly validated. For inherited catchments, blockwise native
+catmxy assignments index coarse values, yielding pixel-weighted statistics; no
+coarse cells without assignments contribute. Cache policy/quantiles/population.
+
+Explicit Gallery presets and old JSON retain a persisted gallery reference policy
+for Auto/Gallery scales (old coarse extrema / terrain P2/P98 and Gallery transfer).
+Selecting explicit Linear or Log uses ordinary P3/P97 even after a preset. Preserve
+old normalization helpers for this documented exception, not as ordinary defaults.
+JSON remains version2 with an optional auto_limits_policy field; absence means
+legacy behavior, fresh sessions use percentile. Palette intervals are unchanged.
+
+
+## Historical background/selection/view follow-up (DT-0119, 2026-11-17)
+
+DT-0119 was superseded by DT-0120 above for UI/statistics/style; its original
+policy superseded historical background-dependent selection and
 unrestricted terrain-statistics choices below. Earlier sections remain as
 scientific rationale/history, not competing current behavior. See README and
 [VR-0165](../../research/records/validation_runs/VR-0165.md) for usage/evidence.
@@ -603,3 +636,27 @@ the Python/Shell and test conventions in root AGENTS.md are used instead.
 Implementation API references: [Panel document-lock guidance](https://panel.holoviz.org/en/docs/latest/how_to/callbacks/server.html),
 [Bokeh interaction callbacks](https://docs.bokeh.org/en/latest/docs/user_guide/interaction/js_callbacks.html),
 and [Bokeh image origin](https://docs.bokeh.org/en/latest/docs/reference/plotting/figure.html).
+
+## DT-0120 statistical and compatibility details
+
+Ordinary Log includes finite nonpositive reference values before P3/P97; only
+its rendering masks them. Positive values below the chosen lower bound saturate.
+Manual positive bounds are authoritative even below0.01. A constant Linear field
+retains the previous small display-only upper-bound expansion; invalid Log ranges
+never use that expansion. This supersedes the preceding ordinary Log fallback
+from DT-0118/0119-era controls while retaining it only for explicit Auto/Gallery
+compatibility policy. Cache keys include (variable, positive-filter flag, quantiles,
+assigned-pixel-v2, inherited/native population, coarse dimensions) within each Tile.
+Ordinary Linear and Log share the same finite-reference cache, then resolve bounds.
+
+Inherited uparea repeats selected coarse values at all valid assigned native pixels,
+excluding nonfinite coarse values. These are pixel-frequency weights, not physical
+area weights, and the genuine high-resolution uparea file is not read for this
+background. catmxy provides assignment; nextxy still provides network connectivity.
+The native selection geometry remains independent of background normalization.
+
+Shared Inspector.update validates/caches stored outlets and exposes selected-cell
+attributes to the map summary, even when networks are off or drawn at grid centers.
+The summary does not reconstruct geometry or use click/center coordinates as outlets.
+No duplicated Point Select state or plot/Inspector reconstruction is introduced.
+See [VR-0166](../../research/records/validation_runs/VR-0166.md) for executed evidence.

@@ -29,7 +29,7 @@ LOG_DISPLAY_MINIMUM = 0.01
 
 
 def log_display_limits(low, high):
-    """Resolve display bounds only: honor positive manual minima, default to 0.01.
+    """Legacy Gallery reference only: retain the preceding display bounds/fallback.
 
     An all-nonpositive reference still needs a positive, nondegenerate colorbar;
     its finite data use the lower-end color, never invented scientific values.
@@ -39,10 +39,40 @@ def log_display_limits(low, high):
     return low, high
 
 
-def log_display_values(values, minimum):
-    """Floor finite pixels for LogNorm, retaining missing pixels and native source arrays."""
+def log_display_values(values, minimum, mask_nonpositive=True):
+    """Mask nonpositive Log pixels; saturate positive under-range values, without data edits."""
     values = np.ma.asarray(values).astype(float).filled(np.nan)
-    return np.where(np.isfinite(values), np.maximum(values, minimum), np.nan)
+    return np.where(np.isfinite(values) & ((values > 0) if mask_nonpositive else True), np.maximum(values, minimum), np.nan)
+
+
+def resolve_color_limits(low, high, logarithmic=False, *, manual=False):
+    """Physical display bounds, never a transformation of scientific data.
+
+    Automatic percentiles include valid nonpositive values before the Log floor.
+    Manual bounds are authoritative. A degenerate Log range is an error rather
+    than an invented positive upper value. Constant Linear fields retain the
+    historical small display-only expansion needed by continuous colorbars.
+    """
+    low, high = float(low), float(high)
+    if not np.isfinite([low, high]).all() or high < low:
+        raise ValueError("Color limits must be finite and ordered")
+    if logarithmic:
+        low = low if manual else max(low, LOG_DISPLAY_MINIMUM)
+        if low <= 0 or high <= low:
+            raise ValueError("Cannot construct a valid logarithmic color range: require 0 < lower < upper")
+    elif high == low:
+        if manual:
+            raise ValueError("Manual Color Maximum must exceed Color Minimum")
+        high = low + max(abs(low)*.01, .01)
+    return low, high
+
+
+def percentile_limits(values, logarithmic=False):
+    values = np.ma.asarray(values).astype(float).filled(np.nan)
+    valid = values[np.isfinite(values)]
+    if not valid.size:
+        raise ValueError("No valid finite reference values for automatic color limits")
+    return resolve_color_limits(*np.percentile(valid, (3,97)), logarithmic)
 
 
 def layer_colors(layer):
@@ -73,7 +103,7 @@ def validate_palette_range(value=None):
 
 
 
-def make_layer(reader, name, scale='auto', palette='viridis', limits=None, palette_range=None):
+def make_layer(reader, name, scale='auto', palette='viridis', limits=None, palette_range=None, reference_policy="percentile"):
     spec = SCHEMA[name]
     raw = reader.read(name)
     values = raw.astype(float).filled(np.nan) * spec.factor
@@ -111,14 +141,19 @@ def make_layer(reader, name, scale='auto', palette='viridis', limits=None, palet
     finite = values[np.isfinite(values)]
     if not finite.size:
         raise ValueError(f'{name}: no values usable with this color scale')
-    low, high = map(float, (finite.min(), finite.max()) if limits is None else limits)
-    if not np.isfinite([low, high]).all() or low > high:
-        raise ValueError('Color limits must be finite and ordered')
+    legacy = reference_policy == "gallery" and scale == "auto" and limits is None
+    if legacy:
+        low, high = float(finite.min()), float(finite.max())
+        if logarithmic:
+            low, high = log_display_limits(None, high)
+        elif low == high:
+            high = low + max(abs(low)*.01,.01)
+    elif limits is None:
+        low, high = percentile_limits(finite, logarithmic)
+    else:
+        low, high = resolve_color_limits(*limits, logarithmic, manual=True)
     if logarithmic:
-        low, high = log_display_limits(None if limits is None else low, high)
-        values = log_display_values(values, low)
-    elif low == high:
-        high = low + max(abs(low)*.01, .01)
+        values = log_display_values(values, low, mask_nonpositive=not legacy)
     lo, hi = validate_palette_range(palette_range)
     colors = [to_hex(colormaps[palette](lo + (i/255)*(hi-lo))) for i in range(256)]
     return DisplayLayer(values, colors, low, high, logarithmic, np.array([]), label)

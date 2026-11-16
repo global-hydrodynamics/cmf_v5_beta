@@ -122,6 +122,7 @@ def load_settings(content, reader):
             "representation",
             "background_opacity",
             "highres_style",
+            "auto_limits_policy",
             "coarse_palette_range",
             "arrow_size",
             "background_method",
@@ -130,6 +131,9 @@ def load_settings(content, reader):
         for key in set(layers) - allowed:
             notes.append("Ignored layer setting: " + key)
             layers.pop(key)
+        layers.setdefault("auto_limits_policy", "gallery")
+        if layers["auto_limits_policy"] not in ("percentile", "gallery"):
+            raise ValueError("Unsupported automatic color-limit reference policy")
         if layers.get("background", "coarse") not in ("none", "coarse", "catchment", "elevtn", "difference", "flddif"):
             raise ValueError("Unsupported background representation")
         if layers.get("terrain_palette", "gray") not in ("gray", "pale_terrain"):

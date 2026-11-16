@@ -115,10 +115,10 @@ def test_terrain_physical_limits_and_explicit_log_floor(products, mode, scale):
     app.highres_scale.value = scale
     tile = app.scene.tiles[app.hires_source.value]
     native = tile.sample(mode, np.arange(6), np.arange(8))
-    expected = ~np.isfinite(native)
+    expected = ~np.isfinite(native) | ((native<=0) if scale=="log" else False)
     np.testing.assert_array_equal(np.isnan(app.frame.layer.image), expected)
-    reference = tile.percentiles(mode, positive=scale == "log")
-    reference = (0.01, reference[1]) if scale == "log" else reference
+    reference = tile.percentiles(mode)
+    reference = (max(reference[0],0.01), reference[1]) if scale == "log" else reference
     assert (app.frame.layer.low, app.frame.layer.high) == reference
     app.set_extent((11, 13, 20.5, 22.5))
     assert (app.frame.layer.low, app.frame.layer.high) == reference
@@ -143,8 +143,8 @@ def test_catchment_linear_log_manual_and_independent_preferences(products):
     app.highres_scale.value = "log"
     assert app.frame.layer.logarithmic and (app.mapper.low, app.mapper.high) == (2, 8)
     app.highres_low.value = 0
-    assert "Error" not in app.status.object
-    assert app.mapper.low == app.highres_low.value == 0.01
+    assert "Error" in app.status.object
+    assert app.highres_low.value == 0 and not app.image_source.data["image"]
     app.highres_low.value = 1
     assert "Error" not in app.status.object
     app.highres_variable.value = "elevtn"
@@ -284,7 +284,7 @@ def test_log_clips_below_manual_minimum_without_mutating_native_values(products)
     app.highres_high.value = 100
     app.highres_low.value = 0.1
     layer = app.frame.layer
-    valid = np.isfinite(native)
+    valid = np.isfinite(native) & (native>0)
     np.testing.assert_array_equal(layer.image[valid], np.maximum(native[valid], 0.1))
     np.testing.assert_array_equal(np.isnan(layer.image), ~valid)
     np.testing.assert_array_equal(tile.sample("elevtn", np.arange(6), np.arange(8)), native)
@@ -292,7 +292,8 @@ def test_log_clips_below_manual_minimum_without_mutating_native_values(products)
     minimum_color = colorize(layer, np.array([[0.1]]))[0, 0]
     assert np.all(colors[valid & (native < 0.1)] == minimum_color)
     app.highres_low.value = -10
-    assert app.mapper.low == app.highres_low.value == 0.01
+    assert app.highres_low.value == -10 and "Error" in app.status.object
+    app.highres_low.value=.1
     assert "Error" not in app.status.object
     assert app.export().is_file()  # PNG uses the same clipped display data/limits.
 
@@ -308,11 +309,15 @@ def test_log_all_nonpositive_reference_remains_displayable(products):
     app.raster_type.value = "highres"
     app.highres_variable.value = "elevtn"
     app.highres_scale.value = "log"
-    assert "Error" not in app.status.object
-    assert (app.mapper.low, app.mapper.high) == (0.01, 0.1)
-    assert np.isnan(app.frame.layer.image[0, 1])
-    assert np.all(app.frame.layer.image[np.isfinite(app.frame.layer.image)] == 0.01)
-    assert path.read_bytes() == before
+    assert "logarithmic color range" in app.status.object
+    assert not app.image_source.data["image"]
+    with pytest.raises(ValueError,match="logarithmic"):
+        app.export()
+    app.highres_auto_limits.value=False
+    app.highres_low.value=.01
+    app.highres_high.value=1
+    assert np.isnan(app.frame.layer.image).all()  # nonpositive values are masked, never invented
+    assert path.read_bytes()==before
     assert app.export().is_file()
 
 

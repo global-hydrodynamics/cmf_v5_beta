@@ -52,6 +52,7 @@ class Explorer:
         self._networks = {}
         self._auto_channel_initialized = False
         self.frame = None
+        self._background_error = None
         self.selection = SelectionState()
         self._selection_indexes = {}
         self.preset_library = PresetLibrary()
@@ -75,6 +76,7 @@ class Explorer:
         self.osm_opacity = pn.widgets.IntSlider(name="OpenStreetMap Opacity", start=0, end=100, step=5, value=100)
         self.map_aspect = pn.widgets.Select(name="Map Aspect Ratio", options=ASPECT_LABELS, value="square")
         self._frame_ratio = 1.0
+        self.auto_limits_policy = "percentile"
         self.background_method = "default"
         self.network_geometry = "straight"
         initial_extent = aspect_extent(self.reader.geometry.extent, self.reader.geometry, 1.0)
@@ -342,9 +344,9 @@ class Explorer:
             "x1",
             "y1",
             source=self.selected_coarse_source,
-            line_color="#888888",
-            line_width=1,
-            line_alpha=0.65,
+            line_color="#D8C8F0",
+            line_width=3,
+            line_alpha=1,
             line_dash="dashed",
             name="selected-coarse-grid",
         )
@@ -485,7 +487,6 @@ class Explorer:
             ("Background", background_controls),
             ("River", network_controls),
             ("Overlays", overlay_controls),
-            ("Inspector", details),
             ("View", navigation),
             sizing_mode="stretch_width",
         )
@@ -498,9 +499,17 @@ class Explorer:
             self.preset_status,
             sizing_mode="stretch_width",
         )
+        self.panel_mode = pn.widgets.RadioButtonGroup(
+            options=["Visualization", "Inspector"], value="Visualization", sizing_mode="stretch_width"
+        )
+        self.visualization_panel = pn.Column(preset_box, self.right_tabs, sizing_mode="stretch_width")
+        self.inspector_panel = details
+        self.inspector_panel.visible = False
+        self.panel_mode.param.watch(lambda event: self._schedule(self._panel_mode_changed), "value")
         self.settings_panel = pn.Column(
-            preset_box,
-            self.right_tabs,
+            self.panel_mode,
+            self.visualization_panel,
+            self.inspector_panel,
             sizing_mode="stretch_width",
             min_width=340,
             max_width=420,
@@ -596,6 +605,12 @@ class Explorer:
             image, (w, e, s, n) = decoded
             self.basemap_source.data = dict(image=[image], x=[w], y=[s], dw=[e - w], dh=[n - s])
 
+    def _panel_mode_changed(self):
+        # Persistent children preserve widget/Bokeh ownership, tab selection and
+        # accordion state. Map clicks never change this independent UI mode.
+        self.visualization_panel.visible = self.panel_mode.value == "Visualization"
+        self.inspector_panel.visible = self.panel_mode.value == "Inspector"
+
     def _point_mode_changed(self):
         self._update_assignment_controls()
         if hasattr(self, "_last_click"):
@@ -681,25 +696,39 @@ class Explorer:
             extent = g.extent
         self._guard(lambda: self.set_extent(extent, preserve_aspect=True))
 
+    def _unavailable_background(self, exc):
+        self._background_error = str(exc)
+        self.image_source.data = dict(image=[], x=[], y=[], dw=[], dh=[])
+        self.channel_image_source.data = dict(image=[], x=[], y=[], dw=[], dh=[])
+        self.bar.visible = False
+        self.background_ui.color_note.object = "Background unavailable: " + str(exc)
+        self.plot.title.text = "Background unavailable · check color limits"
+
     def update_layer(self):
         name = self.variable.value
         if not SCHEMA[name].categorical and self.palette.value in ("basin_pastel", "subcol_pastel", "subcol_gray"):
             self._updating = True
             self.palette.value = "viridis"
             self._updating = False
-        layer = make_layer(
-            self.reader,
-            name,
-            self.scale.value,
-            self.palette.value,
-            None if self.auto_limits.value else (self.low.value, self.high.value),
-            palette_range=(
-                [self.background_ui.coarse_palette_min.value, self.background_ui.coarse_palette_max.value]
-                if self.background.value == "coarse"
-                else None
-            ),
-        )
+        try:
+            layer = make_layer(
+                self.reader,
+                name,
+                self.scale.value,
+                self.palette.value,
+                None if self.auto_limits.value else (self.low.value, self.high.value),
+                reference_policy=self.auto_limits_policy if self.background.value == "coarse" else "gallery",
+                palette_range=(
+                    [self.background_ui.coarse_palette_min.value, self.background_ui.coarse_palette_max.value]
+                    if self.background.value == "coarse"
+                    else None
+                ),
+            )
+        except ValueError as exc:
+            self._unavailable_background(exc)
+            raise
         self.layer = layer
+        self._background_error = None
         self._updating = True
         try:
             for widget in (self.scale, self.palette, self.auto_limits):
@@ -819,6 +848,7 @@ class Explorer:
             terrain_palette=self.terrain_palette.value,
             background_opacity=self.background_ui.opacity.value / 100,
             highres_style=self.background_ui.highres_options(),
+            auto_limits_policy=self.auto_limits_policy,
             coarse_palette_range=[
                 self.background_ui.coarse_palette_min.value,
                 self.background_ui.coarse_palette_max.value,
@@ -830,6 +860,11 @@ class Explorer:
         )
 
     def render_view(self):
+        if self.background.value == "coarse" and self._background_error is not None:
+            # A River/Overlay callback must not revive the previous valid raster
+            # while current coarse physical limits are invalid. update_layer
+            # clears this flag only after constructing the current valid layer.
+            raise ValueError(self._background_error)
         if self.layer is None:
             return
         # Resolve selection before composing layers: even an unavailable overlay
@@ -843,12 +878,9 @@ class Explorer:
         except ValueError as exc:
             # Never leave a previous variable's image masquerading as the new
             # background when native-assignment statistics cannot be computed.
-            self.image_source.data = dict(image=[], x=[], y=[], dw=[], dh=[])
-            self.channel_image_source.data = dict(image=[], x=[], y=[], dw=[], dh=[])
-            self.bar.visible = False
-            self.background_ui.color_note.object = "Background unavailable: " + str(exc)
-            self.plot.title.text = "Background unavailable · use manual limits"
+            self._unavailable_background(exc)
             raise
+        self._background_error = None
         self._set_colorbar(frame.layer)
         # Synchronize effective Log bounds only after building the current frame;
         # visibility/profile restoration can still refer to a previous frame.
@@ -1118,9 +1150,7 @@ class Explorer:
                             float(b[ny - 1, nx - 1]) if np.isfinite(b[ny - 1, nx - 1]) else None
                         )
             self._highlight(row, col)
-            self.selection_summary.object = (
-                f"**Selected river cell (1-based, Fortran):** ix={col+1}, iy={row+1} · {state.status}"
-            )
+            self.selection_summary.object = ""  # Filled from the shared Inspector source attributes below.
         else:
             # No containing-cell fallback for unassigned catchment pixels.
             self.selected_source.data = dict(x=[], y=[])
@@ -1131,12 +1161,34 @@ class Explorer:
         if state.boundary is not None:
             result["unit catchment assigned pixel count"] = state.boundary.pixel_count
             result["selected boundary"] = "Native exposed edges; " + str(len(state.boundary.segments)) + " merged runs"
-            self.selection_summary.object += (
-                f" · **{state.boundary.pixel_count:,} native catchment pixels** · orange solid outline"
-            )
+
         self._render_catchment_selection()
 
         self.cell_inspector.update(state, result, net if state.river_cell is not None else None)
+        if state.river_cell is not None:
+            row, col = state.river_cell
+            label = "Grid" if self.point_select.value == "grid" else "Unit Catchment"
+
+            def number(key, factor=1, digits=5):
+                value = result.get(key)
+                return (
+                    "Unavailable"
+                    if value is None or not np.isfinite(value)
+                    else (f"{value*factor:,.9g}" if digits == 3 else f"{value*factor:,.{digits}f}")
+                )
+
+            outlet_lat = number("source outlet latitude")
+            outlet_lon = number("source outlet longitude")
+            outlet_lat += "°" if outlet_lat != "Unavailable" else ""
+            outlet_lon += "°" if outlet_lon != "Unavailable" else ""
+            area = number("uparea [m2]", 1e-6, 3)
+            method = "geographic containment" if self.point_select.value == "grid" else "catmxy assignment"
+            count = f" · {state.boundary.pixel_count:,} high-res pixels" if state.boundary is not None else ""
+            self.selection_summary.object = (
+                f"**Selected {label}:** ix={col+1}, iy={row+1} (1-based Fortran) · "
+                f"**Outlet (lat, lon):** {outlet_lat}, {outlet_lon} · **Upstream Area:** {area} km²  \n"
+                f"Selection: {method}{count}"
+            )
         return result
 
     def _tap(self, event):
@@ -1146,6 +1198,8 @@ class Explorer:
         return self.output_dir / f"map-explorer-{datetime.now():%Y%m%d-%H%M%S-%f}{suffix}"
 
     def export(self):
+        if self._background_error is not None:
+            raise ValueError(self._background_error)
         frame = self.scene.build(
             self.extent, self.variable.value, self.layer, self.network, self.scene_options(), max_side=2400
         )
@@ -1206,7 +1260,14 @@ class Explorer:
         self._applied_preset = None
         self._preset_baseline = None
         # Validate the complete display before mutating widgets/session state.
-        make_layer(self.reader, data["variable"], data["scale"], data["palette"], data["limits"])
+        make_layer(
+            self.reader,
+            data["variable"],
+            data["scale"],
+            data["palette"],
+            data["limits"],
+            reference_policy=data.get("layers", {}).get("auto_limits_policy", "gallery"),
+        )
         self._updating = True
         try:
             self.point_select.value = data["point_select"]
@@ -1219,6 +1280,7 @@ class Explorer:
             self.network_choice.value = data["network"]
             options = data["network_options"]
             layers = data.get("layers", {})
+            self.auto_limits_policy = layers.get("auto_limits_policy", "gallery")
             self.background_method = layers.get("background_method", "default")
             self.network_geometry = layers.get("network_geometry", "straight")
             self.map_aspect.value = data["viewport"]["aspect"]

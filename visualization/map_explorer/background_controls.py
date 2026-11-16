@@ -405,23 +405,37 @@ class BackgroundControls:
                 if app.background.value == "catchment"
                 else "Native terrain / 8-neighbor elevation difference [m], not slope. "
             )
-            self.color_note.object += (
-                "Log clips values below its positive minimum (automatic: 0.01); native values remain unchanged. "
-                if log
-                else ""
+            legacy = (
+                app.auto_limits_policy == "gallery"
+                and self.highres_scale.value == "gallery"
+                and self.highres_auto.value
             )
-            self.color_note.object += (
-                "Gallery Default preserves log-uparea / full-tile assigned-pixel P2/P98 and terrain stretch. "
-                if self.highres_scale.value == "gallery"
-                else "Custom " + self.highres_scale.value + " normalization. "
-            )
-            self.color_note.object += (
-                "Automatic limits use the full reference, not the viewport; manual limits must be strictly increasing."
-            )
+            if legacy:
+                self.color_note.object += "Explicit Gallery/legacy reference and transfer retained; legacy Log clips finite under-range values. "
+            else:
+                if self.highres_scale.value != "gallery":
+                    self.color_note.object += f"Custom {self.highres_scale.value} normalization. "
+                population = (
+                    "pixel-weighted assigned catchment values"
+                    if app.background.value == "catchment"
+                    else "valid assigned high-res pixels"
+                )
+                self.color_note.object += (
+                    f"Automatic full-tile P3/P97 of {population}. "
+                    if self.highres_auto.value
+                    else "Manual physical limits retained. "
+                )
+                if log:
+                    self.color_note.object += "Automatic Log lower=max(P3,0.01); nonpositive display pixels masked, positive under-range values saturated. "
+            self.color_note.object += "Reference is independent of viewport; palette interval changes colors only."
         elif SCHEMA[app.variable.value].categorical:
             self.color_note.object = "Stored categories use discrete colors; continuous normalization, limits and palette cropping are disabled."
         else:
-            self.color_note.object = "Display transforms only; source values stay unchanged."
+            self.color_note.object = (
+                "Gallery/legacy Auto reference; explicit Linear/Log uses P3/P97."
+                if app.auto_limits_policy == "gallery" and app.scale.value == "auto"
+                else "Automatic full-map P3/P97; Log lower=max(P3,0.01). Display transforms only; source values unchanged."
+            )
         if not self._available() and not self.notice.object:
             self.notice.object = "No supported high-resolution variables in selected tile. Unit-Catchment needs catmxy + coarse uparea; terrain needs native elevtn (and flddif for floodplain height)."
         self._key = self.profile_key()

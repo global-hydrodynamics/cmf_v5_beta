@@ -186,6 +186,7 @@ class PresetLibrary:
         state["basemap"] = dict(show=False, opacity=1.0)
         state["layers"] = dict(
             coarse_palette_range=[0.0, 1.0],
+            auto_limits_policy="gallery",
             background=row["background"],
             tile=tile,
             terrain_palette=row["terrain_palette"],

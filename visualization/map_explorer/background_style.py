@@ -6,7 +6,13 @@ import numpy as np
 from matplotlib import colormaps
 from matplotlib.colors import LinearSegmentedColormap, to_hex
 
-from map_layers import DisplayLayer, log_display_limits, log_display_values, validate_palette_range
+from map_layers import (
+    DisplayLayer,
+    log_display_limits,
+    log_display_values,
+    validate_palette_range,
+    resolve_color_limits,
+)
 from map_reader import SCHEMA
 
 # Approved cmf_colormap/data/pale_terrain.json v1.0.0 linear-sRGB controls.
@@ -34,7 +40,7 @@ def validate_style(style=None, gallery_log=False):
         raise ValueError("highres_style must be an object")
     result = {"palette": "gallery", "scale": "gallery", "limits": None, "palette_range": [0.0, 1.0], **(style or {})}
     if set(result) != {"palette", "scale", "limits", "palette_range"}:
-        raise ValueError("highres_style must contain only palette, scale and limits")
+        raise ValueError("highres_style must contain only palette, scale, limits and palette_range")
     if result["palette"] not in PALETTES.values() or result["scale"] not in SCALES.values():
         raise ValueError("Unsupported high-resolution palette/scale")
     result["palette_range"] = validate_palette_range(result["palette_range"])
@@ -49,7 +55,7 @@ def validate_style(style=None, gallery_log=False):
         if not np.isfinite([low, high]).all() or not low < high:
             raise ValueError("Color Maximum must be greater than Color Minimum; both must be finite")
         if result["scale"] == "log" or result["scale"] == "gallery" and gallery_log:
-            low, high = log_display_limits(low, high)
+            low, high = resolve_color_limits(low, high, True, manual=True)
         result["limits"] = [low, high]
     return result
 
@@ -66,16 +72,19 @@ def apply_opacity(rgba, opacity=1.0):
     return result
 
 
-def highres_layer(image, reader, tile, mode, name, coarse_layer, style=None, terrain_palette="gray"):
+def highres_layer(
+    image, reader, tile, mode, name, coarse_layer, style=None, terrain_palette="gray", reference_policy="percentile"
+):
     """Build one physical-unit DisplayLayer; full-reference limits never use view."""
     catchment = mode == "catchment"
     gallery_log = catchment and SCHEMA[name].logarithmic
     options = validate_style(style, gallery_log)
     logarithmic = options["scale"] == "log" or options["scale"] == "gallery" and gallery_log
     values = np.asarray(image, dtype=float).copy()
+    legacy = reference_policy == "gallery" and options["scale"] == "gallery" and options["limits"] is None
     if options["limits"] is not None:
-        low, high = options["limits"]
-    elif catchment:
+        low, high = resolve_color_limits(*options["limits"], logarithmic, manual=True)
+    elif catchment and legacy:
         reference = reader.read(name).astype(float).filled(np.nan) * SCHEMA[name].factor
         good = np.isfinite(reference) & ((reference > 0) if logarithmic else True)
         if not good.any() and not logarithmic:
@@ -84,10 +93,21 @@ def highres_layer(image, reader, tile, mode, name, coarse_layer, style=None, ter
         if not logarithmic and high <= low:
             high = low + max(abs(low) * 0.01, 0.01)
     else:
-        low, high = tile.percentiles(mode, positive=logarithmic, allow_empty=logarithmic, coarse=reader.geometry)
+        inherited = reader.read(name).astype(float).filled(np.nan) * SCHEMA[name].factor if catchment else None
+        low, high = tile.percentiles(
+            name if catchment else mode,
+            positive=legacy and logarithmic,
+            allow_empty=legacy and logarithmic,
+            coarse=reader.geometry,
+            quantiles=(2, 98) if legacy else (3, 97),
+            inherited=inherited,
+        )
+        if not legacy:
+            low, high = resolve_color_limits(low, high, logarithmic)
     if logarithmic:
-        low, high = log_display_limits(None if options["limits"] is None else low, high)
-        values = log_display_values(values, low)
+        if legacy:
+            low, high = log_display_limits(None, high)
+        values = log_display_values(values, low, mask_nonpositive=not legacy)
     t = np.linspace(0, 1, 256)
     pmin, pmax = options["palette_range"]
     crop = lambda positions: pmin + positions * (pmax - pmin)

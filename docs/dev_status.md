@@ -6,6 +6,19 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Explorer UI and statistics (DT-0120, 2026-11-17)
+
+Maintainer authorizes the six UI/Inspector/P3-P97/selection refinements, automated
+and actual browser/PNG validation, commit and push on existing feature/package-builder.
+Owner Dai Yamazaki; Codex implements. Starting93e425d0 matches fetched origin;
+open Issue/PR searches found no overlapping work. Scope: visualization/map_explorer,
+related documentation and research evidence. Scientific input/model/Gallery scripts
+remain unchanged. All six changes implemented;283 tests +3 subtests PASS, actual
+Mekong/browser/PNG verified,248 protected hashes unchanged. Explicit Gallery/legacy
+exceptions and10 pre-existing research-link failures documented. Design/acceptance:
+Explorer DESIGN.md DT-0120; [VR-0166](../research/records/validation_runs/VR-0166.md).
+
+
 ### Explorer background, selection and view (DT-0119, 2026-11-17)
 
 The maintainer explicitly assigns subsequent Explorer work to the existing

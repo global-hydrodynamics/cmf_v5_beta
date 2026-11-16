@@ -114,14 +114,20 @@ class Tile:
             (r1 - r0 <= max_side and c1 - c0 <= max_side),
         )
 
-    def percentiles(self, name, positive=False, allow_empty=False, coarse=None):
-        """Exact full-tile P2/P98, bounded RAM and disposable disk workspace."""
+    def percentiles(self, name, positive=False, allow_empty=False, coarse=None, *, quantiles=(3, 97), inherited=None):
+        """Exact assigned-pixel percentiles with bounded RAM/disk workspace.
+
+        Inherited fields are indexed by every native assignment, preserving pixel
+        weighting rather than weighting each coarse cell once. Positive filtering
+        is only for explicit legacy Gallery policies; ordinary Log includes all
+        finite values in its P3/P97 population before applying its display floor.
+        """
         coarse = coarse or self.coarse_geometry
         if coarse is None or "catmxy" not in self.files:
             raise ValueError(
                 f"{self.key}: automatic limits require native catmxy and coarse map geometry; use manual limits"
             )
-        key = (name, bool(positive), "valid-native-assignment-v1", coarse.nx, coarse.ny)
+        key = (name, bool(positive), tuple(quantiles), "assigned-pixel-v2", inherited is not None, coarse.nx, coarse.ny)
         if key not in self._stats:
             g = self.geometry
             block = max(1, 500000 // g.nx)
@@ -131,10 +137,14 @@ class Tile:
                 count = 0
                 assigned_count = 0
                 for start in range(0, g.ny, block):
-                    values = self.sample(name, np.arange(start, min(g.ny, start + block)), np.arange(g.nx))
                     rows = np.arange(start, min(g.ny, start + block))
                     x, y = self.sample("catmxy", rows, np.arange(g.nx))
                     valid, _, _ = assignment(x, y, coarse)
+                    if inherited is None:
+                        values = self.sample(name, rows, np.arange(g.nx))
+                    else:
+                        values = np.full(valid.shape, np.nan)
+                        values[valid] = inherited[y[valid] - 1, x[valid] - 1]
                     assigned_count += int(valid.sum())
                     finite = values[valid & np.isfinite(values) & ((values > 0) if positive else True)]
                     work[count : count + finite.size] = finite
@@ -144,11 +154,11 @@ class Tile:
                         f"{self.key}: no valid native catmxy assignments for automatic limits; use manual limits"
                     )
                 if count:
-                    low, high = np.percentile(work[:count], (2, 98), overwrite_input=True)
+                    low, high = np.percentile(work[:count], quantiles, overwrite_input=True)
                 else:
                     low = high = np.nan  # Let a Log display choose its documented fallback, not fake percentiles.
                 del work
-            self._stats[key] = float(low), float(high if high > low else low + 1)
+            self._stats[key] = float(low), float(high if tuple(quantiles) != (2, 98) or high > low else low + 1)
         if not allow_empty and not np.isfinite(self._stats[key]).all():
             raise ValueError(f"{self.key}: no {'positive ' if positive else ''}valid {name} values")
         return self._stats[key]

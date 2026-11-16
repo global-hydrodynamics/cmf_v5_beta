@@ -100,7 +100,7 @@ def test_percentiles_full_tile_and_missing_floodplain_fill(products):
     app.background.value = "flddif"
     t = app.scene.tiles["fine/tile"]
     full = t.sample("flddif", np.arange(6), np.arange(8))
-    expected = np.percentile(full[np.isfinite(full)], (2, 98))
+    expected = np.percentile(full[np.isfinite(full)], (3, 97))
     np.testing.assert_allclose(t.percentiles("flddif"), expected)
     rgba = app.frame.images[0][0]
     assert rgba[0, 0] != np.uint32(0xFFFFFFFF)  # missing flddif, valid elevtn: neutral

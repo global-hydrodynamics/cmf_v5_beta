@@ -154,8 +154,8 @@ def test_selection_style_png_receives_identical_geometry(products, monkeypatch):
     assert app.selection_boundary_renderer.glyph.line_color == "#FF7F00"
     assert app.selection_boundary_renderer.glyph.line_width == 3
     assert app.selection_boundary_renderer.glyph.line_dash == "solid"
-    assert app.selected_coarse_renderer.glyph.line_color == "#888888"
-    assert app.selected_coarse_renderer.glyph.line_width == 1
+    assert app.selected_coarse_renderer.glyph.line_color == "#D8C8F0"
+    assert app.selected_coarse_renderer.glyph.line_width == 3
     link = app.selected_link.data
     assert len(link["x1"]) == 1
     expected = (
@@ -199,11 +199,13 @@ def test_selection_style_png_receives_identical_geometry(products, monkeypatch):
     selected = {h.get_label(): h for h in legends if h.get_label().startswith("Selected ")}
     coarse_key = "Selected computational coarse grid cell"
     native_key = next(k for k in selected if k.startswith("Selected stored"))
-    assert selected[coarse_key].get_color() == "#888888" and selected[coarse_key].get_linestyle() == "--"
+    assert selected[coarse_key].get_color() == "#D8C8F0" and selected[coarse_key].get_linestyle() == "--"
     assert selected[native_key].get_color() == "#FF7F00" and selected[native_key].get_linestyle() == "-"
     np.testing.assert_array_equal(captured[10][0], native)
     np.testing.assert_array_equal(captured[9][0], coarse)
-    assert captured[10][1]["colors"] == "#FF7F00" and captured[9][1]["colors"] == "#888888"
+    assert captured[10][1]["colors"] == "#FF7F00" and captured[9][1]["colors"] == "#D8C8F0"
+    assert captured[9][1]["linewidths"] == 3 * 72 / 160
+    assert app.selected_coarse_renderer.glyph.line_dash=="dashed"
     assert captured[10][1]["linewidths"] == 3 * 72 / 160
     assert len(arrows) == 1 and arrows[0][2]["c"] == ["#FFD400"]
     assert [arrows[0][0][0], arrows[0][1][0]] == pytest.approx([link["x1"][0], link["y1"][0]])
