@@ -2,3 +2,6 @@
 # is the external cmf_v5_package_data/map/glb_15min/ store. Keep the entire local
 # copy untracked; maintained generators/templates remain under map/tools/.
 /glb_15min/
+
+# Runoff preset intermediates, exports and reference comparisons are generated locally.
+/tools/script_runoff_preset/output/
