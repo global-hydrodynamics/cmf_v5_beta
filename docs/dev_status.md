@@ -6,6 +6,34 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Map Explorer v2 Gallery integration (DT-0106, 2026-11-16)
+
+Maintainer authorizes autonomous extension on current `main`, starting at
+`78bf975f`; Dai Yamazaki owns the project and Codex implements. Scope is the
+existing map_explorer app, tests/docs and evidence. No branch change, commit,
+push, Gallery modifications, map writes or model/preprocessing execution.
+
+Implemented independent Background / River Network / Overlay controls,
+metadata-discovered high-resolution tiles, inherited unit catchments, terrain
+and native-neighbor elevation difference, outlet vectors, stable full-network
+area quartiles/six log classes/continuous/fixed styles, direction heads,
+channel/overland bifurcations, outlets, regional centroid guides and true
+assignment boundaries. PNG uses the same scene; v2 JSON retains v1 loading.
+Mac/Windows launchers and existing coarse-map functionality are preserved.
+
+34 tests pass, including the original 23 and actual Mekong/Gallery comparisons.
+Browser combined views, resizing, native inspection and PNG/JSON saving checked;
+exported PNG visually reviewed. All 250 protected map/Gallery hashes unchanged.
+Mekong has 382 unique valid bifurcations (77 channel, 305 overland). A single
+local check measured startup 0.154 s, first difference/vector view 0.285 s,
+and cached rendering 0.008 s; these are not global performance guarantees.
+Automatic tile mosaics, bifurcation picking and periodic global centroid guides
+remain deferred. See [design](../visualization/map_explorer/DESIGN.md),
+[user guide](../visualization/map_explorer/README.md), and
+[VR-0152](../research/records/validation_runs/VR-0152.md).
+Changes remain uncommitted for maintainer review.
+
+
 ### Interactive Map Explorer (DT-0105, 2026-11-16)
 
 Maintainer-requested autonomous specification/implementation/testing on the

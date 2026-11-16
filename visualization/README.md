@@ -8,7 +8,9 @@ Gallery selections.
 ## Interactive exploration
 
 [Map Explorer](map_explorer/README.md) is a standalone local browser for
-read-only CaMa-Flood map rasters, downstream connectivity and cell inspection.
+read-only CaMa-Flood coarse/high-resolution rasters, unit catchments, outlet-based
+networks, bifurcations and native cell inspection. Backgrounds, networks and
+additional overlays can be combined independently.
 Run `./visualization/map_explorer/run.sh map/mekong_15min` from the repository
 root; PNG/settings export and custom map directories are supported. This tool
 is independent of the Figure workflows below.

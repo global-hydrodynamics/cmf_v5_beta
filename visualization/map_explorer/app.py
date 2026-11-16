@@ -18,6 +18,7 @@ from config import load_settings, save_settings
 from map_layers import colorize, export_png, make_layer, network_style, raster_subset
 from map_reader import MapReader, SCHEMA
 from river_network import RiverNetwork
+from scene import Scene, OVERLAY_DEFAULTS, export_scene
 
 pn.extension()
 
@@ -25,6 +26,10 @@ pn.extension()
 class Explorer:
     def __init__(self, map_dir, output_dir=None):
         self.reader = MapReader(map_dir)
+        self.scene = Scene(self.reader)
+        self._networks = {}
+        self._auto_channel_initialized = False
+        self.frame = None
         if not self.reader.sources:
             raise ValueError('No supported readable rasters. ' + '; '.join(self.reader.messages))
         self.output_dir = Path(output_dir or Path(__file__).parent/'output').resolve()
@@ -52,6 +57,30 @@ class Explorer:
         self.distinguish = pn.widgets.Checkbox(name='Distinguish Flexible Downstream', value=True)
         self.area_width = pn.widgets.Checkbox(name='Width by upstream area (not discharge)', value=False, disabled='uparea' not in self.reader.sources)
         self.area_color = pn.widgets.Checkbox(name='Color by upstream area (overrides type)', value=False, disabled='uparea' not in self.reader.sources)
+        background_options = {'None':'none', 'Coarse raster':'coarse'}
+        if any('catmxy' in t.files for t in self.scene.tiles.values()):
+            background_options['Unit catchments']='catchment'
+        if any('elevtn' in t.files for t in self.scene.tiles.values()):
+            background_options.update({'High-resolution elevation':'elevtn','8-neighbor elevation difference (not slope)':'difference'})
+        if any('elevtn' in t.files and 'flddif' in t.files for t in self.scene.tiles.values()):
+            background_options['Floodplain height']='flddif'
+        self.background = pn.widgets.Select(name='Background representation', options=background_options, value='coarse')
+        self.hires_source = pn.widgets.Select(name='High-resolution source', options=list(self.scene.tiles) or [None])
+        self.terrain_palette = pn.widgets.Select(name='Terrain palette (full-tile P2/P98)', options=['gray','pale_terrain'])
+        self.representation = pn.widgets.Select(name='Main network representation', options=['off','grid_center'] + (['outlet_vector'] if self.scene.products.outlet_source else []), value='grid_center')
+        self.color_mode = pn.widgets.Select(name='Network color', options=['uniform','connection_type','upstream_area'],value='connection_type')
+        self.width_mode = pn.widgets.Select(name='Network width', options=['uniform','upstream_area'])
+        self.classification = pn.widgets.Select(name='Full-map contributing-area classes',options=['quartiles','six_log','continuous','fixed'],value='quartiles')
+        self.arrows = pn.widgets.Checkbox(name='Downstream direction heads (zoomed views)',value=False)
+        self.overlay_controls = {}
+        for key,value in OVERLAY_DEFAULTS.items():
+            if isinstance(value,bool):
+                self.overlay_controls[key] = pn.widgets.Checkbox(name=key.replace('_',' ').title(),value=value)
+            elif isinstance(value,str):
+                self.overlay_controls[key] = pn.widgets.ColorPicker(name=key.replace('_',' ').title(),value=value)
+            else:
+                self.overlay_controls[key] = pn.widgets.FloatSlider(name='Bifurcation width',start=.2,end=5,step=.1,value=value)
+        self.legend = pn.pane.HTML('',sizing_mode='stretch_width')
         self.extent_inputs = [pn.widgets.FloatInput(name=k, value=v, width=140) for k, v in zip(['West', 'East', 'South', 'North'], self.reader.geometry.extent)]
         self.apply_extent_button = pn.widgets.Button(name='Apply extent', button_type='primary')
         self.reset_button = pn.widgets.Button(name='Full map')
@@ -85,6 +114,12 @@ class Explorer:
         self.plot.add_layout(self.bar, 'right')
         self.link_source = ColumnDataSource(dict(x0=[], y0=[], x1=[], y1=[], width=[], color=[]))
         self.plot.segment('x0', 'y0', 'x1', 'y1', line_width='width', line_color='color', source=self.link_source)
+        self.overlay_source = ColumnDataSource(dict(x0=[],y0=[],x1=[],y1=[],width=[],color=[]))
+        self.plot.segment('x0','y0','x1','y1',source=self.overlay_source,line_width='width',line_color='color')
+        self.outlet_source = ColumnDataSource(dict(x=[],y=[]))
+        self.plot.scatter('x','y',source=self.outlet_source,size=4,fill_color='white',line_color='#555555',line_width=.5)
+        self.arrow_source = ColumnDataSource(dict(x=[],y=[],angle=[],color=[]))
+        self.plot.scatter('x','y',source=self.arrow_source,marker='triangle',angle='angle',fill_color='color',line_color='color',size=7)
         self.selected_source = ColumnDataSource(dict(x=[], y=[]))
         self.plot.scatter('x', 'y', source=self.selected_source, size=15, line_color='#e11d48', fill_alpha=0, line_width=3)
         self.selected_link = ColumnDataSource(dict(x0=[], y0=[], x1=[], y1=[]))
@@ -105,27 +140,30 @@ class Explorer:
         self.variable.value = 'uparea' if 'uparea' in self.reader.sources else next(iter(self.reader.sources))
         self._guard(self.update_layer)
         self._guard(self.update_network)
-        controls = pn.Column(
-            pn.pane.Markdown('## Display settings\nNative grid · read-only'),
-            self.scale, self.palette, self.auto_limits, pn.Row(self.low, self.high),
-            pn.layout.Divider(), self.width, pn.Row(self.color, self.flex_color),
-            self.distinguish, self.area_width, self.area_color,
-            pn.pane.Markdown('Area styling: log 1–10⁶ km²; no discharge inference.'),
-            pn.layout.Divider(), pn.pane.Markdown('### Geographic extent'),
-            pn.Row(*self.extent_inputs[:2]), pn.Row(*self.extent_inputs[2:]),
-            pn.Row(self.apply_extent_button, self.reset_button),
-            pn.layout.Divider(), self.export_button, self.save_button, self.upload,
-            self.status, width=315, styles={'background': '#f4f7fb', 'padding': '12px'})
-        diagnostics = '<br>'.join(escape(v) for v in self.reader.messages) or 'All supported products passed metadata checks.'
-        header = pn.pane.HTML(f'<h1 style="margin-bottom:4px">CaMa-Flood <span style="color:#39758a">Map Explorer</span></h1><p>{escape(str(self.reader.path))} · {g.nx} × {g.ny} · {g.resolution:g}° · local & read-only</p>')
-        details = pn.Column(pn.pane.Markdown('## Cell inspector\nFortran indices start at **1**.'), self.inspection,
-                            pn.pane.Markdown('### Source diagnostics'), pn.pane.HTML(diagnostics, width=300), width=340)
-        # Tabs keep the map and controls usable in a narrow desktop side panel
-        # as well as a normal browser. Native aspect follows actual frame width.
-        selectors = pn.FlexBox(self.variable, self.network_choice, flex_wrap='wrap')
-        self.view = pn.Column(header, selectors, pn.Tabs(
-            ('Explore', pn.Column(self.coordinate, self.selection_summary, self.network_summary, self.plot, sizing_mode='stretch_width')),
-            ('Display & export', controls), ('Cell inspector', details), sizing_mode='stretch_width'), sizing_mode='stretch_width')
+        for widget in (self.background,self.hires_source,self.terrain_palette):
+            widget.param.watch(lambda event: self._schedule(self.update_layer),'value')
+        for widget in (self.representation,self.classification,self.arrows):
+            widget.param.watch(lambda event: self._schedule(self.update_network),'value')
+        for widget in (self.color_mode,self.width_mode):
+            widget.param.watch(lambda event: self._schedule(self._style_modes),'value')
+        for widget in self.overlay_controls.values():
+            widget.param.watch(lambda event: self._schedule(self.render_view),'value')
+        background_controls = pn.Column(self.background,self.variable,self.hires_source,self.terrain_palette,
+            self.scale,self.palette,self.auto_limits,pn.Row(self.low,self.high),
+            self.overlay_controls['catchment_boundaries'],self.overlay_controls['channel_pixels'],width=330)
+        network_controls = pn.Column(self.network_choice,self.representation,self.color_mode,self.width_mode,
+            self.classification,self.width,pn.Row(self.color,self.flex_color),self.arrows,width=330)
+        overlay_controls = pn.Column(*(self.overlay_controls[k] for k in ['channel','overland','outlets','headwater','coarse_grid','channel_color','overland_color','bif_width','bif_classes']),width=330)
+        navigation = pn.Column(pn.pane.Markdown('### Geographic extent'),pn.Row(*self.extent_inputs[:2]),pn.Row(*self.extent_inputs[2:]),
+            pn.Row(self.apply_extent_button,self.reset_button),self.export_button,self.save_button,self.upload,self.status,width=330)
+        diagnostics = '<br>'.join(escape(v) for v in self.reader.messages+self.scene.messages) or 'Supported products passed metadata checks.'
+        header = pn.pane.HTML(f'<h2 style="margin:4px">CaMa-Flood · Map Explorer v2</h2><small>{escape(self.reader.path.name)} · {g.nx} × {g.ny} · local & read-only</small>')
+        details = pn.Column(pn.pane.Markdown('### Native cell inspection · 1-based indices'),self.inspection,
+                            pn.pane.HTML(diagnostics,width=320),width=350)
+        self.view = pn.Column(header,pn.Tabs(
+            ('Explore',pn.Column(self.coordinate,self.selection_summary,self.plot,self.legend,sizing_mode='stretch_width')),
+            ('Background',background_controls),('River Network',network_controls),('Overlays',overlay_controls),
+            ('View & export',navigation),('Cell inspector',details),sizing_mode='stretch_width'),sizing_mode='stretch_width')
 
     def _schedule(self, function):
         # Panel widget events can run outside Bokeh's document lock. Queue
@@ -180,8 +218,10 @@ class Explorer:
         # Wheel/pan may move beyond map bounds; clamp to the map on completion
         # rather than rendering misleading extrapolated data or exporting it.
         g = self.reader.geometry
-        extent = (max(g.west, self.plot.x_range.start), min(g.east, self.plot.x_range.end),
-                  max(g.south, self.plot.y_range.start), min(g.north, self.plot.y_range.end))
+        # Browser range events can arrive before the separate Range1d property
+        # patches. Use the event's complete viewport, not partly stale ranges.
+        extent = (max(g.west, event.x0), min(g.east, event.x1),
+                  max(g.south, event.y0), min(g.north, event.y1))
         if extent[0] >= extent[1] or extent[2] >= extent[3]:
             extent = g.extent
         self._guard(lambda: self.set_extent(extent))
@@ -200,10 +240,19 @@ class Explorer:
                 self.low.value, self.high.value = layer.low, layer.high
         finally:
             self._updating = False
+        self._set_colorbar(layer)
+        self.plot.title.text = layer.label
+        self.status.object = f'**Source:** `{self.reader.sources[name].path.name}`\n\n' + ('Discrete categories; colors may repeat.' if SCHEMA[name].categorical else 'Color transforms affect display only.')
+        self.render_view()
+
+    def _set_colorbar(self, layer):
+        self.bar.visible = layer is not None
+        if layer is None:
+            return
         cls = LogColorMapper if layer.logarithmic else LinearColorMapper
         self.mapper = cls(palette=layer.palette, low=layer.low, high=layer.high, nan_color='#f5f7fa')
         self.bar.color_mapper = self.mapper
-        self.bar.title = name + f' [{SCHEMA[name].display_units}]'
+        self.bar.title = 'Elevation diff. [m]' if layer.label.startswith('Maximum') else layer.label.split(' —')[0]
         if len(layer.categories):
             ticks = np.unique(np.linspace(0, len(layer.categories)-1, min(16, len(layer.categories))).astype(int))
             self.bar.ticker = FixedTicker(ticks=ticks.tolist())
@@ -212,52 +261,110 @@ class Explorer:
             from bokeh.models import BasicTicker, LogTicker
             self.bar.ticker = LogTicker() if layer.logarithmic else BasicTicker()
             self.bar.major_label_overrides = {}
-        self.plot.title.text = layer.label
-        self.status.object = f'**Source:** `{self.reader.sources[name].path.name}`\n\n' + ('Discrete categories; colors may repeat.' if SCHEMA[name].categorical else 'Color transforms affect display only.')
-        self.render_view()
+
+    def _style_modes(self):
+        self._updating = True
+        try:
+            self.area_color.value = self.color_mode.value == 'upstream_area'
+            self.distinguish.value = self.color_mode.value == 'connection_type'
+            self.area_width.value = self.width_mode.value == 'upstream_area'
+        finally:
+            self._updating = False
+        self.update_network()
 
     def network_options(self):
         return dict(width=self.width.value, color=self.color.value, flexible_color=self.flex_color.value,
-                    distinguish=self.distinguish.value, scale_width=self.area_width.value, color_area=self.area_color.value)
+                    distinguish=self.distinguish.value, scale_width=self.area_width.value, color_area=self.area_color.value,
+                    classification=self.classification.value)
 
     def update_network(self):
         name = self.network_choice.value
-        if name == 'off':
+        if name == 'off' or self.representation.value == 'off':
             self.network = None
-            self.network_summary.object = 'Network overlay hidden; stored connectivity remains inspectable.'
         else:
-            if self._network_cache is None or self._network_cache.product != name:
-                self._network_cache = RiverNetwork(self.reader, name)
-            self.network = self._network_cache
-            net = self.network
-            self.network_summary.object = (f'**{name}:** {len(net.rows):,} links · {int(net.flexible.sum()):,} flexible. '
-                                           f'Excluded: {net.counts["out_of_map"]} outside-map, {net.counts["mixed_codes"]} mixed-code, '
-                                           f'{net.counts["self_links"]} self links. Terminal pairs: {net.counts["terminal_pairs"]}.')
+            if name not in self._networks:
+                self._networks[name] = RiverNetwork(self.reader,name)
+            self._network_cache = self._networks[name]
+            self.network = self.scene.products.network_view(self._network_cache,self.representation.value)
+            if self.representation.value == 'outlet_vector' and not self._auto_channel_initialized:
+                self._auto_channel_initialized = True
+                self._updating = True
+                try:
+                    self.overlay_controls['channel'].value = self.scene.products.bif_path is not None
+                finally:
+                    self._updating = False
         self.render_view()
-        if self.selected:
-            row, col = self.selected
-            self.inspect(self.reader.geometry.lon[col], self.reader.geometry.lat[row])
+        if self.selected is not None:
+            if hasattr(self,'_last_click'):
+                self.inspect(*self._last_click)
+            else:
+                self._highlight(*self.selected)
+
+    def scene_options(self):
+        return dict(background=self.background.value,tile=self.hires_source.value,terrain_palette=self.terrain_palette.value,
+                    network_style=self.network_options(),arrows=self.arrows.value,
+                    overlays={k:widget.value for k,widget in self.overlay_controls.items()})
 
     def render_view(self):
         if self.layer is None:
             return
         self._size_map()
-        image, edges = raster_subset(self.layer, self.reader.geometry, self.extent)
-        w, e, s, n = edges
-        # Bokeh image row zero is southern: flip exactly once at this boundary.
-        self.image_source.data = dict(image=[colorize(self.layer, image)[::-1]], x=[w], y=[s], dw=[e-w], dh=[n-s])
-        if self.network is None:
-            self.link_source.data = dict(x0=[], y0=[], x1=[], y1=[], width=[], color=[])
-            self.selected_link.data = dict(x0=[], y0=[], x1=[], y1=[])
+        self.frame = frame = self.scene.build(self.extent,self.variable.value,self.layer,self.network,self.scene_options())
+        self._set_colorbar(frame.layer)
+        self.plot.title.text = ('Unit catchments · '+self.variable.value if self.background.value=='catchment' else
+                               '8-neighbor elevation difference [m]' if self.background.value=='difference' else
+                               'High-resolution '+self.background.value+' [m]' if self.background.value in ('elevtn','flddif') else
+                               self.variable.value if self.background.value=='coarse' else 'Stored river-map geometry')
+        self.image_source.data = dict(image=[np.ascontiguousarray(a[::-1]) for a,e in frame.images],
+            x=[e[0] for a,e in frame.images],y=[e[2] for a,e in frame.images],
+            dw=[e[1]-e[0] for a,e in frame.images],dh=[e[3]-e[2] for a,e in frame.images])
+        self.link_source.data = frame.main
+        combined=dict(x0=[],y0=[],x1=[],y1=[],width=[],color=[])
+        for segments,color,width,label in frame.overlays:
+            for key,values in [('x0',segments[:,0,0]),('y0',segments[:,0,1]),('x1',segments[:,1,0]),('y1',segments[:,1,1]),
+                               ('width',np.broadcast_to(width,(len(segments),))),('color',np.full(len(segments),color))]:
+                combined[key].extend(values.tolist())
+        self.overlay_source.data=combined
+        self.outlet_source.data=dict(x=frame.points[:,0],y=frame.points[:,1])
+        self.arrow_source.data=frame.arrows
+        labels=frame.legend+[entry[3] for entry in frame.overlays]+frame.diagnostics
+        swatches=''.join(f'<div><span style="display:inline-block;width:35px;height:{max(2,width*2):.2f}px;background:{color};margin-right:8px"></span>{escape(label)}</div>' for label,color,width in frame.swatches)
+        self.legend.object='<details><summary>Legend & diagnostics</summary>'+swatches+''.join('<div>'+escape(label)+'</div>' for label in labels)+'</details>'
+        if self.selected is not None:
+            self._highlight(*self.selected)
+
+    def _highlight(self,row,col):
+        g=self.reader.geometry
+        x,y=g.lon[col],g.lat[row]
+        if self.representation.value=='outlet_vector' and self.scene.products.outlet_source:
+            a,b=self.scene.products.outlets
+            if np.isfinite(a[row,col]) and np.isfinite(b[row,col]):
+                x,y=a[row,col],b[row,col]
+        self.selected_source.data=dict(x=[x],y=[y])
+        if self.network is not None:
+            net=self.network
+            ids=np.flatnonzero((net.rows[net.link_index]==row)&(net.cols[net.link_index]==col))
+            self.selected_link.data=dict(x0=net.x0[ids],y0=net.y0[ids],x1=net.x1[ids],y1=net.y1[ids])
         else:
-            net = self.network
-            ids = net.visible(self.extent)
-            widths, colors = network_style(net, self.reader, ids, **self.network_options())
-            self.link_source.data = dict(x0=net.x0[ids], y0=net.y0[ids], x1=net.x1[ids], y1=net.y1[ids], width=widths, color=colors)
+            self.selected_link.data=dict(x0=[],y0=[],x1=[],y1=[])
 
     def inspect(self, lon, lat):
+        self._last_click=(lon,lat)
         result = self.reader.inspect(lon, lat)
         row, col = self.reader.geometry.cell(lon, lat)
+        extra,assigned = self.scene.inspect(lon,lat,self.hires_source.value)
+        if self.background.value=='catchment' and assigned is not None:
+            clicked=(col+1,row+1)
+            row,col=assigned
+            g=self.reader.geometry
+            result=self.reader.inspect(g.lon[col],g.lat[row])
+            result['clicked coarse ix/iy (1-based)']=str(clicked)
+        result.update(extra)
+        result['network representation']=self.representation.value
+        if self.representation.value=='outlet_vector' and self.scene.products.outlet_source:
+            a,b=self.scene.products.outlets
+            result['source outlet longitude']=float(a[row,col]) if np.isfinite(a[row,col]) else None
+            result['source outlet latitude']=float(b[row,col]) if np.isfinite(b[row,col]) else None
         self.selected = row, col
         self.selected_source.data = dict(x=[self.reader.geometry.lon[col]], y=[self.reader.geometry.lat[row]])
         # Inspection remains available when network visibility is off.
@@ -268,8 +375,14 @@ class Explorer:
         if net is not None:
             result['network product'] = net.product
             result.update(net.inspect(row, col))
+            nx,ny=int(net.nextx[row,col]),int(net.nexty[row,col])
+            if self.representation.value=='outlet_vector' and 1<=nx<=self.reader.geometry.nx and 1<=ny<=self.reader.geometry.ny:
+                a,b=self.scene.products.outlets
+                result['downstream outlet longitude']=float(a[ny-1,nx-1]) if np.isfinite(a[ny-1,nx-1]) else None
+                result['downstream outlet latitude']=float(b[ny-1,nx-1]) if np.isfinite(b[ny-1,nx-1]) else None
             ids = np.flatnonzero((net.rows[net.link_index] == row) & (net.cols[net.link_index] == col)) if self.network else np.array([], dtype=int)
             self.selected_link.data = dict(x0=net.x0[ids], y0=net.y0[ids], x1=net.x1[ids], y1=net.y1[ids])
+        self._highlight(row,col)
         rows = ''.join(f'<tr><td style="padding:5px;border-bottom:1px solid #ddd">{escape(k)}</td><td style="padding:5px;border-bottom:1px solid #ddd">{escape("missing" if v is None else str(v))}</td></tr>' for k, v in result.items())
         self.inspection.object = f'<table style="width:100%;font-size:12px">{rows}</table><p>Raw source values; area units here are m². Pink ring = selected cell; pink line = its downstream link.</p>'
         self.selection_summary.object = f'**Selected cell (1-based):** ix={col+1}, iy={row+1} · {result.get("downstream status", "no network")} · Details in **Cell inspector**.'
@@ -282,15 +395,25 @@ class Explorer:
         return self.output_dir / f'map-explorer-{datetime.now():%Y%m%d-%H%M%S-%f}{suffix}'
 
     def export(self):
-        path = export_png(self.reader, self.variable.value, self.extent, self._output('.png'), layer=self.layer,
-                          network=self.network, network_options=self.network_options(), selected=self.selected)
-        self.status.object = f'**PNG saved:** `{path}`'
+        frame=self.scene.build(self.extent,self.variable.value,self.layer,self.network,self.scene_options(),max_side=2400)
+        point=None
+        segments=None
+        if self.selected is not None:
+            self._highlight(*self.selected)
+            point=(self.selected_source.data['x'][0],self.selected_source.data['y'][0])
+            data=self.selected_link.data
+            segments=np.stack([np.column_stack([data['x0'],data['y0']]),np.column_stack([data['x1'],data['y1']])],axis=1)
+        path=export_scene(self.reader,frame,self.extent,self._output('.png'),point,segments)
+        self.status.object=f'**PNG saved:** `{path}`'
         return path
 
     def settings(self):
-        return dict(version=1, map_path=str(self.reader.path), variable=self.variable.value, extent=list(self.extent),
-                    scale=self.scale.value, palette=self.palette.value, limits=None if self.auto_limits.value else [self.low.value, self.high.value],
-                    network=self.network_choice.value, network_options=self.network_options())
+        layers=self.scene_options()
+        layers.pop('network_style')
+        layers['representation']=self.representation.value
+        return dict(version=2,map_path=str(self.reader.path),variable=self.variable.value,extent=list(self.extent),
+                    scale=self.scale.value,palette=self.palette.value,limits=None if self.auto_limits.value else [self.low.value,self.high.value],
+                    network=self.network_choice.value,network_options=self.network_options(),layers=layers)
 
     def save(self):
         path = save_settings(self._output('.json'), self.settings())
@@ -311,6 +434,18 @@ class Explorer:
                 self.low.value, self.high.value = data['limits']
             self.network_choice.value = data['network']
             options = data['network_options']
+            layers = data.get('layers',{})
+            self.classification.value = options.get('classification','fixed')
+            self.background.value = layers.get('background','coarse')
+            self.hires_source.value = layers.get('tile',self.hires_source.value)
+            self.terrain_palette.value = layers.get('terrain_palette','gray')
+            self.representation.value = layers.get('representation','grid_center')
+            self.arrows.value = layers.get('arrows',False)
+            self._auto_channel_initialized = True
+            for k,w in self.overlay_controls.items():
+                w.value = layers.get('overlays',{}).get(k,OVERLAY_DEFAULTS[k])
+            self.color_mode.value = 'upstream_area' if options['color_area'] else 'connection_type' if options['distinguish'] else 'uniform'
+            self.width_mode.value = 'upstream_area' if options['scale_width'] else 'uniform'
             for widget, key in [(self.width, 'width'), (self.color, 'color'), (self.flex_color, 'flexible_color'),
                                 (self.distinguish, 'distinguish'), (self.area_width, 'scale_width'), (self.area_color, 'color_area')]:
                 widget.value = options[key]
@@ -319,7 +454,7 @@ class Explorer:
         self.set_extent(data['extent'])
         self.update_layer()
         self.update_network()
-        self.status.object = '**Settings loaded.**'
+        self.status.object = '**Settings loaded.** ' + '; '.join(data.get('_warnings',[]))
 
 
 def create_app(map_dir, output_dir=None):

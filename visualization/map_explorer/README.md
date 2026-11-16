@@ -1,4 +1,4 @@
-# CaMa-Flood Interactive Map Explorer
+# CaMa-Flood Interactive Map Explorer v2
 
 A standalone, read-only browser for coarse CaMa-Flood river maps. Explore
 rasters, stored downstream connectivity and individual cells without editing
@@ -68,41 +68,153 @@ were lost when copying the Mac launcher, restore them with
 The Windows batch wrapper is supplied but has not been executed on Windows
 in this macOS development session.
 
-## Operation
+## Operation and independent layers
 
-1. Choose **Raster variable**. `uparea` defaults to log scale in km². Raw
-   source values, including m² areas, remain unchanged in the inspector.
-2. Choose **Stored network**: `nextxy`, optional `nextxy_noedge`, or `off`.
-   The latter product suppresses regional edges and is not silently substituted
-   for model connectivity. Dark links are local; orange links are Flexible
-   Downstream by default. Both endpoints are actual cell centers.
-3. In **Explore**, drag to pan, use the wheel or box-zoom tool, and use the
-   toolbar Reset or **Display & export → Full map** to return to all cells.
-   The pointer reports geographic degrees. Map aspect uses the viewport's
-   midpoint latitude; this is a local equirectangular view, not a projection.
-4. Click a cell. A pink ring identifies the source and a pink line its
-   downstream link. Open **Cell inspector** for native attributes, 1-based
-   Fortran `(ix,iy)`, cell-center coordinates, destination indices/coordinates
-   and local/flexible/terminal status. Inspection also works with links hidden.
-5. In **Display & export**, adjust continuous palette/scale/limits, link
-   colors/width, and optional contributing-area styles. Area styles represent
-   **contributing area, not discharge**. Color-by-area overrides link-type colors;
-   its documented fixed log display range is 1–10⁶ km². Width styling alone
-   retains local/flexible colors. Manual extent fields use west/east/south/north
-   geographic degrees; confirm numeric edits with Enter, then press Apply
-   extent. Layer changes preserve the view.
-6. **Export current view · PNG** writes a Matplotlib/Agg rendering to local
-   `output/`, preserving the current extent, scale, categories, palette, links,
-   selected cell/link and a colorbar/legend. The status gives its full path.
-   No Selenium or additional browser engine is needed. Bokeh's toolbar Save
-   separately downloads the browser canvas; use the app export for labeled PNGs.
-7. **Save settings · JSON** records the map path and display options in
-   `output/`. Load it with the file chooser. Settings for another map are
-   rejected: launch that map separately. Selection and window size are not saved.
+The app keeps navigation, native inspection and export while separating three
+independent groups. Settings use tabs on narrow windows; the map frame adapts
+on resize, with geographic aspect corrected at the viewport midpoint.
 
-On narrow screens the controls and inspector use tabs. The map frame adapts
-to the available width, preserving local geographic aspect. Larger maps/views
-can be tall; scroll the page to reach their southern edge.
+### Background
+
+Choose a representation in **Background**:
+
+- **None:** transparent/blank map background, independent of network/overlays.
+- **Coarse raster:** the original scalar/categorical maps; `subcol` now also
+  accepts the distributed `subcol-sample.bin` display categories.
+- **Unit catchments:** each native high-resolution pixel inherits the selected
+  coarse variable from its stored one-based `(catmx,catmy)` assignment. Default
+  `uparea` is m² → km² with logarithmic green coloring. Basin/category fields
+  remain discrete. Inherited width/depth values describe the assigned coarse
+  river cell, not a measurement of every fine pixel. Gray is unassigned land
+  (`catmxy=-999` in both records); other missing/background pixels are white.
+- **High-resolution elevation**, **8-neighbor elevation difference**, and
+  **Floodplain height:** native `elevtn`, max absolute valid eight-neighbor
+  elevation difference, and `flddif`, all in metres. Elevation difference is
+  **not dimensionless slope** and is not divided by horizontal distance.
+
+Choose the **High-resolution source** from discovered `location.txt` records.
+No `1min/` path or Mekong size is hardcoded. The MVP renders one selected tile;
+select another source for another region. Automatic cross-tile mosaics are not
+implemented. Views outside the selected tile remain blank with a diagnostic.
+
+**Terrain palette** offers gray and Gallery-equivalent `pale_terrain`. Terrain
+uses exact full-tile P2/P98 clipping and square-root stretch; pale terrain adds
+Gallery's 0.4 display gamma. Limits are cached and do not change on pan/zoom.
+Missing `flddif` with valid elevation receives a neutral display fill; missing
+both stays white. The coarse variable/palette/limits controls apply to coarse
+and inherited-catchment attributes; terrain uses its dedicated palette and
+full-tile normalization instead. The displayed colorbar reports physical units.
+
+Enable **Catchment Boundaries** for actual neighboring assignment-pair edges,
+not contours of displayed values. Boundaries are omitted in sampled views
+and above 100,000 visible edges; zoom in for native geometry. **Channel Pixels**
+adds blue `visual=10` main-channel and lavender `visual=7` small-stream pixels,
+only where assigned to valid river catchments. Other visual codes are not
+reinterpreted. When a fine image is sampled, these colors refer to the sampled
+native pixel, so small features can be omitted until zoomed in.
+
+### River Network
+
+Select stored `nextxy` or `nextxy_noedge` and choose **grid_center** or
+**outlet_vector** representation. Off hides the main layer. Connectivity always
+comes from explicit destination indices, including Flexible Downstream links.
+Outlet vectors use stored `outlon/outlat`; straight segments are graphical
+model connections, not observed centerlines or reconstructed high-resolution
+river paths. Regional outlets can lie slightly outside the coarse-grid bounds;
+their stored coordinates are preserved. Only a full 360° map uses periodic
+longitude and split seam segments.
+
+Color and width are independent. Choose uniform, connection-type or upstream-
+area colors; choose uniform or upstream-area width. The source-cell area is
+contributing drainage area, **not discharge**. Classification choices are:
+
+| Mode | Full-network reference |
+| --- | --- |
+| `quartiles` | Four data-derived quartiles of positive log10 area, as p01-f03 |
+| `six_log` | Six equal log intervals between full-network min/max, as p01-f02 |
+| `continuous` | Continuous log min/max of the complete source-link population |
+| `fixed` | Explicit legacy fixed log range 1–10⁶ km² |
+
+Class boundaries stay fixed when navigating. Thinner main links are drawn
+first; heavier main-channel links remain visible. Optional direction heads
+follow the stored downstream direction and are omitted above 600 visible
+segments; zoom in to enable them. **Legend & diagnostics** supplies colored
+swatches, class ranges and omitted-feature messages.
+
+### Overlays
+
+Each overlay is independent of the background and main-network style:
+
+- **Channel / Overland:** stored bifurcation pathways resolved to outlets.
+  Positive first-layer width means channel; zero means overland. All widths
+  must be finite and nonnegative. Channel defaults on when first selecting
+  outlet-vector representation with an available table; overland defaults off.
+  Colors and width are configurable; optional channel width quartiles use the
+  full set of positive first-layer log widths. These widths are not discharge.
+- **Outlets:** unobtrusive markers at stored outlet coordinates, not grid centers.
+- **Headwater:** native unit-catchment pixel-centroid to outlet guides for cells
+  without incoming regional main links. Regional boundary omissions can create
+  candidates: these are **not confirmed physical headwaters**. The selected
+  tile and uparea must be available. Periodic global headwater guides are
+  explicitly unsupported until circular-longitude centroid handling is added.
+- **Coarse Grid:** regular cell edges from `params.txt`, independent of the
+  high-resolution catchment boundaries.
+
+Bifurcations use the first valid record of each unique directed endpoint pair,
+following Gallery f04. Reversed pairs remain distinct records. Invalid indices,
+widths, outlets, duplicates and conflicting duplicate widths are reported.
+No stored record is changed. Bifurcation link picking is deferred; rendering,
+class distinctions, unique counts and error diagnostics are implemented.
+
+### Navigation, native inspection and export
+
+Use drag-pan, wheel zoom, box zoom, or Reset. In **View & export**, enter
+west/east/south/north in degrees, confirm with Enter and Apply extent. Layer
+changes retain the view. The viewport is taken from the browser's complete
+range event, avoiding partially synchronized axis updates.
+
+Click to select a native location. **Cell inspector** distinguishes coarse
+indices/attributes, high-resolution indices, raw assignment codes/status,
+assigned coarse-cell attributes, native elevation/flddif/visual, and the derived
+elevation difference. For catchment backgrounds, pink highlights follow the
+assigned coarse river cell and its selected network geometry. The clicked
+coarse position is retained separately. Outlet representation adds the actual
+source/destination outlet coordinates. The inspector never treats display
+colors or sampled images as measurements. Missing values remain explicit.
+
+**Export current view · PNG** uses the same scene, classifications, masks and
+colors with Matplotlib/Agg, including selected source/link, bifurcations, other
+enabled overlays and legends. It writes to ignored app-local `output/`; no
+browser engine or source-map writes are needed. Browser and PNG typography/
+arrow sizes can differ; their scientific data and classifications agree.
+
+**Save settings · JSON** records v2 layers and styles in `output/`. Loading old
+v1 files preserves coarse/grid behavior and legacy fixed area styling. Unknown
+settings warn and are ignored; missing optional sources fall back with a
+message. Map-path mismatch and unsupported versions are rejected. The file
+chooser reload is covered programmatically; native browser file-chooser reload
+was not part of the visual checks. Selection/window size are not saved.
+
+## Gallery compatibility
+
+These are control combinations, not copied Figure pipelines:
+
+| Gallery method | Explorer combination |
+| --- | --- |
+| p01-f02c | Coarse/category or no background + grid-center network + area color/width + six log classes |
+| p01-f03a | Coarse subcol + outlet vectors + area quartiles |
+| p01-f03b | Outlet vectors + area quartiles + channel/overland + outlets/guides |
+| p01-f04a | Unit catchments/uparea + outlet vectors + channel bifurcations |
+| p01-f04b | f04a combination + channel pixels + optional assignment boundaries |
+| p01-f05 | High-resolution elevation/difference/flddif + gray/pale terrain + independently styled network |
+
+Explorer keeps scientific classes/definitions while allowing different palettes,
+width scales, extents and layouts. Runtime imports no Gallery plotting module.
+Tests alone load Gallery reference functions for numerical comparison. The
+existing [visualization catalog](../visualization_catalog.csv) remains the
+single Figure metadata registry; a future optional JSON-preset reference could
+link these combinations there. No duplicate CSV/YAML or automatic synchronization
+is introduced in v2.
 
 ## Supported data contracts
 
@@ -114,7 +226,7 @@ registry or import any existing visualization or preprocessing module.
 | --- | --- | --- | --- |
 | `uparea` | contributing drainage area, m² → km²; default log | Float32 | `uparea` |
 | `basin` | original basin identity; discrete colors | Int32 | `basin` |
-| `bsncol` | reusable display category, **not** basin identity | Int32 | `bsncol` |
+| `bsncol`, `subcol` | reusable display categories, **not** basin identity | Int32 | matching name |
 | `elevtn` | channel-top elevation, m (EGM96) | Float32 | `elevtn` |
 | `ctmare`, `grdare` | catchment / grid area, m² → km² | Float32 | matching name |
 | `rivlen`, `rivwth`, `rivhgt` | channel length / width / depth parameter, m | Float32 | matching name |
@@ -157,7 +269,7 @@ python -m pytest visualization/map_explorer/tests -q
 
 The integration test reads the existing Mekong sample if present; otherwise
 it explicitly skips. Synthetic maps are generated in temporary directories.
-See [DESIGN.md](DESIGN.md) and [validation evidence](../../research/records/validation_runs/VR-0151.md)
+See [DESIGN.md](DESIGN.md), [v1 evidence](../../research/records/validation_runs/VR-0151.md) and [v2 evidence](../../research/records/validation_runs/VR-0152.md)
 for scientific conventions, executed checks and limits.
 
 - **Missing GUI dependencies**: check `PYTHON`; install requirements into a
@@ -175,9 +287,35 @@ for scientific conventions, executed checks and limits.
   PNG 2400). Sampling does not average IDs and may omit tiny features when
   zoomed out. Network construction still reads complete coarse nextxy arrays.
 
-Deferred: bifurcations, high-resolution `flddif`/elevation/catchments (different
-geometry and sometimes different area units), basin tracing/filtering,
-curvilinear grids and indexed/streamed global-scale rendering. No existing
+Deferred: automatic multi-tile mosaics, bifurcation picking, basin tracing/
+filtering, periodic global headwater guides, curvilinear grids and indexed/
+streamed global-scale rendering. No existing
 Figure workflows, numerical model, map data or shared environment are changed.
 Requirements are version ranges; full packaging and cross-platform dependency
 certification remain future work.
+
+### High-resolution and vector input details
+
+`location.txt` uses an area count, one header row, then records of area ID,
+filename prefix, W/E/S/N, NX/NY and spacing in degrees. Each supported named
+prefix may have `.catmxy.bin` (two little-endian Int16 assignment planes),
+`.visual.bin` (one signed Int8 plane; missing -9), `.elevtn.bin` and `.flddif.bin`
+(one little-endian Float32 plane each; missing -9999). All use X-fastest,
+north-first layout. Sizes and geometry are validated without loading fields.
+
+`lonlat.nc` contains aligned Float32 `outlon/outlat` with geographic-degree
+units; `lonlat.bin` is also supported as two explicit Float32 planes. Bifurcation
+support currently requires NetCDF integer `ix/iy/jx/jy` path arrays and
+`width(layer,path)` in metres. Stored ending coordinates are checked when
+present. CSV/TXT bifurcation parsing is deferred; a missing table does not
+prevent unrelated layers from operating.
+
+High-resolution rendering reads only sampled native pixels and actual neighbor
+halos. Memory maps and statistics/centroid caches are reused. On first use,
+exact terrain percentiles scan the selected full tile in bounded chunks using
+roughly eight bytes per native pixel in temporary disk workspace; this can be
+slow or disk-intensive for global tiles, but is not performed at startup.
+Full-tile centroid calculation is likewise lazy and chunked. Browser raster
+transfer is capped at 1200 pixels per axis (PNG 2400); no category averaging.
+Full coarse nextxy topology still scales with the coarse grid. A single Mekong
+integration is evidence for this sample, not a global performance guarantee.

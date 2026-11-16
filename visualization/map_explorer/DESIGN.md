@@ -1,5 +1,73 @@
 # Interactive Map Explorer design
 
+## v2 specification (2026-11-16, DT-0106)
+
+Maintainer authorizes Gallery integration on the existing main checkout at
+78bf975f, preserving v1 launchers/API and leaving changes uncommitted. This
+specification precedes v2 implementation. Existing Gallery pipelines and all
+map data remain read-only and are not runtime dependencies.
+
+Three independent controls drive a shared scene, used by browser and PNG:
+background (none/coarse/catchment/elevation/elevation difference/flddif),
+main network (none/grid centers/outlets), and overlays (bifurcations, outlets,
+regional headwater guides, coarse grid and true catchment boundaries).
+New hires.py reads metadata and memory-mapped spatial subsets. New scene.py
+combines reusable primitives; no Figure-specific pipeline is copied. The
+existing reader, network, layer functions and app/controller are extended.
+
+Verified contracts: location.txt records area ID/name, W/E/S/N, NX/NY and
+spacing. catmxy is two little-endian Int16 planes, visual signed Int8; elevtn
+and flddif Float32 with -9999 missing. catmxy=-999 in both planes is unassigned
+land (gray), -9999 is other missing background (white); positive assignments
+are one-based coarse cells. Boundaries compare both indices, never map values.
+Visual 10/7 overlays are applied only to assigned river cells. Native terrain
+zero/negative values are retained. Elevation difference is max absolute
+8-neighbor elevation difference in metres, computed with a native 1-pixel
+halo and no horizontal-distance division. It is not slope.
+
+Terrain uses exact full-tile P2/P98 (cached on first use), square-root stretch,
+gray intensity 0.16..0.58 or Gallery pale_terrain with the additional 0.4 gamma.
+The tiny approved pale_terrain control table is embedded for independence,
+with source attribution; no new metadata registry. Exact statistics scan bounded
+chunks into temporary disk storage, not all global fields into RAM at startup.
+Rendering samples native centers without averaging categories. A selected
+high-resolution tile is explicit; automatic multi-tile mosaicking is deferred,
+and outside the selected tile stays blank. Multiple location records and
+directories are discoverable without 1min hardcoding.
+
+Outlet geometry reads outlon/outlat aligned to params; connectivity and
+local/flexible classification still follow nextxy. Straight outlet segments
+are symbolic modeled connections, not observed centerlines. Full-map source
+log-area quartiles match f03; six equal log intervals match f02. Continuous
+log scaling and clearly labeled legacy fixed 1..1e6 km² remain separate modes.
+Thin links precede thick links. Direction heads follow stored downstream,
+suppressed above 600 visible segments to avoid crowding (legend reports it).
+
+Bifurcations read integer ix/iy/jx/jy and width(layer,path) in metres. Reject
+invalid indices/nonfinite or negative widths; validate stored end coordinates
+when present. Unique directed endpoint pairs use the first valid record, as
+f04; duplicate/conflicting records are reported, not rewritten. width[0]>0
+is channel, zero is overland; width never means discharge. Channel-width
+quartiles use positive first-layer log widths over the complete dataset.
+Overlays use stored outlets even if main-network representation is grid-based.
+
+Headwater guides sum native assigned pixel-center coordinates by coarse ID,
+in bounded chunks over the full selected tile. Candidate cells have no incoming
+regional network links, not necessarily physical headwaters. Optional products
+fail with diagnostics and disable only dependent features. Native inspection
+adds assignment status/indices, terrain and derived difference, distinguishing
+sampled display pixels from scientific values. Pink highlighting follows the
+selected geometry, including assigned catchment cells.
+
+Settings v2 extend v1 JSON; old files migrate to legacy fixed area styling.
+Unknown v2 fields warn and are ignored; unsupported versions fail clearly.
+Tests extend the existing suite and compare actual Mekong arrays, classes and
+derived quantities to independently loaded Gallery reference functions during
+tests only. Browser QA verifies combined views and export; no claim of
+scientific model validation or globally certified responsiveness.
+
+The original v1 specification below is historical where superseded above.
+
 Status: initial specification, 2026-11-16; DT-0105. Maintainer request authorizes
 autonomous implementation on the existing checkout, without commit/push.
 

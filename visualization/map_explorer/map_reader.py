@@ -89,6 +89,7 @@ SCHEMA = {
     'uparea': Variable('Upstream drainage area', 'm2', factor=1e-6, display_units='km²', logarithmic=True),
     'basin': Variable('Basin ID', '1', '<i4', display_units='ID', categorical=True),
     'bsncol': Variable('Basin display color (not basin ID)', '1', '<i4', display_units='category', categorical=True),
+    'subcol': Variable('Subbasin display color (not subbasin ID)', '1', '<i4', display_units='category', categorical=True),
     'elevtn': Variable('Channel-top elevation (EGM96)', 'm'),
     'ctmare': Variable('Unit-catchment area', 'm2', factor=1e-6, display_units='km²'),
     'rivlen': Variable('River-channel length', 'm'),
@@ -127,13 +128,15 @@ class MapReader:
         self.cache_size = cache_size
         for key, spec in SCHEMA.items():
             source = self._discover(key, (key,), spec.dtype, spec.units)
+            if source is None and key=='subcol':
+                source=self._discover('subcol-sample',('subcol',),spec.dtype,spec.units)
             if source:
                 self.sources[key] = source
         for key in ('nextxy', 'nextxy_noedge'):
             source = self._discover(key, ('nextx', 'nexty'), '<i4', '1')
             if source:
                 self.network_sources[key] = source
-        known = set(SCHEMA) | {'nextxy', 'nextxy_noedge'}
+        known = set(SCHEMA) | {'nextxy', 'nextxy_noedge','subcol-sample','lonlat'}
         unknown = sorted(p.name for p in self.path.glob('*.bin') if p.stem not in known)
         if unknown:
             self.messages.append('Unsupported Binary products skipped (no dtype guessing): ' + ', '.join(unknown))
