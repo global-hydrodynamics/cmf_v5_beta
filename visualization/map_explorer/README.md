@@ -75,8 +75,43 @@ independent groups. The map stays mounted on the left (about 70–75% on desktop
 with Gallery presets and Background / River / Overlays / Inspector / View tabs
 on the right. Switching settings tabs never replaces the map. The right panel
 scrolls independently; **Settings panel** hides/shows it. Narrow windows wrap
-settings below the map. Geographic aspect remains corrected at the viewport
-midpoint; a tall geographic extent may require page scrolling to see its south.
+settings below the map. The actual Bokeh frame fits both available width and
+approximately75% of browser height, reserving space for axes and the legend.
+Tall maps become narrower instead of distorting geography, cropping, or requiring
+internal scrolling. Coordinates/selection stay above and Legend & Diagnostics
+immediately below. Resize, pan/zoom/reset and style changes retain geographic
+ranges unless navigation explicitly changes them. PNG geometry remains independent
+of browser dimensions. Very narrow windows may still place settings below the map.
+
+### View: frame shape and center navigation
+
+**Map Aspect Ratio** offers **Square (1:1)** (fresh-session default),
+**Landscape (4:3)** and **Portrait (3:4)**. Ratios refer to the map frame,
+using longitude × cos(midlatitude), not degree ratios. A fresh Square is the
+largest centered square fitting the domain; use Full map to show all bounds.
+Changing shape keeps the center and vertical span when possible, reducing scale
+only to fit the available domain. The map widget remains mounted; the frame
+continues to fit the available width and browser-height cap.
+
+Manual West/East/South/North plus **Apply extent** remains authoritative and
+sets **Custom**. **Full map** also chooses Custom. Pan/zoom retain the frame
+preference and synchronize both extent and center fields.
+
+**Center Longitude [°]**, **Center Latitude [°]** and **Move to Center** translate
+the current view with exactly the same longitude/latitude spans. Near a domain
+edge, the view shifts to the nearest fitting position and reports the adjusted
+center; requests outside the regional domain are rejected without changing the
+map. Complete global longitude domains retain periodic normalization.
+Selection and layer settings survive translation.
+
+Preserving exact degree spans at a new latitude conflicts with preserving an
+exact physical ratio. The explicit policy is to preserve spans and requested
+frame allocation and **letterbox the undistorted geographic plot within it**.
+Thus the inner axes can be slightly narrower/shorter after translation; no data
+stretch or hidden zoom occurs. PNG retains geographic extent/proportions rather
+than browser letterboxing. JSON v2 optionally stores `viewport.aspect` and
+`viewport.frame_ratio`; v1/v2 files without this object infer Custom and load
+exact saved bounds, without a forced Square migration.
 
 ### Background: Raster Type → Variable
 
@@ -163,8 +198,10 @@ own palettes, scales and limits. JSON saves the active style and both type/varia
 choices; inactive profiles are not serialized and restart from defaults after a
 fresh load. No display transform changes scientific source data.
 
-**Channel Pixels** appears in Background only for High-resolution Raster and
-is enabled only if the selected tile has `visual`. It draws native visual=10
+**Channel Pixels** appears in **Overlays → Visible Overlays**, immediately
+after Unit Catchment Boundaries. It is enabled only for a visible High-resolution
+Raster whose selected tile has `visual`; otherwise it remains visible but disabled
+with an explanation. It draws native visual=10
 blue main-channel and visual=7 lavender small-stream pixels above the base raster.
 With catmxy, the existing valid-assignment mask is retained; without catmxy,
 visual codes can be shown but no river-cell assignment is inferred. Coarse Raster
@@ -193,9 +230,12 @@ coarse-grid index displacement (with periodic adjacency), never vector length.
   flexible links. **Connection Type** shows **Local Links Color** and
   **Flexible Links Color**. Area palette/limit controls are hidden in both.
 - **Upstream Area** color hides those pickers and shows **Colormap** and area
-  limits. Palettes: viridis, plasma, magma, cividis, YlGnBu, YlGn, Blues, turbo,
-  shade_rainbow. Discrete classes sample the selected palette; shade_rainbow's
-  approved control colors remain unchanged.
+  limits. The dropdown contains exactly **Shades_rainbow, Turbo, Blues, YlGnBu,
+  plasma, Blue → Navy, Gray → Black, Gray → White**, in that order. Display labels map to `shade_rainbow`, `turbo`, `Blues`,
+  `YlGnBu`, `plasma`, `blue_navy`, `gray_black`, `gray_white`. The first retains
+  approved control colors; Turbo/Blues/YlGnBu/plasma use Matplotlib, and the
+  three additions use explicit four-color Matplotlib gradients. Discrete classes sample the selected palette. River mode
+  switches retain the chosen palette. Background palette menus are unchanged.
 - **Width Mode** is Uniform or Upstream Area. Fresh sessions default to
   **Upstream Area** width and **Continuous (log scale)** mapping; without uparea,
   width defaults Uniform. **Base Line Width [px]** sets uniform width or the
@@ -241,8 +281,22 @@ p01-f03/f04 use Tutorial02's four blue colors (`gallery_quartiles`); f02c and
 relevant f05 styles use continuous shade-rainbow colors with six width bins
 (`gallery_continuous`). Generic `palette` styles use the chosen discrete palette.
 Applying a preset restores its exception and original arrow preference (True→7px).
+Old saved/Gallery palettes outside the eight-option River menu remain rendered
+under their original identifier. A visible compatibility message names that palette;
+the dropdown has no active choice, rather than displaying a false substitute.
+Selecting any of the eight explicitly replaces it. Saved JSON preserves the actual
+loaded palette until replacement. Gallery historical colors also remain explicit.
 Changing Colormap or Mapping releases that exception and marks the preset custom;
 individual changes never silently replace the scientific method registry.
+
+The added River gradients use linear RGB interpolation through explicit controls:
+Blue → Navy: #9ECAE1 / #4292C6 / #08519C / #081D58; Gray → Black:
+#BDBDBD / #969696 / #525252 / #111111; Gray → White:
+#777777 / #A0A0A0 / #CCCCCC / #F5F5F5. They work through the existing Continuous,
+Quantile and Six Log mappings. Manual limits retain existing mapping semantics
+(continuous/six-log color limits; full-population quantile classes). Changing
+these palettes leaves network geometry and width mapping untouched. Background
+palettes and the approved shade_rainbow controls are unchanged.
 
 JSON remains v2. `network_options.area_limits` is null for automatic, or physical
 `[min,max]`; `area_color_style` is `palette`, `gallery_quartiles` or
@@ -254,22 +308,53 @@ session defaults. v1 and v2/v3-created v2 files remain supported.
 
 ### Overlays
 
-Each overlay is independent of the background and main-network style:
+**Visible Overlays** groups Unit Catchment Boundaries, Bifurcation Channel,
+Bifurcation Overland, Outlets, Headwater Guides and Coarse Grid, with Channel Pixels
+immediately after Unit Catchment Boundaries.
+**Overlay Display Settings** follows below with boundary/bifurcation colors,
+base width and Channel Width mapping, and outlet size. Irrelevant controls stay
+visible but disabled, retaining saved styles when visibility is toggled.
+Channel Pixels is grouped here; its high-resolution-only rendering condition remains.
 
-- **Channel / Overland:** stored bifurcation pathways resolved to outlets.
-  Positive first-layer width means channel; zero means overland. All widths
-  must be finite and nonnegative. Channel defaults on when first selecting
-  outlet-vector representation with an available table; overland defaults off.
-  Colors and width are configurable; optional channel width quartiles use the
-  full set of positive first-layer log widths. These widths are not discharge.
-- **Outlets:** unobtrusive markers at stored outlet coordinates, not grid centers.
-- **Headwater:** native unit-catchment pixel-centroid to outlet guides for cells
-  without incoming regional main links. Regional boundary omissions can create
-  candidates: these are **not confirmed physical headwaters**. The selected
-  tile and uparea must be available. Periodic global headwater guides are
-  explicitly unsupported until circular-longitude centroid handling is added.
-- **Coarse Grid:** regular cell edges from `params.txt`, independent of the
-  high-resolution catchment boundaries.
+Each overlay remains independent of the background and main-network style:
+
+- **Unit Catchment Boundaries** draws native catmx/catmy assignment-pair edges.
+  **Unit Catchment Boundary Color**, default `#646464`, changes only these ordinary
+  solid boundaries. It never changes the selected catchment's orange solid
+  outline, selected computational rectangle, network or bifurcations. Native
+  geometry and sampling/performance limits remain as documented above.
+- **Bifurcation Channel** draws **dashed** stored paths whose first-layer width
+  is positive. **Bifurcation Overland** draws **dotted** paths with first-layer
+  width zero; its separate color and uniform base width remain. Neither style
+  redefines endpoints, direction or scientific classification.
+- **Bifurcation Channel Width** replaces the ambiguous Bif Classes checkbox.
+  **Uniform** applies **Base Bifurcation Width [px]** directly. **Channel Width**
+  multiplies it by the existing four full-reference log-width quantile classes,
+  derived from positive stored first-layer width in metres. This represents
+  channel geometry, **not discharge or upstream contributing area**. The selector
+  is disabled when Channel is off. Overland never inherits these classes.
+- **Outlets** uses actual stored outlon/outlat hollow-circle positions.
+  **Outlet Size [px]**,0–20 step1/default4, is disabled when Outlets is off.
+  Zero hides ordinary outlets while preserving selected-cell/catchment markers.
+  The existing20000-visible-marker safeguard reports omissions explicitly.
+- **Headwater** retains native unit-catchment pixel-centroid to outlet guides for
+  cells without incoming regional links. Boundary omissions can create candidates;
+  these are **not confirmed physical headwaters**. Selected catmxy/uparea are
+  required; periodic global centroid guides remain unsupported.
+- **Coarse Grid** retains subtle regular computational edges from params.txt,
+  independently of native catchment boundaries.
+
+PNG uses the same typed overlay geometry/color/width/style. Channel dash6/3px
+and Overland dot1/3px patterns use separate fixed-style Bokeh renderers and
+matching absolute pixel patterns converted to Matplotlib points at160dpi.
+Outlet diameters use the same pixel-to-point conversion, rather than fixed area.
+The underlying scientific data are read-only.
+
+JSONv2 adds optional `layers.overlays.catchment_boundary_color` and `outlet_size`.
+Missing values load as gray/default4. The width selector still saves the existing
+boolean `bif_classes` (False=Uniform, True=Channel Width), so old settings and CSV
+Gallery classifications remain compatible. Existing CSV rows need no duplicated
+style metadata: preset loading supplies the new optional defaults.
 
 Bifurcations use the first valid record of each unique directed endpoint pair,
 following Gallery f04. Reversed pairs remain distinct records. Invalid indices,
@@ -287,7 +372,7 @@ range event, avoiding partially synchronized axis updates.
 Click to select a native location. **Inspector** distinguishes coarse
 indices/attributes, high-resolution indices, raw assignment codes/status,
 assigned coarse-cell attributes, native elevation/flddif/visual, and the derived
-elevation difference. For catchment backgrounds, pink highlights follow the
+elevation difference. For catchment backgrounds, orange highlights follow the
 assigned coarse river cell and its selected network geometry. The clicked
 geographic coordinate is retained separately. Outlet representation adds the actual
 source/destination outlet coordinates. The inspector never treats display
@@ -337,7 +422,21 @@ before changes if outside this map. Missing required products are named and
 Apply is disabled; there is no silent substitution of topology or terrain.
 Without the shared catalog, presets are unavailable but exploration still works.
 
-All 12 presets are supported (the original 11 plus p01-f05e):
+Exactly seven presets appear in the dropdown, in this order:
+
+| Visible panel | Essential rendering |
+| --- | --- |
+| p01-f01a | Coarse upstream area, log YlGnBu; no network |
+| p01-f01d | Pastel subcol inside valid bsncol coverage; unassigned gray, outside white; black bsncol display-class edges |
+| p01-f02a | Faint log-area background (17%); nextxy_noedge local black straight links and flexible orange curved links, direction heads |
+| p01-f03a | Pastel subcol and stored-outlet vectors; historical four blue area/width classes |
+| p01-f03c | Gray subcol; nextxy stored-outlet vectors; continuous log shade_rainbow color with four full-network log-area quantile widths |
+| p01-f04b | Native catchments inheriting uparea with channel pixels and the existing f04 overlays |
+| p01-f05f | Native flddif pale-terrain background with network and bifurcations |
+
+The same CSV/library retains 15 callable IDs for compatibility with existing
+scripts and saved workflows; omitted choices were not deleted or redefined.
+The older supported methods include:
 
 | Canonical panel | Essential Explorer settings |
 | --- | --- |
@@ -365,7 +464,7 @@ Optional `layers.highres_style` holds `palette`, `scale` and `limits`: e.g.
 `limits: null` selects automatic limits; palette/scale `gallery` restore Gallery
 behavior, including the legacy `terrain_palette` gray/pale choice. Older files
 without these fields retain opacity 100% and infer their prior linear/log or
-Gallery terrain rendering. Gallery presets reset opacity/style to original defaults.
+Gallery terrain rendering. Gallery presets set opacity/style to their documented panel values.
 Legacy coarse/catchment/elevtn/flddif/difference/none values project into the new
 UI. Conflicting new UI/scientific fields are rejected before mutation. Unsupported
 saved high-resolution variables use an explicitly named fallback; other legacy
@@ -373,19 +472,27 @@ choices, including non-uparea catchments and linear normalization, are preserved
 Selection is ephemeral and is not serialized into user configuration.
 
 CSV schema: `gallery_id` is a foreign key into `visualization_catalog.csv`;
-`background`, `variable`, `palette`, `terrain_palette` set the background;
+`background`, `variable`, `palette`, `terrain_palette`, `background_opacity`
+(fraction) and `background_method` (`default` / `subbasin_context`) set the background;
 `network_source`, `representation`, `color_mode`, `width_mode`, `classification`,
-`area_palette`, `area_color_style`, `line_width`, `arrows` set the main network; flat named overlay
+`area_palette`, `area_color_style`, `line_width`, `arrows`, `flexible_color` and
+`network_geometry` (`straight` / `gallery_arcs`) set the main network; flat named overlay
 columns mirror the existing layer controls; `west/east/south/north` are suggested
 degree bounds. Boolean fields use true/false; widths use display units. See the
 header and [presets.py](presets.py) for allowed values. CSV is UTF-8 (BOM accepted)
 and Excel-compatible, with no nested JSON fields or duplicated Figure registry.
 
 Presets reproduce essential data/method choices, not exact published graphics.
-Explorer retains straight flexible links and full-network area normalization;
-f02c's Gallery curved links and f04's visible/path quartile normalization can
-therefore differ. Overlay widths/heads and typography can also differ. This
-preserves v2 definitions and pan-independent scientific classes. A custom edit
+Explorer retains full-network area normalization. f02a uses quadratic Arc3
+flexible connectors (rad 0.22, 17 sampled points) in approximate physical display
+coordinates, and tangent-aligned downstream heads. These are graphical connectors,
+not new meandering channel geometry. Stored endpoints and local/flexible classes
+are unchanged; a conservative curve hull filters the viewport. Above 600 visible
+links, heads are explicitly omitted with a zoom-in diagnostic. f02c's legacy
+straight connectors and f04's visible/path quartile normalization can still differ. Overlay widths/heads and typography can also differ. This
+preserves v2 definitions and pan-independent scientific classes. Existing f04b
+retains its outlets-off preset setting; the Gallery image shows outlet squares.
+Enable the independent Outlets control to display stored outlet positions. A custom edit
 does not become a newly Gallery-approved method. No two-way synchronization.
 
 ## Selecting a Grid and its stored unit catchment
@@ -407,19 +514,82 @@ cell/outlet marker and downstream link refer to the **same selected river cell**
 The native assignment shown for the clicked pixel can differ from that selected
 cell and is explicitly labeled separately.
 
-The Inspector shows Selection method, clicked lon/lat, clicked geographic Coarse
-Grid, native pixel, raw catmx/catmy, selected river-map Grid, catchment status/
-pixel count and downstream connectivity. GUI indices use **1-based (Fortran)** /
-`(1-based, Fortran)`; Python row/column values remain zero-based internally.
-Selected-cell attributes come only from the selected river Grid, not a different
-clicked pixel's assigned Grid. Coordinates update the fixed Lon / Lat region;
-there is no pointer-following coordinate Tooltip.
+The **Inspector** presents the selected Unit Catchment as a scientific object.
+Its persistent 2×2 summary reads, in row order:
 
-Prominent magenta edges show the complete native unit catchment, with holes and
-components intact. A separate muted blue-gray dashed rectangle shows the selected
-computational cell from params.txt. Neither substitutes for the other. Both
-remain visible when general Unit Catchment Boundaries are off. PNG uses the
-same two geometries plus the selected cell/outlet and downstream connection.
+1. **Outlet coordinates**: native outlat/outlon, about five decimal places. These
+   are read even when the network is drawn at grid centers; no center-coordinate
+   substitute is used when native outlets are unavailable.
+2. **Upstream Area [km²]**: selected coarse uparea converted from m², not ctmare.
+3. **Unit Catchment ID (ix, iy)**: selected river-map pair, **1-based Fortran**.
+   The identifier does not imply a rectangular catchment boundary.
+4. **Clicked Location**: original geographic latitude/longitude, distinct from
+   the selected river-map cell and its outlet.
+
+The selection-method line explicitly says **High-resolution catmxy assignment**
+or **Geographic coarse-grid containment**. Geometry and Connectivity remain
+visible by default; the old long Location & Assignment table is available under
+**Advanced / Native Values**, collapsed initially. Opening/closing this section
+or the profile survives new clicks; panes update without rebuilding the map.
+
+**River and Floodplain Geometry** uses elevtn/rivwth/rivhgt in metres,
+rivlen/nxtdst converted from metres to kilometres, and ctmare from m² to km².
+Valid negative elevations and zeros are retained. The expandable **fldhgt [m]**
+table lists **all native layers**, using NLFP from params.txt. fldhgt is the
+floodplain height-profile thresholds, not simulated flooded fraction fldfrc.
+Layers are labeled by native layer index; no area percentages are inferred.
+Mekong supplies ten layers; other maps may have a different count. Missing
+products or individual values explicitly show Unavailable.
+
+Inspector-only reads follow the existing registry: Binary fldhgt is little-endian
+Float32 in NLFP consecutive NX×NY records, x fastest, native north-to-south rows.
+NetCDF validates Float32 metres, geographic axes, NLFP layer count and native
+layer order, including -9999/attribute fills. Spatial dimension permutations and
+coordinate reversals are normalized; inconsistent/packed products are rejected
+with an Advanced diagnostic. No size-based dtype guessing or data modification.
+These products are not added to the Background raster menu.
+
+**River Network Connectivity** defines:
+
+- **Downstream ID**: stored destination in the selected nextxy/nextxy_noedge
+  product, with terminal/boundary, missing, invalid and out-of-map codes explicit.
+- **Total upstream Unit Catchments**: distinct supplied river-map nodes that can
+  reach the selected node by following this directed product, excluding itself.
+- **Direct upstream Unit Catchments**: distinct nodes whose stored destination is
+  the selected node (graph in-degree). A stored self-loop contributes to direct
+  in-degree, but total always excludes the selected node. Neither count is
+  inferred from drainage area or restricted to the viewport.
+- **Channel/Overland bifurcations**: separate **Incoming / Outgoing** counts of
+  unique directed paths from Products.bifurcations, using the renderer's first-
+  valid-endpoint-pair deduplication and outlet/width validity filters. Positive
+  first-layer width means Channel; zero means Overland. Counts are independent
+  of layer visibility and do not use line color/proximity.
+- **Basin ID** is actual basin. **Subbasin ID** is shown only with a readable
+  subbsn or subbsn-sample product; positive integers identify prepared segments,
+  zero is unassigned. Mekong's subbsn-sample uses the documented 30000/5000 km²
+  sample segmentation. subcol/bsncol are display categories, never substitutes.
+
+Graph indices are cached per selected network product. An iterative O(N)
+functional-graph pass accumulates in-degree and total counts; cycles are handled
+as distinct-node components, without recursive or per-click network scans.
+Counts cover the **supplied regional network**; omitted upstream connectivity
+outside it can be unknown. Selecting a different stored network refreshes all
+counts even when its graphic representation is Off. First loading a large graph
+costs O(N) time/memory; global performance has not been certified.
+
+Advanced retains geographic coarse indices, native pixel, catmx/catmy, source
+attributes, visual code, hires elevtn/flddif, raw profile, boundary diagnostics,
+color categories and network product/representation. Existing programmatic
+inspect() keys remain; source outlet coordinates, fldhgt/subbsn and upstream
+counts are additionally available. Selection geometry is never derived from
+these formatted summaries.
+
+The native assignment boundary is **orange (`#FF7F00`), solid, 3 px**, preserving
+holes/components. The computational rectangle is a subdued **gray (`#888888`),
+dashed, 1 px at 65% opacity**, without casing. Both remain visible when ordinary
+Unit Catchment Boundaries are disabled and use identical browser/PNG coordinates.
+The selected outlet/link stay yellow with a downstream endpoint arrow. This
+supersedes earlier pink/cased presentation; selection logic is unchanged.
 
 Changing Coarse ↔ High-resolution, including No Background, **re-evaluates the
 last geographic click without another click**. The Inspector and all highlights
@@ -515,6 +685,8 @@ python -m pytest visualization/map_explorer/tests -q
 The integration test reads the existing Mekong sample if present; otherwise
 it explicitly skips. Synthetic maps are generated in temporary directories.
 See [DESIGN.md](DESIGN.md), [v1 evidence](../../research/records/validation_runs/VR-0151.md) and [v2 evidence](../../research/records/validation_runs/VR-0152.md) and [v3 evidence](../../research/records/validation_runs/VR-0153.md) and [UI refinement evidence](../../research/records/validation_runs/VR-0154.md) and [Background UI evidence](../../research/records/validation_runs/VR-0155.md) and [selection-rule evidence](../../research/records/validation_runs/VR-0156.md)
+and [View/palette/preset evidence](../../research/records/validation_runs/VR-0160.md)
+and [scientific Inspector evidence](../../research/records/validation_runs/VR-0163.md)
 for scientific conventions, executed checks and limits.
 
 - **Missing GUI dependencies**: check `PYTHON`; install requirements into a

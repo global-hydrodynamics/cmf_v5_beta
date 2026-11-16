@@ -226,7 +226,7 @@ def test_native_centroid_and_sampled_boundaries(products):
     a.overlay_controls["catchment_boundaries"].value = True
     frame = a.scene.build(g.extent, "uparea", a.layer, a.network, a.scene_options(), max_side=2)
     assert any("sampled view" in message for message in frame.diagnostics)
-    assert not any("assignment boundaries" in label for segments, color, width, label in frame.overlays)
+    assert not any("assignment boundaries" in label for segments, color, width, label, dash in frame.overlays)
 
 
 ROOT = Path(__file__).resolve().parents[3]

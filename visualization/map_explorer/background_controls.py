@@ -78,8 +78,6 @@ class BackgroundControls:
             self.notice,
             self.opacity,
             self.color_settings,
-            app.overlay_controls["channel_pixels"],
-            self.channel_note,
             width=330,
         )
         self.adopt_legacy()
@@ -327,11 +325,16 @@ class BackgroundControls:
                 app._updating = updating
         channels = app.overlay_controls["channel_pixels"]
         tile = app.scene.tiles.get(app.hires_source.value)
-        channels.visible = highres and not blank
-        channels.disabled = not channels.visible or tile is None or "visual" not in tile.files
-        self.channel_note.visible = channels.visible
+        # Always discoverable in Overlays; moving the control does not change
+        # the high-resolution-only scientific rendering contract.
+        channels.visible = True
+        channels.disabled = not highres or blank or tile is None or "visual" not in tile.files
+        self.channel_note.visible = channels.disabled
         self.channel_note.object = (
-            "Channel Pixels unavailable: selected tile has no visual product." if channels.disabled else ""
+            "Channel Pixels requires a visible high-resolution background."
+            if not highres or blank else
+            "Channel Pixels unavailable: selected tile has no visual product."
+            if channels.disabled else ""
         )
         if highres and categorical:
             self.color_note.object = (

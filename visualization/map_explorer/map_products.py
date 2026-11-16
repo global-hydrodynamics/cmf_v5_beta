@@ -177,7 +177,23 @@ class Products:
 AREA_COLORS = ("#5E88BE", "#4F80BF", "#285A9B", "#103A70")
 
 
-AREA_PALETTES = ("viridis", "plasma", "magma", "cividis", "YlGnBu", "YlGn", "Blues", "turbo", "shade_rainbow")
+RIVER_GRADIENTS = {
+    "blue_navy": ("#9ECAE1", "#4292C6", "#08519C", "#081D58"),
+    "gray_black": ("#BDBDBD", "#969696", "#525252", "#111111"),
+    "gray_white": ("#777777", "#A0A0A0", "#CCCCCC", "#F5F5F5"),
+}
+AREA_PALETTES = (
+    "viridis",
+    "plasma",
+    "magma",
+    "cividis",
+    "YlGnBu",
+    "YlGn",
+    "Blues",
+    "turbo",
+    "shade_rainbow",
+    *RIVER_GRADIENTS,
+)
 AREA_COLOR_STYLES = ("palette", "gallery_quartiles", "gallery_continuous")
 
 
@@ -237,7 +253,11 @@ def area_style(
             ],
         )
         if area_palette == "shade_rainbow"
-        else colormaps[area_palette]
+        else (
+            LinearSegmentedColormap.from_list(area_palette, RIVER_GRADIENTS[area_palette])
+            if area_palette in RIVER_GRADIENTS
+            else colormaps[area_palette]
+        )
     )
     if classification not in ("quartiles", "six_log", "continuous", "fixed"):
         raise ValueError("Unknown area classification")
@@ -295,9 +315,11 @@ def area_style(
         np.log10(limits) if limits is not None and classification in ("continuous", "six_log") else (width_lo, width_hi)
     )
     fraction, color_positions, color_labels = mapping(color_lo, color_hi)
-    if area_color_style == "gallery_continuous" and classification == "six_log":
+    if area_color_style == "gallery_continuous" and classification in ("six_log", "quartiles"):
         color_positions = fraction
-        color_labels = [f"continuous: log {10**color_lo:.3g}–{10**color_hi:.3g} km² (Gallery; six width classes)"]
+        color_labels = [
+            f"continuous: log {10**color_lo:.3g}–{10**color_hi:.3g} km² (Gallery; {4 if classification=='quartiles' else 6} width classes)"
+        ]
     colors = np.array([to_hex(cmap(v)) for v in color_positions], dtype=object)
     if area_color_style == "gallery_quartiles" and classification == "quartiles":
         colors = np.asarray(AREA_COLORS, dtype=object)[np.rint(color_positions * 3).astype(int)]
@@ -325,7 +347,7 @@ def area_style(
         legend += [kind + ": " + label for label in labels]
         classes = (
             4
-            if classification == "quartiles"
+            if classification == "quartiles" and not (kind == "Color" and area_color_style == "gallery_continuous")
             else (
                 6
                 if classification == "six_log" and not (kind == "Color" and area_color_style == "gallery_continuous")

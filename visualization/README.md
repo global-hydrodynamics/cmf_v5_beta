@@ -8,11 +8,15 @@ Gallery selections.
 ## Interactive exploration
 
 [Map Explorer v3](map_explorer/README.md) adds a persistent map/settings layout,
-11 catalog-referenced Gallery presets and native catmxy catchment-selection
+seven visible catalog-referenced Gallery presets (legacy IDs remain callable),
+Square/Landscape/Portrait and center navigation, eight River palettes, grouped
+overlay controls and native catmxy catchment-selection
 outlines (also in PNG). It is a standalone local browser for
 read-only CaMa-Flood coarse/high-resolution rasters, unit catchments, outlet-based
 networks, bifurcations and native cell inspection. Backgrounds, networks and
-additional overlays can be combined independently.
+additional overlays can be combined independently. The Unit Catchment Inspector
+shows native outlet/area/IDs, layered fldhgt and cached full-regional upstream
+counts, with raw diagnostics retained in an expandable section.
 Run `./visualization/map_explorer/run.sh map/mekong_15min` from the repository
 root; PNG/settings export and custom map directories are supported. This tool
 is independent of the Figure workflows below.

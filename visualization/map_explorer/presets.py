@@ -10,6 +10,8 @@ import numpy as np
 from scene import OVERLAY_DEFAULTS
 from map_products import AREA_PALETTES, AREA_COLOR_STYLES
 
+VISIBLE_PRESETS = ("p01-f01a", "p01-f01d", "p01-f02a", "p01-f03a", "p01-f03c", "p01-f04b", "p01-f05f")
+
 BOOLEAN_FIELDS = {
     "arrows",
     "channel",
@@ -21,8 +23,10 @@ BOOLEAN_FIELDS = {
     "channel_pixels",
     "bif_classes",
 }
-NUMBER_FIELDS = {"line_width", "bif_width", "west", "east", "south", "north"}
+NUMBER_FIELDS = {"background_opacity", "line_width", "bif_width", "west", "east", "south", "north"}
 CHOICES = {
+    "background_method": {"default", "subbasin_context"},
+    "network_geometry": {"straight", "gallery_arcs"},
     "background": {"coarse", "catchment", "elevtn", "difference", "flddif", "none"},
     "representation": {"off", "grid_center", "outlet_vector"},
     "color_mode": {"uniform", "connection_type", "upstream_area"},
@@ -53,6 +57,10 @@ class PresetLibrary:
                     identity = row["gallery_id"]
                     if identity not in canonical or identity in self.presets:
                         raise ValueError(f"Unknown/duplicate Gallery reference: {identity}")
+                    row.setdefault("background_method", "default")
+                    row.setdefault("network_geometry", "straight")
+                    row.setdefault("background_opacity", "1")
+                    row.setdefault("flexible_color", "#e67e22")
                     for key in BOOLEAN_FIELDS:
                         if row[key].lower() not in ("true", "false", "1", "0"):
                             raise ValueError(f"{identity}:{key} must be boolean")
@@ -61,12 +69,23 @@ class PresetLibrary:
                         row[key] = float(row[key])
                         if not np.isfinite(row[key]):
                             raise ValueError(f"{identity}:{key} must be finite")
-                    row.setdefault('area_color_style', 'gallery_quartiles' if row['classification']=='quartiles'
-                                   else 'gallery_continuous' if row['classification']=='six_log' and row['area_palette']=='shade_rainbow'
-                                   else 'palette')
+                    row.setdefault(
+                        "area_color_style",
+                        (
+                            "gallery_quartiles"
+                            if row["classification"] == "quartiles"
+                            else (
+                                "gallery_continuous"
+                                if row["classification"] == "six_log" and row["area_palette"] == "shade_rainbow"
+                                else "palette"
+                            )
+                        ),
+                    )
                     for key, choices in CHOICES.items():
                         if row[key] not in choices:
                             raise ValueError(f"{identity}:{key} unsupported setting")
+                    if not 0 <= row["background_opacity"] <= 1:
+                        raise ValueError(f"{identity}: invalid opacity")
                     if not (0.2 <= row["line_width"] <= 4 and 0.2 <= row["bif_width"] <= 5):
                         raise ValueError(f"{identity}: invalid line widths")
                     if not (row["west"] < row["east"] and row["south"] < row["north"]):
@@ -79,6 +98,8 @@ class PresetLibrary:
     def missing_products(self, identity, reader, scene):
         row, _ = self.presets[identity]
         missing = []
+        if row.get("background_method") == "subbasin_context" and "bsncol" not in reader.sources:
+            missing.append("bsncol")
         if row["variable"] not in reader.sources:
             missing.append(row["variable"])
         if row["network_source"] != "off" and row["network_source"] not in reader.network_sources:
@@ -147,8 +168,9 @@ class PresetLibrary:
             distinguish=row["color_mode"] == "connection_type",
             scale_width=row["width_mode"] == "upstream_area",
             color="#000000",
+            flexible_color=row["flexible_color"],
         )
-        overlays = {**OVERLAY_DEFAULTS, **{key: row[key] for key in OVERLAY_DEFAULTS}}
+        overlays = {**OVERLAY_DEFAULTS, **{key: row.get(key, default) for key, default in OVERLAY_DEFAULTS.items()}}
         required = set()
         if row["background"] == "catchment" or row["headwater"] or row["catchment_boundaries"]:
             required.add("catmxy")
@@ -169,8 +191,14 @@ class PresetLibrary:
             arrows=row["arrows"],
             arrow_size=7 if row["arrows"] else 0,
             overlays=overlays,
-            background_opacity=1.0,
-            highres_style=dict(palette='gallery',scale='gallery',limits=None),
+            background_opacity=row["background_opacity"],
+            background_method=row["background_method"],
+            network_geometry=row["network_geometry"],
+            highres_style=dict(palette="gallery", scale="gallery", limits=None),
         )
-        state['background_ui'] = app.background_ui.config_for(row['background'],row['variable'])
+        if gallery_extent:
+            from view_controls import geographic_ratio
+
+            state["viewport"] = {"aspect": "custom", "frame_ratio": geographic_ratio(extent)}
+        state["background_ui"] = app.background_ui.config_for(row["background"], row["variable"])
         return state

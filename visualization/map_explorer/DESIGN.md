@@ -1,5 +1,139 @@
 # Interactive Map Explorer design
 
+## Unit Catchment Inspector redesign (DT-0117)
+
+Maintainer authorizes the compact scientific Inspector and orange solid native /
+subdued dashed computational selection styles, with commit and push of accumulated
+Explorer work on current main. This supersedes previous no-publication requests
+for these changes. Fetched origin/main remains75bc362f; no overlapping open
+Issues/PRs found. Keep existing dirty work, readers/rendering/selection semantics,
+source data and core model unchanged.
+
+Use a persistent2x2 summary (native outlet lat/lon; uparea km²; selected Fortran
+ix/iy identifier; original click lat/lon), method line, visible geometry and
+connectivity, separate collapsed fldhgt profile and Advanced/Native Values.
+Update persistent pane contents so accordion state survives clicks. The native
+API/diagnostics remain available, including invalid/unassigned selections.
+
+Add inspector-only validated fldhgt/subbsn readers, not competing raster layers.
+Verified registry/CTL/converter and actual Mekong: fldhgt Float32 little endian,
+NLFP records in native layer order (10 here); NetCDF(layer,lat,lon),units m,
+-9999 fill. Preserve valid zero/negative values; no invented area percentages.
+subbsn[-sample] Int32 positive segment IDs,0 unassigned; subcol/bsncol are not IDs.
+The sample ID depends on documented30000/5000km² segmentation thresholds.
+
+Connectivity uses the full selected regional raw nextxy arrays, independent of
+viewport/outlet-coordinate validity or renderer seam splits. Precompute in-degree
+and distinct total upstream counts once per product via functional-graph leaf
+peeling; cycle nodes share component totals excluding themselves. Nonrecursive,
+linear time/space; retain cycle diagnostics and regional external uncertainty.
+Bifurcation incidence reuses Products.bifurcations first-valid directed-pair
+ deduplication and valid outlet/width filters. Incoming/outgoing counts per kind
+are explicit; positive first-layer width is Channel, zero is Overland.
+
+Native boundary becomes3px#FF7F00 solid; coarse rectangle1px#888888 dashed at.65
+alpha without casing. Selected outlet/link/endpoint head stay yellow. Browser
+and PNG receive identical selection geometry. Validate synthetic graphs/profile
+layout/unit conversions/cycles and actual Mekong/UI/PNG, then full suite and
+protected data hashes before publication. No new dependency or Gallery edits.
+
+## Selection visibility follow-up (2026-11-16)
+
+Maintainer requests doubling the native selected outline from1.5 to3px,
+retaining dashed pink. Selected outlet ring/link become yellow#FFD400 and
+a15px triangle marks the stored downstream endpoint, oriented with geographic
+latitude correction. Reuse selected_link data, clearing its angles together
+with coordinates. PNG receives the same endpoints and orientation. Geometry,
+assignment and ordinary outlet/network styles remain unchanged. This supersedes
+prior selected-outline width/color notes below.
+
+## Channel Pixels control location (2026-11-16 follow-up)
+
+Maintainer requests moving Channel Pixels from Background to Overlays. Reuse
+the same widget and saved layers.overlays.channel_pixels key, immediately after
+ordinary catchment boundaries. Keep it visible but disabled with an explanation
+when the background is coarse/hidden or visual is absent. Its preference survives
+background switches; rendering, palettes, native visual=10/7 masks and PNG
+composition remain unchanged. This supersedes earlier placement notes below.
+
+## View controls, seven Gallery choices and selection styling (DT-0114)
+
+Maintainer authorizes all five requested groups on main75bc362f, retaining dirty
+DT-0113 work. No branch/commit/push, scientific data, model or Gallery script edits.
+
+Add explicit four-control-color River gradients, through existing area mapping.
+Group Overlay visibility before disabled-but-retained style controls. Selection
+geometry stays unchanged; muted1.5px dashed pink native outline and2px bright
+solid computational rectangle with dark casing are separate from ordinary layers.
+
+Navigation helpers separate data-coordinate bounds from frame preference. New
+sessions choose the largest centered Square fitting the domain. Aspect choices
+preserve center/vertical span where possible, shrink to available domain when
+necessary, using longitude*cos(midlatitude). Manual four-bound edits are authoritative
+and become Custom. Center moves preserve exact degree spans, clamp position (not
+size) inside domain, report adjusted center, and retain selection. Different latitude
+makes exact spans and exact physical shape incompatible: retain a requested frame
+allocation and letterbox the undistorted geographic plot inside it. Pan/zoom update
+bounds/center without recursive changes. JSONv2 optional viewport object stores
+aspect and frame_ratio; old files infer Custom without changing saved bounds.
+The height cap remains; one plot stays mounted. State loading replaces prior navigation messages so the View panel cannot show an unrelated previous center correction. PNG uses unchanged geographic
+extent and projection proportions, independent of browser letterboxing.
+
+Visible presets are exactly f01a/f01d/f02a/f03a/f03c/f04b/f05f; retain old programmatic
+IDs in the same CSV/library. Reuse canonical metadata, no copied descriptions.
+f01d needs native bsncol coverage/class edges with subcol pastel display; f03c
+needs nextxy outlet vectors, continuous shade colors and four quantile widths.
+f02a uses faint uparea, stored local/flexible classification, curved flexible
+connectors and downstream heads; existing arrow-density safeguard remains explicit.
+Add flat CSV settings for these display distinctions, keeping source geometry
+and palette mapping separate. Verify actual seven renders, not just IDs. The CSV uses flat background_method,
+network_geometry, background_opacity and flexible_color columns; older CSVs infer
+original defaults. Curved connectors retain exact source endpoints, use 17 samples
+for flexible quadratic Arc3 paths and two for local links, and align direction
+heads with the downstream tangent. Conservative Bezier-hull visibility avoids
+missing curved bulges; full-network statistics remain pan-independent. f01d
+bsncol class boundaries indicate display classes, not unique basin identities.
+
+Current selection style supersedes earlier magenta/blue-gray styling below:
+#D96BA0 dashed 1.5px native stored-assignment boundary; #E6E6E6 solid 2px
+computational rectangle over #555555 3.5px casing. PNG converts pixel widths
+and dash lengths at160dpi. No extraction, assignment or selected-grid rule changes.
+Earlier DT-0113 sections document the superseded five-choice menu; the current
+River menu appends Blue → Navy, Gray → Black and Gray → White, and retains the
+same explicit named legacy compatibility behavior.
+
+
+## Overlay styling and bounded map viewport (DT-0113)
+
+Maintainer authorizes autonomous Overlay/UI refinements including exactly five
+River palettes on current main75bc362f, clean and equal to fetched origin/main.
+No commit/push, Gallery/source-data/model edits. Preserve selection/classifications.
+
+Overlay records carry explicit geometry/color/width/label/dash fields. Separate
+static-dash Bokeh sources avoid unsupported per-row line_dash. PNG matches dash
+lengths at160dpi. Native ordinary boundaries get a color; selection stays magenta.
+Channel first width>0 is dashed, zero-width Overland dotted. Existing log-width
+quartiles persist behind Uniform/Channel Width labels, never applied to Overland.
+Hollow outlet sizes0..20px remain independent of selection; existing density limit.
+Optional JSON defaults boundary gray/outlet4px; preserve presets and old booleans.
+
+A ReactiveHTML viewport measures available width and browser height. Constrain
+actual Bokeh frame dimensions by both bounds with geographic aspect preserved at
+viewport midpoint; shrink width for tall maps instead of stretching/cropping or
+internal scrolling. Coordinates/selection stay above, legend below. PNG geometry
+is independent of browser dimensions. Observe resizing and retain one plot/document,
+ranges, pan/zoom/reset/tap. CSS-only max-height leaves an oversized Bokeh frame and
+is insufficient. Browser checks must cover wide/tall/zoomed/smaller desktop views.
+
+River's visible selector contains exactly Shades_rainbow/Turbo/Blues/YlGnBu/plasma
+in that order; internal IDs shade_rainbow/turbo/Blues/YlGnBu/plasma. Keep renderer
+legacy palettes for saved files/Gallery. Legacy loaded palettes remain rendered
+and named in a visible message, with no active menu choice until explicitly
+replaced. Never display a misleading substitute. Background palettes unchanged.
+Verify exact menu order, actual colors, legacy rendering, overlay/PNG contracts,
+layout/aspect/interactions and protected source hashes.
+
+
 ## River display controls (DT-0112)
 
 Maintainer authorizes autonomous corrective River controls on current main,

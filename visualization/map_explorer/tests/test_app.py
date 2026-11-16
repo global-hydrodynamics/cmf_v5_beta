@@ -56,10 +56,11 @@ def test_bokeh_raster_flip_and_subset(map_dir,tmp_path):
 
 def test_error_feedback_and_no_output_in_map(map_dir):
     app=Explorer(map_dir,map_dir.parent/'exports')
+    initial_extent=app.extent
     app.extent_inputs[0].value=100
     app._guard(app.apply_extent)
     assert 'Error' in app.status.object
-    assert app.extent == app.reader.geometry.extent
+    assert app.extent == initial_extent
     with pytest.raises(ValueError,match='outside'):
         Explorer(map_dir,map_dir/'output')
     assert 'Cannot open map' in create_app(map_dir/'absent').object

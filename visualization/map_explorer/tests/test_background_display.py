@@ -51,7 +51,8 @@ def test_opacity_changes_only_raster_not_colorbar_or_selection(products, mode):
 def test_channel_pixels_highres_only_and_independent_alpha(products):
     app = Explorer(products, products.parent / "exports")
     channels = app.overlay_controls["channel_pixels"]
-    assert not channels.visible and channels.disabled
+    assert channels.visible and channels.disabled
+    assert channels not in app.background_ui.view.objects and channels in app.overlay_visibility.objects
     app.raster_type.value = "highres"
     channels.value = True
     assert channels.visible and not channels.disabled and len(app.frame.images) == 2
@@ -62,7 +63,7 @@ def test_channel_pixels_highres_only_and_independent_alpha(products):
     app.background_opacity.value = 0
     np.testing.assert_array_equal(app.frame.images[1][0], pixels)
     app.raster_type.value = "coarse"
-    assert channels.value and not channels.visible and channels.disabled
+    assert channels.value and channels.visible and channels.disabled
     assert len(app.frame.images) == 1
     app.raster_type.value = "highres"
     assert channels.value and len(app.frame.images) == 2

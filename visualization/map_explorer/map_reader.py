@@ -136,7 +136,7 @@ class MapReader:
             source = self._discover(key, ('nextx', 'nexty'), '<i4', '1')
             if source:
                 self.network_sources[key] = source
-        known = set(SCHEMA) | {'nextxy', 'nextxy_noedge','subcol-sample','lonlat'}
+        known = set(SCHEMA) | {'nextxy', 'nextxy_noedge','subcol-sample','lonlat','fldhgt','subbsn','subbsn-sample'}
         unknown = sorted(p.name for p in self.path.glob('*.bin') if p.stem not in known)
         if unknown:
             self.messages.append('Unsupported Binary products skipped (no dtype guessing): ' + ', '.join(unknown))

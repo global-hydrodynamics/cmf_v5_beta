@@ -123,6 +123,7 @@ def test_synthetic_export_matches_browser_selection(split_assignment, raster_typ
 
     root, data = split_assignment
     explorer = Explorer(root, root.parent / "exports")
+    explorer.set_extent(explorer.reader.geometry.extent)  # Compare complete geometry, not viewport-clipped browser runs.
     explorer.raster_type.value = raster_type
     explorer.inspect(11.25, 22.25)
     expected = (0, 1) if raster_type == "coarse" else (1, 0)

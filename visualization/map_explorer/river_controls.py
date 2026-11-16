@@ -4,12 +4,29 @@ import panel as pn
 
 from map_products import AREA_PALETTES
 
+RIVER_PALETTES = {
+    "Shades_rainbow": "shade_rainbow",
+    "Turbo": "turbo",
+    "Blues": "Blues",
+    "YlGnBu": "YlGnBu",
+    "plasma": "plasma",
+    "Blue → Navy": "blue_navy",
+    "Gray → Black": "gray_black",
+    "Gray → White": "gray_white",
+}
+
 MAPPINGS = {
     "Continuous (log scale)": "continuous",
     "Quantiles (4 groups)": "quartiles",
     "Logarithmic (6 classes)": "six_log",
     "Fixed log range (legacy)": "fixed",
 }
+
+
+class PaletteSelect(pn.widgets.Select):
+    # Panel otherwise coerces an out-of-menu legacy value to the first option.
+    # Keep no active choice until the user explicitly replaces the loaded palette.
+    _allows_none = True
 
 
 class RiverControls:
@@ -35,12 +52,15 @@ class RiverControls:
         app.classification.options = MAPPINGS
         app.area_palette.name = "Colormap"
         app.area_palette.options = list(AREA_PALETTES)
+        self.palette = PaletteSelect(name="Colormap", options=RIVER_PALETTES)
+        self.legacy_palette = pn.pane.Markdown("", sizing_mode="stretch_width")
+        self.palette.param.watch(lambda event: app._schedule(self.palette_changed), "value")
         app.width.name = "Base Line Width [px]"
         app.flex_color.name = "Flexible Links Color"
         self.auto = pn.widgets.Checkbox(name="Automatic Area Limits", value=True)
         self.low = pn.widgets.FloatInput(name="Area Minimum [km²]", value=1, width=145)
         self.high = pn.widgets.FloatInput(name="Area Maximum [km²]", value=1e6, width=145)
-        self.area_colors = pn.Column(app.area_palette, self.auto, pn.Row(self.low, self.high))
+        self.area_colors = pn.Column(self.palette, self.legacy_palette, self.auto, pn.Row(self.low, self.high))
         self.note = pn.pane.Markdown("", sizing_mode="stretch_width")
         self.view = pn.Column(
             app.network_choice,
@@ -66,6 +86,16 @@ class RiverControls:
             widget.param.watch(lambda event: app._schedule(self.custom_mapping), "value")
         app.arrow_size.param.watch(lambda event: app._schedule(self.arrow_changed), "value")
 
+    def palette_changed(self):
+        if self.palette.value is None:
+            return
+        self.app._updating = True
+        try:
+            self.app.area_palette.value = self.palette.value
+        finally:
+            self.app._updating = False
+        self.custom_mapping()
+
     def render(self):
         self.app.render_view()
         if self.app.status.object.startswith("**Error:**"):
@@ -89,6 +119,21 @@ class RiverControls:
 
     def refresh(self):
         app = self.app
+        updating = app._updating
+        app._updating = True
+        try:
+            current = app.area_palette.value
+            self.palette.value = current if current in RIVER_PALETTES.values() else None
+            self.legacy_palette.object = (
+                "Loaded palette **"
+                + current
+                + "** is preserved for compatibility (Gallery colors may override it). Choose one of the eight palettes to replace it."
+                if current not in RIVER_PALETTES.values()
+                else ""
+            )
+            self.legacy_palette.visible = bool(self.legacy_palette.object)
+        finally:
+            app._updating = updating
         area = app.color_mode.value == "upstream_area"
         typed = app.color_mode.value == "connection_type"
         app.color.name = "Local Links Color" if typed else "All Links Color"

@@ -11,7 +11,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import to_hex
 
 from app import Explorer
-from map_products import AREA_COLORS, AREA_PALETTES, area_style
+from map_products import AREA_COLORS, AREA_PALETTES, RIVER_GRADIENTS, area_style
 from test_v2 import products
 
 
@@ -29,7 +29,10 @@ def test_quantile_palette_and_explicit_gallery_exception(palette):
     )
     np.testing.assert_allclose(widths[:7], [1, 1, 5 / 3, 7 / 3, 7 / 3, 3, 3])
     assert len(set(colors[:7])) == 4 and colors[-1] == "#888888"
-    if palette != "shade_rainbow":
+    if palette in RIVER_GRADIENTS:
+        assert colors[0] == RIVER_GRADIENTS[palette][0].lower()
+        assert colors[6] == RIVER_GRADIENTS[palette][-1].lower()
+    elif palette != "shade_rainbow":
         assert colors[0] == to_hex(colormaps[palette](0.0))
         assert colors[6] == to_hex(colormaps[palette](1.0))
     old = area_style(

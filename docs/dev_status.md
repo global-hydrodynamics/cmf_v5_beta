@@ -6,6 +6,89 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Scientific Unit Catchment Inspector (DT-0117, 2026-11-16)
+
+Maintainer authorizes Inspector redesign plus orange solid native / subdued
+dashed computational highlights, and explicitly requests commit/push of completed
+accumulated Explorer work on current main75bc362f. This supersedes prior
+no-publication requests for DT-0113–0116; retain their historical work/evidence.
+Owner Dai Yamazaki; Codex implements/publishes. No branch, scientific-data or
+core-model changes. Added2x2 native outlet/area/Fortran-ID/click summary,
+geometry/fldhgt profile, cached regional graph counts/true optional IDs,
+renderer-deduplicated bifurcation incidence and persistent collapsed diagnostics.
+204 PASS/0 FAIL/0 SKIP; actual browser/PNG, all10 Mekong layers and independent
+1049 total/1 direct upstream check pass;251 protected hashes unchanged.
+Three registry rows gain reader-usage evidence; workflow_stage unchanged.
+Publication references follow after successful commit/push. See
+[guide](../visualization/map_explorer/README.md),
+[design](../visualization/map_explorer/DESIGN.md),
+[VR-0163](../research/records/validation_runs/VR-0163.md).
+
+
+### Selected catchment visibility (DT-0116, 2026-11-16)
+
+Maintainer requests double selected boundary width and yellow outlet/link with
+endpoint arrow. Implemented on same main retaining prior dirty work:3px dashed
+pink native boundary, yellow selected ring/link and15px downstream endpoint
+triangle. Browser and PNG use same stored endpoints; no selection/data changes.
+16 targeted tests PASS; Mekong228-pixel selection and PNG visually verified.
+No commit/push. See [VR-0162](../research/records/validation_runs/VR-0162.md).
+
+
+### Channel Pixels placement and preset labels (DT-0115, 2026-11-16)
+
+Maintainer requests Channel Pixels in Overlays and removal of duplicate preset
+ID prefixes. Codex implemented on current main retaining DT-0113/0114 work;
+no commit/push. Same saved key and high-resolution rendering conditions; one
+widget after Unit Catchment Boundaries, with disabled-state explanation.
+Canonical Gallery text unchanged; f03c/f05f dropdown names have one ID prefix.
+3 targeted tests PASS and actual browser verified. See
+[VR-0161](../research/records/validation_runs/VR-0161.md).
+
+
+### View controls, River gradients and seven Gallery choices (DT-0114, 2026-11-16)
+
+Maintainer authorizes all five requested groups on current main75bc362f, equal
+to freshly fetched origin/main; retained uncommitted DT-0113 work. Owner Dai
+Yamazaki; Codex implements. No branch change, commit/push or scientific/Gallery
+input edits. Added three River gradients (eight visible palettes), visibility-
+first Overlay controls, Square/Landscape/Portrait plus Custom and exact-span
+center navigation, seven visible presets with legacy IDs callable, and muted
+pink dashed native / light-gray cased solid computational selection styling.
+Center translation letterboxes undistorted geography when latitude changes;
+old JSON retains exact extent. Inspected Gallery code and actual seven renders,
+including f01d context, f02a curves and f03c continuous shade/four width groups.
+186 PASS/0 FAIL/0 SKIP; actual browser menus/colors/layout/center/navigation and
+PNG styles/legend verified; native64/98=228 pixels versus coarse64/97=287 pixels
+independently confirmed;251 protected digests unchanged. Windows/global
+performance unclaimed; existing direction-head/sampling budgets remain explicit.
+See [guide](../visualization/map_explorer/README.md),
+[design](../visualization/map_explorer/DESIGN.md),
+[VR-0160](../research/records/validation_runs/VR-0160.md).
+Local review proposal; no publication. Supersedes DT-0113's five-choice menu and
+prior selected-style presentation while retaining its Overlay/height behavior.
+
+### Overlay styles, map height and River palette menu (DT-0113, 2026-11-16)
+
+Maintainer authorizes autonomous Overlay/UI improvements plus exact five River
+palettes on current main75bc362f; initial worktree clean, equal to fetched origin/main.
+Owner Dai Yamazaki; Codex implements. No commit/push, branch change, scientific
+inputs, Gallery assets/scripts or model/preprocessing changes.
+Implemented ordinary catchment-boundary color, explicit Channel dashed/Overland
+dotted styles, Outlet0–20px, Uniform/Channel Width selector retaining stored-width
+quartiles, and actual viewport-bounded geographic frame with legend below.
+River menu is exactly Shades_rainbow/Turbo/Blues/YlGnBu/plasma; old palettes stay
+rendered/named until replaced, Gallery colors and Background menus unchanged.
+165 PASS /0 FAIL /0 SKIP; actual Mekong browser all5 palettes, mixed styles,
+Outlet0/4/10/20, width modes, native295-pixel selection, pan/wheel/box/reset/tap,
+tall/wide/zoom/small desktop and PNG/JSON checked. Legend bottom721px within760px
+small desktop;251 protected hashes unchanged. Windows/global performance unclaimed;
+extremely thin map longitude labels may crowd. See
+[guide](../visualization/map_explorer/README.md),
+[design](../visualization/map_explorer/DESIGN.md), and
+[VR-0159](../research/records/validation_runs/VR-0159.md).
+Local review proposal; changes remain uncommitted.
+
 ### River display controls (DT-0112, 2026-11-16)
 
 Maintainer authorizes autonomous River refactoring on current main f78591bd;

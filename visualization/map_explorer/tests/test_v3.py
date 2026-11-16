@@ -126,7 +126,7 @@ def test_native_assignment_clicks_and_persistent_selection(products):
 
 def test_presets_catalog_missing_inputs_and_atomic_application(map_dir):
     library = PresetLibrary()
-    assert len(library.presets) == 12 and not library.messages
+    assert len(library.presets) == 15 and not library.messages
     app = Explorer(map_dir, map_dir.parent / "exports")
     before = app.settings()
     missing = library.missing_products("p01-f04b", app.reader, app.scene)
@@ -215,7 +215,7 @@ def test_mekong_presets_native_outline_and_png(tmp_path):
     path = app.export()
     with Image.open(path) as image:
         rgb = np.array(image.convert("RGB")).astype(int)
-        assert ((rgb[:, :, 0] > 180) & (rgb[:, :, 1] < 30) & ((rgb[:, :, 2] > 130) & (rgb[:, :, 2] < 200))).sum() > 20
+        assert (np.max(np.abs(rgb-np.array([255,127,0])),axis=2)<8).sum() > 20
 
 
 def test_source_change_reassesses_outline(products):

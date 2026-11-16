@@ -38,7 +38,7 @@ def test_background_dependent_selection_and_independent_overlay(products, backgr
                         if coarse else [[[10,23],[11,23]],[[11,23],[11,22]],[[11,22],[10,22]],[[10,22],[10,23]]])
     np.testing.assert_array_equal(app.selection.coarse_outline, expected)
     assert app.selected_coarse_renderer is not app.selection_boundary_renderer
-    assert app.selected_coarse_renderer.glyph.line_dash != []
+    assert app.selected_coarse_renderer.glyph.line_dash == 'dashed'
     assert app.selected_coarse_renderer.glyph.line_color != app.selection_boundary_renderer.glyph.line_color
     assert "High-resolution ix (1-based, Fortran)" in app.inspection.object
     assert "Native assignment catmx" in app.inspection.object
