@@ -11,15 +11,15 @@ an independently scrollable right panel. These controls preserve the geographic
 viewport except for explicit navigation and aspect actions.
 
 - **Show OpenStreetMap** is OFF initially. **OpenStreetMap Opacity** (0–100%,
-  step5) controls only the basemap; Background Opacity controls only the scientific
+  step 5) controls only the basemap; Background Opacity controls only the scientific
   raster. No Background + OSM gives an online map with scientific vectors; both
   off gives the existing blank background. Scientific missing-data fills retain
-  their previous appearance and can cover tiles at100% raster opacity.
+  their previous appearance and can cover tiles at 100% raster opacity.
 - OSM is reprojected from Web Mercator into the unchanged longitude/latitude axes
   at each output row, rather than stretching a tile affinely in latitude. Native
   clicks, river endpoints, outlets, computational grids and catchment edges stay
   geographic. Attribution appears below the map. Only the current visible zoom
-  level is requested, at most32 tiles after a250ms debounce, using browser HTTP
+  level is requested, at most 32 tiles after a 250 ms debounce, using browser HTTP
   cache, browser identification and Referer. No prefetch or offline archive.
   Public tiles follow the [OSMF tile usage policy](https://operations.osmfoundation.org/policies/tiles/).
   They require network access and have no availability guarantee. For deployment,
@@ -28,12 +28,12 @@ viewport except for explicit navigation and aspect actions.
   browser CORS image reads. Loopback HTTP is allowed for local/self-hosted tests.
   Default provider: `https://tile.openstreetmap.org/{z}/{x}/{y}.png`.
   Failed tiles remain transparent with a visible status; scientific layers work.
-- **Palette Minimum / Maximum** are independent0–1 sliders (step0.01) for Coarse
+- **Palette Minimum / Maximum** are independent 0–1 sliders (step 0.01) for Coarse
   and High-resolution Raster. Physical Color Minimum/Maximum retain their units.
   Processing order is physical Linear/Log normalization → existing Gallery
-  nonlinear transfer → `pmin + t*(pmax-pmin)` → colormap lookup. Thus Gray[0,.5]
-  darkens the image; Gray[.5,1] brightens it without changing values or colorbar
-  ticks. Gray reversed is also available. Defaults[0,1] preserve original colors.
+  nonlinear transfer → `pmin + t*(pmax-pmin)` → colormap lookup. Thus Gray [0,.5]
+  darkens the image; Gray [.5,1] brightens it without changing values or colorbar
+  ticks. Gray reversed is also available. Defaults [0,1] preserve original colors.
   Categorical identities retain discrete colors with cropping disabled. Invalid
   intervals roll back with an explanation. Variable-specific session preferences
   are retained; active intervals are saved in JSON, not the entire profile cache.
@@ -50,9 +50,9 @@ viewport except for explicit navigation and aspect actions.
   high-resolution uparea. Statistics are cached by tile/variable/positive policy/
   assignment-mask version/coarse dimensions. Blocks bound RAM; disposable disk
   workspace scales with native tile size and initial scans can take time.
-- Ordinary **Unit Catchment Boundaries** default to `#4A4A4A`,0.65px. The existing
+- Ordinary **Unit Catchment Boundaries** default to `#4A4A4A`, 0.65 px. The existing
   color picker and saved colors remain authoritative. Selected native boundaries
-  remain orange solid3px; computational rectangles remain subdued dashed gray.
+  remain orange solid 3 px; computational rectangles remain subdued dashed gray.
 - **Inspector → Point Select → Grid / Catchment** explicitly selects either the
   containing computational grid or the exact clicked native catmxy assignment,
   independently of background. New sessions default to Catchment when a catmxy
@@ -60,9 +60,9 @@ viewport except for explicit navigation and aspect actions.
   click without another click. Missing/unassigned pixels never fall back to Grid.
   Changing source re-resolves the click and cannot leave an unrelated outline.
 - **High-resolution Pixel Information** is collapsed initially and retains its
-  expansion across updates. It reports native1-based ix/iy, catmx/catmy and
+  expansion across updates. It reports native 1-based ix/iy, catmx/catmy and
   assignment status, native uparea[km²], elevtn[m], rivwth[m] and signed catmz100
-  codes when supplied. catmz100 is the stored100-level floodplain profile position;
+  codes when supplied. catmz100 is the stored 100-level floodplain profile position;
   -9 is sea/unassigned, not an elevation or converted percentage. Native flddif[m]
   is explicitly separate. No pixelwise native fldhgt was supplied/verified, so it
   shows Unavailable; the coarse NLFP profile remains in its existing section.
@@ -80,7 +80,7 @@ JSON v1/v2 still load. Missing new fields default to OSM off, full palette range
 and the saved background's original Grid/Catchment rule; new files store explicit
 `point_select`, `basemap`, `layers.coarse_palette_range` and
 `layers.highres_style.palette_range`. Gallery presets reset OSM off and palette
-ranges to[0,1], retaining the user's explicit Point Select preference. Shared
+ranges to [0,1], retaining the user's explicit Point Select preference. Shared
 preset settings remain CSV references to the canonical visualization catalog.
 
 **PNG:** local Matplotlib uses the same scientific palette, physical limits and

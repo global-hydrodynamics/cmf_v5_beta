@@ -19,7 +19,9 @@ data, core-model, Gallery-script or additional-data-store changes. Starting
 returned none. Acceptance: synthetic contracts, complete Explorer regression,
 actual Mekong native comparison, browser rendering and PNG inspection.
 
-Implementation and evidence: [VR-0165](../research/records/validation_runs/VR-0165.md).
+Implementation 60fcbee7 published to feature/package-builder; 277 tests and 3
+subtests PASS, actual Mekong/browser/PNG verified, source data unchanged. Known 10
+pre-existing research-link failures are documented. Evidence: [VR-0165](../research/records/validation_runs/VR-0165.md).
 This branch's status remains a proposal until integrated/published through the
 maintainer workflow; main is not a push target.
 
