@@ -92,9 +92,14 @@ def test_mekong_integration(tmp_path):
         binary=np.fromfile(root/f'{name}.bin',dtype='<i4').reshape(2,120,80)
         for record,actual in zip(binary,r.read_network(name)):
             np.testing.assert_array_equal(actual.filled(-9999),record)
-    row,col=app.network.rows[0],app.network.cols[0]
-    result=app.inspect(r.geometry.lon[col],r.geometry.lat[row])
-    assert result['ix (1-based)'] == col+1
+    # Native assignment now governs every background, including this default
+    # coarse raster. Choose a valid point within the selected high-res tile.
+    lon,lat=105.8,10.8
+    tile=app.scene.tiles[app.hires_source.value]
+    rr,cc=tile.geometry.cell(lon,lat)
+    x,y=map(int,tile.mmap('catmxy')[:,rr,cc])
+    result=app.inspect(lon,lat)
+    assert result['ix (1-based)'] == x and result['iy (1-based)'] == y
     for name in r.sources:
         app.variable.value=name
         assert app.layer is not None and 'Error' not in app.status.object

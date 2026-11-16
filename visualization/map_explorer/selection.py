@@ -33,6 +33,26 @@ class SelectionState:
     river_cell: tuple[int, int] | None = None
     boundary: CatchmentBoundary | None = None
     status: str = "No selection"
+    # Regular computational-cell geometry, distinct from native catchment edges.
+    coarse_outline: np.ndarray | None = None
+
+
+def coarse_cell_outline(geometry, row, col):
+    """Four exact params.txt cell edges; inputs are Python zero-based indices."""
+    west = geometry.west + col * geometry.resolution
+    east = west + geometry.resolution
+    north = geometry.north - row * geometry.resolution
+    south = north - geometry.resolution
+    result = np.array(
+        [
+            [[west, north], [east, north]],
+            [[east, north], [east, south]],
+            [[east, south], [west, south]],
+            [[west, south], [west, north]],
+        ]
+    )
+    result.flags.writeable = False
+    return result
 
 
 def merge_edges(edges):

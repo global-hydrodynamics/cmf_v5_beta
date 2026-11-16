@@ -6,6 +6,25 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Map Explorer v3 UI refinement (DT-0108, 2026-11-16)
+
+Maintainer authorizes autonomous work on current main bb36a2ec; owner Dai
+Yamazaki, Codex implements. Scope: existing map_explorer app/scene/selection,
+related tests, README/DESIGN and evidence. No branch change, commit, push,
+Gallery/data changes or numerical preprocessing/model execution.
+
+Implemented fixed Lon/Lat without pointer tooltip, explicit Bifurcation labels,
+background-independent native assignment selection and ordinary boundary overlay,
+separate dashed assigned coarse-cell rectangle in browser/PNG, and 1-based
+(Fortran) inspector labels. Existing JSON keys/presets/readers remain unchanged.
+61 tests pass; actual Mekong coarse/None/elevation clicks, selection retention,
+Overlay labels, Inspector and exported PNG reviewed. Tile mosaics/global-scale
+performance and Windows execution remain outside this validation. See
+[design](../visualization/map_explorer/DESIGN.md),
+[guide](../visualization/map_explorer/README.md), and
+[VR-0154](../research/records/validation_runs/VR-0154.md).
+Changes remain uncommitted for maintainer review; this status is a local proposal.
+
 ### Map Explorer v2 Gallery integration (DT-0106, 2026-11-16)
 
 Maintainer authorizes autonomous extension on current `main`, starting at

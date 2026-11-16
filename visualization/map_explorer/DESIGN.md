@@ -1,5 +1,37 @@
 # Interactive Map Explorer design
 
+## v3 UI refinement and background-independent selection (DT-0108)
+
+The maintainer authorizes this incremental extension on current main bb36a2ec,
+with no commit/push and all source data preserved. This supersedes only the v3
+rule that coarse/terrain backgrounds do not select native assignments.
+
+Background changes must never alter selection science: any selected tile with
+catmxy resolves native clicks for every background, using existing SelectionState
+and CatchmentIndex. Missing/mixed/outside-tile assignments clear the previous
+selection without a containing-cell fallback. A map with no catmxy retains
+explicitly labeled coarse geographic selection. Tile-source changes clear state.
+
+General assignment boundaries move out of background raster construction into
+a shared overlay step. Existing native-only and segment-count limits remain;
+missing catmxy gives a diagnostic. Its control moves to Overlays, labeled Unit
+Catchment Boundaries. No duplicate control/state or JSON key migration.
+
+The assigned computational rectangle is calculated once from params geometry,
+kept separately from the irregular native boundary and drawn with a dedicated
+muted blue 1px dashed renderer. Both browser/PNG use the same complete rectangle
+and catchment coordinates; neither is inferred from displayed colors or nextxy.
+The rectangle helps explain different spatial domains; it never substitutes for
+a catchment. Selection stays mounted through background/style/navigation changes.
+
+Mousemove updates the existing fixed coordinate Div above the map; remove the
+HoverTool tooltip entirely. GUI labels become Bifurcation Channel/Overland.
+Inspector index labels explicitly state 1-based (Fortran); raw assignment codes,
+physical click, fine pixel, selected river cell and connectivity are distinct.
+Legacy programmatic result keys and saved configuration keys remain compatible.
+Validation covers every background, native-vs-geographic assignment differences,
+invalid pixels, missing products, independent geometry/export and actual browser.
+
 ## v3 specification (2026-11-16, DT-0107)
 
 Maintainer authorizes an incremental extension on clean main at 2effc881,

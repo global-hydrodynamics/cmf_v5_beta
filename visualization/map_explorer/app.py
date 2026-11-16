@@ -18,7 +18,6 @@ from bokeh.models import (
     CustomJS,
     Div,
     FixedTicker,
-    HoverTool,
     LinearColorMapper,
     LogColorMapper,
     Range1d,
@@ -30,7 +29,7 @@ from config import load_settings, save_settings
 from map_layers import colorize, export_png, make_layer, network_style, raster_subset
 from map_reader import MapReader, SCHEMA
 from river_network import RiverNetwork, intersects
-from selection import SelectionState, CatchmentIndex
+from selection import SelectionState, CatchmentIndex, coarse_cell_outline
 from presets import PresetLibrary
 from scene import Scene, OVERLAY_DEFAULTS, export_scene
 
@@ -126,7 +125,8 @@ class Explorer:
         self.overlay_controls = {}
         for key, value in OVERLAY_DEFAULTS.items():
             if isinstance(value, bool):
-                self.overlay_controls[key] = pn.widgets.Checkbox(name=key.replace("_", " ").title(), value=value)
+                self.overlay_controls[key] = pn.widgets.Checkbox(name={"channel":"Bifurcation Channel", "overland":"Bifurcation Overland",
+                          "catchment_boundaries":"Unit Catchment Boundaries"}.get(key,key.replace("_", " ").title()), value=value)
             elif isinstance(value, str):
                 self.overlay_controls[key] = pn.widgets.ColorPicker(name=key.replace("_", " ").title(), value=value)
             else:
@@ -152,7 +152,7 @@ class Explorer:
         self.preset_extent = pn.widgets.Checkbox(name="Apply suggested Gallery extent", value=False)
         self.apply_preset_button = pn.widgets.Button(name="Apply preset", button_type="primary")
         self.settings_toggle = pn.widgets.Toggle(name="Settings panel", value=True, width=135)
-        self.coordinate = Div(text="Pointer: longitude / latitude", width=300)
+        self.coordinate = Div(text="Lon: —  Lat: —", width=300)
         self.selection_summary = pn.pane.Markdown(
             "Click a map cell; detailed native values appear in **Cell inspector**."
         )
@@ -218,6 +218,11 @@ class Explorer:
         )
         self.selected_link = ColumnDataSource(dict(x0=[], y0=[], x1=[], y1=[]))
         self.plot.segment("x0", "y0", "x1", "y1", source=self.selected_link, line_color="#e11d48", line_width=3)
+        # Computational rectangle is a guide, never the unit-catchment boundary.
+        self.selected_coarse_source = ColumnDataSource(dict(x0=[], y0=[], x1=[], y1=[]))
+        self.selected_coarse_renderer = self.plot.segment(
+            'x0','y0','x1','y1',source=self.selected_coarse_source,line_color='#607d8b',
+            line_width=1, line_dash='dashed', name='selected-coarse-grid')
         # Separate from ordinary catchment outlines; source remains mounted.
         self.selection_boundary_source = ColumnDataSource(dict(x0=[], y0=[], x1=[], y1=[]))
         self.selection_boundary_renderer = self.plot.segment(
@@ -230,12 +235,11 @@ class Explorer:
             line_width=2.8,
             name="selected-unit-catchment",
         )
-        self.plot.add_tools(HoverTool(tooltips=[("lon", "$x{0.0000}"), ("lat", "$y{0.0000}")], renderers=[self.raster]))
         self.plot.js_on_event(
             "mousemove",
             CustomJS(
                 args={"target": self.coordinate},
-                code="target.text = `Pointer: ${cb_obj.x.toFixed(4)}°, ${cb_obj.y.toFixed(4)}°`;",
+                code="target.text = `Lon: ${cb_obj.x.toFixed(4)}°  Lat: ${cb_obj.y.toFixed(4)}°`;",
             ),
         )
         self.plot.on_event(Tap, self._tap)
@@ -280,7 +284,6 @@ class Explorer:
             self.palette,
             self.auto_limits,
             pn.Row(self.low, self.high),
-            self.overlay_controls["catchment_boundaries"],
             self.overlay_controls["channel_pixels"],
             width=330,
         )
@@ -296,7 +299,10 @@ class Explorer:
             self.arrows,
             width=330,
         )
+        self.boundary_status = pn.pane.Markdown('',sizing_mode='stretch_width')
+        self._update_assignment_controls()
         overlay_controls = pn.Column(
+            self.overlay_controls['catchment_boundaries'], self.boundary_status,
             *(
                 self.overlay_controls[k]
                 for k in [
@@ -332,7 +338,7 @@ class Explorer:
             f'<h2 style="margin:4px">CaMa-Flood · Map Explorer v3</h2><small>{escape(self.reader.path.name)} · {g.nx} × {g.ny} · local & read-only</small>'
         )
         details = pn.Column(
-            pn.pane.Markdown("### Native cell inspection · 1-based indices"),
+            pn.pane.Markdown("### Native cell inspection · 1-based (Fortran)"),
             self.inspection,
             pn.pane.HTML(diagnostics, width=320),
             width=350,
@@ -617,6 +623,9 @@ class Explorer:
         self._check_preset_modified()
 
     def _render_catchment_selection(self):
+        rectangle = self.selection.coarse_outline
+        self.selected_coarse_source.data = (dict(x0=[],y0=[],x1=[],y1=[]) if rectangle is None else
+            dict(x0=rectangle[:,0,0],y0=rectangle[:,0,1],x1=rectangle[:,1,0],y1=rectangle[:,1,1]))
         boundary = self.selection.boundary
         if boundary is None:
             self.selection_boundary_source.data = dict(x0=[], y0=[], x1=[], y1=[])
@@ -628,7 +637,15 @@ class Explorer:
             x0=visible[:, 0, 0], y0=visible[:, 0, 1], x1=visible[:, 1, 0], y1=visible[:, 1, 1]
         )
 
+    def _update_assignment_controls(self):
+        tile = self.scene.tiles.get(self.hires_source.value)
+        available = tile is not None and 'catmxy' in tile.files
+        self.overlay_controls['catchment_boundaries'].disabled = not available
+        if hasattr(self,'boundary_status'):
+            self.boundary_status.object = '' if available else 'Unit Catchment Boundaries unavailable: selected source has no catmxy.'
+
     def _hires_changed(self):
+        self._update_assignment_controls()
         self._reconcile_selection_source()
         self.update_layer()
 
@@ -640,6 +657,7 @@ class Explorer:
         self.selected_source.data = dict(x=[], y=[])
         self.selected_link.data = dict(x0=[], y0=[], x1=[], y1=[])
         self.selection_boundary_source.data = dict(x0=[], y0=[], x1=[], y1=[])
+        self.selected_coarse_source.data = dict(x0=[],y0=[],x1=[],y1=[])
         self.selection_summary.object = message
         self.inspection.object = escape(message)
 
@@ -670,7 +688,10 @@ class Explorer:
                 raise ValueError("Click is outside the map")
             tile = self.scene.tiles.get(self.hires_source.value)
             pixel = tile.geometry.cell(lon, lat) if tile else None
-            if self.background.value == "catchment":
+            # Assignment science is independent of the displayed raster. If a
+            # map has catmxy, an invalid/missing native assignment never falls
+            # back to a geographically containing computational cell.
+            if any('catmxy' in value.files for value in self.scene.tiles.values()):
                 extra, assigned = self.scene.inspect(lon, lat, self.hires_source.value)
                 boundary = None
                 if assigned is not None and tile is not None:
@@ -684,7 +705,8 @@ class Explorer:
                     pixel,
                     assigned,
                     boundary,
-                    extra.get("assignment status", "No supported catmxy assignment"),
+                    extra.get("assignment status", "Selected high-resolution source has no catmxy"),
+                    coarse_outline=coarse_cell_outline(self.reader.geometry,*assigned) if assigned is not None else None,
                 )
             else:
                 terrain = self.background.value in ("elevtn", "flddif", "difference")
@@ -695,7 +717,8 @@ class Explorer:
                     pixel if terrain else None,
                     coarse,
                     None,
-                    "Native terrain pixel; containing coarse cell" if terrain else "Containing coarse cell",
+                    "No catmxy in map; containing coarse grid cell (reference, not assigned catchment)",
+                    coarse_outline=coarse_cell_outline(self.reader.geometry,*coarse),
                 )
             self.selected = self.selection.river_cell
         state = self.selection
@@ -736,7 +759,7 @@ class Explorer:
                         )
             self._highlight(row, col)
             self.selection_summary.object = (
-                f"**Selected river cell (1-based):** ix={col+1}, iy={row+1} · {state.status}"
+                f"**Selected river cell (1-based, Fortran):** ix={col+1}, iy={row+1} · {state.status}"
             )
         else:
             # No containing-cell fallback for unassigned catchment pixels.
@@ -752,11 +775,25 @@ class Explorer:
                 f" · **{state.boundary.pixel_count:,} native catchment pixels** · magenta outline"
             )
         self._render_catchment_selection()
+        def inspector_label(key):
+            # Keep programmatic keys stable while clarifying the GUI convention.
+            labels = {
+                'clicked longitude':'Clicked location · Lon [°]',
+                'clicked latitude':'Clicked location · Lat [°]',
+                'selection status':'Selected Unit Catchment status',
+                'native hires ix (1-based)':'High-resolution ix (1-based, Fortran)',
+                'native hires iy (1-based)':'High-resolution iy (1-based, Fortran)',
+                'assigned coarse ix (1-based)':'Native assignment catmx [stored code]',
+                'assigned coarse iy (1-based)':'Native assignment catmy [stored code]',
+                'ix (1-based)':'Coarse Grid ix (1-based, Fortran)',
+                'iy (1-based)':'Coarse Grid iy (1-based, Fortran)',
+            }
+            return labels.get(key,key.replace('(1-based)','(1-based, Fortran)'))
         rows = "".join(
-            f'<tr><td style="padding:4px;border-bottom:1px solid #ddd">{escape(k)}</td><td style="padding:4px;border-bottom:1px solid #ddd">{escape("missing" if v is None else str(v))}</td></tr>'
+            f'<tr><td style="padding:4px;border-bottom:1px solid #ddd">{escape(inspector_label(k))}</td><td style="padding:4px;border-bottom:1px solid #ddd">{escape("missing" if v is None else str(v))}</td></tr>'
             for k, v in result.items()
         )
-        self.inspection.object = f'<table style="width:100%;font-size:12px">{rows}</table><p>Native values. Magenta = stored assignment boundary; pink = river cell/outlet and downstream link. catmxy is assignment; nextxy is connectivity.</p>'
+        self.inspection.object = f'<table style="width:100%;font-size:12px">{rows}</table><p>Native values. Magenta = stored assignment boundary; dashed blue-gray = computational coarse cell; pink = river cell/outlet and downstream link. Index labels use 1-based (Fortran). catmxy is assignment; nextxy is connectivity.</p>'
         return result
 
     def _tap(self, event):
@@ -779,7 +816,7 @@ class Explorer:
                 [np.column_stack([data["x0"], data["y0"]]), np.column_stack([data["x1"], data["y1"]])], axis=1
             )
         path = export_scene(
-            self.reader, frame, self.extent, self._output(".png"), point, segments, self.selection.boundary
+            self.reader, frame, self.extent, self._output(".png"), point, segments, self.selection.boundary, self.selection.coarse_outline
         )
         self.status.object = f"**PNG saved:** `{path}`"
         return path
@@ -839,6 +876,7 @@ class Explorer:
                 widget.value = options[key]
         finally:
             self._updating = False
+        self._update_assignment_controls()
         self._reconcile_selection_source()
         self.set_extent(data["extent"])
         self.update_layer()

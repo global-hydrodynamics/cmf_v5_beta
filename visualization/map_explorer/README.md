@@ -109,8 +109,10 @@ both stays white. The coarse variable/palette/limits controls apply to coarse
 and inherited-catchment attributes; terrain uses its dedicated palette and
 full-tile normalization instead. The displayed colorbar reports physical units.
 
-Enable **Catchment Boundaries** for actual neighboring assignment-pair edges,
-not contours of displayed values. Boundaries are omitted in sampled views
+Enable **Unit Catchment Boundaries** in **Overlays** for actual neighboring
+assignment-pair edges on any background (None, coarse, catchments or terrain),
+not contours of displayed values or coarse rectangles. Without selected catmxy
+the control is disabled and a reason is shown. Boundaries are omitted in sampled views
 and above 100,000 visible edges; zoom in for native geometry. **Channel Pixels**
 adds blue `visual=10` main-channel and lavender `visual=7` small-stream pixels,
 only where assigned to valid river catchments. Other visual codes are not
@@ -267,14 +269,23 @@ does not become a newly Gallery-approved method. No two-way synchronization.
 
 ## Selecting a stored unit catchment
 
-With **Unit catchments**, click the map to read the exact native high-resolution
-pixel. The inspector separates clicked lon/lat, 1-based native pixel, raw
-`catmx/catmy`, assigned 1-based river cell, attributes, assigned pixel count and
+With **any background**, click the map to read the exact native high-resolution
+assignment whenever the map has catmxy. The inspector separates clicked lon/lat,
+native pixel, raw `catmx/catmy`, assigned river cell, attributes, assigned pixel count and
 stored downstream connection. A dedicated bright magenta outline shows all
 native pixels with that exact assignment pair, including holes and disconnected
 components. It stays visible with general boundaries disabled and across style,
-network, tab, pan/zoom and same-source preset changes. Changing high-resolution
+background, network, tab, pan/zoom and same-source preset changes. Changing high-resolution
 source clears it with a message. New valid clicks replace the selection.
+A separate muted blue-gray, 1px dashed rectangle marks the **assigned coarse
+computational cell**, calculated from params.txt edges. It is unfilled and
+visually distinct from the prominent magenta native catchment. The same two
+geometries, selected cell/outlet and downstream link appear in PNG exports.
+
+GUI index labels use **1-based (Fortran)** / `(1-based, Fortran)`, while Python
+arrays use zero-based row/column internally. Programmatic inspector dictionary
+keys remain compatible. Coordinate values update the single fixed **Lon / Lat**
+area above the map; no coordinate Tooltip follows or obscures the pointer.
 
 A coarse grid cell is a regular computational raster rectangle. Its **unit
 catchment** is the irregular collection of fine pixels assigned to it and may
@@ -283,9 +294,11 @@ downstream river connectivity. The outline follows stored assignments: it is
 not a new watershed delineation, observed basin boundary or recalculated flow
 product. Unassigned land, background and invalid mixed pairs report their raw
 codes, clear the previous outline and never fall back to geographic containment
-or nearest-neighbor assignment. Coarse backgrounds retain containing-cell
-selection; terrain backgrounds inspect native terrain without implicitly
-selecting a catchment.
+or nearest-neighbor assignment. Pixels outside the selected assignment tile also
+clear selection and report their status. With no catmxy anywhere in the map,
+clicking retains coarse geographic selection, explicitly labeled as a reference
+cell rather than an assigned catchment. The background type never changes the
+scientific assignment result. Terrain values are still inspected natively.
 
 Display rasters are sampled for speed and may miss small features. Selection
 always uses the native pixel, not the displayed sample. A lazy block-wise index
@@ -358,7 +371,7 @@ python -m pytest visualization/map_explorer/tests -q
 
 The integration test reads the existing Mekong sample if present; otherwise
 it explicitly skips. Synthetic maps are generated in temporary directories.
-See [DESIGN.md](DESIGN.md), [v1 evidence](../../research/records/validation_runs/VR-0151.md) and [v2 evidence](../../research/records/validation_runs/VR-0152.md) and [v3 evidence](../../research/records/validation_runs/VR-0153.md)
+See [DESIGN.md](DESIGN.md), [v1 evidence](../../research/records/validation_runs/VR-0151.md) and [v2 evidence](../../research/records/validation_runs/VR-0152.md) and [v3 evidence](../../research/records/validation_runs/VR-0153.md) and [UI refinement evidence](../../research/records/validation_runs/VR-0154.md)
 for scientific conventions, executed checks and limits.
 
 - **Missing GUI dependencies**: check `PYTHON`; install requirements into a

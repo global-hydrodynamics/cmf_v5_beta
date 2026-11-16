@@ -80,6 +80,8 @@ class Scene:
                 options.get("terrain_palette", "gray"),
                 max_side,
             )
+        if overlays["catchment_boundaries"]:
+            self._catchment_boundaries(frame, tile, extent, max_side)
         if network is not None:
             visible = network.visible(extent)
             widths, colors, legend, frame.swatches = area_style(
@@ -177,7 +179,7 @@ class Scene:
             return
         rows, cols, edges, native = subset
         x = y = valid = land = None
-        if mode == "catchment" or overlays["catchment_boundaries"] or overlays["channel_pixels"]:
+        if mode == "catchment" or overlays["channel_pixels"]:
             if "catmxy" not in tile.files:
                 raise ValueError(f"{tile.key}: no catmxy assignment product")
             x, y = tile.sample("catmxy", rows, cols)
@@ -255,15 +257,27 @@ class Scene:
             else:
                 frame.diagnostics.append("Selected tile has no signed Int8 visual product")
         frame.images.append((rgba, edges))
-        if overlays["catchment_boundaries"] and valid is not None:
-            if native:
-                segments = catchment_edges(x, y, valid, edges)
-                if len(segments) <= 100000:
-                    frame.overlays.insert(0, (segments, "#646464", 0.35, "Native unit-catchment assignment boundaries"))
-                else:
-                    frame.diagnostics.append("Catchment outlines omitted above 100,000 native edges; zoom in")
-            else:
-                frame.diagnostics.append("Catchment outlines omitted in sampled view; zoom in to native detail")
+
+    def _catchment_boundaries(self, frame, tile, extent, max_side):
+        """Assignment-pair overlay independent of the chosen background/variable."""
+        if tile is None or "catmxy" not in tile.files:
+            frame.diagnostics.append("Unit Catchment Boundaries need catmxy in the selected tile")
+            return
+        subset = tile.subset(extent, max_side)
+        if subset is None:
+            frame.diagnostics.append("Unit Catchment Boundaries: outside selected tile")
+            return
+        rows, cols, edges, native = subset
+        if not native:
+            frame.diagnostics.append("Catchment outlines omitted in sampled view; zoom in to native detail")
+            return
+        x, y = tile.sample("catmxy", rows, cols)
+        valid, _, _ = assignment(x, y, self.reader.geometry)
+        segments = catchment_edges(x, y, valid, edges)
+        if len(segments) <= 100000:
+            frame.overlays.insert(0, (segments, "#646464", 0.35, "Native unit-catchment assignment boundaries"))
+        else:
+            frame.diagnostics.append("Catchment outlines omitted above 100,000 native edges; zoom in")
 
     def _grid(self, frame, extent):
         g = self.reader.geometry
@@ -369,7 +383,7 @@ class Scene:
         return result, assigned
 
 
-def export_scene(reader, frame, extent, path, selected_point=None, selected_segments=None, selected_boundary=None):
+def export_scene(reader, frame, extent, path, selected_point=None, selected_segments=None, selected_boundary=None, selected_coarse_outline=None):
     from matplotlib.figure import Figure
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from matplotlib.collections import LineCollection
@@ -414,6 +428,9 @@ def export_scene(reader, frame, extent, path, selected_point=None, selected_segm
         ax.plot(*selected_point, "o", mfc="none", mec="#e11d48", ms=9, mew=2, zorder=8)
     if selected_segments is not None and len(selected_segments):
         ax.add_collection(LineCollection(selected_segments, colors="#e11d48", linewidths=2.2, zorder=8))
+    if selected_coarse_outline is not None:
+        ax.add_collection(LineCollection(selected_coarse_outline, colors='#607d8b',
+                                        linewidths=0.8, linestyles='dashed', zorder=9))
     if selected_boundary is not None:
         # Same native exposed edges as the dedicated browser selection glyph.
         # Matplotlib clips at axes limits; the viewport never delineates it.
@@ -430,6 +447,8 @@ def export_scene(reader, frame, extent, path, selected_point=None, selected_segm
     handles += [Line2D([], [], color=color, lw=1, label=label) for segments, color, width, label in frame.overlays]
     if len(frame.points):
         handles.append(Line2D([], [], marker="o", mfc="white", mec="#555555", ls="none", label="Stored outlets"))
+    if selected_coarse_outline is not None:
+        handles.append(Line2D([],[],color='#607d8b',lw=0.8,ls='--',label='Selected computational coarse grid cell'))
     if selected_boundary is not None:
         handles.append(Line2D([],[],color='#ff00a8',lw=2,label=f'Selected stored unit catchment ({selected_boundary.pixel_count:,} pixels)'))
     if handles:
