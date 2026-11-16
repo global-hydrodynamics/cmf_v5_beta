@@ -2,7 +2,7 @@
 
 - Status: accepted scope by explicit maintainer task; AI-authored summary pending maintainer review
 - Date: 2026-11-16
-- Task: DT-0105; events: EV-0486, EV-0487, EV-0488, EV-0489
+- Task: DT-0118; events: EV-0526, EV-0527, EV-0528, EV-0529
 - Owner: Dai Yamazaki (maintainer); implementation: Codex
 - Approved working branch: feature/package-builder; no commit/push authorized
 
@@ -50,7 +50,7 @@ coordinate order. Synthetic legacy comparison is exact when masks agree.
 separate confirmed intent, verified source rules and new policy. Input Matrix
 use remains downstream; the same runoff product can support different maps.
 Twelve [focused tests](../../../map/tools/tests/test_runoff_preset.py) pass;
-VR-0151 records real-data comparison. Old reference remains unchanged.
+VR-0164 records real-data comparison. Old reference remains unchanged.
 
 Knowledge-gap review identified KG-0037: historical generation provenance is not
 fully recoverable; changed-domain physical effects require review before manual
@@ -59,9 +59,9 @@ remain explicit limitations. No physical correctness is inferred from execution.
 
 ## Subsequent maintainer adoption — 2026-11-16
 
-EV-0490 records the maintainer's explicit judgment that the observed differences
+EV-0530 records the maintainer's explicit judgment that the observed differences
 are acceptable and their manual copy of the new Binary/NetCDF into map/data/.
-These are now the canonical climatology. EV-0491 verifies both SHA-256 hashes
+These are now the canonical climatology. EV-0531 verifies both SHA-256 hashes
 against the generated files (Binary 7a5876df2934e87cb7db9ffd1ace38bc68d3f9268a7f6c3ba69c21db4108ae6a; NetCDF 4e0c5205fee14ec6ed102f239f71a070eb1f6a4beb62d961a7fbdc73ad6f981b).
 No agent data copy or recomputation was performed in this follow-up. The
 adoption question is settled; incomplete historical provenance and independent
