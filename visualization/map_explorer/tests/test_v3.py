@@ -116,9 +116,11 @@ def test_native_assignment_clicks_and_persistent_selection(products):
         assert app.selected is None and app.selection.boundary is None
         assert not len(app.selection_boundary_source.data["x0"])
         assert "ix (1-based)" not in info  # no containing-cell fallback
+    app.point_select.value = "grid"
     app.background.value = "coarse"
     app.inspect(11.25, 21.75)
     assert app.selected == (1, 1) and app.selection.boundary is not None  # coarse geographic rule
+    app.point_select.value = "catchment"
     app.background.value = "elevtn"
     app.inspect(11.25, 21.75)
     assert app.selection.kind == "catchment" and app.selected == (0, 0)

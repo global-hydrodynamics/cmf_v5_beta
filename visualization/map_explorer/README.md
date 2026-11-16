@@ -4,6 +4,91 @@ A standalone, read-only browser for coarse CaMa-Flood river maps. Explore
 rasters, stored downstream connectivity and individual cells without editing
 plotting scripts, running a Fortran program, or providing model output.
 
+## Background, selection and view controls (DT-0119)
+
+The map stays mounted on the left; configuration and Inspector tabs remain on
+an independently scrollable right panel. These controls preserve the geographic
+viewport except for explicit navigation and aspect actions.
+
+- **Show OpenStreetMap** is OFF initially. **OpenStreetMap Opacity** (0–100%,
+  step5) controls only the basemap; Background Opacity controls only the scientific
+  raster. No Background + OSM gives an online map with scientific vectors; both
+  off gives the existing blank background. Scientific missing-data fills retain
+  their previous appearance and can cover tiles at100% raster opacity.
+- OSM is reprojected from Web Mercator into the unchanged longitude/latitude axes
+  at each output row, rather than stretching a tile affinely in latitude. Native
+  clicks, river endpoints, outlets, computational grids and catchment edges stay
+  geographic. Attribution appears below the map. Only the current visible zoom
+  level is requested, at most32 tiles after a250ms debounce, using browser HTTP
+  cache, browser identification and Referer. No prefetch or offline archive.
+  Public tiles follow the [OSMF tile usage policy](https://operations.osmfoundation.org/policies/tiles/).
+  They require network access and have no availability guarantee. For deployment,
+  choose a suitably licensed provider via `CMF_EXPLORER_TILE_URL` (HTTPS XYZ
+  `{z}/{x}/{y}` template) and `CMF_EXPLORER_TILE_ATTRIBUTION`; the provider must allow
+  browser CORS image reads. Loopback HTTP is allowed for local/self-hosted tests.
+  Default provider: `https://tile.openstreetmap.org/{z}/{x}/{y}.png`.
+  Failed tiles remain transparent with a visible status; scientific layers work.
+- **Palette Minimum / Maximum** are independent0–1 sliders (step0.01) for Coarse
+  and High-resolution Raster. Physical Color Minimum/Maximum retain their units.
+  Processing order is physical Linear/Log normalization → existing Gallery
+  nonlinear transfer → `pmin + t*(pmax-pmin)` → colormap lookup. Thus Gray[0,.5]
+  darkens the image; Gray[.5,1] brightens it without changing values or colorbar
+  ticks. Gray reversed is also available. Defaults[0,1] preserve original colors.
+  Categorical identities retain discrete colors with cropping disabled. Invalid
+  intervals roll back with an explanation. Variable-specific session preferences
+  are retained; active intervals are saved in JSON, not the entire profile cache.
+- Terrain automatic limits are full-tile P2/P98 over **valid native paired catmxy
+  assignments only**, using the existing assignment helper and coarse dimensions.
+  Unassigned/sea/out-of-range pairs and nonfinite/missing values are excluded;
+  Log statistics additionally exclude nonpositive values. Existing Log display
+  floor semantics remain unchanged. Elevation Difference uses native neighbors
+  before this center-pixel assignment mask; this is not a new terrain derivation.
+  Limits do not depend on pan/zoom or the sampled display image. Missing/unusable
+  catmxy gives an explicit diagnostic and clears the unavailable background;
+  use manual physical limits to display such a terrain tile. Inherited catchment
+  uparea retains its coarse contributing-area reference, not the separate native
+  high-resolution uparea. Statistics are cached by tile/variable/positive policy/
+  assignment-mask version/coarse dimensions. Blocks bound RAM; disposable disk
+  workspace scales with native tile size and initial scans can take time.
+- Ordinary **Unit Catchment Boundaries** default to `#4A4A4A`,0.65px. The existing
+  color picker and saved colors remain authoritative. Selected native boundaries
+  remain orange solid3px; computational rectangles remain subdued dashed gray.
+- **Inspector → Point Select → Grid / Catchment** explicitly selects either the
+  containing computational grid or the exact clicked native catmxy assignment,
+  independently of background. New sessions default to Catchment when a catmxy
+  source exists, otherwise Grid. Switching modes re-resolves the last geographic
+  click without another click. Missing/unassigned pixels never fall back to Grid.
+  Changing source re-resolves the click and cannot leave an unrelated outline.
+- **High-resolution Pixel Information** is collapsed initially and retains its
+  expansion across updates. It reports native1-based ix/iy, catmx/catmy and
+  assignment status, native uparea[km²], elevtn[m], rivwth[m] and signed catmz100
+  codes when supplied. catmz100 is the stored100-level floodplain profile position;
+  -9 is sea/unassigned, not an elevation or converted percentage. Native flddif[m]
+  is explicitly separate. No pixelwise native fldhgt was supplied/verified, so it
+  shows Unavailable; the coarse NLFP profile remains in its existing section.
+  The clicked pixel's native uparea and assigned coarse catchment uparea are
+  separate rows, including in Grid mode when their target differs. Scalar reads
+  use read-only memmaps. Supplied location.txt/native Binary formats are supported;
+  an unverified high-resolution NetCDF layout is not inferred.
+- **View → Apply Aspect Ratio**, directly below the selector, reapplies its shape
+  around the current center even when the selector has not changed. Repeated
+  clicks work after pan/zoom/manual extent/resize. Custom keeps the current
+  geographic proportions. Manual extents remain authoritative until an explicit
+  predefined shape action. Existing viewport-height bounds and legend remain.
+
+JSON v1/v2 still load. Missing new fields default to OSM off, full palette range
+and the saved background's original Grid/Catchment rule; new files store explicit
+`point_select`, `basemap`, `layers.coarse_palette_range` and
+`layers.highres_style.palette_range`. Gallery presets reset OSM off and palette
+ranges to[0,1], retaining the user's explicit Point Select preference. Shared
+preset settings remain CSV references to the canonical visualization catalog.
+
+**PNG:** local Matplotlib uses the same scientific palette, physical limits and
+selection geometry. Online tiles are deliberately excluded, with a notice in the
+GUI/export status and PNG legend. No tile requests are made for PNG export.
+See [validation report](../../research/records/validation_runs/VR-0165.md) for
+executed checks and current limits; no model simulation equivalence is claimed.
+
 ## Install and launch
 
 Python 3.10+ with NumPy, netCDF4, Matplotlib, Panel and Bokeh is required.
@@ -40,8 +125,8 @@ A Conda prompt alone does not override this order; select its interpreter with
 The app opens a browser at **http://127.0.0.1:5006/**; the terminal also prints
 the URL. Use `--no-browser` on a headless machine or `--port 5010` if occupied.
 Stop with Ctrl-C. The service listens on loopback only. It uses local plotting
-resources and needs no Internet connection after installation; no web basemap,
-account, external backend or database is required.
+resources and needs no Internet connection after installation; no account, external backend or database is required. The optional OSM basemap
+needs an Internet connection; offline scientific rendering stays available.
 
 ### Double-click launchers
 
@@ -194,7 +279,7 @@ One **Color Settings** section shows the active representation's controls:
   transfer. Elevation Difference is maximum absolute eight-neighbor difference,
   in metres; it is not physical slope.
 
-Automatic terrain limits use full-tile P2/P98, not the zoomed viewport; catchment
+Automatic terrain limits use full-tile valid-native-assignment P2/P98, not the zoomed viewport; catchment
 limits use the full coarse attribute reference. Log uses a default display
 minimum of **0.01** when limits are automatic or the entered minimum is zero or
 negative. A specified positive minimum is retained. Finite values below that
@@ -342,7 +427,7 @@ Channel Pixels is grouped here; its high-resolution-only rendering condition rem
 Each overlay remains independent of the background and main-network style:
 
 - **Unit Catchment Boundaries** draws native catmx/catmy assignment-pair edges.
-  **Unit Catchment Boundary Color**, default `#646464`, changes only these ordinary
+  **Unit Catchment Boundary Color**, default `#4A4A4A` (0.65px), changes only these ordinary
   solid boundaries. It never changes the selected catchment's orange solid
   outline, selected computational rectangle, network or bifurcations. Native
   geometry and sampling/performance limits remain as documented above.
@@ -520,18 +605,17 @@ does not become a newly Gallery-approved method. No two-way synchronization.
 
 ## Selecting a Grid and its stored unit catchment
 
-Selection depends on the **active raster type**, not the displayed variable:
+Selection uses **Inspector → Point Select**, independently of raster type:
 
-| Active background | Selection method | Selected river-map Grid |
+| Point Select | Selection method | Selected river-map Grid |
 | --- | --- | --- |
-| Coarse Raster | Coarse Grid geographic containment | params.txt rectangle containing the click |
-| High-resolution Raster (all four variables) | High-resolution catmxy assignment | river cell assigned to the exact clicked native pixel |
-| No Background | Coarse Grid geographic containment | same default rule as Coarse Raster |
+| Grid | Coarse Grid geographic containment | params.txt rectangle containing the click |
+| Catchment | Native catmxy assignment | river cell assigned to the exact clicked native pixel |
 
 A high-resolution pixel can lie inside geographic Grid A while its catmxy points
-to river Grid B. Coarse Raster selects **A** and outlines all native pixels assigned
-to A; High-resolution Raster selects **B** and outlines B's pixels. The clicked
-native assignment never overrides the geographic rule in coarse/blank mode.
+to river Grid B. Grid selects **A** and outlines all native pixels assigned to A;
+Catchment selects **B** and outlines B's pixels. Background changes do not change
+this explicit choice. Old JSON initially derives the original background rule.
 In either mode the selected rectangle, unit-catchment boundary, attributes,
 cell/outlet marker and downstream link refer to the **same selected river cell**.
 The native assignment shown for the clicked pixel can differ from that selected

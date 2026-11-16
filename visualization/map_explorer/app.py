@@ -26,6 +26,7 @@ from bokeh.models import (
 from bokeh.plotting import figure
 
 from config import load_settings, save_settings
+from basemap import GeographicBasemap
 from map_layers import colorize, export_png, make_layer, network_style, raster_subset
 from map_reader import MapReader, SCHEMA
 from river_network import RiverNetwork, intersects
@@ -67,6 +68,11 @@ class Explorer:
         self.layer = None
         self._updating = False
         self._network_cache = None
+        self.apply_aspect_button = pn.widgets.Button(name="Apply Aspect Ratio", button_type="primary")
+        self.apply_aspect_button.on_click(lambda event: self._schedule(self._apply_aspect))
+        self.basemap = GeographicBasemap()
+        self.show_osm = pn.widgets.Checkbox(name="Show OpenStreetMap", value=False)
+        self.osm_opacity = pn.widgets.IntSlider(name="OpenStreetMap Opacity", start=0, end=100, step=5, value=100)
         self.map_aspect = pn.widgets.Select(name="Map Aspect Ratio", options=ASPECT_LABELS, value="square")
         self._frame_ratio = 1.0
         self.background_method = "default"
@@ -93,7 +99,18 @@ class Explorer:
         self.scale = pn.widgets.Select(name="Color scale (continuous only)", options=["auto", "linear", "log"])
         self.palette = pn.widgets.Select(
             name="Continuous palette",
-            options=["viridis", "terrain", "magma", "Blues", "YlGnBu", "basin_pastel", "subcol_pastel", "subcol_gray"],
+            options=[
+                "viridis",
+                "terrain",
+                "magma",
+                "gray",
+                "gray_r",
+                "Blues",
+                "YlGnBu",
+                "basin_pastel",
+                "subcol_pastel",
+                "subcol_gray",
+            ],
         )
         self.auto_limits = pn.widgets.Checkbox(name="Automatic color limits", value=True)
         self.low = pn.widgets.FloatInput(name="Color minimum", value=0, width=140)
@@ -127,7 +144,22 @@ class Explorer:
         self.background = pn.widgets.Select(
             name="Background representation", options=background_options, value="coarse"
         )
-        self.hires_source = pn.widgets.Select(name="High-resolution source", options=list(self.scene.tiles) or [None])
+        self.hires_source = pn.widgets.Select(
+            name="High-resolution source",
+            options=list(self.scene.tiles) or [None],
+            value=next(
+                (key for key, tile in self.scene.tiles.items() if "catmxy" in tile.files),
+                next(iter(self.scene.tiles), None),
+            ),
+        )
+        tile = self.scene.tiles.get(self.hires_source.value)
+        self.point_select = pn.widgets.RadioButtonGroup(
+            name="Point Select",
+            options={"Grid": "grid", "Catchment": "catchment"},
+            value="catchment" if tile and "catmxy" in tile.files else "grid",
+        )
+        self.point_note = pn.pane.Markdown("")
+        self.point_select.param.watch(lambda event: self._schedule(self._point_mode_changed), "value")
         self.terrain_palette = pn.widgets.Select(
             name="Terrain palette (full-tile P2/P98)", options=["gray", "pale_terrain"]
         )
@@ -224,6 +256,13 @@ class Explorer:
             sizing_mode="fixed",
         )
         self.plot.toolbar.logo = None
+        self.basemap_source = ColumnDataSource(dict(image=[], x=[], y=[], dw=[], dh=[]))
+        self.basemap_renderer = self.plot.image_rgba(
+            image="image", x="x", y="y", dw="dw", dh="dh", source=self.basemap_source, level="image"
+        )
+        self.basemap.driver.param.watch(lambda event: self._schedule(self._basemap_image), "png")
+        for widget in (self.show_osm, self.osm_opacity):
+            widget.param.watch(lambda event: self._schedule(self._update_basemap), "value")
         self.image_source = ColumnDataSource(dict(image=[], x=[], y=[], dw=[], dh=[]))
         self.mapper = LinearColorMapper(palette=["#ffffff", "#000000"], low=0, high=1, nan_color="#f5f7fa")
         self.raster = self.plot.image_rgba(
@@ -417,6 +456,7 @@ class Explorer:
         )
         navigation = pn.Column(
             self.map_aspect,
+            self.apply_aspect_button,
             self.view_note,
             pn.pane.Markdown("### Move Map Center", margin=(0, 0)),
             pn.Row(self.center_lon, self.center_lat),
@@ -438,7 +478,9 @@ class Explorer:
         header = pn.pane.HTML(
             f'<h2 style="margin:4px">CaMa-Flood · Map Explorer v3</h2><small>{escape(self.reader.path.name)} · {g.nx} × {g.ny} · local & read-only</small>'
         )
-        details = self.cell_inspector.view
+        details = pn.Column(
+            pn.pane.Markdown("#### Point Select"), self.point_select, self.point_note, self.cell_inspector.view
+        )
         self.right_tabs = pn.Tabs(
             ("Background", background_controls),
             ("River", network_controls),
@@ -478,6 +520,8 @@ class Explorer:
             self.coordinate,
             self.selection_summary,
             self.map_viewport,
+            self.basemap.driver,
+            self.basemap.attribution,
             self.legend,
             sizing_mode="stretch_width",
             min_width=300,
@@ -532,6 +576,30 @@ class Explorer:
             self.map_viewport.height = allocation[1] + 90
             self.map_viewport.plot.width = allocation[0] + 150
             self.map_viewport.plot.height = allocation[1] + 85
+        self._update_basemap()
+
+    def _update_basemap(self):
+        self.basemap_renderer.glyph.global_alpha = self.osm_opacity.value / 100
+        self.basemap_renderer.visible = self.show_osm.value
+        if not self.show_osm.value:
+            self.basemap_source.data = dict(image=[], x=[], y=[], dw=[], dh=[])
+        self.basemap.update(
+            self.extent,
+            (self.plot.frame_width or 900, self.plot.frame_height or 600),
+            self.show_osm.value,
+            self.osm_opacity.value / 100,
+        )
+
+    def _basemap_image(self):
+        decoded = self.basemap.decode()
+        if decoded is not None:
+            image, (w, e, s, n) = decoded
+            self.basemap_source.data = dict(image=[image], x=[w], y=[s], dw=[e - w], dh=[n - s])
+
+    def _point_mode_changed(self):
+        self._update_assignment_controls()
+        if hasattr(self, "_last_click"):
+            self.inspect(*self._last_click)
 
     def _apply_aspect(self):
         if self.map_aspect.value == "custom":
@@ -625,6 +693,11 @@ class Explorer:
             self.scale.value,
             self.palette.value,
             None if self.auto_limits.value else (self.low.value, self.high.value),
+            palette_range=(
+                [self.background_ui.coarse_palette_min.value, self.background_ui.coarse_palette_max.value]
+                if self.background.value == "coarse"
+                else None
+            ),
         )
         self.layer = layer
         self._updating = True
@@ -746,6 +819,10 @@ class Explorer:
             terrain_palette=self.terrain_palette.value,
             background_opacity=self.background_ui.opacity.value / 100,
             highres_style=self.background_ui.highres_options(),
+            coarse_palette_range=[
+                self.background_ui.coarse_palette_min.value,
+                self.background_ui.coarse_palette_max.value,
+            ],
             network_style=self.network_options(),
             arrows=self.arrows.value,
             arrow_size=self.arrow_size.value,
@@ -759,9 +836,19 @@ class Explorer:
         # must not leave old grid/catchment highlights from another rule/tile.
         self._reconcile_selection_source()
         self._size_map()
-        self.frame = frame = self.scene.build(
-            self.extent, self.variable.value, self.layer, self.network, self.scene_options()
-        )
+        try:
+            self.frame = frame = self.scene.build(
+                self.extent, self.variable.value, self.layer, self.network, self.scene_options()
+            )
+        except ValueError as exc:
+            # Never leave a previous variable's image masquerading as the new
+            # background when native-assignment statistics cannot be computed.
+            self.image_source.data = dict(image=[], x=[], y=[], dw=[], dh=[])
+            self.channel_image_source.data = dict(image=[], x=[], y=[], dw=[], dh=[])
+            self.bar.visible = False
+            self.background_ui.color_note.object = "Background unavailable: " + str(exc)
+            self.plot.title.text = "Background unavailable · use manual limits"
+            raise
         self._set_colorbar(frame.layer)
         # Synchronize effective Log bounds only after building the current frame;
         # visibility/profile restoration can still refer to a previous frame.
@@ -862,6 +949,11 @@ class Explorer:
         tile = self.scene.tiles.get(self.hires_source.value)
         available = tile is not None and "catmxy" in tile.files
         self.overlay_controls["catchment_boundaries"].disabled = not available
+        self.point_note.object = (
+            ""
+            if available
+            else "Catchment unavailable: selected source has no native catmxy. Grid selection remains available."
+        )
         if hasattr(self, "boundary_status"):
             self.boundary_status.object = (
                 "" if available else "Unit Catchment Boundaries unavailable: selected source has no catmxy."
@@ -884,7 +976,7 @@ class Explorer:
         self.cell_inspector.clear(message)
 
     def _reconcile_selection_source(self):
-        # Background-type and tile changes reassess the original geographic click.
+        # Explicit selection-mode and tile changes reassess the original geographic click.
         # Variable/style changes under the same rule/source preserve its grid.
         if hasattr(self, "_last_click") and (
             self.selection.method != self._selection_method() or self.selection.tile_key != self.hires_source.value
@@ -894,7 +986,7 @@ class Explorer:
     def _selection_method(self):
         return (
             "Coarse Grid geographic containment"
-            if self.background.value in ("coarse", "none")
+            if self.point_select.value == "grid"
             else "High-resolution catmxy assignment"
         )
 
@@ -946,7 +1038,7 @@ class Explorer:
                 boundary, status = self._selected_catchment(tile, selected)
                 kind = "coarse"
             else:
-                # Every high-resolution variable uses native catmxy. Missing
+                # Explicit Catchment mode uses native catmxy for every background. Missing
                 # codes or products never substitute the containing rectangle.
                 selected = assigned
                 boundary = None
@@ -981,6 +1073,7 @@ class Explorer:
             result["clicked coarse iy (1-based)"] = state.geographic_cell[0] + 1
         if state.clicked:
             extra, _ = self.scene.inspect(*state.clicked, state.tile_key)
+            result["clicked assigned catchment uparea [km²]"] = extra.get("assigned uparea [m2]", float("nan")) * 1e-6
             # Raw native assignment is informative in either mode. Attributes
             # below belong only to the selected grid, never a different clicked
             # pixel's assigned grid; catmxy and nextxy have distinct roles.
@@ -1065,6 +1158,8 @@ class Explorer:
             segments = np.stack(
                 [np.column_stack([data["x0"], data["y0"]]), np.column_stack([data["x1"], data["y1"]])], axis=1
             )
+        if self.show_osm.value:
+            frame.legend.append("Online basemap excluded from PNG; scientific layers and selection retained")
         path = export_scene(
             self.reader,
             frame,
@@ -1075,7 +1170,7 @@ class Explorer:
             self.selection.boundary,
             self.selection.coarse_outline,
         )
-        self.status.object = f"**PNG saved:** `{path}`"
+        self.status.object = f"**PNG saved:** `{path}`" + (" · Online basemap excluded." if self.show_osm.value else "")
         return path
 
     def settings(self):
@@ -1094,6 +1189,8 @@ class Explorer:
             network_options=self.network_options(),
             layers=layers,
             background_ui=self.background_ui.configuration(),
+            point_select=self.point_select.value,
+            basemap=dict(show=self.show_osm.value, opacity=self.osm_opacity.value / 100),
             viewport=dict(aspect=self.map_aspect.value, frame_ratio=self._frame_ratio),
         )
 
@@ -1112,6 +1209,9 @@ class Explorer:
         make_layer(self.reader, data["variable"], data["scale"], data["palette"], data["limits"])
         self._updating = True
         try:
+            self.point_select.value = data["point_select"]
+            self.show_osm.value = data["basemap"]["show"]
+            self.osm_opacity.value = round(data["basemap"]["opacity"] * 100)
             self.variable.value, self.scale.value, self.palette.value = data["variable"], data["scale"], data["palette"]
             self.auto_limits.value = data["limits"] is None
             if data["limits"] is not None:

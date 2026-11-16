@@ -62,7 +62,18 @@ def colorize(layer, image):
     return rgba.view('<u4').reshape(image.shape)
 
 
-def make_layer(reader, name, scale='auto', palette='viridis', limits=None):
+def validate_palette_range(value=None):
+    value = [0.0, 1.0] if value is None else value
+    if not isinstance(value, (list, tuple)) or len(value) != 2 or any(isinstance(v, bool) for v in value):
+        raise ValueError("Palette range needs minimum and maximum in [0,1]")
+    lo, hi = map(float, value)
+    if not np.isfinite([lo, hi]).all() or not 0 <= lo < hi <= 1:
+        raise ValueError("Palette Minimum must be below Palette Maximum within [0,1]")
+    return [lo, hi]
+
+
+
+def make_layer(reader, name, scale='auto', palette='viridis', limits=None, palette_range=None):
     spec = SCHEMA[name]
     raw = reader.read(name)
     values = raw.astype(float).filled(np.nan) * spec.factor
@@ -108,7 +119,8 @@ def make_layer(reader, name, scale='auto', palette='viridis', limits=None):
         values = log_display_values(values, low)
     elif low == high:
         high = low + max(abs(low)*.01, .01)
-    colors = [to_hex(colormaps[palette](i/255)) for i in range(256)]
+    lo, hi = validate_palette_range(palette_range)
+    colors = [to_hex(colormaps[palette](lo + (i/255)*(hi-lo))) for i in range(256)]
     return DisplayLayer(values, colors, low, high, logarithmic, np.array([]), label)
 
 

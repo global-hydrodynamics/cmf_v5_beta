@@ -1,4 +1,4 @@
-"""Background-dependent selection and distinct computational geometry."""
+"""Explicit selection across backgrounds and distinct computational geometry."""
 
 from pathlib import Path
 
@@ -14,14 +14,16 @@ from test_v2 import products
 BACKGROUNDS = ["none", "coarse", "catchment", "elevtn", "difference", "flddif"]
 
 
+@pytest.mark.parametrize("mode", ["grid","catchment"])
 @pytest.mark.parametrize("background", BACKGROUNDS)
-def test_background_dependent_selection_and_independent_overlay(products, background):
+def test_explicit_selection_and_independent_overlay(products, background, mode):
     path = products / "fine/tile.catmxy.bin"
     data = np.fromfile(path, dtype="<i2").reshape(2, 6, 8)
     data[:, 2:5, 1:5] = 1  # not the geographically containing coarse cell
     data[:, 3, 2] = 2  # hole, same geometry used across every background
     data.tofile(path)
     app = Explorer(products, products.parent / "exports")
+    app.point_select.value = mode
     app.background.value = background
     app.overlay_controls["catchment_boundaries"].value = True
     normal = [entry[0] for entry in app.frame.overlays if "assignment boundaries" in entry[3]]
@@ -30,7 +32,7 @@ def test_background_dependent_selection_and_independent_overlay(products, backgr
     app.scene.build(app.extent, app.variable.value, app.layer, app.network, app.scene_options(), max_side=2)
     info = app.inspect(11.000001, 21.999999)
     assert app.reader.geometry.cell(11.000001, 21.999999) == (1, 1)
-    coarse = background in ('none','coarse')
+    coarse = mode == 'grid'
     assert app.selected == ((1,1) if coarse else (0,0)) and app.selection.native_pixel == (2,2)
     pair = 2 if coarse else 1
     assert app.selection.boundary.pixel_count == int(((data[0]==pair)&(data[1]==pair)).sum())
@@ -45,14 +47,14 @@ def test_background_dependent_selection_and_independent_overlay(products, backgr
     state = app.selection
     for other in BACKGROUNDS:
         app.background.value = other
-        expected_cell = (1,1) if other in ('none','coarse') else (0,0)
+        expected_cell = (1,1) if coarse else (0,0)
         assert app.selected == expected_cell
         if state.method == app.selection.method:
             assert app.selection is state
         normal = [entry[0] for entry in app.frame.overlays if "assignment boundaries" in entry[3]]
         np.testing.assert_array_equal(normal[0], reference)
         app.inspect(10.25, 22.75)  # -999 land: no stale selection/fallback
-        if other in ('none','coarse'):
+        if coarse:
             assert app.selected == (0,0) and app.selection.coarse_outline is not None
         else:
             assert app.selected is None and app.selection.boundary is None
@@ -109,11 +111,12 @@ ROOT = Path(__file__).resolve().parents[3]
 def test_mekong_all_backgrounds_assignment_and_rectangle(tmp_path):
     app = Explorer(ROOT / "map/mekong_15min", tmp_path)
     app.set_extent((104.5, 107, 9.5, 12))
-    for background in BACKGROUNDS:
+    for mode,background in [(mode,bg) for mode in ("grid","catchment") for bg in BACKGROUNDS]:
+        app.point_select.value = mode
         app.background.value = background
         app.overlay_controls["catchment_boundaries"].value = True
         info = app.inspect(105.8, 10.8)
-        coarse = background in ('none','coarse')
+        coarse = mode == 'grid'
         expected = (96,63) if coarse else (96,62)
         assert app.selected == expected
         tile = app.scene.tiles[app.hires_source.value]

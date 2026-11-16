@@ -93,7 +93,8 @@ def test_mekong_integration(tmp_path):
         binary=np.fromfile(root/f'{name}.bin',dtype='<i4').reshape(2,120,80)
         for record,actual in zip(binary,r.read_network(name)):
             np.testing.assert_array_equal(actual.filled(-9999),record)
-    # Default coarse background selects its geographic grid; native assignment
+    app.point_select.value = "grid"
+    # Explicit Grid mode selects its geographic grid; native assignment
     # codes remain separately inspectable and must not override this rule.
     lon,lat=105.8,10.8
     tile=app.scene.tiles[app.hires_source.value]

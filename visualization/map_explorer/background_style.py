@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import colormaps
 from matplotlib.colors import LinearSegmentedColormap, to_hex
 
-from map_layers import DisplayLayer, log_display_limits, log_display_values
+from map_layers import DisplayLayer, log_display_limits, log_display_values, validate_palette_range
 from map_reader import SCHEMA
 
 # Approved cmf_colormap/data/pale_terrain.json v1.0.0 linear-sRGB controls.
@@ -16,6 +16,7 @@ CATCHMENT_GREEN = ("#FFFFD4", "#D9F0A3", "#78C679", "#31A354")
 PALETTES = {
     "Gallery Default": "gallery",
     "Gray": "gray",
+    "Gray (reversed)": "gray_r",
     "Pale Terrain": "pale_terrain",
     "Viridis": "viridis",
     "YlGn": "YlGn",
@@ -31,11 +32,12 @@ SCALES = {"Gallery Default": "gallery", "Linear": "linear", "Log": "log"}
 def validate_style(style=None, gallery_log=False):
     if not isinstance(style, (dict, type(None))):
         raise ValueError("highres_style must be an object")
-    result = {"palette": "gallery", "scale": "gallery", "limits": None, **(style or {})}
-    if set(result) != {"palette", "scale", "limits"}:
+    result = {"palette": "gallery", "scale": "gallery", "limits": None, "palette_range": [0.0, 1.0], **(style or {})}
+    if set(result) != {"palette", "scale", "limits", "palette_range"}:
         raise ValueError("highres_style must contain only palette, scale and limits")
     if result["palette"] not in PALETTES.values() or result["scale"] not in SCALES.values():
         raise ValueError("Unsupported high-resolution palette/scale")
+    result["palette_range"] = validate_palette_range(result["palette_range"])
     limits = result["limits"]
     if limits is not None:
         if not isinstance(limits, (list, tuple)) or len(limits) != 2:
@@ -82,19 +84,24 @@ def highres_layer(image, reader, tile, mode, name, coarse_layer, style=None, ter
         if not logarithmic and high <= low:
             high = low + max(abs(low) * 0.01, 0.01)
     else:
-        low, high = tile.percentiles(mode, positive=logarithmic, allow_empty=logarithmic)
+        low, high = tile.percentiles(mode, positive=logarithmic, allow_empty=logarithmic, coarse=reader.geometry)
     if logarithmic:
         low, high = log_display_limits(None if options["limits"] is None else low, high)
         values = log_display_values(values, low)
     t = np.linspace(0, 1, 256)
+    pmin, pmax = options["palette_range"]
+    crop = lambda positions: pmin + positions * (pmax - pmin)
     chosen = options["palette"]
     gallery = options["scale"] == "gallery"
     if chosen == "gallery" and catchment:
         if name == "uparea":
             cmap = LinearSegmentedColormap.from_list("catchment", CATCHMENT_GREEN)
-            palette = [to_hex(cmap(v)) for v in t]
+            palette = [to_hex(cmap(v)) for v in crop(t)]
         else:
             palette = coarse_layer.palette  # preserve legacy inherited-field colors
+            if options["palette_range"] != [0.0, 1.0]:
+                cmap = LinearSegmentedColormap.from_list("legacy", palette)
+                palette = [to_hex(cmap(v)) for v in crop(t)]
     else:
         effective = terrain_palette if chosen == "gallery" else chosen
         cmap = (
@@ -107,7 +114,7 @@ def highres_layer(image, reader, tile, mode, name, coarse_layer, style=None, ter
             transfer = t**0.2 if effective == "pale_terrain" else np.sqrt(t)
         if chosen == "gallery" and effective == "gray" and not catchment:
             transfer = 0.16 + 0.42 * transfer  # original subdued Gallery gray range
-        palette = [to_hex(cmap(v)) for v in transfer]
+        palette = [to_hex(cmap(v)) for v in crop(transfer)]
     title = (
         coarse_layer.label + " inherited by assigned unit catchment"
         if catchment

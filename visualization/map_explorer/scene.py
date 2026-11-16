@@ -26,7 +26,7 @@ OVERLAY_DEFAULTS = dict(
     channel_pixels=False,
     channel_color="#b2182b",
     overland_color="#999999",
-    catchment_boundary_color="#646464",
+    catchment_boundary_color="#4A4A4A",
     outlet_size=4,
     bif_width=1.5,
     bif_classes=True,
@@ -347,9 +347,13 @@ class Scene:
                 rgba[fill] = neutral_floodplain_color(style, terrain_palette)
                 frame.legend.append("Missing flddif + valid elevation: neutral fill; both missing: blank")
             reference = (
-                "manual limits" if (style or {}).get("limits") is not None
-                else "Log floor / full-tile positive P98 upper" if layer.logarithmic
-                else "full-tile P2/P98 reference"
+                "manual limits"
+                if (style or {}).get("limits") is not None
+                else (
+                    "Log floor / full-tile valid-assignment positive P98 upper"
+                    if layer.logarithmic
+                    else "full-tile assigned-pixel P2/P98 reference"
+                )
             )
             frame.legend.append(
                 f"{tile.key} {reference}: {layer.low:.4g}/{layer.high:.4g} m; "
@@ -357,7 +361,9 @@ class Scene:
                 + " display normalization"
             )
         if layer.logarithmic:
-            frame.diagnostics.append(f"Log display clips finite values below {layer.low:g}; native values remain unchanged")
+            frame.diagnostics.append(
+                f"Log display clips finite values below {layer.low:g}; native values remain unchanged"
+            )
         frame.layer = layer
         frame.images.append((rgba, edges))
         if overlays["channel_pixels"]:
@@ -379,7 +385,7 @@ class Scene:
             else:
                 frame.diagnostics.append("Selected tile has no signed Int8 visual product")
 
-    def _catchment_boundaries(self, frame, tile, extent, max_side, color="#646464"):
+    def _catchment_boundaries(self, frame, tile, extent, max_side, color="#4A4A4A"):
         """Assignment-pair overlay independent of the chosen background/variable."""
         if tile is None or "catmxy" not in tile.files:
             frame.diagnostics.append("Unit Catchment Boundaries need catmxy in the selected tile")
@@ -396,7 +402,7 @@ class Scene:
         valid, _, _ = assignment(x, y, self.reader.geometry)
         segments = catchment_edges(x, y, valid, edges)
         if len(segments) <= 100000:
-            frame.overlays.insert(0, Overlay(segments, color, 0.35, "Native unit-catchment assignment boundaries"))
+            frame.overlays.insert(0, Overlay(segments, color, 0.65, "Native unit-catchment assignment boundaries"))
         else:
             frame.diagnostics.append("Catchment outlines omitted above 100,000 native edges; zoom in")
 
@@ -498,12 +504,13 @@ class Scene:
                 result.update(
                     {"assigned " + k: v for k, v in self.reader.inspect(g.lon[int(x) - 1], g.lat[int(y) - 1]).items()}
                 )
-        for name in ("elevtn", "flddif", "visual"):
+        for name in ("elevtn", "flddif", "visual", "catmz100", "uparea", "rivwth"):
             if name in tile.files:
                 value = tile.sample(name, np.array([row]), np.array([col]))[0, 0]
-                result[f"native hires {name}" + (" [m]" if name != "visual" else " [stored code]")] = (
-                    float(value) if np.isfinite(value) else None
-                )
+                result[
+                    f"native hires {name}"
+                    + (" [stored code]" if name in ("visual", "catmz100") else " [km²]" if name == "uparea" else " [m]")
+                ] = (float(value) if np.isfinite(value) else None)
         if "elevtn" in tile.files:
             value = tile.sample("difference", np.array([row]), np.array([col]))[0, 0]
             result["derived max 8-neighbor elevation difference [m], NOT slope"] = (

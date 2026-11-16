@@ -183,7 +183,9 @@ class PresetLibrary:
         tile = app.hires_source.value
         if required and (tile not in app.scene.tiles or not required.issubset(app.scene.tiles[tile].files)):
             tile = next(key for key, value in app.scene.tiles.items() if required.issubset(value.files))
+        state["basemap"] = dict(show=False, opacity=1.0)
         state["layers"] = dict(
+            coarse_palette_range=[0.0, 1.0],
             background=row["background"],
             tile=tile,
             terrain_palette=row["terrain_palette"],
@@ -194,7 +196,7 @@ class PresetLibrary:
             background_opacity=row["background_opacity"],
             background_method=row["background_method"],
             network_geometry=row["network_geometry"],
-            highres_style=dict(palette="gallery", scale="gallery", limits=None),
+            highres_style=dict(palette="gallery", scale="gallery", limits=None, palette_range=[0.0, 1.0]),
         )
         if gallery_extent:
             from view_controls import geographic_ratio

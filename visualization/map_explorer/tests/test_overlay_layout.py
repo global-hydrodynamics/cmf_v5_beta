@@ -201,7 +201,7 @@ def test_overlay_roundtrip_and_defaults_for_older_files(products):
     data["layers"]["overlays"].pop("catchment_boundary_color")
     app.load(json.dumps(data).encode())
     assert app.overlay_controls["outlet_size"].value == 4
-    assert app.overlay_controls["catchment_boundary_color"].value == "#646464" and not app.bif_width_mode.value
+    assert app.overlay_controls["catchment_boundary_color"].value == "#4A4A4A" and not app.bif_width_mode.value
 
 
 ROOT = Path(__file__).resolve().parents[3]

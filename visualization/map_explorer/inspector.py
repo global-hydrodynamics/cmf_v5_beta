@@ -191,6 +191,10 @@ class CellInspector:
         self.profile_section = pn.Accordion(
             ("Floodplain elevation profile · fldhgt [m]", self.profile), active=[], sizing_mode="stretch_width"
         )
+        self.pixel = pn.pane.HTML("Click the map to inspect its native pixel.", sizing_mode="stretch_width")
+        self.pixel_section = pn.Accordion(
+            ("High-resolution Pixel Information", self.pixel), active=[], sizing_mode="stretch_width"
+        )
         self.advanced = pn.pane.HTML("<p>Native values appear after selection.</p>", sizing_mode="stretch_width")
         self.advanced_section = pn.Accordion(
             ("Advanced / Native Values", self.advanced), active=[], sizing_mode="stretch_width"
@@ -203,6 +207,7 @@ class CellInspector:
             self.profile_section,
             pn.pane.Markdown("#### River Network Connectivity", margin=(5, 0)),
             self.connectivity,
+            self.pixel_section,
             self.advanced_section,
             sizing_mode="stretch_width",
         )
@@ -250,9 +255,39 @@ class CellInspector:
         self.method.object = ""
         self.geometry.object = self.connectivity.object = "Unavailable"
         self.profile.object = "Unavailable"
+        self.pixel.object = escape(message)
         self.advanced.object = escape(message)
 
     def update(self, state, data, network):
+        fields = [
+            ("Clicked Longitude [°]", "clicked longitude"),
+            ("Clicked Latitude [°]", "clicked latitude"),
+            ("High-resolution source", "high-resolution source"),
+            ("Native ix (1-based)", "native hires ix (1-based)"),
+            ("Native iy (1-based)", "native hires iy (1-based)"),
+            ("catmx [stored code]", "assigned coarse ix (1-based)"),
+            ("catmy [stored code]", "assigned coarse iy (1-based)"),
+            ("Assignment status", "assignment status"),
+            ("Native uparea [km²]", "native hires uparea [km²]"),
+            ("Native elevtn [m]", "native hires elevtn [m]"),
+            ("Native fldhgt [m]", "native hires fldhgt [m]"),
+            ("Native flddif [m] (separate field)", "native hires flddif [m]"),
+            ("Native catmz100 [signed stored code]", "native hires catmz100 [stored code]"),
+            ("Native rivwth [m]", "native hires rivwth [m]"),
+            ("Assigned catchment uparea [km²] (inherited)", "clicked assigned catchment uparea [km²]"),
+        ]
+
+        def pixel_value(key):
+            value = data.get(key)
+            if value is None or isinstance(value, (int, float)) and not np.isfinite(value):
+                return "Unavailable"
+            if isinstance(value, (int, float)):
+                if "code" in key or "1-based" in key:
+                    return str(int(value))
+                return f"{value:.5f}" if "longitude" in key or "latitude" in key else f"{value:,.6g}"
+            return str(value)
+
+        self.pixel.object = table([(label, pixel_value(key)) for label, key in fields])
         diagnostics = []
         rowcol = state.river_cell
         coords = lambda lat, lon: (

@@ -48,12 +48,15 @@ class Tile:
     _maps: dict = field(default_factory=dict, repr=False)
     _stats: dict = field(default_factory=dict, repr=False)
     _centroids: object = field(default=None, repr=False)
+    coarse_geometry: object = field(default=None, repr=False)
 
     def mmap(self, name):
         if name not in self.files:
             raise ValueError(f"{self.key}: missing {name}")
         if name not in self._maps:
-            dtype, records = ("<i2", 2) if name == "catmxy" else ("i1", 1) if name == "visual" else ("<f4", 1)
+            dtype, records = (
+                ("<i2", 2) if name == "catmxy" else ("i1", 1) if name in ("visual", "catmz100") else ("<f4", 1)
+            )
             g = self.geometry
             self._maps[name] = np.memmap(self.files[name], dtype=dtype, mode="r", shape=(records, g.ny, g.nx))
         return self._maps[name]
@@ -77,7 +80,7 @@ class Tile:
             return result
         data = self.mmap(name)
         result = np.array(data[:, rows[:, None], cols[None, :]])
-        if name in ("elevtn", "flddif"):
+        if name in ("elevtn", "flddif", "uparea", "rivwth"):
             a = result[0].astype(float)
             a[(a == -9999) | ~np.isfinite(a)] = np.nan
             return a
@@ -111,9 +114,14 @@ class Tile:
             (r1 - r0 <= max_side and c1 - c0 <= max_side),
         )
 
-    def percentiles(self, name, positive=False, allow_empty=False):
+    def percentiles(self, name, positive=False, allow_empty=False, coarse=None):
         """Exact full-tile P2/P98, bounded RAM and disposable disk workspace."""
-        key=(name,'positive') if positive else name
+        coarse = coarse or self.coarse_geometry
+        if coarse is None or "catmxy" not in self.files:
+            raise ValueError(
+                f"{self.key}: automatic limits require native catmxy and coarse map geometry; use manual limits"
+            )
+        key = (name, bool(positive), "valid-native-assignment-v1", coarse.nx, coarse.ny)
         if key not in self._stats:
             g = self.geometry
             block = max(1, 500000 // g.nx)
@@ -121,11 +129,20 @@ class Tile:
                 stream.truncate(g.nx * g.ny * 8)
                 work = np.memmap(stream, dtype="f8", mode="r+", shape=(g.nx * g.ny,))
                 count = 0
+                assigned_count = 0
                 for start in range(0, g.ny, block):
                     values = self.sample(name, np.arange(start, min(g.ny, start + block)), np.arange(g.nx))
-                    finite = values[np.isfinite(values) & ((values>0) if positive else True)]
+                    rows = np.arange(start, min(g.ny, start + block))
+                    x, y = self.sample("catmxy", rows, np.arange(g.nx))
+                    valid, _, _ = assignment(x, y, coarse)
+                    assigned_count += int(valid.sum())
+                    finite = values[valid & np.isfinite(values) & ((values > 0) if positive else True)]
                     work[count : count + finite.size] = finite
                     count += finite.size
+                if not assigned_count:
+                    raise ValueError(
+                        f"{self.key}: no valid native catmxy assignments for automatic limits; use manual limits"
+                    )
                 if count:
                     low, high = np.percentile(work[:count], (2, 98), overwrite_input=True)
                 else:
@@ -192,8 +209,16 @@ def discover_tiles(map_dir, messages):
                     raise ValueError("invalid area filename prefix")
                 g = Geometry(nx, ny, 1, step, w, e, s, n)
                 key = str((location.parent / name).relative_to(root))
-                tile = Tile(key, location.parent, name, g)
-                for field_name, bytes_per_pixel in [("catmxy", 4), ("visual", 1), ("elevtn", 4), ("flddif", 4)]:
+                tile = Tile(key, location.parent, name, g, coarse_geometry=Geometry.read(root / "params.txt"))
+                for field_name, bytes_per_pixel in [
+                    ("catmxy", 4),
+                    ("visual", 1),
+                    ("elevtn", 4),
+                    ("flddif", 4),
+                    ("catmz100", 1),
+                    ("uparea", 4),
+                    ("rivwth", 4),
+                ]:
                     path = location.parent / f"{name}.{field_name}.bin"
                     if path.is_file():
                         if path.stat().st_size == nx * ny * bytes_per_pixel:

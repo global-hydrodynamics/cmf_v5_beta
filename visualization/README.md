@@ -16,7 +16,12 @@ read-only CaMa-Flood coarse/high-resolution rasters, unit catchments, outlet-bas
 networks, bifurcations and native cell inspection. Backgrounds, networks and
 additional overlays can be combined independently. The Unit Catchment Inspector
 shows native outlet/area/IDs, layered fldhgt and cached full-regional upstream
-counts, with raw diagnostics retained in an expandable section.
+counts, with raw diagnostics retained in an expandable section. Explicit Grid /
+Catchment selection is background independent; a separate collapsed section
+reports native high-resolution pixel values. Optional correctly reprojected OSM,
+independent palette intervals, assignment-only terrain statistics and an explicit
+Apply Aspect Ratio action are documented in the Explorer guide. Local PNG retains
+scientific layers/selection and explicitly excludes online tiles.
 Run `./visualization/map_explorer/run.sh map/mekong_15min` from the repository
 root; PNG/settings export and custom map directories are supported. This tool
 is independent of the Figure workflows below.

@@ -48,15 +48,27 @@ class BackgroundControls:
         self.highres_auto = pn.widgets.Checkbox(name="Automatic Color Limits", value=True)
         self.highres_low = pn.widgets.FloatInput(name="Color Minimum", value=0, width=140)
         self.highres_high = pn.widgets.FloatInput(name="Color Maximum", value=1, width=140)
+        self.coarse_palette_min = pn.widgets.FloatSlider(name="Palette Minimum", start=0, end=1, step=0.01, value=0)
+        self.coarse_palette_max = pn.widgets.FloatSlider(name="Palette Maximum", start=0, end=1, step=0.01, value=1)
+        self.highres_palette_min = pn.widgets.FloatSlider(name="Palette Minimum", start=0, end=1, step=0.01, value=0)
+        self.highres_palette_max = pn.widgets.FloatSlider(name="Palette Maximum", start=0, end=1, step=0.01, value=1)
         self.limits_row = pn.Row(app.low, app.high)
         self.coarse_colors = pn.Column(
-            app.palette, app.scale, app.auto_limits, self.limits_row, sizing_mode="stretch_width"
+            app.palette,
+            app.scale,
+            app.auto_limits,
+            self.limits_row,
+            self.coarse_palette_min,
+            self.coarse_palette_max,
+            sizing_mode="stretch_width",
         )
         self.highres_colors = pn.Column(
             self.highres_palette,
             self.highres_scale,
             self.highres_auto,
             pn.Row(self.highres_low, self.highres_high),
+            self.highres_palette_min,
+            self.highres_palette_max,
             sizing_mode="stretch_width",
         )
         self.color_settings = pn.Column(
@@ -70,6 +82,9 @@ class BackgroundControls:
         self.channel_note = pn.pane.Markdown("", sizing_mode="stretch_width")
         self.view = pn.Column(
             self.no_background,
+            app.show_osm,
+            app.osm_opacity,
+            app.basemap.notice,
             pn.pane.Markdown("#### Raster Type", margin=(0, 0)),
             self.raster_type,
             self.coarse_variable,
@@ -93,14 +108,47 @@ class BackgroundControls:
         ):
             widget.param.watch(lambda event: app._schedule(self.render_style), "value")
 
+        for widget in (
+            self.coarse_palette_min,
+            self.coarse_palette_max,
+            self.highres_palette_min,
+            self.highres_palette_max,
+        ):
+            widget.param.watch(lambda event: app._schedule(lambda: self.palette_changed(event)), "value")
+
+    def palette_changed(self, event):
+        from map_layers import validate_palette_range
+
+        low, high = (
+            (self.coarse_palette_min, self.coarse_palette_max)
+            if event.obj in (self.coarse_palette_min, self.coarse_palette_max)
+            else (self.highres_palette_min, self.highres_palette_max)
+        )
+        try:
+            validate_palette_range([low.value, high.value])
+        except ValueError as exc:
+            updating = self.app._updating
+            self.app._updating = True
+            try:
+                event.obj.value = event.old
+            finally:
+                self.app._updating = updating
+            self.color_note.object = str(exc) + "; previous range retained."
+            return
+        self.render_style()
+
     def render_style(self):
-        self.app.render_view()
+        if self.app.background.value == "coarse":
+            self.app.update_layer()
+        else:
+            self.app.render_view()
         if self.app.status.object.startswith("**Error:**"):
             self.app.status.object = "Background display updated; source values unchanged."
 
     def highres_options(self):
         return dict(
             palette=self.highres_palette.value,
+            palette_range=[self.highres_palette_min.value, self.highres_palette_max.value],
             scale=self.highres_scale.value,
             limits=None if self.highres_auto.value else [self.highres_low.value, self.highres_high.value],
         )
@@ -108,6 +156,7 @@ class BackgroundControls:
     def set_highres_options(self, options):
         value = validate_style(options)
         self.highres_palette.value, self.highres_scale.value = value["palette"], value["scale"]
+        self.highres_palette_min.value, self.highres_palette_max.value = value["palette_range"]
         self.highres_auto.value = value["limits"] is None
         if value["limits"] is not None:
             self.highres_low.value, self.highres_high.value = value["limits"]
@@ -167,6 +216,7 @@ class BackgroundControls:
             low=app.low.value,
             high=app.high.value,
             terrain=app.terrain_palette.value,
+            palette_range=[self.coarse_palette_min.value, self.coarse_palette_max.value],
             highres=self.highres_options(),
         )
 
@@ -183,6 +233,7 @@ class BackgroundControls:
         app.auto_limits.value = state["auto"]
         app.low.value, app.high.value = state["low"], state["high"]
         app.terrain_palette.value = state["terrain"]
+        self.coarse_palette_min.value, self.coarse_palette_max.value = state.get("palette_range", [0, 1])
         self.set_highres_options(state.get("highres", {}))
 
     def apply(self):
@@ -224,6 +275,9 @@ class BackgroundControls:
             variable = app.variable.value
             layers = (data or {}).get("layers", {})
             if data is not None:
+                self.coarse_palette_min.value, self.coarse_palette_max.value = layers.get(
+                    "coarse_palette_range", [0, 1]
+                )
                 self.opacity.value = int(round(layers.get("background_opacity", 1.0) * 100))
             if "highres_style" in layers:
                 self.set_highres_options(layers["highres_style"])
@@ -332,14 +386,13 @@ class BackgroundControls:
         self.channel_note.visible = channels.disabled
         self.channel_note.object = (
             "Channel Pixels requires a visible high-resolution background."
-            if not highres or blank else
-            "Channel Pixels unavailable: selected tile has no visual product."
-            if channels.disabled else ""
+            if not highres or blank
+            else "Channel Pixels unavailable: selected tile has no visual product." if channels.disabled else ""
         )
+        self.coarse_palette_min.disabled = self.coarse_palette_max.disabled = SCHEMA[app.variable.value].categorical
+        self.highres_palette_min.disabled = self.highres_palette_max.disabled = categorical
         if highres and categorical:
-            self.color_note.object = (
-                "Legacy inherited categories retain discrete colors; continuous scales/limits do not apply."
-            )
+            self.color_note.object = "Legacy inherited categories retain discrete colors; continuous scales/limits and palette cropping do not apply."
         elif highres:
             log = (
                 self.highres_scale.value == "log"
@@ -353,10 +406,12 @@ class BackgroundControls:
                 else "Native terrain / 8-neighbor elevation difference [m], not slope. "
             )
             self.color_note.object += (
-                "Log clips values below its positive minimum (automatic: 0.01); native values remain unchanged. " if log else ""
+                "Log clips values below its positive minimum (automatic: 0.01); native values remain unchanged. "
+                if log
+                else ""
             )
             self.color_note.object += (
-                "Gallery Default preserves existing log-uparea / full-tile P2/P98 and terrain stretch. "
+                "Gallery Default preserves log-uparea / full-tile assigned-pixel P2/P98 and terrain stretch. "
                 if self.highres_scale.value == "gallery"
                 else "Custom " + self.highres_scale.value + " normalization. "
             )
@@ -364,9 +419,7 @@ class BackgroundControls:
                 "Automatic limits use the full reference, not the viewport; manual limits must be strictly increasing."
             )
         elif SCHEMA[app.variable.value].categorical:
-            self.color_note.object = (
-                "Stored categories use discrete colors; continuous normalization and limits do not apply."
-            )
+            self.color_note.object = "Stored categories use discrete colors; continuous normalization, limits and palette cropping are disabled."
         else:
             self.color_note.object = "Display transforms only; source values stay unchanged."
         if not self._available() and not self.notice.object:

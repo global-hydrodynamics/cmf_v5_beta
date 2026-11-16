@@ -1,5 +1,48 @@
 # Interactive Map Explorer design
 
+## Background/selection/view follow-up (DT-0119, 2026-11-17)
+
+This current policy supersedes historical background-dependent selection and
+unrestricted terrain-statistics choices below. Earlier sections remain as
+scientific rationale/history, not competing current behavior. See README and
+[VR-0165](../../research/records/validation_runs/VR-0165.md) for usage/evidence.
+
+Maintainer explicitly assigns this work to feature/package-builder and requests
+commit/push, overriding the attachment's publication restriction. Clean starting
+HEAD1a734f7b matches fetched origin/feature/package-builder; no overlapping open
+Issues/PRs. Do not change scientific datasets/core/package store/Gallery scripts.
+
+Keep geographic plotting coordinates. Browser-only visible XYZ tiles are reprojected
+by exact spherical Mercator inverse mapping per geographic output scanline; never
+affinely stretch a whole Mercator tile in latitude. Browser fetch uses normal HTTP
+cache/User-Agent/Referer; one visible zoom level, bounded tile count, debounced stale
+requests; no prefetch/offline harvest. Provider configurable via environment. Keep
+visible OSM attribution under map. Online basemap OFF by default and excluded from
+local PNG, explicitly reported. Scientific layers/native clicks never reprojected.
+
+Palette interval is separate from physical limits: physical normalization, Gallery
+transfer, then range crop, then palette lookup. Categorical controls disabled. Full
+[0,1] preserves previous colors; per-variable session styles and active JSON state.
+Use shared range validation and preserve masks/physical colorbar labels.
+
+Terrain full-tile block percentiles use the existing native assignment helper,
+paired index bounds and finite/positive requirements. Cache includes mask policy
+and coarse dimensions. Missing/unusable catmxy gives a diagnostic, not unrestricted
+statistics. Inherited uparea remains a coarse attribute. Ordinary boundaries become
+#4A4A4A/.65px; saved/custom colors and selected orange solid outline stay independent.
+
+Point Select=Catchment when catmxy exists, otherwise Grid, independent of Background.
+Preserve/re-resolve last click on mode changes; no invalid-assignment fallback. Old
+JSON infers its prior background rule; new files save explicit mode. Native Pixel
+Information is persistent/collapsed, scalar reads only: verified Binary elevtn,
+uparea[km²],rivwth[m], signed catmz100 codes plus native assignment/pixel information.
+No native fldhgt product is verified; show Unavailable, never substitute coarse NLFP.
+
+Apply Aspect Ratio explicitly reruns existing center/scale fitting even with unchanged
+selector; manual extents stay authoritative until explicit shape action. Keep map
+mounted and bounded. Validate all features with synthetic data, actual Mekong,
+actual GUI and PNG, document limitations and baseline unrelated research-link errors.
+
 ## Unit Catchment Inspector redesign (DT-0117)
 
 Maintainer authorizes the compact scientific Inspector and orange solid native /
@@ -165,7 +208,7 @@ classes/color-width independence, presets/legacy settings,
 arrow geometry/export and actual Mekong browser controls/PNG.
 
 
-## Background display controls (DT-0111)
+## Historical background display controls (DT-0111)
 
 The maintainer requires four corrective controls, all verified in actual GUI:
 raster-only 0–100% opacity, high-resolution-only visual channel pixels,
@@ -209,7 +252,7 @@ Acceptance requires automated RGBA/norm/reference-limit/config/export contracts,
 Mekong integration and actual browser comparisons for all four controls, with a
 feature-by-feature verification matrix and honest remaining limitations.
 
-## Background-dependent scientific selection (DT-0110)
+## Historical background-dependent scientific selection (DT-0110)
 
 The maintainer explicitly replaces background-independent selection with two
 rules, retaining the preceding uncommitted DT-0109 UI/configuration work.

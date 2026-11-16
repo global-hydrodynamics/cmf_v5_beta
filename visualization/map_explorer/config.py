@@ -20,7 +20,7 @@ def load_settings(content, reader):
     if not isinstance(data, dict) or not required.issubset(data) or data["version"] not in (1, 2):
         raise ValueError("Unsupported settings schema/version")
     notes = []
-    unknown = set(data) - required - {"layers", "background_ui", "viewport"}
+    unknown = set(data) - required - {"layers", "background_ui", "viewport", "basemap", "point_select"}
     if unknown:
         notes.append("Ignored unknown settings: " + ", ".join(sorted(unknown)))
         for key in unknown:
@@ -48,6 +48,8 @@ def load_settings(content, reader):
         raise ValueError("Viewport aspect and frame_ratio disagree")
     data["viewport"] = view
     if data["scale"] not in ("auto", "linear", "log") or data["palette"] not in (
+        "gray",
+        "gray_r",
         "viridis",
         "terrain",
         "magma",
@@ -120,6 +122,7 @@ def load_settings(content, reader):
             "representation",
             "background_opacity",
             "highres_style",
+            "coarse_palette_range",
             "arrow_size",
             "background_method",
             "network_geometry",
@@ -153,6 +156,9 @@ def load_settings(content, reader):
             data["variable"] != "subcol" or "bsncol" not in reader.sources
         ):
             raise ValueError("Subbasin context requires subcol and bsncol")
+        from map_layers import validate_palette_range
+
+        layers["coarse_palette_range"] = validate_palette_range(layers.get("coarse_palette_range"))
         from background_style import validate_style
         from map_reader import SCHEMA
 
@@ -237,6 +243,27 @@ def load_settings(content, reader):
             inherited = highres.split(":", 1)[1] if ":" in highres else "uparea"
             if inherited != data["variable"]:
                 raise ValueError("highres_variable disagrees with inherited catchment field")
+    data.setdefault(
+        "point_select",
+        (
+            "grid"
+            if data["version"] == 1 or data.get("layers", {}).get("background", "coarse") in ("none", "coarse")
+            else "catchment"
+        ),
+    )
+    if data["point_select"] not in ("grid", "catchment"):
+        raise ValueError("Point Select must be grid or catchment")
+    basemap = data.setdefault("basemap", dict(show=False, opacity=1.0))
+    if not isinstance(basemap, dict) or set(basemap) != {"show", "opacity"} or not isinstance(basemap["show"], bool):
+        raise ValueError("Invalid basemap settings")
+    alpha = basemap["opacity"]
+    if (
+        isinstance(alpha, bool)
+        or not isinstance(alpha, (int, float))
+        or not math.isfinite(alpha)
+        or not 0 <= alpha <= 1
+    ):
+        raise ValueError("OSM opacity must be between 0 and 1")
     data["_warnings"] = notes
     if notes:
         warnings.warn("; ".join(notes), UserWarning)

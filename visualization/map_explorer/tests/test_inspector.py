@@ -270,5 +270,7 @@ def test_mekong_profile_ids_graph_counts_outlets_and_source_switch(tmp_path):
             assert index.total[node] == total[node] and index.direct[node] == direct[node]
         assert info["network product"] == source
     app.raster_type.value = "coarse"
+    assert app.selected == (97, 63)  # background does not change explicit Catchment mode
+    app.point_select.value = "grid"
     assert app.selected == (96, 63)
     assert "Geographic coarse-grid containment" in panel.method.object

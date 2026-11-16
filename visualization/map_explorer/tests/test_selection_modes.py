@@ -25,6 +25,7 @@ def split_assignment(products):
 def test_switching_rules_keeps_grid_catchment_and_nextxy_consistent(split_assignment):
     root, data = split_assignment
     app = Explorer(root, root.parent / "exports")
+    app.point_select.value = "grid"
     lon, lat = 11.25, 22.25
     info = app.inspect(lon, lat)
     assert app.selection.method == "Coarse Grid geographic containment"
@@ -36,7 +37,7 @@ def test_switching_rules_keeps_grid_catchment_and_nextxy_consistent(split_assign
     assert app.selection.coarse_outline[0].tolist() == [[11.0, 23.0], [12.0, 23.0]]
     assert app.selection.boundary.pixel_count == np.count_nonzero((data[0] == 2) & (data[1] == 1))
     assert len(app.selected_link.data["x0"]) == 1
-    app.raster_type.value = "highres"  # no new click
+    app.point_select.value = "catchment"  # no new click
     assert app.selection.clicked == (lon, lat) and app.selected == (1, 0)
     info = app.inspect(lon, lat, resolve_selection=False)
     assert info["selection method"] == "High-resolution catmxy assignment"
@@ -49,10 +50,12 @@ def test_switching_rules_keeps_grid_catchment_and_nextxy_consistent(split_assign
         app.highres_variable.value = variable
         assert app.selected == (1, 0) and app.selection.boundary is boundary
     app.no_background.value = True
-    assert app.selected == (0, 1) and app.selection.method == "Coarse Grid geographic containment"
+    assert app.selected == (1, 0) and app.selection.method == "High-resolution catmxy assignment"
     app.no_background.value = False
     assert app.selected == (1, 0)
     app.raster_type.value = "coarse"
+    assert app.selected == (1, 0)
+    app.point_select.value = "grid"
     assert app.selected == (0, 1)
     # Save/load and presets must also re-evaluate the last click by active rule.
     saved = app.settings()
@@ -65,20 +68,21 @@ def test_switching_rules_keeps_grid_catchment_and_nextxy_consistent(split_assign
 def test_unassigned_missing_source_and_tile_reassessment(split_assignment):
     root, data = split_assignment
     app = Explorer(root, root.parent / "exports")
+    app.point_select.value = "grid"
     app.inspect(10.25, 22.75)  # unassigned native -999, but geographic coarse grid valid
     assert app.selected == (0, 0)
-    app.raster_type.value = "highres"
+    app.point_select.value = "catchment"
     assert app.selected is None and app.selection.boundary is None
     assert app.selection.clicked == (10.25, 22.75)
     assert not len(app.selected_coarse_source.data["x0"])
     info = app.inspect(10.25, 22.75, resolve_selection=False)
     assert info["assigned coarse ix (1-based)"] == -999
     assert info["native hires ix (1-based)"] == 1
-    app.raster_type.value = "coarse"
+    app.point_select.value = "grid"
     assert app.selected == (0, 0)
     # A new tile changes the clicked native assignment and must reassess it.
     app.inspect(11.25, 22.25)
-    app.raster_type.value = "highres"
+    app.point_select.value = "catchment"
     path = root / "replacement.bin"
     changed = data.copy()
     changed[:, 1, 2] = [3, 3]
@@ -97,13 +101,14 @@ def test_unassigned_missing_source_and_tile_reassessment(split_assignment):
     info = app.inspect(11.25, 22.25)
     assert app.selected is None and "unavailable" in info["selection status"]
     assert "native hires ix (1-based)" in info
-    app.raster_type.value = "coarse"
+    app.point_select.value = "grid"
     assert app.selected == (0, 1) and app.selection.boundary is None
     assert len(app.selected_coarse_source.data["x0"]) == 4
 
 
 def test_coarse_grid_without_assigned_pixels_remains_selected(products):
     app = Explorer(products, products.parent / "exports")
+    app.point_select.value = "grid"
     tile = app.scene.tiles["fine/tile"]
     path = products / "sparse.bin"
     data = tile.mmap("catmxy").copy()
@@ -125,6 +130,7 @@ def test_synthetic_export_matches_browser_selection(split_assignment, raster_typ
     explorer = Explorer(root, root.parent / "exports")
     explorer.set_extent(explorer.reader.geometry.extent)  # Compare complete geometry, not viewport-clipped browser runs.
     explorer.raster_type.value = raster_type
+    explorer.point_select.value = "grid" if raster_type=="coarse" else "catchment"
     explorer.inspect(11.25, 22.25)
     expected = (0, 1) if raster_type == "coarse" else (1, 0)
     assert explorer.selected == expected
@@ -169,7 +175,13 @@ def test_missing_assignment_clears_while_visual_pixels_remain_available(products
     )
     app.hires_source.options = list(app.scene.tiles)
     app.hires_source.value = "terrain_only"
-    # Visual codes can be shown without inventing a catmxy assignment.
+    # Automatic stats must diagnose missing assignments; explicit physical limits
+    # still allow terrain and visual codes without inventing an assignment.
+    assert "automatic limits require native catmxy" in app.status.object
+    app.background_ui.highres_auto.value = False
+    app.highres_low.value, app.highres_high.value = 0, 50
+    app.render_view()
+    app.status.object = "manual limits"
     assert 'Error' not in app.status.object and len(app.frame.images)==2
     assert any('no assignment inferred' in message for message in app.frame.diagnostics)
     assert app.selection.tile_key == "terrain_only" and app.selected is None

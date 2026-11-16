@@ -6,6 +6,24 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Explorer background, selection and view (DT-0119, 2026-11-17)
+
+The maintainer explicitly assigns subsequent Explorer work to the existing
+feature/package-builder branch after main integration and requests commit/push
+at completion, overriding the attachment's no-publication instruction. Owner:
+Dai Yamazaki; Codex implements/tests/publishes. Bounded scope:
+visualization/map_explorer background/overlay/Inspector/view controls, relevant
+map-reader usage metadata, documentation and research evidence; no scientific
+data, core-model, Gallery-script or additional-data-store changes. Starting
+1a734f7b equals fetched project branch; open GitHub Issue/PR overlap searches
+returned none. Acceptance: synthetic contracts, complete Explorer regression,
+actual Mekong native comparison, browser rendering and PNG inspection.
+
+Implementation and evidence: [VR-0165](../research/records/validation_runs/VR-0165.md).
+This branch's status remains a proposal until integrated/published through the
+maintainer workflow; main is not a push target.
+
+
 ### Parallel research-log integration (2026-11-16)
 
 The maintainer authorizes reconciliation of university main and local
