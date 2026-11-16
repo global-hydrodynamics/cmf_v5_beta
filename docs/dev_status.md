@@ -13,7 +13,8 @@ and actual browser/PNG validation, commit and push on existing feature/package-b
 Owner Dai Yamazaki; Codex implements. Starting93e425d0 matches fetched origin;
 open Issue/PR searches found no overlapping work. Scope: visualization/map_explorer,
 related documentation and research evidence. Scientific input/model/Gallery scripts
-remain unchanged. All six changes implemented;283 tests +3 subtests PASS, actual
+remain unchanged. Implementation106a41aa published to feature/package-builder.
+All six changes implemented;283 tests +3 subtests PASS, actual
 Mekong/browser/PNG verified,248 protected hashes unchanged. Explicit Gallery/legacy
 exceptions and10 pre-existing research-link failures documented. Design/acceptance:
 Explorer DESIGN.md DT-0120; [VR-0166](../research/records/validation_runs/VR-0166.md).
