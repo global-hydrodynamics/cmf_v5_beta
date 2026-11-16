@@ -29,7 +29,7 @@ def load_settings(content, reader):
     if data['variable'] not in reader.sources:
         raise ValueError('Settings variable is not available in this map')
     reader.geometry.validate_extent(data['extent'])
-    if data['scale'] not in ('auto', 'linear', 'log') or data['palette'] not in ('viridis', 'terrain', 'magma', 'Blues'):
+    if data['scale'] not in ('auto', 'linear', 'log') or data['palette'] not in ('viridis', 'terrain', 'magma', 'Blues','YlGnBu','basin_pastel','subcol_pastel','subcol_gray'):
         raise ValueError('Unsupported scale/palette')
     if data['network'] != 'off' and data['network'] not in reader.network_sources:
         raise ValueError('Settings network is not available')
@@ -37,10 +37,13 @@ def load_settings(content, reader):
     base_options={'width', 'color', 'flexible_color', 'distinguish', 'scale_width', 'color_area'}
     if not isinstance(options, dict) or not base_options.issubset(options):
         raise ValueError('Unsupported network options')
-    for key in set(options)-base_options-{'classification'}:
+    for key in set(options)-base_options-{'classification','area_palette'}:
         notes.append('Ignored network option: '+key)
         options.pop(key)
     options.setdefault('classification','fixed')
+    options.setdefault('area_palette','viridis')
+    if options['area_palette'] not in ('viridis','shade_rainbow'):
+        raise ValueError('Unsupported network area palette')
     if options['classification'] not in ('fixed','quartiles','six_log','continuous'):
         raise ValueError('Unsupported area classification')
     if not isinstance(options['width'], (int, float)) or not .2 <= options['width'] <= 4:

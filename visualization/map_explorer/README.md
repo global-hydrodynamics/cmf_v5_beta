@@ -1,4 +1,4 @@
-# CaMa-Flood Interactive Map Explorer v2
+# CaMa-Flood Interactive Map Explorer v3
 
 A standalone, read-only browser for coarse CaMa-Flood river maps. Explore
 rasters, stored downstream connectivity and individual cells without editing
@@ -71,8 +71,12 @@ in this macOS development session.
 ## Operation and independent layers
 
 The app keeps navigation, native inspection and export while separating three
-independent groups. Settings use tabs on narrow windows; the map frame adapts
-on resize, with geographic aspect corrected at the viewport midpoint.
+independent groups. The map stays mounted on the left (about 70–75% on desktop),
+with Gallery presets and Background / River / Overlays / Inspector / View tabs
+on the right. Switching settings tabs never replaces the map. The right panel
+scrolls independently; **Settings panel** hides/shows it. Narrow windows wrap
+settings below the map. Geographic aspect remains corrected at the viewport
+midpoint; a tall geographic extent may require page scrolling to see its south.
 
 ### Background
 
@@ -168,22 +172,22 @@ class distinctions, unique counts and error diagnostics are implemented.
 
 ### Navigation, native inspection and export
 
-Use drag-pan, wheel zoom, box zoom, or Reset. In **View & export**, enter
+Use drag-pan, wheel zoom, box zoom, or Reset. In **View**, enter
 west/east/south/north in degrees, confirm with Enter and Apply extent. Layer
 changes retain the view. The viewport is taken from the browser's complete
 range event, avoiding partially synchronized axis updates.
 
-Click to select a native location. **Cell inspector** distinguishes coarse
+Click to select a native location. **Inspector** distinguishes coarse
 indices/attributes, high-resolution indices, raw assignment codes/status,
 assigned coarse-cell attributes, native elevation/flddif/visual, and the derived
 elevation difference. For catchment backgrounds, pink highlights follow the
 assigned coarse river cell and its selected network geometry. The clicked
-coarse position is retained separately. Outlet representation adds the actual
+geographic coordinate is retained separately. Outlet representation adds the actual
 source/destination outlet coordinates. The inspector never treats display
 colors or sampled images as measurements. Missing values remain explicit.
 
 **Export current view · PNG** uses the same scene, classifications, masks and
-colors with Matplotlib/Agg, including selected source/link, bifurcations, other
+colors with Matplotlib/Agg, including selected catchment outline/source/link, bifurcations, other
 enabled overlays and legends. It writes to ignored app-local `output/`; no
 browser engine or source-map writes are needed. Browser and PNG typography/
 arrow sizes can differ; their scientific data and classifications agree.
@@ -212,9 +216,94 @@ Explorer keeps scientific classes/definitions while allowing different palettes,
 width scales, extents and layouts. Runtime imports no Gallery plotting module.
 Tests alone load Gallery reference functions for numerical comparison. The
 existing [visualization catalog](../visualization_catalog.csv) remains the
-single Figure metadata registry; a future optional JSON-preset reference could
-link these combinations there. No duplicate CSV/YAML or automatic synchronization
-is introduced in v2.
+single Figure metadata registry. v3 adds only flat settings and references in
+[presets.csv](presets.csv); no Gallery descriptions or variable definitions are
+copied into it. Runtime reads the canonical catalog for names, explanations and
+documentation links. Gallery plotting scripts remain independent.
+
+## Gallery presets and editable settings
+
+Select a panel in **Gallery Presets**, read its canonical scientific purpose,
+and press **Apply preset**. The map updates in place, preserving its current
+extent. **Apply suggested Gallery extent** is explicitly opt-in and rejected
+before changes if outside this map. Missing required products are named and
+Apply is disabled; there is no silent substitution of topology or terrain.
+Without the shared catalog, presets are unavailable but exploration still works.
+
+All 11 initial panels are supported:
+
+| Canonical panel | Essential Explorer settings |
+| --- | --- |
+| p01-f01a | Coarse uparea, log YlGnBu, no network |
+| p01-f01c | bsncol, pastel basin display colors, no network |
+| p01-f02c | Gray subcol, grid-center nextxy_noedge, continuous log shade_rainbow colors / six log width classes |
+| p01-f03a | Pastel subcol, stored outlet vectors, full-network log-area quartiles / direction heads |
+| p01-f03b | Pastel bsncol, outlet vectors, channel + overland bifurcations, outlets, guides, coarse grid |
+| p01-f04a | Native assigned catchments inheriting uparea, boundaries, outlet vectors, channel bifurcations, guides, grid |
+| p01-f04b | f04a plus visual 10/7 channel pixels |
+| p01-f05a / f05c | Native elevtn / flddif with grayscale P2/P98 stretch and area-colored outlet network |
+| p01-f05d / f05f | Native elevtn / flddif with pale terrain, black outlet network and area widths |
+
+Presets are initial settings. All individual controls remain editable; deviations
+show **Custom (modified from …)**. Panning alone does not mark a preset modified.
+Complete custom settings still save/load as version-2 JSON; version-1 JSON also
+loads. Selection is ephemeral and is not serialized into user configuration.
+
+CSV schema: `gallery_id` is a foreign key into `visualization_catalog.csv`;
+`background`, `variable`, `palette`, `terrain_palette` set the background;
+`network_source`, `representation`, `color_mode`, `width_mode`, `classification`,
+`area_palette`, `line_width`, `arrows` set the main network; flat named overlay
+columns mirror the existing layer controls; `west/east/south/north` are suggested
+degree bounds. Boolean fields use true/false; widths use display units. See the
+header and [presets.py](presets.py) for allowed values. CSV is UTF-8 (BOM accepted)
+and Excel-compatible, with no nested JSON fields or duplicated Figure registry.
+
+Presets reproduce essential data/method choices, not exact published graphics.
+Explorer retains straight flexible links and full-network area normalization;
+f02c's Gallery curved links and f04's visible/path quartile normalization can
+therefore differ. Overlay widths/heads and typography can also differ. This
+preserves v2 definitions and pan-independent scientific classes. A custom edit
+does not become a newly Gallery-approved method. No two-way synchronization.
+
+## Selecting a stored unit catchment
+
+With **Unit catchments**, click the map to read the exact native high-resolution
+pixel. The inspector separates clicked lon/lat, 1-based native pixel, raw
+`catmx/catmy`, assigned 1-based river cell, attributes, assigned pixel count and
+stored downstream connection. A dedicated bright magenta outline shows all
+native pixels with that exact assignment pair, including holes and disconnected
+components. It stays visible with general boundaries disabled and across style,
+network, tab, pan/zoom and same-source preset changes. Changing high-resolution
+source clears it with a message. New valid clicks replace the selection.
+
+A coarse grid cell is a regular computational raster rectangle. Its **unit
+catchment** is the irregular collection of fine pixels assigned to it and may
+cross that rectangle. `catmxy` supplies this assignment; `nextxy` supplies only
+downstream river connectivity. The outline follows stored assignments: it is
+not a new watershed delineation, observed basin boundary or recalculated flow
+product. Unassigned land, background and invalid mixed pairs report their raw
+codes, clear the previous outline and never fall back to geographic containment
+or nearest-neighbor assignment. Coarse backgrounds retain containing-cell
+selection; terrain backgrounds inspect native terrain without implicitly
+selecting a catchment.
+
+Display rasters are sampled for speed and may miss small features. Selection
+always uses the native pixel, not the displayed sample. A lazy block-wise index
+scans the selected tile once, retaining sparse assignment bounding boxes/counts;
+subsequent boundaries read that box with native halos. Exposed pixel edges are
+merged into collinear runs without joining gaps or filling holes. Up to 24
+boundaries are cached per indexed tile. Complete geometry survives off-screen;
+only intersecting runs transfer to the browser. PNG export uses the **same
+native coordinates**, clipped to its axes, above other layers. Use **Export
+current view · PNG** in View, rather than Bokeh's canvas-only Save tool.
+
+The first selection can pause while indexing a large tile. Index memory scales
+with assigned coarse cells and extraction work with the assignment bounding box;
+a highly fragmented catchment may still contain many runs. Selection covers
+all matching pixels in the **selected tile**; cross-tile stitching/mosaics and
+asynchronous global indexing remain unimplemented. Tile borders are explicit
+limits of the stored tile geometry, not inferred drainage divides. All source
+data stay read-only.
 
 ## Supported data contracts
 
@@ -269,7 +358,7 @@ python -m pytest visualization/map_explorer/tests -q
 
 The integration test reads the existing Mekong sample if present; otherwise
 it explicitly skips. Synthetic maps are generated in temporary directories.
-See [DESIGN.md](DESIGN.md), [v1 evidence](../../research/records/validation_runs/VR-0151.md) and [v2 evidence](../../research/records/validation_runs/VR-0152.md)
+See [DESIGN.md](DESIGN.md), [v1 evidence](../../research/records/validation_runs/VR-0151.md) and [v2 evidence](../../research/records/validation_runs/VR-0152.md) and [v3 evidence](../../research/records/validation_runs/VR-0153.md)
 for scientific conventions, executed checks and limits.
 
 - **Missing GUI dependencies**: check `PYTHON`; install requirements into a

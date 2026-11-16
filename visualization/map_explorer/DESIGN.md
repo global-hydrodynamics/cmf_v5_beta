@@ -1,5 +1,64 @@
 # Interactive Map Explorer design
 
+## v3 specification (2026-11-16, DT-0107)
+
+Maintainer authorizes an incremental extension on clean main at 2effc881,
+confirmed equal to freshly fetched origin/main. No commit/push, source-data
+changes or Gallery-pipeline edits. This specification precedes implementation.
+
+The Bokeh map and its sources remain mounted once in a stretchable left column.
+The right column contains Gallery presets followed by compact settings/inspector
+tabs, with independent vertical scrolling. A wrapping flex layout and a settings
+visibility toggle provide a narrow-window fallback. Reparenting/recreating the
+plot on tab changes is forbidden. Existing geographic aspect/range-event logic
+is retained. Ordinary settings and presets preserve the view; Gallery extents
+are opt-in and validated against MAP_DIR before changing controls.
+
+presets.csv stores only canonical visualization IDs and flat Explorer settings;
+titles/descriptions/scientific methods/doc links are read from the existing
+visualization_catalog.csv. No copied metadata or YAML. Missing shared catalog
+disables presets without preventing standalone map exploration. Each preset is
+validated for required rasters, topology, outlets, bifurcations and a suitable
+tile. Missing products are named; no alternate scientific products are silently
+substituted. Presets initialize editable settings, not a new scientific approval.
+A display-state comparison excluding extent marks subsequent edits Custom.
+User JSON stays version 2, retaining v1/v2 compatibility; selection is ephemeral.
+
+selection.py separates clicked coordinates, native fine pixel, assignment pair,
+selected coarse river cell and complete catchment boundary. catmxy supplies
+assignment; nextxy supplies connectivity only. Native pair equality selects all
+assigned pixels, independent of the sampled browser raster and current viewport.
+A lazy block-wise index of assignment bounding boxes/counts is built once per
+tile, with a bounded LRU of recently extracted boundaries. Exposed N/S/E/W pixel
+edges include different/missing neighbors, holes, disconnected components and
+tile borders. Collinear runs merge without changing geometry. Boundary extraction
+uses halos across processing blocks, never viewport clipping as delineation.
+
+A dedicated magenta selection renderer lies above ordinary boundaries and
+river links even when general catchment outlines are off. The complete geometry
+is retained; only intersecting runs are transferred to the browser. PNG uses the
+same complete native coordinates and clips to its axes. Palette/network/overlay
+changes and pan/zoom preserve selection. Source changes clear it with an explicit
+message. An unassigned/mixed/outside native pixel clears selection and reports
+actual codes, without falling back to a containing coarse rectangle. Coarse
+clicks keep native coarse selection; terrain clicks inspect pixels without
+implicitly selecting a catchment. These outlines are stored assignments, not
+new watersheds, observed boundaries or numerical preprocessing outputs.
+
+Initial presets target p01-f01a/c, f02c, f03a/b, f04a/b and f05a/c/d/f. Small
+display-only palettes implement documented pastel/subcol gray and shade-rainbow
+choices independently of Gallery code. Explorer's full-network normalization,
+straight flexible segments and overlay arrow/width differences remain explicit
+compatibility limits rather than claims of pixel-exact Gallery reproduction.
+
+Validation extends all v1/v2 tests with analytic exposed-edge cases, native vs
+sampled click mapping, cache/view independence, missing products, preset atomicity
+and viewport retention, map ownership and actual Mekong selections crossing
+coarse-grid boundaries. Browser QA covers persistent desktop map, right scrolling,
+presets, native selection, narrow fallback and exported selection geometry.
+
+Earlier specifications below are retained as development history.
+
 ## v2 specification (2026-11-16, DT-0106)
 
 Maintainer authorizes Gallery integration on the existing main checkout at

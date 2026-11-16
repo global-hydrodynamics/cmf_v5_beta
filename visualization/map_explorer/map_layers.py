@@ -48,6 +48,21 @@ def make_layer(reader, name, scale='auto', palette='viridis', limits=None):
     values = raw.astype(float).filled(np.nan) * spec.factor
     label = f'{name} — {spec.title} [{spec.display_units}]'
     if spec.categorical:
+        if palette in ('basin_pastel','subcol_pastel','subcol_gray'):
+            # Gallery palettes classify stored display IDs, never interpolate
+            # or infer basin identity from color. Zero has a defined subcol gray.
+            minimum=1 if palette=='basin_pastel' else 0
+            categories=np.arange(minimum,11)
+            valid=np.isfinite(values)&(values>=minimum)&(values<=10)&(values==np.floor(values))
+            image=np.full(values.shape,np.nan);image[valid]=values[valid]-minimum
+            if palette=='subcol_gray':
+                colors=[to_hex((v,v,v)) for v in [.50,*np.linspace(.45,.10,10)]]
+            else:
+                rgba=colormaps['tab10'](np.arange(10));rgba[:,:3]=.4*rgba[:,:3]+.6
+                colors=[to_hex(v) for v in rgba]
+                if minimum==0:
+                    colors=['#b2b2b2',*colors]
+            return DisplayLayer(image,colors,-.5,len(categories)-.5,False,categories,label)
         # IDs are categorical, including zero if supplied as a valid value.
         # Dense display slots are internal; ticks and inspection retain raw IDs.
         finite = np.isfinite(values)

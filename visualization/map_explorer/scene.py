@@ -369,7 +369,7 @@ class Scene:
         return result, assigned
 
 
-def export_scene(reader, frame, extent, path, selected_point=None, selected_segments=None):
+def export_scene(reader, frame, extent, path, selected_point=None, selected_segments=None, selected_boundary=None):
     from matplotlib.figure import Figure
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from matplotlib.collections import LineCollection
@@ -414,6 +414,10 @@ def export_scene(reader, frame, extent, path, selected_point=None, selected_segm
         ax.plot(*selected_point, "o", mfc="none", mec="#e11d48", ms=9, mew=2, zorder=8)
     if selected_segments is not None and len(selected_segments):
         ax.add_collection(LineCollection(selected_segments, colors="#e11d48", linewidths=2.2, zorder=8))
+    if selected_boundary is not None:
+        # Same native exposed edges as the dedicated browser selection glyph.
+        # Matplotlib clips at axes limits; the viewport never delineates it.
+        ax.add_collection(LineCollection(selected_boundary.segments,colors='#ff00a8',linewidths=2.1,zorder=10))
     ax.set(
         xlim=(w, e),
         ylim=(s, n),
@@ -426,6 +430,8 @@ def export_scene(reader, frame, extent, path, selected_point=None, selected_segm
     handles += [Line2D([], [], color=color, lw=1, label=label) for segments, color, width, label in frame.overlays]
     if len(frame.points):
         handles.append(Line2D([], [], marker="o", mfc="white", mec="#555555", ls="none", label="Stored outlets"))
+    if selected_boundary is not None:
+        handles.append(Line2D([],[],color='#ff00a8',lw=2,label=f'Selected stored unit catchment ({selected_boundary.pixel_count:,} pixels)'))
     if handles:
         ax.legend(handles=handles, loc="lower left", fontsize=6)
     figure.supxlabel("\n".join(frame.legend), fontsize=7)

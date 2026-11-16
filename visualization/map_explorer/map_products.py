@@ -188,10 +188,23 @@ def area_style(
     scale_width=False,
     color_area=False,
     classification="quartiles",
+    area_palette="viridis",
 ):
     """Full-network classes are independent of viewport, using source uparea."""
     from matplotlib import colormaps
     from matplotlib.colors import to_hex
+    from matplotlib.colors import LinearSegmentedColormap
+
+    # Approved cmf_colormap shade_rainbow v1.0.0 linear-sRGB controls. A small
+    # display definition is embedded to keep Gallery code out of runtime imports.
+    if area_palette=='shade_rainbow':
+        cmap=LinearSegmentedColormap.from_list('shade_rainbow',
+            ['#AAAAAA','#C3ADC8','#B49DE3','#6096F4','#00B7E7','#00D5BD',
+             '#1BF607','#D2F500','#F6D800','#FF9914','#F22F29','#EB00ED'])
+    elif area_palette=='viridis':
+        cmap=colormaps['viridis']
+    else:
+        raise ValueError('Unknown network area palette')
 
     if not hasattr(network, "_areas"):
         raw = (
@@ -230,7 +243,9 @@ def area_style(
     elif classification == "six_log":
         level = np.minimum((fraction * 6).astype(int), 5)
         positions = level / 5
-        colors = np.array([to_hex(colormaps["viridis"](v)) for v in positions])
+        # f02c uses continuous log color even though shaft widths have six bins.
+        color_positions=fraction if area_palette=='shade_rainbow' else positions
+        colors = np.array([to_hex(cmap(v)) for v in color_positions])
         edges = np.linspace(lo, hi, 7)
         labels = [f"L{i+1}: {10**edges[i]:.3g}–{10**edges[i+1]:.3g} km²" for i in range(6)]
     else:
@@ -239,7 +254,7 @@ def area_style(
             positions = np.zeros(len(ids))
             positions[usable] = np.clip(np.log10(a[usable]) / 6, 0, 1)
             lo, hi = 0.0, 6.0
-        colors = np.array([to_hex(colormaps["viridis"](v)) for v in positions])
+        colors = np.array([to_hex(cmap(v)) for v in positions])
         labels = [f"{classification}: log {10**lo:.3g}–{10**hi:.3g} km²"]
     widths = np.full(len(ids), float(width))
     if scale_width:
@@ -257,7 +272,7 @@ def area_style(
     if scale_width or color_area:
         count = 4 if classification == "quartiles" else 6 if classification == "six_log" else 5
         for i, v in enumerate(np.linspace(0, 1, count)):
-            c = AREA_COLORS[i] if classification == "quartiles" else to_hex(colormaps["viridis"](v))
+            c = AREA_COLORS[i] if classification == "quartiles" else to_hex(cmap(v))
             label = labels[i] if len(labels) > 1 else f"{10**(lo+v*(hi-lo)):.3g} km²"
             swatches.append(
                 (
