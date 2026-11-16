@@ -5,6 +5,14 @@ Project-local figures are tracked and documented in their project READMEs;
 the combined p01-f01 through p01-f05 figures below are the current
 Gallery selections.
 
+## Interactive exploration
+
+[Map Explorer](map_explorer/README.md) is a standalone local browser for
+read-only CaMa-Flood map rasters, downstream connectivity and cell inspection.
+Run `./visualization/map_explorer/run.sh map/mekong_15min` from the repository
+root; PNG/settings export and custom map directories are supported. This tool
+is independent of the Figure workflows below.
+
 ## Gallery
 
 ### p01 — River Map

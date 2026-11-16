@@ -1,0 +1,5 @@
+numpy>=1.26,<3
+netCDF4>=1.6,<2
+matplotlib>=3.8,<4
+panel>=1.5,<2
+bokeh>=3.5,<4

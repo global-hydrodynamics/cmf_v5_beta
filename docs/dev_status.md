@@ -6,6 +6,34 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Interactive Map Explorer (DT-0105, 2026-11-16)
+
+Maintainer-requested autonomous specification/implementation/testing on the
+existing `main` checkout; owner: Dai Yamazaki (maintainer), Codex implements.
+Starting revision: `fc97d485`. Scope: independent read-only local browser app
+under `visualization/map_explorer/`, a concise visualization-index link and
+project/research evidence. No branch creation/switch, commit, push, model/map
+changes or existing Figure-workflow changes. The request explicitly authorizes
+proceeding from design into implementation without another approval gate.
+
+Implemented Panel/Bokeh GUI: lazy Binary/NetCDF rasters, stored nextxy/noedge
+selection, local/flexible links, pan/zoom and extent controls, 1-based native
+cell inspection, area styling, Matplotlib PNG and JSON settings save/load.
+The design precedes application implementation; see [DESIGN](../visualization/map_explorer/DESIGN.md)
+and [user guide](../visualization/map_explorer/README.md). An ignored app-local
+virtual environment is provisioned without changing the shared environment.
+Mekong and synthetic tests: 23 pass. Actual browser interaction and exported
+PNG were visually inspected; 105 source/data hashes remain unchanged. GUI
+locking and image-color issues found during browser checks were fixed.
+High-resolution rasters, bifurcations, basin tracing and global-scale performance
+validation are deferred. Evidence/limits: [VR-0151](../research/records/validation_runs/VR-0151.md).
+Follow-up at maintainer request: Mac `.command` and Windows `.bat` desktop
+launchers select a map folder, use existing Python environments and choose an
+available loopback port. Mac wrapper startup and folder-dialog console fallback
+were checked; Windows execution remains unverified on this macOS workstation.
+Implementation and this status proposal remain uncommitted for maintainer review.
+
+
 ### Repository migration consistency cleanup (DT-0104, 2026-11-15)
 
 Maintainer-approved working branch: `main`; owner: Dai Yamazaki (maintainer),
