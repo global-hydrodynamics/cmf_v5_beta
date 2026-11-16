@@ -42,9 +42,9 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('Dry run. CDS request:', result.stdout)
         self.assertIn("'02'", result.stdout)
-        self.assertIn('ERA5land-glb_2day/original/ERA5-Land_runoff_200001.nc', result.stdout)
-        self.assertIn('ERA5land-glb_2day/runoff_200001.nc', result.stdout)
-        self.assertFalse((self.inp / 'ERA5land-glb_2day').exists())
+        self.assertIn('repo-ERA5land-glb_2day/original/ERA5-Land_runoff_200001.nc', result.stdout)
+        self.assertIn('repo-ERA5land-glb_2day/runoff_200001.nc', result.stdout)
+        self.assertFalse((self.inp / 'repo-ERA5land-glb_2day').exists())
 
     def test_japan_hourly_dry_run_has_ten_daily_requests(self):
         import ast

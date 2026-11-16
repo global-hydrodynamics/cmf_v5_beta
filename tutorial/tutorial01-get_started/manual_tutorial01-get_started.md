@@ -172,7 +172,7 @@ If available, you can inspect without saving using `nano tutorial01-get_started.
 | Project | `PROJ="tutorial01-get_started"` |
 | River map | `map/mekong_15min/` |
 | Runoff | `inp/test-mek_1deg/`, daily binary files |
-| Runoff-to-map mapping | `inpdim_test-mek_1deg.txt` and `inpmat_test-mek_1deg.bin` in the map directory |
+| Runoff-to-map mapping | `diminfo_test-mek_1deg.txt` and `inpmat_test-mek_1deg.bin` in the map directory |
 | Period | 2000-01-01 00:00 to 2000-02-10 00:00; end time is exclusive (40 days) |
 | Time step | Base `DT=3600` seconds; adaptive time stepping enabled |
 | Execution | Non-MPI, one OpenMP thread; bifurcation enabled |
@@ -272,8 +272,8 @@ The runoff grid is 20 × 30 cells, while this Mekong river map is 80 × 120 cell
 cd "${cmf_root}"
 cd map/mekong_15min
 pwd
-ls -lhF inpdim_test-mek_1deg.txt inpmat_test-mek_1deg.bin
-cat inpdim_test-mek_1deg.txt
+ls -lhF diminfo_test-mek_1deg.txt inpmat_test-mek_1deg.bin
+cat diminfo_test-mek_1deg.txt
 ```
 
 ### Expected output
@@ -281,7 +281,7 @@ cat inpdim_test-mek_1deg.txt
 Observed sizes and the descriptor contents:
 
 ```text
--rw-r--r--  1 yamadai  staff   312B Nov  3 08:24 inpdim_test-mek_1deg.txt
+-rw-r--r--  1 yamadai  staff   312B Nov  3 08:24 diminfo_test-mek_1deg.txt
 -rw-r--r--  1 yamadai  staff   450K Nov  3 08:05 inpmat_test-mek_1deg.bin
 ```
 
@@ -302,16 +302,16 @@ inpmat_test-mek_1deg.bin
 The script points to this pair and turns on input-matrix mapping with `LINTERP`:
 
 ```sh
-INPDIM="${MAPDIR}/inpdim_${ROFFTAG}.txt"
+DIMINFO="${MAPDIR}/diminfo_${ROFFTAG}.txt"
 INPMAT="${MAPDIR}/inpmat_${ROFFTAG}.bin"
 LINTERP=".TRUE."
 ```
 
-`INPDIM` gives the model and input-grid dimensions and names the matrix file. `INPMAT` is the mapping data itself. With `LINTERP` true, runoff is mapped through this matrix. The supplied files already match this sample; Tutorial01 does not regenerate them.
+`DIMINFO` gives the model and input-grid dimensions and names the matrix file. `INPMAT` is the mapping data itself. With `LINTERP` true, runoff is mapped through this matrix. The supplied files already match this sample; Tutorial01 does not regenerate them.
 
 ### Learning Check
 
-- [ ] I can locate the two mapping files and match them to `INPDIM` and `INPMAT`.
+- [ ] I can locate the two mapping files and match them to `DIMINFO` and `INPMAT`.
 - [ ] I can find `LINTERP` in the same GOSH configuration.
 
 ## 8. Run the experiment

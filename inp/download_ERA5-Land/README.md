@@ -55,7 +55,7 @@ documentation update.
 | `s01-download.sh` | Argument-driven download stage (daily/monthly source NetCDF) |
 | `s02-convert_CMF_nc.sh` | Argument-driven conversion stage (daily/monthly/yearly NetCDF and information) |
 | `sample-global_2day.sh` | Download, convert and summarize global January 1–2, 2000 |
-| `sample-japan_hourly.sh` | Download, convert and summarize Japan, January 2000 |
+| `sample-japan_hourly.sh` | Download, convert and summarize Japan, September 1–10, 2007 |
 | `workflow.sh` | Shared Shell arguments, execution, jobs and logs |
 | `download_era5land.py` | Standalone CDS client and request dry-run |
 | `convert_CMF_nc.py` | Standalone accumulated-runoff conversion |
@@ -79,15 +79,27 @@ inp/repo-ERA5land-jpn_hourly/
     └── convert.<run-id>/20070901.log
 ```
 
-The new Japan product is a planned GitHub hourly input fixture. GOSH
-integration and input-matrix preparation remain future work. Its [dataset README](../repo-ERA5land-jpn_hourly/README.md)
-records the specification, validation limits and redistribution review.
-Only its explanation and converted daily NetCDF are eligible for tracking;
-`original/`, logs and generated information are ignored. No actual new sample
-has been downloaded or converted here. Measure actual file sizes and complete
-license/attribution review before adding data to Git or pushing them.
+The converted repository products are [`repo-ERA5land-glb_2day`](../repo-ERA5land-glb_2day/README.md)
+(one monthly file, two daily records) and
+[`repo-ERA5land-jpn_hourly`](../repo-ERA5land-jpn_hourly/README.md)
+(ten daily files, 24 hourly records each). Both exist locally; the Japan files
+are already tracked, and the renamed global product is eligible for tracking.
+Only the converted files and README belong in Git; originals, logs and generated
+information remain ignored. Review download-specific attribution/licence
+information before publication. Header inspection is not model or scientific
+validation; GOSH/input-matrix integration and KG-0019 remain open.
 
-Other `ERA5land-*` outputs remain ignored. The global two-day sample is unchanged.
+## Standard workflow and registry
+
+Edit a Product Shell and run it: s01 saves source data under `original/`, then
+s02 differences accumulated runoff, converts metres to timestep millimetres,
+reorganizes file grouping and writes CaMa-Flood variables/dimensions/metadata.
+Use the finished `runoff_*.nc` as forcing; normally do not point the model at
+`original/`. The [runoff registry](../runoff_datasets.csv) describes finished
+products. Their source files are provenance in `data_source`, `source_url`
+and `notes`, not parallel standard-input records. The registry is descriptive,
+not read by the model at runtime; metadata review does not establish scientific
+validation.
 
 ## Settings and execution
 
@@ -101,13 +113,13 @@ Each `sample-*.sh` is a product-generation Shell with a `User settings` section 
 `VAR=value` assignments for dataset, period, domain, timestep and grouping.
 Edit these assignments or use explicit CLI options; inherited environment
 values do not override these experiment settings. The Japan product uses literal `PYTHON_CMD="python3"` and `NCPUS=2`.
-The unchanged global product retains its documented runtime environment
+The global product retains its documented runtime environment
 overrides; explicit `--python` and `--ncpus` options take precedence in either product.
 Sample settings:
 
 | Setting | Global sample | Japan sample |
 | --- | --- | --- |
-| `DATASET` | `ERA5land-glb_2day` | `repo-ERA5land-jpn_hourly` |
+| `DATASET` | `repo-ERA5land-glb_2day` | `repo-ERA5land-jpn_hourly` |
 | `START_DATE`, `END_DATE` | 2000-01-01, 2000-01-02 | 2007-09-01, 2007-09-10 |
 | `WEST`, `EAST`, `SOUTH`, `NORTH` | -180, 180, -90, 90 | 120, 150, 20, 50 |
 | `TSTEP` | 24 hours | 1 hour |
@@ -142,7 +154,8 @@ bash inp/download_ERA5-Land/s02-convert_CMF_nc.sh \
 overrides. `PYTHON_CMD`/`--python` selects an executable, not a command string.
 Dataset names must be single names containing letters, digits, `_` or `-`;
 path separators and symlinks escaping the dataset are rejected. The standard `original/`, `logs/`, `runoff_*.nc` and information-file
-layout is Git-ignored even when a custom dataset name is chosen.
+layout is Git-ignored even when a custom dataset name is chosen, except for the
+explicitly enabled converted files in the two `repo-ERA5land-*` samples.
 
 Existing data and information files are skipped/retained by default. Only
 explicit `--overwrite` permits replacement. A skip does not verify contents or
@@ -162,6 +175,16 @@ error before writing; no missing hours are synthesized. After conversion, s02
 lists the output destination and generated NetCDF files. Checking 24 records
 establishes structural completeness, not physical time attribution.
 
+## Advanced usage
+
+Run `s01-download.sh` alone when only source acquisition is needed, or rerun
+`s02-convert_CMF_nc.sh` independently against retained originals. No conversion
+skip option is needed. Direct original-NetCDF model input is an advanced option
+only when the reader supports its layout. Verify accumulation period and time
+labels, variable/coordinate/time names, units and `DROFUNIT`, grid geometry and
+the matching Input Matrix. Raw metadata compatibility does not validate physical
+time attribution. This is not the standard sample configuration.
+
 ## Scientific behavior and unresolved time attribution
 
 Calculation is preserved: within each UTC-date group, keep its first accumulated
@@ -177,7 +200,7 @@ to the final file dimension for subdaily input. NetCDF-4 uses float32, fill
 value `1e20`, lossless deflate level 3 and shuffle.
 
 For CaMa-Flood, select the actual grid/input matrix and coordinate names,
-`LINPCDF=.TRUE.`, `CROFFREQ="MON"`/`"YEAR"`, `CROFPRE="runoff_"`,
+`LINPCDF=.TRUE.`, `CROFFREQ="DAY"`/`"MON"`/`"YEAR"`, `CROFPRE="runoff_"`,
 `CROFSUF=".nc"`, `CVNROF="runoff"`, `IFRQ_INP=TSTEP`, and
 `DROFUNIT=1000*TSTEP*3600`. The model does not derive unit conversion from the
 NetCDF units attribute. The information helper derives edges from coordinate

@@ -100,3 +100,9 @@ map/tools/**/*.pyc
 
 # Developer simulation project directories (all generated experiment files).
 /gosh_test/out/
+
+# Python bytecode caches are local generated files, never repository content.
+# Keep these rules after broad sample-data exceptions above.
+__pycache__/
+*.pyc
+*.pyo

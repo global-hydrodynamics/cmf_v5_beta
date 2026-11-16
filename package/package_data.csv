@@ -1,2 +1,3 @@
 dataset_id,source_path,target_path,file_pattern,format,description
 ELSE_GPCC,inp/ELSE_GPCC,inp/ELSE_GPCC,runoff*.nc,NetCDF-4,"Global ELSE_GPCC daily runoff, 1979-2010 (32 years), one annual file."
+glb_15min,map/glb_15min,map/glb_15min,**/*,Binary;NetCDF-4;text,"Global 15-minute model map: base Binary, netcdf, standard parameters and auxiliary text; include 1min_nc; exclude 1min and generation scripts/build/log files per package/README.md selection policy."

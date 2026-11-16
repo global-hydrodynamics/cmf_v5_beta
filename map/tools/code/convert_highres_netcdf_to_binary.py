@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Restore little-endian high-resolution Binary tiles from distribution NetCDF."""
+"""Restore little-endian high-resolution Binary tiles from distribution NetCDF.
+
+The registry owns signed storage types and complete-plane record order.
+Read raw stored values without masks/scaling so sentinels and floating-point
+bit patterns are not silently reinterpreted during legacy-format restoration.
+"""
 from __future__ import annotations
 
 import argparse

@@ -21,7 +21,7 @@ Tutorial01 introduces repository navigation and a first model run; it does not t
 | Read experiment settings | Read this specification and inspect the standalone GOSH script. | Identify where experiment details are described and where the script settings are written. | The learner can locate a setting in the script after finding it in the experiment information. |
 | Locate river-map files | List representative map files and inspect `MAPDIR`, `NEXTXY`, and `RIVWTH`. | Match the script's path and filenames to files in the map directory. | The learner can point out the selected map directory, connectivity file, and width file. |
 | Locate runoff files | List daily runoff files and find the relevant dataset and filename settings. | Match the directory and filename parts in the script to actual sample files. | The learner can locate a dated runoff file and the settings that point to its dataset and naming pattern. |
-| Locate runoff-mapping files | List the input-dimension descriptor and matrix and find `INPDIM` and `INPMAT`. | Match those settings to the two files in the map directory; identify `LINTERP` as another setting in the same block. | The learner can find each referenced file and its setting in the GOSH script. |
+| Locate runoff-mapping files | List the input-dimension descriptor and matrix and find `DIMINFO` and `INPMAT`. | Match those settings to the two files in the map directory; identify `LINTERP` as another setting in the same block. | The learner can find each referenced file and its setting in the GOSH script. |
 | Run an experiment | Execute the Tutorial01 script from its documented directory and identify `PROJ` and `RUNDIR`. | Match the project name to the output directory shown by the script. | The learner can run the script, recognize its success message, and locate the selected run directory. |
 | Locate results | List the project output and inspect the model log. | Identify which generated file is discharge output and which file is the model log. | The learner can locate `outflw2000.bin`, `log_CaMa.txt`, and see evidence that the run completed. |
 
@@ -37,7 +37,7 @@ CaMa-Flood_v4/
 ├── src_main/                        # v5 Fortran source and MAIN_cmf after build
 ├── map/mekong_15min/                # Bundled 80 x 120 river map
 │   ├── params.txt                   # Map dimensions, grid, and geographic bounds
-│   ├── inpdim_test-mek_1deg.txt     # Runoff-grid dimensions and mapping metadata
+│   ├── diminfo_test-mek_1deg.txt     # Runoff-grid dimensions and mapping metadata
 │   └── inpmat_test-mek_1deg.bin     # Runoff-to-map input matrix
 ├── inp/test-mek_1deg/runoff/        # Bundled daily Binary runoff
 ├── gosh_test/                        # Developer GOSH workflows and operational checks
@@ -62,7 +62,7 @@ The repository also contains root setup scripts and shared tools; include them i
 
 - Map: `map/mekong_15min/`, Binary format, 80 × 120 cells, 0.25-degree grid, and 10 floodplain layers.
 - Runoff: `inp/test-mek_1deg/runoff/`, daily Binary `mm/day` files named `Roff____YYYYMMDD.one`; the sample grid is 20 × 30.
-- Runoff-to-map files: `map/mekong_15min/inpdim_test-mek_1deg.txt` and `inpmat_test-mek_1deg.bin`, generated for this map/runoff grid pairing.
+- Runoff-to-map files: `map/mekong_15min/diminfo_test-mek_1deg.txt` and `inpmat_test-mek_1deg.bin`, generated for this map/runoff grid pairing.
 - Simulation: 2000-01-01 00:00 to 2000-02-10 00:00 exclusive (40 days), non-MPI, base timestep 3600 seconds, adaptive timestep and bifurcation enabled, reservoir operation disabled, one OpenMP thread.
 - Preserve the scientific and I/O settings of `gosh_test/mek01-default_run.sh`. The tutorial's complete standalone script changes only repository-relative context, output isolation under `tutorial/tutorial01-get_started/out/${PROJ}/`, the project name, and OpenMP thread count to one. The maintained `gosh_test/` script remains unchanged.
 - Define `PROJ="tutorial01-get_started"` using the established experiment-name convention. Construct `RUNDIR` as the Tutorial01 script directory's `out/${PROJ}/`. Generated executable copy, Namelist, logs, model outputs, CTLs, and Restart files all belong there.

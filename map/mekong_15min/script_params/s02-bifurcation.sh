@@ -3,7 +3,7 @@
 # Copy to <map>/script_params/, configure BIFLAYER and ROFFTAG, and run from any CWD.
 #
 # Inputs: params.txt, nextxy.bin, basin.bin, bifori.txt, rivhgt.bin,
-#         and inpdim_<ROFFTAG>.txt in the map root.
+#         and diminfo_<ROFFTAG>.txt in the map root.
 # Outputs: bifprm.csv, netcdf/bifprm.nc, bifbsn.bin, bifcol.bin; optional check maps.
 # Usage: ./s02-bifurcation.sh [check_map]
 set -eu
@@ -16,8 +16,8 @@ CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 
 # Bifurcation inputs and runoff-grid matrix selection.
 BIFLAYER=5                      # Number of bifori.txt layers to process (1-10).
-ROFFTAG="test-glb_1deg"         # Runoff dataset ID used to derive INPDIM.
-INPDIM="inpdim_${ROFFTAG}.txt"  # Runoff-grid dimensions file derived from ROFFTAG.
+ROFFTAG="test-glb_1deg"         # Runoff dataset ID used to derive DIMINFO.
+DIMINFO="diminfo_${ROFFTAG}.txt"  # Simulation dimension information (model and input grids).
 RIVHGT="rivhgt.bin"             # Channel-depth map used to estimate bifurcation depth.
 BIFPRM_CSV="bifprm.csv"         # Finalized, named bifurcation parameter table.
 BIFPRM_NC="netcdf/bifprm.nc"    # NetCDF conversion of the same CSV table.
@@ -74,9 +74,9 @@ cd "$MAP_DIR"
 STEP="Filter bifurcation paths and estimate bifurcation-channel depth"
 printf '\n==================================================\n[STEP 1/3] Generate finalized bifurcation CSV\n==================================================\n\n'
 if [ "$CHECK_MAP" = check_map ]; then
-    "$EXEC_SETPARAM" "$RIVHGT" "$BIFPRM_CSV" "$BIFLAYER" "$INPDIM" check_map
+    "$EXEC_SETPARAM" "$RIVHGT" "$BIFPRM_CSV" "$BIFLAYER" "$DIMINFO" check_map
 else
-    "$EXEC_SETPARAM" "$RIVHGT" "$BIFPRM_CSV" "$BIFLAYER" "$INPDIM"
+    "$EXEC_SETPARAM" "$RIVHGT" "$BIFPRM_CSV" "$BIFLAYER" "$DIMINFO"
 fi
 printf '[SUCCESS] Generated %s\n' "$BIFPRM_CSV"
 

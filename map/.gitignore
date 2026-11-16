@@ -1,2 +1,4 @@
-# Global 15-minute map is package-only additional data, not repository content.
+# Global map data are installed locally for development; the authoritative source
+# is the external cmf_v5_package_data/map/glb_15min/ store. Keep the entire local
+# copy untracked; maintained generators/templates remain under map/tools/.
 /glb_15min/

@@ -29,9 +29,9 @@ class InputMatrixNamingTests(unittest.TestCase):
             program = code_dir / "param_inpmat_generate"
             program.write_text(
                 "#!/bin/sh\n"
-                "hires=$1; inpdim=$8; inpmat=$9\n"
-                "printf '%s\\n%s\\n%s\\n' \"$hires\" \"$inpdim\" \"$inpmat\" > called.args\n"
-                "printf '3\\n2\\n2\\n360\\n180\\n1\\n%s\\n-1.5\\n1.5\\n1\\n-1\\n' \"$inpmat\" > \"$inpdim\"\n"
+                "hires=$1; diminfo=$8; inpmat=$9\n"
+                "printf '%s\\n%s\\n%s\\n' \"$hires\" \"$diminfo\" \"$inpmat\" > called.args\n"
+                "printf '3\\n2\\n2\\n360\\n180\\n1\\n%s\\n-1.5\\n1.5\\n1\\n-1\\n' \"$inpmat\" > \"$diminfo\"\n"
                 "printf x > \"$inpmat\"\n",
                 encoding="ascii",
             )
@@ -50,12 +50,12 @@ class InputMatrixNamingTests(unittest.TestCase):
                 text=True, capture_output=True, check=False,
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertTrue((map_root / "inpdim_rainfall-025.txt").is_file())
+            self.assertTrue((map_root / "diminfo_rainfall-025.txt").is_file())
             self.assertTrue((map_root / "inpmat_rainfall-025.bin").is_file())
-            self.assertEqual((map_root / "inpdim_rainfall-025.txt").read_text().splitlines()[6],
+            self.assertEqual((map_root / "diminfo_rainfall-025.txt").read_text().splitlines()[6],
                              "inpmat_rainfall-025.bin")
             self.assertEqual((map_root / "called.args").read_text().splitlines(), [
-                "15sec", "inpdim_rainfall-025.txt", "inpmat_rainfall-025.bin"
+                "15sec", "diminfo_rainfall-025.txt", "inpmat_rainfall-025.bin"
             ])
             self.assertIn("[STEP 1/1] Generate runoff input matrix", result.stdout)
             self.assertEqual(result.stdout.count("[SUCCESS]"), 1)

@@ -13,6 +13,9 @@ program param_water_calc_prmwat
 ! as flddif < 5 m; legacy v4 and this migration use <= 5 m, so equality is
 ! currently included pending clarification. The result is accumulated in m2
 ! and capped by ctmare.
+! I/O stages read catmxy as two int16 planes (x, then y), and water/area
+! fields as float32 planes with x fastest. Calculation retains source indices;
+! no resampling is performed when selecting a different high-resolution tag.
 ! ================================================================
 use, intrinsic :: iso_fortran_env, only: int16, int32, int64, real32, real64, error_unit
 use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
@@ -98,22 +101,10 @@ integer(int64) :: capped_catchment_count              ! Cells limited to their c
 integer(int64) :: missing_flddif_selected_count       ! Selected pixels with flddif=-9999.
 logical :: used_grdare_fallback                       ! Whether any area used legacy rgetarea fallback.
 
-! Geometry and binary-size checks must complete before allocation.
-location_open = .false.
-data_open = .false.
-output_open = .false.
-valid_catchment_count = 0_int64
-selected_pixel_count = 0_int64
-capped_catchment_count = 0_int64
-missing_flddif_selected_count = 0_int64
-used_grdare_fallback = .false.
-
-call get_command_argument(1, hires_tag, status=io_status)
-if (io_status /= 0 .or. len_trim(hires_tag) == 0) then
-    call fail('Usage: param_water_calc_prmwat HIRES_TAG (1min, 30sec, 15sec, 5sec, 3sec, or 1sec)')
-end if
-
-call select_resolution(trim(hires_tag), cells_per_degree, hires_cell_size)
+! HIRES_TAG (argument 1) selects ./<HIRES_TAG>/ and its cell size.
+! Initialize the resolution, file-state flags and diagnostic counters.
+! Paths below are relative to the current map directory.
+call configure_run()
 
 hires_dir = './' // trim(hires_tag) // '/'
 params_file = './params.txt'
@@ -123,77 +114,19 @@ location_file = trim(hires_dir) // 'location.txt'
 output_file = './prmwat.bin'
 
 ! ================================================================
-! [1] Read the base map geometry and validate its binary inputs
+! [1] Initialize permanent-water area on the river-network mask
 ! ================================================================
-open(newunit=location_unit, file=params_file, status='old', action='read', &
-     form='formatted', iostat=io_status)
-if (io_status /= 0) call fail('Cannot open ' // trim(params_file))
-location_open = .true.
-
-read(location_unit, *, iostat=io_status) nx
-if (io_status /= 0) call fail('Cannot read NX from ' // trim(params_file))
-read(location_unit, *, iostat=io_status) ny
-if (io_status /= 0) call fail('Cannot read NY from ' // trim(params_file))
-read(location_unit, *, iostat=io_status) nfpl
-if (io_status /= 0) call fail('Cannot read floodplain layer count from ' // trim(params_file))
-read(location_unit, *, iostat=io_status) map_grid_size
-if (io_status /= 0) call fail('Cannot read map grid size from ' // trim(params_file))
-read(location_unit, *, iostat=io_status) map_west
-if (io_status /= 0) call fail('Cannot read western bound from ' // trim(params_file))
-read(location_unit, *, iostat=io_status) map_east
-if (io_status /= 0) call fail('Cannot read eastern bound from ' // trim(params_file))
-read(location_unit, *, iostat=io_status) map_south
-if (io_status /= 0) call fail('Cannot read southern bound from ' // trim(params_file))
-read(location_unit, *, iostat=io_status) map_north
-if (io_status /= 0) call fail('Cannot read northern bound from ' // trim(params_file))
-close(location_unit, iostat=io_status)
-location_open = .false.
-if (io_status /= 0) call fail('Cannot close ' // trim(params_file))
-
-if (nx <= 0 .or. ny <= 0 .or. nfpl < 0) then
-    call fail('Invalid NX, NY, or floodplain layer count in ' // trim(params_file))
-end if
-if (.not. ieee_is_finite(map_grid_size) .or. map_grid_size <= 0.0_real32) then
-    call fail('Invalid map grid size in ' // trim(params_file))
-end if
-if (.not. ieee_is_finite(map_west) .or. .not. ieee_is_finite(map_east) .or. &
-    .not. ieee_is_finite(map_south) .or. .not. ieee_is_finite(map_north)) then
-    call fail('Nonfinite map bounds in ' // trim(params_file))
-end if
-
-map_record_cells = int(nx, int64) * int(ny, int64)
-map_float_record_bytes = map_record_cells * int(storage_size(0.0_real32) / 8, int64)
-map_integer_record_bytes = map_record_cells * int(storage_size(0_int32) / 8, int64)
-if (map_float_record_bytes > int(huge(map_float_recl), int64) .or. &
-    map_integer_record_bytes > int(huge(map_integer_recl), int64)) then
-    call fail('Map dimensions exceed supported direct-access record size')
-end if
-map_float_recl = int(map_float_record_bytes)
-map_integer_recl = int(map_integer_record_bytes)
-
-call allocate_base_arrays()
-
-! nextxy.bin has two int32 records; only record 1 is needed as the legacy
-! river-network mask, but the complete standard two-record file is checked.
-call open_exact_direct(nextxy_file, map_integer_recl, 2_int64, data_unit)
-read(data_unit, rec=1, iostat=io_status) nextx
-if (io_status /= 0) call fail('Incomplete read of record 1 from ' // trim(nextxy_file))
-call close_data_file(nextxy_file)
-
-call open_exact_direct(ctmare_file, map_float_recl, 1_int64, data_unit)
-read(data_unit, rec=1, iostat=io_status) catchment_area
-if (io_status /= 0) call fail('Incomplete read of record 1 from ' // trim(ctmare_file))
-call close_data_file(ctmare_file)
+! Read params.txt (NX, NY and geometry), nextxy.bin (record 1: network mask),
+! and ctmare.bin (unit-catchment area in m2). catmxy below maps pixels to this grid.
+call read_map_parameters(params_file)  ! Validate geometry, then allocate NX x NY arrays.
+call read_network_mask(nextxy_file, nextx, record=1)
+call read_catchment_area(ctmare_file, catchment_area, record=1)
 
 prmwat = MISSING_REAL
 do iy0 = 1, ny
     do ix0 = 1, nx
         if (nextx(ix0, iy0) /= MISSING_INT) then
-            if (.not. ieee_is_finite(catchment_area(ix0, iy0)) .or. &
-                catchment_area(ix0, iy0) <= 0.0_real32) then
-                write(filename, '(a,i0,a,i0,a)') 'Invalid ctmare at map cell (', ix0, ',', iy0, ')'
-                call fail(trim(filename) // ' in ' // trim(ctmare_file))
-            end if
+            call validate_catchment_area()
             prmwat(ix0, iy0) = 0.0_real32
             valid_catchment_count = valid_catchment_count + 1_int64
         end if
@@ -201,20 +134,186 @@ do iy0 = 1, ny
 end do
 
 ! ================================================================
-! [2] Read each non-tiled high-resolution area and accumulate water area
+! [2] Select permanent-water pixels and accumulate their area in m2
 ! ================================================================
-open(newunit=location_unit, file=location_file, status='old', action='read', &
-     form='formatted', iostat=io_status)
-if (io_status /= 0) call fail('Cannot open ' // trim(location_file))
-location_open = .true.
-
-read(location_unit, *, iostat=io_status) narea
-if (io_status /= 0 .or. narea <= 0) call fail('Invalid area count in ' // trim(location_file))
-read(location_unit, '(a)', iostat=io_status) unused_header
-if (io_status /= 0) call fail('Cannot read column header from ' // trim(location_file))
+! Open ./<HIRES_TAG>/location.txt: area names, bounds, dimensions and cell sizes.
+! Its rows identify the source areas to read and aggregate without resampling.
+call open_area_list(location_file, narea)
 
 ! Aggregate selected permanent-water pixels from each listed high-resolution area.
 do area_index = 1, narea
+    ! Read the next location.txt row and ./<HIRES_TAG>/<area>.*.bin:
+    ! catmxy records 1/2 give 1-based model x/y indices; rivwth classifies river/water pixels;
+    ! flddif is height above the catchment reference river (m); grdare is km2.
+    ! If grdare is absent, retain the legacy latitude-based pixel-area calculation.
+    call read_area_geometry_and_allocate()
+
+    filename = trim(hires_dir) // trim(area_name) // '.catmxy.bin'
+    call read_pixel_catchment_indices(filename, catm_x, catm_y)
+
+    filename = trim(hires_dir) // trim(area_name) // '.rivwth.bin'
+    call read_pixel_water_class(filename, rivwth)
+
+    filename = trim(hires_dir) // trim(area_name) // '.grdare.bin'
+    call read_pixel_area_or_fallback(filename, pixel_area_km2)
+
+    filename = trim(hires_dir) // trim(area_name) // '.flddif.bin'
+    call read_pixel_flood_height(filename, flddif)
+
+    do iy0 = 1, ny0
+        do ix0 = 1, nx0
+            if (catm_x(ix0, iy0) > 0_int16) then
+                call validate_catchment_assignment(ix0, iy0, trim(area_name))
+
+                call validate_water_fields()
+
+                ! Only count permanent water within modeled inundation terrain;
+                ! elevated isolated lakes must not be subtracted as flood area.
+                if (rivwth(ix0, iy0) > 0.0_real32 .or. rivwth(ix0, iy0) == -1.0_real32) then
+                    ! The maintainer described flddif < 5 m. Preserve legacy
+                    ! <= behavior for now; the exact-5 m boundary is unresolved.
+                    if (flddif(ix0, iy0) <= 5.0_real32) then
+                        if (flddif(ix0, iy0) == MISSING_REAL) then
+                            missing_flddif_selected_count = missing_flddif_selected_count + 1_int64
+                        end if
+                        call validate_selected_pixel_area()
+
+                        ! Sum each selected pixel into its assigned model cell (km2 to m2).
+                        target_x = int(catm_x(ix0, iy0))
+                        target_y = int(catm_y(ix0, iy0))
+                        prmwat(target_x, target_y) = prmwat(target_x, target_y) + &
+                                                     pixel_area_km2(ix0, iy0) * 1000000.0_real32
+                        call validate_accumulated_area()
+                        selected_pixel_count = selected_pixel_count + 1_int64
+                    end if
+                end if
+            end if
+        end do
+    end do
+
+    ! Release this area's pixel arrays before reading the next area.
+    call release_area_arrays()
+end do
+! Close location.txt and report any selected flddif=-9999 pixels; the legacy
+! <=5 m rule includes this sentinel, which has not been reinterpreted here.
+call close_area_list()
+
+! ================================================================
+! [3] Limit permanent-water area to the unit-catchment area
+! ================================================================
+do iy0 = 1, ny
+    do ix0 = 1, nx
+        if (nextx(ix0, iy0) /= MISSING_INT) then
+            if (prmwat(ix0, iy0) > catchment_area(ix0, iy0)) then
+                prmwat(ix0, iy0) = min(prmwat(ix0, iy0), catchment_area(ix0, iy0))
+                capped_catchment_count = capped_catchment_count + 1_int64
+            end if
+        end if
+    end do
+end do
+
+! Write ./prmwat.bin: permanent-water area (m2), one float32 NX x NY record,
+! x fastest; non-network cells retain -9999. Print processing counts.
+call write_permanent_water_map(output_file, prmwat, record=1)
+
+! Release remaining base-map arrays (nextx, catchment_area, prmwat).
+! The same cleanup also releases any allocated pixel arrays on error exits.
+call cleanup_arrays()
+
+contains
+
+! Technical details: configuration, file access, allocation and validation.
+! Helpers use the program arrays; checks remain at their original execution points.
+
+subroutine configure_run()
+    ! Geometry and binary-size checks must complete before allocation.
+    location_open = .false.
+    data_open = .false.
+    output_open = .false.
+    valid_catchment_count = 0_int64
+    selected_pixel_count = 0_int64
+    capped_catchment_count = 0_int64
+    missing_flddif_selected_count = 0_int64
+    used_grdare_fallback = .false.
+
+    call get_command_argument(1, hires_tag, status=io_status)
+    if (io_status /= 0 .or. len_trim(hires_tag) == 0) then
+        call fail('Usage: param_water_calc_prmwat HIRES_TAG (1min, 30sec, 15sec, 5sec, 3sec, or 1sec)')
+    end if
+
+    call select_resolution(trim(hires_tag), cells_per_degree, hires_cell_size)
+
+end subroutine configure_run
+
+subroutine read_map_parameters(params_file)
+    character(len=*), intent(in) :: params_file
+
+    open(newunit=location_unit, file=params_file, status='old', action='read', &
+         form='formatted', iostat=io_status)
+    if (io_status /= 0) call fail('Cannot open ' // trim(params_file))
+    location_open = .true.
+
+    read(location_unit, *, iostat=io_status) nx
+    if (io_status /= 0) call fail('Cannot read NX from ' // trim(params_file))
+    read(location_unit, *, iostat=io_status) ny
+    if (io_status /= 0) call fail('Cannot read NY from ' // trim(params_file))
+    read(location_unit, *, iostat=io_status) nfpl
+    if (io_status /= 0) call fail('Cannot read floodplain layer count from ' // trim(params_file))
+    read(location_unit, *, iostat=io_status) map_grid_size
+    if (io_status /= 0) call fail('Cannot read map grid size from ' // trim(params_file))
+    read(location_unit, *, iostat=io_status) map_west
+    if (io_status /= 0) call fail('Cannot read western bound from ' // trim(params_file))
+    read(location_unit, *, iostat=io_status) map_east
+    if (io_status /= 0) call fail('Cannot read eastern bound from ' // trim(params_file))
+    read(location_unit, *, iostat=io_status) map_south
+    if (io_status /= 0) call fail('Cannot read southern bound from ' // trim(params_file))
+    read(location_unit, *, iostat=io_status) map_north
+    if (io_status /= 0) call fail('Cannot read northern bound from ' // trim(params_file))
+    close(location_unit, iostat=io_status)
+    location_open = .false.
+    if (io_status /= 0) call fail('Cannot close ' // trim(params_file))
+
+    if (nx <= 0 .or. ny <= 0 .or. nfpl < 0) then
+        call fail('Invalid NX, NY, or floodplain layer count in ' // trim(params_file))
+    end if
+    if (.not. ieee_is_finite(map_grid_size) .or. map_grid_size <= 0.0_real32) then
+        call fail('Invalid map grid size in ' // trim(params_file))
+    end if
+    if (.not. ieee_is_finite(map_west) .or. .not. ieee_is_finite(map_east) .or. &
+        .not. ieee_is_finite(map_south) .or. .not. ieee_is_finite(map_north)) then
+        call fail('Nonfinite map bounds in ' // trim(params_file))
+    end if
+
+    map_record_cells = int(nx, int64) * int(ny, int64)
+    map_float_record_bytes = map_record_cells * int(storage_size(0.0_real32) / 8, int64)
+    map_integer_record_bytes = map_record_cells * int(storage_size(0_int32) / 8, int64)
+    if (map_float_record_bytes > int(huge(map_float_recl), int64) .or. &
+        map_integer_record_bytes > int(huge(map_integer_recl), int64)) then
+        call fail('Map dimensions exceed supported direct-access record size')
+    end if
+    map_float_recl = int(map_float_record_bytes)
+    map_integer_recl = int(map_integer_record_bytes)
+
+    call allocate_base_arrays()
+
+end subroutine read_map_parameters
+
+subroutine open_area_list(location_file, narea)
+    character(len=*), intent(in) :: location_file
+    integer, intent(out) :: narea
+
+    open(newunit=location_unit, file=location_file, status='old', action='read', &
+         form='formatted', iostat=io_status)
+    if (io_status /= 0) call fail('Cannot open ' // trim(location_file))
+    location_open = .true.
+
+    read(location_unit, *, iostat=io_status) narea
+    if (io_status /= 0 .or. narea <= 0) call fail('Invalid area count in ' // trim(location_file))
+    read(location_unit, '(a)', iostat=io_status) unused_header
+    if (io_status /= 0) call fail('Cannot read column header from ' // trim(location_file))
+end subroutine open_area_list
+
+subroutine read_area_geometry_and_allocate()
     read(location_unit, *, iostat=io_status) area_id, area_name, west0, east0, &
          south0, north0, nx0, ny0, location_cell_size
     if (io_status /= 0) then
@@ -249,84 +348,84 @@ do area_index = 1, narea
     area_float_recl = int(area_float_record_bytes)
 
     call allocate_area_arrays()
+end subroutine read_area_geometry_and_allocate
 
-    filename = trim(hires_dir) // trim(area_name) // '.catmxy.bin'
-    call open_exact_direct(filename, area_integer_recl, 2_int64, data_unit)
+subroutine read_network_mask(nextxy_file, nextx, record)
+    character(len=*), intent(in) :: nextxy_file
+    integer(int32), intent(out) :: nextx(:,:)
+    integer, intent(in) :: record
+
+    ! nextxy.bin has two int32 records; only record 1 is needed as the legacy
+    ! river-network mask, but the complete standard two-record file is checked.
+    call open_exact_direct(nextxy_file, map_integer_recl, 2_int64, data_unit)
+    read(data_unit, rec=record, iostat=io_status) nextx
+    if (io_status /= 0) call fail('Incomplete read of record 1 from ' // trim(nextxy_file))
+    call close_data_file(nextxy_file)
+end subroutine read_network_mask
+
+subroutine read_catchment_area(ctmare_file, catchment_area, record)
+    character(len=*), intent(in) :: ctmare_file
+    real(real32), intent(out) :: catchment_area(:,:)
+    integer, intent(in) :: record
+
+    call open_exact_direct(ctmare_file, map_float_recl, 1_int64, data_unit)
+    read(data_unit, rec=record, iostat=io_status) catchment_area
+    if (io_status /= 0) call fail('Incomplete read of record 1 from ' // trim(ctmare_file))
+    call close_data_file(ctmare_file)
+end subroutine read_catchment_area
+
+subroutine read_pixel_catchment_indices(input_path, catm_x, catm_y)
+    character(len=*), intent(in) :: input_path
+    integer(int16), intent(out) :: catm_x(:,:), catm_y(:,:)
+
+    call open_exact_direct(input_path, area_integer_recl, 2_int64, data_unit)
     read(data_unit, rec=1, iostat=io_status) catm_x
-    if (io_status /= 0) call fail('Incomplete catmxy record 1 in ' // trim(filename))
+    if (io_status /= 0) call fail('Incomplete catmxy record 1 in ' // trim(input_path))
     read(data_unit, rec=2, iostat=io_status) catm_y
-    if (io_status /= 0) call fail('Incomplete catmxy record 2 in ' // trim(filename))
-    call close_data_file(filename)
+    if (io_status /= 0) call fail('Incomplete catmxy record 2 in ' // trim(input_path))
+    call close_data_file(input_path)
+end subroutine read_pixel_catchment_indices
 
-    filename = trim(hires_dir) // trim(area_name) // '.rivwth.bin'
-    call open_exact_direct(filename, area_float_recl, 1_int64, data_unit)
+subroutine read_pixel_water_class(input_path, rivwth)
+    character(len=*), intent(in) :: input_path
+    real(real32), intent(out) :: rivwth(:,:)
+
+    call open_exact_direct(input_path, area_float_recl, 1_int64, data_unit)
     read(data_unit, rec=1, iostat=io_status) rivwth
-    if (io_status /= 0) call fail('Incomplete rivwth record 1 in ' // trim(filename))
-    call close_data_file(filename)
+    if (io_status /= 0) call fail('Incomplete rivwth record 1 in ' // trim(input_path))
+    call close_data_file(input_path)
+end subroutine read_pixel_water_class
 
-    filename = trim(hires_dir) // trim(area_name) // '.grdare.bin'
-    inquire(file=trim(filename), exist=file_exists, iostat=io_status)
-    if (io_status /= 0) call fail('Cannot inspect ' // trim(filename))
+subroutine read_pixel_area_or_fallback(input_path, pixel_area_km2)
+    character(len=*), intent(in) :: input_path
+    real(real32), intent(out) :: pixel_area_km2(:,:)
+
+    inquire(file=trim(input_path), exist=file_exists, iostat=io_status)
+    if (io_status /= 0) call fail('Cannot inspect ' // trim(input_path))
     if (file_exists) then
-        call open_exact_direct(filename, area_float_recl, 1_int64, data_unit)
+        call open_exact_direct(input_path, area_float_recl, 1_int64, data_unit)
         read(data_unit, rec=1, iostat=io_status) pixel_area_km2
-        if (io_status /= 0) call fail('Incomplete grdare record 1 in ' // trim(filename))
-        call close_data_file(filename)
+        if (io_status /= 0) call fail('Incomplete grdare record 1 in ' // trim(input_path))
+        call close_data_file(input_path)
     else
         used_grdare_fallback = .true.
-        call calculate_fallback_pixel_area()
-        write(*, '(a)') 'WARNING: missing ' // trim(filename) // &
+        call calculate_fallback_pixel_area(pixel_area_km2)
+        write(*, '(a)') 'WARNING: missing ' // trim(input_path) // &
              '; using the legacy scaled rgetarea fallback.'
     end if
+end subroutine read_pixel_area_or_fallback
 
-    filename = trim(hires_dir) // trim(area_name) // '.flddif.bin'
-    call open_exact_direct(filename, area_float_recl, 1_int64, data_unit)
+subroutine read_pixel_flood_height(input_path, flddif)
+    character(len=*), intent(in) :: input_path
+    real(real32), intent(out) :: flddif(:,:)
+
+    call open_exact_direct(input_path, area_float_recl, 1_int64, data_unit)
     read(data_unit, rec=1, iostat=io_status) flddif
-    if (io_status /= 0) call fail('Incomplete flddif record 1 in ' // trim(filename))
-    call close_data_file(filename)
+    if (io_status /= 0) call fail('Incomplete flddif record 1 in ' // trim(input_path))
+    call close_data_file(input_path)
+end subroutine read_pixel_flood_height
 
-    do iy0 = 1, ny0
-        do ix0 = 1, nx0
-            if (catm_x(ix0, iy0) > 0_int16) then
-                call validate_catchment_assignment(ix0, iy0, trim(area_name))
-
-                if (.not. ieee_is_finite(rivwth(ix0, iy0))) then
-                    call report_area_pixel_error('Nonfinite rivwth', area_name, ix0, iy0)
-                end if
-                if (.not. ieee_is_finite(flddif(ix0, iy0))) then
-                    call report_area_pixel_error('Nonfinite flddif', area_name, ix0, iy0)
-                end if
-
-                ! Only count permanent water within modeled inundation terrain;
-                ! elevated isolated lakes must not be subtracted as flood area.
-                if (rivwth(ix0, iy0) > 0.0_real32 .or. rivwth(ix0, iy0) == -1.0_real32) then
-                    ! The maintainer described flddif < 5 m. Preserve legacy
-                    ! <= behavior for now; the exact-5 m boundary is unresolved.
-                    if (flddif(ix0, iy0) <= 5.0_real32) then
-                        if (flddif(ix0, iy0) == MISSING_REAL) then
-                            missing_flddif_selected_count = missing_flddif_selected_count + 1_int64
-                        end if
-                        if (.not. ieee_is_finite(pixel_area_km2(ix0, iy0)) .or. &
-                            pixel_area_km2(ix0, iy0) <= 0.0_real32) then
-                            call report_area_pixel_error('Invalid grdare area for selected water pixel', &
-                                                         area_name, ix0, iy0)
-                        end if
-
-                        target_x = int(catm_x(ix0, iy0))
-                        target_y = int(catm_y(ix0, iy0))
-                        prmwat(target_x, target_y) = prmwat(target_x, target_y) + &
-                                                     pixel_area_km2(ix0, iy0) * 1000000.0_real32
-                        if (.not. ieee_is_finite(prmwat(target_x, target_y))) then
-                            call report_area_pixel_error('Nonfinite accumulated permanent-water area', &
-                                                         area_name, ix0, iy0)
-                        end if
-                        selected_pixel_count = selected_pixel_count + 1_int64
-                    end if
-                end if
-            end if
-        end do
-    end do
-
+subroutine release_area_arrays()
     if (allocated(catm_x)) deallocate(catm_x)
     if (allocated(catm_y)) deallocate(catm_y)
     if (allocated(rivwth)) deallocate(rivwth)
@@ -334,50 +433,74 @@ do area_index = 1, narea
     if (allocated(flddif)) deallocate(flddif)
     if (allocated(center_latitude)) deallocate(center_latitude)
     if (allocated(fallback_area_km2)) deallocate(fallback_area_km2)
-end do
-close(location_unit, iostat=io_status)
-location_open = .false.
-if (io_status /= 0) call fail('Cannot close ' // trim(location_file))
+end subroutine release_area_arrays
 
-if (missing_flddif_selected_count > 0_int64) then
-    write(*, '(a,i0,a)') 'WARNING: ', missing_flddif_selected_count, &
-         ' selected pixels have flddif=-9999; legacy flddif<=5 selection is preserved.'
-end if
+subroutine close_area_list()
+    close(location_unit, iostat=io_status)
+    location_open = .false.
+    if (io_status /= 0) call fail('Cannot close ' // trim(location_file))
 
-! ================================================================
-! [3] Cap by unit-catchment area and write the single float32 record
-! ================================================================
-do iy0 = 1, ny
-    do ix0 = 1, nx
-        if (nextx(ix0, iy0) /= MISSING_INT) then
-            if (prmwat(ix0, iy0) > catchment_area(ix0, iy0)) then
-                prmwat(ix0, iy0) = min(prmwat(ix0, iy0), catchment_area(ix0, iy0))
-                capped_catchment_count = capped_catchment_count + 1_int64
-            end if
-        end if
-    end do
-end do
+    if (missing_flddif_selected_count > 0_int64) then
+        write(*, '(a,i0,a)') 'WARNING: ', missing_flddif_selected_count, &
+             ' selected pixels have flddif=-9999; legacy flddif<=5 selection is preserved.'
+    end if
+end subroutine close_area_list
 
-open(newunit=output_unit, file=output_file, status='replace', action='write', &
-     access='direct', form='unformatted', recl=map_float_recl, iostat=io_status)
-if (io_status /= 0) call fail('Cannot create ' // trim(output_file))
-output_open = .true.
-write(output_unit, rec=1, iostat=io_status) prmwat
-if (io_status /= 0) call fail('Cannot write record 1 to ' // trim(output_file))
-close(output_unit, iostat=io_status)
-output_open = .false.
-if (io_status /= 0) call fail('Cannot close ' // trim(output_file))
+subroutine write_permanent_water_map(output_file, prmwat, record)
+    character(len=*), intent(in) :: output_file
+    real(real32), intent(in) :: prmwat(:,:)
+    integer, intent(in) :: record
 
-write(*, '(a,i0)') 'Processed high-resolution areas: ', narea
-write(*, '(a,i0)') 'Valid unit catchments: ', valid_catchment_count
-write(*, '(a,i0)') 'Selected permanent-water pixels: ', selected_pixel_count
-write(*, '(a,i0)') 'Catchments capped at ctmare: ', capped_catchment_count
-write(*, '(a,l1)') 'Used grdare fallback: ', used_grdare_fallback
-write(*, '(a)') 'Wrote prmwat.bin (float32, one NX x NY record, units m2).'
+    open(newunit=output_unit, file=output_file, status='replace', action='write', &
+         access='direct', form='unformatted', recl=map_float_recl, iostat=io_status)
+    if (io_status /= 0) call fail('Cannot create ' // trim(output_file))
+    output_open = .true.
+    write(output_unit, rec=record, iostat=io_status) prmwat
+    if (io_status /= 0) call fail('Cannot write record 1 to ' // trim(output_file))
+    close(output_unit, iostat=io_status)
+    output_open = .false.
+    if (io_status /= 0) call fail('Cannot close ' // trim(output_file))
 
-call cleanup_arrays()
+    write(*, '(a,i0)') 'Processed high-resolution areas: ', narea
+    write(*, '(a,i0)') 'Valid unit catchments: ', valid_catchment_count
+    write(*, '(a,i0)') 'Selected permanent-water pixels: ', selected_pixel_count
+    write(*, '(a,i0)') 'Catchments capped at ctmare: ', capped_catchment_count
+    write(*, '(a,l1)') 'Used grdare fallback: ', used_grdare_fallback
+    write(*, '(a)') 'Wrote prmwat.bin (float32, one NX x NY record, units m2).'
+end subroutine write_permanent_water_map
 
-contains
+subroutine validate_catchment_area()
+    if (.not. ieee_is_finite(catchment_area(ix0, iy0)) .or. &
+        catchment_area(ix0, iy0) <= 0.0_real32) then
+        write(filename, '(a,i0,a,i0,a)') 'Invalid ctmare at map cell (', ix0, ',', iy0, ')'
+        call fail(trim(filename) // ' in ' // trim(ctmare_file))
+    end if
+end subroutine validate_catchment_area
+
+subroutine validate_water_fields()
+    if (.not. ieee_is_finite(rivwth(ix0, iy0))) then
+        call report_area_pixel_error('Nonfinite rivwth', area_name, ix0, iy0)
+    end if
+    if (.not. ieee_is_finite(flddif(ix0, iy0))) then
+        call report_area_pixel_error('Nonfinite flddif', area_name, ix0, iy0)
+    end if
+end subroutine validate_water_fields
+
+subroutine validate_selected_pixel_area()
+    if (.not. ieee_is_finite(pixel_area_km2(ix0, iy0)) .or. &
+        pixel_area_km2(ix0, iy0) <= 0.0_real32) then
+        call report_area_pixel_error('Invalid grdare area for selected water pixel', &
+                                     area_name, ix0, iy0)
+    end if
+end subroutine validate_selected_pixel_area
+
+subroutine validate_accumulated_area()
+    if (.not. ieee_is_finite(prmwat(target_x, target_y))) then
+        call report_area_pixel_error('Nonfinite accumulated permanent-water area', &
+                                     area_name, ix0, iy0)
+    end if
+end subroutine validate_accumulated_area
+
 
 subroutine select_resolution(tag, count_per_degree, pixel_size)
     character(len=*), intent(in) :: tag
@@ -476,7 +599,8 @@ subroutine report_area_pixel_error(condition, source_area, x_index, y_index)
     call fail(trim(message))
 end subroutine report_area_pixel_error
 
-subroutine calculate_fallback_pixel_area()
+subroutine calculate_fallback_pixel_area(pixel_area_km2)
+    real(real32), intent(out) :: pixel_area_km2(:,:)
     integer :: stat, row
 
     allocate(center_latitude(ny0), fallback_area_km2(ny0), stat=stat)

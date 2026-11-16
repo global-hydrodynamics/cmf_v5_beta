@@ -75,10 +75,10 @@
       character*256            :: hires
       character*256            :: inpmat  !! input-matrix filename
       character*256            :: hires_tag
-      character*256            :: inpdim  !! input-dimension descriptor filename
+      character*256            :: diminfo  !! simulation dimension information filename
       parameter                 (mapdir='../')
       parameter                 (inpmat='inpmat_test-glb_1deg.bin')
-      parameter                 (inpdim='../inpdim_test-glb_1deg.txt')
+      parameter                 (diminfo='../diminfo_test-glb_1deg.txt')
 
 ! Format strings and input buffers.
       character*256            :: buf
@@ -270,7 +270,7 @@ print *, 'REGION_DEFAULT_INPMAT:'
 
 ! Write dimensions and the sparse matrix: input X indices, Y indices, then
 ! overlap areas, each as a separate direct-access record.
-      open(11,file=inpdim,form='formatted')
+      open(11,file=diminfo,form='formatted')
       write(11,'(i10,5x,a)') nXX,          '!! nXX'
       write(11,'(i10,5x,a)') nYY,          '!! nYY'
       write(11,'(i10,5x,a)') nflp,         '!! floodplain layer'

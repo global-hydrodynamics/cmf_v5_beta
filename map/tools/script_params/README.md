@@ -4,13 +4,13 @@
 
 ```sh
 cd "$MAP_DIR"
-"$EXEC_OUTCLM" "$TYPE" "$INTERP" "$INPDIM" "$CROFBIN"
-"$EXEC_RIVWTH" "$TYPE" "$INPDIM" "$HC" "$HP" "$HO" "$HMIN" \
+"$EXEC_OUTCLM" "$TYPE" "$INTERP" "$DIMINFO" "$CROFBIN"
+"$EXEC_RIVWTH" "$TYPE" "$DIMINFO" "$HC" "$HP" "$HO" "$HMIN" \
     "$WC" "$WP" "$WO" "$WMIN"
-"$EXEC_MERIT" "$INPDIM"
+"$EXEC_MERIT" "$DIMINFO"
 ```
 
-`map/src/` is preserved as the historical v4 tree; v5 migrations belong under `map/tools/` and do not rewrite those legacy workflows. Legacy callers retain their `diminfo_` names; the shared v5 workflows use the `ROFFTAG`-derived pair.
+`map/src/` is preserved as the historical v4 tree; v5 migrations belong under `map/tools/` and do not rewrite those legacy workflows. The `diminfo_` naming convention is shared with v4; the v5 workflows derive both descriptor and matrix names from `ROFFTAG` without changing their formats.
 
 ## Implemented workflow organization
 
@@ -38,7 +38,7 @@ Independent diagnostics belong in `script_analysis/`. No `script_allocate/` dire
 2. `param_channel_calc_rivwth` derives power-law channel width, depth, roughness, and infinite-depth products.
 3. `param_channel_set_merit_width` combines the power-law width with the MERIT Hydro width layer.
 
-It does not run bifurcation, MPI, or permanent-water processing. Configure the script's runoff path and coefficients before use. Its defaults retain the legacy standard recipe: binary runoff in mm/s, `inpmat` interpolation, `ROFFTAG=test-glb_1deg`, and the height/width coefficients shown in the script. It reads the paired `inpdim_test-glb_1deg.txt` and `inpmat_test-glb_1deg.bin` without regenerating them. `ROFFTAG` identifies runoff/input-grid configuration and is distinct from `HIRES_TAG`, which selects high-resolution map data during map generation.
+It does not run bifurcation, MPI, or permanent-water processing. Configure the script's runoff path and coefficients before use. Its defaults retain the legacy standard recipe: binary runoff in mm/s, `inpmat` interpolation, `ROFFTAG=test-glb_1deg`, and the height/width coefficients shown in the script. It reads the paired `diminfo_test-glb_1deg.txt` and `inpmat_test-glb_1deg.bin` without regenerating them. `ROFFTAG` identifies runoff/input-grid configuration and is distinct from `HIRES_TAG`, which selects high-resolution map data during map generation.
 
 The expected annual-mean runoff input is `../data/ELSE_GPCC_clm-1981-2010.one`, relative to the map root. This 360 x 180, one-record little-endian binary is now included in the Git repository; its CTL specifies runoff in mm/s. The CTL variable comment says "daily runoff climatology," despite the single record and the channel workflow's annual-mean use; treat this as an existing metadata inconsistency. The package guide identifies ELSE_GPCC and cites Kim et al. (2009). Its inclusion in this repository was directed by the maintainer; upstream terms for other ELSE_GPCC products or derivatives have not been established.
 
@@ -50,7 +50,18 @@ The standard channel workflow uses annual mean runoff. The historical `map/src/s
 
 ## Permanent-water area
 
-[`s05-permanent_water.sh`](s05-permanent_water.sh) runs `param_water_calc_prmwat` to create `prmwat.bin` from a base map and selected high-resolution map. Set `HIRES_TAG` near the top of the copied script; it defaults explicitly to `1min` and is not inferred from available directories. Build the shared executable beforehand with `make -C map/tools/code param`. The script can be run from any current working directory and does not run the preceding parameterization steps.
+For a Japan map with only `15sec/`, set `HIRES_TAG="15sec"` at the top of
+the map-local wrapper, then run `./s05-permanent_water.sh`. The Japan copy
+already has this setting. The shared Fortran program already supports `1min`, `30sec`,
+`15sec`, `5sec`, `3sec`, and `1sec`; it checks `location.txt` cell size against
+the selected tag. No resampling or change to permanent-water classification,
+area aggregation, missing-value handling or ctmare capping is introduced.
+NetCDF-only inputs must first be restored using the high-resolution s04 tool.
+The program writes/replaces `prmwat.bin`; retain an earlier output separately
+if it is needed for comparison.
+
+
+[`s05-permanent_water.sh`](s05-permanent_water.sh) runs `param_water_calc_prmwat` to create `prmwat.bin` from a base map and selected high-resolution map. Set `HIRES_TAG` near the top of the copied script: `1min` for the common/Mekong example or `15sec` for a map with 15-second inputs. Resolution selection is explicit: no automatic fallback between map products is performed. The Shell only passes this setting to Fortran; the Fortran program validates the tag, location metadata and input files and reports errors. Build the shared executable beforehand with `make -C map/tools/code param`. The script can be run from any current working directory and does not run the preceding parameterization steps.
 
 The source layout must use the non-tiled `location.txt` format. Inputs are `params.txt`, `nextxy.bin`, and `ctmare.bin` in the map root, plus `<HIRES_TAG>/location.txt` and per-area `catmxy`, `rivwth`, and `flddif` binaries; `grdare.bin` is optional. The output is one float32 `NX x NY` record in m2. Non-network cells are `-9999`; network cells with no selected water pixels are zero. For valid catchment assignments, selected pixels satisfy `(rivwth > 0 OR rivwth == -1) AND flddif <= 5 m`; `rivwth == -1` denotes water surface outside the channel centerline. Their pixel areas are summed and capped by `ctmare`. The legacy `flddif <= 5` condition also accepts `flddif=-9999`; the migrated program warns and preserves that behavior rather than silently adding a new scientific filter.
 
@@ -64,7 +75,7 @@ The compiled `param_bif_set_params` validates `BIFLAYER` as an integer from 1 th
 
 The generator writes only the finalized CSV; the standalone `map/tools/code/convert_bifprm_csv_to_netcdf.py` converts that same table to static NetCDF-4 (`path`, `layer`; `width(layer,path)`) with lossless shuffle/deflate level 3. It requires Python NumPy and netCDF4. Run it directly as `python3 map/tools/code/convert_bifprm_csv_to_netcdf.py map/<tag>/bifprm.csv`; omit the output argument to write `bifprm.nc` beside the CSV. The map-local s02 wrapper passes `netcdf/bifprm.nc` explicitly, keeping the authoritative CSV at the map root. The s02 wrapper performs these steps in order and fails if conversion fails. `start_lat/start_lon` retain the pathway-source values; `end_lat/end_lon` are the unit-catchment outlet coordinates at `(jx,jy)` from `lonlat.bin` records 2/1 respectively. Basin identifiers `ibsn/jbsn` remain numerically ascending, not directional. See the [map-product registry](../../../variable_table/map_variables.csv) and [metadata specification](../../../variable_table/map_metadata_spec.md#bifurcation-parameter-tables).
 
-[`s02-bifurcation.sh`](s02-bifurcation.sh) is intended to follow `s01-channel_params.sh`, which produces the required channel-depth map `rivhgt.bin`. It generates ordinary bifurcation parameters and basin-connectivity products using map-root `nextxy.bin`, `basin.bin`, `bifori.txt`, `params.txt`, and `inpdim_<ROFFTAG>.txt` (default `inpdim_test-glb_1deg.txt`). `BIFLAYER` defaults to the legacy value `5`. If `bifori.txt` contains fewer layers than requested, the Fortran program warns and clamps processing to the available count.
+[`s02-bifurcation.sh`](s02-bifurcation.sh) is intended to follow `s01-channel_params.sh`, which produces the required channel-depth map `rivhgt.bin`. It generates ordinary bifurcation parameters and basin-connectivity products using map-root `nextxy.bin`, `basin.bin`, `bifori.txt`, `params.txt`, and `diminfo_<ROFFTAG>.txt` (default `diminfo_test-glb_1deg.txt`). `BIFLAYER` defaults to the legacy value `5`. If `bifori.txt` contains fewer layers than requested, the Fortran program warns and clamps processing to the available count.
 
 The workflow runs `param_bif_set_params` from the map root, then runs `param_bif_set_basin` from the map-local `script_params/` directory because its input/output paths use `../`. It writes or replaces `bifprm.csv`, converts that finalized table to `netcdf/bifprm.nc`, then writes `bifbsn.bin` and `bifcol.bin`. `bifcol.bin` remains unconditional because it is routinely used to visualize the merged basin map. The display palette has colors 2–10 and falls back to color 10 if no candidate is free among neighboring basins; adjacent regions can consequently share a color, without changing simulation products. With `s02-bifurcation.sh check_map`, `param_bif_set_params` additionally writes `check_bif_dphwth.bin` with two float32 records (`bifdph` depth, then `bifwth` width), and `param_bif_set_basin` writes `check_bif_bsnmod.bin` with two int32 records (`bifmod`, then `bpoint`). These are inspection-only products, not model inputs. Without `check_map`, neither diagnostic is created or overwritten; a pre-existing check file can therefore reflect an earlier run. The v5 program no longer creates the legacy separate `bifmod.bin` and `bpoint.bin`; pre-existing files are left untouched. Older v4 `bifdph.bin` files are also left untouched. `bifprm.csv` preserves the filtered `bifori.txt` row order; `pth_id` is a consecutive, configuration-specific row ID and `(ix,iy,jx,jy)` identifies a path across configurations. The CSV-to-NetCDF converter does no path filtering or recalculation. The model simulation reader accepts the generated `bifprm.csv` directly, or the equivalent `netcdf/bifprm.nc` in a NetCDF-enabled build; legacy `bifprm.txt` remains supported. The CSV is authoritative and the NetCDF converter preserves its finalized row order and values.
 
@@ -99,11 +110,22 @@ The wrapper supports `--dry-run` and `--no-overwrite`; existing CTLs are replace
 
 ## General-purpose runoff input matrix
 
-[`s03-generate_inpmat.sh`](s03-generate_inpmat.sh) invokes `param_inpmat_generate` to create a matrix for a user-selected regular runoff grid. Its retained example uses 0.25-degree cells, longitude bounds -180 to 180 degrees, latitude bounds -60 to 90 degrees, and north-to-south row order. Edit these values to match the runoff data; they describe that input grid, not the CaMa-Flood map grid.
+[`s03-generate_inpmat.sh`](s03-generate_inpmat.sh) invokes `param_inpmat_generate` to create a matrix for a user-selected regular runoff grid. Its standard example uses the ERA5-Land global 0.1-degree grid: 3600 × 1801 cells, west/east edges -180.05/179.95 degrees, north/south edges 90.05/-90.05 degrees, and north-to-south row order. These half-cell edges match the inspected converted `inp/repo-ERA5land-glb_2day/runoff_200001.nc`; source and converted coordinate arrays are identical. Edit these values to match the runoff data; they describe that input grid, not the CaMa-Flood map grid.
 
-The target map must provide `params.txt`, a selected high-resolution directory with `location.txt`, and each area's `catmxy.bin`; `grdare.bin` is optional. The runoff values themselves are not read while constructing the matrix. Set `ROFFTAG` to identify the runoff grid; the wrapper derives `inpdim_<ROFFTAG>.txt` and `inpmat_<ROFFTAG>.bin`. Set `HIRES_TAG` separately when the default high-resolution map selection is unsuitable.
+`repo-ERA5land-glb_2day` names the converted runoff dataset; `ERA5land_global`
+is its reusable spatial-grid tag (`ROFFTAG`); `glb_15min`, for example, names
+an independent CaMa-Flood model map. The standard s03 writes
+`diminfo_ERA5land_global.txt` and `inpmat_ERA5land_global.bin` into the selected
+map root. The same pair can be reused for longer runoff series on exactly the
+same grid/order **and the same model map**; generate it separately for every
+other model map. Other regular runoff grids remain manually configurable.
+For the global map, generated matrices belong in Package Additional Data at
+`cmf_v5_package_data/map/glb_15min/`, not in Git. This settings update generates
+no matrices and does not change the external data store.
 
-This configurable matrix is distinct from the standard `inpmat_test-glb_1deg.bin` and `inpdim_test-glb_1deg.txt` produced by `region_default_inpmat` and distributed with prepared v5 maps for the standard annual-runoff channel workflow. The configurable `inpmat` is expected to be needed by a future sample simulation, but the sample runoff/map dataset and GitHub-versus-package data selection remain open. Existing v4 maps may still carry `diminfo_<ROFFTAG>.txt`; those names are retained for legacy workflows. See the [Phase B2 migration plan](../../../docs/map_params_migration_plan.md) for migration evidence and limitations.
+The target map must provide `params.txt`, a selected high-resolution directory with `location.txt`, and each area's `catmxy.bin`; `grdare.bin` is optional. The runoff values themselves are not read while constructing the matrix. Set `ROFFTAG` to identify the runoff grid; the wrapper derives `diminfo_<ROFFTAG>.txt` and `inpmat_<ROFFTAG>.bin`. Set `HIRES_TAG` separately when the default high-resolution map selection is unsuitable.
+
+This configurable matrix is distinct from the standard `inpmat_test-glb_1deg.bin` and `diminfo_test-glb_1deg.txt` produced by `region_default_inpmat` and distributed with prepared v5 maps for the standard annual-runoff channel workflow. The ERA5-Land setting defines the standard sample grid; generation and model-ingestion validation of its matrix remain separate work. The restored `diminfo_<ROFFTAG>.txt` naming is shared with v4; existing v4 reading behavior is unchanged. See the [Phase B2 migration plan](../../../docs/map_params_migration_plan.md) for migration evidence and limitations.
 
 The Python dam-parameter estimation workflow under legacy `map/src/src_dam/` is separate from the Fortran dam-location allocation workflows listed below.
 

@@ -135,7 +135,7 @@ class GenerateCtlTests(unittest.TestCase):
         self.assertEqual((result.generated, result.skipped, result.failed), (0, 1, 1))
         self.assertFalse((self.map_dir / "known.ctl").exists())
 
-    def test_input_matrix_uses_its_inpdim_descriptor_and_mixed_record_types(self):
+    def test_input_matrix_uses_its_diminfo_descriptor_and_mixed_record_types(self):
         matrix_rows = []
         for name, dtype, index, long_name, units in (
             ("inpx", "int32", "1", "Input-grid x index", "1"),
@@ -153,7 +153,7 @@ class GenerateCtlTests(unittest.TestCase):
             item["units"] = units
             matrix_rows.append(item)
         write_registry(self.registry, matrix_rows)
-        (self.map_dir / "inpdim_test-glb_1deg.txt").write_text(
+        (self.map_dir / "diminfo_test-glb_1deg.txt").write_text(
             "3 !! nXX\n2 !! nYY\n2 !! floodplain layers\n360 !! input nXX\n"
             "180 !! input nYY\n4 !! input num\ninpmat_test-glb_1deg.bin\n"
             "-1.5 !! west\n1.5 !! east\n1.0 !! north\n-1.0 !! south\n",

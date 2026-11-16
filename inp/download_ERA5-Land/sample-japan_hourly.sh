@@ -10,6 +10,7 @@ set -eu
 DATASET="repo-ERA5land-jpn_hourly"
 
 # Inclusive period and geographic edges [degrees east/north].
+# Requested CDS area is not a substitute for the downloaded grid-center metadata.
 START_DATE="2007-09-01"
 END_DATE="2007-09-10"
 WEST=120

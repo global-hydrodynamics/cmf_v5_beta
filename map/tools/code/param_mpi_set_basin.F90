@@ -26,8 +26,6 @@ program param_mpi_set_basin
   integer                  :: allgrid  !! total river cells used for basin-size diagnostics
   integer                  :: grid_thrs  !! combined basin threshold [cells]
   integer                  :: thrs2  !! small-basin threshold [cells]
-  integer                  :: ios  !! I/O status code
-  integer                  :: argc  !! number of command-line arguments
   integer                  :: ix, iy  !! x/y grid index
   integer                  :: i  !! basin, pathway, or grid traversal index
   integer                  :: k  !! bifurcation layer index
@@ -36,7 +34,6 @@ program param_mpi_set_basin
   integer                  :: mark  !! pathway endpoint classification code
   integer                  :: again  !! number of basin merges in the current pass
   integer                  :: pass  !! bifurcation merge stage
-  integer                  :: u  !! active input/output-file unit
   real                     :: gsize  !! map grid size [deg]
   real                     :: west, east, south, north  !! map bounds [deg]
   real                     :: rate  !! basin-merge threshold fraction
@@ -54,78 +51,33 @@ program param_mpi_set_basin
   ! Bifurcation widths and parsed pathway rows.
   type(pathway), allocatable :: paths(:)  !! parsed bifurcation pathway records
   type(bifprm_path), allocatable :: csv_paths(:)  !! paths loaded by named CSV columns
-  character(len=256)       :: arg  !! command-line argument
-  character(len=256)       :: diagnostic_arg  !! optional check_map argument
   logical                  :: check_map  !! whether to write the optional diagnostic raster
 
   ! ================================================
   ! [1] Select the merge mode and optional diagnostic output
   ! ================================================
-  check_map=.false.
-  call get_command_argument(1,arg)
-  if (trim(arg) == 'MaxMPI') then
-    rate=0.03
-  else if (len_trim(arg) == 0 .or. trim(arg) == 'normal') then
-    rate=0.06
-  else
-    write(*,'(a)') 'Usage: param_mpi_set_basin [normal|MaxMPI] [check_map]'
-    stop 2
-  end if
-  call get_command_argument(2,diagnostic_arg)
-  if (len_trim(diagnostic_arg)>0) then
-    if (trim(diagnostic_arg)/='check_map') then
-      write(*,'(a)') 'Usage: param_mpi_set_basin [normal|MaxMPI] [check_map]'
-      stop 2
-    end if
-    check_map=.true.
-  end if
-  argc=command_argument_count()
-  if (argc>2) then
-    write(*,'(a)') 'Usage: param_mpi_set_basin [normal|MaxMPI] [check_map]'
-    stop 2
-  end if
-  write(*,'(a,f6.3)') 'MPI basin-merge threshold fraction: ',rate
+  ! normal: 6% of river cells; MaxMPI: 3%. Optional check_map enables diagnostics.
+  call read_merge_options(rate, check_map)
 
   ! ================================================
   ! [2] Read map geometry, basin IDs, and bifurcation pathways
   ! ================================================
-  open(newunit=u,file='../params.txt',status='old',action='read',iostat=ios)
-  if (ios /= 0) call die('cannot open ../params.txt')
-  read(u,*,iostat=ios) nx
-  if (ios==0) read(u,*,iostat=ios) ny
-  if (ios==0) read(u,*,iostat=ios)
-  if (ios==0) read(u,*,iostat=ios) gsize
-  if (ios==0) read(u,*,iostat=ios) west
-  if (ios==0) read(u,*,iostat=ios) east
-  if (ios==0) read(u,*,iostat=ios) south
-  if (ios==0) read(u,*,iostat=ios) north
-  close(u)
-  if (ios /= 0 .or. nx<1 .or. ny<1) call die('invalid map dimensions in ../params.txt')
+  ! params.txt supplies NX, NY and geographic bounds before raster allocation.
+  call read_map_parameters('../params.txt')
 
   allocate(basin(nx,ny))
-  open(newunit=u,file='../basin.bin',form='unformatted',access='direct',recl=4*nx*ny,status='old',iostat=ios)
-  if (ios /= 0) call die('cannot open ../basin.bin')
-  read(u,rec=1,iostat=ios) basin
-  close(u)
-  if (ios /= 0) call die('cannot read ../basin.bin record 1')
+  ! Record 1: model-grid basin IDs; positive IDs identify river cells.
+  call read_basin_ids('../basin.bin', basin, record=1)
   if (check_map) then
     allocate(basin_original(nx,ny))
     basin_original=basin
   end if
 
+  ! Named CSV columns define inter-basin endpoints, elevations [m] and widths [m].
   call read_bifprm_csv('../bifprm.csv',csv_paths,npth,nlev)
-  allocate(paths(npth))
-  do i=1,npth
-    paths(i)%ix=csv_paths(i)%ix; paths(i)%iy=csv_paths(i)%iy
-    paths(i)%jx=csv_paths(i)%jx; paths(i)%jy=csv_paths(i)%jy
-    paths(i)%ibsn=csv_paths(i)%ibsn; paths(i)%jbsn=csv_paths(i)%jbsn
-    paths(i)%elv=csv_paths(i)%elevtn
-    paths(i)%w1=csv_paths(i)%widths(1)
-    paths(i)%line=csv_paths(i)%sort_line
-    if (min(paths(i)%ix,paths(i)%iy,paths(i)%jx,paths(i)%jy)<1 .or. &
-        paths(i)%ix>nx .or. paths(i)%jx>nx .or. paths(i)%iy>ny .or. paths(i)%jy>ny) &
-      call die('bifprm.csv contains an endpoint outside params.txt dimensions')
-  end do
+  ! Retain endpoint indices, basin IDs, elevation, layer-1 width and legacy sort key;
+  ! validate endpoints against NX x NY before the order-sensitive aggregation.
+  call prepare_merge_pathways(csv_paths, paths)
 
   ! [3] Sort pathways before the order-sensitive basin aggregation.
   ! The CSV reader reconstructs the legacy row only for the deterministic
@@ -172,6 +124,8 @@ program param_mpi_set_basin
         if (bnew(jbsn)==-9999 .or. bnew(jbsn)>ibsn) bnew(jbsn)=ibsn
       end if
     end do
+    ! Apply the candidate ID links in ascending basin order, update cell counts
+    ! and relabel the basin raster before testing the next pass.
     call commit_merges(.false.)
     again=0
     do i=1,npth
@@ -198,6 +152,7 @@ program param_mpi_set_basin
         if (bnew(jbsn)==-9999 .or. bnew(jbsn)>ibsn) bnew(jbsn)=ibsn
       end if
     end do
+    ! This stage commits candidate ID links in descending basin order.
     call commit_merges(.true.)
     again=0
     do i=1,npth
@@ -218,29 +173,131 @@ program param_mpi_set_basin
   ! of how many MPI regions are assigned later.
   allocate(basin_color(nx,ny))
   call color_map(basin,nx,ny,west,east,basin_color)
-  open(newunit=u,file='../bifcol_mpi.bin',form='unformatted',access='direct', &
-       recl=4*nx*ny,status='replace',iostat=ios)
-  if (ios/=0) call die('cannot create ../bifcol_mpi.bin')
-  write(u,rec=1,iostat=ios) basin_color
-  if (ios/=0) call die('cannot write ../bifcol_mpi.bin record 1')
-  close(u,iostat=ios)
-  if (ios/=0) call die('cannot close ../bifcol_mpi.bin')
-  write(*,'(a)') 'Created MPI-aggregated basin colors: ../bifcol_mpi.bin'
+  ! Record 1: integer display colors for the aggregated basins, not MPI region IDs.
+  call write_basin_colors('../bifcol_mpi.bin', basin_color, record=1)
 
   ! Optional legacy-compatible diagnostic for basin changes and original
   ! bifurcation endpoints. It is written before region assignment and therefore
   ! does not depend on the number of MPI regions.
-  if (check_map) call write_check_map()
+  ! Records 1/2: basin-change classes / pathway-endpoint classes (integer NX x NY).
+  if (check_map) call write_check_map('../check_bif_bsnmod_mpi.bin')
 
   ! Temporary intermediate consumed by param_mpi_set_region; wrapper removes it.
-  open(newunit=u,file='../bifbsn_mpi.tmp',form='unformatted',access='direct',recl=4*nx*ny,status='replace',iostat=ios)
-  if (ios/=0) call die('cannot create ../bifbsn_mpi.tmp')
-  write(u,rec=1,iostat=ios) basin
-  close(u)
-  if (ios/=0) call die('cannot write ../bifbsn_mpi.tmp')
-  write(*,'(a)') 'Created temporary MPI basin groups: ../bifbsn_mpi.tmp'
+  call write_mpi_basin_groups('../bifbsn_mpi.tmp', basin, record=1)
 
 contains
+
+  ! Configuration, file access and CSV validation; scientific merge loops remain above.
+  subroutine read_merge_options(rate, check_map)
+    real,intent(out) :: rate
+    logical,intent(out) :: check_map
+    integer :: argc
+    character(len=256) :: arg, diagnostic_arg
+
+    check_map=.false.
+    call get_command_argument(1,arg)
+    if (trim(arg) == 'MaxMPI') then
+      rate=0.03
+    else if (len_trim(arg) == 0 .or. trim(arg) == 'normal') then
+      rate=0.06
+    else
+      write(*,'(a)') 'Usage: param_mpi_set_basin [normal|MaxMPI] [check_map]'
+      stop 2
+    end if
+    call get_command_argument(2,diagnostic_arg)
+    if (len_trim(diagnostic_arg)>0) then
+      if (trim(diagnostic_arg)/='check_map') then
+        write(*,'(a)') 'Usage: param_mpi_set_basin [normal|MaxMPI] [check_map]'
+        stop 2
+      end if
+      check_map=.true.
+    end if
+    argc=command_argument_count()
+    if (argc>2) then
+      write(*,'(a)') 'Usage: param_mpi_set_basin [normal|MaxMPI] [check_map]'
+      stop 2
+    end if
+    write(*,'(a,f6.3)') 'MPI basin-merge threshold fraction: ',rate
+  end subroutine read_merge_options
+
+  subroutine read_map_parameters(input_file)
+    character(len=*),intent(in) :: input_file
+    integer :: u, ios
+
+    open(newunit=u,file=input_file,status='old',action='read',iostat=ios)
+    if (ios /= 0) call die('cannot open ../params.txt')
+    read(u,*,iostat=ios) nx
+    if (ios==0) read(u,*,iostat=ios) ny
+    if (ios==0) read(u,*,iostat=ios)
+    if (ios==0) read(u,*,iostat=ios) gsize
+    if (ios==0) read(u,*,iostat=ios) west
+    if (ios==0) read(u,*,iostat=ios) east
+    if (ios==0) read(u,*,iostat=ios) south
+    if (ios==0) read(u,*,iostat=ios) north
+    close(u)
+    if (ios /= 0 .or. nx<1 .or. ny<1) call die('invalid map dimensions in ../params.txt')
+  end subroutine read_map_parameters
+
+  subroutine read_basin_ids(input_file, basin, record)
+    character(len=*),intent(in) :: input_file
+    integer,intent(out) :: basin(:,:)
+    integer,intent(in) :: record
+    integer :: u, ios
+
+    open(newunit=u,file=input_file,form='unformatted',access='direct',recl=4*nx*ny,status='old',iostat=ios)
+    if (ios /= 0) call die('cannot open ../basin.bin')
+    read(u,rec=record,iostat=ios) basin
+    close(u)
+    if (ios /= 0) call die('cannot read ../basin.bin record 1')
+  end subroutine read_basin_ids
+
+  subroutine prepare_merge_pathways(csv_paths, paths)
+    type(bifprm_path),intent(in) :: csv_paths(:)
+    type(pathway),allocatable,intent(out) :: paths(:)
+    integer :: i
+
+    allocate(paths(npth))
+    do i=1,npth
+      paths(i)%ix=csv_paths(i)%ix; paths(i)%iy=csv_paths(i)%iy
+      paths(i)%jx=csv_paths(i)%jx; paths(i)%jy=csv_paths(i)%jy
+      paths(i)%ibsn=csv_paths(i)%ibsn; paths(i)%jbsn=csv_paths(i)%jbsn
+      paths(i)%elv=csv_paths(i)%elevtn
+      paths(i)%w1=csv_paths(i)%widths(1)
+      paths(i)%line=csv_paths(i)%sort_line
+      if (min(paths(i)%ix,paths(i)%iy,paths(i)%jx,paths(i)%jy)<1 .or. &
+          paths(i)%ix>nx .or. paths(i)%jx>nx .or. paths(i)%iy>ny .or. paths(i)%jy>ny) &
+        call die('bifprm.csv contains an endpoint outside params.txt dimensions')
+    end do
+  end subroutine prepare_merge_pathways
+
+  subroutine write_basin_colors(output_file, basin_color, record)
+    character(len=*),intent(in) :: output_file
+    integer,intent(in) :: basin_color(:,:), record
+    integer :: u, ios
+
+    open(newunit=u,file=output_file,form='unformatted',access='direct', &
+         recl=4*nx*ny,status='replace',iostat=ios)
+    if (ios/=0) call die('cannot create ../bifcol_mpi.bin')
+    write(u,rec=record,iostat=ios) basin_color
+    if (ios/=0) call die('cannot write ../bifcol_mpi.bin record 1')
+    close(u,iostat=ios)
+    if (ios/=0) call die('cannot close ../bifcol_mpi.bin')
+    write(*,'(a)') 'Created MPI-aggregated basin colors: ../bifcol_mpi.bin'
+  end subroutine write_basin_colors
+
+  subroutine write_mpi_basin_groups(output_file, basin, record)
+    character(len=*),intent(in) :: output_file
+    integer,intent(in) :: basin(:,:), record
+    integer :: u, ios
+
+    open(newunit=u,file=output_file,form='unformatted',access='direct',recl=4*nx*ny,status='replace',iostat=ios)
+    if (ios/=0) call die('cannot create ../bifbsn_mpi.tmp')
+    write(u,rec=record,iostat=ios) basin
+    close(u)
+    if (ios/=0) call die('cannot write ../bifbsn_mpi.tmp')
+    write(*,'(a)') 'Created temporary MPI basin groups: ../bifbsn_mpi.tmp'
+  end subroutine write_mpi_basin_groups
+
   subroutine die(message)
     character(len=*),intent(in) :: message
     write(*,'(a)') 'param_mpi_set_basin: ERROR: '//trim(message)
@@ -278,12 +335,13 @@ contains
     if (left<hi) call quicksort(left,hi)
   end subroutine quicksort
 
-  subroutine write_check_map()
+  subroutine write_check_map(output_file)
+    character(len=*),intent(in) :: output_file
+    integer :: ios
     integer, allocatable     :: bnum_final(:)
     integer                  :: record_unit  !! binary output unit
     integer                  :: class_value
     integer                  :: original_id
-    character(len=64)        :: output_file
 
     allocate(bifmod_mpi(nx,ny),bpoint_mpi(nx,ny),bnum_final(nbsn))
     bnum_final=0
@@ -327,7 +385,6 @@ contains
       end do
     end do
 
-    output_file='../check_bif_bsnmod_mpi.bin'
     open(newunit=record_unit,file=output_file,form='unformatted',access='direct', &
          recl=4*nx*ny,status='replace',iostat=ios)
     if (ios/=0) call die('cannot create '//trim(output_file))

@@ -1,8 +1,22 @@
 # River maps and map-preparation tools
 
+For maintained code and workflow changes, see the [shared preprocessing code conventions](../docs/preprocessing_code_conventions.md) and local [agent instructions](AGENTS.md).
+
 The `map/` directory connects CaMa-Flood's river and floodplain representation to the datasets and preprocessing tools used to prepare it. The GitHub source repository supplies map-processing code and documentation, plus the official `mekong_15min` development/test sample. Global source maps such as `glb_15min` are distributed separately in CaMa-Flood data packages. Check the map files included with your package and obtain any additional datasets required by the simulation.
 
 For model setup and example runs, see the [v5 developer execution guide](../gosh_test/README.md). This page is an overview; tool-specific details remain in the component documentation linked below.
+
+## Global additional data
+
+The authoritative global 15-minute map is
+`cmf_v5_package_data/map/glb_15min/`, outside the repository; a local
+`map/glb_15min/` development copy is ignored by Git. The package catalog keeps
+model-grid Binary, `netcdf/`, standard generated parameters and auxiliary text.
+High-resolution distribution uses compressed `1min_nc/` and its `location.txt`;
+`1min/` Binary is restored on demand, not shipped as a duplicate. Generation
+scripts remain in GitHub under `map/tools/`. See the
+[package selection policy](../package/README.md#global-15-minute-map-selection)
+and [Binary restoration guide](tools/script_bin2nc/README.md#restore-high-resolution-binary-working-files-s04).
 
 ## Development and test sample
 
@@ -74,7 +88,7 @@ Examples of maps used by sample runs are listed in [the v5 workflow guide](../go
 
 [`variable_table/map_variables.csv`](../variable_table/map_variables.csv) is the source-linked variable and data-product registry for CaMa-Flood maps. It uses symbolic dimensions such as `NX`, `NY`, and `NLFP`, so the definitions apply across map resolutions and regional domains. It is the primary source for variable names, proposed long names and units, data types, record layouts, numeric stored missing values, meaningful special codes, product variants, distribution roles, and current model-reader mappings.
 
-[`variable_table/map_metadata_spec.md`](../variable_table/map_metadata_spec.md) explains the CSV schema and how it relates to per-map `params.txt`, `mapdim.txt`, runoff/input-grid descriptors, and GrADS CTL files. v5 workflows pair `inpdim_<ROFFTAG>.txt` with `inpmat_<ROFFTAG>.bin`; legacy `diminfo_*.txt` names remain supported for existing v4 data and callers. `ROFFTAG` identifies the runoff/input-grid configuration, while `HIRES_TAG` selects high-resolution map data.
+[`variable_table/map_metadata_spec.md`](../variable_table/map_metadata_spec.md) explains the CSV schema and how it relates to per-map `params.txt`, `mapdim.txt`, runoff/input-grid descriptors, and GrADS CTL files. v5 workflows pair `diminfo_<ROFFTAG>.txt` with `inpmat_<ROFFTAG>.bin`; legacy `diminfo_*.txt` names remain supported for existing v4 data and callers. `ROFFTAG` identifies the runoff/input-grid configuration, while `HIRES_TAG` selects high-resolution map data. The s03 standard is now `ROFFTAG=ERA5land_global`, matching the converted `repo-ERA5land-glb_2day` 0.1-degree runoff grid (3600 × 1801). The tag describes spatial geometry, not a time period or the model-map name (`glb_15min`, for example). Generate the paired matrix/descriptor separately for each model map; identical runoff geometry/order allows reuse across periods on that map. Global-map products are intended for Package Additional Data, and are not generated here.
 
 The bifurcation workflow writes authoritative named `bifprm.csv` at the map root and its static NetCDF-4 counterpart at `netcdf/bifprm.nc`; the simulation reader accepts both plus legacy `bifprm.txt`. IDs in these products are configuration-specific row IDs, with endpoint indices used to identify paths across configurations. The channel-parameter entries describe products users generate or verify for a target map. Data-rich packages may include prepared examples; check the actual package contents before generating replacements. The v5 workflow writes the alternative MERIT Hydro merged width as `rivwth_merit.bin`; the preserved v4 workflow retains its historical `rivwth_gwdlr.bin` output.
 
@@ -154,7 +168,7 @@ Check the feature-specific manual or workflow first. For reservoirs, see `src/sr
 
 Map directories are commonly named by region and grid spacing, for example `glb_15min` or `conus_06min`. The model's namelist explicitly names the map paths; scripts commonly set a base such as `FMAP` and build those paths from it. A directory name alone does not establish that its contents are complete or compatible.
 
-The standard binary map path uses files such as `nextxy.bin` (downstream grid indices), `ctmare.bin` (unit-catchment area), `elevtn.bin`, `nxtdst.bin`, `rivlen.bin`, and `fldhgt.bin`; channel parameters may include `rivwth.bin`, `rivhgt.bin`, and `rivman.bin`. Runoff/input-grid descriptors carry dimensions and map bounds: v5 tools name them `inpdim_<ROFFTAG>.txt`, while existing v4 configurations retain `diminfo_*.txt`. The model's namelist key remains `diminfo_file`. Optional files and required names depend on the selected model options. The `NMAP` namelist in `src/cmf_ctrl_maps_mod.F90` shows the paths read by the model, while sample execution scripts show concrete configurations.
+The standard binary map path uses files such as `nextxy.bin` (downstream grid indices), `ctmare.bin` (unit-catchment area), `elevtn.bin`, `nxtdst.bin`, `rivlen.bin`, and `fldhgt.bin`; channel parameters may include `rivwth.bin`, `rivhgt.bin`, and `rivman.bin`. Runoff/input-grid descriptors carry dimensions and map bounds: v5 tools name them `diminfo_<ROFFTAG>.txt`, while existing v4 configurations retain `diminfo_*.txt`. The model's namelist key remains `diminfo_file`. Optional files and required names depend on the selected model options. The `NMAP` namelist in `src/cmf_ctrl_maps_mod.F90` shows the paths read by the model, while sample execution scripts show concrete configurations.
 
 Many legacy `.bin` files are Fortran unformatted direct-access records, but the record contents and numeric types vary by file. For example, the `nextxy` reader expects two integer records; other readers expect real-valued parameters. Text metadata and tables may use `.txt` or `.csv`. The code also contains an optional NetCDF map reader, which requires a NetCDF-enabled build and matching NetCDF variables. Do not infer a complete file specification from the extension alone.
 
@@ -181,3 +195,14 @@ When combining or generating map products, keep dimensions, grid spacing, geogra
 - [Dam/reservoir parameter workflow](src/src_dam/ReadMe.md)
 - [Model source architecture](../src_main/README.md)
 - [Sample simulation workflows](../gosh_test/README.md)
+
+## Simulation dimension information
+
+`diminfo_<TAG>.txt` is **Simulation dimension information**, containing both
+model-grid dimensions (`NX`, `NY`, `NLFP`) and runoff/input-grid dimensions
+(`NXIN`, `NYIN`, `INPN`), plus geographic bounds when applicable.
+`inpmat_<TAG>.bin` separately stores input-to-model cell correspondence.
+The previous v5 `inpdim` name was reverted because it described only part of
+the descriptor's role. File contents and scientific processing are unchanged;
+there is no old-name fallback. Existing `CDIMINFO`/`diminfo_file` interfaces
+are retained. See the [metadata specification](../variable_table/map_metadata_spec.md#diminfo_rofftagtxt--simulation-dimension-information).

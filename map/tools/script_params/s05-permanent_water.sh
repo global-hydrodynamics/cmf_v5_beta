@@ -15,7 +15,7 @@ MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
 CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 
 # Select the high-resolution map used to estimate permanent-water area.
-HIRES_TAG="1min"  # Map directory tag containing location.txt (default: 1min).
+HIRES_TAG="1min"  # Source directory containing location.txt; edit for the target map.
 
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
@@ -52,6 +52,7 @@ cd "$MAP_DIR"
 
 STEP="Aggregate permanent-water pixels from $HIRES_TAG into unit catchments"
 printf '\n==================================================\n[STEP 1/1] Estimate permanent-water area (%s)\n==================================================\n\n' "$HIRES_TAG"
+# Fortran owns the tag/geometry/file validation as well as the aggregation.
 "$EXEC_PRMWAT" "$HIRES_TAG"
 
 printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"

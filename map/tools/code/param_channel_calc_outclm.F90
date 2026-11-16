@@ -27,8 +27,8 @@ USE NETCDF
       data                    intp /'inpmat'/
 
 ! input files
-      character*256            :: diminfo  !! input-dimension descriptor filename
-      data                    diminfo /'./inpdim_test-glb_1deg.txt'/
+      character*256            :: diminfo  !! simulation dimension information filename
+      data                    diminfo /'./diminfo_test-glb_1deg.txt'/
 
       character*256            :: crofbin  !! runoff climatology (plain binary) in [mm/sec]
       data                    crofbin /'../data/runoff_1981-2000_ave.bin'/

@@ -59,7 +59,7 @@ LRESTCDF=".TRUE."               # TRUE: NetCDF restart; FALSE: Binary restart.
 
 NAMELIST="${RUNDIR}/input_cmf.nam"
 RUNOFF_DIR="${CMF_BASE}/inp/${ROFFTAG}"
-INPDIM="${MAPDIR}/inpdim_${INPMAT_TAG}.txt"
+DIMINFO="${MAPDIR}/diminfo_${INPMAT_TAG}.txt"
 INPMAT="${MAPDIR}/inpmat_${INPMAT_TAG}.bin"
 
 EXEC_CMF="${CMF_BASE}/src_main/MAIN_cmf"
@@ -119,7 +119,7 @@ LDAMOUT = ${LDAMOUT}       ! TRUE enables reservoir operation; FALSE disables it
 LRESTART = ${LRESTART}     ! TRUE reads initial state from CRESTSTO; FALSE starts without a restart.
 /
 &NDIMTIME
-CDIMINFO = "${INPDIM}"    ! Map and runoff-grid dimensions for input mapping.
+CDIMINFO = "${DIMINFO}"    ! Map and runoff-grid dimensions for input mapping.
 DT = ${DT}                 ! Base timestep [s]; adaptive stepping may reduce it.
 IFRQ_INP = ${IFRQ_INP}     ! Runoff update interval [hours].
 /

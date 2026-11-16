@@ -108,7 +108,7 @@ trap 'exit 143' TERM
 RUNOFF_DIR="${CMF_BASE}/inp/${ROFFTAG}/runoff"
 
 # The dimension descriptor and matrix were generated for this map/runoff pair.
-INPDIM="${MAPDIR}/inpdim_${INPMAT_TAG}.txt"
+DIMINFO="${MAPDIR}/diminfo_${INPMAT_TAG}.txt"
 INPMAT="${MAPDIR}/inpmat_${INPMAT_TAG}.bin"
 
 # Source executable; a copy is placed in RUNDIR and executed there.
@@ -156,7 +156,7 @@ LDAMOUT  = ${LDAMOUT}        ! TRUE: enable reservoir operation; FALSE: disable.
 LRESTART = ${LRESTART}       ! TRUE: read restart initial conditions; FALSE: initialize without restart data.
 /
 &NDIMTIME
-CDIMINFO = "${INPDIM}"       ! Map and runoff-grid dimensions and input-matrix metadata.
+CDIMINFO = "${DIMINFO}"       ! Map and runoff-grid dimensions and input-matrix metadata.
 DT       = ${DT}             ! Base timestep [s], multiple of 60; adaptive stepping may adjust it.
 IFRQ_INP = ${IFRQ_INP}       ! Runoff update interval [hours]; examples: 1, 2, 3, 6, 12, 24.
 /

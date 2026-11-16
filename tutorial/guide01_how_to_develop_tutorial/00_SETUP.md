@@ -241,7 +241,7 @@ presence:
 test -f map/mekong_15min/params.txt
 test -f inp/test-mek_1deg_nc/runoff2000.nc
 test -f map/mekong_15min/inpmat_test-mek_1deg.bin
-test -f map/mekong_15min/inpdim_test-mek_1deg.txt
+test -f map/mekong_15min/diminfo_test-mek_1deg.txt
 ```
 
 These checks confirm that expected files are present; they do not validate

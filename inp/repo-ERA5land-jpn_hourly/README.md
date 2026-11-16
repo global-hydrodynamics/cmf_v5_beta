@@ -1,9 +1,10 @@
-# Planned ERA5-Land Japan hourly repository sample
+# ERA5-Land Japan hourly repository sample
 
-**Status: workflow prepared; real data not downloaded or generated.**
+**Status: ten converted files exist and are Git-tracked; format metadata inspected.
+Scientific time attribution and model integration remain unvalidated.**
 
 This dataset is an example of the ERA5-Land download/NetCDF conversion
-workflow and a planned hourly CaMa-Flood runoff input fixture. GOSH
+workflow and an hourly CaMa-Flood runoff input fixture. GOSH
 integration and input-matrix preparation remain future work. This is not
 yet a validated GOSH input.
 
@@ -30,9 +31,12 @@ repo-ERA5land-jpn_hourly/
 └── logs/
 ```
 
-No original or converted data files are currently supplied here. Check actual
-coordinates after download: requested geographic limits are not a verified
-input-grid edge specification. The expected 301 × 301 center grid is provisional.
+Ten converted files total 17,229,869 bytes (about 16.43 MiB). Header/time/coordinate
+inspection confirms 24 hourly records per file, a 301 × 301 grid with longitude
+centers 120..150 and latitude 50..20, float32 `runoff(time,lat,lon)`, units `mm`,
+fill `1e20`, deflate=3 and shuffle. Derived edges are 119.95..150.05 and
+19.95..50.05 degrees. Raw files exist locally but remain ignored. These checks
+do not verify runoff values or model ingestion.
 
 ## Execution
 
@@ -78,21 +82,22 @@ Before publishing actual files, retain the applicable download-time licence
 and notices, record the retrieval date/source edition, include ECMWF/C3S and
 Copernicus attribution and the dataset DOI, and describe regional extraction,
 accumulation conversion, unit conversion and layout changes. This README
-records the current source terms; no particular downloaded files have yet been
-reviewed or cleared for publication.
+records the previously checked source terms; download-specific notices still
+need review before publication. This task does not clear particular files for
+redistribution.
 
 The README and `runoff_YYYYMMDD.nc` are eligible for Git tracking. Original CDS
 files, logs and the generated information file remain ignored. **Do not git add
 or push generated data until their actual sizes, attribution/licence metadata
-and validation results have been reviewed.** There are no measured data-file
-sizes or real-data validation results in this task.
+and validation results have been reviewed.** The measured sizes and header
+checks above are limited evidence, not scientific validation. The converted files were already tracked before this task.
 
 ## Required real-data checks
 
-After a later download, verify ten daily files and 240 distinct hourly labels,
+Before model integration/publication, verify 240 distinct hourly labels,
 source/output coordinate consistency, units, masks, negative/reset behavior,
 float32 layout and compression, and the first/last records at each daily boundary.
-Record actual file sizes and attribution before Git registration. A separate
-scientific review must address KG-0019; a later integration task must supply the
+Retain the measured file sizes and establish download-specific attribution
+before publication. A separate scientific review must address KG-0019; a later integration task must supply the
 matching input matrix and validate the GOSH/model reader. The current offline
 checks use only tiny synthetic fields.

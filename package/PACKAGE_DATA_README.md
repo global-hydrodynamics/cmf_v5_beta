@@ -8,7 +8,8 @@ This repository-external store contains authoritative additional datasets used t
 work/
 ├── cmf_v5_beta/                # Git-managed development sources and package tools
 ├── cmf_v5_package_data/        # Authoritative additional datasets (this store)
-│   └── inp/ELSE_GPCC/
+│   ├── inp/ELSE_GPCC/
+│   └── map/glb_15min/
 └── cmf_v5b01_pkg/              # Independently generated distribution package
 ```
 
@@ -29,7 +30,31 @@ The authoritative selection catalog is `cmf_v5_beta/package/package_data.csv`. I
 
 The period and file inventory have been identified, but NetCDF contents, value equivalence, precision and compression settings have not been independently validated in this catalog-initialization work.
 
-## Source, conversion and redistribution
+### map/glb_15min/
+
+Global 15-minute model maps are supplied as additional package data. Their
+authoritative source is `cmf_v5_package_data/map/glb_15min/`; GitHub holds the
+small Mekong sample and generation/conversion tools. Local checkout copies are
+not authoritative package inputs.
+
+The catalog includes model-grid Binary, model-grid `netcdf/`, standard generated
+parameter data, observation/station information, bifurcation products and other
+auxiliary text. High-resolution `1min_nc/` plus its `location.txt` are distributed
+as compressed NetCDF; `1min/` Binary is excluded and can be restored on demand
+with `cmf_v5_beta/map/tools/script_bin2nc/s04-restore_highres_binary.sh`. Do not
+include both high-resolution formats. Generation directories (`script*/`,
+`src*/`, `code/`), script/source files and temporary/build/log files are excluded
+by the selection policy in `cmf_v5_beta/package/README.md`; the existing
+six-column catalog does not yet encode exclusions mechanically. Existing standard `.bin` products are
+not removed by those exclusions. Input Matrix format and further data pruning
+are deferred to a later round.
+
+This registration does not alter the stored data or establish scientific
+validation. Map-product provenance, redistribution permissions and required
+attribution still need to be assembled before distributing a package. A previous
+package's contents alone do not establish redistribution permission.
+
+## ELSE_GPCC source, conversion and redistribution
 
 The source product is ELSE_GPCC runoff. Existing project documentation associates it with Kim et al. (2009), [doi:10.1029/2009GL039006](https://doi.org/10.1029/2009GL039006). The exact upstream edition and complete processing provenance still need to be recorded; a citation alone is not a redistribution permission record.
 
@@ -44,5 +69,11 @@ Redistribution conditions for this global archive are **not yet confirmed in thi
 - Register or revise datasets in `cmf_v5_beta/package/package_data.csv`, and update the Git-managed README source when the description, provenance, coverage or terms change.
 - Keep dataset directories aligned with their intended package destinations, for example `inp/ELSE_GPCC/` under both data and package roots.
 - Preserve original data. Do not silently overwrite existing files; retain generation/version and validation evidence when datasets are revised.
-- Development copies must be excluded through dataset-local Git ignore rules (`inp/.gitignore`, and `map/.gitignore` for future map additions). Do not commit the large data to the development repository.
+- Development copies must be excluded through dataset-local Git ignore rules (`inp/.gitignore` and `map/.gitignore`). Do not commit the large data to the development repository.
 - Package installation and generation automation remain planned. They must use the external authoritative store and catalog, leaving source data unchanged and creating an independent package output.
+
+The logical sibling `cmf_v5_package_data/` may be a symbolic link to externally
+managed storage. Tools must use that logical location without hard-coded
+Dropbox paths and must clearly fail if it or a required dataset is inaccessible;
+no data should be generated or copied as an implicit fallback. Installation
+and package assembly are still planned, not implemented tools.

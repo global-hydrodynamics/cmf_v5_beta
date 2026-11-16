@@ -1,6 +1,8 @@
 # Runoff input data and preparation
 
-The `inp/` directory contains tools for preparing runoff forcing used by CaMa-Flood. Runoff supplies water per unit land area over time; CaMa-Flood converts it to a flow rate for routing through the river network. The GitHub repository includes an ERA5-Land download and conversion workflow with small Japan examples. Distribution packages also include sample forcing for selected `gosh/` runs. Obtain or prepare additional forcing when the chosen experiment requires data beyond those supplied with the package.
+For maintained code and workflow changes, see the [shared preprocessing code conventions](../docs/preprocessing_code_conventions.md) and local [agent instructions](AGENTS.md).
+
+The `inp/` directory contains tools for preparing runoff forcing used by CaMa-Flood. Runoff supplies water per unit land area over time; CaMa-Flood converts it to a flow rate for routing through the river network. The GitHub repository includes an ERA5-Land download and conversion workflow with global two-day and Japan hourly examples. Distribution packages also include sample forcing for selected `gosh/` runs. Obtain or prepare additional forcing when the chosen experiment requires data beyond those supplied with the package.
 
 The GitHub repository also tracks the Binary `repo-mek_1deg_bin/` and annual NetCDF `repo-mek_1deg/` samples for minimal Mekong development runs; these do not require the larger additional-data package. The current v5 execution examples are under `gosh_test/`. Package Additional Data and the generated user package have distinct roles in [the maintained design](../docs/development_and_distribution_design.md); v5 assembly is planned, not an existing download/build procedure.
 
@@ -23,7 +25,7 @@ NetCDF is the standard v5 input format: new NetCDF dataset names normally omit `
 | --- | --- |
 | `tools/` | Shared runoff dataset helpers: [`extract_ELSE_GPCC.py`](tools/extract_ELSE_GPCC.py) extracts regional daily data from global annual NetCDF, and [`validate_runoff_datasets.py`](tools/validate_runoff_datasets.py) checks the input registry without reading datasets. Execution examples appear below. |
 | `download_ERA5-Land/` | Shell settings/job control and standalone Python CDS/NetCDF tools. No data are stored here; see the [ERA5-Land guide](download_ERA5-Land/README.md). Binary conversion is retired. |
-| `ERA5land-glb_2day/` | Destination for the optional global two-day sample: source files in `original/`, converted monthly NetCDF and logs in the dataset root/subdirectories. This refactor does not download or validate a new global sample. Git-ignored. |
+| `repo-ERA5land-glb_2day/` | Converted global two-day repository sample: `runoff_200001.nc` (24-hour records, 8,154,888 bytes). Original CDS inputs/logs are ignored. See the [dataset README](repo-ERA5land-glb_2day/README.md); format metadata inspected, scientific time attribution unresolved. |
 | `ERA5_land/daily/` | Canonical north-south half-grid geometry (90° to −90° cell centers; 3,600 × 1,801 at 0.1°). Only one local daily-named binary sample (1960-01-01) is currently present; its units, missing-value meaning, longitude order, and full coverage are unconfirmed. |
 | `ERA5_land/Roff/` | Legacy 1981–2020 daily binary series, 3,600 × 1,800. The maintainer confirms it omits the north-south half-grid shift and is not the canonical geometry. Neither series is tracked or distributed; see both registry entries. |
 | `ELSE_GPCC/` | Optional global daily NetCDF runoff, 1979–2010, one `runoffYYYY.nc` file per year. Supplied through the separate additional-data store and ignored by Git; see the [package catalog](../package/package_data.csv). Formerly named `ELSE_GPCC_nc/`; the previous Binary dataset at this path has been removed. Redistribution conditions and model-input validation remain unconfirmed. |
@@ -33,9 +35,9 @@ NetCDF is the standard v5 input format: new NetCDF dataset names normally omit `
 
 ## Runoff Dataset Registry
 
-[`runoff_datasets.csv`](runoff_datasets.csv) is a human-readable metadata registry of runoff datasets that can be used with CaMa-Flood. The model does not read this CSV at runtime, and registration is optional: users can run their own runoff data without modifying it. They must still identify the dataset's spatial grid, temporal interval and meaning, units, missing-value convention, and file format, then configure those values correctly in the map-preprocessing and simulation scripts.
+[`runoff_datasets.csv`](runoff_datasets.csv) is a human-readable metadata registry centered on finished datasets used as CaMa-Flood forcing. Downloaded originals are conversion intermediates; record their provenance in `data_source`, `source_url` and `notes`, rather than registering them alongside the finished product. The model does not read this CSV at runtime, and registration is optional: users can run their own runoff data without modifying it. They must still identify the dataset's spatial grid, temporal interval and meaning, units, missing-value convention, and file format, then configure those values correctly in the map-preprocessing and simulation scripts.
 
-An entry is recommended when sharing a dataset with collaborators or other users. It records the configuration needed to reproduce the setup, along with file patterns, provenance, and access or distribution information. Empty fields are not established values; check `configuration_status` and `notes` before reusing an entry. For usability and maintenance, use the naming convention `dataset_id = ROFFTAG = runoff dataset directory name`. This is a human-facing convention, not a technical requirement imposed by the model. The generated Input Matrix remains specific to its target map even when two maps use the same `ROFFTAG`.
+An entry is recommended when sharing a dataset with collaborators or other users. It records the configuration needed to reproduce the setup, along with file patterns, provenance, and access or distribution information. Empty fields are not established values; check `configuration_status` and `notes` before reusing an entry. For usability, `dataset_id` normally matches the runoff dataset directory name. `ROFFTAG` instead identifies the Input Matrix spatial grid and need not match the product or period: `repo-ERA5land-glb_2day` uses the reusable grid tag `ERA5land_global`. Neither naming convention is enforced by the model. The generated Input Matrix remains specific to its target map even when two maps use the same `ROFFTAG`.
 
 ### Available Runoff Samples
 
@@ -49,7 +51,7 @@ The table below summarizes the sample locations and review state. The CSV is the
 | `repo-mek_1deg_bin/` | Mekong 20 × 30 grid (90–110°E, 5–35°N); daily January–February 2000 data in two monthly Binary files. | Float32 `mm/day`, N-to-S, little-endian, missing value `-999`; `CROFFREQ=MON`, `IFRQ_INP=24`, `DROFUNIT=86400000`. Replaces the former long daily Binary collection. |
 | `repo-mek_1deg/` | Mekong 20 × 30 daily NetCDF runoff for 1979–2010, one file per year (32 files, about 15.6 MiB). | Float32 `mm day-1`, longitude centers 90.5–109.5°E, descending latitude 34.5–5.5°N, missing value `-999`, CF daily bounds; `CROFFREQ=YEAR`. All regional values were checked against global NetCDF; this is extraction fidelity, not model/scientific validation. |
 | `test_jpn_1hr/` | Original/source reference: daily binary files (`runoff_YYYYMMDD.bin`) plus `runoff.ctl`; Japan 1/60-degree grid (1500 × 1320), 1-hour records for 2007-09-03 through 2007-09-09. Locally available through an ignored symlink; large binaries are not tracked. | Maintainer-confirmed provenance: 1-arcmin simulations using the Today’s Japan system, provided by Yoshimura Laboratory. The maintainer identifies the original CTL `mm/day` label as erroneous and assesses the values as `mm/hour`, consistent with `gosh/test3-jpn_fcast.sh` (`IFRQ_INP=1`, `DROFUNIT=3600000`); this interpretation is not independently verified. |
-| `repo-ERA5land-jpn_hourly/` | Planned Japan hourly NetCDF fixture: September 1–10, 2007, 120–150°E/20–50°N, ten daily files. | [Dataset specification](repo-ERA5land-jpn_hourly/README.md); no real download yet. Planned hourly CaMa-Flood input sample; GOSH integration remains future work. Size/license review required before data registration. KG-0019 remains open. |
+| `repo-ERA5land-jpn_hourly/` | Converted Japan hourly repository sample, September 1–10, 2007: ten daily files, 24 records each, 17,229,869 bytes total. | [Dataset README](repo-ERA5land-jpn_hourly/README.md); format metadata inspected. GOSH/input-matrix integration and KG-0019 remain open. |
 | `ERA5land-jpn_legacy_bin/` | Preserved historical Binary CTL/report only; no maintained conversion workflow. | Binary conversion was retired; use the NetCDF workflow. These local historical files are Git-ignored. |
 | `ERA5_land/daily/` | Canonical north-south geometry. The only observed local file, `ERA5-Land_Runoff_daily_19600101.bin`, is headerless float32 with 3,600 × 1,801 values (25,934,400 bytes). | Maintainer confirms the half-grid shift: input-grid limits 90.05 to −90.05 produce centers 90 to −90 under the map-tool convention. Units, missing-value meaning, longitude order, provenance, and long-term coverage are unconfirmed; not ready for a configured simulation. |
 | `ERA5_land/Roff/` | Legacy 1981–2020 global daily binary series, 3,600 × 1,800 values per date. | The maintainer confirms the north-south half-grid shift is absent, so this is not the canonical daily geometry. Existing legacy input settings use 90/−90 limits (centers 89.95…−89.95). Metadata and scientific validity remain unverified; see `runoff_datasets.csv`. |
@@ -62,23 +64,39 @@ Package-only data are not added by cloning the GitHub repository. Obtain the v4.
 
 The runoff input grid and CaMa-Flood river map are separate grids. They may have different resolution, dimensions, and geographic extent. Use the runoff product's own regular latitude/longitude grid geometry to configure [the map-local `s03-generate_inpmat.sh` workflow](../map/tools/script_params/s03-generate_inpmat.sh). The workflow maps high-resolution map-pixel centers into runoff cells and accumulates overlap area for each map catchment. If the runoff grid does not cover part of the map, some catchments may have incomplete or no runoff coverage.
 
-Configure the runoff-grid settings in the copied script, for example:
+The standard s03 example matches the converted global ERA5-Land sample:
 
 ```sh
-ROFFTAG="repo-mek_1deg"
-GRSIZEIN=1.0
-WESTIN=90.0
-EASTIN=110.0
-NORTHIN=35.0
-SOUTHIN=5.0
+ROFFTAG="ERA5land_global"
+GRSIZEIN=0.1
+WESTIN=-180.05
+EASTIN=179.95
+NORTHIN=90.05
+SOUTHIN=-90.05
 OLAT="NtoS"
 ```
 
-The example describes the `repo-mek_1deg` 1-degree Mekong grid. `GRSIZEIN` is the runoff-cell spacing in degrees; `WESTIN`, `EASTIN`, `NORTHIN`, and `SOUTHIN` are the grid edges. The generator derives dimensions from the edge spans and spacing, and treats cell centers as half a cell inward from each edge. `OLAT` must match stored row order: `NtoS` or `StoN`. It does not read runoff values or validate source coordinates. Generate the matrix only after the product has been converted to the same grid and ordering it will use at runtime.
+The inspected `repo-ERA5land-glb_2day/runoff_200001.nc` has 3600 × 1801 cells:
+longitude centers -180..179.9 (increasing), latitude 90..-90 (decreasing), and
+0.1-degree spacing. Coordinates are unchanged from its downloaded source.
+The shown boundaries extend half a cell beyond the centers. `ERA5land_global`
+labels that spatial grid, not the sample's two-day period or the target model
+map (such as `glb_15min`). Longer forcing can reuse the same matrix only when
+its coordinates/order and target model map are unchanged; each different model
+map needs its own matrix. The dedicated Mekong regional settings remain in
+[`mek03-generate_inpmat-mek1deg.sh`](../map/mekong_15min/script_params/mek03-generate_inpmat-mek1deg.sh).
 
-Copy the workflow into the target map's `script_params/` directory, edit the settings, then run it there (or invoke the copied script by path). It writes `inpdim_<ROFFTAG>.txt` and `inpmat_<ROFFTAG>.bin` in the map root. Set `CINPMAT` in the simulation's `NFORCE` group to the map-root path for `inpmat_<ROFFTAG>.bin`. Keep the dataset's actual coordinates and longitude convention consistent between the forcing file and matrix; the model does not compare NetCDF coordinate values against the matrix.
+All settings remain user-editable for other regular runoff grids. `GRSIZEIN`
+is cell spacing and the four bounds are edges, not centers; `OLAT` must match
+stored row order. The generator derives dimensions from edge spans and spacing,
+with centers half a cell inward. It does not read runoff values or validate
+NetCDF coordinates. No ERA5-Land matrix is generated or model-tested by this
+settings update. Global-map matrix data are intended for the external
+`cmf_v5_package_data/map/glb_15min/` store, which is unchanged here.
 
-The generated pair is linked: set `CDIMINFO` in `NDIMTIME` to `inpdim_<ROFFTAG>.txt` and `CINPMAT` in `NFORCE` to `inpmat_<ROFFTAG>.bin`. The descriptor supplies the map/input dimensions and geographic bounds used with the matrix. Both files are map-specific and must be regenerated for another target map. See the [Map Tools guide](../map/tools/README.md) and [parameter workflow guide](../map/tools/script_params/README.md) for build and map-local setup details. If you optionally add a registry row, check its CSV structure and grid arithmetic with the standard-library-only checker:
+Copy the workflow into the target map's `script_params/` directory, edit the settings, then run it there (or invoke the copied script by path). It writes `diminfo_<ROFFTAG>.txt` and `inpmat_<ROFFTAG>.bin` in the map root. Set `CINPMAT` in the simulation's `NFORCE` group to the map-root path for `inpmat_<ROFFTAG>.bin`. Keep the dataset's actual coordinates and longitude convention consistent between the forcing file and matrix; the model does not compare NetCDF coordinate values against the matrix.
+
+The generated pair is linked: set `CDIMINFO` in `NDIMTIME` to `diminfo_<ROFFTAG>.txt` and `CINPMAT` in `NFORCE` to `inpmat_<ROFFTAG>.bin`. The descriptor supplies the map/input dimensions and geographic bounds used with the matrix. Both files are map-specific and must be regenerated for another target map. See the [Map Tools guide](../map/tools/README.md) and [parameter workflow guide](../map/tools/script_params/README.md) for build and map-local setup details. If you optionally add a registry row, check its CSV structure and grid arithmetic with the standard-library-only checker:
 
 ```sh
 python3 inp/tools/validate_runoff_datasets.py
@@ -126,7 +144,9 @@ See the [map overview](../map/README.md) and [Map Tools parameter workflow guide
 
 ## ERA5-Land source and conversion workflow
 
-The ERA5-Land-specific [download and NetCDF conversion workflow](download_ERA5-Land/README.md) separates Shell settings/jobs from Python requests and conversion. `sample-global_2day.sh` and `sample-japan_hourly.sh` offer complete workflows with `--dry-run`; data and logs belong under dataset directories outside the tool directory. The planned `repo-ERA5land-jpn_hourly/` daily converted files and README are eligible for Git tracking after size/license review; original downloads and logs remain ignored. Binary conversion is retired. The separate `ERA5_land/Roff/` laboratory series is not regenerated by these scripts. The term ERA5-Land is deliberate; ERA5 atmospheric reanalysis is a separate product.
+The ERA5-Land [standard workflow](download_ERA5-Land/README.md) is Product Shell → Download → Convert. Edit `sample-global_2day.sh` or `sample-japan_hourly.sh` and run it to produce CaMa-Flood `runoff_*.nc` and `runoff_info_CaMaFlood.txt`. Normally use the converted files, not `original/`, as model input. `DOWNLOAD_UNIT`, `OUTPUT_UNIT` and `TSTEP` are independent; file grouping does not imply averaging. `repo-ERA5land-glb_2day/` and `repo-ERA5land-jpn_hourly/` contain converted repository samples; raw downloads, logs and generated reports stay ignored. Binary conversion is retired; the separate `ERA5_land/Roff/` laboratory series is not regenerated here.
+
+**Advanced usage:** s01 may be run independently. Direct use of its original NetCDF is only an advanced option where the model supports that source layout: verify accumulation/time meaning, variable and coordinate names, units and `DROFUNIT`, the input grid and a matching Input Matrix. See the [advanced workflow notes](download_ERA5-Land/README.md#advanced-usage). Format readability does not establish scientific validity or resolve KG-0019.
 
 ## Supported Input Formats and Simulation Settings
 
@@ -172,7 +192,7 @@ For NetCDF `SEQ`, set `CROFCDF` to the file containing the series. When `SYEARIN
 
 | Setting | Group | Role |
 | --- | --- | --- |
-| `CDIMINFO` | `NDIMTIME` | Path to `inpdim_<ROFFTAG>.txt`, the map and input-grid dimensions/bounds for the matrix. |
+| `CDIMINFO` | `NDIMTIME` | Path to `diminfo_<ROFFTAG>.txt`, the map and input-grid dimensions/bounds for the matrix. |
 | `IFRQ_INP` | `NDIMTIME` | Runoff record interval in hours; independent of file grouping and units. |
 | `LINPCDF` | `NFORCE` | `.FALSE.` selects Binary; `.TRUE.` selects NetCDF and requires a NetCDF-enabled executable. |
 | `CROFFREQ` | `NFORCE` | Required: `DAY`, `MON`, `YEAR`, or advanced `SEQ`. |
@@ -189,7 +209,7 @@ For NetCDF `SEQ`, set `CROFCDF` to the file containing the series. When `SYEARIN
 
 ```text
 &NDIMTIME
-  CDIMINFO = "/data/map/inpdim_my-runoff.txt"
+  CDIMINFO = "/data/map/diminfo_my-runoff.txt"
   IFRQ_INP = 24
 /
 &NFORCE

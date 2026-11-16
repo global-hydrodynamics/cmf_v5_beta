@@ -23,8 +23,8 @@ USE NETCDF
       character*256            :: type  !! 'bin' for binary, 'cdf' for netCDF
       data                    type /'bin'/
 
-      character*256            :: diminfo  !! input-dimension descriptor filename
-      data                    diminfo /'./inpdim_test-glb_1deg.txt'/
+      character*256            :: diminfo  !! simulation dimension information filename
+      data                    diminfo /'./diminfo_test-glb_1deg.txt'/
 
 ! Power-law coefficients and lower limits
       real                     :: HC  !! depth power-law coefficient

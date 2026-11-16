@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Extract daily regional runoff from annual ELSE_GPCC NetCDF without aggregation."""
+"""Extract daily regional runoff from annual ELSE_GPCC NetCDF without aggregation.
+
+Cell-edge alignment preserves the original grid rather than interpolating it.
+Monthly/yearly files retain calendar-period record positions; unrequested dates
+are missing-value slots, not averages or additional source-data extraction.
+"""
 
 import argparse
 import calendar

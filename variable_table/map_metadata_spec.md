@@ -6,7 +6,7 @@
 
 This document defines the CSV columns, records the design choices, and explains how the shared variable definitions relate to metadata files distributed with a map. The CSV is the primary source for variable short names, proposed long names, units, data types, symbolic dimensions, binary record positions, missing conventions, distribution roles, and model-reader/NetCDF variable mappings. Do not copy its full variable table into another README or manual.
 
-Dataset-specific dimensions, bounds, and spacing remain in each map dataset's metadata. Input-grid/runoff settings remain in the paired input-grid descriptor and input matrix: v5 uses `inpdim_<ROFFTAG>.txt`; unconverted v4 package maps may retain `diminfo_<ROFFTAG>.txt`. Neither dataset-specific dimensions nor runoff-grid settings belong in the common variable definition.
+Dataset-specific dimensions, bounds, and spacing remain in each map dataset's metadata. Simulation dimensions belong in `diminfo_<ROFFTAG>.txt`, while input-to-model mapping belongs in `inpmat_<ROFFTAG>.bin`. The descriptor includes both model-grid and runoff/input-grid dimensions; the matrix stores their correspondence. Neither dataset-specific dimensions nor runoff-grid settings belong in the common variable definition.
 
 ## CSV format and row model
 
@@ -208,13 +208,23 @@ The package example contains three records: `NX`, `NY`, and `NLFP`. The maintain
 
 The external algorithm's source is not included in this repository. The repository therefore has no in-tree reader/writer for this file; the distributed map package is the reference for its observed three-record representation.
 
-### `inpdim_<ROFFTAG>.txt` — v5 runoff/input-grid configuration
+### `diminfo_<ROFFTAG>.txt` — Simulation dimension information
 
-v5 map workflows pair `inpdim_<ROFFTAG>.txt` with `inpmat_<ROFFTAG>.bin`. `ROFFTAG` identifies the runoff product or input-grid mapping configuration (for example, `test-glb_1deg` or `test-E2O_15min_nc`). It is independent of `HIRES_TAG`, which selects the high-resolution map directory used to generate a mapping, such as `1min` or `15sec`.
+`diminfo_<ROFFTAG>.txt` configures simulation dimensions: model grid `NX, NY`,
+floodplain layers `NLFP`, runoff/input grid `NXIN, NYIN`, input-matrix contributor
+count `INPN`, and optional geographic bounds read when `LGRIDMAP` is enabled.
+`inpmat_<ROFFTAG>.bin` is the separate input-to-model correspondence matrix.
+`ROFFTAG` identifies the runoff product/mapping configuration; `HIRES_TAG`
+independently selects high-resolution lookup data such as `1min` or `15sec`.
 
-The legacy `diminfo_` prefix remains in existing v4 package data and workflows that have not migrated. The v5 CTL generator accepts both `inpdim_` and legacy `diminfo_` companions. The model's namelist/API field remains named `diminfo_file`; that interface name does not dictate the physical descriptor filename. Existing legacy descriptors are retained for backward compatibility while v5 scripts select `inpdim_<ROFFTAG>.txt`.
+The earlier v5 `inpdim` spelling is retired because it incorrectly suggested
+input-grid-only metadata. Restoring `diminfo` clarifies the simulation-wide role
+and aligns naming with v4; it does not establish file-format compatibility by
+itself. The eleven-record format, record values and matrix Binary layout are
+unchanged. `CDIMINFO` and `diminfo_file` remain the existing configuration/API
+names. No old-name fallback or duplicate descriptors are generated.
 
-### Text descriptor format (legacy `diminfo_*.txt` and v5 `inpdim_*.txt`)
+### Text descriptor format (`diminfo_*.txt`)
 
 The standard sample format contains eleven records:
 
@@ -227,6 +237,15 @@ The standard sample format contains eleven records:
 | 8–11 | west, east, north, south map bounds | Destination map domain, in degrees for the inspected geographic grids |
 
 The core run configuration parser reads the dimensions, input-grid dimensions, and `INPN`; when `LGRIDMAP` is true (the inspected default), it also reads the four map bounds. The input matrix is a separate binary file, with records grouped as `INPN` x-index records, `INPN` y-index records, then `INPN` float32 overlap-area records, each covering `NX × NY`.
+
+`src_main/cmf_ctrl_nmlist_mod.F90` reads `NDIMTIME/CDIMINFO` into the global
+simulation dimensions before initialization. The per-input mapping path
+`input_conf_class` → `get_inpmat_index` → `load_inpmat_files` →
+`read_inpmat_diminfo` independently reads the configured `diminfo_file`, checks
+its model shape against `NX, NY, NLFP`, and stores input dimensions and `INPN`
+with the mapping. These paths can read the same physical file when configured
+that way; the per-input descriptor is not automatically taken from `CDIMINFO`.
+This naming change does not consolidate or reorder those reads.
 
 The file combines destination-map geometry with runoff/input-grid configuration. It does not by itself specify runoff-grid spacing, source bounds, longitude convention, or row order; the shell workflow/input dataset provides those. `generate_inpmat.F90` reads the destination grid from `params.txt`, calculates `NXIN`/`NYIN` from configured input bounds and spacing, and writes the descriptor plus paired matrix. Thus `params.txt` and the descriptor repeat some map dimensions/bounds but have distinct roles. v5 `param_inpmat_generate` derives both filenames from `ROFFTAG`; `HIRES_TAG` is passed separately to select high-resolution lookup data.
 
@@ -276,7 +295,7 @@ The maintainer confirmed that the module-level files were previously generated a
 
 ### GrADS CTL generation
 
-The v5 generator is implemented at `map/tools/code/generate_ctl.py`. It combines variable metadata from `map_variables.csv` with dataset-specific geometry read from `params.txt` or `location.txt`. The CSV describes reusable products and record layouts, not sample-map dimensions. It accepts explicit independent-record layouts (including one row per variable with record indices), the documented `NLFP` layered-variable layout, and the regionalization input matrix paired with its dimension description. In a v5 input-matrix filename pair, the shared suffix (for example `_test-glb_1deg`) identifies the runoff-data/configuration variant: `inpmat_<ROFFTAG>.bin` pairs with `inpdim_<ROFFTAG>.txt`. The generator also accepts legacy `diminfo_<ROFFTAG>.txt` descriptors for existing maps. The description supplies `NX`, `NY`, `INPN`, bounds, and the paired binary filename; map dimensions and bounds are checked against `params.txt`. A same-basename `.txt` is also accepted. Unknown dimensions/types and unrecognized record descriptions are skipped; blank missing values use the per-type fallback with a warning; invalid values, conflicting declarations, and binary size/layout mismatches are rejected. It scans one selected directory at a time and does not recurse.
+The v5 generator is implemented at `map/tools/code/generate_ctl.py`. It combines variable metadata from `map_variables.csv` with dataset-specific geometry read from `params.txt` or `location.txt`. The CSV describes reusable products and record layouts, not sample-map dimensions. It accepts explicit independent-record layouts (including one row per variable with record indices), the documented `NLFP` layered-variable layout, and the regionalization input matrix paired with its dimension description. In a v5 input-matrix filename pair, the shared suffix (for example `_test-glb_1deg`) identifies the runoff-data/configuration variant: `inpmat_<ROFFTAG>.bin` pairs with `diminfo_<ROFFTAG>.txt`. The description supplies `NX`, `NY`, `INPN`, bounds, and the paired binary filename; map dimensions and bounds are checked against `params.txt`. A same-basename `.txt` is also accepted. Unknown dimensions/types and unrecognized record descriptions are skipped; blank missing values use the per-type fallback with a warning; invalid values, conflicting declarations, and binary size/layout mismatches are rejected. It scans one selected directory at a time and does not recurse.
 
 The tool follows the existing legacy CTL convention `yrev little_endian` and cell-center coordinates. The standard regional input matrix has three logical variables (`inpx`, `inpy`, `inpa`) with `INPN` levels, matching the two integer-index blocks and one floating-point overlap-area block written by `region_default_inpmat.F90`; unused slots initialized to zero are represented by `undef 0`. This is the distributed mapping for the standard annual runoff climatology used in channel cross-section parameter estimation. It is distinct from the general-purpose `generate_inpmat.F90` utility for user-selected runoff grids. The generator does not read the runoff dataset itself. The CTL tool does not infer or validate alternative endianness or row order.
 

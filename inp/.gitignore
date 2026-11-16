@@ -25,3 +25,13 @@
 /repo-ERA5land-jpn_hourly/original/
 /repo-ERA5land-jpn_hourly/logs/
 /repo-ERA5land-jpn_hourly/runoff_info_CaMaFlood.txt
+
+# Repository global sample: keep converted monthly forcing and its explanation.
+# Raw CDS inputs, logs and generated reports are reproducible local artifacts.
+!/repo-ERA5land-glb_2day/
+/repo-ERA5land-glb_2day/*
+!/repo-ERA5land-glb_2day/README.md
+!/repo-ERA5land-glb_2day/runoff_??????.nc
+/repo-ERA5land-glb_2day/original/
+/repo-ERA5land-glb_2day/logs/
+/repo-ERA5land-glb_2day/runoff_info_CaMaFlood.txt

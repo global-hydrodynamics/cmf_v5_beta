@@ -17,8 +17,8 @@
 ! ===================
 ! Command-line options and input mode
       character*256            :: buf
-      character*256            :: diminfo  !! input-dimension descriptor filename
-      data                    diminfo /'./inpdim_test-glb_1deg.txt'/
+      character*256            :: diminfo  !! simulation dimension information filename
+      data                    diminfo /'./diminfo_test-glb_1deg.txt'/
 
 ! River-network map parameters
       integer                  :: ix, iy  !! x/y grid index
@@ -113,7 +113,7 @@ print *, 'set_bifparam: read parameters from arguments'
 ! ================================================
 ! [1] Read map configuration and river-network inputs
 ! ================================================
-! INPDIM supplies the base-grid dimensions and bounds; all subsequent direct
+! DIMINFO supplies the base-grid dimensions and bounds; all subsequent direct
 ! binary records are sized as NX*NY four-byte values.
       open(11,file=diminfo,form='formatted')
       read(11,*) nx

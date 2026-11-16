@@ -3,7 +3,7 @@
 # Copy to <map>/script_params/, edit the grid settings, and run from any CWD.
 #
 # Inputs: params.txt and <HIRES_TAG>/location.txt with each area's catmxy.bin.
-# Outputs: inpdim_<ROFFTAG>.txt and inpmat_<ROFFTAG>.bin in the map root.
+# Outputs: diminfo_<ROFFTAG>.txt and inpmat_<ROFFTAG>.bin in the map root.
 set -eu
 
 # Paths
@@ -12,14 +12,17 @@ SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
 CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 
-# Runoff grid and output tag; these describe runoff data, not the CaMa-Flood map grid.
-ROFFTAG="test-E2O_15min_nc"  # Runoff dataset ID for the paired output filenames.
-GRSIZEIN=0.25            # Runoff grid-cell size (degrees).
-WESTIN=-180.0            # Western runoff-grid boundary (degrees longitude).
-EASTIN=180.0             # Eastern runoff-grid boundary (degrees longitude).
-NORTHIN=90.0             # Northern runoff-grid boundary (degrees latitude).
-SOUTHIN=-60.0            # Southern runoff-grid boundary (degrees latitude).
-OLAT="NtoS"              # Runoff latitude row order: NtoS or StoN.
+# Runoff input grid: ERA5-Land global 0.1-degree grid, independent of the model map.
+# ERA5land_global labels the spatial grid, not the repo-ERA5land-glb_2day period.
+# Reuse this grid tag for longer ERA5-Land series with identical coordinates/order;
+# generate a separate matrix in each target CaMa-Flood map.
+ROFFTAG="ERA5land_global"  # User-editable runoff-grid tag for the paired output filenames.
+GRSIZEIN=0.1              # Runoff grid-cell size (degrees).
+WESTIN=-180.05            # Western edge: first longitude center (-180) minus half a cell.
+EASTIN=179.95             # Eastern edge: last longitude center (179.9) plus half a cell.
+NORTHIN=90.05             # Northern edge: first latitude center (90) plus half a cell.
+SOUTHIN=-90.05            # Southern edge: last latitude center (-90) minus half a cell.
+OLAT="NtoS"               # Runoff latitude row order: NtoS or StoN.
 
 # High-resolution map selection is independent of the runoff-grid tag.
 HIRES_TAG=""  # Map directory tag; empty selects an available 1min or 15sec grid.
@@ -64,7 +67,7 @@ if [ -z "$HIRES_TAG" ]; then
     fi
 fi
 
-INPDIM="inpdim_${ROFFTAG}.txt"
+DIMINFO="diminfo_${ROFFTAG}.txt"
 INPMAT="inpmat_${ROFFTAG}.bin"
 
 EXEC_INPMAT="$CODE_DIR/param_inpmat_generate"
@@ -75,6 +78,6 @@ cd "$MAP_DIR"
 STEP="Map river cells to the configured runoff grid"
 printf '\n==================================================\n[STEP 1/1] Generate runoff input matrix\n==================================================\n\n'
 "$EXEC_INPMAT" "$HIRES_TAG" "$GRSIZEIN" "$WESTIN" "$EASTIN" \
-    "$NORTHIN" "$SOUTHIN" "$OLAT" "$INPDIM" "$INPMAT"
+    "$NORTHIN" "$SOUTHIN" "$OLAT" "$DIMINFO" "$INPMAT"
 
 printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"

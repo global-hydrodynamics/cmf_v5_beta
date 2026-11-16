@@ -2,7 +2,7 @@
 # Generate the Mekong map-to-runoff matrix for the 1-degree runoff sample.
 #
 # Inputs: params.txt and 1min/location.txt with 1min.catmxy.bin.
-# Outputs: inpdim_test-mek_1deg.txt and inpmat_test-mek_1deg.bin in the map root.
+# Outputs: diminfo_test-mek_1deg.txt and inpmat_test-mek_1deg.bin in the map root.
 set -eu
 
 # Paths
@@ -63,11 +63,11 @@ if [ -z "$HIRES_TAG" ]; then
     fi
 fi
 
-INPDIM="inpdim_${ROFFTAG}.txt"
+DIMINFO="diminfo_${ROFFTAG}.txt"
 INPMAT="inpmat_${ROFFTAG}.bin"
 
-if [ -e "$MAP_DIR/$INPDIM" ] || [ -e "$MAP_DIR/$INPMAT" ]; then
-    printf 'ERROR: refusing to overwrite existing %s or %s\n' "$INPDIM" "$INPMAT" >&2
+if [ -e "$MAP_DIR/$DIMINFO" ] || [ -e "$MAP_DIR/$INPMAT" ]; then
+    printf 'ERROR: refusing to overwrite existing %s or %s\n' "$DIMINFO" "$INPMAT" >&2
     exit 1
 fi
 
@@ -79,6 +79,6 @@ cd "$MAP_DIR"
 STEP="Map river cells to the configured runoff grid"
 printf '\n==================================================\n[STEP 1/1] Generate runoff input matrix\n==================================================\n\n'
 "$EXEC_INPMAT" "$HIRES_TAG" "$GRSIZEIN" "$WESTIN" "$EASTIN" \
-    "$NORTHIN" "$SOUTHIN" "$OLAT" "$INPDIM" "$INPMAT"
+    "$NORTHIN" "$SOUTHIN" "$OLAT" "$DIMINFO" "$INPMAT"
 
 printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"

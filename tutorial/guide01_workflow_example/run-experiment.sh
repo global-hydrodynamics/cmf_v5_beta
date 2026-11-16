@@ -9,7 +9,7 @@ MAPDIR="$CMF_BASE/map/mekong_15min"
 MAP_NC="$MAPDIR/netcdf"
 RUNOFF_DIR="$CMF_BASE/inp/test-mek_1deg_nc"
 INPMAT="$MAPDIR/inpmat_test-mek_1deg.bin"
-INPDIM="$MAPDIR/inpdim_test-mek_1deg.txt"
+DIMINFO="$MAPDIR/diminfo_test-mek_1deg.txt"
 OMP_NUM_THREADS=4
 DT=600
 YEAR=2000
@@ -24,7 +24,7 @@ if [ "$#" -gt 0 ]; then
     FORCE=1
 fi
 
-for required in "$PYTHON" "$MODEL" "$INPMAT" "$INPDIM" "$RUNOFF_DIR/runoff2000.nc" \
+for required in "$PYTHON" "$MODEL" "$INPMAT" "$DIMINFO" "$RUNOFF_DIR/runoff2000.nc" \
                 "$MAP_NC/nextxy_noedge.nc" "$MAP_NC/ctmare.nc" "$MAP_NC/elevtn.nc" \
                 "$MAP_NC/nxtdst.nc" "$MAP_NC/rivlen.nc" "$MAP_NC/fldhgt.nc" \
                 "$MAP_NC/rivwth_merit.nc" "$MAP_NC/rivman.nc" "$MAP_NC/bifprm.nc" "$RIVHGT"; do
@@ -58,7 +58,7 @@ LRESTART = .FALSE.
 LLEAPYR = .TRUE.
 /
 &NDIMTIME
-CDIMINFO = "$INPDIM"
+CDIMINFO = "$DIMINFO"
 DT = $DT
 IFRQ_INP = 24
 /

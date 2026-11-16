@@ -107,6 +107,43 @@ class PermanentWaterTests(unittest.TestCase):
         self.assertIn("Used grdare fallback: T", result.stdout)
         self.assertEqual((self.map_root / "prmwat.bin").stat().st_size, 16)
 
+    def test_15sec_with_explicit_pixel_areas_preserves_aggregation(self) -> None:
+        self.make_inputs(grdare=[0.0004, 0.0008, 0.0001, 0.0003])
+        one_minute = self.run_program()
+        self.assertEqual(one_minute.returncode, 0, one_minute.stderr)
+        expected = (self.map_root / "prmwat.bin").read_bytes()
+        (self.map_root / "1min").rename(self.map_root / "15sec")
+        location = self.map_root / "15sec/location.txt"
+        location.write_text(
+            "1 narea\niarea carea west east south north nx ny csize\n"
+            "1 area 0 0.00833333333333333 0 0.00833333333333333 2 2 0.00416666666666667\n",
+            encoding="ascii",
+        )
+        result = self.run_program("15sec")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        # Provided pixel areas and catchment assignments, not inferred geographic area,
+        # determine this fixture's expected aggregate; all scientific rules are unchanged.
+        self.assertEqual((self.map_root / "prmwat.bin").read_bytes(), expected)
+
+    def test_wrapper_passes_configured_hires_tag_to_program(self) -> None:
+        work = self.map_root / "wrapper/map/japan/script_params"
+        work.mkdir(parents=True)
+        map_dir = work.parent
+        code = map_dir.parent / "tools/code"
+        code.mkdir(parents=True)
+        executable = code / "param_water_calc_prmwat"
+        executable.write_text('#!/bin/sh\nprintf "%s\\n" "$@" > called.args\n')
+        executable.chmod(0o755)
+        wrapper = work / "s05-permanent_water.sh"
+        template = (ROOT / "map/tools/script_params/s05-permanent_water.sh").read_text()
+        for tag in ("1min", "15sec"):
+            wrapper.write_text(template.replace('HIRES_TAG="1min"', f'HIRES_TAG="{tag}"'))
+            result = subprocess.run(["/bin/sh", str(wrapper)], cwd=self.map_root,
+                                    text=True, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual((map_dir / "called.args").read_text(), f"{tag}\n")
+        # Input validation is delegated to the real program, not replicated in Shell.
+
     def test_invalid_resolution_is_rejected(self) -> None:
         result = self.run_program("10sec")
         self.assertNotEqual(result.returncode, 0)

@@ -8,7 +8,7 @@
 #   monthly -> read ERA5-Land_runoff_YYYYMM.nc
 #
 # Output:
-#   runoff_YYYY.nc or runoff_YYYYMM.nc
+#   Caller-selected file, e.g. runoff_YYYYMMDD.nc, runoff_YYYYMM.nc or runoff_YYYY.nc
 #
 # Main processing:
 #   1. Read downloaded ERA5-Land NetCDF files.
@@ -18,7 +18,8 @@
 #
 # Notes:
 #   - ERA5-Land runoff is an accumulated variable in metres.
-#   - Output runoff is mm per input timestep.
+#   - Output runoff is mm per input timestep, not a rate or a daily mean.
+#   - UTC-date differencing/labels are retained; 00 UTC attribution remains open (KG-0019).
 #   - Longitude is kept as stored in the downloaded NetCDF files.
 #==========================================================
 

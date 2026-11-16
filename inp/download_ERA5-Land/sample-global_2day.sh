@@ -7,7 +7,7 @@ set -eu
 # User settings
 
 # Output dataset name under inp/; a single directory name, never a path.
-DATASET="ERA5land-glb_2day"
+DATASET="repo-ERA5land-glb_2day"
 
 # Inclusive period and geographic edges [degrees east/north].
 START_DATE="2000-01-01"

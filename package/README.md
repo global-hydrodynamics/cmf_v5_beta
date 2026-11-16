@@ -1,6 +1,6 @@
 # CaMa-Flood v5 Package Builder
 
-Status: planning / under development. This directory is the temporary development workspace for package-building scripts, configuration and documentation. The dataset catalog is initialized; no installer or package-generation script is implemented yet.
+Status: planning / under development. This directory is the temporary development workspace for package-building scripts, configuration and documentation. The dataset catalog records runoff and global-map selections; no installer or package-generation script is implemented yet.
 
 ## Working-directory layout
 
@@ -47,13 +47,78 @@ Detailed behavior will be specified in separate tasks. The broader product roles
 | dataset_id | Unique dataset identifier. |
 | source_path | Relative dataset directory under cmf_v5_package_data/. |
 | target_path | Relative destination under the development or distribution root. |
-| file_pattern | Filename pattern selecting files within the source directory. |
+| file_pattern | Dataset-relative Python `Path.glob` pattern selecting files; `**/*` includes files recursively, including map-root files. |
 | format | Data format. |
 | description | Purpose and known coverage; registration is not content validation. |
 
 The initial ELSE_GPCC row selects runoff*.nc for 1979–2010. The conversion script beside those data is not selected or copied. To register a dataset, add a unique row with relative paths, the intended pattern, format and description; ensure local installation paths are ignored before copying and do not overwrite existing files without approval.
 
 cmf_v5_beta/ is the Git development checkout, cmf_v5_package_data/ holds authoritative additional data outside Git, and cmf_v5b01_pkg/ is the independently generated distribution. Preserve original datasets. install_package_data.sh and make_package.sh will later automate catalog-driven copying; neither script nor a distribution package is created in this task.
+
+## Global 15-minute map selection
+
+The `glb_15min` dataset row uses `source_path=map/glb_15min`,
+`target_path=map/glb_15min`, and `file_pattern=**/*`. The source is relative to
+the external `cmf_v5_package_data/` root, never the local checkout's map copy.
+
+| Include | Exclude |
+| --- | --- |
+| Model-grid `.bin`, `netcdf/`, and standard parameter products | High-resolution Binary `1min/` |
+| Compressed `1min_nc/` including `location.txt` | `script*/`, `src*/`, `code/` and generation source files |
+| Observation/station information, bifurcation products, CTL and auxiliary text | Build products, logs, temporary files, caches and `.DS_Store` |
+
+**Distribution format: compressed NetCDF** for high-resolution maps.
+**Legacy-compatible working format: Binary generated on demand.** Use the
+[high-resolution restoration tool](../map/tools/script_bin2nc/README.md#restore-high-resolution-binary-working-files-s04)
+when legacy processing needs Binary. Do not package both `1min/` and `1min_nc/`.
+Model-grid Binary remains included, alongside model-grid NetCDF. This first
+selection does not prune generated standard products or change the Input Matrix
+format; further data reduction and Input Matrix NetCDF are separate work.
+
+### Exclusion semantics and implementation boundary
+
+The catalog retains its existing six-column schema. `file_pattern` identifies
+candidate files, but cannot itself express the exclusion policy above. The
+`glb_15min` description explicitly refers here for the required filtering;
+`**/*` must not be treated as permission to copy the entire source blindly.
+The existing ELSE_GPCC row still selects only `runoff*.nc`.
+
+For a future implementation, the minimal proposed extension is one optional
+`exclude_patterns` column, rather than another configuration file or copy
+routine. The proposed patterns are:
+
+```text
+1min/;script*/;src*/;code/;__pycache__/;.git/;*.sh;*.bash;*.csh;*.ksh;*.py;*.pyc;*.F90;*.f90;*.F;*.f;*.c;*.cpp;Makefile*;*.o;*.mod;*.log;*.tmp;.DS_Store
+```
+
+Proposed semantics: split on `;`; patterns ending in `/` match relative parent
+directory components with case-sensitive shell-style `fnmatch` rules and exclude
+their descendants. Other patterns match basenames at any depth. Thus `1min/`
+never excludes `1min_nc/`, and `.bin` is not a blanket exclusion. This column
+has **not** been added; approve that schema extension when implementing the
+assembler, or implement the documented filtering another explicitly reviewed
+way. An assembler must not claim support for this row until it applies the
+inclusion/exclusion policy. The read-only registration inventory applies those
+documented rules, not a package-building command.
+
+There is currently no installer or package assembler to update or execute.
+These are explicit selection requirements for those planned tools,
+not an implemented package-generation command. Do not add a second copy routine
+or another selection configuration alongside this catalog.
+
+Resolve the default store as the logical sibling `../cmf_v5_package_data/`
+relative to the checkout, permitting that directory to be a symbolic link.
+Do not embed the resolved Dropbox location. A future installer/assembler must
+report an inaccessible store or missing registered dataset as an error; it must
+not create substitute data, fall back to the local map copy or silently skip a
+registered source. It must read sources without modification and write only to
+an independent destination. Catalog selection is not licence clearance: record
+source provenance, redistribution terms and attribution before distribution.
+
+GitHub maintains the small Mekong sample and shared generators under `map/tools/`.
+The ignored `map/glb_15min/` checkout copy is neither authoritative package input
+nor the home for the only copy of a maintained generator. No tracked files were
+found under that path during registration, so no index removal was required.
 
 ## Authoritative README for the additional-data store
 

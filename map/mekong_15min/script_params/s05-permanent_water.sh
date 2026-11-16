@@ -15,7 +15,7 @@ MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
 CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 
 # Select the high-resolution map used to estimate permanent-water area.
-HIRES_TAG="1min"  # Map directory tag containing location.txt (default: 1min).
+HIRES_TAG="1min"  # Source directory containing location.txt; edit for the target map.
 
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.

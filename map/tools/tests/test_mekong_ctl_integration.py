@@ -30,7 +30,7 @@ class MekongCtlWrapperIntegrationTests(unittest.TestCase):
                          map_root / "tools" / "code" / "generate_ctl.py")
             shutil.copy2(SAMPLE / "script_region" / "s02-write_ctl.sh",
                          fixture / "script_region" / "s02-write_ctl.sh")
-            for name in ("params.txt", "inpdim_test-glb_1deg.txt", "inpdim_test-E2O_15min_nc.txt"):
+            for name in ("params.txt", "diminfo_test-glb_1deg.txt", "diminfo_test-E2O_15min_nc.txt"):
                 shutil.copy2(SAMPLE / name, fixture / name)
             for path in SAMPLE.glob("*.bin"):
                 shutil.copy2(path, fixture / path.name)

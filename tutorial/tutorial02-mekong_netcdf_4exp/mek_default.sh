@@ -30,7 +30,7 @@ MAP_NETCDF_DIR="${MAPDIR}/netcdf"
 RUNOFF_DIR="${CMF_BASE}/inp/test-mek_1deg_nc"
 RUNDIR="${SCRIPT_DIR}/out/${PROJ}"
 EXEC_CMF="${CMF_BASE}/out/bin/MAIN_cmf_netcdf"
-INPDIM="${MAPDIR}/inpdim_test-mek_1deg.txt"
+DIMINFO="${MAPDIR}/diminfo_test-mek_1deg.txt"
 INPMAT="${MAPDIR}/inpmat_test-mek_1deg.bin"
 
 if [ ! -x "$EXEC_CMF" ]; then
@@ -84,7 +84,7 @@ LRESTART = $LRESTART       ! TRUE: read the preceding year's Restart.
 LLEAPYR = .TRUE.           ! TRUE: use Gregorian calendar including February 29.
 /
 &NDIMTIME
-CDIMINFO = "$INPDIM"       ! Map and runoff-grid dimensions.
+CDIMINFO = "$DIMINFO"       ! Map and runoff-grid dimensions.
 DT = $DT                   ! Base model timestep [s].
 IFRQ_INP = 24              ! Daily runoff update interval [hours].
 /

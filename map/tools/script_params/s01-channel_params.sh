@@ -2,7 +2,7 @@
 # Generate annual-runoff channel parameters for a map.
 # Copy to <map>/script_params/, configure the paths and coefficients, and run from any CWD.
 #
-# Inputs: inpdim_<ROFFTAG>.txt, inpmat_<ROFFTAG>.bin, annual runoff climatology,
+# Inputs: diminfo_<ROFFTAG>.txt, inpmat_<ROFFTAG>.bin, annual runoff climatology,
 #         nextxy.bin, ctmare.bin, and width.bin.
 # Outputs: outclm.bin, rivwth.bin, rivhgt.bin, rivman.bin, rivhgt_inf.bin,
 #          and rivwth_merit.bin in the map root.
@@ -18,7 +18,7 @@ CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 TYPE="bin"                                     # Runoff format: bin for binary or cdf for NetCDF.
 INTERP="inpmat"                                # Runoff mapping: inpmat for input matrix or near for nearest-grid.
 ROFFTAG="test-glb_1deg"                        # Runoff dataset ID used in both matrix filenames.
-INPDIM="inpdim_${ROFFTAG}.txt"                 # Runoff-grid dimensions file derived from ROFFTAG.
+DIMINFO="diminfo_${ROFFTAG}.txt"                 # Simulation dimension information (model and input grids).
 INPMAT="inpmat_${ROFFTAG}.bin"                 # Runoff input matrix file derived from ROFFTAG.
 CROFBIN="../data/ELSE_GPCC_clm-1981-2010.one"  # Annual-mean runoff input [mm/s], relative to the map root.
 # Source: Kim et al. (2009), https://doi.org/10.1029/2009GL039006
@@ -70,17 +70,17 @@ cd "$MAP_DIR"
 
 STEP="Calculate mean river discharge from annual runoff and the input matrix"
 printf '\n==================================================\n[STEP 1/3] Calculate mean river discharge\n==================================================\n\n'
-"$EXEC_OUTCLM" "$TYPE" "$INTERP" "$INPDIM" "$CROFBIN"
+"$EXEC_OUTCLM" "$TYPE" "$INTERP" "$DIMINFO" "$CROFBIN"
 
 # 2. Estimate width, depth, roughness, and the no-floodplain depth field.
 STEP="Estimate channel width, depth, and roughness"
 printf '\n==================================================\n[STEP 2/3] Estimate channel parameters\n==================================================\n\n'
-"$EXEC_RIVWTH" "$TYPE" "$INPDIM" "$HC" "$HP" "$HO" "$HMIN" \
+"$EXEC_RIVWTH" "$TYPE" "$DIMINFO" "$HC" "$HP" "$HO" "$HMIN" \
     "$WC" "$WP" "$WO" "$WMIN"
 
 # 3. Merge MERIT Hydro width estimates with the power-law river widths.
 STEP="Merge power-law channel widths with MERIT Hydro widths"
 printf '\n==================================================\n[STEP 3/3] Merge MERIT Hydro channel widths\n==================================================\n\n'
-"$EXEC_MERIT" "$INPDIM"
+"$EXEC_MERIT" "$DIMINFO"
 
 printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"
