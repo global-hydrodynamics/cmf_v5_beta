@@ -131,10 +131,19 @@ def load_settings(content, reader):
             "arrow_size",
             "background_method",
             "network_geometry",
+            "network_detail",
+            "network_budget",
         }
         for key in set(layers) - allowed:
             notes.append("Ignored layer setting: " + key)
             layers.pop(key)
+        layers.setdefault("network_detail", "all")  # Old saved views retain complete networks.
+        layers.setdefault("network_budget", 5000)
+        if layers["network_detail"] not in ("auto", "all"):
+            raise ValueError("Unsupported River detail mode")
+        budget = layers["network_budget"]
+        if isinstance(budget, bool) or not isinstance(budget, int) or not 1000 <= budget <= 20000:
+            raise ValueError("Target visible links must be an integer from 1000 to 20000")
         layers.setdefault("auto_limits_policy", "gallery")
         if layers["auto_limits_policy"] not in ("percentile", "gallery"):
             raise ValueError("Unsupported automatic color-limit reference policy")

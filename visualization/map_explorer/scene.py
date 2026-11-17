@@ -13,7 +13,7 @@ from hires import assignment, catchment_edges, discover_tiles
 from map_layers import DisplayLayer, colorize, layer_colors, make_layer, raster_subset
 from map_products import Products, area_style, split_segments
 from background_style import PALE_TERRAIN, apply_opacity, highres_layer, neutral_floodplain_color
-from river_network import intersects
+from river_network import intersects, automatic_detail
 from map_reader import SCHEMA
 
 OVERLAY_DEFAULTS = dict(
@@ -58,6 +58,7 @@ class Frame:
     legend: list = field(default_factory=list)
     diagnostics: list = field(default_factory=list)
     swatches: list = field(default_factory=list)
+    network_detail_note: str = ""
     background_opacity: float = 1.0  # Shared raster/colorbar presentation, independent of overlays.
 
 
@@ -121,6 +122,15 @@ class Scene:
                     & (np.minimum(np.minimum(y0, y1), cy) <= extent[3])
                     & (np.maximum(np.maximum(y0, y1), cy) >= extent[2])
                 ]
+            if options.get("network_detail", "all") == "auto":
+                visible, frame.network_detail_note = automatic_detail(
+                    network, self.reader, visible, options.get("network_budget", 5000)
+                )
+                frame.diagnostics.append(frame.network_detail_note)
+                if "uparea ≥" in frame.network_detail_note:
+                    frame.legend.append("Display only: " + frame.network_detail_note.split(" Zoom in")[0])
+            else:
+                frame.network_detail_note = f"All links: {len(np.unique(network.link_index[visible])):,} visible."
             widths, colors, legend, frame.swatches = area_style(
                 network, self.reader, visible, **options.get("network_style", {})
             )

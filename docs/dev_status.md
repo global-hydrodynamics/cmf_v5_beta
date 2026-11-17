@@ -6,6 +6,18 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Map Explorer automatic river detail (DT-0128, 2026-11-17)
+
+Maintainer requests automatic decluttering of dense Japan river networks by
+omitting small-uparea links. Codex owns Explorer scene/network/River UI/settings,
+associated tests/docs/research on approved feature/package-builder; commit/push
+scope retained. Display-only omission; no source topology, Inspector, selection,
+classification, Gallery scripts or data changes. New sessions Auto/5000; All links
+opt-out, old JSON full-network compatibility, cutoff/count disclosure and shared
+PNG behavior. Actual Japan131670 ->5000 links at503.883km²; zoom562/562 restored;
+live browser All/Auto and final PNG verified.368 tests plus3 subtests PASS;
+1 native-Windows SKIP. Full validation details VR-0174.
+
 Maintainer's latest bin2nc follow-up requires CSV-driven all-variable s03 defaults,
 listing all12 high-resolution products and skipping absent Binary tiles. Python
 preflights all resolutions before one bulk overwrite prompt; No/Enter uses per-file

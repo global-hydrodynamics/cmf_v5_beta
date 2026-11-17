@@ -19,6 +19,30 @@ A standalone, read-only browser for coarse CaMa-Flood river maps. Explore
 rasters, stored downstream connectivity and individual cells without editing
 plotting scripts, running a Fortran program, or providing model output.
 
+## Automatic river detail for crowded views
+
+**River → River detail → Auto (upstream area)** is the new-session default.
+When the visible main network exceeds **Target visible links** (default5,000;
+range1,000–20,000), Explorer hides smaller source-cell upstream-area links.
+The panel reports retained/candidate counts and the physical cutoff in km².
+Zooming into a smaller region restores tributaries automatically; choose **All
+links** to disable filtering. Presets preserve this display preference.
+
+Only main-network drawing changes: nextxy connectivity, native cell/catchment
+selection, Inspector counts, scientific attributes and source products are intact.
+Color/width classifications still use the full scientific reference network.
+Periodic seam pieces share one decision. Equal areas at the cutoff and missing,
+nonfinite or nonpositive areas are retained, so the target is not a strict cap.
+Without stored uparea the full visible network remains and the reason is shown.
+This is display generalization, not a new drainage-area product or network model.
+
+PNG uses the same viewport/area decision and discloses the cutoff in its legend.
+JSON stores `layers.network_detail` (auto/all) and `network_budget`; older settings
+without these fields restore All links to preserve their previous appearance.
+Bifurcation/Channel Pixels/grid/boundary overlays retain their own existing rules;
+this control does not thin those overlays. Initial large-map loading and source
+network construction still occur; filtering reduces browser drawing payload.
+
 ## Map Dataset — load or switch maps
 
 Click **Map dataset** next to **Settings panel** in the header to reveal the

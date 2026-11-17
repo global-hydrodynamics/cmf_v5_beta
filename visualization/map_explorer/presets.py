@@ -197,6 +197,8 @@ class PresetLibrary:
             background_opacity=row["background_opacity"],
             background_method=row["background_method"],
             network_geometry=row["network_geometry"],
+            network_detail=app.river_ui.detail.value,
+            network_budget=app.river_ui.budget.value,
             highres_style=dict(palette="gallery", scale="gallery", limits=None, palette_range=[0.0, 1.0]),
         )
         if gallery_extent:

@@ -61,10 +61,18 @@ class RiverControls:
         self.low = pn.widgets.FloatInput(name="Area Minimum [km²]", value=1, width=145)
         self.high = pn.widgets.FloatInput(name="Area Maximum [km²]", value=1e6, width=145)
         self.area_colors = pn.Column(self.palette, self.legacy_palette, self.auto, pn.Row(self.low, self.high))
+        self.detail = pn.widgets.Select(name="River detail", options={"Auto (upstream area)": "auto", "All links": "all"}, value="auto")
+        self.budget = pn.widgets.IntSlider(name="Target visible links", start=1000, end=20000, step=1000, value=5000)
+        self.detail_note = pn.pane.Markdown("", sizing_mode="stretch_width")
+        for widget in (self.detail, self.budget):
+            widget.param.watch(lambda event: app._schedule(self.render), "value")
         self.note = pn.pane.Markdown("", sizing_mode="stretch_width")
         self.view = pn.Column(
             app.network_choice,
             app.representation,
+            self.detail,
+            self.budget,
+            self.detail_note,
             pn.pane.Markdown("#### COLOR", margin=(0, 0)),
             app.color_mode,
             app.color,
@@ -97,6 +105,7 @@ class RiverControls:
         self.custom_mapping()
 
     def render(self):
+        self.budget.disabled = self.detail.value != "auto"
         self.app.render_view()
         if self.app.status.object.startswith("**Error:**"):
             self.app.status.object = "River display updated; source values unchanged."

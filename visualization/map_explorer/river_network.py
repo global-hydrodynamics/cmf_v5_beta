@@ -83,3 +83,33 @@ class RiverNetwork:
             info.update({'downstream longitude': float(g.lon[x-1]), 'downstream latitude': float(g.lat[y-1])})
         info['downstream status'] = status
         return info
+
+
+def automatic_detail(network, reader, visible, budget=5000):
+    """Hide small-uparea display links only; scientific topology stays intact.
+
+    Rank unique stored links, so two periodic seam pieces share one decision.
+    Equal areas at the cutoff are retained together. Missing/invalid source areas
+    cannot support an omission decision and remain visible.
+    """
+    unique = np.unique(network.link_index[visible])
+    if len(unique) <= budget:
+        return visible, f"Auto detail: all {len(unique):,} visible links (target {budget:,})."
+    if "uparea" not in reader.sources:
+        return visible, "Auto detail unavailable: no stored uparea; all visible links retained."
+    if not hasattr(network, "_areas"):
+        network._areas = reader.read("uparea")[network.rows, network.cols].astype(float).filled(np.nan) * 1e-6
+    areas = network._areas
+    reference = areas[unique]
+    valid = np.isfinite(reference) & (reference > 0)
+    if np.count_nonzero(valid) <= budget:
+        return visible, "Auto detail: insufficient valid uparea to reduce density; all visible links retained."
+    # A physical area cutoff, not arbitrary array striding or random subsampling.
+    cutoff = float(np.partition(reference[valid], -budget)[-budget])
+    values = areas[network.link_index[visible]]
+    keep = ~np.isfinite(values) | (values <= 0) | (values >= cutoff)
+    retained = visible[keep]
+    count = len(np.unique(network.link_index[retained]))
+    return retained, (f"Auto detail: {count:,}/{len(unique):,} visible links; "
+                      f"uparea ≥ {cutoff:,.6g} km² (ties/unknown areas retained). "
+                      "Zoom in for tributaries or select All links. Display only.")

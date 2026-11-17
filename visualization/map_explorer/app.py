@@ -898,6 +898,8 @@ class Explorer:
                 else "default"
             ),
             network_geometry=self.network_geometry,
+            network_detail=self.river_ui.detail.value,
+            network_budget=self.river_ui.budget.value,
             background=self.background.value,
             tile=self.hires_source.value,
             terrain_palette=self.terrain_palette.value,
@@ -993,6 +995,7 @@ class Explorer:
         )
         self._overlay_controls_state()
         self.arrow_source.data = frame.arrows
+        self.river_ui.detail_note.object = frame.network_detail_note
         labels = frame.legend + [entry[3] for entry in frame.overlays] + frame.diagnostics
         swatches = "".join(
             f'<div><span style="display:inline-block;width:35px;height:{max(2,width*2):.2f}px;background:{color};margin-right:8px"></span>{escape(label)}</div>'
@@ -1354,6 +1357,9 @@ class Explorer:
             self.auto_limits_policy = layers.get("auto_limits_policy", "gallery")
             self.background_method = layers.get("background_method", "default")
             self.network_geometry = layers.get("network_geometry", "straight")
+            self.river_ui.detail.value = layers.get("network_detail", "all")
+            self.river_ui.budget.value = layers.get("network_budget", 5000)
+            self.river_ui.budget.disabled = self.river_ui.detail.value != "auto"
             self.map_aspect.value = data["viewport"]["aspect"]
             self._frame_ratio = data["viewport"]["frame_ratio"]
             self.classification.value = options.get("classification", "fixed")
