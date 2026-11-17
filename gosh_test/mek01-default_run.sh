@@ -3,8 +3,7 @@
 # Map: map/mekong_15min; forcing: inp/repo-mek_1deg_bin (daily mm/day, monthly files).
 # Output, executable, and namelist: gosh_test/out/${PROJ}/.
 #
-# Execution requirement:
-#   Run this script from the gosh_test/ directory.
+# Normally run from gosh_test/; launching from the repository root also works.
 #
 # Example:
 #   cd gosh_test
@@ -12,7 +11,9 @@
 set -eu
 
 # CaMa-Flood base directory (contains src_main/, map/, and inp/).
-CMF_BASE=$(cd .. && pwd)
+# CDPATH= avoids user cd search paths; resolve paths from this script, not the CWD.
+SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+CMF_BASE=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
 
 # -------------------------- User settings ------------------------------
 # Project/output settings. ${VAR:-default} uses the environment value when nonempty.

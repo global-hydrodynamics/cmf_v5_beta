@@ -6,6 +6,17 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### gosh_test mek01/mek02 maintenance (DT-0131, 2026-11-17)
+
+Maintainer explicitly approves minimal upkeep on existing feature/package-builder,
+including commit/push. Codex owns only the two maintained Mekong runners, their
+README/isolated tests and records. Keep mek01 nextxy_noedge.bin versus mek02
+nextxy.nc intentionally different; retain test-mek_1deg matrices and all scientific
+Namelist settings. Resolve mek01 root from script location; derive exact mek02
+annual NetCDF cleanup names from CVARSOUT and configured years. Existing Restart,
+log and bookkeeping cleanup unchanged. Three isolated tests PASS; before/after
+Namelists byte-identical; no real model execution or data deletion. See VR-0177.
+
 ### Explorer all-or-none grid lines (DT-0130, 2026-11-17)
 
 Maintainer requests all native computational edges below30 cells on both axes,

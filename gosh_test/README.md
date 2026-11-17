@@ -30,13 +30,30 @@ PROJ=mek01-default ./mek01-default_run.sh
 PROJ=mek02-custom ./mek02-2year_netcdf.sh
 ```
 
-The first script retains its existing requirement to launch from `gosh_test/`. For a complete path override:
+Both scripts resolve the repository root from their own location, independent of
+launch directory. Running from `gosh_test/` remains the usual workflow; direct
+repository-root invocation also works: `./gosh_test/mek01-default_run.sh` and
+`./gosh_test/mek02-2year_netcdf.sh`. For a complete path override from `gosh_test/`:
 
 ```sh
 PROJ=mek01-custom RUNDIR="/absolute/path/to/my-run" ./mek01-default_run.sh
 ```
 
 Both scripts keep their existing sample-rerun policy: they replace only their known generated files in the selected RUNDIR, not the entire directory. Choose another project or explicit RUNDIR to retain an earlier run. Existing outputs under the old root `out/` locations are not moved or deleted by this change. Files unrelated to the selected sample and sibling projects are preserved.
+
+The river-network choices intentionally differ: mek01 uses
+`map/mekong_15min/nextxy_noedge.bin`, while mek02 uses
+`map/mekong_15min/netcdf/nextxy.nc` (including boundary-affected networks).
+Both retain `INPMAT_TAG="test-mek_1deg"`, `diminfo_test-mek_1deg.txt` and
+`inpmat_test-mek_1deg.bin`: the repository runoff datasets `repo-mek_1deg_bin`
+and `repo-mek_1deg` use the same 1-degree grid, so no matrix rename or regeneration
+is needed.
+
+mek02 removes exactly `o_<CVARSOUT variable><year>.nc` for its configured inclusive
+year range before rerunning. The current eight-variable list includes `pthflw`,
+`rivdph` and `fldare`; adding a variable to CVARSOUT automatically includes its
+annual files. Other variable names, year tags and similarly prefixed files remain.
+Existing Restart, log, Namelist and annual bookkeeping cleanup is unchanged.
 
 ## Mekong default experiment
 
@@ -58,4 +75,9 @@ Output-analysis f01 and its shared extractor still default to the previous root 
 
 The tracked Mekong inputs support small developer runs, while larger data support extended tests. Current output metadata are resolved from `CMF_BASE/variable_table/output_variables.csv` unless `COUTVAR_TABLE` overrides it; maintained runners keep CMF_BASE at the repository root.
 
-Validation is limited to syntax, unchanged Namelist templates and short output-directory probes; no full model simulation or numerical validation is claimed. The [development and distribution design](../docs/development_and_distribution_design.md) records broader unfinished regression/package work. Follow [CONTRIBUTING.md](../CONTRIBUTING.md) for proportionate tests and [Tutorial01](../tutorial/README.md) for learner-facing instructions.
+Run the isolated maintenance checks with
+`python3 -m unittest discover -s gosh_test/tests -v` from the repository root.
+They use temporary directories and stub model/CTL commands to check syntax,
+launch-directory independence, exact annual cleanup, future-variable coverage,
+and retention of unrelated files. Before/after Namelists were also compared for
+this maintenance change. No full model simulation or numerical validation is claimed. The [development and distribution design](../docs/development_and_distribution_design.md) records broader unfinished regression/package work. Follow [CONTRIBUTING.md](../CONTRIBUTING.md) for proportionate tests and [Tutorial01](../tutorial/README.md) for learner-facing instructions.
