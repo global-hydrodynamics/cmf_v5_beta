@@ -124,11 +124,11 @@ class Scene:
                 ]
             if options.get("network_detail", "all") == "auto":
                 visible, frame.network_detail_note = automatic_detail(
-                    network, self.reader, visible, options.get("network_budget", 5000)
+                    network, visible, options.get("network_budget", 5000)
                 )
                 frame.diagnostics.append(frame.network_detail_note)
-                if "uparea ≥" in frame.network_detail_note:
-                    frame.legend.append("Display only: " + frame.network_detail_note.split(" Zoom in")[0])
+                if "omitted headwater" in frame.network_detail_note:
+                    frame.legend.append(frame.network_detail_note)
             else:
                 frame.network_detail_note = f"All links: {len(np.unique(network.link_index[visible])):,} visible."
             widths, colors, legend, frame.swatches = area_style(

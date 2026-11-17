@@ -85,31 +85,25 @@ class RiverNetwork:
         return info
 
 
-def automatic_detail(network, reader, visible, budget=5000):
-    """Hide small-uparea display links only; scientific topology stays intact.
+def automatic_detail(network, visible, threshold=5000):
+    """Optionally omit only links leaving native zero-incoming-link cells.
 
-    Rank unique stored links, so two periodic seam pieces share one decision.
-    Equal areas at the cutoff are retained together. Missing/invalid source areas
-    cannot support an omission decision and remain visible.
+    Headwater flags use the complete stored nextxy graph, never the clipped view
+    or outlet-coordinate availability. Cache the one-pass native graph test.
+    Periodic display pieces share their source link's flag.
     """
+    if not hasattr(network, "_headwater_links"):
+        nx, ny = network.geometry.nx, network.geometry.ny
+        destinations = network.dest_rows * nx + network.dest_cols
+        incoming = np.bincount(destinations, minlength=nx * ny)
+        network._headwater_links = incoming[network.rows * nx + network.cols] == 0
     unique = np.unique(network.link_index[visible])
-    if len(unique) <= budget:
-        return visible, f"Auto detail: all {len(unique):,} visible links (target {budget:,})."
-    if "uparea" not in reader.sources:
-        return visible, "Auto detail unavailable: no stored uparea; all visible links retained."
-    if not hasattr(network, "_areas"):
-        network._areas = reader.read("uparea")[network.rows, network.cols].astype(float).filled(np.nan) * 1e-6
-    areas = network._areas
-    reference = areas[unique]
-    valid = np.isfinite(reference) & (reference > 0)
-    if np.count_nonzero(valid) <= budget:
-        return visible, "Auto detail: insufficient valid uparea to reduce density; all visible links retained."
-    # A physical area cutoff, not arbitrary array striding or random subsampling.
-    cutoff = float(np.partition(reference[valid], -budget)[-budget])
-    values = areas[network.link_index[visible]]
-    keep = ~np.isfinite(values) | (values <= 0) | (values >= cutoff)
-    retained = visible[keep]
-    count = len(np.unique(network.link_index[retained]))
-    return retained, (f"Auto detail: {count:,}/{len(unique):,} visible links; "
-                      f"uparea ≥ {cutoff:,.6g} km² (ties/unknown areas retained). "
-                      "Zoom in for tributaries or select All links. Display only.")
+    count = int(np.count_nonzero(network._headwater_links[unique]))
+    if count <= threshold:
+        return visible, (f"Auto detail: all {len(unique):,} visible links; "
+                         f"{count:,} headwater cells ≤ threshold {threshold:,}.")
+    retained = visible[~network._headwater_links[network.link_index[visible]]]
+    shown = len(np.unique(network.link_index[retained]))
+    return retained, (f"Auto detail: {shown:,}/{len(unique):,} visible links; "
+                      f"{count:,} headwater cells > threshold {threshold:,}; "
+                      "omitted headwater links only. Display only.")

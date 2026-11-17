@@ -143,7 +143,7 @@ def load_settings(content, reader):
             raise ValueError("Unsupported River detail mode")
         budget = layers["network_budget"]
         if isinstance(budget, bool) or not isinstance(budget, int) or not 1000 <= budget <= 20000:
-            raise ValueError("Target visible links must be an integer from 1000 to 20000")
+            raise ValueError("Headwater count threshold must be an integer from 1000 to 20000")
         layers.setdefault("auto_limits_policy", "gallery")
         if layers["auto_limits_policy"] not in ("percentile", "gallery"):
             raise ValueError("Unsupported automatic color-limit reference policy")

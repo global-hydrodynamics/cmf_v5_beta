@@ -1,4 +1,4 @@
-"""Area-based display decluttering never rewrites scientific connectivity."""
+"""Headwater-only display decluttering never rewrites scientific connectivity."""
 import json
 from types import SimpleNamespace
 
@@ -10,21 +10,29 @@ from river_network import automatic_detail
 from test_v2 import products
 
 
-def test_area_cutoff_zoom_ties_unknown_and_periodic_pieces():
-    raw = np.array([1., 2., 3., 8., 8., 9., np.nan, 0.])
-    network = SimpleNamespace(_areas=raw.copy(), link_index=np.array([0, 1, 2, 3, 4, 5, 6, 7, 5]))
-    reader = SimpleNamespace(sources={"uparea": None})
-    ids = np.arange(9)
-    kept, text = automatic_detail(network, reader, ids, budget=2)
-    # 8 is the second-largest area: ties stay together; unknowns are never guessed.
-    np.testing.assert_array_equal(kept, [3, 4, 5, 6, 7, 8])
-    assert "8 km²" in text and "Display only" in text
-    np.testing.assert_array_equal(network._areas, raw)
-    zoom, _ = automatic_detail(network, reader, np.array([0, 1]), budget=2)
+def test_only_native_headwaters_hide_with_strict_trigger_and_periodic_pieces():
+    # Native graph: 0,1 ->3 ->5 ->6 and 2 ->4 ->5. Only 0,1,2 are headwaters.
+    network = SimpleNamespace(
+        geometry=SimpleNamespace(nx=8, ny=1),
+        rows=np.zeros(6, dtype=int), cols=np.arange(6),
+        dest_rows=np.zeros(6, dtype=int), dest_cols=np.array([3, 3, 4, 5, 5, 6]),
+        link_index=np.array([0, 1, 2, 3, 4, 5, 0]),
+    )
+    original = network.dest_cols.copy()
+    ids = np.arange(7)
+    kept, text = automatic_detail(network, ids, threshold=2)
+    np.testing.assert_array_equal(kept, [3, 4, 5])
+    np.testing.assert_array_equal(network._headwater_links, [True, True, True, False, False, False])
+    np.testing.assert_array_equal(network.dest_cols, original)
+    assert "3 headwater cells > threshold 2" in text and "Display only" in text
+    # Exact threshold does not trigger; seam fragments do not double-count heads.
+    unchanged, _ = automatic_detail(network, ids, threshold=3)
+    np.testing.assert_array_equal(unchanged, ids)
+    zoom, _ = automatic_detail(network, np.array([0, 1]), threshold=2)
     np.testing.assert_array_equal(zoom, [0, 1])
-    no_area, text = automatic_detail(network, SimpleNamespace(sources={}), ids, budget=2)
-    np.testing.assert_array_equal(no_area, ids)
-    assert "no stored uparea" in text
+    # Incoming links outside view still count: clipped upstream nodes are not new heads.
+    interior, _ = automatic_detail(network, np.array([3, 4, 5]), threshold=0)
+    np.testing.assert_array_equal(interior, [3, 4, 5])
 
 
 def test_detail_settings_roundtrip_legacy_and_selection(products):
@@ -64,14 +72,14 @@ def test_invalid_detail_settings_rejected_before_mutation(products, key, value):
 def test_scene_detail_keeps_style_reference_and_export_geometry(products, monkeypatch):
     app = Explorer(products, products.parent / "detail-scene")
     options = app.scene_options()
-    options.update(network_detail="auto", network_budget=2)
+    options.update(network_detail="auto", network_budget=0)
     auto = app.scene.build(app.extent, app.variable.value, app.layer, app.network, options)
     assert len(auto.main["x0"]) < len(app.network.visible(app.extent))
     exported = app.scene.build(app.extent, app.variable.value, app.layer, app.network, options, max_side=2400)
     for key in auto.main:
         np.testing.assert_array_equal(auto.main[key], exported.main[key])
     assert "Auto detail" in auto.network_detail_note
-    assert any("Display only" in label and "uparea ≥" in label for label in auto.legend)
+    assert any("Display only" in label and "omitted headwater" in label for label in auto.legend)
     options["network_detail"] = "all"
     full = app.scene.build(app.extent, app.variable.value, app.layer, app.network, options)
     assert len(full.main["x0"]) == len(app.network.visible(app.extent))

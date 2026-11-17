@@ -8,24 +8,14 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ### Map Explorer automatic river detail (DT-0128, 2026-11-17)
 
-Maintainer requests automatic decluttering of dense Japan river networks by
-omitting small-uparea links. Codex owns Explorer scene/network/River UI/settings,
-associated tests/docs/research on approved feature/package-builder; commit/push
-scope retained. Display-only omission; no source topology, Inspector, selection,
-classification, Gallery scripts or data changes. New sessions Auto/5000; All links
-opt-out, old JSON full-network compatibility, cutoff/count disclosure and shared
-PNG behavior. Actual Japan131670 ->5000 links at503.883km²; zoom562/562 restored;
-live browser All/Auto and final PNG verified.368 tests plus3 subtests PASS;
-1 native-Windows SKIP. Full validation details VR-0174.
-
-Maintainer's latest bin2nc follow-up requires CSV-driven all-variable s03 defaults,
-listing all12 high-resolution products and skipping absent Binary tiles. Python
-preflights all resolutions before one bulk overwrite prompt; No/Enter uses per-file
-confirmation. Source formats/scientific values unchanged.20 tests plus4 subtests
-PASS including real PTY bulk/individual prompts and read-back byte comparisons.
-Shared/Mekong/local Japan scripts updated; no actual data conversion. Registry
-usage/evidence updated; workflow_stage and scientific metadata unchanged. See
-VR-0173. Same approved feature/package-builder publication scope.
+Maintainer correction supersedes area-based ranking as too aggressive. Auto now
+caches native zero-incoming-nextxy source-cell flags and omits only their outgoing
+links when visible headwater count > threshold5000. Every non-headwater link stays;
+no area ranking, recursive pruning or remaining-link target. All links opt-out and
+same JSON keys retained. Native Japan oracle:52142 heads omitted;79528/131670
+retained, versus previous5000. Zoom562/562 restored with255 heads.48 related tests
+PASS. Scope stays Explorer display/tests/docs on feature/package-builder; data,
+Inspector, selection and scientific classifications unchanged. Details VR-0174.
 
 ### Map bin2nc overwrite and high-resolution coverage fixes (DT-0127, 2026-11-17)
 

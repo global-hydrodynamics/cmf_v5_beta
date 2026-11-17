@@ -882,27 +882,25 @@ validates finite nonboolean fractions; missing old keys use1 with no schema bump
 Gallery defaults use1; manual opacity marks the preset Custom as usual.
 
 
-### Adaptive main-network drawing (DT-0128, 2026-11-17)
+### Headwater-only main-network drawing (DT-0128, revised 2026-11-17)
 
-After straight-segment or conservative Bezier-hull viewport clipping and before area_style,
-rank unique stored source links by genuine positive finite source-cell uparea in
-km². Above the target count, use the kth-largest value as a physical cutoff and
-retain all links at/above it, all ties, and all invalid/unknown-area links. Never
-rank by line color, displayed raster value, geographic containment or sampled
-high-resolution data. Cache native source-link areas as already used by area_style.
-Periodic seam fragments share link_index, so no half-link ranking artifact occurs.
+The maintainer rejects the initial upstream-area ranking as too aggressive.
+Current Auto marks zero-incoming-link source cells once from the complete valid
+non-self nextxy graph (not the current viewport or available outlet-coordinate
+subset). Native destination indices accumulate incoming counts; source-cell flags
+are cached per network. Display seam pieces map back through link_index.
 
-A smaller viewport with fewer candidates shows all of them, including small
-tributaries hidden in the full-map view. This count-based heuristic is independent
-of random sampling, output DPI and browser pixel size; identical viewport/settings
-produce identical scientific segments in Bokeh and PNG. The budget is a target,
-not a strict cap when ties/unknowns occur. It does not ensure equal density in
-every region or enforce/recalculate watershed topology. Full-reference color and
-width populations remain unchanged. Selection renderers and Inspector continue to
-use the original network; bifurcations and high-resolution overlays are separate.
+After straight-segment/conservative Bezier-hull clipping, count unique headwater
+source cells among candidate links. Only when count > threshold (default5000),
+omit links leaving flagged cells. All unflagged links remain; no area threshold,
+ranking, hard remaining-link budget or iterative pruning is applied. A smaller
+view restores heads when count <= threshold. This is an internal flag, not an
+extra headwater point renderer or a change to the separate Headwater Guides overlay.
 
-New sessions default auto/5000; explicit All links disables it. Existing saved JSON
-without the optional layer keys restores all/5000. Presets retain the preference;
-manual changes use normal Custom indication. The River panel and filtered PNG
-legend disclose actual counts/cutoff and display-only interpretation. No scientific
-input, reader, registry definition or classification method changes.
+Bifurcation connectivity does not redefine this primary-nextxy headwater flag.
+All native arrays/Inspector links, selection and full-reference color/width
+classifications remain intact. Browser/PNG share retained geometry and count
+notes. The River threshold control range remains1000–20000. The existing optional
+network_budget JSON key now stores the headwater-count trigger; auto/all values
+and old-file All links compatibility are retained. Current policy supersedes the
+area-cutoff implementation preserved historically in VR-0174.

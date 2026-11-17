@@ -21,27 +21,27 @@ plotting scripts, running a Fortran program, or providing model output.
 
 ## Automatic river detail for crowded views
 
-**River → River detail → Auto (upstream area)** is the new-session default.
-When the visible main network exceeds **Target visible links** (default5,000;
-range1,000–20,000), Explorer hides smaller source-cell upstream-area links.
-The panel reports retained/candidate counts and the physical cutoff in km².
-Zooming into a smaller region restores tributaries automatically; choose **All
-links** to disable filtering. Presets preserve this display preference.
+**River → River detail → Auto (headwaters only)** is the new-session default.
+Explorer marks native source cells that have **zero incoming valid nextxy links**
+in the full map. If the number of these headwater cells among visible links is
+strictly greater than **Headwater count threshold** (default5,000; range1,000–20,000),
+it omits only the first link leaving each such cell. Every non-headwater link
+remains, irrespective of upstream area. There is no area ranking or target for
+remaining river-link count, and no recursive peeling of additional upstream rows.
 
-Only main-network drawing changes: nextxy connectivity, native cell/catchment
-selection, Inspector counts, scientific attributes and source products are intact.
-Color/width classifications still use the full scientific reference network.
-Periodic seam pieces share one decision. Equal areas at the cutoff and missing,
-nonfinite or nonpositive areas are retained, so the target is not a strict cap.
-Without stored uparea the full visible network remains and the reason is shown.
-This is display generalization, not a new drainage-area product or network model.
+Zooming in restores all links when the visible headwater count is below/equal to
+the threshold. **All links** disables omission. Flags are internal cached topology
+metadata, not extra plotted point markers. The panel and PNG disclose candidate,
+headwater and retained counts. A source with upstream links outside the viewport
+is not incorrectly relabeled as a headwater. Periodic seam pieces share one flag.
+Bifurcation tables are not included in this primary-nextxy definition.
 
-PNG uses the same viewport/area decision and discloses the cutoff in its legend.
-JSON stores `layers.network_detail` (auto/all) and `network_budget`; older settings
-without these fields restore All links to preserve their previous appearance.
-Bifurcation/Channel Pixels/grid/boundary overlays retain their own existing rules;
-this control does not thin those overlays. Initial large-map loading and source
-network construction still occur; filtering reduces browser drawing payload.
+Scientific topology, Inspector, native selection and source products are unchanged.
+Color/width classifications keep the full reference. Presets preserve the display
+preference; JSON uses `layers.network_detail` (auto/all) and `network_budget`
+(now the headwater count threshold). Earlier JSON without the keys restores All
+links. Existing auto settings use the revised headwater-only policy. Other overlays
+keep their own rules. Initial full-network construction still occurs.
 
 ## Map Dataset — load or switch maps
 
