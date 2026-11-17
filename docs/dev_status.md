@@ -30,6 +30,13 @@ previously ignored the converter's existing-output guard. See research/records/v
 
 ### Map Explorer dataset switching (DT-0126, 2026-11-17)
 
+Latest maintainer follow-up: every loaded/switched supported map defaults to
+p01-f04b; only bundled Mekong uses the Gallery extent. Other maps retain their
+full native extent; missing preset inputs keep usable coarse fallback/status.
+19 related tests PASS; actual Japan/global/Mekong switch sequence PASS with
+all3 required overlays ON. Observed loads9.52s/28.47s/0.55s; no source-data edits.
+Existing feature/package-builder scope/publication retained; details VR-0172.
+
 Follow-up: regenerated visual.nc was present but rejected because the reader
 expected units1 rather than canonical CSV units code. Accept code only for visual
 while retaining legacy1; assignment validation remains strict. Three installed

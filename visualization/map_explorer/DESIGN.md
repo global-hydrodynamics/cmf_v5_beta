@@ -816,9 +816,11 @@ peaks therefore exceed a single settled view. Individual settings edits do not
 recreate the plot. The session holds no cross-map Pins or scientific values.
 
 Startup uses bundled Mekong, script-relative and without a dialog across terminal,
-macOS/native Windows/WSL/direct Python paths. Only that bundled map receives its
-compatible p01-f04b Gallery startup. Other maps get their complete native extent
-with a Custom geographic frame, supported coarse raster and network. Optional
+macOS/native Windows/WSL/direct Python paths. Every supported map receives p01-f04b
+on initial load or switching; only bundled Mekong requests the Gallery extent.
+Other maps first get their complete native extent with a Custom geographic frame,
+then apply p01-f04b while preserving that extent. Missing/invalid preset inputs
+retain a usable coarse display and an explicit preset-status reason. Optional
 Gallery methods continue to validate products/extents; JSON mismatch rejects
 before any state mutation and asks for an explicit Map Dataset switch. No schema
 migration; export filenames now identify the current map.

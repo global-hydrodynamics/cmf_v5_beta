@@ -3,8 +3,10 @@
 With no map argument, every launcher opens the repository's bundled
 `map/mekong_15min/` without a folder dialog. Mekong retains the **p01-f04b**
 startup display with Channel + Overland bifurcations and its compatible Gallery
-extent. Other maps start with their full native extent, a supported coarse raster
-and nextxy network; no Mekong-specific extent is applied. High-resolution
+extent. Every other map also applies **p01-f04b** on initial load and map switching
+when its required products are available, retaining that map's full native extent
+instead of the Mekong Gallery extent. If requirements are missing or invalid,
+a supported coarse display remains usable and the preset status explains why. High-resolution
 **NetCDF is preferred** for Mekong, TE-Japan and global maps. Existing Binary
 products remain compatible; optional Binary visual/catmz100 fields can supplement
 NetCDF when the corresponding NetCDF product is absent. The categorical

@@ -12,6 +12,7 @@ from app import create_app
 from map_datasets import DEFAULT_MAP, REPOSITORY, discover_maps, resolve_map
 from map_session import ExplorerSession
 from test_hires_netcdf import write_product
+from test_v2 import products
 from map_reader import Geometry
 
 
@@ -288,3 +289,21 @@ def test_map_dataset_drawer_is_opt_in_and_independent_of_settings(maps):
     assert not s.active.settings_panel.visible
     s.dataset_toggle.value = False
     assert not s.controls.visible
+
+
+def test_switch_applies_p04b_to_other_supported_maps_without_gallery_extent(products, tmp_path):
+    import shutil
+    from map_reader import MapReader
+    alternate = tmp_path.parent / f"{tmp_path.name}-other map"
+    shutil.copytree(products, alternate)
+    s = ExplorerSession(products, output_dir=tmp_path.parent / f"{tmp_path.name}-exports")
+    assert s.active._applied_preset == "p01-f04b"
+    s.active.background.value = "none"
+    assert s.load_map(alternate)
+    app = s.active
+    assert app._applied_preset == app.preset_choice.value == "p01-f04b"
+    assert app.extent == MapReader(alternate).geometry.extent
+    assert app.background.value == "catchment"
+    assert all(app.overlay_controls[name].value for name in ("channel_pixels", "channel", "overland"))
+    assert "Gallery preset p01-f04b applied" in app.preset_status.object
+    s.close()

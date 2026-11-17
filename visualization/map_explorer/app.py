@@ -1427,7 +1427,7 @@ class Explorer:
         else:
             self.preset_status.object = f"**Gallery preset {self._applied_preset} applied**"
 
-    def apply_startup_defaults(self):
+    def apply_startup_defaults(self, *, use_gallery_extent=True):
         """One-time desktop/server default using the canonical Gallery preset."""
         identity = "p01-f04b"
         if identity not in self.preset_library.presets:
@@ -1441,7 +1441,7 @@ class Explorer:
         row, _ = self.preset_library.presets[identity]
         try:
             self.reader.geometry.validate_extent([row[k] for k in ("west", "east", "south", "north")])
-            use_extent = True
+            use_extent = use_gallery_extent
         except ValueError:
             use_extent = False
         base = self.settings()

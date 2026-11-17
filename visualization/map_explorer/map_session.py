@@ -92,12 +92,13 @@ class ExplorerSession:
         try:
             if explorer.frame is None or explorer.layer is None or explorer._background_error:
                 raise ValueError(f"Cannot render a supported core raster: {explorer.status.object}")
-            # Gallery extent/scientific defaults belong to the bundled example,
-            # never to an unrelated Japan/global/custom dataset.
+            # Apply the same method to every map; only bundled Mekong uses
+            # the Gallery's geographic extent. Other datasets retain their domain.
             if path == resolve_map(None, self.repository):
                 explorer.apply_startup_defaults()
             else:
                 explorer.set_extent(explorer.reader.geometry.extent)
+                explorer.apply_startup_defaults(use_gallery_extent=False)
             return explorer
         except Exception:
             explorer.close()
