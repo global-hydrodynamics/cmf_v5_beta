@@ -6,6 +6,22 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Stored terminal markers and bounded headwater guides (DT-0137, 2026-11-17)
+
+Maintainer reports missing-looking river vectors/headwater guides, then requests
+markers at stored nextxy=-10 endpoints. Regional cutting also uses this code;
+labels must not assert an inland-mouth interpretation. Codex owns Explorer scene/network
+annotation/renderers/tests/docs on existing feature/package-builder. Check stored
+links independently, mark paired(-10,-10) without inventing downstream links,
+restore explicitly labeled native-window centroid guides without global scans.
+Scientific inputs and river-link topology remain unchanged.
+
+DT-0137 complete:402 tests plus3subtests PASS;1existing Windows SKIP. Reported
+Global region retains235stored links,with18paired-10 markers and97native-window
+guides. Real browser terminal-cell Inspector/PNG verified;147source stats unchanged.
+See VR-0183;registry scientific fields/workflow_stage unchanged.
+
+
 ### Large-map sparse display limits (DT-0136, 2026-11-17)
 
 Maintainer reports Global load blocked by uncached exact P5/P95 and explicitly

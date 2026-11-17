@@ -322,6 +322,9 @@ class Explorer:
         self.outlet_renderer = self.plot.scatter(
             "x", "y", source=self.outlet_source, size="size", fill_color="white", line_color="#555555", line_width=0.5
         )
+        self.terminal_source = ColumnDataSource(dict(x=[], y=[]))
+        self.terminal_renderer = self.plot.scatter('x', 'y', source=self.terminal_source, marker='diamond',
+            size=10, fill_color='#D73027', line_color='white', line_width=1, name='terminal-minus10')
         self.arrow_source = ColumnDataSource(dict(x=[], y=[], angle=[], color=[], size=[]))
         self.plot.scatter(
             "x",
@@ -637,6 +640,8 @@ class Explorer:
             for source in tile.cog.values():
                 source.cache.clear()
         self.scene._outline_cache.clear()
+        self.scene._guide_cache.clear()
+        self.scene._headwater_masks.clear()
         self.scene.tiles.clear()
         self.cell_inspector._graphs.clear()
         for name in ("outlet_coordinates", "bifurcation_counts"):
@@ -1025,6 +1030,7 @@ class Explorer:
         self.outlet_source.data = dict(
             x=frame.points[:, 0], y=frame.points[:, 1], size=np.full(len(frame.points), frame.point_size)
         )
+        self.terminal_source.data = dict(x=frame.terminal_points[:,0], y=frame.terminal_points[:,1])
         self._overlay_controls_state()
         self.arrow_source.data = frame.arrows
         self.river_ui.detail_note.object = frame.network_detail_note

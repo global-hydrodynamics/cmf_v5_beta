@@ -1068,3 +1068,44 @@ VR-0182 records synthetic masking/cache/manual/native-selection tests, actual
 Japan→Global load with full-stat workspace/high-res NC opens forbidden, and actual
 browser/PNG checks. Old exact-cache values are not presented as sparse estimates;
 the new large-tile cache uses its explicit new policy key.
+
+
+## DT-0137 — Endpoint markers and native-window headwater guides (2026-11-17)
+
+Maintainer reports partial-looking Outlet Vectors and missing guides, then requests
+markers for nextxy=-10. Direct Global inspection of the reported viewport finds
+all235 stored visible links retained (74zero-incoming sources,below5000). No
+endpoint-invalid or zero-length links occur there. Main-link omission is not
+observed; the18paired(-10,-10) endpoints have no downstream line by definition.
+
+Frame now contains a dedicated terminal-point array shared by Bokeh and PNG,
+shown automatically with an active river network. A red diamond/white border at
+stored outlon/outlat for Outlet Vector,or computational center for Grid Center,
+marks only paired(-10,-10); missing/outlet-invalid/mixed/-9 are excluded. No inferred
+connection is added. Missing actual outlets are reported rather than using centers
+under an Outlet label. Inspector identifies the stored terminal code explicitly.
+Regional region_cut_domain.F90 also writes paired-10 when downstream is outside
+its crop. Therefore the marker is called terminal,not uniquely an inland mouth.
+No scientific code definitions or source data are rewritten.
+
+The COG-wide disable of centroid guides is replaced by bounded native-window
+centroids. Full model-grid incoming counts and positive uparea define candidates,
+including isolated cells with no outgoing valid link,as in the prior regional
+algorithm. Read only native catmxy pixels in the intersecting raster window when
+native pixels are sufficiently resolved and window≤2million. No Overview category
+or sparse display-statistics sample defines guide assignment/position. Native
+coordinate means are grouped by paired coarse IDs; only visible-window pixels
+contribute,not undisplayed components. This explicit window scope can change with
+pan/clipping and does not claim a complete catchment centroid. Global longitude
+uses circular mean; split_segments handles periodic edges. Later tiles mask earlier
+overlap. Stored outlets are endpoints,never an inferred flow route.
+
+Guide arrays cache8windows by network product,extent,tile/source identity; coarse
+candidate masks cache by selected stored topology. Both are released on close/map
+switch. Color/overlay changes reuse geometry. Wide/downsampled views show a zoom
+message and omit guides rather than scan the whole high-res tile. This supersedes
+the earlier COG guide-disable and periodic-global unsupported limitations. Existing
+regional complete centroids remain a low-level scientific helper; the interactive
+controller no longer invokes them. Main link arrays/classes/automatic omission,
+settings formats and Gallery scripts remain unchanged. VR-0183 provides exact
+synthetic pair/coordinate/seam oracles and actual Global/browser/PNG evidence.

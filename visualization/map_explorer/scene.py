@@ -55,6 +55,8 @@ class Frame:
     points: np.ndarray = field(default_factory=lambda: np.empty((0, 2)))
     arrows: dict = field(default_factory=lambda: dict(x=[], y=[], angle=[], color=[], size=[]))
     point_size: int = 4
+    terminal_points: np.ndarray = field(default_factory=lambda: np.empty((0, 2)))
+    terminal_location: str = ""
     layer: object = None
     legend: list = field(default_factory=list)
     diagnostics: list = field(default_factory=list)
@@ -76,6 +78,8 @@ class Scene:
         self.messages = list(self.products.messages)
         self.tiles = discover_tiles(reader.path, self.messages)
         self._outline_cache = OrderedDict()
+        self._guide_cache = OrderedDict()
+        self._headwater_masks = {}
 
     def build(self, extent, name, coarse_layer, network, options, max_side=1200):
         frame = Frame(background_opacity=options.get("background_opacity", 1.0))
@@ -122,6 +126,7 @@ class Scene:
             for boundary_tile in self.visible_tiles(selected_tile,extent):
                 self._catchment_boundaries(frame, boundary_tile, extent, max_side, overlays["catchment_boundary_color"])
         if network is not None:
+            self._terminal_markers(frame, network, extent)
             curved = options.get("network_geometry") == "gallery_arcs"
             visible = network.visible(self.reader.geometry.extent if curved else extent)
             if curved:
@@ -219,40 +224,111 @@ class Scene:
                     else:
                         frame.diagnostics.append("Outlet markers omitted above 20,000 visible nodes")
                 if overlays["headwater"]:
-                    if g.periodic:
-                        raise ValueError("Periodic global headwater centroid guides are not yet supported")
-                    if tile is None or "catmxy" not in tile.files or network is None:
-                        frame.diagnostics.append("Headwater guides need selected catmxy tile and a main network")
-                    elif tile.cog or options.get("automatic_selection"):
-                        frame.diagnostics.append("Headwater centroid guides disabled for COG: no whole-tile native scan during interaction")
-                    else:
-                        river = self.reader.read("uparea").astype(float).filled(np.nan) > 0
-                        lon, lat, counts = tile.centroids(g, river)
-                        incoming = np.bincount(network.dest_rows * g.nx + network.dest_cols, minlength=g.nx * g.ny)
-                        ids = np.flatnonzero(
-                            river.ravel()
-                            & (incoming == 0)
-                            & (counts > 0)
-                            & np.isfinite(a.ravel())
-                            & np.isfinite(b.ravel())
-                        )
-                        segments = np.stack(
-                            [np.column_stack([lon[ids], lat[ids]]), np.column_stack([a.ravel()[ids], b.ravel()[ids]])],
-                            axis=1,
-                        )
-                        segments = segments[visible_segments(segments, extent)]
-                        frame.overlays.insert(
-                            0,
-                            Overlay(
-                                segments,
-                                "#888888",
-                                0.65,
-                                "Regional no-incoming centroid guides (not confirmed headwaters)",
-                            ),
-                        )
+                    self._headwater_guides(frame, network, selected_tile, extent,
+                                          options.get("screen", (max_side, max_side)), max_side)
             except (ValueError, OSError, KeyError) as exc:
                 frame.diagnostics.append(f"Outlet/guide overlay unavailable: {exc}")
         return frame
+
+    def _terminal_markers(self, frame, network, extent):
+        """Paired -10 is an endpoint, not a fabricated downstream connection."""
+        rows, cols = np.where((network.nextx == -10) & (network.nexty == -10))
+        g = self.reader.geometry
+        if getattr(network, 'representation', 'grid_center') == 'outlet_vector':
+            lon, lat = self.products.outlets
+            x, y = lon[rows, cols], lat[rows, cols]
+            frame.terminal_location = 'stored outlets'
+        else:
+            x, y = g.lon[cols], g.lat[rows]
+            frame.terminal_location = 'computational grid centers'
+        valid = np.isfinite(x) & np.isfinite(y)
+        if (~valid).any():
+            frame.diagnostics.append(f'{int((~valid).sum())} -10 terminals have no valid {frame.terminal_location}')
+        visible = valid & (x >= extent[0]) & (x <= extent[1]) & (y >= extent[2]) & (y <= extent[3])
+        frame.terminal_points = np.column_stack((x[visible], y[visible]))
+        if visible.any():
+            frame.legend.append(f'Stored -10 terminals (-10,-10): red diamonds at {frame.terminal_location}')
+
+    def _headwater_guides(self, frame, network, selected, extent, screen, max_side):
+        """Native-window centroid to stored outlet: a guide, never a new river link.
+
+        Global scans are avoided. Centroids follow only the displayed native window
+        and can change with viewport clipping; full-catchment centroids are not claimed.
+        """
+        if network is None or 'uparea' not in self.reader.sources:
+            frame.diagnostics.append('Headwater guides need a main network and uparea')
+            return
+        tiles = self.visible_tiles(selected, extent)
+        windows = []
+        for tile in tiles:
+            if 'catmxy' not in tile.files:
+                continue
+            if 'catmxy' in tile.cog:
+                plan = tile.display_plan('catmxy', extent, screen)
+                if plan is None or not plan.native:
+                    frame.diagnostics.append('Headwater guides: zoom to native detail; no global assignment scan')
+                    return
+                r0, r1, c0, c1 = plan.native_window
+                rows, cols = np.arange(r0, r1), np.arange(c0, c1)
+            else:
+                subset = tile.subset(extent, max_side)
+                if subset is None or not subset[3]:
+                    frame.diagnostics.append('Headwater guides: zoom to native detail; no sampled centroids')
+                    return
+                rows, cols = subset[:2]
+            windows.append((tile, rows, cols))
+        if not windows:
+            frame.diagnostics.append('Headwater guides need native catmxy in the visible tile')
+            return
+        key = (network.product, tuple(extent), tuple((t.key, t.source_identity) for t, _, _ in windows))
+        if key not in self._guide_cache:
+            g = self.reader.geometry
+            if network.product not in self._headwater_masks:
+                incoming = np.bincount(network.dest_rows * g.nx + network.dest_cols, minlength=g.nx*g.ny)
+                river = self.reader.read('uparea').astype(float).filled(np.nan) > 0
+                self._headwater_masks[network.product] = river.ravel() & (incoming == 0)
+            heads = self._headwater_masks[network.product]
+            labels, longitude, latitude = [], [], []
+            for index, (tile, rows, cols) in enumerate(windows):
+                if len(rows)*len(cols) > 2_000_000:
+                    frame.diagnostics.append('Headwater guide window exceeds native budget; zoom in')
+                    return
+                x, y = tile.sample('catmxy', rows, cols)
+                valid, _, _ = assignment(x, y, g)
+                xx = tile.geometry.west + (cols+.5)*tile.geometry.resolution
+                yy = tile.geometry.north - (rows+.5)*tile.geometry.resolution
+                # As with raster composition, later tiles win any geographic overlap.
+                for later, _, _ in windows[index+1:]:
+                    h = later.geometry
+                    valid &= ~((xx[None,:] >= h.west) & (xx[None,:] < h.east)
+                               & (yy[:,None] > h.south) & (yy[:,None] <= h.north))
+                rr, cc = np.where(valid)
+                ids = (y[valid].astype('i8')-1)*g.nx + x[valid].astype('i8')-1
+                keep = heads[ids]
+                labels.append(ids[keep]); longitude.append(xx[cc[keep]]); latitude.append(yy[rr[keep]])
+            ids, inverse, counts = np.unique(np.concatenate(labels), return_inverse=True, return_counts=True)
+            lon, lat = np.concatenate(longitude), np.concatenate(latitude)
+            lat = np.bincount(inverse, weights=lat, minlength=len(ids))/counts
+            if g.periodic:
+                # Circular mean prevents a seam-straddling centroid moving to Greenwich.
+                angle = np.deg2rad(lon)
+                lon = np.rad2deg(np.arctan2(np.bincount(inverse, weights=np.sin(angle), minlength=len(ids)),
+                                           np.bincount(inverse, weights=np.cos(angle), minlength=len(ids))))
+                lon = g.west + (lon-g.west) % 360
+            else:
+                lon = np.bincount(inverse, weights=lon, minlength=len(ids))/counts
+            outlon, outlat = self.products.outlets
+            destx, desty = outlon.ravel()[ids], outlat.ravel()[ids]
+            valid = np.isfinite(destx) & np.isfinite(desty)
+            x0, y0, x1, y1, _ = split_segments(g, lon[valid], lat[valid], destx[valid], desty[valid], ids[valid])
+            segments = np.stack((np.column_stack((x0, y0)), np.column_stack((x1, y1))), axis=1)
+            self._guide_cache[key] = segments[visible_segments(segments, extent)]
+            while len(self._guide_cache) > 8:
+                self._guide_cache.popitem(last=False)
+        self._guide_cache.move_to_end(key)
+        segments = self._guide_cache[key]
+        frame.overlays.insert(0, Overlay(segments, '#888888', .65,
+            'Headwater guides: visible-window native pixel centroid to stored outlet (not channel geometry)'))
 
     def visible_tiles(self, selected, extent):
         tile = self.tiles.get(selected)
@@ -691,6 +767,9 @@ def export_scene(
                     zorder=4,
                 )
             )
+    if len(frame.terminal_points):
+        ax.scatter(*frame.terminal_points.T, marker='D', s=(10*72/160)**2,
+                   facecolors='#D73027', edgecolors='white', linewidths=.7, zorder=6)
     if len(frame.points):
         ax.scatter(
             *frame.points.T,
@@ -778,6 +857,9 @@ def export_scene(
     ax.set_aspect(1 / max(0.05, np.cos(np.deg2rad((s + n) / 2))))
     handles = [Line2D([], [], color=color, lw=width, label=label) for label, color, width in frame.swatches]
     handles += [Line2D([], [], color=o.color, lw=1, linestyle=o.dash, label=o.label) for o in frame.overlays]
+    if len(frame.terminal_points):
+        handles.append(Line2D([], [], marker='D', mfc='#D73027', mec='white', ls='none',
+                              label='Stored -10 terminals (-10,-10)'))
     if len(frame.points):
         handles.append(Line2D([], [], marker="o", mfc="white", mec="#555555", ls="none", label="Stored outlets"))
     if selected_coarse_outline is not None:

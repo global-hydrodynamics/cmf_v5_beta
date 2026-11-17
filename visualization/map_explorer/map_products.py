@@ -87,6 +87,7 @@ class Products:
             x0, y0, x1, y1 = a[sr, sc], b[sr, sc], a[dr, dc], b[dr, dc]
             valid = np.isfinite(x0) & np.isfinite(y0) & np.isfinite(x1) & np.isfinite(y1)
             view = copy(network)
+            view.representation = "outlet_vector"
             # Endpoint validity can change the reference population for full-
             # network classes. Do not inherit the grid-center summary cache.
             view.__dict__.pop("_area_summary", None)

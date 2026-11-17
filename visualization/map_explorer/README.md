@@ -20,6 +20,36 @@ A standalone, read-only browser for coarse CaMa-Flood river maps. Explore
 rasters, stored downstream connectivity and individual cells without editing
 plotting scripts, running a Fortran program, or providing model output.
 
+## Stored terminal markers and Headwater Guides
+
+When a river network is enabled, paired stored `nextx=-10,nexty=-10` endpoints
+appear as **red diamonds with white borders**. Outlet Vector places them at stored
+outlon/outlat; Grid Center places them at computational centers. Missing outlet
+coordinates are reported and omitted, never replaced silently. Network Off hides
+these markers. Browser and PNG use the same points. A terminal has no downstream
+vector; no artificial connection is added. `-9`, missing and mixed pairs are not
+included. The label is deliberately **terminal (-10)**: regional cutting can also
+write this code for downstream-outside-domain cells, so it is not uniquely proof
+of a physical inland river mouth.
+
+**Overlays → Headwater** is restored for native COG views, including Global. It
+draws the centroid of assigned native pixels in the **visible raster window** to
+their stored coarse-cell outlet. The existing full-model-grid zero-incoming-link
+criterion identifies candidates, including isolated positive-uparea cells; this
+can exceed the number of headwaters among valid drawn river links. These are
+advisory guides, not observed channel geometry or confirmed physical headwaters.
+
+Only the bounded native window is read (≤2million pixels/tile); no global assignment
+scan/index is built. The centroid is window-limited and may move when the window
+clips a catchment or disconnected component; it is not advertised as the complete
+catchment centroid. At native detail over the whole tile it agrees with the prior
+regional centroid. Global longitudes use a circular mean and seam-split guides to
+avoid artificial lines through Greenwich. Later tiles win overlaps as in the raster.
+Eight recent guide windows and model-grid candidate masks are cached; closing or
+switching maps releases them. Wide/downsampled views defer guides with a zoom-in
+message, rather than estimate assignments from overviews. The native guide window
+is independent of background colors and the ordinary catchment-boundary toggle.
+
 ## Automatic river detail for crowded views
 
 **River → River detail → Auto (headwaters only)** is the new-session default.
@@ -153,8 +183,8 @@ Tiles of the selected resolution family are composed in lexical order (later til
 win overlaps); click lookup follows that draw order. Physical limits come from the
 first rendered tile's full native reference, shared by the composed frame. This is
 not an all-tiles percentile. Other limitations: native 8-neighbor elevation
-difference is displayed only at native detail; centroid-based Headwater Guides are
-disabled on COG paths to avoid whole-tile interactive scans. The normal river graph
+difference is displayed only at native detail; Headwater Guides use only native windows
+and defer in wide views as described above. The normal river graph
 and headwater link-display policy still use model-grid topology. PNG export uses
 the current frame/overview and scientific coordinates; it does not reread a full
 native image merely because the export has more output pixels.
@@ -675,11 +705,11 @@ Each overlay remains independent of the background and main-network style:
   **Outlet Size [px]**,0–20 step1/default4, is disabled when Outlets is off.
   Zero hides ordinary outlets while preserving selected-cell/catchment markers.
   The existing20000-visible-marker safeguard reports omissions explicitly.
-- **Headwater** retains native unit-catchment pixel-centroid to outlet guides for
-  cells without incoming regional links. Boundary omissions can create candidates;
-  these are **not confirmed physical headwaters**. Selected catmxy/uparea are
-  required; periodic global centroid guides remain unsupported. This centroid
-  guide is explicitly disabled on COG paths to prevent a whole-native-tile scan.
+- **Headwater** draws visible-window native assignment centroids to stored outlets
+  for positive-uparea cells with no incoming full-model-grid links. These guides are
+  not confirmed physical headwaters/channels. They support COG/Global at native
+  detail, cache bounded windows, and defer wide/downsampled views without scanning
+  the full high-res source. Centroid scope and periodic behavior are detailed above.
 - **Coarse Grid** draws every native computational edge from params.txt only
   while both displayed map spans are below30 cells. At30 or more cells on either
   axis, the entire grid overlay is hidden: lines are never thinned. Span is the

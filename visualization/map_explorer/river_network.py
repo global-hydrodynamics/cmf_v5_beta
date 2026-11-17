@@ -22,6 +22,7 @@ def intersects(x0, y0, x1, y1, extent):
 class RiverNetwork:
     def __init__(self, reader, product='nextxy'):
         self.geometry = g = reader.geometry
+        self.representation = "grid_center"
         self.product = product
         x, y = reader.read_network(product)
         self.nextx, self.nexty = x.filled(-9999), y.filled(-9999)
@@ -69,6 +70,8 @@ class RiverNetwork:
         info = {'downstream ix (1-based)': x, 'downstream iy (1-based)': y}
         if x == -9999 or y == -9999:
             status = 'missing / unassigned'
+        elif x == -10 and y == -10:
+            status = 'terminal (-10; no downstream link)'
         elif x <= 0 or y <= 0:
             status = 'terminal / boundary code (raw codes retained)' if x <= 0 and y <= 0 else 'invalid mixed destination codes'
         elif x > g.nx or y > g.ny:
