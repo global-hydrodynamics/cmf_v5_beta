@@ -110,8 +110,8 @@ def test_gradient_mapping_geometry_and_manual_limits(palette, classification):
     width, colors, _, _ = area_style(
         net, reader, ids, color_area=True, scale_width=True, classification=classification, area_palette=palette
     )
-    assert colors[0] == RIVER_GRADIENTS[palette][0].lower()
-    assert colors[6] == RIVER_GRADIENTS[palette][-1].lower()
+    assert colors[0].lower() == RIVER_GRADIENTS[palette][0].lower()
+    assert colors[6].lower() == RIVER_GRADIENTS[palette][-1].lower()
     changed = area_style(
         net,
         reader,
@@ -236,7 +236,7 @@ def test_seven_visible_gallery_renderings_and_legacy_library(tmp_path):
             rgba = app.frame.images[0][0].view("u1").reshape(*app.frame.images[0][0].shape, 4)
             assert np.any(np.all(rgba[:, :, :3] == 179, axis=2))
         if identity == "p01-f02a":
-            assert app.network_choice.value == "nextxy_noedge"
+            assert app.network_choice.value == "nextxy"
             assert app.frame.paths["xs"] and len(app.frame.arrows["x"]) > 0
             lengths = list(map(len, app.frame.paths["xs"]))
             assert 2 in lengths and 17 in lengths

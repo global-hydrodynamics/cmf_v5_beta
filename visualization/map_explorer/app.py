@@ -120,7 +120,7 @@ class Explorer:
         self.high = pn.widgets.FloatInput(name="Color maximum", value=1, width=140)
         self.network_choice = pn.widgets.Select(
             name="Stored network",
-            options=["off", *self.reader.network_sources],
+            options=["off", *(["nextxy"] if "nextxy" in self.reader.network_sources else [])],
             value="nextxy" if "nextxy" in self.reader.network_sources else "off",
         )
         self.width = pn.widgets.FloatSlider(name="Link width", start=0.2, end=4, step=0.2, value=1)
@@ -1135,8 +1135,8 @@ class Explorer:
                 net = self._networks[name]
             else:
                 net = self._network_cache
-            if net is None and self.reader.network_sources:
-                name = "nextxy" if "nextxy" in self.reader.network_sources else next(iter(self.reader.network_sources))
+            if net is None and "nextxy" in self.reader.network_sources:
+                name = "nextxy"
                 self._network_cache = net = RiverNetwork(self.reader, name)
             if net is not None:
                 result["network product"] = net.product
@@ -1389,7 +1389,7 @@ class Explorer:
             self.preset_status.object = f"**Gallery preset {self._applied_preset} applied**"
 
     def apply_startup_defaults(self):
-        """One-time desktop/server default, separate from the canonical Gallery preset."""
+        """One-time desktop/server default using the canonical Gallery preset."""
         identity = "p01-f04b"
         if identity not in self.preset_library.presets:
             self.preset_status.object = "**Startup p01-f04b unavailable:** Gallery metadata is missing."
@@ -1414,14 +1414,7 @@ class Explorer:
             self.status.object = "**Startup p01-f04b unavailable:** " + str(exc)
             self.preset_status.object = self.status.object
             return
-        updating = self._updating
-        self._updating = True
-        try:
-            self.overlay_controls["overland"].value = True
-        finally:
-            self._updating = updating
-        self.render_view()
-        self.status.object = "**Startup:** p01-f04b + Overland bifurcations ON."
+        self.status.object = "**Startup:** p01-f04b (Channel + Overland bifurcations)."
 
     def apply_preset(self, identity=None, use_gallery_extent=None):
         identity = identity or self.preset_choice.value

@@ -258,7 +258,7 @@ def test_mekong_profile_ids_graph_counts_outlets_and_source_switch(tmp_path):
     assert len(result["fldhgt [m]"]) == 10 and result["subbsn [1]"] == 63
     assert "105.59792" in panel.summary.object and "10.82958" in panel.summary.object
     assert "798.716" in panel.summary.object
-    for source in ["nextxy", "nextxy_noedge"]:
+    for source in ["nextxy"]:
         app.representation.value = "off"
         app.network_choice.value = source
         info = app.inspect(*app.selection.clicked)

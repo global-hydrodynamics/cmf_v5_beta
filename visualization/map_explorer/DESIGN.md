@@ -765,3 +765,27 @@ launch. Overland is an Explorer startup override and therefore shows Custom
 (modified from p01-f04b), preserving scientific preset provenance. User-loaded
 JSON/later preset applications retain their own settings; never reapply defaults.
 Tests cover startup/factory, unavailable products and later saved settings.
+
+
+## DT-0124 — Gallery f04 bifurcation comparison
+
+2026-11-17 explicit correction: f04a retains Channel only, f04b adds Overland
+alongside Channel. Update Gallery scripts, regenerated panels/combined/Gallery
+PNG, both visualization READMEs and canonical CSV. Native bifprm first-layer
+width>0 means Channel; width=0 means Overland; validate endpoints/nonnegative
+finite layers and retain first valid directed pair. Keep area normalization and
+all other layers unchanged. Explorer CSV references now declare f04b Overland ON;
+startup no longer needs a custom override and should show the canonical preset.
+This supersedes DT-0123's startup-only Overland difference. Validate path counts,
+rendered geometry, unchanged panel-a output and source data, and inspect PNGs.
+
+
+DT-0124 additional maintainer steering: use complete nextxy throughout p01 River
+Map workflows and Explorer presets; remove nextxy_noedge from the UI while keeping
+low-level data reading and explicit old-JSON migration. Align Blue→Navy anchors
+with the existing Gallery quartet and select it by default for p01-f03a/f04b.
+Regenerate f02/f03/f04/f05 figures and Gallery copies after source changes. This
+supersedes the earlier f04-only scope: full nextxy changes the complete
+connectivity and headwater/reference populations. The local f04a delta output
+nevertheless remains byte-identical because its plotted local geometry is unchanged.
+No scientific input file, p02 simulation-product pairing or model is modified.

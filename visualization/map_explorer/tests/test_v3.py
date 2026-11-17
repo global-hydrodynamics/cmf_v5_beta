@@ -133,7 +133,7 @@ def test_presets_catalog_missing_inputs_and_atomic_application(map_dir):
     before = app.settings()
     missing = library.missing_products("p01-f04b", app.reader, app.scene)
     assert any("catmxy" in name for name in missing)
-    assert "nextxy_noedge" in missing
+    assert "nextxy" in missing
     with pytest.raises(ValueError, match="missing"):
         app.apply_preset("p01-f04b")
     assert app.settings() == before

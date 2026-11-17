@@ -211,6 +211,12 @@ ROOT = Path(__file__).resolve().parents[3]
 def test_mekong_gallery_legacy_palette_and_mixed_overlay_export(tmp_path):
     app = Explorer(ROOT / "map/mekong_15min", tmp_path)
     app.apply_preset("p01-f03a", use_gallery_extent=True)
+    assert app.river_ui.palette.value == "blue_navy"
+    # Older Gallery settings remain explicit and render their approved quartet.
+    legacy = app.settings()
+    legacy["network_options"]["area_palette"] = "viridis"
+    legacy["network_options"]["area_color_style"] = "gallery_quartiles"
+    app.load(json.dumps(legacy).encode())
     assert app.river_ui.palette.value is None and "viridis" in app.river_ui.legacy_palette.object
     assert set(app.frame.main["color"]) <= set(AREA_COLORS)
     assert len(app.river_ui.palette.options) == 8

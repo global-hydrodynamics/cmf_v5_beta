@@ -60,6 +60,10 @@ def load_settings(content, reader):
         "subcol_gray",
     ):
         raise ValueError("Unsupported scale/palette")
+    if data["network"] == "nextxy_noedge":
+        data["network"] = "nextxy" if "nextxy" in reader.network_sources else "off"
+        notes.append("Legacy nextxy_noedge display source replaced by " + data["network"]
+                     + "; River Map now uses complete nextxy connectivity")
     if data["network"] != "off" and data["network"] not in reader.network_sources:
         raise ValueError("Settings network is not available")
     options = data["network_options"]

@@ -72,7 +72,7 @@ show color-class transitions and cannot recover every original basin boundary.
 On valid `bsncol` cells, `subcol=0` or `subcol=-9999` is shown gray as an
 unassigned river cell. Missing `bsncol` cells remain white. White therefore
 includes both sea and any network-external land that these two inputs cannot
-distinguish. f01d does not use `nextxy_noedge` or classify land and sea.
+distinguish. f01d does not use `nextxy` or classify land and sea.
 
 CaMa-Flood uses Flexible Downstream connections beyond immediate grid
 neighbors. Apparent gaps in an upstream-area raster do not necessarily mean
@@ -121,7 +121,7 @@ external land as well as sea, because these inputs do not distinguish them.
 Black edges mark adjacent changes in `bsncol` display class, not boundaries
 reconstructed from original basin IDs; repeated classes can hide boundaries
 between distinct basins. The script does not read `basin.nc`,
-`subbsn-sample.bin`, or `nextxy_noedge.nc`, and does not recalculate
+`subbsn-sample.bin`, or `nextxy.nc`, and does not recalculate
 segmentation or convert the binary to NetCDF.
 
 The f01b legend uses **display-only pseudo-log categorical spacing**. IDs 1–20
@@ -254,11 +254,11 @@ station data, external download, or map preparation is needed.
 | Input | Meaning and use |
 | --- | --- |
 | `netcdf/uparea.nc`: `uparea(lat, lon)`, m² | Convert to km²; read source-cell areas for network links and a faint logarithmic background in a/b. Missing, non-finite and non-positive areas are excluded. |
-| `netcdf/nextxy_noedge.nc`: `nextx`, `nexty` | One-based destination indices; paired non-positive terminal/sentinel values do not define links. |
+| `netcdf/nextxy.nc`: `nextx`, `nexty` | One-based destination indices; paired non-positive terminal/sentinel values do not define links. |
 | `subcol-sample.bin`: little-endian int32, one Fortran-order record | Categorical subbasin display indices for c's background. Zero maps to gray (0.50 brightness); positive classes 1–10 map to discrete grays from 0.45 to 0.10; `-9999` is white. The file has 80 × 120 values, with x varying fastest. |
 | `params.txt` | Grid dimensions, resolution and bounds, checked against NetCDF cell-center coordinates. |
 
-The current map contains 3,150 valid links (3,022 local and 128 Flexible
+The complete nextxy map contains 6,152 valid links (5,919 local and 233 Flexible
 Downstream). Every valid link is passed to plotting; the axes clip the display
 without filtering connections by extent. Link direction comes directly from
 `nextxy`, never geographic proximity. A link is Flexible Downstream if either
@@ -400,10 +400,10 @@ to that cell's river outlet. Candidates are river cells with no incoming valid
 main-channel `nextxy` link in the regional map. For each candidate, the script
 finds the high-resolution pixels assigned to its coarse cell by `catmxy`,
 computes the geographic center of each pixel from `location.txt`, then takes
-the mean of those pixel-center coordinates. The regional map has 220 such
-candidate cells on its outer grid boundary. Some may lack upstream links only
-because those connections lie outside this regional map, so the guides do not
-assert that every candidate is a physical headwater.
+the mean of those pixel-center coordinates. The complete nextxy map includes
+interior and boundary candidates. Some boundary cells may lack incoming links
+because connections lie outside this regional map, so the guides do not assert
+that every candidate is a physical headwater.
 
 The f03b extent is intentionally zoomed to 102–108°E and 9–15°N to make the
 delta bifurcation network legible. It is independent of f03a's wider default
@@ -418,7 +418,7 @@ observed flows.
 
 | Relative path | Variables and format | Use |
 | --- | --- | --- |
-| `map/mekong_15min/netcdf/nextxy_noedge.nc` | NetCDF `nextx`, `nexty` (`lat × lon`); one-based indices | Supplies main-channel links for f03a and f03b. |
+| `map/mekong_15min/netcdf/nextxy.nc` | NetCDF `nextx`, `nexty` (`lat × lon`); one-based indices | Supplies main-channel links for f03a and f03b. |
 | `map/mekong_15min/netcdf/nextxy.nc` | NetCDF `nextx`, `nexty` (`lat × lon`); one-based indices | Supplies main-channel links for f03c. |
 | `map/mekong_15min/netcdf/lonlat.nc` | NetCDF `outlon`, `outlat` (`lat × lon`); degrees east/north | Gives outlet coordinates for main links, bifurcation endpoints, and headwater guide termini. |
 | `map/mekong_15min/netcdf/uparea.nc` | NetCDF `uparea` (`lat × lon`); m² | Provides main-channel source-cell area classes and identifies valid river cells. |
@@ -489,9 +489,15 @@ candidate at the map edge may have an upstream link outside the regional map.
 
 Red bifurcation arrows show unique `bifprm.nc` paths whose first-layer
 `width` is positive, identifying channel bifurcations. Their colors and widths
-use four quartiles of visible path width in metres. Zero-width overland paths
-are excluded. These arrows reproduce stored endpoint connections; they are
-not terrain-traced channel paths. White square markers identify mapped
+use four quartiles of visible path width in metres. **p01-f04a retains these
+Channel bifurcations only; p01-f04b includes both Channel and Overland bifurcations.**
+In panel b, valid paths with zero first-layer width are drawn in subdued green
+(`#76B77B`), with uniform width and a directed midpoint arrow. All layer widths
+must be finite/nonnegative and both endpoints must match valid stored outlets.
+The first valid directed endpoint pair is retained; duplicate paths are not
+counted twice. The first-layer classification matches the existing f03/Explorer
+convention. These arrows reproduce stored endpoint directions, not instantaneous
+discharge directions or terrain-traced channel paths. White square markers identify mapped
 river-cell outlets. The colorbar and main-channel legend describe this
 quantity as “Upstream area at unit-catchment.” No observation sites, station
 labels, or station-to-outlet links are included.
@@ -505,26 +511,29 @@ are slightly thicker than the initial f04 rendering while retaining their
 relative classes and colors. Edit `MAIN_WIDTHS` and `CHANNEL_WIDTHS` near the
 top of `f04-rivmap_catchment.sh` to adjust the four ascending width classes
 for main channels and channel bifurcations; values are in points and apply to
-both panels and their legend samples.
+both panels and their legend samples. `OVERLAND_WIDTH` controls the uniform
+panel-b Overland line/legend width in points (default1.2).
 
-For `p01-f04b` (`channel_pixel`), the same green area raster and network layers
-are used. The signed-int8 `1min.visual.bin` categories are overlaid only on
+For `p01-f04b` (`channel_pixel`), the same green area raster, main network and
+Channel bifurcations are retained, and stored Overland bifurcations are added.
+The signed-int8 `1min.visual.bin` categories are overlaid only on
 pixels assigned by `catmxy`: value 10 marks main-channel pixels (pale blue),
 and value 7 is the source-defined small-stream category (pale purple, usable as
 a tributary visualization class). The remaining `visual` categories are not
 drawn as channel pixels. The binary missing value is signed `-9`; the GrADS
 CTL's `undef 247` is only its unsigned-byte representation and is not used as
 the source-data missing value. The two pixel swatches are added to the f04b
-legend; f04a keeps the same legend-row space without showing these entries.
+legend alongside the Overland entry; f04a keeps the same legend-row space
+without Channel Pixel or Overland entries.
 
 | Input | Use |
 | --- | --- |
 | `map/mekong_15min/1min/1min.catmxy.bin`, `1min/location.txt` | Two little-endian int16 assignment planes and 1-minute grid geometry; provide high-resolution pixels and their one-based coarse-cell assignment. |
 | `map/mekong_15min/1min/1min.visual.bin` | Signed int8 visualization categories; f04b overlays value 10 (main stream) and value 7 (small stream) on assigned catchment pixels only. |
 | `map/mekong_15min/netcdf/uparea.nc` | Coarse-grid upstream drainage area in m²; supplies pixel colors and main-link area classes. |
-| `map/mekong_15min/netcdf/nextxy_noedge.nc` | Main-network downstream connectivity (`nextx`, `nexty`), with one-based grid indices. |
+| `map/mekong_15min/netcdf/nextxy.nc` | Main-network downstream connectivity (`nextx`, `nexty`), with one-based grid indices. |
 | `map/mekong_15min/netcdf/lonlat.nc` | Coarse-cell outlet coordinates (`outlon`, `outlat`) in degrees east/north. |
-| `map/mekong_15min/netcdf/bifprm.nc` | Bifurcation endpoint indices and layer widths; only unique paths with positive first-layer width are drawn. |
+| `map/mekong_15min/netcdf/bifprm.nc` | Bifurcation endpoint indices and layer widths; panel a draws positive-first-layer-width Channel paths; panel b also draws zero-first-layer-width Overland paths. |
 | `map/mekong_15min/params.txt` | Coarse-grid dimensions, resolution, and bounds used to validate map alignment. |
 
 Run the Figure script after the standard Python setup. It renders both
@@ -627,7 +636,7 @@ for each background field.
 | `map/mekong_15min/1min/location.txt` | 1-minute grid bounds, dimensions, and resolution. |
 | `map/mekong_15min/1min/1min.catmxy.bin` | Coarse-cell assignments used to summarize headwater catchment pixel centroids. |
 | `map/mekong_15min/netcdf/uparea.nc` | Coarse-grid upstream area [m²] for link color and width. |
-| `map/mekong_15min/netcdf/nextxy_noedge.nc` | One-based main-network downstream connectivity. |
+| `map/mekong_15min/netcdf/nextxy.nc` | One-based main-network downstream connectivity. |
 | `map/mekong_15min/netcdf/lonlat.nc` | Geographic grid and outlet coordinates (`outlon`, `outlat`). |
 | `map/mekong_15min/netcdf/bifprm.nc` | Stored bifurcation paths and layer widths; positive first-layer width selects channel paths. |
 | `map/mekong_15min/params.txt` | Coarse-grid geometry used to validate alignment. |

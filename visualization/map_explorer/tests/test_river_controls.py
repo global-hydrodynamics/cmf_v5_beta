@@ -30,8 +30,8 @@ def test_quantile_palette_and_explicit_gallery_exception(palette):
     np.testing.assert_allclose(widths[:7], [1, 1, 5 / 3, 7 / 3, 7 / 3, 3, 3])
     assert len(set(colors[:7])) == 4 and colors[-1] == "#888888"
     if palette in RIVER_GRADIENTS:
-        assert colors[0] == RIVER_GRADIENTS[palette][0].lower()
-        assert colors[6] == RIVER_GRADIENTS[palette][-1].lower()
+        assert colors[0].lower() == RIVER_GRADIENTS[palette][0].lower()
+        assert colors[6].lower() == RIVER_GRADIENTS[palette][-1].lower()
     elif palette != "shade_rainbow":
         assert colors[0] == to_hex(colormaps[palette](0.0))
         assert colors[6] == to_hex(colormaps[palette](1.0))
@@ -223,7 +223,7 @@ def test_mekong_gallery_exceptions_and_custom_palette(tmp_path):
     app = Explorer(ROOT / "map/mekong_15min", tmp_path)
     app.apply_preset("p01-f03a", use_gallery_extent=True)
     assert set(app.frame.main["color"]) <= set(AREA_COLORS)
-    assert app.river_ui.color_style == "gallery_quartiles" and app.arrow_size.value == 7
+    assert app.river_ui.color_style == "palette" and app.area_palette.value == "blue_navy" and app.arrow_size.value == 7
     app.area_palette.value = "plasma"
     assert not set(app.frame.main["color"]) <= set(AREA_COLORS)
     assert "Custom" in app.preset_status.object

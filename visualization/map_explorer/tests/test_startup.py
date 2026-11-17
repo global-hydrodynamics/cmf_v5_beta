@@ -21,16 +21,16 @@ def test_startup_preset_and_overland_then_saved_user_settings(products):
     assert app.overlay_controls["channel_pixels"].value
     assert app.overlay_controls["overland"].value
     assert app.extent == extent  # Mekong Gallery extent is outside this synthetic map
-    assert "Custom (modified from p01-f04b)" in app.preset_status.object
+    assert "Gallery preset p01-f04b applied" in app.preset_status.object
     assert app.preset_library.presets["p01-f04b"][0] == canonical
-    assert not canonical["overland"]
+    assert canonical["channel"] and canonical["overland"]
     assert any("Overland bifurcations" in o.label for o in app.frame.overlays)
     state = app.settings()
     state["layers"]["overlays"]["overland"] = False
     app.load(json.dumps(state).encode())
     assert not app.overlay_controls["overland"].value
     app.apply_preset("p01-f04b")
-    assert not app.overlay_controls["overland"].value  # explicit Gallery unchanged
+    assert app.overlay_controls["overland"].value  # canonical Gallery now includes Overland
 
 
 def test_startup_missing_products_keeps_map_usable(map_dir):

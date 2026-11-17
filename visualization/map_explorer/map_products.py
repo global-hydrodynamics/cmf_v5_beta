@@ -178,7 +178,7 @@ AREA_COLORS = ("#5E88BE", "#4F80BF", "#285A9B", "#103A70")
 
 
 RIVER_GRADIENTS = {
-    "blue_navy": ("#9ECAE1", "#4292C6", "#08519C", "#081D58"),
+    "blue_navy": AREA_COLORS,  # Exactly the p01-f03a/f04b Gallery quartet.
     "gray_black": ("#BDBDBD", "#969696", "#525252", "#111111"),
     "gray_white": ("#777777", "#A0A0A0", "#CCCCCC", "#F5F5F5"),
 }
@@ -321,7 +321,7 @@ def area_style(
             f"continuous: log {10**color_lo:.3g}–{10**color_hi:.3g} km² (Gallery; {4 if classification=='quartiles' else 6} width classes)"
         ]
     colors = np.array([to_hex(cmap(v)) for v in color_positions], dtype=object)
-    if area_color_style == "gallery_quartiles" and classification == "quartiles":
+    if classification == "quartiles" and (area_color_style == "gallery_quartiles" or (area_color_style == "palette" and area_palette == "blue_navy")):
         colors = np.asarray(AREA_COLORS, dtype=object)[np.rint(color_positions * 3).astype(int)]
     if area_color_style == "palette" and classification != "fixed":
         colors[~usable] = "#888888"
@@ -358,7 +358,7 @@ def area_style(
             c = (
                 (
                     AREA_COLORS[i]
-                    if area_color_style == "gallery_quartiles" and classification == "quartiles"
+                    if classification == "quartiles" and (area_color_style == "gallery_quartiles" or (area_color_style == "palette" and area_palette == "blue_navy"))
                     else to_hex(cmap(v))
                 )
                 if kind == "Color"

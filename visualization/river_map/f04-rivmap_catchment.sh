@@ -12,7 +12,7 @@ REPO_ROOT="$(cd "$VISUALIZATION_DIR/.." && pwd)"
 # User settings: Mekong map products and the requested delta extent.
 MAP_DIR="$REPO_ROOT/map/mekong_15min"
 UPAREA_FILE="$MAP_DIR/netcdf/uparea.nc"          # Coarse-grid upstream area [m²].
-NEXTXY_FILE="$MAP_DIR/netcdf/nextxy_noedge.nc"   # One-based downstream cell indices.
+NEXTXY_FILE="$MAP_DIR/netcdf/nextxy.nc"   # One-based downstream cell indices.
 LONLAT_FILE="$MAP_DIR/netcdf/lonlat.nc"          # Coarse-cell outlet coordinates.
 BIFPRM_FILE="$MAP_DIR/netcdf/bifprm.nc"          # Bifurcation endpoints and widths [m].
 CATMXY_FILE="$MAP_DIR/1min/1min.catmxy.bin"      # 1-minute pixel to coarse-cell assignment.
@@ -22,7 +22,8 @@ PARAMS_FILE="$MAP_DIR/params.txt"                # Coarse grid dimensions and bo
 
 # User settings: line widths [points], ordered from smallest to largest class.
 MAIN_WIDTHS="1.5,2.0,2.5,3.0"       # Main-channel upstream-area classes.
-CHANNEL_WIDTHS="1.2,1.6,2.0,2.4" # Channel-bifurcation path-width classes.
+CHANNEL_WIDTHS="1.2,1.6,2.0,2.4"    # Channel-bifurcation path-width classes.
+OVERLAND_WIDTH=1.2                 # Uniform Overland width [points], panel b only.
 
 WEST=104.5
 EAST=107
@@ -52,7 +53,7 @@ PANEL_HEIGHT=$(awk -v height="$FIG_HEIGHT" -v dpi="$DPI" -v margin="$MARGIN" \
 
 mkdir -p "$FIGURE_DIR"
 
-printf '\n[STEP 1/3] Draw f04a upstream area at unit-catchment.\n'
+printf '\n[STEP 1/3] Draw f04a upstream area with Channel bifurcations only.\n'
 "$PYTHON" "$SCRIPT_DIR/script/f04a-rivmap_catchment-outlet_uparea.py" \
     --uparea "$UPAREA_FILE" --nextxy "$NEXTXY_FILE" \
     --lonlat "$LONLAT_FILE" --bifprm "$BIFPRM_FILE" \
@@ -65,7 +66,7 @@ printf '\n[STEP 1/3] Draw f04a upstream area at unit-catchment.\n'
 
 printf '\n[SUCCESS] Created %s\n' "$PANEL_A"
 
-printf '\n[STEP 2/3] Draw f04b channel-pixel classes.\n'
+printf '\n[STEP 2/3] Draw f04b channel pixels with Channel + Overland bifurcations.\n'
 "$PYTHON" "$SCRIPT_DIR/script/f04b-rivmap_catchment-channel_pixel.py" \
     --visual "$VISUAL_FILE" \
     --uparea "$UPAREA_FILE" --nextxy "$NEXTXY_FILE" \
@@ -73,6 +74,7 @@ printf '\n[STEP 2/3] Draw f04b channel-pixel classes.\n'
     --catmxy "$CATMXY_FILE" --location "$LOCATION_FILE" \
     --params "$PARAMS_FILE" \
     --main-widths "$MAIN_WIDTHS" --channel-widths "$CHANNEL_WIDTHS" \
+    --overland-width "$OVERLAND_WIDTH" \
     --west "$WEST" --east "$EAST" --south "$SOUTH" --north "$NORTH" \
     --figure-width "$PANEL_WIDTH" --figure-height "$PANEL_HEIGHT" \
     --dpi "$DPI" --output "$PANEL_B"

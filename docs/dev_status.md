@@ -559,3 +559,14 @@ scientific inputs unchanged. Acceptance: startup/fallback/save-load and actual G
 DT-0123 complete:28 focused tests PASS and actual fresh Mekong browser verifies
 p01-f04b + Overland ON. Missing inputs retain usable map; saved settings unaffected.
 See VR-0169. Canonical preset/scientific data unchanged; unrelated deletions excluded.
+
+DT-0124 (maintainer-approved extension on feature/package-builder): f04a Channel
+only; f04b Channel + Overland. All p01 River Map/Explorer display sources now use
+complete nextxy. Blue→Navy exactly matches Gallery anchors and defaults in
+p01-f03a/f04b. Regenerated f02–f05 and Gallery copies; updated docs/catalog and
+legacy JSON migration. Codex owns these visualization files; scientific inputs
+read-only, unrelated23 TE-Japan deletions excluded. Final evidence: VR-0170.
+
+DT-0124 complete:332 tests +15 subtests PASS,1 Windows SKIP; final74 palette
+checks PASS. Actual Mekong/browser and four combined figures visually checked.
+213 protected hashes unchanged. Research retains10 pre-existing broken links.

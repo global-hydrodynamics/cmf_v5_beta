@@ -2,8 +2,9 @@
 
 New sessions start with **p01-f04b (Unit-Catchment outlet uparea + Channel Pixels)**
 and **Bifurcation Overland ON**. The Gallery extent is used when inside the selected
-map. This startup override leaves the canonical preset unchanged, so its status is
-Custom (modified from p01-f04b). Missing preset products retain the available map
+map. The canonical Gallery preset itself includes Channel and Overland bifurcations
+(the comparison panel p01-f04a includes Channel only). Missing preset products
+retain the available map
 and report why the default cannot be applied. Later JSON loads/preset choices are
 not overridden. All desktop launchers and Panel sessions share this startup path.
 
@@ -390,7 +391,7 @@ catchment boundaries remain independent of that display limit.
 
 ### River Network
 
-**Network source** selects stored `nextxy` or `nextxy_noedge`. **Representation**
+**Network source** selects complete stored `nextxy` or Off. **Representation**
 selects Grid Center, Outlet Vector (when coordinates exist), or Off. Links come
 from stored indices, not traced centerlines. Outlet vectors preserve actual
 `outlon/outlat`, including valid regional outlets outside coarse bounds. Only
@@ -601,7 +602,7 @@ Exactly seven presets appear in the dropdown, in this order:
 | --- | --- |
 | p01-f01a | Coarse upstream area, log YlGnBu; no network |
 | p01-f01d | Pastel subcol inside valid bsncol coverage; unassigned gray, outside white; black bsncol display-class edges |
-| p01-f02a | Faint log-area background (17%); nextxy_noedge local black straight links and flexible orange curved links, direction heads |
+| p01-f02a | Faint log-area background (17%); nextxy local black straight links and flexible orange curved links, direction heads |
 | p01-f03a | Pastel subcol and stored-outlet vectors; historical four blue area/width classes |
 | p01-f03c | Gray subcol; nextxy stored-outlet vectors; continuous log shade_rainbow color with four full-network log-area quantile widths |
 | p01-f04b | Native catchments inheriting uparea with channel pixels and the existing f04 overlays |
@@ -615,7 +616,7 @@ The older supported methods include:
 | --- | --- |
 | p01-f01a | Coarse uparea, log YlGnBu, no network |
 | p01-f01c | bsncol, pastel basin display colors, no network |
-| p01-f02c | Gray subcol, grid-center nextxy_noedge, continuous log shade_rainbow colors / six log width classes |
+| p01-f02c | Gray subcol, grid-center nextxy, continuous log shade_rainbow colors / six log width classes |
 | p01-f03a | Pastel subcol, stored outlet vectors, full-network log-area quartiles / direction heads |
 | p01-f03b | Pastel bsncol, outlet vectors, channel + overland bifurcations, outlets, guides, coarse grid |
 | p01-f04a | Native assigned catchments inheriting uparea, boundaries, outlet vectors, channel bifurcations, guides, grid |
@@ -723,7 +724,7 @@ These products are not added to the Background raster menu.
 
 **River Network Connectivity** defines:
 
-- **Downstream ID**: stored destination in the selected nextxy/nextxy_noedge
+- **Downstream ID**: stored destination in the selected nextxy
   product, with terminal/boundary, missing, invalid and out-of-map codes explicit.
 - **Total upstream Unit Catchments**: distinct supplied river-map nodes that can
   reach the selected node by following this directed product, excluding itself.
@@ -1027,3 +1028,13 @@ independent of the lavender Grid/orange Catchment/yellow outlet/link selections.
 Out-of-viewport markers are clipped. Unicode PNG labels depend on an installed CJK
 font (Noto Sans CJK JP/Yu Gothic/Meiryo/Hiragino Sans are tried). As before, online OSM
 is excluded from PNG with an explicit notice; scientific layers and Pins are retained.
+
+
+River Map network sources now offer `nextxy` (plus Off), with no selectable
+`nextxy_noedge`. All Gallery presets use complete `nextxy` connections. Old saved
+settings naming nextxy_noedge load with an explicit migration notice; if nextxy is
+missing, River rendering is disabled with that notice. Legacy files remain readable
+by the low-level reader; source datasets are not deleted or modified.
+Blue → Navy now exactly matches the p01-f04b/p01-f03a Gallery four colors:
+#5E88BE, #4F80BF, #285A9B, #103A70. Both presets default to this selectable palette
+with four upstream-area groups. Continuous modes interpolate those same anchors.

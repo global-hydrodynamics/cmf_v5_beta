@@ -10,7 +10,7 @@ REPO_ROOT="$(cd "$VISUALIZATION_DIR/.." && pwd)"
 # User settings: tracked map inputs and common geographic extent.
 MAP_DIR="$REPO_ROOT/map/mekong_15min"
 UPAREA_FILE="$MAP_DIR/netcdf/uparea.nc"              # Upstream drainage area [m²].
-NEXTXY_FILE="$MAP_DIR/netcdf/nextxy_noedge.nc"       # One-based downstream grid indices.
+NEXTXY_FILE="$MAP_DIR/netcdf/nextxy.nc"       # One-based downstream grid indices.
 SUBCOL_FILE="$MAP_DIR/subcol-sample.bin"           # Categorical subbasin display indices.
 PARAMS_FILE="$MAP_DIR/params.txt"                    # Grid dimensions, resolution, and bounds.
 WEST=99

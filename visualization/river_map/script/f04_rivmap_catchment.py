@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plot 1-minute catchments with outlet-based main and channel-bifurcation links."""
+"""Plot 1-minute catchments with Channel-only / Channel+Overland bifurcations."""
 
 from __future__ import annotations
 
@@ -28,6 +28,7 @@ from river_network_common import read_river_network
 
 MAIN_COLORS = ("#5E88BE", "#4F80BF", "#285A9B", "#103A70")
 CHANNEL_COLORS = ("#E38768", "#D6604D", "#B2182B", "#67001F")
+OVERLAND_COLOR = "#76B77B"
 EXTENT = (104.5, 107.0, 9.5, 12.0)
 
 
@@ -246,8 +247,8 @@ def read_outlets(path: Path, network):
     return outlon, outlat
 
 
-def read_channel_bifurcations(path: Path, outlon, outlat):
-    """Read positive-first-layer-width paths and resolve outlet endpoints."""
+def read_bifurcations(path: Path, outlon, outlat):
+    """Read valid directed paths; first-layer width classifies Channel/Overland."""
     required = ("ix", "iy", "jx", "jy", "width", "end_lon", "end_lat")
     with Dataset(path) as source:
         for name in required:
@@ -283,11 +284,10 @@ def read_channel_bifurcations(path: Path, outlon, outlat):
 
     segments = np.stack((np.column_stack((x0, y0)),
                          np.column_stack((x1, y1))), axis=1)
-    channel = widths[0, ids] > 0
-    ids, segments = ids[channel], segments[channel]
     first_layer_width = widths[0, ids]
 
-    # Duplicate endpoint pairs are a single channel connection in the reference figure.
+    # Keep the first valid stored directed pair, shared by both classifications.
+    # Zero first-layer width means Overland; never infer routes from proximity.
     unique = []
     seen = set()
     for index, path_id in enumerate(ids):
@@ -297,6 +297,44 @@ def read_channel_bifurcations(path: Path, outlon, outlat):
             unique.append(index)
     unique = np.asarray(unique, dtype=int)
     return segments[unique], first_layer_width[unique]
+
+
+def read_channel_bifurcations(path: Path, outlon, outlat):
+    """Compatibility helper returning only positive-first-layer-width paths."""
+    segments, widths = read_bifurcations(path, outlon, outlat)
+    return segments[widths > 0], widths[widths > 0]
+
+
+def draw_bifurcations(ax, segments, widths, extent, channel_widths,
+                      *, include_overland=False, overland_width=1.2):
+    """Draw stored paths without changing their endpoints or scientific classes."""
+    if not np.isfinite(overland_width) or overland_width <= 0:
+        raise ValueError("Overland width must be positive and finite")
+    visible = segments_intersect_extent(segments, extent)
+    segments, widths = segments[visible], widths[visible]
+    channel = widths > 0
+    channel_segments, channel_width = segments[channel], widths[channel]
+    if len(channel_segments):
+        classes = np.digitize(np.log10(channel_width),
+                              np.quantile(np.log10(channel_width), [.25, .5, .75]))
+        for group, (color, width) in enumerate(zip(CHANNEL_COLORS, channel_widths)):
+            selected = channel_segments[classes == group]
+            if not len(selected):
+                continue
+            ax.add_collection(LineCollection(selected, colors=color, linewidths=width,
+                                             alpha=.98, zorder=6, label="Channel bifurcations"))
+            for segment in selected:
+                add_directional_arrow(ax, segment, color, width, start_fraction=.57,
+                                      end_fraction=.74, size=5.5, zorder=7)
+    overland = segments[widths == 0] if include_overland else np.empty((0, 2, 2))
+    if len(overland):
+        ax.add_collection(LineCollection(overland, colors=OVERLAND_COLOR,
+                                         linewidths=overland_width, alpha=.85,
+                                         zorder=5.5, label="Overland bifurcations"))
+        for segment in overland:
+            add_directional_arrow(ax, segment, OVERLAND_COLOR, overland_width,
+                                  start_fraction=.57, end_fraction=.74, size=5.5, zorder=7)
+    return len(channel_segments), len(overland)
 
 
 def main(default_option: str) -> None:
@@ -312,6 +350,8 @@ def main(default_option: str) -> None:
                         help="Four ascending main-channel widths in points")
     parser.add_argument("--channel-widths", type=parse_line_widths, required=True,
                         help="Four ascending channel-bifurcation widths in points")
+    parser.add_argument("--overland-width", type=float, default=1.2,
+                        help="Uniform Overland line width in points (panel b only)")
     parser.add_argument("--option", choices=("outlet_uparea", "channel_pixel"),
                         default=default_option)
     add_map_arguments(parser)
@@ -326,7 +366,7 @@ def main(default_option: str) -> None:
     _, _, uparea_data = read_map_raster(args.uparea, "uparea", "m2", geometry)
     network = read_river_network(args.uparea, args.nextxy, geometry)
     outlon, outlat = read_outlets(args.lonlat, network)
-    bif_segments, bif_width = read_channel_bifurcations(args.bifprm, outlon, outlat)
+    bif_segments, bif_width = read_bifurcations(args.bifprm, outlon, outlat)
 
     river_cells = np.isfinite(network.uparea) & (network.uparea > 0)
     catmx, catmy, catvalid, unassigned_land, hires = read_catchment_mapping(
@@ -458,27 +498,10 @@ def main(default_option: str) -> None:
             add_directional_arrow(ax, segment, color, width, zorder=4)
             main_arrow_count += 1
 
-    visible_bif = segments_intersect_extent(bif_segments, extent)
-    bif_segments, bif_width = bif_segments[visible_bif], bif_width[visible_bif]
-    if not len(bif_segments):
-        raise ValueError("No positive-width channel bifurcations intersect the requested extent")
-    bif_classes = np.digitize(
-        np.log10(bif_width), np.quantile(np.log10(bif_width), [0.25, 0.5, 0.75]))
-    channel_arrow_count = 0
-    for group, (color, width) in enumerate(zip(CHANNEL_COLORS, args.channel_widths)):
-        group_segments = bif_segments[bif_classes == group]
-        if not len(group_segments):
-            continue
-        ax.add_collection(LineCollection(
-            group_segments, colors=color, linewidths=width,
-            alpha=0.98, zorder=6,
-        ))
-        for segment in group_segments:
-            add_directional_arrow(
-                ax, segment, color, width, start_fraction=0.57,
-                end_fraction=0.74, size=5.5, zorder=7,
-            )
-            channel_arrow_count += 1
+    channel_arrow_count, overland_arrow_count = draw_bifurcations(
+        ax, bif_segments, bif_width, extent, args.channel_widths,
+        include_overland=args.option == "channel_pixel", overland_width=args.overland_width,
+    )
 
     ax.set_xlabel("Longitude")
     ax.set_ylabel("Latitude")
@@ -500,6 +523,9 @@ def main(default_option: str) -> None:
         Line2D([], [], color="#888888", linewidth=0.9, alpha=0.65,
                label="Headwater catchment guide"),
     ] + pixel_legend
+    if args.option == "channel_pixel":
+        legend_handles.append(Line2D([], [], color=OVERLAND_COLOR, linewidth=args.overland_width,
+                                     label="Overland bifurcation (first-layer width = 0)"))
     add_f04_legend(legend_ax, legend_handles)
 
     save_panel(fig, args.output, args.dpi, args.max_width, args.max_height,
@@ -511,7 +537,8 @@ def main(default_option: str) -> None:
           f"{int(sub_unassigned_land.sum())} unassigned land pixels, "
           f"{len(fine_edges)} boundaries, {len(visible_guides)} headwater guides, "
           f"{len(main_segments)} main links/{main_arrow_count} arrows, "
-          f"{len(bif_segments)} channel bifurcations/{channel_arrow_count} arrows; "
+          f"{channel_arrow_count} channel bifurcations/{channel_arrow_count} arrows, "
+          f"{overland_arrow_count} overland bifurcations/{overland_arrow_count} arrows; "
           f"{int(np.count_nonzero(subvalid & (visual_crop == 10))) if visual_crop is not None else 0} main-channel pixels, "
           f"{int(np.count_nonzero(subvalid & (visual_crop == 7))) if visual_crop is not None else 0} small-stream pixels; "
           "no observation-site data or markers")
