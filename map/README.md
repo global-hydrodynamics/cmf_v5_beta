@@ -14,7 +14,9 @@ The authoritative global 15-minute map is
 model-grid Binary, `netcdf/`, standard generated parameters and auxiliary text.
 High-resolution distribution uses compressed `1min_nc/` and its `location.txt`;
 `1min/` Binary is restored on demand, not shipped as a duplicate. Generation
-scripts remain in GitHub under `map/tools/`. See the
+scripts remain maintained in GitHub under `map/tools/`; additional data also
+include `COG/` for immediate visualization and stored generation scripts as
+provenance snapshots. See the
 [package selection policy](../package/README.md#global-15-minute-map-selection)
 and [Binary restoration guide](tools/script_format_conv/README.md#restore-high-resolution-binary-working-files-s04).
 
@@ -24,7 +26,8 @@ and [Binary restoration guide](tools/script_format_conv/README.md#restore-high-r
 source `cmf_v5_package_data/map/TE-Japan_01min/`. Its model grid is 1-minute
 (1500 × 1320 cells, 123–148°E, 24–46°N); supporting high-resolution maps are
 15-second. Package selection includes model-grid Binary, `netcdf/`, standard
-parameters and auxiliary text, plus compressed `15sec_nc/` and `location.txt`.
+parameters and auxiliary text, plus compressed `15sec_nc/` and `location.txt`,
+`COG/` visualization inputs and stored generation scripts/source as provenance.
 High-resolution `15sec/` Binary is restored on demand rather than distributed
 in duplicate. The entire local `map/TE-Japan_01min/` directory, including
 map-specific script copies and README files, is ignored. Shared maintained

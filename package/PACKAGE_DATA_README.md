@@ -43,9 +43,10 @@ parameter data, observation/station information, bifurcation products and other
 auxiliary text. High-resolution `1min_nc/` plus its `location.txt` are distributed
 as compressed NetCDF; `1min/` Binary is excluded and can be restored on demand
 with `cmf_v5_beta/map/tools/script_format_conv/s04-restore_highres_binary.sh`. Do not
-include both high-resolution formats. Generation directories (`script*/`,
-`src*/`, `code/`), script/source files and temporary/build/log files are excluded
-by the selection policy in `cmf_v5_beta/package/README.md`; the optional final
+include both high-resolution formats. Include `COG/` for immediate visualization
+and stored generation scripts, source files, settings and Makefiles as provenance
+snapshots. Temporary/build/log files and caches remain excluded by the selection
+policy in `cmf_v5_beta/package/README.md`; the optional final
 `exclude_patterns` CSV column encodes these rules for both Import and Diff. Existing standard `.bin` products are
 not removed by those exclusions. Input Matrix format and further data pruning
 are deferred to a later round.
@@ -63,8 +64,9 @@ cells over 123–148°E, 24–46°N (`params.txt`). Model-grid Binary, `netcdf/`
 standard parameter products, station/bifurcation information and auxiliary
 text are included. High-resolution distribution uses compressed `15sec_nc/`
 with `location.txt`; `15sec/` Binary is excluded and restored only when needed.
-Generation directories, scripts and build/log/temporary files are excluded
-according to `cmf_v5_beta/package/README.md`. The entire local development copy
+`COG/` and stored generation scripts/source/settings are included for immediate
+visualization and generation provenance. Build/log/temporary files and caches
+are excluded according to `cmf_v5_beta/package/README.md`. The entire local development copy
 `map/TE-Japan_01min/`, including map-specific script copies, is Git-ignored,
 like `map/glb_15min/`. Shared templates remain tracked under `map/tools/`.
 
@@ -80,6 +82,11 @@ The source product is ELSE_GPCC runoff. Existing project documentation associate
 The conversion workflow reads daily global Binary runoff and creates annual NetCDF files without spatial extraction. The original Binary contract is 360 × 180 little-endian Float32 values per day. The generation script is stored with the archive for provenance. Its actual revision, invocation, precision/quantization options and validation results for these files remain to be documented; do not assume lossless conversion or approved numerical accuracy from the filenames alone.
 
 Redistribution conditions for this global archive are **not yet confirmed in this description**. Record the applicable license/permission, required attribution and maintainer approval before selecting it for actual distribution. Catalog registration or local availability does not resolve those conditions.
+
+COG inclusion avoids regeneration before visualization. Stored generation scripts
+are snapshots of how the supplied data were produced; active shared tools remain
+under the Git development repository's `map/tools/`. Do not refresh or edit the
+external snapshots implicitly during catalog maintenance.
 
 ## Management and updates
 

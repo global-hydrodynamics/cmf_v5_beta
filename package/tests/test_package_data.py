@@ -39,9 +39,11 @@ class PackageDataTest(unittest.TestCase):
             self.put(self.source, root + "netcdf/river.nc", b"CDF\x01river")
             self.put(self.source, root + f"{hires}_nc/location.txt", b"location")
             self.put(self.source, root + f"{hires}_nc/tile.nc", b"CDF\x01hires")
-            for excluded in [f"{hires}/raw.bin", "script_params/run.sh", "src_old/source.F90", "code/tool",
-                             "__pycache__/cache.pyc", ".git/config", "build.o", "model.mod", "run.log",
-                             "temp.tmp", ".DS_Store", "source.F90", "Makefile", "convert.py"]:
+            for included in ["script_params/run.sh", "src_old/source.F90", "code/tool",
+                             "source.F90", "Makefile", "convert.py", "COG/river.tif", f"COG/{hires}/tile.tif"]:
+                self.put(self.source, root + included, b"provenance or visualization input")
+            for excluded in [f"{hires}/raw.bin", "__pycache__/cache.pyc", ".git/config",
+                             "build.o", "model.mod", "run.log", "temp.tmp", ".DS_Store"]:
                 self.put(self.source, root + excluded, b"excluded")
         self.put(self.source, "inp/ELSE_GPCC/convert.py", b"excluded by include")
 
@@ -85,7 +87,7 @@ class PackageDataTest(unittest.TestCase):
         before = source_file.read_bytes()
         self.assertEqual(self.run_tool(), 0)
         rows = self.compare()
-        self.assertEqual(len(rows), 9)
+        self.assertEqual(len(rows), 25)
         self.assertTrue(all(d.status == "IDENTICAL" for d in rows))
         self.assertTrue((self.repo / "map/glb_15min/params.txt").stat().st_mode & 0o200)
         self.assertFalse((self.repo / "map/glb_15min/params.txt").is_symlink())
@@ -124,20 +126,40 @@ class PackageDataTest(unittest.TestCase):
         row = next(d for d in self.compare() if d.path.as_posix() == relative)
         self.assertEqual(row.status, "MODIFIED")
 
-    def test_exact_high_resolution_and_code_exclusions_both_sides(self):
+    def test_hires_exclusion_and_provenance_cog_inclusion_both_sides(self):
         for root, hires in [("map/glb_15min", "1min"), ("map/TE-Japan_01min", "15sec")]:
             self.put(self.repo, root + "/script_local/user.sh", b"tracked-workflow-like")
             self.put(self.repo, root + "/" + hires + "/local.bin", b"raw")
             self.put(self.repo, root + "/local.py", b"source")
         rows = self.compare()
-        self.assertEqual(len(rows), 9)
+        self.assertEqual(len(rows), 29)  # 25 source files plus four local-only script files.
         names = {d.path.as_posix() for d in rows}
+        for name in ("glb_15min", "TE-Japan_01min"):
+            for relative in ("COG/river.tif", "script_params/run.sh", "src_old/source.F90", "Makefile", "convert.py"):
+                self.assertIn(f"map/{name}/{relative}", names)
+            self.assertIn(f"map/{name}/script_local/user.sh", names)
+            self.assertIn(f"map/{name}/local.py", names)
+        self.assertIn("map/glb_15min/COG/1min/tile.tif", names)
+        self.assertIn("map/TE-Japan_01min/COG/15sec/tile.tif", names)
         self.assertIn("map/glb_15min/1min_nc/tile.nc", names)
         self.assertIn("map/TE-Japan_01min/15sec_nc/location.txt", names)
         self.run_tool()
+        for name in ("glb_15min", "TE-Japan_01min"):
+            for relative in ("COG/river.tif", "script_params/run.sh", "src_old/source.F90", "Makefile", "convert.py"):
+                self.assertEqual((self.repo / f"map/{name}/{relative}").read_bytes(), b"provenance or visualization input")
         self.assertFalse((self.repo / "map/glb_15min/1min/raw.bin").exists())
         self.assertFalse((self.repo / "inp/ELSE_GPCC/convert.py").exists())
         self.assertEqual((self.repo / "map/glb_15min/script_local/user.sh").read_bytes(), b"tracked-workflow-like")
+
+    def test_root_anchored_exclusions_reject_nested_or_file_rules(self):
+        original = self.catalog_rows()
+        for pattern in ("/1min", "/../", "/nested/path/", "//1min/"):
+            with self.subTest(pattern=pattern):
+                rows = [dict(r) for r in original]
+                rows[1]["exclude_patterns"] = pattern
+                self.save_catalog(rows)
+                with self.assertRaises(data.DataError):
+                    data.load_catalog(self.catalog)
 
     def test_global_refusal_cancels_new_copies_too(self):
         self.conflict()
@@ -320,7 +342,7 @@ class PackageDataTest(unittest.TestCase):
         self.assertEqual(self.run_tool(command="diff", output=str(report)), 0)
         with report.open(newline="") as stream:
             rows = list(csv.DictReader(stream))
-        self.assertEqual(len(rows), 9)
+        self.assertEqual(len(rows), 25)
         self.assertEqual({r["status"] for r in rows}, {"SOURCE_ONLY"})
         blocked = [self.source / "report.csv", self.repo / "map/glb_15min/report.csv", self.repo / ".git/config"]
         for path in blocked:

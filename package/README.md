@@ -171,7 +171,9 @@ the external `cmf_v5_package_data/` root, never the local checkout's map copy.
 | Include | Exclude |
 | --- | --- |
 | Model-grid `.bin`, `netcdf/`, and standard parameter products | High-resolution Binary `1min/` |
-| Compressed `1min_nc/` including `location.txt` | `script*/`, `src*/`, `code/` and generation source files |
+| Compressed `1min_nc/` including `location.txt` | Build products and temporary files |
+| `COG/` for immediate visualization | Logs, caches and `.DS_Store` |
+| Generation script/source directories and Makefiles, as provenance snapshots | Git metadata |
 | Observation/station information, bifurcation products, CTL and auxiliary text | Build products, logs, temporary files, caches and `.DS_Store` |
 
 **Distribution format: compressed NetCDF** for high-resolution maps.
@@ -182,6 +184,22 @@ Model-grid Binary remains included, alongside model-grid NetCDF. This first
 selection does not prune generated standard products or change the Input Matrix
 format; further data reduction and Input Matrix NetCDF are separate work.
 
+### Visualization inputs and generation provenance
+
+For both map datasets, include `COG/` so visualization can start without first
+regenerating those rasters. Also include the scripts, source files, settings,
+README files and Makefiles stored with the authoritative dataset: they record
+how that version of the additional data was generated. These are provenance
+snapshots; active shared development remains under the Git repository's
+`map/tools/`. Inclusion does not imply that every historical recipe is a
+maintained or independently reproducible entry point.
+
+High-resolution Binary directories remain excluded (`1min/` for Global,
+`15sec/` for Japan); restore them from compressed NetCDF when required.
+The catalog selects existing files only; it does not generate missing COGs or
+refresh provenance snapshots. Import/Diff enforce the same selection. No
+assembler is introduced by this policy change.
+
 ### Exclusion semantics and implementation boundary
 
 The catalog retains all six original columns and adds optional `exclude_patterns`
@@ -191,10 +209,12 @@ or dataset registry is introduced. `file_pattern` selects candidate regular file
 TARGET_ONLY discovery. The glb_15min row uses exactly the existing policy:
 
 ```text
-1min/;script*/;src*/;code/;__pycache__/;.git/;*.sh;*.bash;*.csh;*.ksh;*.py;*.pyc;*.F90;*.f90;*.F;*.f;*.c;*.cpp;Makefile*;*.o;*.mod;*.log;*.tmp;.DS_Store
+/1min/;__pycache__/;.git/;*.pyc;*.o;*.mod;*.log;*.tmp;.DS_Store
 ```
 
-Split exclusions on `;`. Patterns ending in `/` match relative parent directory
+Split exclusions on `;`. `/TAG/` excludes only the directory directly under
+the dataset root: `/1min/` excludes raw Binary but preserves `COG/1min/`;
+`/15sec/` likewise preserves `COG/15sec/`. Other patterns ending in `/` match relative parent directory
 components using case-sensitive shell-style `fnmatch` rules; all descendants are
 excluded and not traversed. Other patterns match a file basename at any depth.
 Thus `1min/` never excludes `1min_nc/`; `15sec/` never excludes `15sec_nc/`.
@@ -232,15 +252,15 @@ not 1 minute.
 Apply the same selection policy as the global map above, substituting
 `15sec_nc/` (include, with `location.txt`) and `15sec/` (exclude). Include
 model-grid Binary, `netcdf/`, standard parameter products, station/bifurcation
-information and auxiliary text. Exclude generation directories and sources,
-build products, logs, caches and temporary files. The exclude_patterns column
-implements this same policy, replacing `1min/` with `15sec/`.
+information and auxiliary text, `COG/`, and generation scripts/source snapshots.
+Exclude build products, logs, caches and temporary files. The exclude_patterns column
+implements this same policy, replacing `/1min/` with `/15sec/`.
 Do not copy `**/*` without this filtering. Restore high-resolution Binary on
 demand with the shared restoration tool and `HIRES="15sec"`.
 
-Any Git-managed map-specific workflows are protected; excluded scripts/source
-files are not imported or reported as missing data. Shared maintained generators
-remain under `map/tools/`. Installed data are excluded by `map/.gitignore`;
+Generation scripts/source snapshots are selected by both Import and Diff,
+so local edits can appear as MODIFIED or TARGET_ONLY and retain the existing
+confirmation protections. Shared maintained generators remain under `map/tools/`. Installed data are excluded by `map/.gitignore`;
 existing Git history is preserved. The
 external data store is not modified by this registration. Source edition,
 redistribution conditions and required attribution remain to be confirmed;

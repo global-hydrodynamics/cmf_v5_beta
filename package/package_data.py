@@ -87,7 +87,13 @@ def load_catalog(path, identities=None):
             relative_path(row["file_pattern"], "file_pattern", pattern=True)
             excludes = tuple(p.strip() for p in row.get("exclude_patterns", "").split(";") if p.strip())
             for exclusion in excludes:
+                # /TAG/ anchors a directory exclusion to the dataset root, so
+                # /1min/ does not hide visualization files under COG/1min/.
+                if exclusion.startswith("/") and not exclusion.endswith("/"):
+                    raise DataError(f"Root-anchored exclusions must be directories: {exclusion!r}")
                 name = exclusion[:-1] if exclusion.endswith("/") else exclusion
+                if name.startswith("/"):
+                    name = name[1:]
                 if not name or "/" in name or "\\" in name or name in (".", ".."):
                     raise DataError(f"Invalid component/basename exclusion: {exclusion!r}")
             datasets.append(Dataset(identity, source, target, row["file_pattern"], excludes))
@@ -123,11 +129,16 @@ def included(relative, pattern):
 
 def excluded(relative, rules, directory=False):
     parents = relative.parts if directory else relative.parts[:-1]
-    return any(
-        any(fnmatchcase(part, rule[:-1]) for part in parents) if rule.endswith("/")
-        else (not directory and fnmatchcase(relative.name, rule))
-        for rule in rules
-    )
+    for rule in rules:
+        if rule.startswith("/") and rule.endswith("/"):
+            if parents and fnmatchcase(parents[0], rule[1:-1]):
+                return True
+        elif rule.endswith("/"):
+            if any(fnmatchcase(part, rule[:-1]) for part in parents):
+                return True
+        elif not directory and fnmatchcase(relative.name, rule):
+            return True
+    return False
 
 
 def no_symlinks(root, relative):
