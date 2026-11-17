@@ -557,6 +557,7 @@ def export_scene(
     selected_segments=None,
     selected_boundary=None,
     selected_coarse_outline=None,
+    pins=None,
 ):
     from matplotlib.figure import Figure
     from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -668,6 +669,21 @@ def export_scene(
                     zorder=10,
                 )
             )
+    if pins is not None:
+        from matplotlib import font_manager
+        pin_font = None
+        for family in ("Noto Sans CJK JP", "Yu Gothic", "Meiryo", "Hiragino Sans", "DejaVu Sans"):
+            try:
+                pin_font = font_manager.FontProperties(fname=font_manager.findfont(family, fallback_to_default=False))
+                break
+            except ValueError:
+                continue
+        # Pins mark original clicks, independent of stored outlets / river cells.
+        for x, y, label, color, size in zip(pins["x"], pins["y"], pins["label"], pins["color"], pins["size"]):
+            ax.scatter([x], [y], s=(size * 72 / 160)**2, c=[color], edgecolors="white", zorder=12)
+            ax.annotate(label, (x, y), xytext=(5, 4), textcoords="offset points", color="#3B1464",
+                        weight="bold", fontproperties=pin_font, annotation_clip=True, zorder=13,
+                        bbox=dict(facecolor="white", alpha=.85, edgecolor="none", pad=1))
     ax.set(
         xlim=(w, e),
         ylim=(s, n),

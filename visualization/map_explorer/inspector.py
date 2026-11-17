@@ -212,6 +212,7 @@ class CellInspector:
             self.pixel_section,
             self.advanced_section,
             sizing_mode="stretch_width",
+            styles={"flex-shrink": "0", "max-height": "none"},
         )
 
     @cached_property
@@ -375,6 +376,8 @@ class CellInspector:
                 try:
                     incoming, outgoing = self.bifurcation_counts[kind]
                     node = row * self.reader.geometry.nx + col
+                    data[f"incoming {kind.lower()} bifurcations"] = int(incoming[node])
+                    data[f"outgoing {kind.lower()} bifurcations"] = int(outgoing[node])
                     value = f"Incoming {incoming[node]:,} · Outgoing {outgoing[node]:,}"
                 except (OSError, ValueError, KeyError) as exc:
                     value = "Unavailable"

@@ -94,11 +94,17 @@ def main(argv=None):
     parser.add_argument("--port", type=int, default=0,
                         help="Local port; 0 chooses an available port")
     parser.add_argument("--no-browser", action="store_true")
+    parser.add_argument("--no-setup", action="store_true", help="Report missing packages without installation")
+    parser.add_argument("--windows-browser", type=Path, help="WSL Windows PowerShell executable for browser interop")
     argv = sys.argv[1:] if argv is None else argv
     args = parser.parse_args(argv)
     directory = Path(__file__).resolve().parent
     missing = [name for name in ("numpy", "netCDF4", "matplotlib", "panel", "bokeh")
                if importlib.util.find_spec(name) is None]
+    if missing and args.no_setup:
+        print("[ERROR] Missing WSL Python packages: " + ", ".join(missing), file=sys.stderr)
+        print("Create a Linux venv and install requirements manually; see README Windows Launcher (WSL).", file=sys.stderr)
+        return 1
     if missing:
         return prepare_environment(directory, argv, missing)
     selected = args.map_dir or choose_map(directory.parents[1]/"map"/"mekong_15min")
@@ -113,6 +119,14 @@ def main(argv=None):
         print("Port must be between 0 and 65535.", file=sys.stderr)
         return 2
     port = args.port
+    if port:
+        try:
+            with socket.socket() as listener:
+                listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                listener.bind(("127.0.0.1", port))
+        except OSError as exc:
+            print(f"[ERROR] Port {port} unavailable: {exc}. Choose another port; no process was stopped.", file=sys.stderr)
+            return 2
     if not port:
         # The server is loopback-only. There is a small bind race after release;
         # if another process takes this port, report the startup error normally.
@@ -120,11 +134,27 @@ def main(argv=None):
             listener.bind(("127.0.0.1", 0))
             port = listener.getsockname()[1]
     sys.argv = [str(directory/"app.py"), str(selected), "--port", str(port)]
-    if args.no_browser:
+    if args.windows_browser:
+        from map_reader import Geometry
+        try:
+            Geometry.read(selected / "params.txt")
+        except ValueError as exc:
+            print(f"[ERROR] Invalid map: {exc}", file=sys.stderr)
+            return 2
+    if args.no_browser or args.windows_browser:
         sys.argv.append("--no-browser")
     print("Keep this terminal open while using Map Explorer. Ctrl-C stops it.", flush=True)
     from app import main as run_app
-    run_app()
+    browser = None
+    if args.windows_browser and not args.no_browser:
+        from wsl_browser import start_browser
+        browser = start_browser(args.windows_browser, port)
+    try:
+        run_app()
+    finally:
+        if browser is not None:
+            browser[0].set()
+            browser[1].join(timeout=1)
     return 0
 
 

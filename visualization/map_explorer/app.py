@@ -38,6 +38,7 @@ from map_viewport import MapViewport, frame_size
 from view_controls import ASPECTS, ASPECT_LABELS, geographic_ratio, aspect_extent, translated_extent, allocated_frame
 from presets import VISIBLE_PRESETS
 from inspector import CellInspector
+from pins import PinControls
 from scene import DASH_PIXELS
 from scene import Scene, OVERLAY_DEFAULTS, export_scene
 
@@ -504,6 +505,9 @@ class Explorer:
         )
         self.visualization_panel = pn.Column(preset_box, self.right_tabs, sizing_mode="stretch_width")
         self.inspector_panel = details
+        self.inspector_panel.sizing_mode = "stretch_width"
+        self.inspector_panel.styles = {"flex-shrink": "0", "max-height": "none"}
+        self.visualization_panel.styles = {"flex-shrink": "0", "max-height": "none"}
         self.inspector_panel.visible = False
         self.panel_mode.param.watch(lambda event: self._schedule(self._panel_mode_changed), "value")
         self.settings_panel = pn.Column(
@@ -525,6 +529,8 @@ class Explorer:
         )
         self.map_viewport = MapViewport(plot=pn.pane.Bokeh(self.plot), sizing_mode="stretch_width")
         self.map_viewport.param.watch(lambda event: self._schedule(self._size_map), "bounds")
+        self.pins = PinControls(self)
+        self.inspector_panel.append(self.pins.view)
         self.map_region = pn.Column(
             self.coordinate,
             self.selection_summary,
@@ -532,6 +538,7 @@ class Explorer:
             self.basemap.driver,
             self.basemap.attribution,
             self.legend,
+            self.pins.comparison,
             sizing_mode="stretch_width",
             min_width=300,
             styles={"flex": "3 1 68%", "min-width": "300px"},
@@ -1053,7 +1060,7 @@ class Explorer:
         else:
             self.selected_link.data = dict(x0=[], y0=[], x1=[], y1=[], angle=[])
 
-    def inspect(self, lon, lat, resolve_selection=True):
+    def inspect(self, lon, lat, resolve_selection=True, network_product=None):
         if resolve_selection:
             self._last_click = (lon, lat)
             coarse = self.reader.geometry.cell(lon, lat)
@@ -1121,7 +1128,7 @@ class Explorer:
             g = self.reader.geometry
             result.update(self.reader.inspect(g.lon[col], g.lat[row]))
             result["network representation"] = self.representation.value
-            name = self.network_choice.value
+            name = network_product or self.network_choice.value
             if name != "off":
                 if name not in self._networks:
                     self._networks[name] = RiverNetwork(self.reader, name)
@@ -1189,10 +1196,25 @@ class Explorer:
                 f"**Outlet (lat, lon):** {outlet_lat}, {outlet_lon} · **Upstream Area:** {area} km²  \n"
                 f"Selection: {method}{count}"
             )
+        self._selection_values = result
+        if hasattr(self, "pins"):
+            active = self.pins.current()
+            if active is not None and (
+                active.cell != state.river_cell or active.mode != self.point_select.value
+                or active.tile != state.tile_key or active.clicked != state.clicked
+            ):
+                self.pins.active = None
+                self.pins.refresh()
         return result
 
     def _tap(self, event):
-        self._guard(lambda: self.inspect(event.x, event.y))
+        def select():
+            if not self.pins.hit(event.x, event.y):
+                self.pins.active = None
+                self.inspect(event.x, event.y)
+                self.pins.refresh()
+
+        self._guard(select)
 
     def _output(self, suffix):
         return self.output_dir / f"map-explorer-{datetime.now():%Y%m%d-%H%M%S-%f}{suffix}"
@@ -1223,6 +1245,7 @@ class Explorer:
             segments,
             self.selection.boundary,
             self.selection.coarse_outline,
+            pins=self.pins.marker_data(),
         )
         self.status.object = f"**PNG saved:** `{path}`" + (" · Online basemap excluded." if self.show_osm.value else "")
         return path

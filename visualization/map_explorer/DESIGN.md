@@ -660,3 +660,67 @@ attributes to the map summary, even when networks are off or drawn at grid cente
 The summary does not reconstruct geometry or use click/center coordinates as outlets.
 No duplicated Point Select state or plot/Inspector reconstruction is introduced.
 See [VR-0166](../../research/records/validation_runs/VR-0166.md) for executed evidence.
+
+
+## DT-0121 — WSL launcher and session Pins (approved implementation plan)
+
+Maintainer requests implementation, tests, browser inspection, commit and normal push
+on feature/package-builder. Reuse shared launch_desktop lifecycle; an additive Windows
+WSL wrapper selects a Linux runtime and requests a Windows browser after readiness.
+Do not install dependencies automatically in WSL. Native launchers remain unchanged.
+Pins cache the existing Inspector's structured scientific result and original clicked
+coordinate, selected grid, mode and source fingerprint. Dedicated markers and a
+comparison Accordion below diagnostics do not belong to saved visualization JSON.
+CSV exports use UTF-8 BOM, scalar units and unique pin headers. Revisit validates
+sources and assignment before restoring selection; no geographic fallback.
+Acceptance: isolated launcher and synthetic Pin tests, real Mekong browser + PNG/CSV
+QA; Windows end-to-end explicitly unverified on macOS. Preserve unrelated TE-Japan
+worktree deletions, scientific datasets and Gallery scripts.
+
+
+### DT-0121 implementation details and limits
+
+`pins.py` owns the Pin record, widgets, small comparison matrices and CSV serializers.
+The immutable record fields persist one-based river_ix/river_iy; `cell` exposes a
+zero-based row/column adapter for existing scientific functions. The existing
+`Explorer.inspect` / `CellInspector.update` structured dictionary is the single
+attribute source; snapshots copy it, including actual NLFP and cached graph results.
+Inspector now exposes the same directed-pair bifurcation counts as numeric keys.
+No HTML scraping, new scientific reader, watershed delineation or normalization
+change was introduced. High-res native values remain distinct from inherited values.
+Each snapshot records source path/size/mtime identity; metadata identity cannot prove
+unchanged bytes if another process deliberately preserves timestamps and lengths.
+
+Dedicated Bokeh scatter/LabelSet and Matplotlib scatter/annotations use saved click
+coordinates. One map Tap callback tests marker screen-distance before ordinary
+inspection, preventing a second geographic reassignment. Coincident markers use
+list selection. Selection source validation precedes state mutation. Revisit uses
+saved Inspector network product independently of current displayed River settings;
+viewport translation reuses existing navigation. Switching ordinary selection clears
+active-Pin emphasis if its mode/cell/source/click no longer matches. Pins and small
+comparison tables never enter saved visualization state. Widget watcher mutations
+are queued through Explorer._schedule for Bokeh document-lock ownership; the real
+browser caught and verified this fix, with a corresponding regression test.
+
+Comparison reuse is O(number of Pins × small field count), without full Scene.build,
+assignment scans or graph rebuilding. Full source/native geometry is read only for
+normal selection/revisit; existing catchment indexes/boundaries remain cached.
+Accordion objects stay mounted. Optional subgroups contain all available native
+NLFP layers and native scalar pixel fields; comparison CSV includes these regardless
+of collapsed UI presentation. Missing numeric fields are None→empty CSV and never0.
+No arbitrary small Pin cap is imposed; huge sessions still consume browser/matrix memory.
+
+The additive CMD→PowerShell→WSL sh chain uses argument arrays and positional paths,
+not a shell command containing user input. UNC distro ownership is checked; Windows
+drives use wslpath. Linux runtime probing rejects Windows/macOS Python. Shared
+launch_desktop uses no-setup mode, params validation, dynamic loopback port and an
+in-process foreground Panel lifecycle. Readiness worker first probes Linux HTTP,
+then Windows PowerShell verifies host localhost before Start-Process. Its generated
+numeric localhost URL is encoded UTF-16LE as documented by Microsoft; no user string
+enters executable script code. Cancellation stops the readiness worker on server exit.
+Windows interop/localhost/network behavior requires real Windows QA; isolated tests
+and static review are not evidence of a successful Windows double-click run.
+
+Knowledge-gap review: no new scientific-definition questions; this task reuses the
+existing documented attributes, masks, graph/bifurcation conventions and assignment
+geometry. Windows runtime execution is a validation limitation, not a claimed result.

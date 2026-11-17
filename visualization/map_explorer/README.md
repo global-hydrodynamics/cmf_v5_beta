@@ -904,3 +904,123 @@ Full-tile centroid calculation is likewise lazy and chunked. Browser raster
 transfer is capped at 1200 pixels per axis (PNG 2400); no category averaging.
 Full coarse nextxy topology still scales with the coarse grid. A single Mekong
 integration is evidence for this sample, not a global performance guarantee.
+
+## Windows Launcher (WSL)
+
+Use `launch_windows.bat` for **native Windows Python**, or double-click
+`launch_windows_wsl.cmd` for **Linux Python/Panel inside WSL + Windows default browser**.
+`launch_mac.command` and `run.sh` retain their existing behavior. WSL is optional;
+the launcher does not install WSL, distributions, Python or packages automatically.
+
+Prerequisites: configured WSL distribution (`wsl --list --verbose`), Linux Python
+3.10+, the Explorer requirements installed in a Linux environment, and Windows/WSL
+executable interop + localhost forwarding enabled. Follow the official
+[WSL commands](https://learn.microsoft.com/en-us/windows/wsl/basic-commands) and
+[localhost networking](https://learn.microsoft.com/en-us/windows/wsl/networking)
+guides if WSL is not ready. No administrator/firewall changes are made by this launcher.
+
+Manual setup, **inside the selected WSL distribution**, from the repository root:
+
+```sh
+python3 -m venv "$HOME/.venvs/cmf-map-explorer"
+"$HOME/.venvs/cmf-map-explorer/bin/python" -m pip install -r visualization/map_explorer/requirements.txt
+```
+
+Set `CMF_WSL_PYTHON` in **Windows** to that Linux executable path (for example
+`/home/your-name/.venvs/cmf-map-explorer/bin/python`). This is a Linux path, not a
+Windows `Scripts/python.exe`. Without an override the launcher probes, in order,
+repository `.venv/bin/python`, Explorer `.venv/bin/python`, then Linux `python3`.
+A Windows/macOS venv fails the Linux-platform probe and is skipped. The selected
+runtime reports missing packages without installing anything; install requirements
+manually there or set the override to a prepared environment.
+
+Optional Windows `CMF_WSL_DISTRO` selects an installed distribution; otherwise WSL's
+default is used. A repository/map accessed through `\\wsl.localhost\Distro\...` or
+`\\wsl$\Distro\...` selects its owning distro; contradictory/different-distro paths
+are rejected. Windows drive paths (including D:), spaces and Unicode are passed as
+arguments and converted using `wslpath`; Linux paths are also accepted for the map.
+
+```bat
+visualization\map_explorer\launch_windows_wsl.cmd "D:\CaMa data\map\mekong_15min"
+```
+
+With no argument a Windows folder chooser is shown. Cancel, or an unavailable
+chooser, uses bundled `map/mekong_15min`. The map must contain a valid `params.txt`.
+The minimal CMD delegates to a repository PowerShell helper; its execution-policy
+bypass is process-local and does not change machine/user execution policy.
+
+The shared desktop launcher chooses an available loopback port, runs Panel in the
+foreground and waits for HTTP readiness. A Windows PowerShell helper verifies the
+same URL from Windows before opening the **Windows default browser**; the Linux
+browser is suppressed. No fixed port is assumed, occupied ports/processes are not
+replaced, and no public listener is opened. Keep the terminal open; **Ctrl-C** stops
+the server. Closing the console provides best-effort process termination; Ctrl-C is
+preferred. If startup fails, the CMD retains the error for inspection.
+
+Troubleshooting: check `wsl --list --quiet`, distro initialization and
+`CMF_WSL_DISTRO`; check the chosen Linux Python/version/requirements; check map
+`params.txt`; check Windows-executable interop and WSL localhost forwarding when
+Windows cannot reach the printed URL. The server stays in the terminal if browser
+opening fails. No automatic port forwarding or firewall modification is attempted.
+A small OS bind race remains between port reservation and Panel binding; a startup
+error is reported if another process takes it. WSL double-click/browser/lifecycle
+execution has **not been verified on a real Windows host** in the macOS development session.
+
+## Session Pins and comparison
+
+In **Inspector**, use **Pins** below the existing scientific sections. Select a valid
+Grid or assigned Catchment, enter an optional name (Enter commits text), and click
+**Add Pin**. Empty names get `Pin 1`, `Pin 2`, …; Unicode is supported. Stable IDs are
+independent of names. The same target/mode/source selects the existing Pin instead
+of making a duplicate. An invalid/unassigned Catchment cannot be pinned.
+
+Markers show the **original clicked longitude/latitude**, never an inferred outlet.
+Labels combine A/B/… with the first28 name characters; lists/CSV retain the full name.
+Active markers are larger/purple; other Pins are teal. Rename changes display only.
+Delete removes only that Pin, marker and comparison column, retaining the ordinary
+current selection. Choose a Pin from the list or click its marker to restore its
+saved Grid/Catchment mode, source and assigned river cell. An off-screen Pin recenters
+the viewport while preserving its span. Coincident markers can be chosen via the
+list. Restored Inspector connectivity uses the Pin's saved network product without
+changing current River visibility/style. The clicked coordinate, stored outlet,
+selected1-based river indices and irregular native `catmxy` boundary remain distinct.
+
+Pins survive background/OSM/River/overlay/preset/navigation/UI-mode changes within
+this browser session. They are **not saved in visualization JSON**, persistent storage
+or scientific inputs; reloading/closing the session loses Pins. Source path/size/mtime
+fingerprints and exact native assignment are checked before revisit. Missing/changed
+sources report an error rather than silently substituting a containing Grid. Do not
+modify source datasets during a session; fingerprints are metadata checks, not full
+content hashes of enormous arrays.
+
+**Pinned Locations Comparison** sits below **Legend & diagnostics**, across the map
+column. Expand it to compare parameters as rows and Pins as columns. Checkboxes
+include/exclude individual Pins without deleting them; retained creation order and
+accordion expansion do not depend on selection. The parameter column is sticky
+inside horizontal scrolling. There is no fixed small Pin limit; tens are supported.
+
+Values reuse the Inspector's structured read-only scientific extraction and graph
+indexes. They are cached when a Pin is created, not parsed from HTML or recalculated
+on rename/inclusion. Units: areas m²→km², river/downstream lengths m→km; elevations,
+widths/depths in m. Stored outlet coordinates are separate from clicks. Basin and
+true optional subbasin IDs retain source meaning; display-color categories never
+substitute for IDs. Counts use the same regional directed-link and deduplication
+rules as Inspector (total distinct upstream nodes excludes self). Expand optional
+profile/native groups for all actual NLFP height layers and genuine high-res values;
+inherited coarse uparea is labeled separately. Missing data show Unavailable.
+
+**Export Pins CSV** downloads/saves one row for every Pin, including excluded Pins.
+**Export Comparison CSV** downloads/saves the parameter-by-Pin matrix for included
+Pins only. Matrix headers contain stable IDs + marker labels + full names, so duplicate
+names remain unambiguous. Both use UTF-8 BOM for Excel, proper CSV quoting and empty
+missing numeric fields. CSVs go to the existing validated output directory with
+collision-resistant timestamp filenames; the Pins panel reports the saved path.
+Comparison CSV always includes all available profile layers and native-value rows,
+even when their presentation accordions are collapsed. Pins CSV has stable scalar
+identity/selection/source/geometry/connectivity columns. Neither CSV stores polygons.
+
+PNG export includes all in-viewport Pin markers/labels at the same clicked coordinates,
+independent of the lavender Grid/orange Catchment/yellow outlet/link selections.
+Out-of-viewport markers are clipped. Unicode PNG labels depend on an installed CJK
+font (Noto Sans CJK JP/Yu Gothic/Meiryo/Hiragino Sans are tried). As before, online OSM
+is excluded from PNG with an explicit notice; scientific layers and Pins are retained.

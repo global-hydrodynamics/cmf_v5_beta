@@ -526,3 +526,11 @@ The v4/v5 build configuration separation is implemented on `feature/gosh-refacto
 Map data/tool work is tracked by Issue [#122](https://github.com/global-hydrodynamics/CaMa-Flood_v4/issues/122). Research logging is a cross-project activity with no dedicated Issue. This dashboard copy is an uncommitted proposal until reconciled with `origin/main`. The B2.4 migration records MPI preprocessing and diagnostics; historical `map/src/` tools and tracked Mekong binaries were not modified. Phase C exposes four shared analysis tools under descriptive names (`analysis_river_point_info`, `analysis_upbasin`, `analysis_subbasin`, `analysis_river_node_latlon`) and a portable, explicitly prepared `script_analysis/` bundle alongside independent standard s06/s07 workflows. The Mekong sample uses a 30,000 km2 subbasin threshold, ID 0 for modeled cells below threshold, and station-labeled `upbasin-<GRDC_ID>.bin`; the historical `map/src/` source tree remains unchanged. The Phase C specification update and its 65-test validation are recorded in DR-0043 and VR-0070; the earlier migration and sample-output milestones remain in VR-0068 and VR-0069.
 
 High-resolution area handling contracts are documented in `docs/map_data_tools_plan.md`: allocation is intentionally single-area; matrix and permanent-water aggregation support multiple areas by source inspection. Multi-area package-scale integration validation is pending and is not claimed as completed. The previous wording that treated multi-area allocation itself as an unresolved defect has been narrowed; see `research/records/knowledge_gaps/KG-0014.md`.
+
+
+DT-0121 branch-local scope: maintainer authorizes WSL launcher and session Pins,
+comparison/CSV, automated and actual Mekong GUI verification, commit/push on existing
+feature/package-builder. Owner Codex; implementation complete,305 tests plus3 subtests PASS and1 Windows
+end-to-end SKIP. Actual Mekong/browser/PNG/CSV verified;248 protected hashes unchanged.
+See visualization/map_explorer/DESIGN.md and VR-0167. Publication is to this project
+branch only; Windows end-to-end still requires a Windows host.
