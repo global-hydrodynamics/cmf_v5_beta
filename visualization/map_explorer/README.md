@@ -1,5 +1,13 @@
 # CaMa-Flood Interactive Map Explorer v3
 
+New sessions start with **p01-f04b (Unit-Catchment outlet uparea + Channel Pixels)**
+and **Bifurcation Overland ON**. The Gallery extent is used when inside the selected
+map. This startup override leaves the canonical preset unchanged, so its status is
+Custom (modified from p01-f04b). Missing preset products retain the available map
+and report why the default cannot be applied. Later JSON loads/preset choices are
+not overridden. All desktop launchers and Panel sessions share this startup path.
+
+
 A standalone, read-only browser for coarse CaMa-Flood river maps. Explore
 rasters, stored downstream connectivity and individual cells without editing
 plotting scripts, running a Fortran program, or providing model output.

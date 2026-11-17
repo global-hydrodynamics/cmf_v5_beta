@@ -1388,6 +1388,41 @@ class Explorer:
         else:
             self.preset_status.object = f"**Gallery preset {self._applied_preset} applied**"
 
+    def apply_startup_defaults(self):
+        """One-time desktop/server default, separate from the canonical Gallery preset."""
+        identity = "p01-f04b"
+        if identity not in self.preset_library.presets:
+            self.preset_status.object = "**Startup p01-f04b unavailable:** Gallery metadata is missing."
+            return
+        missing = self.preset_library.missing_products(identity, self.reader, self.scene)
+        if missing:
+            self.status.object = "**Startup p01-f04b unavailable:** " + ", ".join(missing)
+            self.preset_status.object = self.status.object
+            return
+        row, _ = self.preset_library.presets[identity]
+        try:
+            self.reader.geometry.validate_extent([row[k] for k in ("west", "east", "south", "north")])
+            use_extent = True
+        except ValueError:
+            use_extent = False
+        base = self.settings()
+        self.preset_choice.value = identity
+        try:
+            self.apply_preset(identity, use_gallery_extent=use_extent)
+        except (ValueError, OSError) as exc:
+            self.load(json.dumps(base).encode())
+            self.status.object = "**Startup p01-f04b unavailable:** " + str(exc)
+            self.preset_status.object = self.status.object
+            return
+        updating = self._updating
+        self._updating = True
+        try:
+            self.overlay_controls["overland"].value = True
+        finally:
+            self._updating = updating
+        self.render_view()
+        self.status.object = "**Startup:** p01-f04b + Overland bifurcations ON."
+
     def apply_preset(self, identity=None, use_gallery_extent=None):
         identity = identity or self.preset_choice.value
         if identity not in self.preset_library.presets:
@@ -1407,7 +1442,9 @@ class Explorer:
 
 def create_app(map_dir, output_dir=None):
     try:
-        return Explorer(map_dir, output_dir).view
+        explorer = Explorer(map_dir, output_dir)
+        explorer.apply_startup_defaults()
+        return explorer.view
     except (ValueError, OSError) as exc:
         return pn.pane.Alert(f"Cannot open map: {escape(str(exc))}", alert_type="danger")
 

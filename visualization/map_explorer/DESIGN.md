@@ -751,3 +751,17 @@ uparea is pixel-weighted over that assignment mask. Coarse rasters use full sour
 finite/missing-value masks (catmxy is a separate fine-grid assignment, not a coarse
 viewport filter). No positive-only filtering before computing percentiles. Validate
 synthetic masks, small positive bounds, presets/JSON, actual Mekong and browser/PNG.
+
+
+## DT-0123 — Startup p01-f04b with Overland bifurcations
+
+2026-11-17 maintainer requests p01-f04b as initial display and Overland ON.
+Apply through the existing create_app startup factory shared by all launchers,
+reusing preset validation/application; keep the canonical preset CSV unchanged.
+Use the recommended Gallery extent at startup when contained in the selected map;
+otherwise retain its valid map extent. Missing required products keep the usable
+base display and report an actionable startup message, rather than failing map
+launch. Overland is an Explorer startup override and therefore shows Custom
+(modified from p01-f04b), preserving scientific preset provenance. User-loaded
+JSON/later preset applications retain their own settings; never reapply defaults.
+Tests cover startup/factory, unavailable products and later saved settings.

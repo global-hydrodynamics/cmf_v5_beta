@@ -551,3 +551,11 @@ cause (legacy forced minimum), exact ranges and retained masks/units/manual boun
 
 DT-0122 published on feature/package-builder in `d77ae9da3b2a73aa8dfb176bcf282894b55f2b4b`; EV-0549 records
 normal push. Existing5010 session was preserved; verified preview uses5011.
+
+DT-0123: maintainer authorizes initial p01-f04b + Overland ON on existing
+feature/package-builder. Codex owns app startup/tests/docs; canonical preset and
+scientific inputs unchanged. Acceptance: startup/fallback/save-load and actual GUI.
+
+DT-0123 complete:28 focused tests PASS and actual fresh Mekong browser verifies
+p01-f04b + Overland ON. Missing inputs retain usable map; saved settings unaffected.
+See VR-0169. Canonical preset/scientific data unchanged; unrelated deletions excluded.
