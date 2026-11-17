@@ -171,7 +171,7 @@ If available, you can inspect without saving using `nano tutorial01-get_started.
 |---|---|
 | Project | `PROJ="tutorial01-get_started"` |
 | River map | `map/mekong_15min/` |
-| Runoff | `inp/test-mek_1deg/`, daily binary files |
+| Runoff | `inp/repo-mek_1deg_bin/`, daily Binary records grouped by month |
 | Runoff-to-map mapping | `diminfo_test-mek_1deg.txt` and `inpmat_test-mek_1deg.bin` in the map directory |
 | Period | 2000-01-01 00:00 to 2000-02-10 00:00; end time is exclusive (40 days) |
 | Time step | Base `DT=3600` seconds; adaptive time stepping enabled |
@@ -226,42 +226,39 @@ The commented lines show alternative map products; the uncommented assignments s
 
 ## 6. Inspect runoff forcing
 
-Runoff forcing is water input supplied to the model over time. The sample uses daily binary files on a grid coarser than the river map. Inspect a few dates, including the last day before the exclusive end date:
+Runoff forcing is water input supplied to the model over time. The sample uses daily Binary records grouped into monthly files on a grid coarser than the river map. Inspect the two files covering the 40-day interval:
 
 ```bash
 cd "${cmf_root}"
-cd inp/test-mek_1deg/runoff
+cd inp/repo-mek_1deg_bin/runoff
 pwd
-ls -lhF Roff____20000101.one Roff____20000102.one Roff____20000209.one
+ls -l Roff____200001.one Roff____200002.one
 ```
 
 ### Expected output
 
-The three observed sample files are each 2.3 KB; the exact display may round sizes differently.
-
-```text
--rw-r--r--  1 yamadai  staff   2.3K Nov  3 07:06 Roff____20000101.one
--rw-r--r--  1 yamadai  staff   2.3K Nov  3 07:06 Roff____20000102.one
--rw-r--r--  1 yamadai  staff   2.3K Nov  3 07:06 Roff____20000209.one
-```
+The monthly files contain 31 and 29 daily fields respectively (60 records total).
+Their exact sizes are 74,400 and 69,600 bytes. Each daily field is 2,400 bytes;
+monthly grouping does not average the values.
 
 The corresponding GOSH settings identify the dataset, file naming rule, frequency, and unit conversion:
 
 ```sh
-ROFFTAG="test-mek_1deg"
+ROFFTAG="repo-mek_1deg_bin"
+INPMAT_TAG="test-mek_1deg"
 RUNOFF_DIR="${CMF_BASE}/inp/${ROFFTAG}/runoff"
 IFRQ_INP=24
-CROFFREQ="DAY"
+CROFFREQ="MON"
 CROFPRE="Roff____"
 CROFSUF=".one"
 DROFUNIT=86400000
 ```
 
-`Roff____` + a date in `YYYYMMDD` form + `.one` makes a daily filename. `IFRQ_INP=24` means the forcing interval is 24 hours. `DROFUNIT` converts the supplied `mm/day` runoff values to the model's `m/s` units. The 40-day interval ends at February 10 00:00, so February 9 is the final daily input date.
+`Roff____` + a month in `YYYYMM` form + `.one` makes a monthly filename containing daily records. `IFRQ_INP=24` means the forcing interval is 24 hours. `DROFUNIT` converts the supplied `mm/day` runoff values to the model's `m/s` units. The 40-day interval ends at February 10 00:00, so February 9 is the final daily input date.
 
 ### Learning Check
 
-- [ ] I can locate a dated daily runoff file in the listed directory.
+- [ ] I can locate a monthly file containing daily runoff records in the listed directory.
 - [ ] I can find the GOSH settings that select the runoff directory and construct its filename.
 
 ## 7. Inspect runoff-to-map mapping
@@ -302,8 +299,8 @@ inpmat_test-mek_1deg.bin
 The script points to this pair and turns on input-matrix mapping with `LINTERP`:
 
 ```sh
-DIMINFO="${MAPDIR}/diminfo_${ROFFTAG}.txt"
-INPMAT="${MAPDIR}/inpmat_${ROFFTAG}.bin"
+DIMINFO="${MAPDIR}/diminfo_${INPMAT_TAG}.txt"
+INPMAT="${MAPDIR}/inpmat_${INPMAT_TAG}.bin"
 LINTERP=".TRUE."
 ```
 

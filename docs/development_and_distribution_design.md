@@ -175,7 +175,7 @@ CaMa-Flood_v5/
 
 The specific small test datasets and their existing locations should be confirmed before implementation.
 
-**Current-name clarification:** The tree above is conceptual, not an instruction to rename directories. Current tracked forcing is `inp/test-mek_1deg/` (Binary) and `inp/test-mek_1deg_nc/` (annual NetCDF), with `map/mekong_15min/` as the map. Maintained v5 execution workflows currently live in `gosh_test/`; the conceptual `gosh/` entry does not authorize moving them or treating historical v4 scripts as v5 entry points. Preserve these existing locations unless a separate change is approved.
+**Current-name clarification:** The tree above is conceptual, not an instruction to rename directories. Current tracked forcing is `inp/repo-mek_1deg_bin/` (daily Binary records in monthly files) and `inp/repo-mek_1deg/` (annual NetCDF), with `map/mekong_15min/` as the map. Maintained v5 execution workflows currently live in `gosh_test/`; the conceptual `gosh/` entry does not authorize moving them or treating historical v4 scripts as v5 entry points. Preserve these existing locations unless a separate change is approved.
 
 **A separate `github_test/` data directory is not required.**
 

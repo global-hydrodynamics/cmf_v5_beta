@@ -239,7 +239,7 @@ presence:
 
 ```bash
 test -f map/mekong_15min/params.txt
-test -f inp/test-mek_1deg_nc/runoff2000.nc
+test -f inp/repo-mek_1deg/runoff2000.nc
 test -f map/mekong_15min/inpmat_test-mek_1deg.bin
 test -f map/mekong_15min/diminfo_test-mek_1deg.txt
 ```

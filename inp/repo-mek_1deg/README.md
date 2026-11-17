@@ -17,10 +17,9 @@ remains the short January–February 2000 Binary input dedicated to mek01.
   `proleptic_gregorian`; 365 or 366 records per annual file.
 - NetCDF-4 with lossless deflate level 3 and shuffle.
 
-The current 32 files total **16,348,190 bytes (about 15.6 MiB)**. The previous
-six annual files (2000–2005) were tracked under the former directory name;
-the renamed/expanded files remain unstaged for maintainer review. They are
-eligible for Git tracking, not additional-data files to be ignored.
+The current 32 files total **16,348,190 bytes (about 15.6 MiB)**. All 32 annual files are Git-tracked under the current directory name.
+The previous six annual files (2000–2005) were retained during expansion;
+these regional repository samples are distinct from optional global additional data.
 
 The source is the optional global additional dataset
 `inp/ELSE_GPCC/runoffYYYY.nc`, supplied separately from the repository.

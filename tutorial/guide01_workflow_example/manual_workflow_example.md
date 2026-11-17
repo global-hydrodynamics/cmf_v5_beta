@@ -112,7 +112,7 @@ The sample inputs used by the runner are repository-level files:
 
 - Mekong map files under `map/mekong_15min/netcdf/` and
   `map/mekong_15min/`;
-- runoff file `inp/test-mek_1deg_nc/runoff2000.nc`;
+- runoff file `inp/repo-mek_1deg/runoff2000.nc`;
 - input matrix `map/mekong_15min/inpmat_test-mek_1deg.bin` and its dimension
   description `map/mekong_15min/diminfo_test-mek_1deg.txt`.
 

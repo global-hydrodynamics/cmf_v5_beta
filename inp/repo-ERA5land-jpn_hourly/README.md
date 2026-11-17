@@ -35,7 +35,8 @@ Ten converted files total 17,229,869 bytes (about 16.43 MiB). Header/time/coordi
 inspection confirms 24 hourly records per file, a 301 × 301 grid with longitude
 centers 120..150 and latitude 50..20, float32 `runoff(time,lat,lon)`, units `mm`,
 fill `1e20`, deflate=3 and shuffle. Derived edges are 119.95..150.05 and
-19.95..50.05 degrees. Raw files exist locally but remain ignored. These checks
+19.95..50.05 degrees. Raw files and logs are optional ignored intermediates and are absent from the
+current checkout; rerun the Product Shell when they are needed. These checks
 do not verify runoff values or model ingestion.
 
 ## Execution

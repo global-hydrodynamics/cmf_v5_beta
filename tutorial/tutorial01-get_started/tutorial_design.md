@@ -39,7 +39,7 @@ CaMa-Flood_v4/
 │   ├── params.txt                   # Map dimensions, grid, and geographic bounds
 │   ├── diminfo_test-mek_1deg.txt     # Runoff-grid dimensions and mapping metadata
 │   └── inpmat_test-mek_1deg.bin     # Runoff-to-map input matrix
-├── inp/test-mek_1deg/runoff/        # Bundled daily Binary runoff
+├── inp/repo-mek_1deg_bin/runoff/        # Bundled daily Binary runoff
 ├── gosh_test/                        # Developer GOSH workflows and operational checks
 └── tutorial/tutorial01-get_started/
     ├── tutorial_design.md
@@ -52,7 +52,7 @@ The repository also contains root setup scripts and shared tools; include them i
 
 ## Starting state and prerequisites
 
-- The verified learner source is the default `master` checkout, which contains `src_main/`, `config/`, the bundled `map/mekong_15min/` and `inp/test-mek_1deg/` samples, the root `s01-setup_fortran.sh` and `s02-python_setup.sh`, and Tutorial01. Require a clean package start without `src_main/MAIN_cmf` or Tutorial01 run outputs. The official v5 package for this workflow is a future distribution; older packages are not a supported substitute.
+- The verified learner source is the default `master` checkout, which contains `src_main/`, `config/`, the bundled `map/mekong_15min/` and `inp/repo-mek_1deg_bin/` samples, the root `s01-setup_fortran.sh` and `s02-python_setup.sh`, and Tutorial01. Require a clean package start without `src_main/MAIN_cmf` or Tutorial01 run outputs. The official v5 package for this workflow is a future distribution; older packages are not a supported substitute.
 - The current state of `src_main/MAIN_cmf` and Tutorial01's `out/` is not prescribed. `make all` builds or updates the required executable, and the sample script replaces only its known generated files on rerun. Sample map, runoff, and matching input-matrix data are included; no scientific data download or map generation is required.
 - GNU Make, GNU Fortran with OpenMP, and NetCDF-Fortran are available. Run `s01-setup_fortran.sh`, review its recommended configuration, and manually copy the staged `Mkinclude` to the existing `config/Mkinclude` location before building.
 - Run `s02-python_setup.sh` for Python environment diagnosis/setup. Tutorial01's CTL tools use Python standard-library features; installing the full optional requirements set is not required for the sample run.
@@ -61,7 +61,7 @@ The repository also contains root setup scripts and shared tools; include them i
 ## Experiment inputs and settings
 
 - Map: `map/mekong_15min/`, Binary format, 80 × 120 cells, 0.25-degree grid, and 10 floodplain layers.
-- Runoff: `inp/test-mek_1deg/runoff/`, daily Binary `mm/day` files named `Roff____YYYYMMDD.one`; the sample grid is 20 × 30.
+- Runoff: `inp/repo-mek_1deg_bin/runoff/`, daily Binary `mm/day` records in monthly files named `Roff____YYYYMM.one`; the sample grid is 20 × 30.
 - Runoff-to-map files: `map/mekong_15min/diminfo_test-mek_1deg.txt` and `inpmat_test-mek_1deg.bin`, generated for this map/runoff grid pairing.
 - Simulation: 2000-01-01 00:00 to 2000-02-10 00:00 exclusive (40 days), non-MPI, base timestep 3600 seconds, adaptive timestep and bifurcation enabled, reservoir operation disabled, one OpenMP thread.
 - Preserve the scientific and I/O settings of `gosh_test/mek01-default_run.sh`. The tutorial's complete standalone script changes only repository-relative context, output isolation under `tutorial/tutorial01-get_started/out/${PROJ}/`, the project name, and OpenMP thread count to one. The maintained `gosh_test/` script remains unchanged.

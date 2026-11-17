@@ -19,19 +19,18 @@ For format and compression settings used by NetCDF files generated with v5 tools
 
 ## Directory organization
 
-NetCDF is the standard v5 input format: new NetCDF dataset names normally omit `_nc`, while Binary variants use `_bin` where necessary. Existing sample names remain unchanged until their compatibility is reviewed.
+NetCDF is the standard v5 input format: new NetCDF dataset names normally omit `_nc`, while Binary variants use `_bin` where necessary. The current repository samples use the `repo-` prefix; historical Input Matrix tags remain unchanged because they identify grids, not dataset directories.
 
 | Path | Purpose and contents |
 | --- | --- |
 | `tools/` | Shared runoff dataset helpers: [`extract_ELSE_GPCC.py`](tools/extract_ELSE_GPCC.py) extracts regional daily data from global annual NetCDF, and [`validate_runoff_datasets.py`](tools/validate_runoff_datasets.py) checks the input registry without reading datasets. Execution examples appear below. |
 | `download_ERA5-Land/` | Shell settings/job control and standalone Python CDS/NetCDF tools. No data are stored here; see the [ERA5-Land guide](download_ERA5-Land/README.md). Binary conversion is retired. |
 | `repo-ERA5land-glb_2day/` | Converted global two-day repository sample: `runoff_200001.nc` (24-hour records, 8,154,888 bytes). Original CDS inputs/logs are ignored. See the [dataset README](repo-ERA5land-glb_2day/README.md); format metadata inspected, scientific time attribution unresolved. |
-| `ERA5_land/daily/` | Canonical north-south half-grid geometry (90° to −90° cell centers; 3,600 × 1,801 at 0.1°). Only one local daily-named binary sample (1960-01-01) is currently present; its units, missing-value meaning, longitude order, and full coverage are unconfirmed. |
-| `ERA5_land/Roff/` | Legacy 1981–2020 daily binary series, 3,600 × 1,800. The maintainer confirms it omits the north-south half-grid shift and is not the canonical geometry. Neither series is tracked or distributed; see both registry entries. |
 | `ELSE_GPCC/` | Optional global daily NetCDF runoff, 1979–2010, one `runoffYYYY.nc` file per year. Supplied through the separate additional-data store and ignored by Git; see the [package catalog](../package/package_data.csv). Formerly named `ELSE_GPCC_nc/`; the previous Binary dataset at this path has been removed. Redistribution conditions and model-input validation remain unconfirmed. |
-| `test-glb_1deg/` | Historical global 1-degree, daily two-year test extraction (2000–2001) from the former Binary `ELSE_GPCC/Roff/`. Regeneration requires a separately supplied Binary source; the new NetCDF directory cannot be used directly. Scripts and metadata are tracked; generated `Roff/` binaries are Git-ignored pending redistribution review. See the [sample README](test-glb_1deg/README.md). |
 | `repo-mek_1deg_bin/` | Minimal Git-tracked Mekong Binary sample for mek01: 60 daily fields for January–February 2000, grouped into two monthly files (144,000 bytes total). See the [sample README](repo-mek_1deg_bin/README.md). |
 | `repo-mek_1deg/` | Long-term Mekong NetCDF test data, 1979–2010: 32 annual files extracted from global `ELSE_GPCC/`. See the [dataset README](repo-mek_1deg/README.md) for parallel generation and validation. |
+| `repo-ERA5land-jpn_hourly/` | Ten converted hourly NetCDF files for September 1–10, 2007; see the [dataset README](repo-ERA5land-jpn_hourly/README.md). |
+| `test-jpn_6min_1hr/` | Seven derived Japan hourly Binary files for September 3–9, 2007, plus aggregation tools and CTL; see the [sample README](test-jpn_6min_1hr/README.md). The original 1-arcmin input must be supplied separately. |
 
 ## Runoff Dataset Registry
 
@@ -46,15 +45,19 @@ The table below summarizes the sample locations and review state. The CSV is the
 | Package directory | Format and grid/time coverage | Unit evidence and relevant example |
 | --- | --- | --- |
 | `ELSE_GPCC/` | Global annual NetCDF runoff for 1979–2010. The inspected 2000 file has `runoff(time, latitude, longitude)`, float32 `mm day-1`, missing value `-999`, and a 180 × 360 grid. | Header inspection only; values and model ingestion have not been validated. This replaces the former Binary directory, not the Binary extraction interfaces. |
-| `test-glb_1deg/` | Regenerable global 360 × 180 daily plain-binary sample (`Roff____YYYYMMDD.one`) for 2000-01-01 through 2001-12-31, extracted byte-for-byte from ELSE_GPCC. | `mm/day`, `IFRQ_INP=24`, `DROFUNIT=86400000`; scripts and metadata are tracked, generated data are ignored. See the sample README. |
-| `test_1deg/` | Legacy package sample on the same global 1-degree grid and dates. The maintainer identifies it as a two-year extraction from ELSE_GPCC. | The `.ctl` declares runoff in `mm/day`. `gosh/test1-glb_15min.sh` uses `IFRQ_INP=24` and `DROFUNIT=86400000`. |
 | `repo-mek_1deg_bin/` | Mekong 20 × 30 grid (90–110°E, 5–35°N); daily January–February 2000 data in two monthly Binary files. | Float32 `mm/day`, N-to-S, little-endian, missing value `-999`; `CROFFREQ=MON`, `IFRQ_INP=24`, `DROFUNIT=86400000`. Replaces the former long daily Binary collection. |
 | `repo-mek_1deg/` | Mekong 20 × 30 daily NetCDF runoff for 1979–2010, one file per year (32 files, about 15.6 MiB). | Float32 `mm day-1`, longitude centers 90.5–109.5°E, descending latitude 34.5–5.5°N, missing value `-999`, CF daily bounds; `CROFFREQ=YEAR`. All regional values were checked against global NetCDF; this is extraction fidelity, not model/scientific validation. |
-| `test_jpn_1hr/` | Original/source reference: daily binary files (`runoff_YYYYMMDD.bin`) plus `runoff.ctl`; Japan 1/60-degree grid (1500 × 1320), 1-hour records for 2007-09-03 through 2007-09-09. Locally available through an ignored symlink; large binaries are not tracked. | Maintainer-confirmed provenance: 1-arcmin simulations using the Today’s Japan system, provided by Yoshimura Laboratory. The maintainer identifies the original CTL `mm/day` label as erroneous and assesses the values as `mm/hour`, consistent with `gosh/test3-jpn_fcast.sh` (`IFRQ_INP=1`, `DROFUNIT=3600000`); this interpretation is not independently verified. |
 | `repo-ERA5land-jpn_hourly/` | Converted Japan hourly repository sample, September 1–10, 2007: ten daily files, 24 records each, 17,229,869 bytes total. | [Dataset README](repo-ERA5land-jpn_hourly/README.md); format metadata inspected. GOSH/input-matrix integration and KG-0019 remain open. |
-| `ERA5land-jpn_legacy_bin/` | Preserved historical Binary CTL/report only; no maintained conversion workflow. | Binary conversion was retired; use the NetCDF workflow. These local historical files are Git-ignored. |
-| `ERA5_land/daily/` | Canonical north-south geometry. The only observed local file, `ERA5-Land_Runoff_daily_19600101.bin`, is headerless float32 with 3,600 × 1,801 values (25,934,400 bytes). | Maintainer confirms the half-grid shift: input-grid limits 90.05 to −90.05 produce centers 90 to −90 under the map-tool convention. Units, missing-value meaning, longitude order, provenance, and long-term coverage are unconfirmed; not ready for a configured simulation. |
-| `ERA5_land/Roff/` | Legacy 1981–2020 global daily binary series, 3,600 × 1,800 values per date. | The maintainer confirms the north-south half-grid shift is absent, so this is not the canonical daily geometry. Existing legacy input settings use 90/−90 limits (centers 89.95…−89.95). Metadata and scientific validity remain unverified; see `runoff_datasets.csv`. |
+| `test-jpn_6min_1hr/` | Derived Japan 250 × 220 hourly Binary sample for September 3–9, 2007; seven daily files containing 24 records each. | Spatial aggregation of the separately supplied 1-arcmin source; no temporal averaging. The maintainer's `mm/hour` interpretation remains subject to the [sample guide's unit caveat](test-jpn_6min_1hr/README.md#unit-caveat). |
+
+Historical names such as `test-glb_1deg/`, `test_1deg/`, `ERA5_land/` and
+`ERA5land-jpn_legacy_bin/` describe earlier inventories, not datasets included in
+the current checkout or entries in the current five-row registry. The original
+`test_jpn_1hr/` aggregation source is also absent locally; configure it separately
+when regenerating `test-jpn_6min_1hr/`. Historical provenance and unresolved
+scientific questions remain in [the inventory record](../docs/runoff_data_inventory.md).
+Optional `ELSE_GPCC/` is supplied through Package Additional Data and is not
+currently installed in this checkout; it is required only for regeneration.
 
 ### Data Sources and Acquisition
 

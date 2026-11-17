@@ -24,9 +24,9 @@ This inventory covers `inp/`, the standard model forcing reader, the v5 channel 
 
 Key evidence:
 
-- Repository files: [`inp/README.md`](../inp/README.md), [`inp/download_ERA5-Land/ReadMe.md`](../inp/ERA5-Land_download/ReadMe.md), scripts and sample files under [`inp/download_ERA5-Land/`](../inp/ERA5-Land_download/).
-- Download request and dataset name: [`download_era5land.py`](../inp/ERA5-Land_download/download_era5land.py#L63) and its request builder at lines 259–340.
-- Conversion logic: [`convert_CMF_nc.py`](../inp/ERA5-Land_download/convert_CMF_nc.py#L236) and [`convert_CMF_bin.py`](../inp/ERA5-Land_download/convert_CMF_bin.py#L236).
+- Repository files: [`inp/README.md`](../inp/README.md), [current ERA5-Land guide](../inp/download_ERA5-Land/README.md), scripts and sample files under [current ERA5-Land tools](../inp/download_ERA5-Land/).
+- Download request and dataset name: `ERA5-Land_download/download_era5land.py` (historical version) and its request builder at lines 259–340.
+- Conversion logic: `ERA5-Land_download/convert_CMF_nc.py` (historical version) and `ERA5-Land_download/convert_CMF_bin.py` (retired historical converter).
 - Model forcing contract: [`cmf_ctrl_forcing_mod.F90`](../legacy/src/cmf_ctrl_forcing_mod.F90#L35) (namelist and defaults), lines 336–490 (input-matrix readers), and lines 790–855 (runoff conversion/interpolation).
 - Channel parameterization: [`s01-channel_params.sh`](../map/tools/script_params/s01-channel_params.sh#L17) and [`param_channel_calc_outclm.F90`](../map/tools/code/param_channel_calc_outclm.F90#L29).
 - Existing lightweight tests: `map/tools/tests/test_channel_params_wrapper.py`, `test_inpmat_naming.py`, `test_bifurcation_migration.py`, and `test_mekong_ctl_integration.py`. No runoff converter-specific tests or `inp/` test directory were found.
@@ -198,7 +198,7 @@ The package-only `test_1deg` CTL also declares 1000 time records while the inspe
 
 ## Phase B registry correction and Phase C ERA5-Land review — 2026-11-02
 
-The maintainer clarified that `inp/runoff_datasets.csv` is an inventory of CaMa-Flood-ready runoff products, not raw downloaded sources. The `era5land_japan_source_200001` entry was removed. The tracked `ori_japan/` NetCDF remains unchanged and its provenance, download procedure, source units, and conversion role are documented in [`inp/download_ERA5-Land/ReadMe.md`](../inp/ERA5-Land_download/ReadMe.md). The registry validator now rejects raw-source-only entries; the converted NetCDF and binary product entries remain.
+The maintainer clarified that `inp/runoff_datasets.csv` is an inventory of CaMa-Flood-ready runoff products, not raw downloaded sources. The `era5land_japan_source_200001` entry was removed. The tracked `ori_japan/` NetCDF remains unchanged and its provenance, download procedure, source units, and conversion role are documented in [current ERA5-Land guide](../inp/download_ERA5-Land/README.md). The registry validator now rejects raw-source-only entries; the converted NetCDF and binary product entries remain.
 
 The maintainer subsequently simplified the registry by removing the redundant `ROFFTAG` column and memo-oriented `product_role` and `time_semantics` columns. Use each product's `dataset_id` as its `ROFFTAG` when generating the paired input-matrix filenames. The validator checks that identifiers are unique and safe to use as tags; it validates the remaining grid and configuration fields.
 

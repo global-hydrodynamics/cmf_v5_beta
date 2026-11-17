@@ -4,6 +4,15 @@
 
 > Migration note (2026-11-15): Historical branch names, v4 Issue/PR references and dated approvals below are preserved evidence, not current branch assignments. Current v5 development uses cmf_v5_beta/main, src_main/, config/, gosh_test/ and tools/; old root model/build/run files are under legacy/. See [current status](dev_status.md) and [the migration audit](migration_consistency_audit.md).
 
+## Current runoff paths (2026-11-17)
+
+Current repository forcing is `inp/repo-mek_1deg_bin/` (January–February 2000,
+monthly files containing daily records) and `inp/repo-mek_1deg/` (annual NetCDF,
+1979–2010). The existing `test-mek_1deg` Input Matrix tag remains valid for
+both because the grid is unchanged. Earlier milestone paths and conversion
+commands below are historical evidence, not current regeneration instructions;
+use [the current input guide](../inp/README.md).
+
 ## Status
 
 **Phase 0 and Phase 1 (including NetCDF I/O and the two-year Mekong run) are implemented and operationally validated on the maintainer's macOS workstation.** The complete tracked `src/` and `gosh/` trees were copied to `src_main/` and `gosh_test/`; separate Binary and NetCDF-enabled executables were built. The initial 2000 Mekong annual run, 40-day format comparisons, and 2000–2001 annual-NetCDF/restart workflow completed. These checks establish operational behavior and format consistency for this build and sample, not independent scientific validation or broad platform support.

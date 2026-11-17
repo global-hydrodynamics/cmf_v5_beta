@@ -2,7 +2,7 @@
 
 This sample is derived from the existing 1-arcmin Japan hourly binary sample in `inp/test_jpn_1hr/`. The maintainer confirms that the underlying 1-arcmin runoff came from simulations using the Today's Japan system, was provided by Yoshimura Laboratory, and has redistribution permission. The 6-arcmin files are spatially aggregated from that 1-arcmin sample; they are not observations and are not an independent 6-arcmin Today's Japan simulation.
 
-The 1-arcmin sample is retained internally as the source/reference dataset. This smaller, reproducible product is intended to replace it for routine repository distribution. The original data are accessed through the local `inp/test_jpn_1hr` symbolic link; that link and its large source files are excluded from Git and are never modified by the workflow.
+The 1-arcmin sample is retained internally as the source/reference dataset. This smaller, reproducible product is intended to replace it for routine repository distribution. Regeneration expects the original data at `inp/test_jpn_1hr` (for example through a local symbolic link). This source is absent from the current checkout; supply it separately before regenerating. The source link and large source files are excluded from Git and are never modified by the workflow.
 
 ## Grid and time coverage
 

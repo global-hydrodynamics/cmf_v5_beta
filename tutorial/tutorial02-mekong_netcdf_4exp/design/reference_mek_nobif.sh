@@ -27,7 +27,7 @@ LADPSTP=".TRUE."           # TRUE: adaptive timestep; FALSE: fixed DT.
 # ----------------------------------------------------------------------
 MAPDIR="${CMF_BASE}/map/mekong_15min"
 MAP_NETCDF_DIR="${MAPDIR}/netcdf"
-RUNOFF_DIR="${CMF_BASE}/inp/test-mek_1deg_nc"
+RUNOFF_DIR="${CMF_BASE}/inp/repo-mek_1deg"
 RUNDIR="${SCRIPT_DIR}/out/${PROJ}"
 EXEC_CMF="${CMF_BASE}/out/bin/MAIN_cmf_netcdf"
 DIMINFO="${MAPDIR}/diminfo_test-mek_1deg.txt"

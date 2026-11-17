@@ -162,3 +162,32 @@ every line in that combined README diff originated in this cleanup.
 - `tutorial/guide01_workflow_example/s04-downscale_event.sh`
 - `tutorial/guide01_workflow_example/v01-plot_results.py`
 - `variable_table/map_metadata_spec.md`
+
+
+## Input-name consistency follow-up — 2026-11-17
+
+Maintainer requested a check after renaming/reorganizing `inp/`. Work performed
+on `feature/package-builder`; existing scientific data and historical records
+are preserved. Current input registry has five rows. The optional global
+`inp/ELSE_GPCC/` is absent locally; regeneration requires separate installation.
+The original `test_jpn_1hr` aggregation source and ERA5 original/log directories
+are also absent, so their guides now state that they must be supplied/generated.
+
+Corrected the current input guide's removed-directory listings/broken link,
+annual Mekong sample's obsolete pending-staging status (all32 files are tracked),
+and corresponding CSV access notes. Updated current design/NetCDF writer paths.
+Current tutorial NetCDF consumers use `repo-mek_1deg`; Tutorial01 selects
+`repo-mek_1deg_bin` with MON grouping of daily fields. The matrix remains tagged
+`test-mek_1deg`, with24-hour forcing and unchanged units/40-day interval.
+Tutorial manuals/designs agree. Historical milestone paths and research evidence
+retain their original names, with current-guide pointers rather than relabeling
+old scientific results as new validations.
+
+Validation: `python3 inp/tools/validate_runoff_datasets.py` passes (five entries);
+all local Markdown links under inp resolve; changed Shell files pass `bash -n`;
+referenced current dataset directories,2000–2003 annual NetCDFs, two monthly
+Binary sizes (74400/69600 bytes), and both existing matrix files are verified.
+`git diff --check` passes. No dataset was generated or modified, no model run was
+performed, and no new scientific/architectural knowledge gap was identified.
+The separate research validator retains its10 pre-existing broken historical
+links, outside this current-guide correction.
