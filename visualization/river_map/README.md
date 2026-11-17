@@ -148,7 +148,7 @@ does not perform that preprocessing again. See the source for the full rules,
 rather than interpreting `bsncol` as a separate physical field or basin ID.
 
 The individual-map NetCDF preparation template is
-[`map/tools/script_bin2nc/s02-convert_netcdf.sh`](../../map/tools/script_bin2nc/s02-convert_netcdf.sh),
+[`map/tools/script_format_conv/s02-convert_netcdf.sh`](../../map/tools/script_format_conv/s02-convert_netcdf.sh),
 using [`convert_map_binary_to_netcdf.py`](../../map/tools/code/convert_map_binary_to_netcdf.py).
 The three NetCDF inputs are already tracked, so plotting requires neither
 conversion nor map generation.

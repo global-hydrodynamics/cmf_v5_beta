@@ -24,3 +24,16 @@ Historical v4 writers under `src/` and `map/src/`, plus the existing legacy `etc
 ## Reader compatibility
 
 The v5 model uses NetCDF-Fortran for forcing, individual map rasters, output, and Restart data. Deflate and shuffle are transparent to those readers; the data contract remains the variable type, dimensions, order, and metadata defined by each workflow. Format-conversion checks confirm data preservation; model-reader compatibility should be checked when a writer or input path changes.
+
+
+## Optional numeric COG visualization caches
+
+[Map format tools](../map/tools/script_format_conv/README.md#numeric-netcdf-to-cog-caches-s05)
+can derive lossless tiled GeoTIFF/COG caches from registered individual NetCDF
+rasters. This is an additional visualization product, not a change to NetCDF
+writer conventions or authoritative scientific data. Full-resolution source types,
+values, missing codes and record/layer correspondence are verified in chunks.
+Internal average (float) or nearest (integer) overviews are display-only.
+Nonraster/packed/mixed-type or incompatible-NoData products report unsupported.
+Model-grid COGs live under each map's COG/, native high-res under COG/<HIRES>/.
+Explorer ingestion and additional-data/package registration are outside this task.

@@ -1,11 +1,11 @@
-# Mekong Binary-to-NetCDF map conversion
+# Mekong map format conversion
 
-This map-local copy uses the shared templates and converters documented in [`map/tools/script_bin2nc/`](../../tools/script_bin2nc/README.md). `s01`/`s02` convert registered binaries in the Mekong map root; `s03` converts registered high-resolution tiles from `1min/`.
+This map-local copy uses the shared templates and converters documented in [`map/tools/script_format_conv/`](../../tools/script_format_conv/README.md). `s01`/`s02` convert registered binaries in the Mekong map root; `s03` converts registered high-resolution tiles from `1min/`.
 
 Run the scripts with this map-local directory as the current directory. The parent map is detected automatically; no map name or `MAP_DIR` edit is needed:
 
 ```sh
-cd map/mekong_15min/script_bin2nc
+cd map/mekong_15min/script_format_conv
 ./s01-list_binary.sh
 ```
 
@@ -48,7 +48,7 @@ Use these containers with `LMAPCDF=.TRUE.` and `CRIVCLINC`/`CRIVPARNC` pointing 
 
 ## Target selection and explicit overrides
 
-s01–s03 use the parent of the current `script_bin2nc/` directory by default.
+s01–s03 use the parent of the current `script_format_conv/` directory by default.
 `SCRIPT_DIR` locates the development repository's shared Python tools and
 variable registry, independently of the target map. `bin2nc_list.txt` stays in
 the caller's current directory for both s01 and s02.
@@ -59,8 +59,8 @@ example, `./s02-convert_netcdf.sh --map-dir /path/to/map --force` reads the list
 in the current directory and writes into that explicit map. Keep the same
 working directory and target between s01 and s02. Invocation from another
 working directory requires `--map-dir` unless that directory itself is a valid
-map-local `script_bin2nc/`. The shared template directory is not an implicit
-map target. See the [shared guide](../../tools/script_bin2nc/README.md#explicit-target-including-external-package-maps)
+map-local `script_format_conv/`. The shared template directory is not an implicit
+map target. See the [shared guide](../../tools/script_format_conv/README.md#explicit-target-including-external-package-maps)
 for a complete external-map example. This rule applies to s01–s03 only;
 legacy t* helper settings are unchanged.
 
@@ -72,3 +72,15 @@ uses individual overwrite prompts. At an individual prompt, `y`/`Y` overwrites
 only that file and `n`/Enter preserves it. Unselected outputs are untouched.
 Explicit `--force` skips prompts. Noninteractive use without `--force` still
 preserves existing outputs. No bulk prompt appears when all outputs are new.
+
+
+## Numeric COG visualization caches (`s05`)
+
+Run `./s05-convert_netcdf_to_cog.sh` here. This copy uses `RESOLUTIONS="base 1min"`
+and `VARS="all"`; absent registered products skip. Model-grid `netcdf/*.nc` becomes
+`COG/*.tif`, while native `1min_nc/<area>.*.nc` becomes `COG/1min/<area>.*.tif`.
+These are optional numeric caches; scientific source files remain unchanged.
+The shared guide documents dependencies, bands, average/nearest internal overviews,
+full native byte checks, skip/force/atomic publication and unsupported formats.
+Explorer COG reading is not implemented. Generated caches are not tracked or
+registered in Package Additional Data by this task.

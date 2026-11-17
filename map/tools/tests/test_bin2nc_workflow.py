@@ -15,8 +15,8 @@ from pathlib import Path
 from map.tools.code.convert_map_binary_to_netcdf import generate_conversion_list
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT_SOURCE = ROOT / "map/mekong_15min/script_bin2nc"
-SCRIPT_TEMPLATE = ROOT / "map/tools/script_bin2nc"
+SCRIPT_SOURCE = ROOT / "map/mekong_15min/script_format_conv"
+SCRIPT_TEMPLATE = ROOT / "map/tools/script_format_conv"
 CONVERTER_SOURCE = ROOT / "map/tools/code/convert_map_binary_to_netcdf.py"
 
 FIELDS = [
@@ -56,7 +56,7 @@ def write_registry(path: Path, rows: list[dict[str, str]]) -> None:
 
 def make_workflow_tree(root: Path, *, use_converter_stub: bool, script_source: Path = SCRIPT_SOURCE) -> tuple[Path, Path]:
     map_root = root / "map"
-    script_dir = map_root / "mekong_15min/script_bin2nc"
+    script_dir = map_root / "mekong_15min/script_format_conv"
     tools_dir = map_root / "tools"
     code_dir = tools_dir / "code"
     map_dir = map_root / "mekong_15min"

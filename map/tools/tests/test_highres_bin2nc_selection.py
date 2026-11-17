@@ -21,8 +21,8 @@ MISSING = {"catmz100": "int8", "catmzz": "int8", "grdare": "float32", "visual": 
 
 
 @pytest.mark.parametrize("source", [
-    "map/tools/script_bin2nc/s03-convert_highres_netcdf.sh",
-    "map/mekong_15min/script_bin2nc/s03-convert_highres_netcdf.sh",
+    "map/tools/script_format_conv/s03-convert_highres_netcdf.sh",
+    "map/mekong_15min/script_format_conv/s03-convert_highres_netcdf.sh",
 ])
 def test_default_s03_adds_missing_registered_products_losslessly(tmp_path, source):
     script_text = (ROOT / source).read_text()
@@ -41,7 +41,7 @@ def test_default_s03_adds_missing_registered_products_losslessly(tmp_path, sourc
     registry.parent.mkdir()
     shutil.copyfile(REGISTRY, registry)
     map_dir = tmp_path / "map/sample"
-    script_dir = map_dir / "script_bin2nc"
+    script_dir = map_dir / "script_format_conv"
     script_dir.mkdir(parents=True)
     (map_dir / "params.txt").write_text("4\n3\n1\n1\n0\n4\n0\n3\n")
     script = script_dir / "s03-convert_highres_netcdf.sh"

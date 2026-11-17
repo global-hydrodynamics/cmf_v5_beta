@@ -135,7 +135,7 @@ The converter reads dimensions and geographic bounds from `params.txt`, and type
 
 NetCDF variables retain their logical names regardless of output filename, e.g. `rivhgt_optimized.nc` contains `rivhgt`. `nextxy_noedge.nc` contains `nextx` and `nexty`. The converter writes cell-center `lon`/`lat` coordinates, with CDL variable dimensions `(lat,lon)` or `(layer,lat,lon)` corresponding to Fortran-reader dimensions `(NX,NY)` or `(NX,NY,NLFP)`. It checks the output values by reading them back through the NetCDF library, but compatibility with the model is established by the separate mixed-format Mekong simulation tests documented in the [model workflow plan](../../docs/model_source_workflow_plan.md#individual-binarynetcdf-map-inputs). The standalone `convert_bifprm_csv_to_netcdf.py` converts finalized bifurcation CSV tables to static NetCDF-4; it does not recalculate parameters or reorder rows. The current simulation reader still consumes legacy `bifprm.txt`, so the new map-preparation outputs are not yet wired into model execution.
 
-For the shared shell templates and human-edited candidate-list workflow for converting base-map Binary files, see the [Binary-to-NetCDF workflow](script_bin2nc/README.md). Copy the templates into a map-local `script_bin2nc/` directory before configuring and using them. The same guide documents `s03-convert_highres_netcdf.sh`, which converts registered high-resolution tiles independently using their `location.txt` geometry and writes them under `<HIRES>_nc/`; this does not modify the existing `s01`/`s02` behavior.
+For the shared shell templates and human-edited candidate-list workflow for converting base-map Binary files, see the [Binary-to-NetCDF workflow](script_format_conv/README.md). Copy the templates into a map-local `script_format_conv/` directory before configuring and using them. The same guide documents `s03-convert_highres_netcdf.sh`, which converts registered high-resolution tiles independently using their `location.txt` geometry and writes them under `<HIRES>_nc/`; this does not modify the existing `s01`/`s02` behavior.
 
 The same guide documents the separate `t01-legacy_netcdf_map.sh` workflow, which assembles individual NetCDF rasters into the legacy consolidated `rivclim.nc` and `rivpar.nc` containers.
 
@@ -146,3 +146,12 @@ River-network analysis has two execution paths. Standard map preparation uses `s
 Independent inspection utilities are in `script_analysis/`. Build analysis programs centrally using `make -C map/tools/code analysis`, then run `a00-link_codes.sh` from either the shared template or a map-local `script_analysis/` directory to create a relative `code` symlink to the shared executables. The `a01`–`a05` examples print their actual command before invoking `./code/analysis_*`; `a01`–`a04` write generated files to the ignored `out_analysis/` by default, while `a05` places its optional relative CSV there. Each script's `OUT_DIR` setting can select the map-root `out_analysis/` instead. Most examples run from `script_analysis/`, while the MPI connectivity diagnostic runs from the map root because its input paths require that working directory. See the [parameter workflow guide](script_params/README.md#river-network-analysis), [analysis toolkit guide](script_analysis/README.md), and [Phase C migration notes](../../docs/map_params_migration_plan.md#phase-c-river-network-analysis).
 
 Detailed segmentation methods, alternative thresholds, and user-generated products are deferred to a future Map Analysis Tutorial; this task does not add that tutorial.
+
+
+## Numeric COG conversion
+
+The same [format-conversion guide](script_format_conv/README.md#numeric-netcdf-to-cog-caches-s05)
+documents s05 and convert_netcdf_to_cog.py. This optional NumPy/netCDF4/Rasterio
+workflow streams registered native rasters into numeric EPSG:4326 COG caches,
+with full pixel-byte verification and internal display overviews. It does not
+change scientific inputs, Binary/NetCDF conversion algorithms or Explorer readers.

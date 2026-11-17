@@ -176,7 +176,7 @@ the external `cmf_v5_package_data/` root, never the local checkout's map copy.
 
 **Distribution format: compressed NetCDF** for high-resolution maps.
 **Legacy-compatible working format: Binary generated on demand.** Use the
-[high-resolution restoration tool](../map/tools/script_bin2nc/README.md#restore-high-resolution-binary-working-files-s04)
+[high-resolution restoration tool](../map/tools/script_format_conv/README.md#restore-high-resolution-binary-working-files-s04)
 when legacy processing needs Binary. Do not package both `1min/` and `1min_nc/`.
 Model-grid Binary remains included, alongside model-grid NetCDF. This first
 selection does not prune generated standard products or change the Input Matrix

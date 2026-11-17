@@ -1,30 +1,25 @@
 #!/bin/sh
-# Convert registered high-resolution Binary map tiles to NetCDF4.
-# Run from <map>/script_bin2nc/ or select an external map with --map-dir PATH.
+# Restore legacy-compatible Binary tiles from the authoritative high-resolution NetCDF.
+# Run from <map>/script_format_conv/ or select an external map with --map-dir PATH.
 set -eu
 
 # User settings: select available high-resolution directories and variables.
 # Choose one or more available high-resolution map directories.
-# Each selected directory must contain location.txt; absent Binary products skip.
+# Each <HIRES>_nc/ must contain location.txt and registered NetCDF tile files.
 #HIRES="1min 15sec 3sec"
 HIRES="1min"
 
-# All uses every registered high-resolution product; absent Binary files skip.
-# For a subset, replace all with space-separated registered Binary file stems.
+# Choose registered file stems present in the selected NetCDF directories.
 # Options shown here are high-resolution registry products; a map need not
 # contain every one of them. Multi-record files (catmxy, downxy) are converted
 # with all their registered records together.
 #VARS="catmxy catmz100 catmzz downxy elevtn flddif flwdir grdare hand rivwth uparea visual"
-VARS="all"
-
-# Lossless zlib/deflate compression level (0 disables deflate; range 0-9).
-COMPRESSION_LEVEL=3
+VARS="catmxy downxy elevtn uparea hand flddif rivwth"
 
 # Maximum number of parallel Python worker processes.
 JOBS=8
 
-# In a terminal, preflight asks Overwrite all; No asks for each existing output.
-# Noninteractive runs preserve existing outputs; --force replaces without prompts.
+# Existing Binary outputs are skipped by default. Pass --force to replace them.
 FORCE=0
 
 # ----------------------------------------------------------------------
@@ -36,13 +31,13 @@ SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 REPO_ROOT=$(CDPATH= cd "$SCRIPT_DIR/../../.." && pwd -P)
 TOOL_DIR="$REPO_ROOT/map/tools/code"
 REGISTRY="$REPO_ROOT/variable_table/map_variables.csv"
-CONVERTER="$TOOL_DIR/convert_highres_binary_to_netcdf.py"
+CONVERTER="$TOOL_DIR/convert_highres_netcdf_to_binary.py"
 # The physical current directory owns the list and supplies the implicit target.
 RUN_DIR=$(pwd -P)
 MAP_DIR=""
 
 SCRIPT_NAME=${0##*/}
-STEP="Validate high-resolution conversion settings"
+STEP="Validate high-resolution restoration settings"
 # Print a stage-specific error when any command exits unsuccessfully.
 trap '
     EXIT_STATUS=$?
@@ -56,7 +51,7 @@ trap 'exit 129' HUP
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-# --map-dir is explicit; otherwise require a map-local script_bin2nc/ current directory.
+# --map-dir is explicit; otherwise require a map-local script_format_conv/ current directory.
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --map-dir)
@@ -81,8 +76,8 @@ done
 
 if [ -z "$MAP_DIR" ]; then
     # Shell suffix removal gives the last directory component without invoking basename.
-    if [ "${RUN_DIR##*/}" != script_bin2nc ]; then
-        printf 'ERROR: run from <map>/script_bin2nc/ or supply --map-dir PATH.\n' >&2
+    if [ "${RUN_DIR##*/}" != script_format_conv ]; then
+        printf 'ERROR: run from <map>/script_format_conv/ or supply --map-dir PATH.\n' >&2
         exit 2
     fi
     MAP_DIR="$RUN_DIR/.."
@@ -93,7 +88,7 @@ if [ ! -d "$MAP_DIR" ]; then
 fi
 MAP_DIR=$(CDPATH= cd "$MAP_DIR" && pwd -P)
 if [ "$MAP_DIR" = "$REPO_ROOT/map/tools" ]; then
-    printf 'ERROR: map/tools/script_bin2nc is a template, not a map. Run from a map-local directory or supply --map-dir PATH.\n' >&2
+    printf 'ERROR: map/tools/script_format_conv is a template, not a map. Run from a map-local directory or supply --map-dir PATH.\n' >&2
     exit 2
 fi
 if [ ! -f "$MAP_DIR/params.txt" ]; then
@@ -106,20 +101,20 @@ if [ ! -f "$CONVERTER" ] || [ ! -f "$REGISTRY" ]; then
     exit 1
 fi
 
-STEP="Convert selected high-resolution tiles"
-printf '\n==================================================\n'
-printf '[STEP 1/1] Convert registered high-resolution variables\n'
-printf '==================================================\n'
-printf 'Map: %s\nHigh-resolution directories: %s\nVariables: %s\nCompression level: %s\nWorkers: %s\n\n' \
-    "$MAP_DIR" "$HIRES" "$VARS" "$COMPRESSION_LEVEL" "$JOBS"
+STEP="Restore selected high-resolution Binary tiles"
+printf '\n[STEP 1/1] Restore Binary working files from distribution NetCDF\n'
+printf 'Map: %s\nHigh-resolution directories: %s\nVariables: %s\nWorkers: %s\n' \
+    "$MAP_DIR" "$HIRES" "$VARS" "$JOBS"
 
-# Python validates all selected resolutions before one shared overwrite decision.
-if [ "$FORCE" -eq 1 ]; then
-    python3 "$CONVERTER" --map-dir "$MAP_DIR" --hires "$HIRES" --variables "$VARS" \
-        --registry "$REGISTRY" --compression-level "$COMPRESSION_LEVEL" --jobs "$JOBS" --force
-else
-    python3 "$CONVERTER" --map-dir "$MAP_DIR" --hires "$HIRES" --variables "$VARS" \
-        --registry "$REGISTRY" --compression-level "$COMPRESSION_LEVEL" --jobs "$JOBS" --interactive-overwrite
-fi
+# Python validates coordinates, restores location.txt safely and writes each Binary atomically.
+for re in $HIRES; do
+    if [ "$FORCE" -eq 1 ]; then
+        python3 "$CONVERTER" --map-dir "$MAP_DIR" --hires "$re" --variables "$VARS" \
+            --registry "$REGISTRY" --jobs "$JOBS" --force
+    else
+        python3 "$CONVERTER" --map-dir "$MAP_DIR" --hires "$re" --variables "$VARS" \
+            --registry "$REGISTRY" --jobs "$JOBS"
+    fi
+done
 
-printf '\n[SUCCESS] High-resolution Binary-to-NetCDF conversion completed.\n'
+printf '\n[SUCCESS] High-resolution Binary working files restored.\n'

@@ -10,5 +10,8 @@
 # but keep installed model/high-resolution data in the external data store.
 /TE-Japan_01min/*
 !/TE-Japan_01min/script_params/
-!/TE-Japan_01min/script_bin2nc/
+!/TE-Japan_01min/script_format_conv/
 !/TE-Japan_01min/script_region/
+
+# Numeric visualization caches are generated; never package/register implicitly.
+**/COG/

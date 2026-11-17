@@ -6,6 +6,22 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Map format tools and NetCDF-to-COG (DT-0132, 2026-11-17)
+
+Maintainer explicitly approves format-tool rename and new numeric COG generator
+on existing feature/package-builder, including commit/push. Codex owns tracked
+script_format_conv templates/Mekong copy, common converter, focused tests,
+reference paths, registry usage/docs/research. Preserve untracked map workflows,
+scientific values, Binary/NetCDF algorithms and all workflow_stage fields.
+No Explorer COG reader, Package Builder behavior/catalog change or full Japan
+conversion. Acceptance: exact chunk read-back, coordinates, multiband/NoData,
+average-vs-nearest overviews, atomic/overwrite/memory and existing conversion
+regressions.54 related tests plus10 subtests PASS; actual Japan four small-window
+COGs pass strict validation/native bytes and preserve source hashes. Metadata-only
+inspection accepts46 installed raster files; bifprm table is explicitly unsupported.
+512MiB artificial plane passes320MiB RSS guard (observed162.5MiB). No concurrent
+agent claims/open Issues/PRs found. Details and knowledge-gap review:VR-0178.
+
 ### gosh_test mek01/mek02 maintenance (DT-0131, 2026-11-17)
 
 Maintainer explicitly approves minimal upkeep on existing feature/package-builder,

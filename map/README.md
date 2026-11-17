@@ -16,7 +16,7 @@ High-resolution distribution uses compressed `1min_nc/` and its `location.txt`;
 `1min/` Binary is restored on demand, not shipped as a duplicate. Generation
 scripts remain in GitHub under `map/tools/`. See the
 [package selection policy](../package/README.md#global-15-minute-map-selection)
-and [Binary restoration guide](tools/script_bin2nc/README.md#restore-high-resolution-binary-working-files-s04).
+and [Binary restoration guide](tools/script_format_conv/README.md#restore-high-resolution-binary-working-files-s04).
 
 ## Japan additional data
 
@@ -107,7 +107,7 @@ The bifurcation workflow writes authoritative named `bifprm.csv` at the map root
 
 ### GrADS CTL generation
 
-The v5 CTL generator is [`map/tools/code/generate_ctl.py`](tools/code/generate_ctl.py), invoked by the map-local [`s02-write_ctl.sh`](tools/script_region/s02-write_ctl.sh) wrapper. It reads `variable_table/map_variables.csv` and map geometry metadata, then validates registered binary layouts and file sizes before writing GrADS descriptors. The current map-tools directory provides CTL generation; a binary-to-NetCDF conversion command is not currently documented as an available map tool.
+The v5 CTL generator is [`map/tools/code/generate_ctl.py`](tools/code/generate_ctl.py), invoked by the map-local [`s02-write_ctl.sh`](tools/script_region/s02-write_ctl.sh) wrapper. It reads `variable_table/map_variables.csv` and map geometry metadata, then validates registered binary layouts and file sizes before writing GrADS descriptors. The maintained [format-conversion workflow](tools/script_format_conv/README.md) also provides Binary-to-NetCDF, high-resolution NetCDF-to-Binary restoration, and optional numeric NetCDF-to-COG caches.
 
 ```sh
 cd map/<map-tag>/script_region
@@ -219,3 +219,15 @@ The previous v5 `inpdim` name was reverted because it described only part of
 the descriptor's role. File contents and scientific processing are unchanged;
 there is no old-name fallback. Existing `CDIMINFO`/`diminfo_file` interfaces
 are retained. See the [metadata specification](../variable_table/map_metadata_spec.md#diminfo_rofftagtxt--simulation-dimension-information).
+
+
+## Numeric visualization caches
+
+[script_format_conv](tools/script_format_conv/README.md#numeric-netcdf-to-cog-caches-s05)
+replaces the maintained script_bin2nc directory. Scientific Binary/NetCDF inputs
+remain authoritative. Optional COGs are generated at `COG/<model-variable>.tif`
+from `netcdf/`, and `COG/<HIRES>/<area>.<variable>.tif` from `<HIRES>_nc/`.
+Native numeric types/values and multiband record/layer order are preserved;
+internal overviews use average for floats and nearest for integer codes/pairs.
+COG trees are ignored by Git. Explorer COG consumption and package inclusion are
+not implemented here. Untracked installed map workflows are not renamed automatically.

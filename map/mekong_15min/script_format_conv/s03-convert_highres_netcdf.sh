@@ -1,6 +1,6 @@
 #!/bin/sh
 # Convert registered high-resolution Binary map tiles to NetCDF4.
-# Run from <map>/script_bin2nc/ or select an external map with --map-dir PATH.
+# Run from <map>/script_format_conv/ or select an external map with --map-dir PATH.
 set -eu
 
 # User settings: select available high-resolution directories and variables.
@@ -56,7 +56,7 @@ trap 'exit 129' HUP
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-# --map-dir is explicit; otherwise require a map-local script_bin2nc/ current directory.
+# --map-dir is explicit; otherwise require a map-local script_format_conv/ current directory.
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --map-dir)
@@ -81,8 +81,8 @@ done
 
 if [ -z "$MAP_DIR" ]; then
     # Shell suffix removal gives the last directory component without invoking basename.
-    if [ "${RUN_DIR##*/}" != script_bin2nc ]; then
-        printf 'ERROR: run from <map>/script_bin2nc/ or supply --map-dir PATH.\n' >&2
+    if [ "${RUN_DIR##*/}" != script_format_conv ]; then
+        printf 'ERROR: run from <map>/script_format_conv/ or supply --map-dir PATH.\n' >&2
         exit 2
     fi
     MAP_DIR="$RUN_DIR/.."
@@ -93,7 +93,7 @@ if [ ! -d "$MAP_DIR" ]; then
 fi
 MAP_DIR=$(CDPATH= cd "$MAP_DIR" && pwd -P)
 if [ "$MAP_DIR" = "$REPO_ROOT/map/tools" ]; then
-    printf 'ERROR: map/tools/script_bin2nc is a template, not a map. Run from a map-local directory or supply --map-dir PATH.\n' >&2
+    printf 'ERROR: map/tools/script_format_conv is a template, not a map. Run from a map-local directory or supply --map-dir PATH.\n' >&2
     exit 2
 fi
 if [ ! -f "$MAP_DIR/params.txt" ]; then

@@ -42,7 +42,7 @@ The catalog includes model-grid Binary, model-grid `netcdf/`, standard generated
 parameter data, observation/station information, bifurcation products and other
 auxiliary text. High-resolution `1min_nc/` plus its `location.txt` are distributed
 as compressed NetCDF; `1min/` Binary is excluded and can be restored on demand
-with `cmf_v5_beta/map/tools/script_bin2nc/s04-restore_highres_binary.sh`. Do not
+with `cmf_v5_beta/map/tools/script_format_conv/s04-restore_highres_binary.sh`. Do not
 include both high-resolution formats. Generation directories (`script*/`,
 `src*/`, `code/`), script/source files and temporary/build/log files are excluded
 by the selection policy in `cmf_v5_beta/package/README.md`; the optional final

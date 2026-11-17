@@ -1,28 +1,28 @@
-# Binary-to-NetCDF map conversion template
+# Map format conversion templates
 
-This shared template converts registered base-resolution and high-resolution Binary map rasters into individual NetCDF files. Copy the scripts into a map-local `script_bin2nc/` directory and run there. No map name or `MAP_DIR` setting needs editing. The Mekong sample contains a ready-to-use copy at [`map/mekong_15min/script_bin2nc/`](../../mekong_15min/script_bin2nc/).
+These shared templates convert registered base-resolution and high-resolution map rasters between Binary and NetCDF, and generate optional numeric COG visualization caches. Copy the scripts into a map-local `script_format_conv/` directory and run there. No map name or `MAP_DIR` setting needs editing. The Mekong sample contains a ready-to-use copy at [`map/mekong_15min/script_format_conv/`](../../mekong_15min/script_format_conv/).
 
 The scripts reuse [`convert_map_binary_to_netcdf.py`](../code/convert_map_binary_to_netcdf.py), [`convert_highres_binary_to_netcdf.py`](../code/convert_highres_binary_to_netcdf.py), and the authoritative [`variable_table/map_variables.csv`](../../../variable_table/map_variables.csv) registry. `s01`/`s02` handle binaries directly in the map root; `s03` handles registered high-resolution tile binaries.
 
 ## Select files and convert
 
-1. Copy the templates to the target map. The parent of the current `script_bin2nc/` directory becomes the target automatically:
+1. Copy the templates to the target map. The parent of the current `script_format_conv/` directory becomes the target automatically:
 
    ```sh
-   mkdir -p map/your_map/script_bin2nc
-   cp map/tools/script_bin2nc/s01-list_binary.sh map/your_map/script_bin2nc/
-   cp map/tools/script_bin2nc/s02-convert_netcdf.sh map/your_map/script_bin2nc/
-   cp map/tools/script_bin2nc/s03-convert_highres_netcdf.sh map/your_map/script_bin2nc/
+   mkdir -p map/your_map/script_format_conv
+   cp map/tools/script_format_conv/s01-list_binary.sh map/your_map/script_format_conv/
+   cp map/tools/script_format_conv/s02-convert_netcdf.sh map/your_map/script_format_conv/
+   cp map/tools/script_format_conv/s03-convert_highres_netcdf.sh map/your_map/script_format_conv/
    ```
 
 2. Change to the map-local script directory, then generate the candidate list. The list is written to the current directory as `bin2nc_list.txt`:
 
    ```sh
-   cd map/your_map/script_bin2nc
+   cd map/your_map/script_format_conv
    ./s01-list_binary.sh
    ```
 
-   The same scripts work in any map-local `script_bin2nc/`, including Mekong and global maps. Candidates are ordered by numeric `category_id` and then registry row order. A file listed in multiple categories appears once under its first category. Only registered files directly in the map root and supported by the converter are listed. Unregistered binaries and registered but unsupported layouts are reported as warnings. The current `NX,NY,INPN` runoff input matrices are not handled as map rasters and are omitted. If a list already exists in the current directory, `s01` asks before replacing it; non-interactive use preserves it.
+   The same scripts work in any map-local `script_format_conv/`, including Mekong and global maps. Candidates are ordered by numeric `category_id` and then registry row order. A file listed in multiple categories appears once under its first category. Only registered files directly in the map root and supported by the converter are listed. Unregistered binaries and registered but unsupported layouts are reported as warnings. The current `NX,NY,INPN` runoff input matrices are not handled as map rasters and are omitted. If a list already exists in the current directory, `s01` asks before replacing it; non-interactive use preserves it.
 
 3. Review `bin2nc_list.txt` and comment out every file that should not be converted by placing `#` at the beginning of its line. The generated list starts with all supported candidates selected.
 
@@ -44,14 +44,14 @@ The scripts reuse [`convert_map_binary_to_netcdf.py`](../code/convert_map_binary
    ./s02-convert_netcdf.sh --force
    ```
 
-Run both scripts from the same map-local `script_bin2nc/` current directory so `s02` reads the list created by `s01`. The target map comes from the current directory; only the shared converters and registry are resolved from `SCRIPT_DIR` in the development repository. They only inspect `.bin` files directly under `MAP_DIR`; high-resolution subdirectories are never searched.
+Run both scripts from the same map-local `script_format_conv/` current directory so `s02` reads the list created by `s01`. The target map comes from the current directory; only the shared converters and registry are resolved from `SCRIPT_DIR` in the development repository. They only inspect `.bin` files directly under `MAP_DIR`; high-resolution subdirectories are never searched.
 
 ## Explicit target, including external package maps
 
 Normal use is argument-free from the map-local directory:
 
 ```sh
-cd map/glb_15min/script_bin2nc
+cd map/glb_15min/script_format_conv
 ./s01-list_binary.sh
 # Review bin2nc_list.txt, then:
 ./s02-convert_netcdf.sh
@@ -59,9 +59,9 @@ cd map/glb_15min/script_bin2nc
 ```
 
 All three scripts use **Current Directory First, Explicit Override**. Without
-`--map-dir`, the physical current directory must be named `script_bin2nc` and
+`--map-dir`, the physical current directory must be named `script_format_conv` and
 its parent must contain `params.txt`. Calling a script by path does not change
-this rule. The shared `map/tools/script_bin2nc/` directory is not a map and is
+this rule. The shared `map/tools/script_format_conv/` directory is not a map and is
 rejected as an implicit target.
 
 To process an external map without copying scripts outside the repository,
@@ -69,10 +69,10 @@ use the repository's shared scripts with an explicit target. For example, from
 the repository root (replace `/path/to/work` with your workspace):
 
 ```sh
-./map/tools/script_bin2nc/s01-list_binary.sh --map-dir /path/to/work/cmf_v5_package_data/map/glb_15min
+./map/tools/script_format_conv/s01-list_binary.sh --map-dir /path/to/work/cmf_v5_package_data/map/glb_15min
 # Review ./bin2nc_list.txt; keep the same working directory for s02.
-./map/tools/script_bin2nc/s02-convert_netcdf.sh --map-dir /path/to/work/cmf_v5_package_data/map/glb_15min
-./map/tools/script_bin2nc/s03-convert_highres_netcdf.sh --map-dir /path/to/work/cmf_v5_package_data/map/glb_15min
+./map/tools/script_format_conv/s02-convert_netcdf.sh --map-dir /path/to/work/cmf_v5_package_data/map/glb_15min
+./map/tools/script_format_conv/s03-convert_highres_netcdf.sh --map-dir /path/to/work/cmf_v5_package_data/map/glb_15min
 ```
 
 Relative `--map-dir` paths are relative to the caller's current directory;
@@ -96,7 +96,7 @@ The `t01-legacy_netcdf_map.sh` script creates `netcdf/rivclim.nc` with `nextx`, 
 Run the map-local script independently of `s01` and `s02`:
 
 ```sh
-cd map/mekong_15min/script_bin2nc
+cd map/mekong_15min/script_format_conv
 ./t01-legacy_netcdf_map.sh
 ```
 
@@ -121,7 +121,7 @@ The NetCDF C library and Python standard library are sufficient. Validation here
 
 ## Convert high-resolution tiles (`s03`)
 
-Copy `s03-convert_highres_netcdf.sh` to the map-local `script_bin2nc/` directory, set `HIRES`, `VARS`, `COMPRESSION_LEVEL` and `JOBS` near the top, then run from that map-local directory. No `MAP_DIR` edit is needed; use `--map-dir PATH` when running elsewhere. The commented `HIRES` and `VARS` examples show the available choices; select existing resolution directories; absent registered Binary products skip. The standard `VARS="all"` reads every registered high-resolution Binary product
+Copy `s03-convert_highres_netcdf.sh` to the map-local `script_format_conv/` directory, set `HIRES`, `VARS`, `COMPRESSION_LEVEL` and `JOBS` near the top, then run from that map-local directory. No `MAP_DIR` edit is needed; use `--map-dir PATH` when running elsewhere. The commented `HIRES` and `VARS` examples show the available choices; select existing resolution directories; absent registered Binary products skip. The standard `VARS="all"` reads every registered high-resolution Binary product
 from the canonical CSV, currently these 12 stems (paired records are one file):
 
 ```text
@@ -153,7 +153,7 @@ values, record planes and registered missing values/units are unchanged.
 For the bundled Mekong example:
 
 ```sh
-cd map/mekong_15min/script_bin2nc
+cd map/mekong_15min/script_format_conv
 ./s03-convert_highres_netcdf.sh
 ```
 
@@ -170,8 +170,8 @@ The NetCDF C library must be installed and discoverable (typically through `nc-c
 Use `t03-convert_external_highres.sh` when the source maps live outside this v5 repository. Set `MAP_ROOT`, `MAPS`, `HIRES`, `VARS`, `COMPRESSION_LEVEL`, and `JOBS` at the top of the script. It resolves the shared converter and `variable_table/map_variables.csv` relative to its own location, warns and skips missing map/resolution directories, and stops on conversion errors. It copies each selected `location.txt` to `<MAP_DIR>/<HIRES>_nc/`; existing NetCDF outputs are skipped unless the script is run with `--force`. As with `s03`, changing the compression level does not alter existing files; use `--force` to rebuild them, with the old output preserved if conversion fails. `--force` is the only shell command-line option; configure parallelism with `JOBS`, not a shell argument.
 
 ```sh
-map/tools/script_bin2nc/t03-convert_external_highres.sh
-map/tools/script_bin2nc/t03-convert_external_highres.sh --force
+map/tools/script_format_conv/t03-convert_external_highres.sh
+map/tools/script_format_conv/t03-convert_external_highres.sh --force
 ```
 
 The default settings point to the maintainer's v400 data package. Edit `MAP_ROOT` before using the script on another workstation. It writes converted files alongside the external source maps and does not copy map data into this repository.
@@ -180,7 +180,7 @@ The default settings point to the maintainer's v400 data package. Edit `MAP_ROOT
 
 The workflow supports registered `float32` or `int32` rasters with dimensions `NX,NY` or `NX,NY,NLFP`, including multi-variable direct-access files such as `nextxy.bin` and layered files such as `fldhgt.bin`. Data type, record order, dimensions, missing values, and variable metadata come from the registry and `params.txt`; the Binary inputs are not modified.
 
-Python uses only the standard library. Conversion also requires the NetCDF C shared library to be installed and discoverable, typically through `nc-config`. This workflow validates conversion and stored values; compatibility with model execution is a separate validation step.
+For s01–s04, Python uses only the standard library. Conversion also requires the NetCDF C shared library to be installed and discoverable, typically through `nc-config`. This workflow validates conversion and stored values; compatibility with model execution is a separate validation step.
 
 The base-map and consolidated-map NetCDF writers use lossless NetCDF-4 deflate level 3 with shuffle. The high-resolution converter is configurable and defaults to level 3. Existing outputs are not recompressed automatically.
 
@@ -199,10 +199,10 @@ continues to define storage types, variable names and record order; no parallel
 data definition is introduced and workflow-status values are unchanged.
 
 Copy `s04-restore_highres_binary.sh` beside s01–s03 in the target map's
-`script_bin2nc/` (already installed in the local global map), then:
+`script_format_conv/` (already installed in the local global map), then:
 
 ```sh
-cd map/glb_15min/script_bin2nc
+cd map/glb_15min/script_format_conv
 ./s04-restore_highres_binary.sh
 ```
 
@@ -283,3 +283,170 @@ uses individual overwrite prompts. At an individual prompt, `y`/`Y` overwrites
 only that file and `n`/Enter preserves it. Unselected outputs are untouched.
 Explicit `--force` skips prompts. Noninteractive use without `--force` still
 preserves existing outputs. No bulk prompt appears when all outputs are new.
+
+
+## Numeric NetCDF-to-COG caches (`s05`)
+
+Binary is the legacy/model working format; compressed NetCDF is the authoritative
+high-resolution distribution/input format. COG is an optional numeric visualization
+cache, not a replacement for scientific inputs, new RGB image or model format.
+**Explorer COG reading and automatic Overview selection are not implemented.**
+Package Additional Data registration/assembly is unchanged; do not register or
+import generated COGs without a separate size/usefulness review.
+
+The maintained directories are now `script_format_conv/` (formerly
+`script_bin2nc/`). Copy templates to a map-local directory. Git-untracked map
+workflows are not moved automatically; review/copy them manually. Internal
+Binary/NetCDF Python converter names and algorithms remain unchanged. A local
+untracked script left in an old directory is not the updated maintained template.
+
+### Dependencies and invocation
+
+`s01`–`s04` retain their existing standard-library/NetCDF-C requirements. Only
+`s05` additionally needs NumPy, netCDF4-Python and Rasterio with GDAL's COG driver
+(GDAL >=3.7 for native signed Int8). Use an isolated Python environment on PATH.
+One tested Python3.12 installation is:
+
+```sh
+python3 -m venv /path/to/cog-env
+. /path/to/cog-env/bin/activate
+python3 -m pip install 'numpy>=1.24,<2' 'netCDF4>=1.6,<1.7' 'rasterio>=1.4,<1.5'
+# Optional independent structural validation:
+python3 -m pip install rio-cogeo
+```
+
+Other compatible versions may work; test their native read-back and COG validation.
+Source-building Rasterio requires a matching GDAL installation; a platform wheel
+or a consistent conda-forge environment avoids that build requirement. The local
+validated combination is Rasterio1.4.1/GDAL3.9.2, netCDF4 1.6.5, NumPy1.26.4.
+There is no change to the Explorer's installed environment/dependencies.
+
+For TE-Japan, copy the maintained template without moving its data/workflows:
+
+```sh
+mkdir -p map/TE-Japan_01min/script_format_conv
+cp map/tools/script_format_conv/s05-convert_netcdf_to_cog.sh map/TE-Japan_01min/script_format_conv/
+cd map/TE-Japan_01min/script_format_conv
+./s05-convert_netcdf_to_cog.sh
+```
+
+The shared template defaults to `RESOLUTIONS="base 15sec"`, `VARS="all"`, tile
+edge512px (allowed128–4096, divisible by16), lossless DEFLATE, Overview factors2/4/8/16/32 and4 worker processes.
+Mekong's maintained copy defaults to `base 1min`. Use `base 1min` for global15min;
+`base 3sec` is another valid selection when that directory exists. Settings are
+at the top of the shell. Python owns argument/metadata validation; CLI options
+at the end override the shell's settings:
+
+```sh
+map/tools/script_format_conv/s05-convert_netcdf_to_cog.sh \
+  --map-dir /path/to/map --resolutions 'base 1min' --variables 'elevtn catmxy visual' --jobs 1
+# Rebuild selected caches only after review:
+map/tools/script_format_conv/s05-convert_netcdf_to_cog.sh --map-dir /path/to/map --force
+```
+
+No overwrite prompt is needed: existing files always skip without `--force`,
+including noninteractive runs. Skipping does not validate an existing cache.
+A forced replacement is written privately, verified fully and atomically replaced.
+Failure preserves the previous cache and removes temporary files. Independent
+successful files remain if another file fails; no directory-wide rollback occurs.
+The command summarizes PASS/SKIP/UNSUPPORTED/FAIL; unsupported/failed present inputs
+return nonzero. Missing registered inputs/directories are reported and skipped.
+
+### Source/output layout and band contract
+
+- `netcdf/<stem>.nc` → `COG/<stem>.tif`: native **model grid**, never aggregated high-res pixels.
+- `<HIRES>_nc/<area>.<stem>.nc` → `COG/<HIRES>/<area>.<stem>.tif`: native high-resolution grid.
+- Overviews are internal to each file; no separate pyramid directory is generated.
+- Generated `COG/` trees are ignored by Git. `package_data.csv` is unchanged.
+
+The canonical `variable_table/map_variables.csv` controls product selection,
+registered types, names, meanings and record order. `all` considers all registered
+model-grid raster stems/patterns and all12 high-resolution products. Absent products
+are not invented. Native raster families include core Float32 fields, layered
+`fldhgt`, paired Int32 `nextxy`/`downxy`, categorical maps, and signed Int8/Int16
+high-res products including `visual`, `catmz100`, `catmzz`, `flwdir`, `catmxy`,
+`downxy`, plus continuous `elevtn/flddif/hand/rivwth/uparea/grdare`.
+
+Each registered variable is assigned consecutive bands in native record order;
+extra record/layer dimensions expand in their native index order. `fldhgt` layers
+stay ordered, and `catmxx/catmyy` (or existing `catmx/catmy` aliases) remain paired.
+Band descriptions/tags retain source variable, registry name, dtype, units,
+scientific description, original1-based Binary record and extra dimension indices.
+A source-file tag identifies the NetCDF. No unrelated spatial variable is silently
+dropped. `nextxy_noedge.nc` may use the existing `nextx/nexty` variable names.
+
+EPSG:4326 is explicit. Regular geographic coordinate centers are checked against
+params.txt or the selected NetCDF directory's location.txt, accepting ascending
+or descending axes and lat/lon or lon/lat dimension order. The GeoTIFF affine
+transform is derived from source centers, preserving their pixel edges, including
+minor rounding in printed metadata. Native values are only transposed/flipped,
+never resampled, scaled, cast, quantized or colorized. Every full-resolution band
+is read back in chunks and checked byte-for-byte, including fill patterns and
+NoData mask agreement. Nonmissing special codes are preserved; no new catmxy
+assignment-validity mask is imposed on continuous source fields.
+
+### Display Overview semantics, memory and limits
+
+Floating continuous bands use GDAL **average**, excluding the declared NoData.
+Integer codes/indices use **nearest**; all paired bands choose the same source
+pixel, rather than independently aggregating x/y. Layers are handled independently.
+Integer-valued continuous fields, if introduced, conservatively use nearest to
+avoid inventing fractional native integer codes. Overview values are display-only
+representatives and must not replace native model/Inspector measurements. Mean
+rivwth/uparea can make fine river features less prominent; max/mode are future work.
+Small rasters omit unusable reduction factors; odd dimensions have rounded sizes
+and GDAL-reported effective factors. No resampling occurs at full resolution.
+
+NetCDF and GeoTIFF blocks are read/written one band at a time; no full native raster
+is materialized. GDAL block cache is16MiB per worker, overview work chunks are2MiB and staged
+overview tiles128px; NetCDF caches are bounded separately.
+JOBS controls concurrent independent files, not inner compression threads. Allow
+additional memory for libraries/bands and disk for a staged TIFF, internal overviews
+and final COG. Choose JOBS=1 on constrained machines. Large files use BigTIFF when
+needed. Compression choices are lossless DEFLATE/LZW/ZSTD/NONE only.
+
+Both NetCDF-4 and regular NetCDF classic rasters are accepted.
+Unsupported inputs are reported explicitly: nonraster bifurcation tables,
+runoff input matrices with INPN/mixed dtype, unregistered spatial content,
+packed/unsigned-reinterpreted/quantized NetCDF, inconsistent geometry, differing
+band types or missing codes that cannot share one exact TIFF NoData. Current
+registered raster storage is signed Int8/Int16/Int32/Float32; the writer also
+accepts faithfully registered UInt8/16/32 and Float64. Int64/UInt64 and complex
+storage are intentionally not implemented. No arbitrary conversion is attempted.
+NaN payload preservation is verified for the actual library/platform; data already
+changed by an upstream writer cannot be recovered by this converter.
+
+See the [GDAL COG driver](https://gdal.org/en/stable/drivers/raster/cog.html) for
+internal tiling, CreateCopy and existing-Overview semantics. Independent validation:
+
+```sh
+rio cogeo validate --strict map/your_map/COG/elevtn.tif
+python3 -B -m pytest -q -p no:cacheprovider map/tools/tests/test_netcdf_to_cog.py
+```
+
+This task validates synthetic data and small read-only Japan windows only. Full
+TE-Japan/all-variable COG generation, global performance, Explorer integration and
+additional-data inclusion remain separate developer tasks.
+
+
+### Validation in this implementation
+
+The focused offline suite covers full raw Float32/Int8/Int16/Int32 bytes,
+multivariable and layered maps, extra record dimensions, axis flips/transposes,
+EPSG:4326 bounds, NoData and special float bits, average/nearest overviews,
+standard rio-cogeo validation, skip/force and mid-write/verification failure safety.
+It also runs the previous Binary↔NetCDF and shell-workflow regression cases.
+A512MiB native artificial plane (16384×8192 Float32) converted and verified under
+an externally monitored320MiB process RSS budget; observed peak162.5MiB locally.
+This demonstrates bounded processing for that case, not a universal process-memory
+ceiling for arbitrary band counts/libraries. JOBS multiplies per-worker costs.
+
+Read-only TE-Japan checks extracted96×128 windows into a temporary map: model-grid
+elevtn plus15sec elevtn/catmxy/visual produced four valid COGs (five bands total).
+All native bytes matched, internal overviews and EPSG:4326 were verified, strict
+rio-cogeo checks passed and hashes of all four original files were unchanged.
+No full TE-Japan or global product was converted.
+
+Metadata-only inspection of installed TE-Japan accepts35 model-grid plus11
+high-resolution raster files; `flwdir` is absent and `bifprm.nc` is a nonraster
+table reported unsupported. That inspection does not generate full-size COGs.
