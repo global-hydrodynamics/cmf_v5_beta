@@ -114,20 +114,20 @@ class Tile:
             (r1 - r0 <= max_side and c1 - c0 <= max_side),
         )
 
-    def percentiles(self, name, positive=False, allow_empty=False, coarse=None, *, quantiles=(3, 97), inherited=None):
+    def percentiles(self, name, positive=False, allow_empty=False, coarse=None, *, quantiles=(5, 95), inherited=None):
         """Exact assigned-pixel percentiles with bounded RAM/disk workspace.
 
         Inherited fields are indexed by every native assignment, preserving pixel
-        weighting rather than weighting each coarse cell once. Positive filtering
-        is only for explicit legacy Gallery policies; ordinary Log includes all
-        finite values in its P3/P97 population before applying its display floor.
+        weighting rather than weighting each coarse cell once. The positive flag remains
+        for helper compatibility; no Auto path uses it. Auto includes all valid
+        finite values in its P5/P95 population before the nonpositive Log fallback.
         """
         coarse = coarse or self.coarse_geometry
         if coarse is None or "catmxy" not in self.files:
             raise ValueError(
                 f"{self.key}: automatic limits require native catmxy and coarse map geometry; use manual limits"
             )
-        key = (name, bool(positive), tuple(quantiles), "assigned-pixel-v2", inherited is not None, coarse.nx, coarse.ny)
+        key = (name, bool(positive), tuple(quantiles), "assigned-pixel-p5-p95-v3", inherited is not None, coarse.nx, coarse.ny)
         if key not in self._stats:
             g = self.geometry
             block = max(1, 500000 // g.nx)

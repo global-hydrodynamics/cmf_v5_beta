@@ -164,7 +164,7 @@ class Explorer:
         self.point_note = pn.pane.Markdown("")
         self.point_select.param.watch(lambda event: self._schedule(self._point_mode_changed), "value")
         self.terrain_palette = pn.widgets.Select(
-            name="Terrain palette (full-tile P2/P98)", options=["gray", "pale_terrain"]
+            name="Terrain palette (assigned P5/P95)", options=["gray", "pale_terrain"]
         )
         self.representation = pn.widgets.Select(
             name="Main network representation",

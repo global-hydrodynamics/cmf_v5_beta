@@ -1,6 +1,17 @@
 # Interactive Map Explorer design
 
-## Inspector/navigation/statistics refinement (DT-0120, 2026-11-17)
+## Current Auto-range policy — DT-0122
+
+All continuous Auto backgrounds, including Gallery Default, presets and old JSON,
+use full-reference P5/P95. Fine-grid references require valid paired native catmxy
+indices bounded by the coarse map; inherited fields are pixel-weighted. Coarse
+references respect native source masks. Compute percentiles before Log masking;
+use lower=P5 when positive, otherwise0.01; never raise a small positive P5 to0.01.
+Manual limits, discrete categories, Gallery palette/transfer and River coloring remain
+unchanged. This supersedes DT-0120's P3/P97 and Gallery Auto exceptions below, which
+are retained as historical design rationale. See the DT-0122 investigation at the end.
+
+## Historical Inspector/navigation/statistics refinement (DT-0120, 2026-11-17)
 
 Maintainer authorizes implementation, validation, commit and push on the current
 feature/package-builder branch, starting at93e425d0 (equal to fetched origin).
@@ -724,3 +735,19 @@ and static review are not evidence of a successful Windows double-click run.
 Knowledge-gap review: no new scientific-definition questions; this task reuses the
 existing documented attributes, masks, graph/bifurcation conventions and assignment
 geometry. Windows runtime execution is a validation limitation, not a claimed result.
+
+
+## DT-0122 — All-background Auto P5/P95 (2026-11-17)
+
+Maintainer requests investigation of disappearing assigned-pixel P3/P97 behavior,
+replacement by P5/P95 and Log lower=0.01 only if the computed lower is nonpositive.
+Approved scope: background display statistics/tests/docs on feature/package-builder;
+scientific data, network coloring and manual limits remain unchanged. Investigation
+found legacy Gallery branches forced Log lower=0.01 and bypassed pixel weighting.
+Remove those Auto exceptions, including when loading legacy JSON/presets; retain
+Gallery palettes/transfers and explicit manual limits. High-res references use full
+native tiles and valid paired catmxy bounded by coarse dimensions; inherited coarse
+uparea is pixel-weighted over that assignment mask. Coarse rasters use full source
+finite/missing-value masks (catmxy is a separate fine-grid assignment, not a coarse
+viewport filter). No positive-only filtering before computing percentiles. Validate
+synthetic masks, small positive bounds, presets/JSON, actual Mekong and browser/PNG.

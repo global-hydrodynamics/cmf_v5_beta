@@ -118,10 +118,21 @@ def test_terrain_physical_limits_and_explicit_log_floor(products, mode, scale):
     expected = ~np.isfinite(native) | ((native<=0) if scale=="log" else False)
     np.testing.assert_array_equal(np.isnan(app.frame.layer.image), expected)
     reference = tile.percentiles(mode)
-    reference = (max(reference[0],0.01), reference[1]) if scale == "log" else reference
-    assert (app.frame.layer.low, app.frame.layer.high) == reference
-    app.set_extent((11, 13, 20.5, 22.5))
-    assert (app.frame.layer.low, app.frame.layer.high) == reference
+    if scale == "log":
+        low = reference[0] if reference[0] > 0 else .01
+        if reference[1] <= low:
+            assert app._background_error is not None and not app.image_source.data["image"]
+        else:
+            reference = (low, reference[1])
+            assert (app.frame.layer.low, app.frame.layer.high) == reference
+            app.set_extent((11, 13, 20.5, 22.5))
+            assert (app.frame.layer.low, app.frame.layer.high) == reference
+    else:
+        from map_layers import resolve_color_limits
+        reference = resolve_color_limits(*reference)
+        assert (app.frame.layer.low, app.frame.layer.high) == reference
+        app.set_extent((11, 13, 20.5, 22.5))
+        assert (app.frame.layer.low, app.frame.layer.high) == reference
     app.highres_auto_limits.value = False
     app.highres_high.value = 100
     app.highres_low.value = 1 if scale == "log" else -10

@@ -38,8 +38,8 @@ The selected computational rectangle is **pale lavender #D8C8F0, dashed, 3px**;
 the irregular orange native catchment outline remains separate. Both browser and
 PNG share these coordinates and corresponding styles.
 
-Ordinary automatic limits now use full-reference **P3/P97**; see below for Log,
-pixel weighting and explicit Gallery/legacy exceptions. [Validation evidence](../../research/records/validation_runs/VR-0166.md)
+Ordinary automatic limits now use full-reference **P5/P95**; see below for Log,
+pixel weighting and the unified Gallery/legacy Auto policy. [Validation evidence](../../research/records/validation_runs/VR-0168.md)
 records synthetic, actual Mekong, browser and PNG checks.
 
 ## Background, selection and view controls
@@ -75,17 +75,17 @@ viewport except for explicit navigation and aspect actions.
   Categorical identities retain discrete colors with cropping disabled. Invalid
   intervals roll back with an explanation. Variable-specific session preferences
   are retained; active intervals are saved in JSON, not the entire profile cache.
-- Terrain automatic limits are full-tile P3/P97 over **valid native paired catmxy
+- Terrain automatic limits are full-tile P5/P95 over **valid native paired catmxy
   assignments only**, using the existing assignment helper and coarse dimensions.
   Unassigned/sea/out-of-range pairs and nonfinite/missing values are excluded;
-  Log statistics retain finite nonpositive values until after P3/P97 calculation,
-  then use lower=max(P3,0.01) and upper=P97; nonpositive display pixels are masked. Elevation Difference uses native neighbors
+  Log statistics retain finite nonpositive values until after P5/P95 calculation,
+  then use lower=P5 if P5>0, otherwise0.01, and upper=P95; nonpositive display pixels are masked. Elevation Difference uses native neighbors
   before this center-pixel assignment mask; this is not a new terrain derivation.
   Limits do not depend on pan/zoom or the sampled display image. Missing/unusable
   catmxy gives an explicit diagnostic and clears the unavailable background;
   use manual physical limits to display such a terrain tile. Inherited catchment
   uparea uses its coarse contributing-area values repeated for every valid assigned
-  high-resolution pixel (pixel-weighted P3/P97), not the genuine native uparea
+  high-resolution pixel (pixel-weighted P5/P95), not the genuine native uparea
   product. Coarse cells with no assignments in the selected tile do not contribute;
   these are pixel-frequency weights, not physical-area weights. Statistics are cached by tile/variable/positive policy/
   assignment-mask version/coarse dimensions. Blocks bound RAM; disposable disk
@@ -120,9 +120,8 @@ JSON v1/v2 still load. Missing new fields default to OSM off, full palette range
 and the saved background's original Grid/Catchment rule; new files store explicit
 `point_select`, `basemap`, `layers.coarse_palette_range` and
 `layers.highres_style.palette_range` plus `layers.auto_limits_policy`. Fresh sessions
-use `percentile`; old JSON without this optional field uses `gallery` for its
-preceding Auto/Gallery reference. Explicit Linear/Log uses ordinary P3/P97 even
-after a preset. Gallery presets reset OSM off and palette
+use `percentile`; old JSON may retain `gallery` as a compatibility flag. Both
+use the same P5/P95 Auto calculation, including after applying a preset. Gallery presets reset OSM off and palette
 ranges to [0,1], retaining the user's explicit Point Select preference. Shared
 preset settings remain CSV references to the canonical visualization catalog.
 
@@ -313,47 +312,44 @@ One **Color Settings** section shows the active representation's controls:
   Gallery Default, Gray, Pale Terrain, Viridis, YlGn, YlGnBu, Terrain, Plasma,
   Magma and Blues. Changes apply immediately without applying another preset.
 - Unit-Catchment uparea uses the Gallery yellow-green palette and Log km²
-  rendering, with ordinary pixel-weighted P3/P97 limits. Other palettes, Linear/Log and manual km² limits affect only display;
+  rendering, with ordinary pixel-weighted P5/P95 limits. Other palettes, Linear/Log and manual km² limits affect only display;
   native catmxy, coarse uparea, catchment geometry and network remain unchanged.
-- Ordinary terrain defaults use assigned-pixel full-tile P3/P97 with Gallery square-root stretch and
+- Ordinary terrain defaults use assigned-pixel full-tile P5/P95 with Gallery square-root stretch and
   subdued gray range or pale-terrain gamma. **Linear** and **Log** use their
   stated numerical normalization without Gallery stretch. Colorbars stay in
   physical metres (or inherited km²), including for Gallery's nonlinear palette
   transfer. Elevation Difference is maximum absolute eight-neighbor difference,
   in metres; it is not physical slope.
 
-Ordinary continuous coarse limits use P3/P97 of all finite source map-cell values
+Ordinary continuous coarse limits use P5/P95 of all finite source map-cell values
 in physical display units, respecting native missing masks. Terrain uses full-tile
-P3/P97 of finite values with valid paired native catmxy indices within coarse bounds.
+P5/P95 of finite values with valid paired native catmxy indices within coarse bounds.
 Inherited catchment attributes use every assigned pixel's inherited finite value,
 so large pixel populations have proportionate weight. Neither viewport nor display
 sampling participates. Categorical identifiers retain discrete normalization.
 
 For Log, compute percentiles **before** excluding nonpositive values, then use
-`lower=max(P3,0.01)`, `upper=P97`. If upper<=lower, show a range error and clear the
+`lower=P5 if P5>0 else 0.01`, `upper=P95`. If upper<=lower, show a range error and clear the
 unavailable background; never manufacture a positive upper limit. Rendering masks
-nonpositive pixels and saturates positive under-range values. Linear uses P3/P97;
+nonpositive pixels and saturates positive under-range values. Linear uses P5/P95;
 a constant Linear field retains the existing small display-only expansion for a
 usable colorbar. None of these operations changes scientific data or raw inspection.
 
 Disable Automatic Color Limits to retain exact manual bounds. Manual Log requires
-0<lower<upper; invalid minima are reported rather than reset to0.01. The automatic
-floor does not apply to a valid manual minimum below0.01. Palette Minimum/Maximum
+0<lower<upper; invalid minima are reported rather than reset to0.01. The automatic fallback applies only when P5<=0; positive Auto minima below0.01
+and valid manual minima below0.01 are preserved. Palette Minimum/Maximum
 remain independent, applied after physical normalization and any Gallery transfer;
 colorbar and PNG share the same DisplayLayer. The finite reference/quantile/population
 policy is cached per tile; block processing uses disposable disk workspace and may
 pause on the first large-tile scan.
 
-**Gallery/legacy exception:** applying a catalog preset persists
-`layers.auto_limits_policy="gallery"`. Its Auto/Gallery scales retain preceding
-Explorer coarse extrema, inherited coarse-attribute reference and assigned terrain
-P2/P98, including old Log display-floor/fallback behavior and Gallery transfer.
-Old JSON without the policy field loads through the same explicit compatibility
-policy. Selecting explicit Linear or Log uses ordinary P3/P97; its data-limit
-calculation does not inherit a hidden Gallery exception. Palette/categorical
-scientific definitions and the preset CSV/catalog list are unchanged. This retains
-existing Explorer preset behavior rather than claiming exact Gallery typography
-or correcting previously documented differences from the original plotting scripts.
+**Unified Auto policy (DT-0122):** Gallery presets and old JSON now use the same
+valid P5/P95 population as ordinary Explorer backgrounds, including Gallery Default
+scales. The optional saved `auto_limits_policy` field is accepted for compatibility
+but cannot select the old coarse-extrema / P2/P98 / forced0.01 Auto calculation.
+Gallery palette definitions, transfer curves and River classification remain intact;
+explicit manual limits are authoritative. This is an intentional Explorer Auto-range
+update; Gallery plotting scripts and canonical catalog data are unchanged.
 
 Missing flddif with valid elevation retains its neutral, non-measured fill;
 missing both remains white. Palette cropping and opacity do not create data.
@@ -616,7 +612,7 @@ The older supported methods include:
 | p01-f03b | Pastel bsncol, outlet vectors, channel + overland bifurcations, outlets, guides, coarse grid |
 | p01-f04a | Native assigned catchments inheriting uparea, boundaries, outlet vectors, channel bifurcations, guides, grid |
 | p01-f04b | f04a plus visual 10/7 channel pixels |
-| p01-f05a / f05c | Native elevtn / flddif with grayscale P2/P98 stretch and area-colored outlet network |
+| p01-f05a / f05c | Native elevtn / flddif with grayscale assigned P5/P95 stretch and area-colored outlet network |
 | p01-f05d / f05f | Native elevtn / flddif with pale terrain, black outlet network and area widths |
 | p01-f05e | Native maximum 8-neighbor elevation difference [m], pale terrain and black outlet network; no distance-normalized slope |
 
@@ -860,11 +856,10 @@ for scientific conventions, executed checks and limits.
 - **Cannot open map / no supported rasters**: check params.txt and the source
   diagnostics. A missing optional file is harmless; a known file with wrong
   geometry, units, type or record count is rejected, never guessed.
-- **Log limits**: ordinary Auto uses max(P3,0.01)/P97 from finite values before
+- **Log limits**: all Auto paths use positive P5 (otherwise0.01) / P95 from finite values before
   Log masking. Nonpositive display values are masked; positive under-range values
   saturate. Invalid manual bounds or upper<=lower report errors; source values
-  remain accessible through inspection. Explicit Gallery/legacy exceptions above
-  retain previous normalization for compatibility.
+  remain accessible through inspection. Gallery/legacy Auto uses this same policy.
 - **Port in use**: choose another `--port`; the app prints its local URL.
 - **Slow very large map**: use a regional map. Rasters load on demand with a
   four-field LRU cache and Binary memory mapping; uncached inspector values use

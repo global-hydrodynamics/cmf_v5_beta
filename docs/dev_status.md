@@ -537,3 +537,14 @@ branch only; Windows end-to-end still requires a Windows host.
 
 DT-0121 published on feature/package-builder in `1e2b472e3d4749b2f5cbee4f4bd7f98be801663b`; EV-0545 records normal
 push. Windows real-host QA remains unverified; unrelated TE-Japan deletions excluded.
+
+DT-0122: maintainer authorizes investigation/fix of background Auto limits to valid
+P5/P95, including Gallery/legacy entry paths, and nonpositive-only Log fallback0.01.
+Owner Codex on existing feature/package-builder; scientific inputs read-only. Plan
+and scope in visualization/map_explorer/DESIGN.md; inherited attributes remain distinct
+from native pixels, manual limits and River coloring preserved.
+
+DT-0122 completed:315 tests plus3 subtests PASS;1 existing Windows SKIP. Ordinary,
+Gallery preset and old-JSON Auto now use the same P5/P95 valid reference. Actual
+Mekong/browser/PNG verified;248 protected hashes unchanged. See VR-0168 for root
+cause (legacy forced minimum), exact ranges and retained masks/units/manual bounds.

@@ -114,11 +114,11 @@ def test_assigned_only_full_tile_population(products):
     tile._maps.clear()
     valid, _, _ = assignment(*codes, reader.geometry)
     expected = values[valid & np.isfinite(values) & (values != -9999)]
-    assert tile.percentiles("elevtn") == pytest.approx(np.percentile(expected, [3, 97]))
-    assert tile.percentiles("elevtn", positive=True) == pytest.approx(np.percentile(expected[expected > 0], [3, 97]))
+    assert tile.percentiles("elevtn") == pytest.approx(np.percentile(expected, [5, 95]))
+    assert tile.percentiles("elevtn", positive=True) == pytest.approx(np.percentile(expected[expected > 0], [5, 95]))
     before = dict(tile._stats)
     tile.subset((11, 12, 21, 22), max_side=2)
-    assert tile.percentiles("elevtn") == pytest.approx(np.percentile(expected, [3, 97])) and tile._stats == before
+    assert tile.percentiles("elevtn") == pytest.approx(np.percentile(expected, [5, 95])) and tile._stats == before
     tile.files.pop("catmxy")
     with pytest.raises(ValueError, match="manual limits"):
         tile.percentiles("elevtn")

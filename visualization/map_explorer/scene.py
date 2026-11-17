@@ -305,20 +305,6 @@ class Scene:
             valid, land, invalid = assignment(x, y, self.reader.geometry)
             if np.any(invalid):
                 frame.diagnostics.append(f"{int(invalid.sum())} displayed assignment pairs invalid; excluded")
-            rr, cc = np.where(valid)
-            if (
-                "uparea" in self.reader.sources
-                and reference_policy == "gallery"
-                and (style or {}).get("scale", "gallery") == "gallery"
-                and (style or {}).get("limits") is None
-            ):
-                river = self.reader.read("uparea").astype(float).filled(np.nan) > 0
-                nonriver = ~river[y[rr, cc] - 1, x[rr, cc] - 1]
-                if np.any(nonriver):
-                    frame.diagnostics.append(
-                        f"{int(nonriver.sum())} displayed assignments target cells without positive uparea; excluded"
-                    )
-                valid[rr, cc] &= river[y[rr, cc] - 1, x[rr, cc] - 1]
         if mode == "catchment":
             image = np.full(valid.shape, np.nan)
             rr, cc = np.where(valid)
@@ -348,12 +334,8 @@ class Scene:
             rgba[~np.isfinite(image)] = np.uint32(0xFFFFFFFF)
             rgba[land] = np.array([217, 217, 217, 255], dtype="u1").view("<u4")[0]
             frame.legend.append(
-                "Inherited-field automatic reference: "
-                + (
-                    "Gallery legacy coarse-cell distribution"
-                    if reference_policy == "gallery" and (style or {}).get("scale", "gallery") == "gallery"
-                    else "pixel-weighted full-tile assigned P3/P97"
-                )
+                "Inherited-field reference: manual limits" if (style or {}).get("limits") is not None
+                else "Inherited-field automatic reference: pixel-weighted full-tile assigned P5/P95"
             )
             frame.legend.append("Unassigned land catmxy=-999: gray; other missing: white")
             frame.legend.append(
@@ -375,14 +357,11 @@ class Scene:
                 fill = ~np.isfinite(raw_image) & np.isfinite(elevation)
                 rgba[fill] = neutral_floodplain_color(style, terrain_palette)
                 frame.legend.append("Missing flddif + valid elevation: neutral fill; both missing: blank")
-            legacy = reference_policy == "gallery" and (style or {}).get("scale", "gallery") == "gallery"
             if (style or {}).get("limits") is not None:
                 reference = "manual limits"
-            elif legacy:
-                reference = "Gallery/legacy full-tile assigned P2/P98 reference"
             else:
-                reference = "Full-tile assigned-pixel P3/P97" + (
-                    "; Log lower=max(P3,0.01)" if layer.logarithmic else ""
+                reference = "Full-tile assigned-pixel P5/P95" + (
+                    "; Log lower=P5 if positive, otherwise 0.01" if layer.logarithmic else ""
                 )
             frame.legend.append(
                 f"{tile.key} {reference}: {layer.low:.4g}/{layer.high:.4g} m; "

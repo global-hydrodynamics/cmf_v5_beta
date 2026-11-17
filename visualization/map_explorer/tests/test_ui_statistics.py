@@ -70,14 +70,14 @@ def test_summary_from_selected_stored_outlet(split_assignment):
     assert data["assigned coarse ix (1-based)"] == 1
 
 
-def test_coarse_p3_p97_before_log_mask_and_manual(map_dir):
+def test_coarse_p5_p95_before_log_mask_and_manual(map_dir):
     raw = np.array([[-2, -1, 0, 0.005], [1, 2, 3, 4], [5, 10, 100, -0.009999]], dtype="<f4") * 1e6
     raw[-1, -1] = -9999
     raw.tofile(map_dir / "uparea.bin")
     before = (map_dir / "uparea.bin").read_bytes()
     r = MapReader(map_dir)
     values = raw.astype(float).ravel()[:-1] * 1e-6
-    expected = np.percentile(values, [3, 97])
+    expected = np.percentile(values, [5, 95])
     linear = make_layer(r, "uparea", "linear", "gray")
     assert (linear.low, linear.high) == pytest.approx(expected)
     log = make_layer(r, "uparea", "log", "gray")
@@ -118,14 +118,14 @@ def test_pixel_weighted_inherited_population(products):
     valid, _, _ = assignment(*codes, r.geometry)
     inherited = r.read("uparea").astype(float).filled(np.nan) * 1e-6
     reference = inherited[codes[1][valid] - 1, codes[0][valid] - 1]
-    expected = np.percentile(reference, [3, 97])
+    expected = np.percentile(reference, [5, 95])
     low, high = tile.percentiles("uparea", inherited=inherited)
     assert (low, high) == pytest.approx(expected)
-    assert low == 0 and high == 100
+    assert low == .25 and high == 75.25
     layer = highres_layer(
         np.array([[0.0, 1.0, 100.0]]), r, tile, "catchment", "uparea", make_layer(r, "uparea"), dict(scale="log")
     )
-    assert (layer.low, layer.high) == (0.01, 100) and np.isnan(layer.image[0, 0])
+    assert (layer.low, layer.high) == (.25, 75.25) and np.isnan(layer.image[0, 0])
     assert len(tile._stats) == 1  # same finite population reused across Log/Linear
     assert high < inherited.max()  # unassigned coarse cells must not contribute
 
@@ -143,14 +143,21 @@ def test_gallery_legacy_policy_and_json(products):
     a.apply_preset("p01-f04b")
     assert a.auto_limits_policy == "gallery"
     legacy = (a.frame.layer.low, a.frame.layer.high)
-    assert legacy == (0.01, 11)
+    tile = a.scene.tiles[a.hires_source.value]
+    x, y = tile.mmap("catmxy")
+    mask, _, _ = assignment(x, y, a.reader.geometry)
+    source = a.reader.read("uparea").astype(float).filled(np.nan) * 1e-6
+    reference = source[y[mask] - 1, x[mask] - 1]
+    expected_auto = np.percentile(reference[np.isfinite(reference)], [5, 95])
+    assert legacy == pytest.approx((expected_auto[0] if expected_auto[0] > 0 else .01, expected_auto[1]))
+
     a.highres_scale.value = "linear"
     tile = a.scene.tiles[a.hires_source.value]
     x, y = tile.mmap("catmxy")
     mask, _, _ = assignment(x, y, a.reader.geometry)
     source = a.reader.read("uparea").astype(float).filled(np.nan) * 1e-6
     reference = source[y[mask] - 1, x[mask] - 1]
-    expected = np.percentile(reference[np.isfinite(reference)], [3, 97])
+    expected = np.percentile(reference[np.isfinite(reference)], [5, 95])
     assert (a.frame.layer.low, a.frame.layer.high) == pytest.approx(expected)
     frame = a.scene.build(a.reader.geometry.extent, a.variable.value, a.layer, a.network, a.scene_options())
     assert frame.layer.image[0, 6] == 0  # explicit Linear retains legitimate zero-uparea assignments

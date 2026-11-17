@@ -29,7 +29,7 @@ LOG_DISPLAY_MINIMUM = 0.01
 
 
 def log_display_limits(low, high):
-    """Legacy Gallery reference only: retain the preceding display bounds/fallback.
+    """Compatibility helper only; Explorer Auto no longer uses this legacy fallback.
 
     An all-nonpositive reference still needs a positive, nondegenerate colorbar;
     its finite data use the lower-end color, never invented scientific values.
@@ -57,7 +57,7 @@ def resolve_color_limits(low, high, logarithmic=False, *, manual=False):
     if not np.isfinite([low, high]).all() or high < low:
         raise ValueError("Color limits must be finite and ordered")
     if logarithmic:
-        low = low if manual else max(low, LOG_DISPLAY_MINIMUM)
+        low = LOG_DISPLAY_MINIMUM if not manual and low <= 0 else low
         if low <= 0 or high <= low:
             raise ValueError("Cannot construct a valid logarithmic color range: require 0 < lower < upper")
     elif high == low:
@@ -72,7 +72,7 @@ def percentile_limits(values, logarithmic=False):
     valid = values[np.isfinite(values)]
     if not valid.size:
         raise ValueError("No valid finite reference values for automatic color limits")
-    return resolve_color_limits(*np.percentile(valid, (3,97)), logarithmic)
+    return resolve_color_limits(*np.percentile(valid, (5,95)), logarithmic)
 
 
 def layer_colors(layer):
@@ -141,19 +141,14 @@ def make_layer(reader, name, scale='auto', palette='viridis', limits=None, palet
     finite = values[np.isfinite(values)]
     if not finite.size:
         raise ValueError(f'{name}: no values usable with this color scale')
-    legacy = reference_policy == "gallery" and scale == "auto" and limits is None
-    if legacy:
-        low, high = float(finite.min()), float(finite.max())
-        if logarithmic:
-            low, high = log_display_limits(None, high)
-        elif low == high:
-            high = low + max(abs(low)*.01,.01)
-    elif limits is None:
+    # Gallery palettes and transfer curves remain independent of Auto statistics.
+    # Legacy JSON policy flags are accepted but no longer bypass the valid P5/P95 reference.
+    if limits is None:
         low, high = percentile_limits(finite, logarithmic)
     else:
         low, high = resolve_color_limits(*limits, logarithmic, manual=True)
     if logarithmic:
-        values = log_display_values(values, low, mask_nonpositive=not legacy)
+        values = log_display_values(values, low)
     lo, hi = validate_palette_range(palette_range)
     colors = [to_hex(colormaps[palette](lo + (i/255)*(hi-lo))) for i in range(256)]
     return DisplayLayer(values, colors, low, high, logarithmic, np.array([]), label)

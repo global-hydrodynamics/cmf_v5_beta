@@ -8,7 +8,6 @@ from matplotlib.colors import LinearSegmentedColormap, to_hex
 
 from map_layers import (
     DisplayLayer,
-    log_display_limits,
     log_display_values,
     validate_palette_range,
     resolve_color_limits,
@@ -81,33 +80,19 @@ def highres_layer(
     options = validate_style(style, gallery_log)
     logarithmic = options["scale"] == "log" or options["scale"] == "gallery" and gallery_log
     values = np.asarray(image, dtype=float).copy()
-    legacy = reference_policy == "gallery" and options["scale"] == "gallery" and options["limits"] is None
     if options["limits"] is not None:
         low, high = resolve_color_limits(*options["limits"], logarithmic, manual=True)
-    elif catchment and legacy:
-        reference = reader.read(name).astype(float).filled(np.nan) * SCHEMA[name].factor
-        good = np.isfinite(reference) & ((reference > 0) if logarithmic else True)
-        if not good.any() and not logarithmic:
-            raise ValueError("No finite catchment values")
-        low, high = (float(reference[good].min()), float(reference[good].max())) if good.any() else (None, None)
-        if not logarithmic and high <= low:
-            high = low + max(abs(low) * 0.01, 0.01)
     else:
+        # Includes Gallery Default and old saved policies. Percentiles are taken
+        # before nonpositive Log masking, only over legitimate native assignments.
         inherited = reader.read(name).astype(float).filled(np.nan) * SCHEMA[name].factor if catchment else None
         low, high = tile.percentiles(
-            name if catchment else mode,
-            positive=legacy and logarithmic,
-            allow_empty=legacy and logarithmic,
-            coarse=reader.geometry,
-            quantiles=(2, 98) if legacy else (3, 97),
-            inherited=inherited,
+            name if catchment else mode, coarse=reader.geometry,
+            quantiles=(5, 95), inherited=inherited,
         )
-        if not legacy:
-            low, high = resolve_color_limits(low, high, logarithmic)
+        low, high = resolve_color_limits(low, high, logarithmic)
     if logarithmic:
-        if legacy:
-            low, high = log_display_limits(None, high)
-        values = log_display_values(values, low, mask_nonpositive=not legacy)
+        values = log_display_values(values, low)
     t = np.linspace(0, 1, 256)
     pmin, pmax = options["palette_range"]
     crop = lambda positions: pmin + positions * (pmax - pmin)
