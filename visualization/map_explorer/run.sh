@@ -5,22 +5,6 @@ set -eu
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-if [ "$#" -lt 1 ]; then
-    printf 'Usage: %s MAP_DIR [--port 5006] [--no-browser]\n' "$0" >&2
-    exit 2
-fi
-
-MAP_DIR="$1"
-shift
-if [ ! -d "$MAP_DIR" ] && [ -d "$REPO_ROOT/$MAP_DIR" ]; then
-    MAP_DIR="$REPO_ROOT/$MAP_DIR"
-fi
-if [ ! -d "$MAP_DIR" ]; then
-    printf '[ERROR] Map directory not found: %s\n' "$MAP_DIR" >&2
-    exit 2
-fi
-MAP_DIR="$(cd "$MAP_DIR" && pwd)"
-
 if [ -z "${PYTHON:-}" ]; then
     if [ -n "${VIRTUAL_ENV:-}" ] && [ -x "$VIRTUAL_ENV/bin/python" ]; then
         PYTHON="$VIRTUAL_ENV/bin/python"
@@ -37,4 +21,4 @@ export PYTHONDONTWRITEBYTECODE=1
 export BOKEH_RESOURCES=server
 export MPLBACKEND=Agg
 # Keep the terminal entry point's default port; an explicit --port still takes precedence.
-exec "$PYTHON" "$SCRIPT_DIR/launch_desktop.py" "$MAP_DIR" --port 5006 "$@"
+exec "$PYTHON" "$SCRIPT_DIR/launch_desktop.py" --port 5006 "$@"

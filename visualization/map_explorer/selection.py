@@ -87,11 +87,10 @@ class CatchmentIndex:
 
     def _build_index(self):
         g = self.tile.geometry
-        data = self.tile.mmap("catmxy")
         index = {}
         step = max(1, self.block_pixels // g.nx)
         for start in range(0, g.ny, step):
-            x, y = data[:, start : min(g.ny, start + step), :]
+            x, y = self.tile.sample("catmxy", np.arange(start, min(g.ny, start + step)), np.arange(g.nx))
             valid, _, _ = assignment(x, y, self.coarse)
             rows, cols = np.where(valid)
             labels = (y[valid].astype("i8") - 1) * self.coarse.nx + x[valid].astype("i8") - 1
@@ -133,7 +132,6 @@ class CatchmentIndex:
             raise ValueError("No native pixels have this assignment in the selected tile")
         r0, r1, c0, c1, count = self._index[label]
         g = self.tile.geometry
-        data = self.tile.mmap("catmxy")
         horizontal, vertical = [], []
         step = max(1, self.block_pixels // max(1, c1 - c0))
         for start in range(r0, r1, step):
@@ -142,7 +140,7 @@ class CatchmentIndex:
             # block boundaries. Only true tile borders have no neighbor.
             rr0, rr1 = max(0, start - 1), min(g.ny, stop + 1)
             cc0, cc1 = max(0, c0 - 1), min(g.nx, c1 + 1)
-            a, b = data[:, rr0:rr1, cc0:cc1]
+            a, b = self.tile.sample("catmxy", np.arange(rr0, rr1), np.arange(cc0, cc1))
             mask = (a == col + 1) & (b == row + 1)
             padded = np.pad(mask, ((rr0 - (start - 1), (stop + 1) - rr1), (cc0 - (c0 - 1), (c1 + 1) - cc1)))
             center = padded[1:-1, 1:-1]

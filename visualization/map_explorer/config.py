@@ -26,7 +26,7 @@ def load_settings(content, reader):
         for key in unknown:
             data.pop(key)
     if Path(data["map_path"]).expanduser().resolve() != reader.path:
-        raise ValueError("Settings refer to another map; launch that map separately")
+        raise ValueError("Settings refer to another map; use Map Dataset / Load Map first, then load this JSON again")
     if data["variable"] not in reader.sources:
         raise ValueError("Settings variable is not available in this map")
     reader.geometry.validate_extent(data["extent"])

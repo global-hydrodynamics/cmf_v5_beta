@@ -484,10 +484,15 @@ class Scene:
             return {}, None
         cell = tile.geometry.cell(lon, lat)
         if cell is None:
-            return {"high-resolution source": tile.key, "assignment status": "outside selected tile"}, None
+            return {
+                "high-resolution source": tile.key,
+                "high-resolution storage": tile.storage,
+                "assignment status": "outside selected tile",
+            }, None
         row, col = cell
         result = {
             "high-resolution source": tile.key,
+            "high-resolution storage": tile.storage,
             "native hires ix (1-based)": col + 1,
             "native hires iy (1-based)": row + 1,
         }

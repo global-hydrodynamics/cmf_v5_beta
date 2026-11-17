@@ -789,3 +789,57 @@ supersedes the earlier f04-only scope: full nextxy changes the complete
 connectivity and headwater/reference populations. The local f04a delta output
 nevertheless remains byte-identical because its plotted local geometry is unchanged.
 No scientific input file, p02 simulation-product pairing or model is modified.
+
+
+## DT-0126 — Session-level dataset switching and native NetCDF
+
+2026-11-17 maintainer approves map switching plus explicit high-resolution
+NetCDF standard for TE-Japan, Mekong and global maps; commit/push on the existing
+feature/package-builder branch. No data conversion/restoration/model changes.
+
+A session-local ExplorerSession owns the persistent Map Dataset controls and a
+single view host. Shallow candidate discovery uses params/MapReader metadata only.
+Relative custom paths resolve from the repository root; no upload or OS-dialog
+substitute is used. Load Map prepares a coherent Explorer/Scene/Inspector/Pins
+bundle and validates its first raster before adopting it. Failed preparation
+preserves the old bundle. Pins require explicit confirmation before successful
+replacement clears them; failure/cancel retains them. Selection, map settings,
+geometry and caches reset; application mode/control behavior remains. One server
+creates a fresh session controller per browser; there is no global active map.
+
+Panel host replacement removes old document models; Explorer.close cancels queued
+Bokeh work, guards stale callbacks and releases reader/network/selection/tile/
+Inspector caches. Session teardown registers a Bokeh-compatible one-argument
+callback. No forced memmap close is used while NumPy views could still exist.
+Two map bundles coexist briefly while preparing a replacement; large-map memory
+peaks therefore exceed a single settled view. Individual settings edits do not
+recreate the plot. The session holds no cross-map Pins or scientific values.
+
+Startup uses bundled Mekong, script-relative and without a dialog across terminal,
+macOS/native Windows/WSL/direct Python paths. Only that bundled map receives its
+compatible p01-f04b Gallery startup. Other maps get their complete native extent
+with a Custom geographic frame, supported coarse raster and network. Optional
+Gallery methods continue to validate products/extents; JSON mismatch rejects
+before any state mutation and asks for an explicit Map Dataset switch. No schema
+migration; export filenames now identify the current map.
+
+The shared high-res Tile.sample handles read-only Binary plus preferred native
+NetCDF with validated dimensions/coordinate centers/orientation/types/units.
+catmxx/catmyy and catmx/catmy are explicit paired aliases, never reconstructed from
+geographic containment. No automatic mask/scale changes integer assignment codes;
+Float32 declared fill/nonfinite values become display NaN. Native uparea m² -> km²
+is explicit; inherited coarse uparea remains a separate concept. Present invalid
+NC fields are unavailable, while absent optional NC fields may use legacy Binary.
+Mekong visual/catmz100 remain such compatible supplements. Canonical legacy tile
+keys drop the directory _nc suffix, allowing same-map old JSON to select the same
+native geometry. Duplicate Binary/NC geometry must agree before merging fields.
+
+Discovery inspects headers/1-D coordinates; NetCDF reads open/close only requested
+native row/column blocks. CatchmentIndex now consumes these same native samples
+rather than assuming an mmap, preserving exact exposed pixel-edge/hole/component
+semantics. Existing P5/P95 assigned-pixel/inherited-area weighting and Log fallback
+remain unchanged and shared with PNG. Reference statistics stay full-tile and
+block processed with disk workspace, cached per Tile. No high-res statistics or
+raster arrays are materialized on generic map startup. Global full-native scans
+are still expensive and were not benchmarked; no regional-to-global performance
+claim is made. Detailed actual-map measurements and limitations: VR-0172.

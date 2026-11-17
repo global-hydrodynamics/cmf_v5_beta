@@ -1,4 +1,5 @@
 """Explicit selection across backgrounds and distinct computational geometry."""
+from conftest import native_assignments
 
 from pathlib import Path
 
@@ -120,7 +121,7 @@ def test_mekong_all_backgrounds_assignment_and_rectangle(tmp_path):
         expected = (96,63) if coarse else (96,62)
         assert app.selected == expected
         tile = app.scene.tiles[app.hires_source.value]
-        x,y = tile.mmap('catmxy')
+        x,y = native_assignments(tile)
         assert info['unit catchment assigned pixel count'] == np.count_nonzero((x==expected[1]+1)&(y==expected[0]+1))
         rectangle = app.selection.coarse_outline
         assert rectangle[0].tolist() == ([[105.75,11.0],[106.0,11.0]] if coarse else [[105.5,11.0],[105.75,11.0]])

@@ -46,3 +46,21 @@ def write_network(root):
     x[2,1], y[2,1] = 2,3
     np.stack([x,y]).tofile(root/'nextxy.bin')
     return x, y
+
+
+def native_assignments(tile):
+    """Independent real-data test oracle; production never reads a whole NC tile."""
+    path = tile.files["catmxy"]
+    if path.suffix != ".nc":
+        return np.asarray(tile.mmap("catmxy"))
+    with Dataset(path, "r") as ds:
+        ds.set_auto_maskandscale(False)
+        lat, lon = ds["lat"][:], ds["lon"][:]
+        rows, cols = np.argsort(-lat), np.argsort(lon)
+        values = []
+        for key in ("catmxx", "catmyy"):
+            a = ds[key][:]
+            if ds[key].dimensions == ("lon", "lat"):
+                a = a.T
+            values.append(a[np.ix_(rows, cols)])
+        return np.stack(values)

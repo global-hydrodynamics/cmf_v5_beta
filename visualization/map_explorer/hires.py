@@ -9,6 +9,7 @@ import tempfile
 import numpy as np
 
 from map_reader import Geometry
+from hires_netcdf import NetCDFSource
 
 
 def neighbor_difference(values):
@@ -49,8 +50,16 @@ class Tile:
     _stats: dict = field(default_factory=dict, repr=False)
     _centroids: object = field(default=None, repr=False)
     coarse_geometry: object = field(default=None, repr=False)
+    netcdf: dict = field(default_factory=dict, repr=False)
+
+    @property
+    def storage(self):
+        count = sum(path.suffix == ".nc" for path in self.files.values())
+        return "NetCDF" if count == len(self.files) and count else "NetCDF + Binary optional fields" if count else "Binary"
 
     def mmap(self, name):
+        if name in self.files and self.files[name].suffix == ".nc":
+            raise ValueError("NetCDF sources use native block sampling, not a full-array mmap")
         if name not in self.files:
             raise ValueError(f"{self.key}: missing {name}")
         if name not in self._maps:
@@ -78,8 +87,14 @@ class Tile:
                     delta = np.abs(base - neighbor)
                     result = np.fmax(result, np.where(valid, delta, np.nan))
             return result
-        data = self.mmap(name)
-        result = np.array(data[:, rows[:, None], cols[None, :]])
+        rows, cols = np.asarray(rows, dtype=int), np.asarray(cols, dtype=int)
+        if name in self.files and self.files[name].suffix == ".nc":
+            if name not in self.netcdf:
+                self.netcdf[name] = NetCDFSource.open(self.files[name], name, self.geometry)
+            result = self.netcdf[name].read(rows, cols)
+        else:
+            data = self.mmap(name)
+            result = np.array(data[:, rows[:, None], cols[None, :]])
         if name in ("elevtn", "flddif", "uparea", "rivwth"):
             a = result[0].astype(float)
             a[(a == -9999) | ~np.isfinite(a)] = np.nan
@@ -190,7 +205,7 @@ def discover_tiles(map_dir, messages):
     """Discover named records in map-local location.txt files; no 1min constant."""
     root = Path(map_dir)
     tiles = {}
-    for location in sorted(root.rglob("location.txt")):
+    for location in sorted(root.rglob("location.txt"), key=lambda p: (p.parent.name.endswith("_nc"), str(p))):
         try:
             lines = location.read_text().splitlines()
             count = int(lines[0].split()[0])
@@ -218,8 +233,16 @@ def discover_tiles(map_dir, messages):
                 if Path(name).name != name or name in (".", ".."):
                     raise ValueError("invalid area filename prefix")
                 g = Geometry(nx, ny, 1, step, w, e, s, n)
-                key = str((location.parent / name).relative_to(root))
-                tile = Tile(key, location.parent, name, g, coarse_geometry=Geometry.read(root / "params.txt"))
+                relative = location.parent.relative_to(root)
+                # Keep legacy JSON/tile identities stable while preferring _nc
+                # products for the same declared native geometry and prefix.
+                canonical = relative.with_name(relative.name[:-3]) if relative.name.endswith("_nc") else relative
+                key = str(canonical / name)
+                tile = tiles.get(key)
+                if tile is not None and tile.geometry != g:
+                    raise ValueError(f"{key}: Binary/NetCDF native geometries disagree")
+                if tile is None:
+                    tile = Tile(key, location.parent, name, g, coarse_geometry=Geometry.read(root / "params.txt"))
                 for field_name, bytes_per_pixel in [
                     ("catmxy", 4),
                     ("visual", 1),
@@ -229,14 +252,26 @@ def discover_tiles(map_dir, messages):
                     ("uparea", 4),
                     ("rivwth", 4),
                 ]:
+                    nc_path = location.parent / f"{name}.{field_name}.nc"
                     path = location.parent / f"{name}.{field_name}.bin"
-                    if path.is_file():
+                    if nc_path.is_file():
+                        try:
+                            source = NetCDFSource.open(nc_path, field_name, g)
+                            tile.files[field_name] = nc_path
+                            tile.netcdf[field_name] = source
+                        except (OSError, ValueError, KeyError) as exc:
+                            tile.files.pop(field_name, None)
+                            tile.netcdf.pop(field_name, None)
+                            messages.append(f"{nc_path}: invalid NetCDF product skipped: {exc}")
+                    elif path.is_file() and field_name not in tile.netcdf:
                         if path.stat().st_size == nx * ny * bytes_per_pixel:
                             tile.files[field_name] = path
                         else:
                             messages.append(f"{path.name}: wrong declared Binary size; skipped")
                 if tile.files:
                     tiles[key] = tile
+                else:
+                    tiles.pop(key, None)
         except (OSError, ValueError, IndexError) as exc:
             messages.append(f"{location}: unsupported tile metadata: {exc}")
     return tiles

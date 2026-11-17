@@ -6,6 +6,27 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Map Explorer dataset switching (DT-0126, 2026-11-17)
+
+Maintainer approves in-session Map Dataset controls, bundled Mekong no-dialog
+startup across launchers, coherent Explorer replacement with Pins confirmation,
+JSON mismatch rejection, tests/browser/real-map checks, docs and commit/push on
+existing feature/package-builder. Codex owns Explorer controller/launcher/config
+and associated tests/docs/research records. No scientific data/model changes,
+new branch, new server per switch or real-data generation. Start clean61dfe5f2,
+equal to refreshed remote; main coordination and open Issues/PRs checked with no
+overlap. Acceptance: synthetic dimensions/extents/failure/state/session tests,
+actual installed TE-Japan/coarse/Inspector/PNG/browser and return to Mekong;
+optional high-resolution checks with the actual products. Subsequent maintainer
+steering explicitly requires high-resolution NetCDF in Japan, Mekong and global
+maps. Extend native block readers/selection to prefer validated NetCDF, preserving
+Binary compatibility for legacy/missing optional fields and lazy I/O; no restoration
+or scientific-data changes.
+Implementation complete:345 tests plus3 subtests PASS,1 real-Windows SKIP;
+actual browser/Japan native17-pixel selection/Inspector/PNG/OSM/Pins/return and
+lazy global coarse startup verified.433 map metadata entries unchanged.12 unrelated
+inp deletions excluded. Details and knowledge-gap review: VR-0172.
+
 ### Package Additional Data Import / Diff (DT-0125, 2026-11-17)
 
 Maintainer explicitly approves implementation, tests, documentation and commit/push

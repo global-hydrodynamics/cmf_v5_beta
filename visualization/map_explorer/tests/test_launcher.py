@@ -93,8 +93,10 @@ class LauncherSetupTests(unittest.TestCase):
     def test_ready_runtime_does_not_enter_setup(self):
         with patch.object(launcher.importlib.util, 'find_spec', return_value=object()), \
              patch.object(launcher, 'prepare_environment') as setup, \
-             patch.object(launcher, 'choose_map', return_value=None):
-            self.assertEqual(launcher.main([]), 0)
+             patch.object(launcher, 'choose_map', side_effect=AssertionError('default must not open a dialog')), \
+             patch('app.main') as serve:
+            self.assertEqual(launcher.main(['--no-browser']), 0)
+            serve.assert_called_once()
             setup.assert_not_called()
 
     def test_missing_runtime_hands_original_arguments_to_setup(self):

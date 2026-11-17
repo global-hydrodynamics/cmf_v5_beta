@@ -1,4 +1,4 @@
-"""Choose a map and start the local GUI from a desktop launcher."""
+"""Start the bundled Mekong map or an explicit map in the local desktop GUI."""
 from __future__ import annotations
 
 import argparse
@@ -90,7 +90,7 @@ def prepare_environment(directory, argv, missing):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("map_dir", nargs="?", type=Path,
-                        help="Optional map path; otherwise choose a folder")
+                        help="Optional map path; default: bundled Mekong (no folder dialog)")
     parser.add_argument("--port", type=int, default=0,
                         help="Local port; 0 chooses an available port")
     parser.add_argument("--no-browser", action="store_true")
@@ -107,11 +107,11 @@ def main(argv=None):
         return 1
     if missing:
         return prepare_environment(directory, argv, missing)
-    selected = args.map_dir or choose_map(directory.parents[1]/"map"/"mekong_15min")
+    from map_datasets import resolve_map
+    selected = resolve_map(args.map_dir)
     if selected is None:
         print("Launch cancelled.")
         return 0
-    selected = selected.expanduser().resolve()
     if not (selected/"params.txt").is_file():
         print(f"Not a CaMa-Flood map folder (params.txt missing): {selected}", file=sys.stderr)
         return 2

@@ -26,6 +26,7 @@ from bokeh.models import (
 from bokeh.plotting import figure
 
 from config import load_settings, save_settings
+from map_datasets import DEFAULT_MAP
 from basemap import GeographicBasemap
 from map_layers import colorize, export_png, make_layer, network_style, raster_subset
 from map_reader import MapReader, SCHEMA
@@ -47,6 +48,8 @@ pn.extension()
 
 class Explorer:
     def __init__(self, map_dir, output_dir=None):
+        self._closed = False
+        self._pending_callbacks = []
         self.reader = MapReader(map_dir)
         self.scene = Scene(self.reader)
         self.cell_inspector = CellInspector(self.reader, self.scene.products)
@@ -564,21 +567,54 @@ class Explorer:
         # Panel widget events can run outside Bokeh's document lock. Queue
         # direct glyph/range/source mutations on a locked server tick; otherwise
         # a callback can stop halfway and leave the GUI inconsistent with export.
-        if self._updating:
+        if self._updating or self._closed:
             return
         document = self.plot.document
         if document is not None and document.session_context is not None:
-            document.add_next_tick_callback(lambda: self._guard(function))
+            def execute():
+                self._pending_callbacks[:] = [(d, h) for d, h in self._pending_callbacks if h is not handle]
+                self._guard(function)
+            handle = document.add_next_tick_callback(execute)
+            self._pending_callbacks.append((document, handle))
         else:
             self._guard(function)
 
     def _guard(self, function):
-        if self._updating:
+        if self._updating or self._closed:
             return
         try:
             function()
         except (ValueError, OSError, KeyError, TypeError) as exc:
             self.status.object = f"**Error:** {escape(str(exc))}"
+
+    def close(self):
+        """Detach queued work and release map-dependent caches after view replacement.
+
+        Panel removes the old view/models from the document; internal widget
+        cycles are garbage-collectable. Never forcibly close a memmap still held
+        by NumPy views: releasing references lets its normal lifetime handle it.
+        """
+        self._closed = True
+        for document, handle in self._pending_callbacks:
+            try:
+                document.remove_next_tick_callback(handle)
+            except ValueError:
+                pass
+        self._pending_callbacks.clear()
+        self.frame = self.layer = self.network = self._network_cache = None
+        self._networks.clear()
+        self._selection_indexes.clear()
+        self.reader._cache.clear()
+        self.scene.products._views.clear()
+        for name in ("outlets", "bifurcations"):
+            self.scene.products.__dict__.pop(name, None)
+        self.scene.tiles.clear()
+        self.cell_inspector._graphs.clear()
+        for name in ("outlet_coordinates", "bifurcation_counts"):
+            self.cell_inspector.__dict__.pop(name, None)
+        self.cell_inspector.native.__dict__.pop("subbasins", None)
+        self.pins.pins.clear()
+        self.basemap.driver.enabled = False
 
     @property
     def extent(self):
@@ -1217,7 +1253,7 @@ class Explorer:
         self._guard(select)
 
     def _output(self, suffix):
-        return self.output_dir / f"map-explorer-{datetime.now():%Y%m%d-%H%M%S-%f}{suffix}"
+        return self.output_dir / f"map-explorer-{self.reader.path.name}-{datetime.now():%Y%m%d-%H%M%S-%f}{suffix}"
 
     def export(self):
         if self._background_error is not None:
@@ -1433,18 +1469,20 @@ class Explorer:
         return state
 
 
-def create_app(map_dir, output_dir=None):
+def create_app(map_dir=None, output_dir=None):
+    from map_session import ExplorerSession
+
     try:
-        explorer = Explorer(map_dir, output_dir)
-        explorer.apply_startup_defaults()
-        return explorer.view
+        session = ExplorerSession(map_dir, output_dir, factory=Explorer)
+        pn.state.on_session_destroyed(lambda session_context: session.close())
+        return session.view
     except (ValueError, OSError) as exc:
         return pn.pane.Alert(f"Cannot open map: {escape(str(exc))}", alert_type="danger")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("map_dir", type=Path)
+    parser.add_argument("map_dir", nargs="?", type=Path, default=DEFAULT_MAP)
     parser.add_argument("--port", type=int, default=5006)
     parser.add_argument("--no-browser", action="store_true")
     args = parser.parse_args()

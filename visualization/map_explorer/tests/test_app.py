@@ -1,4 +1,5 @@
 """Programmatic GUI integration, scientific display state and reliable PNG export."""
+from conftest import native_assignments
 import json
 from pathlib import Path
 
@@ -99,7 +100,7 @@ def test_mekong_integration(tmp_path):
     lon,lat=105.8,10.8
     tile=app.scene.tiles[app.hires_source.value]
     rr,cc=tile.geometry.cell(lon,lat)
-    x,y=map(int,tile.mmap('catmxy')[:,rr,cc])
+    x,y=map(int,native_assignments(tile)[:,rr,cc])
     result=app.inspect(lon,lat)
     rr_geo,cc_geo=r.geometry.cell(lon,lat)
     assert result['ix (1-based)'] == cc_geo+1 and result['iy (1-based)'] == rr_geo+1

@@ -44,11 +44,12 @@ def test_startup_missing_products_keeps_map_usable(map_dir):
 
 
 def test_all_launchers_use_startup_factory(monkeypatch):
+    import map_session
     instance = Mock()
     constructor = Mock(return_value=instance)
-    monkeypatch.setattr(app_module, "Explorer", constructor)
+    monkeypatch.setattr(map_session, "ExplorerSession", constructor)
     assert create_app("map") is instance.view
-    instance.apply_startup_defaults.assert_called_once_with()
+    constructor.assert_called_once_with("map", None, factory=Explorer)
 
 
 def test_real_mekong_startup_extent_and_reference(tmp_path):

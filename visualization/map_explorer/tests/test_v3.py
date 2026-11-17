@@ -1,4 +1,5 @@
 """Native assignment geometry, preset contracts and persistent Explorer state."""
+from conftest import native_assignments
 
 import csv
 import json
@@ -186,7 +187,7 @@ def test_mekong_presets_native_outline_and_png(tmp_path):
         assert app.plot is plot and "Error" not in app.status.object
     app.apply_preset("p01-f04a", True)
     tile = app.scene.tiles[app.hires_source.value]
-    data = tile.mmap("catmxy")
+    data = native_assignments(tile)
     # These physical locations and native assignments are independently checked;
     # at least one catchment extends beyond its computational geographic cell.
     crossing = False

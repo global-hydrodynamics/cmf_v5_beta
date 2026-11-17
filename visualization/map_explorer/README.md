@@ -1,17 +1,84 @@
 # CaMa-Flood Interactive Map Explorer v3
 
-New sessions start with **p01-f04b (Unit-Catchment outlet uparea + Channel Pixels)**
-and **Bifurcation Overland ON**. The Gallery extent is used when inside the selected
-map. The canonical Gallery preset itself includes Channel and Overland bifurcations
-(the comparison panel p01-f04a includes Channel only). Missing preset products
-retain the available map
-and report why the default cannot be applied. Later JSON loads/preset choices are
-not overridden. All desktop launchers and Panel sessions share this startup path.
-
+With no map argument, every launcher opens the repository's bundled
+`map/mekong_15min/` without a folder dialog. Mekong retains the **p01-f04b**
+startup display with Channel + Overland bifurcations and its compatible Gallery
+extent. Other maps start with their full native extent, a supported coarse raster
+and nextxy network; no Mekong-specific extent is applied. High-resolution
+**NetCDF is preferred** for Mekong, TE-Japan and global maps. Existing Binary
+products remain compatible; optional Binary visual/catmz100 fields can supplement
+NetCDF when the corresponding NetCDF product is absent.
 
 A standalone, read-only browser for coarse CaMa-Flood river maps. Explore
 rasters, stored downstream connectivity and individual cells without editing
 plotting scripts, running a Fortran program, or providing model output.
+
+## Map Dataset — load or switch maps
+
+At the top of **Visualization**, choose an **Available Map** or enter **Map
+Directory**, then press **Load Map**. Dropdown/path edits alone do not switch.
+Candidate maps are immediate children of repository `map/`, with valid params.txt
+and at least one supported readable core raster; tools/src, hidden/temporary and
+invalid map directories are omitted. The name, native dimensions and spacing
+come from metadata. The installed datasets currently include Mekong15min,
+TE-Japan1min and global15min; the list is discovered, not hardcoded.
+
+Custom server-side directories may be absolute or relative to the **repository
+root**, independently of the terminal/browser working directory. Select the map
+root containing params.txt, not its netcdf subdirectory. In WSL, custom GUI paths
+are Linux paths such as `/mnt/d/maps/TE-Japan_01min`.
+
+Loading shows status and disables repeated requests. A complete new Explorer is
+prepared and rendered before replacing the old view on the same server/session.
+Failure keeps the current plot, selection, Inspector and Pins operational and
+reports the invalid path/metadata/product. Different browser sessions have their
+own active map. A map change resets extent, visualization/Gallery state, selection,
+Inspector, network/native caches and Pins; it preserves the application controls
+and Visualization/Inspector mode. Ordinary settings changes still keep the plot
+mounted; only an explicit successful map switch replaces it.
+
+If Pins exist, a warning offers **Switch Map and Clear Pins** and **Cancel map
+switch**. Export Pins/Comparison CSV in Inspector first if needed. Nothing is
+cleared on cancellation or load failure, and exported CSV files are never deleted.
+Settings JSON from a different map is rejected with a message: load that map
+explicitly through Map Dataset, then reload the JSON. Existing same-map v1/v2
+settings and legacy tile IDs remain compatible; JSON never implicitly switches maps.
+PNG/JSON filenames identify the active map and remain outside its scientific input
+directory. No source data are written, restored or converted when switching.
+
+### High-resolution NetCDF and performance
+
+Products under `1min_nc/`, `15sec_nc/` or other location.txt tile directories are
+read directly. Coordinates are validated against native pixel centers; ascending
+or descending axes and lat/lon dimension order are normalized. Paired `catmxx` /
+`catmyy` (or `catmx` / `catmy`) remain one-based river-cell assignments. Supported
+native types are int16 assignments, int8 visual/catmz100 codes and Float32 terrain,
+width and uparea. Units/missing metadata are validated; native uparea in m² is
+converted to displayed km², while supplied km² remains unchanged. Packed/scaled or
+inconsistent metadata are rejected with diagnostics instead of guessing values.
+
+NetCDF products take precedence for each matching native tile/field. A malformed
+present NetCDF field is reported unavailable, not silently replaced by Binary.
+Absent NetCDF fields may use compatible Binary (for example Mekong visual codes).
+This retains p01-f04b without inventing missing TE-Japan/global channel pixels.
+Incompatible Gallery presets show missing products and cannot be applied.
+
+Discovery reads only headers/1-D coordinates. No full-resolution high-res arrays
+or full-tile statistics are computed on generic map startup. Native reads use
+bounded row/column blocks and close NetCDF handles after each read. Catmxy clicks,
+indexing, exposed-edge outlines, P5/P95 and PNG use those same native values;
+display sampling never supplies a catchment assignment. First native selection
+indexes the selected tile once; later selections reuse its assignment index.
+Explicit high-res Auto computes full-tile assigned-pixel P5/P95 and caches it.
+The existing exact-statistics disk workspace is up to 8 bytes/native pixel:
+about 253 MB for Japan's 6000×5280 tile and 1.87 GB for global 21600×10800. Ensure
+adequate temporary disk space; global native selection/statistics can take time.
+
+On the validation Mac, Japan 1500×1320 and global 1440×720 coarse startup took
+about 2.7s and 3.5s. The sequential real-map/PNG integration process peaked near
+930 MiB RSS; this is a process high-water mark, not steady per-map memory.
+Global coarse startup was tested, but global full-native selection/terrain
+statistics and other-machine performance were not benchmarked. See VR-0172.
 
 ## Visualization and Inspector modes
 
@@ -117,7 +184,7 @@ viewport except for explicit navigation and aspect actions.
   the coarse NLFP profile remains in its existing section.
   The clicked pixel's native uparea and assigned coarse catchment uparea are
   separate rows, including in Grid mode when their target differs. Scalar reads
-  use read-only memmaps. Supplied location.txt/native Binary formats are supported;
+  use native NetCDF block reads or read-only Binary memmaps. Supplied location.txt/NetCDF and compatible Binary formats are supported;
   an unverified high-resolution NetCDF layout is not inferred.
 - **View → Apply Aspect Ratio**, directly below the selector, reapplies its shape
   around the current center even when the selector has not changed. Repeated
@@ -156,17 +223,17 @@ An independent installation, run from the repository root, is:
 ```sh
 python3 -m venv visualization/map_explorer/.venv
 visualization/map_explorer/.venv/bin/python -m pip install -r visualization/map_explorer/requirements.txt
-./visualization/map_explorer/run.sh map/mekong_15min
+./visualization/map_explorer/run.sh
 ```
 
 If dependencies are already in the active environment:
 
 ```sh
-./visualization/map_explorer/run.sh map/mekong_15min
+./visualization/map_explorer/run.sh
 ./visualization/map_explorer/run.sh "/path/to/custom_map"
 ```
 
-MAP_DIR resolves relative to the caller first, then relative to this repository.
+MAP_DIR is optional and resolves relative to this repository when not absolute.
 An absolute path also works from any current directory. The Python selection
 order is explicit `PYTHON`, active `VIRTUAL_ENV`, app-local `.venv`, repository
 `.venv`, `python3`. Set `PYTHON` to choose another interpreter explicitly.
@@ -184,18 +251,16 @@ needs an Internet connection; offline scientific rendering stays available.
 - **macOS:** double-click `launch_mac.command` in Finder.
 - **Windows:** double-click `launch_windows.bat` in File Explorer.
 
-A folder chooser asks for a map directory containing `params.txt`. Select the
-map directory itself, not its `netcdf/` subdirectory. If Python's optional Tk
-folder dialog is unavailable, the terminal asks for a path; press Enter to use
-the bundled Mekong map or enter `q` to cancel. Closing the chooser cancels.
-The launcher chooses an available local port and opens the browser. Keep the
-terminal open; Ctrl-C stops the app. Startup errors remain visible in the
-terminal. Existing running instances are not stopped or replaced.
+With no map argument, these launchers immediately use bundled Mekong. The
+launcher chooses an available local port and opens the browser. Keep the terminal
+open; Ctrl-C stops the app. Errors remain visible; existing instances are not
+stopped. Choose another map afterward through Map Dataset, or pass an explicit
+map path on the command line. No Tk/folder-dialog dependency is needed.
 
 Both launchers use an explicit `PYTHON` if supplied, then active `VIRTUAL_ENV`,
 app-local `.venv`, then repository `.venv`. macOS also checks Homebrew locations;
-Windows then tries `py -3` and `python`. Optional command-line map paths bypass
-the folder chooser. A `PYTHON` override must name an executable, without flags.
+Windows then tries `py -3` and `python`. A `PYTHON` override must name an executable,
+without flags.
 
 Each machine needs its own environment (a macOS `.venv` cannot be reused on
 Windows). With Python 3.10+ installed, the setup prompt can prepare it; manual
@@ -208,8 +273,8 @@ visualization\map_explorer\.venv\Scripts\python.exe -m pip install -r visualizat
 
 Double-click launchers ask in their terminal before installing missing dependencies.
 If Python itself is unavailable, install Python 3.10+ first; the launcher does not
-install an OS Python distribution. Missing `_tkinter` only changes folder selection
-to terminal input and is not treated as a missing GUI runtime dependency.
+install an OS Python distribution. Neither the default launch nor in-browser
+map switching requires `_tkinter`.
 If executable permissions were lost when copying the Mac launcher, restore them with
 `chmod +x visualization/map_explorer/launch_mac.command`.
 The Windows batch wrapper is supplied but has not been executed on Windows
@@ -948,8 +1013,8 @@ arguments and converted using `wslpath`; Linux paths are also accepted for the m
 visualization\map_explorer\launch_windows_wsl.cmd "D:\CaMa data\map\mekong_15min"
 ```
 
-With no argument a Windows folder chooser is shown. Cancel, or an unavailable
-chooser, uses bundled `map/mekong_15min`. The map must contain a valid `params.txt`.
+With no argument WSL starts bundled `map/mekong_15min` without a folder chooser.
+Explicit Windows/Linux map paths remain supported. The map must contain a valid `params.txt`.
 The minimal CMD delegates to a repository PowerShell helper; its execution-policy
 bypass is process-local and does not change machine/user execution policy.
 

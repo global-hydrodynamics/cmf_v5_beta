@@ -23,13 +23,7 @@ try {
     $distros = @($listText -split "`r?`n" | ForEach-Object { ($_ -replace "`0", '').Trim() } | Where-Object { $_ })
     if ($listExit -ne 0 -or $distros.Count -eq 0) { throw 'No usable WSL distribution. Run wsl --list --verbose and complete Linux distribution setup.' }
     if (-not $MapDirectory) {
-        try {
-            Add-Type -AssemblyName System.Windows.Forms
-            $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
-            $dialog.Description = 'Select a CaMa-Flood map folder containing params.txt (Cancel uses bundled Mekong)'
-            if ($dialog.ShowDialog() -eq 'OK') { $MapDirectory = $dialog.SelectedPath }
-        } catch { Write-Host 'Folder chooser unavailable; using bundled Mekong.' }
-        if (-not $MapDirectory) { $MapDirectory = Join-Path $PSScriptRoot '..\..\map\mekong_15min' }
+        $MapDirectory = Join-Path $PSScriptRoot '..\..\map\mekong_15min'
     }
     $distro = $env:CMF_WSL_DISTRO
     # A UNC Linux path identifies its owning distribution. Refuse cross-distro ambiguity.
