@@ -82,8 +82,9 @@ def test_netcdf_assignment_boundaries_percentiles_and_native_click(products):
     app.inspect(11.75, 21.75)
     native = nc.sample("catmxy", np.array([2]), np.array([3]))[:, 0, 0]
     assert app.selected == (int(native[1]) - 1, int(native[0]) - 1)
-    assert app.selection.native_pixel == (2, 3)
-    assert app.selection.boundary.pixel_count == b.pixel_count
+    assert app.point_select.value == "grid" and app.selection.native_pixel is None
+    assert app.selection.boundary is None and not app.cell_inspector.pixel_section.visible
+    assert b.pixel_count > 0  # Explicit fallback/native tooling still matches Binary scientifically.
 
 
 def test_native_uparea_units_and_fill_are_not_inherited(products):

@@ -950,3 +950,82 @@ Browser and PNG share the explicit overlay geometry. Selection rectangles and
 stored catmxy catchment boundaries are separate renderers and remain visible.
 No input arrays, scientific assignments, model behavior, saved settings or grid
 resolution change. This replaces the old combined500-line omission safeguard.
+
+
+## DT-0134 — COG display and resolution-aware selection (2026-11-17)
+
+Maintainer authorizes this incremental architecture on feature/package-builder,
+including commit/push. This section supersedes earlier manual Point Select,
+NetCDF-first high-res and whole-tile CatchmentIndex interaction descriptions.
+Model-grid NetCDF readers, river topology/classifications and native scientific
+values remain unchanged. Converter/package/catalog generation is outside scope.
+
+`hires_cog.py` is a read-only window/overview adapter. Tile discovery prefers
+compatible existing numeric COGs by product before opening high-res NetCDF.
+Geometry/orientation/types/band metadata/units/source filename and freshness are
+checked; optional absent products have reasoned fallback. Metadata stat calls to
+an NC source are not native NC reads. No rendered RGB or assignment overview is
+ever a scientific input. Coarse/model-grid readers retain their original contract.
+
+`Sampling` records native window edges, output shape, overview factor, both pixel
+screen scales and actual native/decimated state. Screen size is the fitted Bokeh
+frame times measured DPR (batched callbacks accept both events). Closest logarithmic
+overview factor supplies display; factor1 alone does not establish native mode.
+Both native pixels must span at least one physical pixel, output shape must remain
+native, and compatible catmxy COG must exist. The two-million-output-pixel budget
+can force Grid even on a very large display. The one disabled Point Select group
+reports effective mode, never an independent manual preference. Both map header
+and Inspector show reason. Current source/LOD wins over legacy JSON/Pin mode hints.
+The existing plot stays mounted on style/tab changes; a dataset switch replaces
+only the session's validated map as before. Drawer toggles explicitly remeasure
+the frame because moving a DOM box need not trigger its ResizeObserver.
+
+Grid mode never invokes native pixel/boundary inspection. Catchment mode resolves
+exact native row/column at click, validates both one-based catmxy indices against
+coarse dimensions, then reads coarse scientific attributes from the assigned cell.
+`nextxy` supplies connectivity only. Invalid pairs preserve their stored codes and
+clear prior selection; they do not choose a geographic/nearest river cell. Native
+scalar uparea and inherited coarse uparea remain separate, with unit conversion.
+
+`visible_catchment_boundary` reads only viewport+one native neighbor halo, compares
+stored assignments and emits real exposed edges merged into collinear runs. No
+viewport border is invented; true tile borders, holes and disconnected groups
+are retained. Geometry is explicitly incomplete outside the visible window;
+count scope is included in Inspector diagnostics, summary and Pins CSV. The old
+full CatchmentIndex remains for explicit small scientific tooling/tests but is not
+used in the controller. Selection source identity/extent govern geometry reuse.
+The orange outline and lavender Grid rectangle use these same coordinates in PNG.
+
+Tiles in the selected resolution family compose in lexical order; overlap clicks
+use the last drawn tile. Frame color limits are the first rendered tile's full
+native reference shared across images, not combined multi-tile quantiles. Native
+8-neighbor difference is deferred until native detail. Centroid Headwater Guides
+are disabled for COG to prevent full native scans; model-grid river links retain
+existing display policy. These are explicit current limitations, not science
+substitutions or future functions advertised as present.
+
+Exact assigned-native P5/P95 is preserved with existing bounded-memory/disk
+partitioning. Inherited uparea uses pixel weights, valid paired assignments and
+actual coarse units. No overview statistics enter limits. Persistent tiny JSON
+limit caches outside map directories include native COG/NC stat signatures,
+quantiles/mask policy, coarse shape and inherited array hash. More than50million
+native pixels without an exact cache requires Manual; no global cold scan starts
+on a click/pan. The temporary workspace may still be large for supported tiles.
+Raw values share64MiB session LRU, geometry8 windows; selected geometry caches one
+current source/cell/window. Large statistic stripes do not evict active display
+values. Replaced file signatures invalidate caches; closing/switching releases
+session references. Freshness metadata cannot prove byte-identical provenance;
+no hash exists in existing converter outputs. Malformed/disappeared active files
+produce a read error; reload the map to rediscover available fallback products.
+
+Navigation coalesces latest extent75ms under Bokeh's document lock. No busy scan or
+worker races are introduced. Palette/opacity reuse values and geometry. PNG uses
+the already composed screen frame and overview; Matplotlib output size is not a
+request for native data. Launchers probe Rasterio along with existing modules;
+macOS wheel1.4.1/GDAL3.9.2 tested, real Windows/WSL execution remains unverified.
+
+Validation and single-trial old-NetCDF benchmark: VR-0180. The comparator is
+read-only baseline d6ede25f in a temporary directory, not a switched branch.
+No new scientific knowledge gap was identified: the maintainer specifies LOD and
+selection semantics, while tests independently establish native units/indices/
+true-edge geometry. Execution is evidence of I/O/UI contracts, not model physics.

@@ -21,6 +21,7 @@ from map_layers import make_layer, validate_palette_range
 from map_reader import MapReader
 from background_style import highres_layer
 from test_v2 import products
+from conftest import install_test_cogs
 from test_selection_modes import split_assignment
 
 
@@ -132,7 +133,9 @@ def test_explicit_selection_legacy_state_and_native_fields(split_assignment):
     levels = np.full((6, 8), 42, dtype="i1")
     levels[0, 0] = -9
     levels.tofile(d / "tile.catmz100.bin")
+    install_test_cogs(root)
     app = Explorer(root, root.parent / "exports")
+    app.background.value = "catchment"
     assert app.point_select.value == "catchment" and app.cell_inspector.pixel_section.active == []
     info = app.inspect(11.25, 22.25)
     assert app.selected == (1, 0) and app.selection.native_pixel == (1, 2)
@@ -140,10 +143,10 @@ def test_explicit_selection_legacy_state_and_native_fields(split_assignment):
     assert "High-res elevtn" in app.cell_inspector.pixel.object and "fldhgt" not in app.cell_inspector.pixel.object
     for mode in ("coarse", "elevtn", "catchment", "none"):
         app.background.value = mode
-        assert app.selected == (1, 0)
-    app.point_select.value = "grid"
+        assert app.selected == ((1,0) if mode in ("elevtn","catchment") else (0,1))
+    app.background.value = "coarse"
     assert app.selected == (0, 1)
-    app.point_select.value = "catchment"
+    app.background.value = "catchment"
     assert app.selected == (1, 0)
     info = app.inspect(10.25, 22.75)
     assert app.selected is None and info["native hires catmz100 [stored code]"] == -9
@@ -196,6 +199,6 @@ def test_new_session_prefers_assignment_source(products):
     with location.open("a") as stream:
         stream.write("2 assigned 10 14 20 23 8 6 0.5\n")
     app = Explorer(products, products.parent / "exports")
-    assert app.hires_source.value == "fine/assigned" and app.point_select.value == "catchment"
+    assert app.hires_source.value == "fine/assigned" and app.point_select.value == "grid"
     app.inspect(11.25, 21.75)
     assert app.selected == (1, 1)

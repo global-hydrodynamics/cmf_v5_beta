@@ -7,9 +7,10 @@ extent. Every other map also applies **p01-f04b** on initial load and map switch
 when its required products are available, retaining that map's full native extent
 instead of the Mekong Gallery extent. If requirements are missing or invalid,
 a supported coarse display remains usable and the preset status explains why. High-resolution
-**NetCDF is preferred** for Mekong, TE-Japan and global maps. Existing Binary
-products remain compatible; optional Binary visual/catmz100 fields can supplement
-NetCDF when the corresponding NetCDF product is absent. The categorical
+**COG is preferred** for high-resolution rasters in Mekong, TE-Japan and global maps.
+Model-grid scientific attributes and topology continue to use NetCDF.
+Missing/invalid COG fields have an explicit NetCDF/Binary display fallback;
+Catchment interaction requires compatible native COG catmxy. The categorical
 `visual.nc` uses CSV units `code`; Explorer accepts this canonical encoding and
 legacy dimensionless `1` without changing classification values. If regenerated
 products were rejected by an older running server, restart Explorer to load the
@@ -80,39 +81,60 @@ settings and legacy tile IDs remain compatible; JSON never implicitly switches m
 PNG/JSON filenames identify the active map and remain outside its scientific input
 directory. No source data are written, restored or converted when switching.
 
-### High-resolution NetCDF and performance
+### High-resolution COG and performance
 
-Products under `1min_nc/`, `15sec_nc/` or other location.txt tile directories are
-read directly. Coordinates are validated against native pixel centers; ascending
-or descending axes and lat/lon dimension order are normalized. Paired `catmxx` /
-`catmyy` (or `catmx` / `catmy`) remain one-based river-cell assignments. Supported
-native types are int16 assignments, int8 visual/catmz100 codes and Float32 terrain,
-width and uparea. Units/missing metadata are validated; native uparea in m² is
-converted to displayed km², while supplied km² remains unchanged. Packed/scaled or
-inconsistent metadata are rejected with diagnostics instead of guessing values.
+Existing numeric `MAP_DIR/COG/RESOLUTION/AREA.FIELD.tif` files supply both display
+and native inspection. Discovery validates COG layout, EPSG:4326, native dimensions,
+pixel edges, signed dtype, band variable names, units and source filename. A COG
+older than its associated NetCDF is rejected. This checks metadata/mtime, not a
+cryptographic provenance hash. Compatible COGs prevent opening that field's high-res
+NetCDF; only filesystem metadata may be checked. No conversion runs in Explorer.
+Missing/incompatible COGs show diagnostics and preserve the existing NetCDF/Binary
+fallback display; fallback does not enable native Catchment interaction.
 
-NetCDF products take precedence for each matching native tile/field. A malformed
-present NetCDF field is reported unavailable, not silently replaced by Binary.
-Absent NetCDF fields may use compatible Binary (for example Mekong visual codes).
-This retains p01-f04b without inventing missing TE-Japan/global channel pixels.
-Incompatible Gallery presets show missing products and cannot be applied.
+The frame's actual CSS dimensions × device-pixel ratio determine sampling on both
+longitude and latitude axes. The closest available internal overview in logarithmic
+factor space supplies wide views; output is capped at two million pixels. Native
+Catchment mode requires factor 1, no output decimation, at least one physical screen
+pixel per native pixel on **both** axes and compatible COG catmxy. Native data can
+be used for display without qualifying as native selection if downsampled afterward.
+The mode and reason appear above the map and in Inspector. Point Select shows the
+one effective automatic mode; it is no longer a manual override.
 
-Discovery reads only headers/1-D coordinates. No full-resolution high-res arrays
-or full-tile statistics are computed on generic map startup. Native reads use
-bounded row/column blocks and close NetCDF handles after each read. Catmxy clicks,
-indexing, exposed-edge outlines, P5/P95 and PNG use those same native values;
-display sampling never supplies a catchment assignment. First native selection
-indexes the selected tile once; later selections reuse its assignment index.
-Explicit high-res Auto computes full-tile assigned-pixel P5/P95 and caches it.
-The existing exact-statistics disk workspace is up to 8 bytes/native pixel:
-about 253 MB for Japan's 6000×5280 tile and 1.87 GB for global 21600×10800. Ensure
-adequate temporary disk space; global native selection/statistics can take time.
+Clicks in Grid mode read coarse attributes only and hide Pixel Information/native
+outlines. Catchment clicks read the exact native pixel (not the display overview).
+Boundaries use only the visible native window plus a true one-pixel neighbor halo,
+merge collinear exposed edges, preserve holes/components, and never close a polygon
+at the viewport edge. Counts are **assigned pixels in the visible window**, not
+complete catchment counts or physical area. Pan recomputes that window; style-only
+changes reuse geometry. Invalid/missing catmxy has no inferred assignment.
 
-On the validation Mac, Japan 1500×1320 and global 1440×720 coarse startup took
-about 2.7s and 3.5s. The sequential real-map/PNG integration process peaked near
-930 MiB RSS; this is a process high-water mark, not steady per-map memory.
-Global coarse startup was tested, but global full-native selection/terrain
-statistics and other-machine performance were not benchmarked. See VR-0172.
+Automatic limits retain exact full-tile assigned-native **P5/P95**, including
+pixel-weighted inherited coarse values. Overview samples never determine statistics.
+Bounded row blocks and temporary disk partitioning bound RAM. The disposable exact
+limit cache is under the system temporary directory (`cmf-explorer-native-stats`);
+`CMF_EXPLORER_STATS_CACHE` can select another writable location outside map data.
+Cache keys include source signatures, assignment policy, coarse dimensions and an
+inherited-field content hash. Cold Auto still scans native tile blocks: temporary
+workspace can reach eight bytes/native pixel (Japan about253MB). Above50million
+native pixels, an uncached exact Auto scan is refused explicitly: use Manual limits
+or a previously prepared exact cache. No approximate percentiles are substituted.
+
+Raw geographic-window arrays share a64MiB session LRU; native outlines keep8 recent
+windows. Cached values precede palette/opacity transforms. File replacement changes
+cache identity; map switch/close releases session caches. Dataset-drawer visibility
+also remeasures frame height. Pan/zoom redraws are coalesced75ms after events using
+the latest extent. Coarse-grid edges remain all-or-none, never subsampled.
+
+Tiles of the selected resolution family are composed in lexical order (later tiles
+win overlaps); click lookup follows that draw order. Physical limits come from the
+first rendered tile's full native reference, shared by the composed frame. This is
+not an all-tiles percentile. Other limitations: native 8-neighbor elevation
+difference is displayed only at native detail; centroid-based Headwater Guides are
+disabled on COG paths to avoid whole-tile interactive scans. The normal river graph
+and headwater link-display policy still use model-grid topology. PNG export uses
+the current frame/overview and scientific coordinates; it does not reread a full
+native image merely because the export has more output pixels.
 
 ## Visualization and Inspector modes
 
@@ -140,7 +162,7 @@ separate coarse NLFP profile is unchanged and never substituted for pixelwise da
 
 Above the map, the compact summary distinguishes **Selected Grid** from **Selected
 Unit Catchment** and shows selected 1-based indices, stored Outlet (lat,lon), selected
-coarse uparea converted from m² to km², selection method and assigned High-res pixel
+coarse uparea converted from m² to km², selection method and assigned High-res visible-window pixel
 count where available. It uses validated stored outlat/outlon, never the click or
 cell center. Coordinates use five decimal places; uparea uses nine significant
 digits. Missing values show Unavailable. The pixel count is not a physical area.
@@ -203,12 +225,11 @@ viewport except for explicit navigation and aspect actions.
 - Ordinary **Unit Catchment Boundaries** default to `#4A4A4A`, 0.65 px. The existing
   color picker and saved colors remain authoritative. Selected native boundaries
   remain orange solid 3 px; computational rectangles are pale lavender #D8C8F0, dashed, 3px.
-- **Inspector → Point Select → Grid / Catchment** explicitly selects either the
-  containing computational grid or the exact clicked native catmxy assignment,
-  independently of background. New sessions default to Catchment when a catmxy
-  source exists, otherwise Grid. Switching modes re-resolves the last geographic
-  click without another click. Missing/unassigned pixels never fall back to Grid.
-  Changing source re-resolves the click and cannot leave an unrelated outline.
+- **Inspector → Point Select → Grid / Catchment** reports the automatic
+  resolution-aware mode. Overview/decimated/fallback/coarse/no-background views use
+  Grid; undecimated native COG views with catmxy use Catchment. Changes re-resolve
+  the last click without creating another selection state. Invalid assignments in
+  native mode never fall back to a containing Grid.
 - **High-resolution Pixel Information** is collapsed initially and retains its
   expansion across updates. It reports High-res 1-based ix/iy, catmx/catmy,
   genuine High-res uparea[km²], elevtn[m], rivwth[m] and signed catmz100
@@ -217,9 +238,8 @@ viewport except for explicit navigation and aspect actions.
   is explicitly separate. No pixelwise native fldhgt is inferred or shown in this ordinary section;
   the coarse NLFP profile remains in its existing section.
   The clicked pixel's native uparea and assigned coarse catchment uparea are
-  separate rows, including in Grid mode when their target differs. Scalar reads
-  use native NetCDF block reads or read-only Binary memmaps. Supplied location.txt/NetCDF and compatible Binary formats are supported;
-  an unverified high-resolution NetCDF layout is not inferred.
+  separate rows in native Catchment mode. Grid mode hides this section and performs
+  no native pixel reads. Scalar inspection uses native COG pixel windows.
 - **View → Apply Aspect Ratio**, directly below the selector, reapplies its shape
   around the current center even when the selector has not changed. Repeated
   clicks work after pan/zoom/manual extent/resize. Custom keeps the current
@@ -227,12 +247,12 @@ viewport except for explicit navigation and aspect actions.
   predefined shape action. Existing viewport-height bounds and legend remain.
 
 JSON v1/v2 still load. Missing new fields default to OSM off, full palette range
-and the saved background's original Grid/Catchment rule; new files store explicit
+and automatic resolution-aware selection; new files retain compatible
 `point_select`, `basemap`, `layers.coarse_palette_range` and
 `layers.highres_style.palette_range` plus `layers.auto_limits_policy`. Fresh sessions
 use `percentile`; old JSON may retain `gallery` as a compatibility flag. Both
 use the same P5/P95 Auto calculation, including after applying a preset. Gallery presets reset OSM off and palette
-ranges to [0,1], retaining the user's explicit Point Select preference. Shared
+ranges to [0,1], re-evaluating automatic Point Select from current resolution. Shared
 preset settings remain CSV references to the canonical visualization catalog.
 
 **PNG:** local Matplotlib uses the same scientific palette, physical limits and
@@ -491,8 +511,8 @@ of Background Opacity. Sampling may omit small features without category
 averaging; the diagnostics explicitly recommend zooming in when pixels are sampled.
 
 Enable **Unit Catchment Boundaries** in **Overlays** for native assignment-pair
-edges on either raster type, independently of Channel Pixels and displayed values.
-Missing selected catmxy disables it with a reason. Ordinary boundaries are omitted
+edges in native COG Catchment mode, independently of Channel Pixels and displayed values.
+Grid/overview/fallback modes disable it with a reason. Ordinary boundaries are omitted
 in sampled views and above 100,000 visible native edges; zoom in. Selected
 catchment boundaries remain independent of that display limit.
 
@@ -633,7 +653,8 @@ Each overlay remains independent of the background and main-network style:
 - **Headwater** retains native unit-catchment pixel-centroid to outlet guides for
   cells without incoming regional links. Boundary omissions can create candidates;
   these are **not confirmed physical headwaters**. Selected catmxy/uparea are
-  required; periodic global centroid guides remain unsupported.
+  required; periodic global centroid guides remain unsupported. This centroid
+  guide is explicitly disabled on COG paths to prevent a whole-native-tile scan.
 - **Coarse Grid** draws every native computational edge from params.txt only
   while both displayed map spans are below30 cells. At30 or more cells on either
   axis, the entire grid overlay is hidden: lines are never thinned. Span is the
@@ -798,7 +819,7 @@ does not become a newly Gallery-approved method. No two-way synchronization.
 
 ## Selecting a Grid and its stored unit catchment
 
-Selection uses **Inspector → Point Select**, independently of raster type:
+Selection uses the one automatic **Inspector → Point Select** status:
 
 | Point Select | Selection method | Selected river-map Grid |
 | --- | --- | --- |
@@ -806,13 +827,11 @@ Selection uses **Inspector → Point Select**, independently of raster type:
 | Catchment | Native catmxy assignment | river cell assigned to the exact clicked native pixel |
 
 A high-resolution pixel can lie inside geographic Grid A while its catmxy points
-to river Grid B. Grid selects **A** and outlines all native pixels assigned to A;
-Catchment selects **B** and outlines B's pixels. Background changes do not change
-this explicit choice. Old JSON initially derives the original background rule.
-In either mode the selected rectangle, unit-catchment boundary, attributes,
-cell/outlet marker and downstream link refer to the **same selected river cell**.
-The native assignment shown for the clicked pixel can differ from that selected
-cell and is explicitly labeled separately.
+to river Grid B. Grid mode selects **A** with no native read/outline. Native
+Catchment mode selects **B** with B's true exposed assignment edges in the visible
+window. The selected rectangle, attributes, outlet and downstream link refer to
+the selected river cell. JSON v1/v2 selection hints still load, but current source
+and resolution determine the effective mode.
 
 The **Inspector** presents the selected Unit Catchment as a scientific object.
 Its persistent 2×2 summary reads, in row order:
@@ -891,16 +910,14 @@ Unit Catchment Boundaries are disabled and use identical browser/PNG coordinates
 The selected outlet/link stay yellow with a downstream endpoint arrow. This
 supersedes earlier pink/cased presentation; selection logic is unchanged.
 
-Changing **Point Select Grid ↔ Catchment** re-evaluates the last geographic click
-without another click. Background/variable/color/network/overlay/panel/viewport
-changes preserve the explicit selection rule. Source changes reassess the same
-click; unrelated tile geometry is never retained. Selection is not serialized;
-loading a configuration reassesses an existing click if its rule/source changes.
+Resolution/source/background changes re-evaluate the last geographic click when
+the automatic mode changes. Palette/opacity/network/UI changes preserve compatible
+selection. Grid↔Catchment changes clear stale native geometry/fields. Selection is
+not serialized; loading settings reassesses the current display resolution.
 
 In Catchment mode, unassigned/missing/mixed/outside-tile pixels retain raw diagnostic
 information and clear prior selected geometry/link. No geographic or nearest-cell
-fallback is allowed. Grid mode remains selectable without catmxy, even when no
-native pixels are assigned to that grid; only its catchment outline is unavailable.
+fallback is allowed. Grid mode needs no catmxy and performs no native inspection.
 
 catmxy maps native pixels to river-map cells; nextxy defines connectivity between
 those cells. A regular computational rectangle and an irregular unit catchment
@@ -1110,11 +1127,15 @@ Labels combine A/B/… with the first28 name characters; lists/CSV retain the fu
 Active markers are larger/purple; other Pins are teal. Rename changes display only.
 Delete removes only that Pin, marker and comparison column, retaining the ordinary
 current selection. Choose a Pin from the list or click its marker to restore its
-saved Grid/Catchment mode, source and assigned river cell. An off-screen Pin recenters
+saved source and river cell when the current automatic mode is compatible. A mode
+mismatch is reported; zoom to native detail or out to Grid before restoring that
+Pin. A saved mode never overrides current resolution. An off-screen Pin recenters
 the viewport while preserving its span. Coincident markers can be chosen via the
 list. Restored Inspector connectivity uses the Pin's saved network product without
 changing current River visibility/style. The clicked coordinate, stored outlet,
 selected1-based river indices and irregular native `catmxy` boundary remain distinct.
+Pins CSV adds `assigned_pixel_scope` so visible-window counts cannot be mistaken
+for complete native catchment totals; prior columns remain compatible.
 
 Pins survive background/OSM/River/overlay/preset/navigation/UI-mode changes within
 this browser session. They are **not saved in visualization JSON**, persistent storage

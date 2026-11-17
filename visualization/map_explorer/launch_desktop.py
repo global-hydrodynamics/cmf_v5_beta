@@ -78,7 +78,7 @@ def prepare_environment(directory, argv, missing):
                         str(environment)], check=True)
         print("[STEP] Installing Map Explorer requirements", flush=True)
         subprocess.run([str(python), "-m", "pip", "install", "-r", str(directory / "requirements.txt")], check=True)
-        subprocess.run([str(python), "-c", "import numpy, netCDF4, matplotlib, panel, bokeh"], check=True)
+        subprocess.run([str(python), "-c", "import numpy, netCDF4, matplotlib, panel, bokeh, rasterio"], check=True)
     except (OSError, subprocess.CalledProcessError) as exc:
         print(f"[ERROR] Environment setup failed: {exc}", file=sys.stderr)
         print("Existing data and other environments were not changed. Re-run the launcher to retry.", file=sys.stderr)
@@ -99,7 +99,7 @@ def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
     args = parser.parse_args(argv)
     directory = Path(__file__).resolve().parent
-    missing = [name for name in ("numpy", "netCDF4", "matplotlib", "panel", "bokeh")
+    missing = [name for name in ("numpy", "netCDF4", "matplotlib", "panel", "bokeh", "rasterio")
                if importlib.util.find_spec(name) is None]
     if missing and args.no_setup:
         print("[ERROR] Missing WSL Python packages: " + ", ".join(missing), file=sys.stderr)

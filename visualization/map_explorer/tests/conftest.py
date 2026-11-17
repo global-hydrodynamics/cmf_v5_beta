@@ -49,18 +49,60 @@ def write_network(root):
 
 
 def native_assignments(tile):
-    """Independent real-data test oracle; production never reads a whole NC tile."""
+    """Small-map test oracle only; large datasets require representative windows."""
+    if "catmxy" in tile.cog:
+        g = tile.geometry
+        if g.nx*g.ny > 5_000_000:
+            raise ValueError("Use native windows for large-map test oracles")
+        return np.concatenate([tile.sample("catmxy",np.arange(r,min(g.ny,r+64)),np.arange(g.nx))
+                               for r in range(0,g.ny,64)],axis=1)
     path = tile.files["catmxy"]
     if path.suffix != ".nc":
         return np.asarray(tile.mmap("catmxy"))
-    with Dataset(path, "r") as ds:
+    with Dataset(path,"r") as ds:
         ds.set_auto_maskandscale(False)
-        lat, lon = ds["lat"][:], ds["lon"][:]
-        rows, cols = np.argsort(-lat), np.argsort(lon)
-        values = []
-        for key in ("catmxx", "catmyy"):
-            a = ds[key][:]
-            if ds[key].dimensions == ("lon", "lat"):
-                a = a.T
-            values.append(a[np.ix_(rows, cols)])
+        rows,cols = np.argsort(-ds["lat"][:]),np.argsort(ds["lon"][:])
+        values=[]
+        for key in ("catmxx","catmyy"):
+            data=ds[key][:]
+            if ds[key].dimensions == ("lon","lat"):data=data.T
+            values.append(data[np.ix_(rows,cols)])
         return np.stack(values)
+
+
+def install_test_cogs(root):
+    """Promote tiny synthetic Binary fixtures to self-contained numeric COGs only.
+
+    Never used with real datasets: both temporary-root and pixel-budget guards
+    prevent an accidental scientific-map conversion during regression setup.
+    """
+    import tempfile
+    import rasterio
+    from rasterio.shutil import copy as raster_copy
+    from rasterio.enums import Resampling
+    from rasterio.transform import from_origin
+    from hires import discover_tiles
+    root=Path(root).resolve()
+    assert Path(tempfile.gettempdir()).resolve() in root.parents
+    for tile in discover_tiles(root,[]).values():
+        g=tile.geometry
+        assert g.nx*g.ny <= 50000
+        for name in list(tile.files):
+            source=tile.directory/f'{tile.prefix}.{name}.bin'
+            if not source.is_file():continue
+            dtype,records=('<i2',2) if name=='catmxy' else ('i1',1) if name in ('visual','catmz100') else ('<f4',1)
+            values=np.fromfile(source,dtype=dtype).reshape(records,g.ny,g.nx)
+            names=['catmxx','catmyy'] if name=='catmxy' else [name]
+            units='km2' if name=='uparea' else 'code' if name=='visual' else '1' if values.dtype.kind=='i' else 'm'
+            target=root/'COG'/Path(tile.key).parent/f'{tile.prefix}.{name}.tif'
+            target.parent.mkdir(parents=True,exist_ok=True)
+            stage=target.with_suffix('.stage.tif')
+            with rasterio.open(stage,'w',driver='GTiff',width=g.nx,height=g.ny,count=records,dtype=values.dtype,
+                               crs='EPSG:4326',transform=from_origin(g.west,g.north,g.resolution,g.resolution),
+                               nodata=-9 if values.dtype==np.dtype('int8') else -9999,
+                               tiled=True,blockxsize=128,blockysize=128) as ds:
+                ds.write(values);ds.update_tags(source_file=source.with_suffix('.nc').name)
+                for i,key in enumerate(names,1):ds.update_tags(i,source_variable=key,units=units)
+                ds.build_overviews([2],Resampling.nearest if values.dtype.kind=='i' else Resampling.average)
+            raster_copy(stage,target,driver='COG',BLOCKSIZE=128,COMPRESS='DEFLATE',OVERVIEWS='FORCE_USE_EXISTING')
+            stage.unlink()

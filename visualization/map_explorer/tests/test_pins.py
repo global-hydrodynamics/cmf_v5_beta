@@ -11,11 +11,15 @@ import pytest
 from app import Explorer
 from pins import csv_bytes, letter, scalar
 from test_v2 import products
+from conftest import install_test_cogs
 
 
 @pytest.fixture
 def app(products, tmp_path_factory):
-    return Explorer(products, output_dir=tmp_path_factory.mktemp("pin-exports"))
+    install_test_cogs(products)
+    result = Explorer(products, output_dir=tmp_path_factory.mktemp("pin-exports"))
+    result.background.value = "catchment"
+    return result
 
 
 def add(app, x=10.75, y=22.25, name=""):
@@ -48,7 +52,7 @@ def test_pin_crud_unicode_duplicates_identity_and_positions(app):
 
 def test_grid_and_catchment_same_coordinate_are_distinct(app):
     first = add(app)
-    app.point_select.value = "grid"
+    app.background.value = "coarse"
     second = app.pins.add()
     assert first.id != second.id
     assert first.clicked == second.clicked
@@ -64,16 +68,21 @@ def test_unassigned_and_invalid_cannot_be_pinned(app):
 
 
 def test_revisit_cross_grid_restores_assignment_not_containment(app):
-    tile = next(iter(app.scene.tiles.values()))
-    raw = np.memmap(tile.files["catmxy"], dtype="<i2", mode="r+", shape=(2, 6, 8))
-    raw[:, 1, 1] = [4, 3]
-    raw.flush()
-    del raw
+    path = app.reader.path / "fine/tile.catmxy.bin"
+    raw = np.fromfile(path,dtype="<i2").reshape(2,6,8)
+    raw[:,1,1]=[4,3]
+    raw.tofile(path)
+    install_test_cogs(app.reader.path)
+    app.scene.tiles = __import__("hires").discover_tiles(app.reader.path,[])
+    app.render_view()
     p = add(app)
     assert p.cell == (2, 3)
     assert app.reader.geometry.cell(*p.clicked) == (0, 0)
-    app.point_select.value = "grid"
+    app.background.value = "coarse"
     app.inspect(11.5, 21.5)
+    app.pins.select(p.id)
+    assert app.point_select.value == "grid" and "adjust zoom" in app.pins.message.object
+    app.background.value = "catchment"
     app.pins.select(p.id)
     assert app.selected == (2, 3)
     assert app.point_select.value == "catchment"

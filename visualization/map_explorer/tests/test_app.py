@@ -104,7 +104,9 @@ def test_mekong_integration(tmp_path):
     result=app.inspect(lon,lat)
     rr_geo,cc_geo=r.geometry.cell(lon,lat)
     assert result['ix (1-based)'] == cc_geo+1 and result['iy (1-based)'] == rr_geo+1
-    assert result['assigned coarse ix (1-based)'] == x and result['assigned coarse iy (1-based)'] == y
+    assert 'assigned coarse ix (1-based)' not in result  # Grid clicks do not inspect native assignments.
+    native,assigned = app.scene.inspect(lon,lat,tile.key,cog_only=True)
+    assert assigned == (y-1,x-1)
     for name in r.sources:
         app.variable.value=name
         assert app.layer is not None and 'Error' not in app.status.object

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 import json
 from datetime import datetime
 from html import escape
@@ -31,7 +32,7 @@ from basemap import GeographicBasemap
 from map_layers import colorize, export_png, make_layer, network_style, raster_subset
 from map_reader import MapReader, SCHEMA
 from river_network import RiverNetwork, intersects
-from selection import SelectionState, CatchmentIndex, coarse_cell_outline
+from selection import SelectionState, CatchmentIndex, coarse_cell_outline, visible_catchment_boundary
 from presets import PresetLibrary
 from background_controls import BackgroundControls
 from river_controls import RiverControls
@@ -50,6 +51,7 @@ class Explorer:
     def __init__(self, map_dir, output_dir=None):
         self._closed = False
         self._pending_callbacks = []
+        self._queued_functions = set()
         self.reader = MapReader(map_dir)
         self.scene = Scene(self.reader)
         self.cell_inspector = CellInspector(self.reader, self.scene.products)
@@ -162,9 +164,10 @@ class Explorer:
         self.point_select = pn.widgets.RadioButtonGroup(
             name="Point Select",
             options={"Grid": "grid", "Catchment": "catchment"},
-            value="catchment" if tile and "catmxy" in tile.files else "grid",
+            value="grid", disabled=True,
         )
         self.point_note = pn.pane.Markdown("")
+        self.resolution_status = pn.pane.Markdown("Selection: Grid", margin=(0,5), styles={"font-size":"12px"})
         self.point_select.param.watch(lambda event: self._schedule(self._point_mode_changed), "value")
         self.terrain_palette = pn.widgets.Select(
             name="Terrain palette (assigned P5/P95)", options=["gray", "pale_terrain"]
@@ -539,11 +542,12 @@ class Explorer:
             },
         )
         self.map_viewport = MapViewport(plot=pn.pane.Bokeh(self.plot), sizing_mode="stretch_width")
-        self.map_viewport.param.watch(lambda event: self._schedule(self._size_map), "bounds")
+        self.map_viewport.param.watch(lambda *events: self._schedule(self.render_view), ["bounds", "pixel_ratio"])
         self.pins = PinControls(self)
         self.inspector_panel.append(self.pins.view)
         self.map_region = pn.Column(
             self.coordinate,
+            self.resolution_status,
             self.selection_summary,
             self.map_viewport,
             self.basemap.driver,
@@ -582,10 +586,15 @@ class Explorer:
             return
         document = self.plot.document
         if document is not None and document.session_context is not None:
+            if function in self._queued_functions:
+                return
+            self._queued_functions.add(function)
             def execute():
+                self._queued_functions.discard(function)
                 self._pending_callbacks[:] = [(d, h) for d, h in self._pending_callbacks if h is not handle]
                 self._guard(function)
-            handle = document.add_next_tick_callback(execute)
+            handle = (document.add_timeout_callback(execute,75)
+                      if function in (self.render_view,self._apply_navigation) else document.add_next_tick_callback(execute))
             self._pending_callbacks.append((document, handle))
         else:
             self._guard(function)
@@ -610,8 +619,13 @@ class Explorer:
             try:
                 document.remove_next_tick_callback(handle)
             except ValueError:
-                pass
+                try:
+                    document.remove_timeout_callback(handle)
+                except ValueError:
+                    pass
         self._pending_callbacks.clear()
+        self._queued_functions.clear()
+        self._visible_boundary = None
         self.frame = self.layer = self.network = self._network_cache = None
         self._networks.clear()
         self._selection_indexes.clear()
@@ -619,6 +633,10 @@ class Explorer:
         self.scene.products._views.clear()
         for name in ("outlets", "bifurcations"):
             self.scene.products.__dict__.pop(name, None)
+        for tile in self.scene.tiles.values():
+            for source in tile.cog.values():
+                source.cache.clear()
+        self.scene._outline_cache.clear()
         self.scene.tiles.clear()
         self.cell_inspector._graphs.clear()
         for name in ("outlet_coordinates", "bifurcation_counts"):
@@ -752,7 +770,13 @@ class Explorer:
         extent = (max(g.west, event.x0), min(g.east, event.x1), max(g.south, event.y0), min(g.north, event.y1))
         if extent[0] >= extent[1] or extent[2] >= extent[3]:
             extent = g.extent
-        self._guard(lambda: self.set_extent(extent, preserve_aspect=True))
+        if np.allclose(extent,getattr(self,"_rendered_extent",(0,0,0,0)),rtol=0,atol=1e-10):
+            return
+        self._pending_navigation_extent = extent
+        self._schedule(self._apply_navigation)
+
+    def _apply_navigation(self):
+        self.set_extent(self._pending_navigation_extent,preserve_aspect=True)
 
     def _unavailable_background(self, exc):
         self._background_error = str(exc)
@@ -805,7 +829,7 @@ class Explorer:
             self.status.object = f"**Background source:** `{source.name if source else 'unavailable'}` · {mode} [m]. Terrain display transforms affect display only."
         elif mode == "none":
             self.status.object = (
-                "No raster background. Network, overlays and native assignment selection remain independent."
+                "No raster background. Grid selection and river-network overlays remain available."
             )
         else:
             self.status.object = f"**Source:** `{self.reader.sources[name].path.name}`\n\n" + (
@@ -896,6 +920,7 @@ class Explorer:
 
     def scene_options(self):
         return dict(
+            automatic_selection=True,
             background_method=(
                 self.background_method
                 if self.background.value == "coarse" and self.variable.value == "subcol"
@@ -906,6 +931,7 @@ class Explorer:
             network_budget=self.river_ui.budget.value,
             background=self.background.value,
             tile=self.hires_source.value,
+            screen=((self.plot.frame_width or 750)*getattr(getattr(self,"map_viewport",None),"pixel_ratio",1), (self.plot.frame_height or 515)*getattr(getattr(self,"map_viewport",None),"pixel_ratio",1)),
             terrain_palette=self.terrain_palette.value,
             background_opacity=self.background_ui.opacity.value / 100,
             highres_style=self.background_ui.highres_options(),
@@ -930,7 +956,6 @@ class Explorer:
             return
         # Resolve selection before composing layers: even an unavailable overlay
         # must not leave old grid/catchment highlights from another rule/tile.
-        self._reconcile_selection_source()
         self._size_map()
         try:
             self.frame = frame = self.scene.build(
@@ -942,6 +967,9 @@ class Explorer:
             self._unavailable_background(exc)
             raise
         self._background_error = None
+        self._rendered_extent = tuple(self.extent)
+        self._update_assignment_controls()
+        self._reconcile_selection_source()
         self._set_colorbar(frame.layer)
         # Synchronize effective Log bounds only after building the current frame;
         # visibility/profile restoration can still refer to a previous frame.
@@ -965,7 +993,7 @@ class Explorer:
                 )
             )
         )
-        for source, images in ((self.image_source, frame.images[:1]), (self.channel_image_source, frame.images[1:])):
+        for source, images in ((self.image_source, frame.images[:frame.background_count]), (self.channel_image_source, frame.images[frame.background_count:])):
             # Clear each source on every update, including toggles and unavailable layers.
             source.data = dict(
                 image=[np.ascontiguousarray(a[::-1]) for a, e in images],
@@ -1022,6 +1050,12 @@ class Explorer:
             self.river_ui.refresh()
 
     def _render_catchment_selection(self):
+        if self.selection.kind == "catchment" and self.selection.river_cell is not None:
+            tile = self.scene.tiles.get(self.selection.tile_key)
+            if tile is not None and "catmxy" in tile.cog:
+                boundary, _ = self._selected_catchment(tile,self.selection.river_cell)
+                if boundary is not self.selection.boundary:
+                    self.selection = replace(self.selection,boundary=boundary)
         rectangle = self.selection.coarse_outline
         self.selected_coarse_source.data = (
             dict(x0=[], y0=[], x1=[], y1=[])
@@ -1040,18 +1074,23 @@ class Explorer:
         )
 
     def _update_assignment_controls(self):
-        tile = self.scene.tiles.get(self.hires_source.value)
-        available = tile is not None and "catmxy" in tile.files
-        self.overlay_controls["catchment_boundaries"].disabled = not available
-        self.point_note.object = (
-            ""
-            if available
-            else "Catchment unavailable: selected source has no native catmxy. Grid selection remains available."
-        )
-        if hasattr(self, "boundary_status"):
-            self.boundary_status.object = (
-                "" if available else "Unit Catchment Boundaries unavailable: selected source has no catmxy."
-            )
+        plans = self.frame.sampling if self.frame is not None else {}
+        active = bool(plans) and len(plans) == len(self.scene.visible_tiles(self.hires_source.value, self.extent)) and all(p.native and "catmxy" in self.scene.tiles[key].cog for key,p in plans.items())
+        mode = "catchment" if active else "grid"
+        updating = self._updating
+        self._updating = True
+        try:
+            self.point_select.value = mode
+            self.point_select.disabled = True  # One automatic state, retained in old JSON as effective mode.
+        finally:
+            self._updating = updating
+        self.point_note.object = "**Selection: Catchment** · Native COG pixels without decimation." if active else (
+            "**Selection: Grid** · Zoom in to native COG resolution with catmxy to enable Catchment selection.")
+        self.resolution_status.object = self.point_note.object
+        self.cell_inspector.pixel_section.visible = active
+        self.overlay_controls["catchment_boundaries"].disabled = not active
+        if hasattr(self,"boundary_status"):
+            self.boundary_status.object = "" if active else "Native Unit Catchment Boundaries disabled in Grid mode."
 
     def _hires_changed(self):
         self._update_assignment_controls()
@@ -1070,10 +1109,14 @@ class Explorer:
         self.cell_inspector.clear(message)
 
     def _reconcile_selection_source(self):
-        # Explicit selection-mode and tile changes reassess the original geographic click.
-        # Variable/style changes under the same rule/source preserve its grid.
+        # Native window counts/attributes must update together after pan/source changes.
+        tile = self.scene.tiles.get(self.selection.tile_key)
+        native_changed = self.selection.kind == "catchment" and tile is not None and (
+            getattr(self, "_visible_boundary_key", None) !=
+            (tile.key, tile.source_identity, self.selection.river_cell, self.extent)
+        )
         if hasattr(self, "_last_click") and (
-            self.selection.method != self._selection_method() or self.selection.tile_key != self.hires_source.value
+            native_changed or self.selection.method != self._selection_method() or getattr(self,"_selection_source_key",None) != self.hires_source.value
         ):
             self.inspect(*self._last_click)
 
@@ -1085,17 +1128,13 @@ class Explorer:
         )
 
     def _selected_catchment(self, tile, cell):
-        if tile is None or "catmxy" not in tile.files:
-            return None, "Catchment boundary unavailable: no catmxy in selected source"
-        if tile.key not in self._selection_indexes:
-            self._selection_indexes[tile.key] = CatchmentIndex(tile, self.reader.geometry)
-        try:
-            return self._selection_indexes[tile.key].boundary(*cell), "Stored unit catchment selected"
-        except ValueError as exc:
-            if str(exc).startswith("No native pixels have this assignment"):
-                return None, "No pixels assigned to selected grid in this tile"
-            raise
-
+        if tile is None or "catmxy" not in tile.cog:
+            return None, "Catchment boundary unavailable: no native catmxy COG"
+        key = (tile.key,tile.source_identity,cell,self.extent)
+        if getattr(self,"_visible_boundary_key",None) != key:
+            self._visible_boundary = visible_catchment_boundary(tile,self.reader.geometry,*cell,self.extent)
+            self._visible_boundary_key = key
+        return self._visible_boundary, "Stored unit catchment selected; visible-window boundary"
     def _highlight(self, row, col):
         g = self.reader.geometry
         x, y = g.lon[col], g.lat[row]
@@ -1117,19 +1156,21 @@ class Explorer:
 
     def inspect(self, lon, lat, resolve_selection=True, network_product=None):
         if resolve_selection:
+            self._update_assignment_controls()
             self._last_click = (lon, lat)
+            self._selection_source_key = self.hires_source.value
             coarse = self.reader.geometry.cell(lon, lat)
             if coarse is None:
                 raise ValueError("Click is outside the map")
-            tile = self.scene.tiles.get(self.hires_source.value)
+            tile = self.scene.tile_at(lon,lat,self.hires_source.value,self.extent) if self.point_select.value == "catchment" else None
             pixel = tile.geometry.cell(lon, lat) if tile else None
             method = self._selection_method()
-            extra, assigned = self.scene.inspect(lon, lat, self.hires_source.value)
+            extra, assigned = self.scene.inspect(lon, lat, tile.key, cog_only=True) if tile else ({},None)
             if method == "Coarse Grid geographic containment":
                 # Geographic computational grid A wins, even if the clicked
                 # native pixel is assigned to another river-map grid B.
                 selected = coarse
-                boundary, status = self._selected_catchment(tile, selected)
+                boundary, status = None, "Geographic computational Grid selected"
                 kind = "coarse"
             else:
                 # Explicit Catchment mode uses native catmxy for every background. Missing
@@ -1145,7 +1186,7 @@ class Explorer:
             self.selection = SelectionState(
                 kind=kind,
                 clicked=(lon, lat),
-                tile_key=self.hires_source.value,
+                tile_key=tile.key if tile else None,
                 native_pixel=pixel,
                 river_cell=selected,
                 boundary=boundary,
@@ -1165,9 +1206,10 @@ class Explorer:
         if state.geographic_cell is not None:
             result["clicked coarse ix (1-based)"] = state.geographic_cell[1] + 1
             result["clicked coarse iy (1-based)"] = state.geographic_cell[0] + 1
-        if state.clicked:
-            extra, _ = self.scene.inspect(*state.clicked, state.tile_key)
-            result["clicked assigned catchment uparea [km²]"] = extra.get("assigned uparea [m2]", float("nan")) * 1e-6
+        if state.clicked and state.kind == "catchment" and state.tile_key is not None:
+            extra, _ = self.scene.inspect(*state.clicked, state.tile_key, cog_only=True)
+            assigned_area = extra.get("assigned uparea [m2]")
+            result["clicked assigned catchment uparea [km²]"] = assigned_area * 1e-6 if assigned_area is not None else None
             # Raw native assignment is informative in either mode. Attributes
             # below belong only to the selected grid, never a different clicked
             # pixel's assigned grid; catmxy and nextxy have distinct roles.
@@ -1222,6 +1264,7 @@ class Explorer:
             )
         if state.boundary is not None:
             result["unit catchment assigned pixel count"] = state.boundary.pixel_count
+            result["unit catchment pixel count scope"] = "visible native window"
             result["selected boundary"] = "Native exposed edges; " + str(len(state.boundary.segments)) + " merged runs"
 
         self._render_catchment_selection()
@@ -1245,7 +1288,7 @@ class Explorer:
             outlet_lon += "°" if outlet_lon != "Unavailable" else ""
             area = number("uparea [m2]", 1e-6, 3)
             method = "geographic containment" if self.point_select.value == "grid" else "catmxy assignment"
-            count = f" · {state.boundary.pixel_count:,} high-res pixels" if state.boundary is not None else ""
+            count = f" · {state.boundary.pixel_count:,} high-res pixels in visible window" if state.boundary is not None else ""
             self.selection_summary.object = (
                 f"**Selected {label}:** ix={col+1}, iy={row+1} (1-based Fortran) · "
                 f"**Outlet (lat, lon):** {outlet_lat}, {outlet_lon} · **Upstream Area:** {area} km²  \n"
@@ -1277,9 +1320,9 @@ class Explorer:
     def export(self):
         if self._background_error is not None:
             raise ValueError(self._background_error)
-        frame = self.scene.build(
-            self.extent, self.variable.value, self.layer, self.network, self.scene_options(), max_side=2400
-        )
+        if self.frame is None:
+            self.render_view()
+        frame = replace(self.frame,legend=list(self.frame.legend))  # Export the displayed COG LOD and image, not a fresh higher-resolution sample.
         point = None
         segments = None
         if self.selected is not None:
@@ -1306,7 +1349,7 @@ class Explorer:
         return path
 
     def settings(self):
-        layers = self.scene_options()
+        layers = {key:value for key,value in self.scene_options().items() if key not in ("screen","automatic_selection")}
         layers.pop("network_style")
         layers["representation"] = self.representation.value
         return dict(

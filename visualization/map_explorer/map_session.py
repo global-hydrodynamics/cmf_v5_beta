@@ -45,7 +45,7 @@ class ExplorerSession:
         )
         self.dataset_toggle = pn.widgets.Toggle(name="Map dataset", value=False, width=135)
         self.dataset_toggle.param.watch(
-            lambda event: setattr(self.controls, "visible", event.new), "value"
+            self._toggle_dataset, "value"
         )
         self.host = pn.Column(sizing_mode="stretch_width")
         self.view = self.host
@@ -56,6 +56,12 @@ class ExplorerSession:
         self.cancel_button.on_click(lambda event: self.cancel_switch())
         initial = self._prepare(resolve_map(map_dir, self.repository))
         self._adopt(initial)
+
+    def _toggle_dataset(self, event):
+        self.controls.visible = event.new
+        if self.active is not None:
+            # Closing the drawer moves the map without resizing its own DOM box.
+            self.active.map_viewport.layout_revision += 1
 
     def _choose(self, event):
         if not self._syncing and event.new:

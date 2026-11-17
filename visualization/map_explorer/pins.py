@@ -129,6 +129,7 @@ class Pin:
             highres_source=self.tile,
             network_source=self.values.get("network product"),
             assigned_pixel_count=self.values.get("unit catchment assigned pixel count"),
+            assigned_pixel_scope=self.values.get("unit catchment pixel count scope"),
         )
         result.update({column: scalar(self.values.get(key), factor) for _, column, key, factor in FIELDS})
         if result["subbasin_id"] is not None and result["subbasin_id"] <= 0:
@@ -274,8 +275,11 @@ class PinControls:
             raise ValueError(f"Pin source unavailable: {exc}") from exc
         if pin.tile not in app.scene.tiles and pin.mode == "catchment":
             raise ValueError("Saved high-resolution source is unavailable.")
+        if pin.mode != app.point_select.value:
+            self.message.object = "This Pin uses " + pin.mode + " selection; adjust zoom/background until that automatic mode is available. Stored values are retained."
+            return
         if pin.mode == "catchment":
-            _, assigned = app.scene.inspect(*pin.clicked, pin.tile)
+            _, assigned = app.scene.inspect(*pin.clicked, pin.tile, cog_only=True)
         else:
             assigned = app.reader.geometry.cell(*pin.clicked)
         if assigned != pin.cell:
@@ -284,7 +288,8 @@ class PinControls:
         app._updating = True
         try:
             app.point_select.value = pin.mode
-            app.hires_source.value = pin.tile
+            if pin.tile is not None:
+                app.hires_source.value = pin.tile
         finally:
             app._updating = False
         app._update_assignment_controls()
@@ -374,7 +379,7 @@ class PinControls:
                 ("Map source", "map_source"),
                 ("High-resolution source", "highres_source"),
                 ("Network source", "network_source"),
-                ("Assigned pixel count (not area)", "assigned_pixel_count"),
+                ("Assigned pixel count (visible window, not area)", "assigned_pixel_count"),
             ]
             fields += [(label, column) for label, column, _, _ in FIELDS]
             rows = [[label] + [r.get(column) for r in records] for label, column in fields]

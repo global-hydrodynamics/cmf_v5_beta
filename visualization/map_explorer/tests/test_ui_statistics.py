@@ -13,12 +13,15 @@ from map_reader import MapReader
 from map_layers import make_layer, percentile_limits
 from background_style import highres_layer
 from test_v2 import products
+from conftest import install_test_cogs
 from test_selection_modes import split_assignment
 
 
 def test_persistent_modes_and_connectivity(split_assignment):
     root, _ = split_assignment
+    install_test_cogs(root)
     a = Explorer(root, root.parent / "exports")
+    a.background.value = "catchment"
     p = a.cell_inspector
     assert a.panel_mode.value == "Visualization" and a.visualization_panel.visible and not a.inspector_panel.visible
     assert len(a.right_tabs) == 4
@@ -54,7 +57,9 @@ def test_persistent_modes_and_connectivity(split_assignment):
 
 def test_summary_from_selected_stored_outlet(split_assignment):
     root, codes = split_assignment
+    install_test_cogs(root)
     a = Explorer(root, root.parent / "exports")
+    a.background.value = "catchment"
     data = a.inspect(11.25, 22.25)
     assert a.selected == (1, 0)
     text = a.selection_summary.object
@@ -63,7 +68,7 @@ def test_summary_from_selected_stored_outlet(split_assignment):
     assert "Upstream Area" in text and "4 km²" in text and "catmxy assignment" in text
     assert f"{np.count_nonzero((codes[0]==1)&(codes[1]==2)):,} high-res pixels" in text
     assert "orange" not in text
-    a.point_select.value = "grid"
+    a.background.value = "coarse"
     text = a.selection_summary.object
     assert "Selected Grid" in text and "ix=2, iy=1" in text and "geographic containment" in text
     assert "11.60000" in text and "22.40000" in text and "2 km²" in text
@@ -177,5 +182,5 @@ def test_summary_missing_values_and_unassigned_mode(map_dir):
     assert "Selected Grid" in text and "Outlet (lat, lon):** Unavailable, Unavailable" in text
     assert "Upstream Area:** Unavailable" in text
     a.point_select.value = "catchment"
-    assert a.selected is None and "No mapped river cell" in a.selection_summary.object
-    assert "Selected Grid" not in a.selection_summary.object
+    assert a.selected == (1,1) and "Selected Grid" in a.selection_summary.object
+    assert not a.cell_inspector.pixel_section.visible

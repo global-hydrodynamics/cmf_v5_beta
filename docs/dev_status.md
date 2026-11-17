@@ -6,6 +6,23 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Explorer COG integration (DT-0134, 2026-11-17)
+
+Maintainer explicitly approves COG display/native interaction integration on
+existing feature/package-builder, including tests/browser/benchmarks/docs and
+commit/push. Codex owns Explorer reader/Tile/Scene/controller/selection/Pins
+integration and tests. Preserve model-grid NetCDF science, exact assigned native
+P5/P95, Gallery methods and source data. No converter/package changes or COG
+regeneration. Automatic Grid for overview/decimated display; Catchment only for
+compatible non-decimated native COG with catmxy. Window-only native boundaries;
+bounded caches and explicit fallback. No overlapping open Issue/PR found.
+
+DT-0134 complete:396 tests plus3 subtests PASS;1 existing Windows SKIP. Actual
+Japan native7products/3pixels exact;0normal high-res NC accesses;22source SHA256
+and stat snapshots unchanged. Actual browser/PNG/Mekong switch and single-trial
+NetCDF baseline benchmark verified. Explicit global-stat/visible-window/centroid
+limits documented. See VR-0180; unrelated user data/deletions remain excluded.
+
 ### COG known non-target skips (DT-0133, 2026-11-17)
 
 Maintainer confirms bifprm.nc and legacy rivclim/rivpar containers are outside

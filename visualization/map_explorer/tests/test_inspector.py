@@ -12,6 +12,7 @@ from conftest import write_network
 from inspector import InspectorProducts, UpstreamIndex
 from map_reader import MapReader
 from test_v2 import products
+from conftest import install_test_cogs
 
 
 def graph(dest):
@@ -160,6 +161,7 @@ def test_summary_native_outlets_assignment_units_true_ids_and_accordion_state(pr
     data = np.fromfile(path, dtype="<i2").reshape(2, 6, 8)
     data[:, 2:5, 1:5] = 1
     data.tofile(path)
+    install_test_cogs(products)
     app = Explorer(products, products.parent / "out")
     app.raster_type.value = "highres"
     result = app.inspect(11.000001, 21.999999)
@@ -270,7 +272,7 @@ def test_mekong_profile_ids_graph_counts_outlets_and_source_switch(tmp_path):
             assert index.total[node] == total[node] and index.direct[node] == direct[node]
         assert info["network product"] == source
     app.raster_type.value = "coarse"
-    assert app.selected == (97, 63)  # background does not change explicit Catchment mode
+    assert app.selected == (96, 63)  # Coarse background now automatically selects its geographic Grid.
     app.point_select.value = "grid"
     assert app.selected == (96, 63)
     assert "Geographic coarse-grid containment" in panel.method.object

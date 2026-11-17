@@ -145,8 +145,8 @@ def test_repeated_switch_resets_scientific_state_and_retains_app_controls(maps):
     assert f"{np.float32(130.135):.5f}" in new.selection_summary.object
     new.point_select.value = "catchment"
     new.inspect(130.0625, 34.9375)
-    assert new.selection.geographic_cell == (0, 0) and new.selected == (1, 1)
-    assert new.selection.boundary.pixel_count == 16
+    assert new.selection.geographic_cell == (0, 0) and new.selected == (0, 0)
+    assert new.point_select.value == "grid" and new.selection.boundary is None
     assert s.load_map(maps[1])
     assert s.active.reader.path == maps[1] and s.active.selected is None
     assert s.active.reader.geometry.nx == 4 and float(s.active.reader.read_cell("uparea", 0, 0)) == 1e6

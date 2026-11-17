@@ -22,6 +22,7 @@ class CatchmentBoundary:
     pixel_count: int
     # Native row/column bounds, exclusive stops. Never a geographic cell box.
     bounds: tuple[int, int, int, int]
+    complete: bool = True
 
 
 @dataclass(frozen=True)
@@ -172,3 +173,39 @@ class CatchmentIndex:
         while len(self._boundaries) > self.cache_size:
             self._boundaries.popitem(last=False)
         return result
+
+
+def visible_catchment_boundary(tile, coarse, row, col, extent):
+    """Stored assignment edges in view, with a real one-pixel neighbor halo.
+
+    A viewport edge is never treated as a physical catchment boundary. No tile
+    index or complete assignment mask is built; the count is visible-window only.
+    """
+    from hires_cog import sampling
+    g = tile.geometry
+    plan = sampling(g,extent,(1000000,1000000),())
+    if plan is None:
+        return None
+    r0,r1,c0,c1 = plan.native_window
+    if (r1-r0+2)*(c1-c0+2) > 2_100_000:
+        raise ValueError('Selected boundary window exceeds native interaction budget; zoom in')
+    a,b,d,e = max(0,r0-1),min(g.ny,r1+1),max(0,c0-1),min(g.nx,c1+1)
+    x,y = tile.sample('catmxy',np.arange(a,b),np.arange(d,e))
+    mask = (x == col+1) & (y == row+1)
+    padded = np.pad(mask,((a-(r0-1),(r1+1)-b),(d-(c0-1),(c1+1)-e)))
+    center = padded[1:-1,1:-1]
+    horizontal,vertical = [],[]
+    for neighbor,offset in [(padded[:-2,1:-1],0),(padded[2:,1:-1],1)]:
+        rr,cc = np.where(center & ~neighbor)
+        horizontal.append(np.column_stack((rr+r0+offset,cc+c0,cc+c0+1)))
+    for neighbor,offset in [(padded[1:-1,:-2],0),(padded[1:-1,2:],1)]:
+        rr,cc = np.where(center & ~neighbor)
+        vertical.append(np.column_stack((cc+c0+offset,rr+r0,rr+r0+1)))
+    h,v = merge_edges(np.concatenate(horizontal)),merge_edges(np.concatenate(vertical))
+    hs = np.stack([np.column_stack((g.west+h[:,1]*g.resolution,g.north-h[:,0]*g.resolution)),
+                   np.column_stack((g.west+h[:,2]*g.resolution,g.north-h[:,0]*g.resolution))],axis=1)
+    vs = np.stack([np.column_stack((g.west+v[:,0]*g.resolution,g.north-v[:,1]*g.resolution)),
+                   np.column_stack((g.west+v[:,0]*g.resolution,g.north-v[:,2]*g.resolution))],axis=1)
+    segments = np.concatenate((hs,vs))
+    segments.flags.writeable = False
+    return CatchmentBoundary(segments,int(center.sum()),(r0,r1,c0,c1),False)

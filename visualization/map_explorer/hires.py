@@ -5,11 +5,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 import tempfile
+import hashlib
+import json
+import os
 
 import numpy as np
 
 from map_reader import Geometry
 from hires_netcdf import NetCDFSource
+from hires_cog import COGSource, RasterCache, sampling, signature
 
 
 def neighbor_difference(values):
@@ -51,15 +55,18 @@ class Tile:
     _centroids: object = field(default=None, repr=False)
     coarse_geometry: object = field(default=None, repr=False)
     netcdf: dict = field(default_factory=dict, repr=False)
+    cog: dict = field(default_factory=dict, repr=False)
 
     @property
     def storage(self):
+        if self.cog:
+            return "COG" if len(self.cog) == len(self.files) else "COG + explicit optional fallback"
         count = sum(path.suffix == ".nc" for path in self.files.values())
         return "NetCDF" if count == len(self.files) and count else "NetCDF + Binary optional fields" if count else "Binary"
 
     def mmap(self, name):
-        if name in self.files and self.files[name].suffix == ".nc":
-            raise ValueError("NetCDF sources use native block sampling, not a full-array mmap")
+        if name in self.files and self.files[name].suffix in (".nc", ".tif"):
+            raise ValueError("NetCDF/COG sources use native block sampling, not a full-array mmap")
         if name not in self.files:
             raise ValueError(f"{self.key}: missing {name}")
         if name not in self._maps:
@@ -88,7 +95,9 @@ class Tile:
                     result = np.fmax(result, np.where(valid, delta, np.nan))
             return result
         rows, cols = np.asarray(rows, dtype=int), np.asarray(cols, dtype=int)
-        if name in self.files and self.files[name].suffix == ".nc":
+        if name in self.cog:
+            result = self.cog[name].read(rows, cols)
+        elif name in self.files and self.files[name].suffix == ".nc":
             if name not in self.netcdf:
                 self.netcdf[name] = NetCDFSource.open(self.files[name], name, self.geometry)
             result = self.netcdf[name].read(rows, cols)
@@ -100,6 +109,18 @@ class Tile:
             a[(a == -9999) | ~np.isfinite(a)] = np.nan
             return a
         return result if name == "catmxy" else result[0]
+
+    def display_plan(self, name, extent, screen):
+        source = self.cog.get("elevtn" if name == "difference" else name)
+        return sampling(self.geometry, extent, screen, source.overviews) if source else None
+
+    def display(self, name, plan):
+        value = self.cog[name].display(plan)
+        return value if name == "catmxy" else value[0]
+
+    @property
+    def source_identity(self):
+        return tuple((name, source.identity) for name, source in sorted(self.cog.items()))
 
     def subset(self, extent, max_side=1200):
         g = self.geometry
@@ -137,12 +158,30 @@ class Tile:
         for helper compatibility; no Auto path uses it. Auto includes all valid
         finite values in its P5/P95 population before the nonpositive Log fallback.
         """
+        if self.cog and "catmxy" not in self.cog:
+            raise ValueError("Exact COG statistics require compatible native catmxy COG; use Manual limits or explicit NetCDF fallback")
         coarse = coarse or self.coarse_geometry
         if coarse is None or "catmxy" not in self.files:
             raise ValueError(
                 f"{self.key}: automatic limits require native catmxy and coarse map geometry; use manual limits"
             )
-        key = (name, bool(positive), tuple(quantiles), "assigned-pixel-p5-p95-v3", inherited is not None, coarse.nx, coarse.ny)
+        inherited_id = None if inherited is None else hashlib.sha256(np.ascontiguousarray(inherited).tobytes()).hexdigest()
+        key = (name, bool(positive), tuple(quantiles), "assigned-pixel-p5-p95-cog-v1", inherited_id,
+               coarse.nx, coarse.ny, self.source_identity)
+        cache_path = None
+        if self.cog:
+            digest = hashlib.sha256(repr((self.key, key)).encode()).hexdigest()
+            cache_root = Path(os.environ.get("CMF_EXPLORER_STATS_CACHE", str(Path(tempfile.gettempdir()) / "cmf-explorer-native-stats")))
+            cache_path = cache_root / (digest + ".json")
+            if key not in self._stats and cache_path.is_file():
+                try:
+                    values = json.loads(cache_path.read_text())
+                    if len(values) == 2 and all(isinstance(v, (int, float)) for v in values):
+                        self._stats[key] = tuple(values)
+                except (ValueError, OSError):
+                    pass
+            if key not in self._stats and self.geometry.nx * self.geometry.ny > 50_000_000:
+                raise ValueError("Exact native P5/P95 cache unavailable for this large tile; use Manual color limits. No global scan started.")
         if key not in self._stats:
             g = self.geometry
             block = max(1, 500000 // g.nx)
@@ -174,6 +213,15 @@ class Tile:
                     low = high = np.nan  # Let a Log display choose its documented fallback, not fake percentiles.
                 del work
             self._stats[key] = float(low), float(high if tuple(quantiles) != (2, 98) or high > low else low + 1)
+        if cache_path is not None and not cache_path.exists():
+            try:
+                cache_path.parent.mkdir(parents=True, exist_ok=True)
+                with tempfile.NamedTemporaryFile(mode="w", dir=cache_path.parent, delete=False) as stream:
+                    json.dump(self._stats[key], stream)
+                    temporary = stream.name
+                os.replace(temporary, cache_path)
+            except OSError:
+                pass  # A read-only cache directory never invalidates exact in-memory statistics.
         if not allow_empty and not np.isfinite(self._stats[key]).all():
             raise ValueError(f"{self.key}: no {'positive ' if positive else ''}valid {name} values")
         return self._stats[key]
@@ -205,6 +253,7 @@ def discover_tiles(map_dir, messages):
     """Discover named records in map-local location.txt files; no 1min constant."""
     root = Path(map_dir)
     tiles = {}
+    cog_cache = RasterCache()
     for location in sorted(root.rglob("location.txt"), key=lambda p: (p.parent.name.endswith("_nc"), str(p))):
         try:
             lines = location.read_text().splitlines()
@@ -254,6 +303,18 @@ def discover_tiles(map_dir, messages):
                 ]:
                     nc_path = location.parent / f"{name}.{field_name}.nc"
                     path = location.parent / f"{name}.{field_name}.bin"
+                    cog_path = root / "COG" / canonical / f"{name}.{field_name}.tif"
+                    if cog_path.is_file():
+                        try:
+                            source = COGSource.open(cog_path, field_name, g, cog_cache, root / canonical.with_name(canonical.name + "_nc") / f"{name}.{field_name}.nc")
+                            tile.files[field_name] = cog_path
+                            tile.cog[field_name] = source
+                            tile.netcdf.pop(field_name, None)
+                            continue  # Valid COG discovery must not open the high-resolution NetCDF.
+                        except (OSError, ValueError) as exc:
+                            messages.append(f"{cog_path}: invalid/incompatible COG; explicit fallback: {exc}")
+                    if field_name in tile.cog:
+                        continue
                     if nc_path.is_file():
                         try:
                             source = NetCDFSource.open(nc_path, field_name, g)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import NamedTuple
+from collections import OrderedDict
 
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -59,6 +60,8 @@ class Frame:
     diagnostics: list = field(default_factory=list)
     swatches: list = field(default_factory=list)
     network_detail_note: str = ""
+    sampling: dict = field(default_factory=dict)
+    background_count: int = 1
     background_opacity: float = 1.0  # Shared raster/colorbar presentation, independent of overlays.
 
 
@@ -72,9 +75,11 @@ class Scene:
         self.products = Products(reader)
         self.messages = list(self.products.messages)
         self.tiles = discover_tiles(reader.path, self.messages)
+        self._outline_cache = OrderedDict()
 
     def build(self, extent, name, coarse_layer, network, options, max_side=1200):
         frame = Frame(background_opacity=options.get("background_opacity", 1.0))
+        frame.diagnostics.extend(self.messages)
         background = options.get("background", "coarse")
         overlays = {**OVERLAY_DEFAULTS, **options.get("overlays", {})}
         selected_tile = options.get("tile")
@@ -89,24 +94,33 @@ class Scene:
         elif background != "none":
             if tile is None:
                 raise ValueError("Select an available high-resolution source")
-            self._background(
-                frame,
-                tile,
-                background,
-                name,
-                coarse_layer,
-                extent,
-                overlays,
-                options.get("terrain_palette", "gray"),
-                max_side,
-                options.get("highres_style"),
-                options.get("auto_limits_policy", "percentile"),
-            )
-        if frame.images:
-            rgba, edges = frame.images[0]
-            frame.images[0] = (apply_opacity(rgba, frame.background_opacity), edges)
-        if overlays["catchment_boundaries"]:
-            self._catchment_boundaries(frame, tile, extent, max_side, overlays["catchment_boundary_color"])
+            backgrounds, channels = [], []
+            common_style = options.get("highres_style")
+            for visible_tile in self.visible_tiles(selected_tile, extent):
+                before = len(frame.images)
+                self._background(
+                    frame, visible_tile, background, name, coarse_layer, extent, overlays,
+                    options.get("terrain_palette", "gray"), max_side, common_style,
+                    options.get("auto_limits_policy", "percentile"),
+                    options.get("screen", (max_side,max_side)),
+                )
+                produced = frame.images[before:]
+                backgrounds += produced[:1]
+                channels += produced[1:]
+                if common_style is None or common_style.get("limits") is None:
+                    if frame.layer is not None:
+                        common_style = {**(common_style or {}), "limits":[frame.layer.low,frame.layer.high]}
+            frame.images = backgrounds + channels
+            frame.background_count = len(backgrounds)
+        for i in range(min(frame.background_count,len(frame.images))):
+            rgba, edges = frame.images[i]
+            frame.images[i] = (apply_opacity(rgba, frame.background_opacity), edges)
+        native_active = bool(frame.sampling) and len(frame.sampling) == len(self.visible_tiles(selected_tile, extent)) and all(p.native and "catmxy" in self.tiles[k].cog for k,p in frame.sampling.items())
+        if overlays["catchment_boundaries"] and options.get("automatic_selection") and not native_active:
+            frame.diagnostics.append("Unit Catchment Boundaries disabled in Grid mode; zoom to compatible native COG detail")
+        elif overlays["catchment_boundaries"]:
+            for boundary_tile in self.visible_tiles(selected_tile,extent):
+                self._catchment_boundaries(frame, boundary_tile, extent, max_side, overlays["catchment_boundary_color"])
         if network is not None:
             curved = options.get("network_geometry") == "gallery_arcs"
             visible = network.visible(self.reader.geometry.extent if curved else extent)
@@ -209,6 +223,8 @@ class Scene:
                         raise ValueError("Periodic global headwater centroid guides are not yet supported")
                     if tile is None or "catmxy" not in tile.files or network is None:
                         frame.diagnostics.append("Headwater guides need selected catmxy tile and a main network")
+                    elif tile.cog or options.get("automatic_selection"):
+                        frame.diagnostics.append("Headwater centroid guides disabled for COG: no whole-tile native scan during interaction")
                     else:
                         river = self.reader.read("uparea").astype(float).filled(np.nan) > 0
                         lon, lat, counts = tile.centroids(g, river)
@@ -237,6 +253,20 @@ class Scene:
             except (ValueError, OSError, KeyError) as exc:
                 frame.diagnostics.append(f"Outlet/guide overlay unavailable: {exc}")
         return frame
+
+    def visible_tiles(self, selected, extent):
+        tile = self.tiles.get(selected)
+        if tile is None:
+            return []
+        # Same declared resolution family only; draw lexical order, later tile wins overlaps.
+        family = str(Path(selected).parent)
+        return [t for key,t in sorted(self.tiles.items())
+                if str(Path(key).parent) == family and abs(t.geometry.resolution-tile.geometry.resolution) < 1e-12
+                and t.geometry.west < extent[1] and t.geometry.east > extent[0]
+                and t.geometry.south < extent[3] and t.geometry.north > extent[2]]
+
+    def tile_at(self, lon, lat, selected, extent):
+        return next((t for t in reversed(self.visible_tiles(selected,extent)) if t.geometry.cell(lon,lat)), None)
 
     @staticmethod
     def _curve_controls(network, ids, extent):
@@ -302,8 +332,37 @@ class Scene:
         max_side,
         style=None,
         reference_policy="percentile",
+        screen=None,
     ):
-        subset = tile.subset(extent, max_side)
+        field = "catmxy" if mode == "catchment" else "elevtn" if mode == "difference" else mode
+        plan = tile.display_plan(field, extent, screen or (max_side,max_side))
+        field_cog = plan is not None
+        if plan is None and tile.cog:
+            # Missing optional field: sample its fallback on the same bounded display
+            # window, while any available COG masks still use their own overviews.
+            plan = tile.display_plan(next(iter(tile.cog)), extent, screen or (max_side,max_side))
+        if plan is not None:
+            r0,r1,c0,c1 = plan.native_window
+            rows = r0 + ((np.arange(plan.shape[0])+.5)*(r1-r0)/plan.shape[0]).astype(int)
+            cols = c0 + ((np.arange(plan.shape[1])+.5)*(c1-c0)/plan.shape[1]).astype(int)
+            subset = rows,cols,plan.edges,plan.native
+            if field_cog:
+                frame.sampling[tile.key] = plan
+            else:
+                frame.diagnostics.append(f"{tile.key}: explicit field fallback; Grid selection")
+            frame.diagnostics.append(f"{tile.key}: COG overview ×{plan.factor}; raster {plan.shape[1]}×{plan.shape[0]}; "
+                                     + ("native pixels without decimation" if plan.native else "display decimated; Grid selection"))
+            if mode == "difference" and not plan.native:
+                frame.diagnostics.append("Native 8-neighbor elevation difference requires native detail; zoom in. No overview-derived difference substituted.")
+                return
+        else:
+            subset = tile.subset(extent, max_side)
+            frame.diagnostics.append(f"{tile.key}: explicit NetCDF/Binary fallback; native COG interaction unavailable")
+        def read(field_name):
+            if plan is not None and field_name in tile.cog:
+                return tile.display(field_name, plan)
+            return tile.sample(field_name, rows, cols)
+
         if subset is None:
             frame.diagnostics.append("View lies outside selected high-resolution tile")
             return
@@ -312,7 +371,7 @@ class Scene:
         if mode == "catchment" and "catmxy" not in tile.files:
             raise ValueError(f"{tile.key}: no catmxy assignment product")
         if "catmxy" in tile.files and (mode == "catchment" or overlays["channel_pixels"]):
-            x, y = tile.sample("catmxy", rows, cols)
+            x, y = read("catmxy")
             valid, land, invalid = assignment(x, y, self.reader.geometry)
             if np.any(invalid):
                 frame.diagnostics.append(f"{int(invalid.sum())} displayed assignment pairs invalid; excluded")
@@ -355,7 +414,7 @@ class Scene:
         else:
             if mode not in ("elevtn", "difference", "flddif"):
                 raise ValueError("Unknown high-resolution background")
-            image = tile.sample(mode, rows, cols)
+            image = read(mode) if mode != "difference" else tile.sample(mode,rows,cols)
             raw_image = image
             layer = highres_layer(
                 image, self.reader, tile, mode, name, coarse_layer, style, terrain_palette, reference_policy
@@ -364,7 +423,7 @@ class Scene:
             rgba = colorize(layer, image)
             rgba[~np.isfinite(image)] = np.uint32(0xFFFFFFFF)
             if mode == "flddif":
-                elevation = tile.sample("elevtn", rows, cols)
+                elevation = read("elevtn")
                 fill = ~np.isfinite(raw_image) & np.isfinite(elevation)
                 rgba[fill] = neutral_floodplain_color(style, terrain_palette)
                 frame.legend.append("Missing flddif + valid elevation: neutral fill; both missing: blank")
@@ -387,7 +446,7 @@ class Scene:
         frame.images.append((rgba, edges))
         if overlays["channel_pixels"]:
             if "visual" in tile.files:
-                visual = tile.sample("visual", rows, cols)
+                visual = read("visual")
                 channel = np.zeros(rgba.shape, dtype="<u4")
                 mask = valid if valid is not None else np.ones(rgba.shape, dtype=bool)
                 for code, color in [(10, [131, 198, 237, 255]), (7, [199, 166, 221, 255])]:
@@ -409,7 +468,15 @@ class Scene:
         if tile is None or "catmxy" not in tile.files:
             frame.diagnostics.append("Unit Catchment Boundaries need catmxy in the selected tile")
             return
-        subset = tile.subset(extent, max_side)
+        if tile.cog and (tile.key not in frame.sampling or not frame.sampling[tile.key].native or "catmxy" not in tile.cog):
+            frame.diagnostics.append("Unit Catchment Boundaries disabled in Grid/overview mode; zoom to native COG detail")
+            return
+        if tile.cog:
+            plan = frame.sampling[tile.key]
+            r0,r1,c0,c1 = plan.native_window
+            subset = np.arange(r0,r1),np.arange(c0,c1),plan.edges,True
+        else:
+            subset = tile.subset(extent, max_side)
         if subset is None:
             frame.diagnostics.append("Unit Catchment Boundaries: outside selected tile")
             return
@@ -417,10 +484,20 @@ class Scene:
         if not native:
             frame.diagnostics.append("Catchment outlines omitted in sampled view; zoom in to native detail")
             return
-        x, y = tile.sample("catmxy", rows, cols)
-        valid, _, _ = assignment(x, y, self.reader.geometry)
-        segments = catchment_edges(x, y, valid, edges)
-        if len(segments) <= 100000:
+        key = (tile.key,tile.source_identity,tuple(edges))
+        if key in self._outline_cache:
+            segments = self._outline_cache[key]
+            self._outline_cache.move_to_end(key)
+        else:
+            x, y = tile.sample("catmxy", rows, cols)
+            valid, _, _ = assignment(x, y, self.reader.geometry)
+            edge_count = np.count_nonzero(valid[:,:-1] & valid[:,1:] & ((x[:,:-1]!=x[:,1:]) | (y[:,:-1]!=y[:,1:])))
+            edge_count += np.count_nonzero(valid[:-1] & valid[1:] & ((x[:-1]!=x[1:]) | (y[:-1]!=y[1:])))
+            segments = catchment_edges(x, y, valid, edges) if edge_count <= 100000 else None
+            self._outline_cache[key] = segments
+            while len(self._outline_cache) > 8:
+                self._outline_cache.popitem(last=False)
+        if segments is not None:
             frame.overlays.insert(0, Overlay(segments, color, 0.65, "Native unit-catchment assignment boundaries"))
         else:
             frame.diagnostics.append("Catchment outlines omitted above 100,000 native edges; zoom in")
@@ -499,7 +576,7 @@ class Scene:
         except (ValueError, OSError, KeyError) as exc:
             frame.diagnostics.append(f"Bifurcations unavailable: {exc}")
 
-    def inspect(self, lon, lat, tile_key):
+    def inspect(self, lon, lat, tile_key, cog_only=False):
         tile = self.tiles.get(tile_key)
         if tile is None:
             return {}, None
@@ -539,13 +616,13 @@ class Scene:
                     {"assigned " + k: v for k, v in self.reader.inspect(g.lon[int(x) - 1], g.lat[int(y) - 1]).items()}
                 )
         for name in ("elevtn", "flddif", "visual", "catmz100", "uparea", "rivwth"):
-            if name in tile.files:
+            if name in tile.files and (not cog_only or name in tile.cog):
                 value = tile.sample(name, np.array([row]), np.array([col]))[0, 0]
                 result[
                     f"native hires {name}"
                     + (" [stored code]" if name in ("visual", "catmz100") else " [km²]" if name == "uparea" else " [m]")
                 ] = (float(value) if np.isfinite(value) else None)
-        if "elevtn" in tile.files:
+        if "elevtn" in tile.files and (not cog_only or "elevtn" in tile.cog):
             value = tile.sample("difference", np.array([row]), np.array([col]))[0, 0]
             result["derived max 8-neighbor elevation difference [m], NOT slope"] = (
                 float(value) if np.isfinite(value) else None
@@ -721,7 +798,7 @@ def export_scene(
                 color="#FF7F00",
                 lw=3 * 72 / 160,
                 ls="-",
-                label=f"Selected stored unit catchment ({selected_boundary.pixel_count:,} pixels)",
+                label=f"Selected stored unit catchment ({selected_boundary.pixel_count:,} visible-window pixels)",
             )
         )
     if handles:

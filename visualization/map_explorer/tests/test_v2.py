@@ -165,11 +165,14 @@ def test_layer_combinations_inspection_and_v1_v2_settings(products):
     app.overlay_controls["channel_pixels"].value = True
     app.overlay_controls["coarse_grid"].value = True
     app.arrows.value = True
-    assert len(app.frame.images) == 2 and len(app.frame.overlays) >= 4
+    assert len(app.frame.images) == 2 and len(app.frame.overlays) == 3
+    assert app.point_select.value == "grid"  # no native COG in this fallback fixture
     assert (app.frame.images[1][0] != 0).any()  # independent transparent channel-pixel image
     assert len(app.frame.points) > 0 and len(app.frame.arrows["x"]) > 0
     info = app.inspect(10.75, 22.25)
-    assert "assignment status" in info and "derived max 8-neighbor elevation difference [m], NOT slope" in info
+    assert app.selection.kind == "coarse" and "assignment status" not in info
+    native, _ = app.scene.inspect(10.75, 22.25, app.hires_source.value)
+    assert "assignment status" in native and "derived max 8-neighbor elevation difference [m], NOT slope" in native
     assert app.export().is_file()
     old_extent = app.extent
     data = app.settings()
@@ -225,7 +228,7 @@ def test_native_centroid_and_sampled_boundaries(products):
     a.background.value = "catchment"
     a.overlay_controls["catchment_boundaries"].value = True
     frame = a.scene.build(g.extent, "uparea", a.layer, a.network, a.scene_options(), max_side=2)
-    assert any("sampled view" in message for message in frame.diagnostics)
+    assert any("Grid" in message for message in frame.diagnostics)
     assert not any("assignment boundaries" in label for segments, color, width, label, dash in frame.overlays)
 
 
@@ -275,15 +278,22 @@ def test_mekong_gallery_numerical_and_multilayer_integration(tmp_path, monkeypat
     a.overlay_controls["outlets"].value = True
     assert a.export().is_file()
     tile = a.scene.tiles[a.hires_source.value]
-    elevation = tile.sample("elevtn", np.arange(tile.geometry.ny), np.arange(tile.geometry.nx))
+    elevation = np.concatenate([tile.sample("elevtn", np.arange(r, min(r + 64, tile.geometry.ny)),
+        np.arange(tile.geometry.nx)) for r in range(0, tile.geometry.ny, 64)])
     baseline = f05.maximum_neighbor_elevation_difference(np.ma.masked_invalid(elevation)).filled(np.nan)
     rows = np.array([0, 600, 1000, 1799])
     cols = np.array([0, 500, 900, 1199])
-    np.testing.assert_array_equal(tile.sample("difference", rows, cols), baseline[np.ix_(rows, cols)])
+    actual_difference = np.array([[tile.sample("difference", np.array([r]), np.array([c]))[0, 0]
+        for c in cols] for r in rows])
+    np.testing.assert_array_equal(actual_difference, baseline[np.ix_(rows, cols)])
     for mode in ("elevtn", "difference", "flddif"):
         a.background.value = mode
         a.terrain_palette.value = "pale_terrain"
-        assert a.frame.layer is not None and "Error" not in a.status.object
+        assert "Error" not in a.status.object
+        if mode == "difference" and not all(p.native for p in a.frame.sampling.values()):
+            assert a.frame.layer is None and any("native detail" in m for m in a.frame.diagnostics)
+        else:
+            assert a.frame.layer is not None
     assert a.export().is_file()
     print(
         f'Mekong full integration: {perf_counter()-start:.3f}s; {len(a.network.rows)} links; {actual["channel"].sum()} channel bifurcations'

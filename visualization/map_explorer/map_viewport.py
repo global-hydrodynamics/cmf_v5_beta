@@ -20,10 +20,13 @@ def frame_size(extent, bounds):
 class MapViewport(pn.reactive.ReactiveHTML):
     plot = param.ClassSelector(class_=pn.viewable.Viewable)
     bounds = param.List(default=[900, 600])
+    pixel_ratio = param.Number(default=1.0)
+    layout_revision = param.Integer(default=0)
     _template = '<div id="measure" style="width:100%;min-width:0;display:flex;justify-content:center">${plot}</div>'
     _scripts = {
         "render": """
             state.fit = () => {
+                data.pixel_ratio = Math.max(1,window.devicePixelRatio || 1);
                 const rect = measure.getBoundingClientRect();
                 const width = Math.max(1, Math.floor(rect.width));
                 const height = Math.max(140, Math.floor(Math.min(window.innerHeight * .75,
@@ -36,6 +39,7 @@ class MapViewport(pn.reactive.ReactiveHTML):
             window.addEventListener('resize',state.fit);
             state.fit();
         """,
+        "layout_revision": "requestAnimationFrame(() => requestAnimationFrame(() => state.fit?.()));",
         "remove": """
             state.observer?.disconnect();
             if (state.fit) window.removeEventListener('resize',state.fit);

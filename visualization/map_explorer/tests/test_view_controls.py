@@ -1,3 +1,4 @@
+from conftest import install_test_cogs
 """View translation, explicit frame policy and Gallery graphical contracts."""
 
 import json
@@ -147,7 +148,10 @@ def test_overlay_groups_and_disabled_styles_retain_preferences(products):
 
 
 def test_selection_style_png_receives_identical_geometry(products, monkeypatch):
+    install_test_cogs(products)
     app = Explorer(products, products.parent / "out")
+    app.set_extent(app.reader.geometry.extent)
+    app.background.value = "catchment"
     app.inspect(11.5, 22.5)
     native = app.selection.boundary.segments.copy()
     coarse = app.selection.coarse_outline.copy()
