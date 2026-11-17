@@ -169,7 +169,7 @@ extent and projection proportions, independent of browser letterboxing.
 Visible presets are exactly f01a/f01d/f02a/f03a/f03c/f04b/f05f; retain old programmatic
 IDs in the same CSV/library. Reuse canonical metadata, no copied descriptions.
 f01d needs native bsncol coverage/class edges with subcol pastel display; f03c
-needs nextxy outlet vectors, continuous shade colors and four quantile widths.
+needs nextxy outlet vectors, continuous shade colors and four equal Log-range widths.
 f02a uses faint uparea, stored local/flexible classification, curved flexible
 connectors and downstream heads; existing arrow-density safeguard remains explicit.
 Add flat CSV settings for these display distinctions, keeping source geometry
@@ -227,9 +227,10 @@ Maintainer authorizes autonomous corrective River controls on current main,
 retaining dirty DT-0109/0110/0111 work; no commit/push, data or Gallery-script edits.
 Conditional color controls and source-area widths remain independent. Ordinary
 sessions default to continuous log mapping and area-dependent widths. Display
-color limits affect only continuous/six-log COLOR; WIDTH retains its complete
-valid-link reference. Quantiles use full-reference log-area quartiles, fixed
-uses historical1..1e6km²; these disable manual color limits. Link populations,
+Current DT-0129 color limits affect Continuous/4/6 interval COLOR; WIDTH retains
+its complete valid-link min/max in the selected Linear/Log scale. Legacy Fixed
+uses historical1..1e6km² Log and disables manual color limits. Population quartiles
+from the historical DT-0112 implementation are superseded. Link populations,
 periodic topology, invalid endpoint handling and stored direction stay unchanged.
 
 Extend area_style with validated area_limits and explicit area_color_style:
@@ -489,8 +490,9 @@ directories are discoverable without 1min hardcoding.
 Outlet geometry reads outlon/outlat aligned to params; connectivity and
 local/flexible classification still follow nextxy. Straight outlet segments
 are symbolic modeled connections, not observed centerlines. Full-map source
-log-area quartiles match f03; six equal log intervals match f02. Continuous
-log scaling and clearly labeled legacy fixed 1..1e6 km² remain separate modes.
+area ranges now use4/6 equal Linear/Log intervals per DT-0129, superseding the
+historical f03 population-quartile match. Static Gallery scripts remain unchanged.
+Continuous selected-scale mapping and legacy fixed Log1..1e6km² remain separate.
 Thin links precede thick links. Direction heads follow stored downstream,
 suppressed above 600 visible segments to avoid crowding (legend reports it).
 
@@ -904,3 +906,27 @@ notes. The River threshold control range remains1000–20000. The existing optio
 network_budget JSON key now stores the headwater-count trigger; auto/all values
 and old-file All links compatibility are retained. Current policy supersedes the
 area-cutoff implementation preserved historically in VR-0174.
+
+
+### Equal value-range classes (DT-0129, 2026-11-17)
+
+Explicit maintainer instruction replaces population-based quartiles with4/6 equal
+intervals in the selected Linear/Log space. River Area Scale is independent of
+Background; it controls both color and width normalization. Native full-reference
+positive finite source-link min/max are cached per valid endpoint population.
+Outlet views must discard Grid-center range caches. Repeated values, viewport,
+sampling and headwater suppression cannot shift the bounds or class edges.
+
+For N classes, use linspace(min,max,N+1) in Linear or linspace(log10min,log10max,N+1)
+in Log then invert for physical legend labels. Interior equality enters the higher
+bin, max enters N-1. Constant domains map to the first color/base width without
+fabricating a range. Missing/nonpositive values keep existing semantics. Manual
+color limits split the selected range while width uses its full-reference bounds.
+The legacy Fixed mode remains1..1e6 Log. No scientific input/unit conversion changes.
+
+JSON adds optional area_scale, default log for old files. Existing classification
+IDs quartiles/six_log now denote4/6 equal intervals; old four-class loads disclose
+the changed convention. No second preset metadata table or schema-version bump.
+Presets reset Log and preserve approved palette anchors/continuous-color exceptions,
+but main-network width classes use current range bins. Static Gallery scripts and
+bifurcation-width population quartiles are outside this correction and untouched.

@@ -527,27 +527,32 @@ not discharge**. Grid centers use complete valid topology; outlet vectors use
 links with valid stored endpoints. Periodic display pieces are counted once.
 References remain fixed during pan/zoom.
 
-**Upstream Area Mapping** appears when color or width uses area:
+**AREA MAPPING** appears when color or width uses area. **Area Scale** selects
+**Log** (default) or **Linear**, independently of the Background scale.
 
 | GUI option / saved identifier | Meaning |
 | --- | --- |
-| Continuous (log scale) / `continuous` | Continuous positive log-area normalization; recommended normal default |
-| Quantiles (4 groups) / `quartiles` | 25th/50th/75th percentiles of full-reference log areas: approximately equal counts of links, not equal log intervals; four color/width classes |
-| Logarithmic (6 classes) / `six_log` | Six equal log intervals, not quantiles; six palette colors and six widths in generic use |
-| Fixed log range (legacy) / `fixed` | Historical fixed1–10⁶km² normalization and width formula |
+| Continuous / `continuous` | Continuous normalization in the selected Linear/Log scale |
+| 4 equal intervals / `quartiles` | Minimum-to-maximum range split into four equal Linear/Log intervals; not population quartiles |
+| 6 equal intervals / `six_log` | Minimum-to-maximum range split into six equal Linear/Log intervals; not population sextiles |
+| Fixed log range (legacy) / `fixed` | Historical fixed1–10⁶km² Log normalization and width formula; Area Scale disabled |
 
-**Automatic Area Limits** uses full positive source-link min/max. Disable it
-for finite positive **Area Minimum [km²]** and **Area Maximum [km²]**, with max>min.
-Continuous color clips outside bounds to endpoint colors; six-log color divides
-these limits into six intervals. Physical links and native areas are never
-removed or changed by display limits. These are **color-only limits**: area
-width always keeps its full-reference normalization/classes. Quantile boundaries
-always use full-reference data, and Fixed keeps its historical range; their
-limit controls are disabled. Legends distinguish applied color and width ranges.
-Missing/nonpositive areas retain links, using base width and neutral gray for
-generic area colors (legacy fixed minimum width/color are retained). If no valid
-positive area exists, selecting an area style reports an error without inventing
-values. Color/width mode switches preserve palettes, limits and custom colors.
+For N=4 or6, Linear boundaries are `min + i*(max-min)/N`. Log boundaries are
+`10**(log10(min) + i*(log10(max)-log10(min))/N)` for i=0..N. A value exactly on an
+interior edge enters the next interval; the maximum stays in the final interval.
+Repeating source values changes counts but never the boundaries. Source-link
+min/max uses the complete positive finite reference (unique native links with
+valid endpoints), independent of viewport, sampled images and headwater omission.
+
+**Automatic Area Limits** uses these full-reference physical min/max. Disable it
+for finite positive **Area Minimum [km²]**/**Maximum**, max>min. For Continuous,
+4 or6 intervals, these are **color-only** limits: saturation maps outside values
+to endpoint colors; width retains full-reference range/classes in the selected
+scale. Only legacy Fixed disables limit controls. Legend labels report physical
+km² for each color/width interval, with Linear/Log explicitly identified.
+Missing/nonpositive areas retain base width and neutral gray for generic colors;
+no valid positive area reports an error. A constant reference stays constant,
+without inventing a wider physical range. Mode switches preserve saved preferences.
 
 **Arrow Size [px]** is0–20, step1, default0 (Off). Positive sizes change actual
 main-network triangle geometry; position and direction follow stored downstream
@@ -561,28 +566,35 @@ Gallery presets explicitly retain historical exceptions in the flat preset CSV:
 p01-f03/f04 use Tutorial02's four blue colors (`gallery_quartiles`); f02c and
 relevant f05 styles use continuous shade-rainbow colors with six width bins
 (`gallery_continuous`). Generic `palette` styles use the chosen discrete palette.
-Applying a preset restores its exception and original arrow preference (True→7px).
+Applying a preset restores its color exception, Log scale and original arrow
+preference (True→7px). Explorer main-network4/6 bins now follow the equal-range
+policy above, even when the serialized preset ID says quartiles. Static Gallery
+scripts/figures retain their independently documented definitions and are unchanged.
 Old saved/Gallery palettes outside the eight-option River menu remain rendered
 under their original identifier. A visible compatibility message names that palette;
 the dropdown has no active choice, rather than displaying a false substitute.
 Selecting any of the eight explicitly replaces it. Saved JSON preserves the actual
 loaded palette until replacement. Gallery historical colors also remain explicit.
-Changing Colormap or Mapping releases that exception and marks the preset custom;
+Changing Colormap, Mapping or Area Scale releases that exception and marks the preset custom;
 individual changes never silently replace the scientific method registry.
 
 The added River gradients use linear RGB interpolation through explicit controls:
-Blue → Navy: #9ECAE1 / #4292C6 / #08519C / #081D58; Gray → Black:
+Blue → Navy: #5E88BE / #4F80BF / #285A9B / #103A70; Gray → Black:
 #BDBDBD / #969696 / #525252 / #111111; Gray → White:
 #777777 / #A0A0A0 / #CCCCCC / #F5F5F5. They work through the existing Continuous,
-Quantile and Six Log mappings. Manual limits retain existing mapping semantics
-(continuous/six-log color limits; full-population quantile classes). Changing
+4-equal and6-equal interval mappings in either selected scale. Manual color
+limits never change the full-reference width range. Changing
 these palettes leaves network geometry and width mapping untouched. Background
 palettes and the approved shade_rainbow controls are unchanged.
 
-JSON remains v2. `network_options.area_limits` is null for automatic, or physical
+JSON remains v2. `network_options.area_scale` is `linear` or `log` (old files
+default Log). Serialized `quartiles` and `six_log` identifiers are retained for
+compatibility but mean4/6 equal value-range intervals in the selected scale.
+Loading an older four-class file reports the changed class convention.
+`network_options.area_limits` is null for automatic, or physical
 `[min,max]`; `area_color_style` is `palette`, `gallery_quartiles` or
 `gallery_continuous`. Existing `classification`, colors, width and palette fields
-remain. Old files infer historical quartile/f02 colors; old booleans
+remain. Old files infer historical four-color/f02 palette definitions; old booleans
 `layers.arrows` map False→0 / True→7px. New files store numerical
 `layers.arrow_size` (and compatible boolean). Explicit saved modes override fresh
 session defaults. v1 and v2/v3-created v2 files remain supported.
@@ -679,8 +691,8 @@ These are control combinations, not copied Figure pipelines:
 | Gallery method | Explorer combination |
 | --- | --- |
 | p01-f02c | Coarse/category or no background + grid-center network + area color/width + six log classes |
-| p01-f03a | Coarse subcol + outlet vectors + area quartiles |
-| p01-f03b | Outlet vectors + area quartiles + channel/overland + outlets/guides |
+| p01-f03a | Coarse subcol + outlet vectors + four equal Log-area intervals |
+| p01-f03b | Outlet vectors + four equal Log-area intervals + channel/overland + outlets/guides |
 | p01-f04a | Unit catchments/uparea + outlet vectors + channel bifurcations |
 | p01-f04b | f04a combination + channel pixels + optional assignment boundaries |
 | p01-f05 | High-resolution elevation/difference/flddif + gray/pale terrain + independently styled network |
@@ -711,7 +723,7 @@ Exactly seven presets appear in the dropdown, in this order:
 | p01-f01d | Pastel subcol inside valid bsncol coverage; unassigned gray, outside white; black bsncol display-class edges |
 | p01-f02a | Faint log-area background (17%); nextxy local black straight links and flexible orange curved links, direction heads |
 | p01-f03a | Pastel subcol and stored-outlet vectors; historical four blue area/width classes |
-| p01-f03c | Gray subcol; nextxy stored-outlet vectors; continuous log shade_rainbow color with four full-network log-area quantile widths |
+| p01-f03c | Gray subcol; nextxy stored-outlet vectors; continuous log shade_rainbow color with four full-reference equal Log-area width intervals |
 | p01-f04b | Native catchments inheriting uparea with channel pixels and the existing f04 overlays |
 | p01-f05f | Native flddif pale-terrain background with network and bifurcations |
 
@@ -724,7 +736,7 @@ The older supported methods include:
 | p01-f01a | Coarse uparea, log YlGnBu, no network |
 | p01-f01c | bsncol, pastel basin display colors, no network |
 | p01-f02c | Gray subcol, grid-center nextxy, continuous log shade_rainbow colors / six log width classes |
-| p01-f03a | Pastel subcol, stored outlet vectors, full-network log-area quartiles / direction heads |
+| p01-f03a | Pastel subcol, stored outlet vectors, full-network log-four equal Log-area intervals / direction heads |
 | p01-f03b | Pastel bsncol, outlet vectors, channel + overland bifurcations, outlets, guides, coarse grid |
 | p01-f04a | Native assigned catchments inheriting uparea, boundaries, outlet vectors, channel bifurcations, guides, grid |
 | p01-f04b | f04a plus visual 10/7 channel pixels |
@@ -770,7 +782,7 @@ coordinates, and tangent-aligned downstream heads. These are graphical connector
 not new meandering channel geometry. Stored endpoints and local/flexible classes
 are unchanged; a conservative curve hull filters the viewport. Above 600 visible
 links, heads are explicitly omitted with a zoom-in diagnostic. f02c's legacy
-straight connectors and f04's visible/path quartile normalization can still differ. Overlay widths/heads and typography can also differ. This
+straight connectors and static Gallery population-based class normalization can still differ. Overlay widths/heads and typography can also differ. This
 preserves v2 definitions and pan-independent scientific classes. Existing f04b
 retains its outlets-off preset setting; the Gallery image shows outlet squares.
 Enable the independent Outlets control to display stored outlet positions. A custom edit

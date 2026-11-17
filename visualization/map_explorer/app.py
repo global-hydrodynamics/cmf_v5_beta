@@ -861,6 +861,7 @@ class Explorer:
             area_palette=self.area_palette.value,
             area_limits=None if self.river_ui.auto.value else [self.river_ui.low.value, self.river_ui.high.value],
             area_color_style=self.river_ui.color_style,
+            area_scale=self.river_ui.scale.value,
         )
 
     def update_network(self):
@@ -1371,6 +1372,7 @@ class Explorer:
             self.arrow_size.value = layers.get("arrow_size", 7 if layers.get("arrows", False) else 0)
             self.arrows.value = self.arrow_size.value > 0
             self.river_ui.color_style = options.get("area_color_style", "palette")
+            self.river_ui.scale.value = options.get("area_scale", "log")
             self.river_ui.auto.value = options.get("area_limits") is None
             if options.get("area_limits") is not None:
                 self.river_ui.low.value, self.river_ui.high.value = options["area_limits"]

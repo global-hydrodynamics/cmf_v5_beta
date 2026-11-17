@@ -70,10 +70,15 @@ def load_settings(content, reader):
     base_options = {"width", "color", "flexible_color", "distinguish", "scale_width", "color_area"}
     if not isinstance(options, dict) or not base_options.issubset(options):
         raise ValueError("Unsupported network options")
-    for key in set(options) - base_options - {"classification", "area_palette", "area_limits", "area_color_style"}:
+    for key in set(options) - base_options - {"classification", "area_palette", "area_limits", "area_color_style", "area_scale"}:
         notes.append("Ignored network option: " + key)
         options.pop(key)
     options.setdefault("classification", "fixed")
+    if "area_scale" not in options and options["classification"] == "quartiles":
+        notes.append("Legacy 4-class ID now uses equal Log value-range intervals, not population quartiles")
+    options.setdefault("area_scale", "log")
+    if options["area_scale"] not in ("linear", "log"):
+        raise ValueError("Unsupported network area scale")
     options.setdefault("area_palette", "viridis")
     from map_products import AREA_PALETTES, AREA_COLOR_STYLES, validate_area_limits
 

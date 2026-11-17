@@ -163,6 +163,7 @@ class PresetLibrary:
             classification=row["classification"],
             area_palette=row["area_palette"],
             area_color_style=row["area_color_style"],
+            area_scale="log",
             area_limits=None,
             color_area=row["color_mode"] == "upstream_area",
             distinguish=row["color_mode"] == "connection_type",

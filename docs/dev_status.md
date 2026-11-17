@@ -6,6 +6,19 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Explorer equal value-range classes (DT-0129, 2026-11-17)
+
+Maintainer explicitly replaces population quartiles/sextiles with4/6 equal
+intervals between min/max in selected Linear/Log space. Codex owns shared River
+styles/UI/config/preset wiring/tests/docs on approved feature/package-builder;
+commit/push scope retained. Separate River Area Scale; full-reference native area
+extrema; manual color ranges separated from full-reference width; physical legend
+labels and cache population isolation. Legacy IDs retained with disclosed new
+meaning; no source-data, model, Background, static Gallery or bifurcation changes.
+376 tests plus3 subtests PASS;1 Windows SKIP. Actual Japan all4 scale/class
+combinations, native-value invariance, browser Linear4/Log6 and PNG verified.
+Details and knowledge-gap review:VR-0175.
+
 ### Map Explorer automatic river detail (DT-0128, 2026-11-17)
 
 Maintainer correction supersedes area-based ranking as too aggressive. Auto now

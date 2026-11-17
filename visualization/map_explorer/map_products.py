@@ -90,6 +90,7 @@ class Products:
             # Endpoint validity can change the reference population for full-
             # network classes. Do not inherit the grid-center summary cache.
             view.__dict__.pop("_area_summary", None)
+            view.__dict__.pop("_area_range_summary", None)
             view.x0, view.y0, view.x1, view.y1, view.link_index = split_segments(
                 network.geometry, x0[valid], y0[valid], x1[valid], y1[valid], np.flatnonzero(valid)
             )
@@ -225,6 +226,7 @@ def area_style(
     area_palette="viridis",
     area_limits=None,
     area_color_style="palette",
+    area_scale="log",
 ):
     """Source-area mapping over complete valid links; color limits never change width/topology."""
     from matplotlib import colormaps
@@ -233,6 +235,8 @@ def area_style(
     if area_palette not in AREA_PALETTES or area_color_style not in AREA_COLOR_STYLES:
         raise ValueError("Unknown network area palette/style")
     limits = validate_area_limits(area_limits)
+    if area_scale not in ("linear", "log"):
+        raise ValueError("Unknown network area scale")
     # Approved cmf_colormap shade_rainbow v1.0.0 linear-sRGB controls.
     cmap = (
         LinearSegmentedColormap.from_list(
@@ -271,54 +275,65 @@ def area_style(
     good = np.isfinite(raw) & (raw > 0)
     # Unique scientific links avoid counting periodic seam display pieces twice.
     # Outlet views use only valid endpoints, not the grid-center population.
-    if not hasattr(network, "_area_summary"):
+    if not hasattr(network, "_area_range_summary"):
         present = np.unique(network.link_index)
         full = raw[present][good[present]]
-        logs = np.log10(full) if len(full) else np.array([0.0, 1.0])
-        network._area_summary = (len(full), float(logs.min()), float(logs.max()), np.quantile(logs, (0.25, 0.5, 0.75)))
-    count, lo, hi, cuts = network._area_summary
+        network._area_range_summary = (
+            len(full), float(full.min()) if len(full) else 1.0,
+            float(full.max()) if len(full) else 10.0,
+        )
+    count, minimum, maximum = network._area_range_summary
+    lo, hi = np.log10([minimum, maximum])
+    # Kept for UI/reference introspection; these are equal Log cuts, not quantiles.
+    network._area_summary = (count, lo, hi, np.linspace(lo, hi, 5)[1:-1])
     if (scale_width or color_area) and not count:
         raise ValueError("No positive source-cell upstream areas for network style")
     ids = network.link_index[visible]
     a = raw[ids]
     usable = np.isfinite(a) & (a > 0)
-    logs = np.zeros(len(a))
-    logs[usable] = np.log10(a[usable])
+    effective_scale = "log" if classification == "fixed" else area_scale
+    transformed = np.zeros(len(a))
+    transformed[usable] = np.log10(a[usable]) if effective_scale == "log" else a[usable]
+
+    def physical(value):
+        return 10**value if effective_scale == "log" else value
 
     def mapping(lower, upper):
         fraction = np.zeros(len(a))
-        fraction[usable] = np.clip((logs[usable] - lower) / max(upper - lower, 1e-12), 0, 1)
-        if classification == "quartiles":
+        if upper > lower:
+            fraction[usable] = np.clip((transformed[usable] - lower) / (upper - lower), 0, 1)
+        if classification in ("quartiles", "six_log"):
+            # Legacy serialized IDs now mean 4/6 equal value-range intervals.
+            # Population frequency and viewport never determine class boundaries.
+            classes = 4 if classification == "quartiles" else 6
+            edges = np.linspace(lower, upper, classes + 1)
             levels = np.zeros(len(a), dtype=int)
-            levels[usable] = np.digitize(logs[usable], cuts)
-            positions, edges, prefix = levels / 3, np.r_[lo, cuts, hi], "Q"
-        elif classification == "six_log":
-            positions = np.minimum((fraction * 6).astype(int), 5) / 5
-            edges, prefix = np.linspace(lower, upper, 7), "L"
+            if upper > lower:
+                levels[usable] = np.searchsorted(edges[1:-1], transformed[usable], side="right")
+            positions = levels / (classes - 1)
+            labels = [f"{effective_scale.title()} {i+1}: {physical(edges[i]):.3g}–{physical(edges[i+1]):.3g} km²"
+                      for i in range(classes)]
         else:
-            positions, edges, prefix = fraction, np.array([lower, upper]), ""
-        labels = (
-            [f"{prefix}{i+1}: {10**edges[i]:.3g}–{10**edges[i+1]:.3g} km²" for i in range(len(edges) - 1)]
-            if prefix
-            else [f"{classification}: log {10**lower:.3g}–{10**upper:.3g} km²"]
-        )
+            positions = fraction
+            labels = [f"{effective_scale}: {physical(lower):.3g}–{physical(upper):.3g} km²"]
         return fraction, positions, labels
 
-    width_lo, width_hi = (0.0, 6.0) if classification == "fixed" else (lo, hi)
+    width_lo, width_hi = ((0.0, 6.0) if classification == "fixed" else
+                          (lo, hi) if effective_scale == "log" else (minimum, maximum))
     _, positions, width_labels = mapping(width_lo, width_hi)
     widths = np.full(len(a), float(width))
     if scale_width:
         widths *= 0.5 + 3 * positions if classification == "fixed" else 1 + 2 * positions
         widths[~usable] = 0.5 * width if classification == "fixed" else width
     # Manual COLOR limits deliberately do not enter the WIDTH calculation.
-    color_lo, color_hi = (
-        np.log10(limits) if limits is not None and classification in ("continuous", "six_log") else (width_lo, width_hi)
-    )
+    color_lo, color_hi = ((np.log10(limits) if effective_scale == "log" else limits)
+                          if limits is not None and classification != "fixed" else (width_lo, width_hi))
     fraction, color_positions, color_labels = mapping(color_lo, color_hi)
     if area_color_style == "gallery_continuous" and classification in ("six_log", "quartiles"):
         color_positions = fraction
         color_labels = [
-            f"continuous: log {10**color_lo:.3g}–{10**color_hi:.3g} km² (Gallery; {4 if classification=='quartiles' else 6} width classes)"
+            f"continuous {effective_scale}: {physical(color_lo):.3g}–{physical(color_hi):.3g} km² "
+            f"(Gallery; {4 if classification=='quartiles' else 6} equal-range width classes)"
         ]
     colors = np.array([to_hex(cmap(v)) for v in color_positions], dtype=object)
     if classification == "quartiles" and (area_color_style == "gallery_quartiles" or (area_color_style == "palette" and area_palette == "blue_navy")):
@@ -331,7 +346,9 @@ def area_style(
             colors[network.flexible[ids]] = flexible_color
     legend, swatches = [], []
     if color_area or scale_width:
-        legend.append("Upstream contributing drainage area (not discharge); " + classification)
+        method = {"quartiles": "4 equal intervals", "six_log": "6 equal intervals",
+                  "continuous": "continuous", "fixed": "legacy fixed range"}[classification]
+        legend.append(f"Upstream contributing drainage area (not discharge); {method}; {effective_scale}")
         if (~usable).any():
             legend.append(
                 "Missing/nonpositive area: historical minimum width/color; links retained"
@@ -365,7 +382,7 @@ def area_style(
                 else color
             )
             line_width = width * (0.5 + 3 * v if classification == "fixed" else 1 + 2 * v) if kind == "Width" else width
-            label = labels[i] if len(labels) > 1 else f"{10**(lower+v*(upper-lower)):.3g} km²"
+            label = labels[i] if len(labels) > 1 else f"{physical(lower+v*(upper-lower)):.3g} km²"
             swatches.append((kind + ": " + label, c, float(line_width)))
     if not color_area:
         legend += ["All/local links: " + color] + (["Flexible Downstream: " + flexible_color] if distinguish else [])

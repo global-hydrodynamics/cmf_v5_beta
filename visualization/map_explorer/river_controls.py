@@ -16,9 +16,9 @@ RIVER_PALETTES = {
 }
 
 MAPPINGS = {
-    "Continuous (log scale)": "continuous",
-    "Quantiles (4 groups)": "quartiles",
-    "Logarithmic (6 classes)": "six_log",
+    "Continuous": "continuous",
+    "4 equal intervals": "quartiles",
+    "6 equal intervals": "six_log",
     "Fixed log range (legacy)": "fixed",
 }
 
@@ -52,6 +52,8 @@ class RiverControls:
         app.classification.options = MAPPINGS
         app.area_palette.name = "Colormap"
         app.area_palette.options = list(AREA_PALETTES)
+        self.scale = pn.widgets.Select(name="Area Scale", options={"Log": "log", "Linear": "linear"}, value="log")
+        self.scale.param.watch(lambda event: app._schedule(self.custom_mapping), "value")
         self.palette = PaletteSelect(name="Colormap", options=RIVER_PALETTES)
         self.legacy_palette = pn.pane.Markdown("", sizing_mode="stretch_width")
         self.palette.param.watch(lambda event: app._schedule(self.palette_changed), "value")
@@ -73,6 +75,10 @@ class RiverControls:
             self.detail,
             self.budget,
             self.detail_note,
+            pn.pane.Markdown("#### AREA MAPPING", margin=(0, 0)),
+            self.scale,
+            app.classification,
+            self.note,
             pn.pane.Markdown("#### COLOR", margin=(0, 0)),
             app.color_mode,
             app.color,
@@ -81,8 +87,6 @@ class RiverControls:
             pn.pane.Markdown("#### WIDTH", margin=(0, 0)),
             app.width_mode,
             app.width,
-            app.classification,
-            self.note,
             pn.pane.Markdown("#### DIRECTION", margin=(0, 0)),
             app.arrow_size,
             pn.pane.Markdown("0 = Off. Main-network direction follows stored downstream connectivity.", margin=(0, 0)),
@@ -150,8 +154,9 @@ class RiverControls:
         app.flex_color.visible = typed
         self.area_colors.visible = area
         uses_area = area or app.width_mode.value == "upstream_area"
-        app.classification.visible = self.note.visible = uses_area
-        editable = app.classification.value in ("continuous", "six_log")
+        app.classification.visible = self.note.visible = self.scale.visible = uses_area
+        self.scale.disabled = app.classification.value == "fixed"
+        editable = app.classification.value != "fixed"
         self.auto.disabled = not editable
         self.low.disabled = self.high.disabled = not editable or self.auto.value
         if self.auto.value and app.network is not None and hasattr(app.network, "_area_summary"):
@@ -162,12 +167,12 @@ class RiverControls:
             finally:
                 app._updating = False
         details = {
-            "continuous": "Continuous log-area mapping; color limits clip colors only. Width uses the full reference.",
-            "quartiles": "Four groups containing approximately equal numbers of river links, ordered by upstream drainage area. Full-reference quantiles; manual limits do not apply.",
-            "six_log": "Six equal log-area intervals (not quantiles). Color intervals may use manual limits; width retains full-reference intervals.",
+            "continuous": "Continuous mapping in the selected Linear/Log scale; color limits clip colors only. Width uses the full reference.",
+            "quartiles": "Four equal intervals from minimum to maximum in the selected Linear/Log scale; not equal population counts.",
+            "six_log": "Six equal intervals from minimum to maximum in the selected Linear/Log scale; not equal population counts.",
             "fixed": "Legacy fixed area reference 1–10⁶ km²; manual limits do not apply.",
         }
-        self.note.object = details[app.classification.value] + " Contributing drainage area, not discharge."
+        self.note.object = details[app.classification.value] + " Full-reference width range; color can use manual limits. Contributing drainage area, not discharge."
         if self.color_style != "palette" and area:
             self.note.object += (
                 " Gallery historical colors retained; changing Colormap or Mapping selects custom palette colors."
