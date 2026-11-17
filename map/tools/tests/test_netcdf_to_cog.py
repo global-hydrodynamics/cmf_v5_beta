@@ -387,3 +387,57 @@ def test_known_non_targets_skip_without_error_or_output(tmp_path, capsys, jobs):
         pass
     assert cog.main(options) == 1
     assert 'UNSUPPORTED' in capsys.readouterr().err
+
+
+@pytest.mark.parametrize('tag', ['1min', '30sec', '15sec'])
+def test_copied_shell_automatically_selects_distributed_highres(tmp_path, tag):
+    """An unchanged template must convert the target map's standard high-res set."""
+    import shutil
+    task, _ = fixture(tmp_path/'seed')
+    repository = tmp_path/'repo'
+    root = repository/'map'/'custom-map-name'
+    shutil.copytree(task.source.parent.parent, root)
+    (repository/'map'/'tools').symlink_to(ROOT/'map/tools', target_is_directory=True)
+    high = root/f'{tag}_nc'
+    high.mkdir()
+    (high/'location.txt').write_text(
+        '1 narea\niarea carea west east south north nx ny csize\n1 a 10 11.6 28.4 30 16 16 .1\n')
+    source = high/'a.elevtn.nc'
+    shutil.copyfile(task.source, source)
+    # Original-resolution directories must never become implicit conversion targets.
+    (root/'3sec_nc').mkdir()
+    (root/'1sec_nc').mkdir()
+    local = root/'script_format_conv'
+    local.mkdir()
+    script = local/'s05-convert_netcdf_to_cog.sh'
+    shutil.copyfile(ROOT/'map/tools/script_format_conv'/script.name, script)
+    digest = hashlib.sha256(source.read_bytes()).digest()
+    env = dict(os.environ, PATH=str(Path(sys.executable).parent)+os.pathsep+os.environ['PATH'])
+    command = ['sh', str(script), '--variables', 'elevtn', '--jobs', '1', '--blocksize', '128']
+    result = subprocess.run(command, cwd=local, env=env, text=True, capture_output=True)
+    assert result.returncode == 0, result.stdout+result.stderr
+    assert f'AUTO resolutions: base {tag}' in result.stdout
+    assert (root/'COG/elevtn.tif').is_file()
+    assert (root/f'COG/{tag}/a.elevtn.tif').is_file()
+    assert not (root/'COG/3sec').exists() and not (root/'COG/1sec').exists()
+    assert hashlib.sha256(source.read_bytes()).digest() == digest
+    # Explicit old CLI choices still override the copied shell's Auto setting.
+    explicit = subprocess.run(command+['--map-dir', str(root), '--resolutions', 'base'],
+                              cwd=tmp_path, env=env, text=True, capture_output=True)
+    assert explicit.returncode == 0, explicit.stdout+explicit.stderr
+    assert 'AUTO resolutions:' not in explicit.stdout
+
+
+def test_auto_resolution_scope_and_explicit_compatibility(tmp_path, capsys):
+    (tmp_path/'3sec_nc').mkdir()
+    (tmp_path/'1sec_nc').mkdir()
+    assert cog.resolve_resolutions(tmp_path, ['auto']) == ['base']
+    assert 'AUTO resolutions: base' in capsys.readouterr().out
+    for tag in ('15sec', '30sec', '1min'):
+        (tmp_path/f'{tag}_nc').mkdir()
+        assert cog.resolve_resolutions(tmp_path, ['auto']) == ['base', tag]
+    assert cog.resolve_resolutions(tmp_path, ['15sec']) == ['15sec']
+    assert cog.resolve_resolutions(tmp_path, ['base', '3sec', '1sec']) == ['base', '3sec', '1sec']
+    for invalid in ([], ['base', 'auto'], ['../1min']):
+        with pytest.raises(ValueError, match='resolutions must'):
+            cog.resolve_resolutions(tmp_path, invalid)

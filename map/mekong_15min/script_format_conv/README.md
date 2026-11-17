@@ -76,7 +76,7 @@ preserves existing outputs. No bulk prompt appears when all outputs are new.
 
 ## Numeric COG visualization caches (`s05`)
 
-Run `./s05-convert_netcdf_to_cog.sh` here. This copy uses `RESOLUTIONS="base 1min"`
+Run `./s05-convert_netcdf_to_cog.sh` here. This copy uses `RESOLUTIONS="auto"` (resolving to `base 1min` from `1min_nc/`)
 and `VARS="all"`; absent registered products skip. Model-grid `netcdf/*.nc` becomes
 `COG/*.tif`, while native `1min_nc/<area>.*.nc` becomes `COG/1min/<area>.*.tif`.
 These are optional numeric caches; scientific source files remain unchanged.

@@ -330,12 +330,30 @@ cd map/TE-Japan_01min/script_format_conv
 ./s05-convert_netcdf_to_cog.sh
 ```
 
-The shared template defaults to `RESOLUTIONS="base 15sec"`, `VARS="all"`, tile
-edge512px (allowed128–4096, divisible by16), lossless DEFLATE, Overview factors2/4/8/16/32 and4 worker processes.
-Mekong's maintained copy defaults to `base 1min`. Use `base 1min` for global15min;
-`base 3sec` is another valid selection when that directory exists. Settings are
-at the top of the shell. Python owns argument/metadata validation; CLI options
-at the end override the shell's settings:
+The shared template and maintained Mekong copy default to `RESOLUTIONS="auto"`,
+`VARS="all"`, tile edge512px (allowed128–4096, divisible by16), lossless DEFLATE,
+Overview factors2/4/8/16/32 and4worker processes. Copy the template without changing
+resolution settings: Python selects the model grid plus the **first existing**
+high-res NetCDF directory in this coarse-to-fine order:
+
+1. `1min_nc/`
+2. `30sec_nc/`
+3. `15sec_nc/`
+
+For example, both1min and15sec present selects only1min; both30sec and15sec
+present selects only30sec. No map-name/source-family inference or ambiguity error
+is needed. If none exists, Auto selects base only and prints that selection.
+`location.txt` still defines actual tile geometry; this search only selects inputs.
+
+MERIT Hydro-derived distributed maps normally have1min data (original3sec is not
+distributed here); Japan's J-FlwDir-derived maps normally have15sec (original1sec
+is not distributed here). Original-resolution data are not automatic candidates;
+use explicit `--resolutions` to select them or any other supported resolution.
+Missing products keep the existing skips. CLI options at the end override the
+shell's settings, and the direct Python CLI has the same Auto default. For an
+existing local copy with fixed `base 15sec`/`base 1min`, change only
+`RESOLUTIONS="auto"` or recopy the template while preserving other custom settings.
+`s03` and other conversions retain their existing explicit resolution settings.
 
 ```sh
 map/tools/script_format_conv/s05-convert_netcdf_to_cog.sh \

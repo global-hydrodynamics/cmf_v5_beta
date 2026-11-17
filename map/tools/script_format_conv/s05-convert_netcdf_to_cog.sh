@@ -4,7 +4,7 @@
 set -eu
 
 # -------------------------- User settings ------------------------------
-RESOLUTIONS="base 15sec"        # Model grid and native high-res tags; global/Mekong: base 1min.
+RESOLUTIONS="auto"             # Base + first available: 1min_nc, 30sec_nc, 15sec_nc.
 VARS="all"                     # All registered products, or space-separated file stems.
 BLOCKSIZE=512                  # TIFF tile edge [pixels], 128..4096 and divisible by16.
 COMPRESSION="DEFLATE"          # Lossless DEFLATE, LZW, ZSTD or NONE.

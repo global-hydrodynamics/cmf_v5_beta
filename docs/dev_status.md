@@ -6,6 +6,22 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Automatic distributed COG resolution (DT-0135, 2026-11-17)
+
+Maintainer requests copy-and-run s05 defaults: MERIT Hydro-derived distributed
+high-res1min; J-FlwDir-derived distributed high-res15sec. Codex owns COG task
+selection, shared/Mekong shell copies, focused tests and docs on existing
+feature/package-builder. Default auto selects the first existing1min_nc,30sec_nc,15sec_nc directory,
+coarse to fine, as the maintainer subsequently simplifies the policy. Explicit
+resolutions remain authoritative; no map-name/source-family inference.
+No raster algorithm, source data, COG generation or package-definition changes.
+
+DT-0135 complete:32 tests PASS;1 unchanged memory test deselected. Copied templates
+select1min/30sec/15sec and preserve explicit overrides. Actual plans choose
+Global1min,Mekong1min,Japan15sec;147/149/132 source file stats unchanged. Four
+shell syntax checks PASS. No actual scientific raster conversion. See VR-0181.
+
+
 ### Explorer COG integration (DT-0134, 2026-11-17)
 
 Maintainer explicitly approves COG display/native interaction integration on

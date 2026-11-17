@@ -69,6 +69,19 @@ def base_geometry(path):
                 west=west, east=east, south=south, north=north)
 
 
+def resolve_resolutions(map_dir, requested):
+    """Choose the first available standard NetCDF directory, coarse to fine."""
+    if requested == ['auto']:
+        selected = next((tag for tag in ('1min', '30sec', '15sec')
+                         if (map_dir / f'{tag}_nc').is_dir()), None)
+        resolutions = ['base', selected] if selected else ['base']
+        print('AUTO resolutions: ' + ' '.join(resolutions))
+        return resolutions
+    if not requested or any(x != 'base' and (not x.isalnum() or not x[0].isdigit()) for x in requested):
+        raise ValueError('resolutions must be auto alone, or base and/or native tags such as 15sec, 1min, 3sec')
+    return requested
+
+
 def plan(map_dir, resolutions, variables, registry):
     """Use the canonical CSV for filenames, record order, types and scientific labels."""
     rows = hires.registry_rows(registry)
@@ -363,7 +376,9 @@ def convert(task, blocksize=512, compression='DEFLATE', overviews=(2, 4, 8, 16, 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--map-dir', type=Path)
-    parser.add_argument('--resolutions', default='base 15sec', help='base and/or native tags, e.g. "base 1min"')
+    parser.add_argument('--resolutions', default='auto',
+                        help='auto: base plus first available 1min_nc, 30sec_nc, 15sec_nc; '
+                             'or explicit tags, e.g. "base 1min"')
     parser.add_argument('--variables', default='all', help='registered file stems separated by spaces')
     parser.add_argument('--registry', type=Path, default=DEFAULT_REGISTRY)
     parser.add_argument('--blocksize', type=int, default=512)
@@ -384,9 +399,7 @@ def main(argv=None):
             if cwd.name != 'script_format_conv' or cwd.parent.name == 'tools':
                 raise ValueError('run from <map>/script_format_conv/ or pass --map-dir PATH')
             map_dir = cwd.parent
-        resolutions = args.resolutions.split()
-        if not resolutions or any(x != 'base' and (not x.isalnum() or not x[0].isdigit()) for x in resolutions):
-            raise ValueError('resolutions must be base and/or native tags such as 15sec, 1min, 3sec')
+        resolutions = resolve_resolutions(map_dir, args.resolutions.split())
         tasks = plan(map_dir.resolve(), resolutions, args.variables.split(), args.registry)
         print(f'COG tasks: {len(tasks)}; workers: {args.jobs}; GDAL block cache <=16MiB per worker; full native verification')
         failed, unsupported, passed, skipped = 0, 0, 0, 0
