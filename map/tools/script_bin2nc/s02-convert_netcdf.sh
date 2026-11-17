@@ -157,6 +157,8 @@ while IFS= read -r FILE <&3 || [ -n "$FILE" ]; do
     printf '[STEP %s/%s] Convert %s\n' "$FILE_NUMBER" "$FILE_COUNT" "$FILE"
     printf '==================================================\n\n'
 
+    # Interactive approval applies only to this file, not the remaining list.
+    OVERWRITE=$FORCE
     if [ -f "$OUTPUT_FILE" ] && [ "$FORCE" -eq 0 ]; then
         if [ ! -t 0 ]; then
             printf 'Existing output preserved in non-interactive mode: %s\n' "$OUTPUT_FILE"
@@ -171,6 +173,7 @@ while IFS= read -r FILE <&3 || [ -n "$FILE" ]; do
             fi
             case "$ANSWER" in
                 y|Y)
+                    OVERWRITE=1
                     break
                     ;;
                 ""|n|N)
@@ -185,7 +188,7 @@ while IFS= read -r FILE <&3 || [ -n "$FILE" ]; do
         done
     fi
 
-    if [ "$FORCE" -eq 1 ]; then
+    if [ "$OVERWRITE" -eq 1 ]; then
         python3 "$CONVERTER" \
             --map-dir "$MAP_DIR" \
             --registry "$REGISTRY" \

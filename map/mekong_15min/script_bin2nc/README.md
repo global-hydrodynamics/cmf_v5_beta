@@ -58,3 +58,7 @@ map-local `script_bin2nc/`. The shared template directory is not an implicit
 map target. See the [shared guide](../../tools/script_bin2nc/README.md#explicit-target-including-external-package-maps)
 for a complete external-map example. This rule applies to s01–s03 only;
 legacy t* helper settings are unchanged.
+
+Interactive `s02` overwrite approval (`y`/`Y`) passes `--force` to the converter
+for that file only. Later existing outputs still require their own confirmation;
+Enter/`n` preserves them. Explicit `--force` applies to the entire selected list.

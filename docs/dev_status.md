@@ -6,6 +6,16 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Map bin2nc overwrite fix (DT-0127, 2026-11-17)
+
+Maintainer reports s02 interactive y followed by converter exists/--force error.
+Bounded follow-up on existing feature/package-builder: Codex fixes only per-file
+Shell overwrite authorization in template/Mekong and the current untracked local
+Japan copy; no scientific conversion/format change or data overwrite performed.
+7 tests plus2 subtests PASS including real temporary NetCDF overwrite and skip.
+Updated stale CWD test fixtures and a stub that previously ignored the converter's
+existing-output guard. See research/records/validation_runs/VR-0173.md.
+
 ### Map Explorer dataset switching (DT-0126, 2026-11-17)
 
 Maintainer follow-up: place infrequently used Load Map controls behind a header

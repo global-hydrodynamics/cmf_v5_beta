@@ -241,3 +241,7 @@ small geographic tiles. Validation therefore used only two 17 × 13 cell windows
 from its catmxy/elevtn files in a temporary map; all four restored window files
 matched the corresponding original Binary bytes. No full global file or complete
 map was restored, and original global data were not changed.
+
+Interactive `s02` overwrite approval (`y`/`Y`) passes `--force` to the converter
+for that file only. Later existing outputs still require their own confirmation;
+Enter/`n` preserves them. Explicit `--force` applies to the entire selected list.
