@@ -553,8 +553,11 @@ class Explorer:
             align_items="flex-start",
             sizing_mode="stretch_width",
         )
+        self.header_bar = pn.Row(
+            header, pn.Spacer(sizing_mode="stretch_width"), self.settings_toggle, sizing_mode="stretch_width"
+        )
         self.view = pn.Column(
-            pn.Row(header, pn.Spacer(sizing_mode="stretch_width"), self.settings_toggle, sizing_mode="stretch_width"),
+            self.header_bar,
             self.content,
             sizing_mode="stretch_width",
         )

@@ -843,3 +843,15 @@ block processed with disk workspace, cached per Tile. No high-res statistics or
 raster arrays are materialized on generic map startup. Global full-native scans
 are still expensive and were not benchmarked; no regional-to-global performance
 claim is made. Detailed actual-map measurements and limitations: VR-0172.
+
+
+### Dataset controls on demand (2026-11-17)
+
+The header places a session-owned Map dataset toggle beside Settings panel. Its
+controls are hidden initially and mounted between the header and map/settings
+content, independently of Visualization/Inspector mode. Toggling visibility does
+not replace the Explorer or alter its viewport/selection. A successful dataset
+switch transfers the same toggle/drawer to the new Explorer; failed mounting
+restores them to the previous Explorer along with its Pins. The drawer remains
+open until explicitly closed, so loading errors and Pins confirmation stay visible.
+No scientific processing or settings schema changes.

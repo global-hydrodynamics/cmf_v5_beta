@@ -134,7 +134,7 @@ def test_repeated_switch_resets_scientific_state_and_retains_app_controls(maps):
     assert old._closed and not old.reader._cache and not old._networks
     assert not new.show_osm.value and new.background.value == "coarse"
     assert new.panel_mode.value == "Inspector"
-    assert s.controls in new.visualization_panel.objects and s.controls not in old.visualization_panel.objects
+    assert s.controls in new.view.objects and s.controls not in old.view.objects
     new.point_select.value = "grid"
     info = new.inspect(130.125, 34.875)
     assert new.selected == (0, 0)
@@ -256,7 +256,35 @@ def test_failed_view_mount_rolls_back_active_controls_and_keeps_pins(maps):
     assert not s.load_map(maps[2], confirm_pins=True)
     assert s.active is old and not old._closed
     assert s.host.objects == [old.view]
-    assert s.controls in old.visualization_panel.objects
+    assert s.controls in old.view.objects
     assert len(old.pins.pins) == 1
     assert "simulated view mount failure" in s.status.object
     assert old.plot.document is document and len(document.roots) == 1
+
+
+def test_map_dataset_drawer_is_opt_in_and_independent_of_settings(maps):
+    s = session(maps)
+    old = s.active
+    plot = old.plot
+    old.inspect(10.5, 22.5)
+    selected = old.selected
+    extent = old.extent
+    assert not s.dataset_toggle.value and not s.controls.visible
+    assert old.header_bar.objects[-2:] == [s.dataset_toggle, old.settings_toggle]
+    assert s.controls not in old.visualization_panel.objects
+    old.settings_toggle.value = False
+    old.panel_mode.value = "Inspector"
+    s.dataset_toggle.value = True
+    assert s.controls.visible and not old.settings_panel.visible
+    assert old.plot is plot and old.selected == selected and old.extent == extent
+    s.dataset_toggle.value = False
+    assert not s.controls.visible
+    s.dataset_toggle.value = True
+    assert s.load_map(maps[2])
+    assert s.controls.visible and s.dataset_toggle.value
+    assert s.dataset_toggle in s.active.header_bar.objects
+    assert s.dataset_toggle not in old.header_bar.objects
+    assert s.active.panel_mode.value == "Inspector"
+    assert not s.active.settings_panel.visible
+    s.dataset_toggle.value = False
+    assert not s.controls.visible

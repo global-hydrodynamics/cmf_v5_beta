@@ -41,6 +41,11 @@ class ExplorerSession:
         self.controls = pn.Column(
             pn.pane.Markdown("### Map Dataset", margin=(0, 0)), self.current, self.available, self.directory,
             self.load_button, self.status, self.confirmation, sizing_mode="stretch_width",
+            visible=False, max_width=900,
+        )
+        self.dataset_toggle = pn.widgets.Toggle(name="Map dataset", value=False, width=135)
+        self.dataset_toggle.param.watch(
+            lambda event: setattr(self.controls, "visible", event.new), "value"
         )
         self.host = pn.Column(sizing_mode="stretch_width")
         self.view = self.host
@@ -104,8 +109,10 @@ class ExplorerSession:
         visible = previous.settings_toggle.value if previous else True
         try:
             if previous is not None:
-                previous.visualization_panel.remove(self.controls)
-            explorer.visualization_panel.insert(0, self.controls)
+                previous.view.remove(self.controls)
+                previous.header_bar.remove(self.dataset_toggle)
+            explorer.view.insert(1, self.controls)
+            explorer.header_bar.insert(len(explorer.header_bar.objects) - 1, self.dataset_toggle)
             explorer.panel_mode.value = mode
             explorer.settings_toggle.value = visible
             self.active = explorer
@@ -127,10 +134,15 @@ class ExplorerSession:
         except Exception:
             # Roll back a view/model mount failure as well as a preparation failure.
             self.active = previous
-            if self.controls in explorer.visualization_panel.objects:
-                explorer.visualization_panel.remove(self.controls)
-            if previous is not None and self.controls not in previous.visualization_panel.objects:
-                previous.visualization_panel.insert(0, self.controls)
+            if self.controls in explorer.view.objects:
+                explorer.view.remove(self.controls)
+            if self.dataset_toggle in explorer.header_bar.objects:
+                explorer.header_bar.remove(self.dataset_toggle)
+            if previous is not None:
+                if self.controls not in previous.view.objects:
+                    previous.view.insert(1, self.controls)
+                if self.dataset_toggle not in previous.header_bar.objects:
+                    previous.header_bar.insert(len(previous.header_bar.objects) - 1, self.dataset_toggle)
             self.host.objects = [previous.view] if previous is not None else []
             explorer.close()
             raise

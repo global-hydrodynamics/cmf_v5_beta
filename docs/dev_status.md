@@ -8,6 +8,10 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ### Map Explorer dataset switching (DT-0126, 2026-11-17)
 
+Maintainer follow-up: place infrequently used Load Map controls behind a header
+Map dataset toggle beside Settings panel; initially hidden and independent of
+Visualization/Inspector modes. Existing branch and publication scope retained.
+
 Maintainer approves in-session Map Dataset controls, bundled Mekong no-dialog
 startup across launchers, coherent Explorer replacement with Pins confirmation,
 JSON mismatch rejection, tests/browser/real-map checks, docs and commit/push on

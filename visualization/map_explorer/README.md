@@ -15,8 +15,12 @@ plotting scripts, running a Fortran program, or providing model output.
 
 ## Map Dataset — load or switch maps
 
-At the top of **Visualization**, choose an **Available Map** or enter **Map
-Directory**, then press **Load Map**. Dropdown/path edits alone do not switch.
+Click **Map dataset** next to **Settings panel** in the header to reveal the
+map-switching controls; they are hidden initially. Choose an **Available Map** or
+enter **Map Directory**, then press **Load Map**. Click **Map dataset** again to
+hide the controls. This drawer is independent of Visualization/Inspector mode
+and the Settings panel, and opening it preserves the plot, extent and selection.
+Dropdown/path edits alone do not switch.
 Candidate maps are immediate children of repository `map/`, with valid params.txt
 and at least one supported readable core raster; tools/src, hidden/temporary and
 invalid map directories are omitted. The name, native dimensions and spacing
