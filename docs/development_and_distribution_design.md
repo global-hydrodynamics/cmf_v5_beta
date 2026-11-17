@@ -466,7 +466,7 @@ Instead, contributors provide focused, tested changes, while maintainers review 
 
 This approach is intended to reduce the technical barriers to community contributions while keeping the CaMa-Flood development and distribution system simple and maintainable.
 
-## 11. Current implementation boundary (2026-11-15)
+## 11. Current implementation boundary (2026-11-17)
 
 The principles above are the adopted direction. Their implementation remains incomplete.
 
@@ -476,7 +476,7 @@ The principles above are the adopted direction. Their implementation remains inc
 | Model and execution entry points | `src_main/`, `config/`, `gosh_test/`, and Tutorial01 provide existing build/run materials with earlier operational evidence. | Consolidate a current clean-clone recipe; do not describe this documentation task as a new model execution or package test. |
 | Regression references | Component tests exist; earlier model comparisons are recorded in research. | Independently approve the official model-reference revision, variables, calendar, precision and comparison criteria, then provide a repeatable command. Historical execution success is not this approval. |
 | Migration baseline | Legacy root src/gosh/adm relocation and direct util-to-tools consolidation are committed in 29b889c4; current main inherits them. | Use legacy/ only as reference and the active src_main/config/gosh_test/tools paths for v5 work. |
-| Additional data | Legacy environments contain larger maps, forcing, derived products and model outputs. | Select datasets by workflow, check provenance/redistribution, and specify the versioned manifest and installation/reference method. A local file or old-package entry is not sufficient redistribution evidence. |
+| Additional data | `package/install_package_data.sh` implements developer Import; `diff_package_data.sh` provides independent read-only file Diff. The sole `package_data.csv` catalog preserves its six fields and adds optional exclude_patterns. Symlinked sibling stores, bounded-memory comparison, Git/ignore protections and verified atomic local copies are supported. | Distribution version/provenance/redistribution review and independent package assembly remain future work. No real-data Import was performed by the implementation task; see the [package guide](../package/README.md). |
 | Distributed Package | No v5 package assembler or verified generated v5 distribution exists. | Implement separate-output assembly from a selected committed revision and approved data version, followed by structural and execution checks. |
 | Legacy packaging instructions | `archive_src.sh`, `doc/make_package.sh` and the old package guide describe v4-oriented workflows. | Preserve them as historical references; do not present them as the v5 assembly command. |
 | Contribution guidance | CONTRIBUTING.md now documents feature branches, focused diffs, two test levels and pre-merge review. | Validate the full contributor workflow with an independently tested feature branch/PR in a later task. |

@@ -45,8 +45,8 @@ as compressed NetCDF; `1min/` Binary is excluded and can be restored on demand
 with `cmf_v5_beta/map/tools/script_bin2nc/s04-restore_highres_binary.sh`. Do not
 include both high-resolution formats. Generation directories (`script*/`,
 `src*/`, `code/`), script/source files and temporary/build/log files are excluded
-by the selection policy in `cmf_v5_beta/package/README.md`; the existing
-six-column catalog does not yet encode exclusions mechanically. Existing standard `.bin` products are
+by the selection policy in `cmf_v5_beta/package/README.md`; the optional final
+`exclude_patterns` CSV column encodes these rules for both Import and Diff. Existing standard `.bin` products are
 not removed by those exclusions. Input Matrix format and further data pruning
 are deferred to a later round.
 
@@ -64,8 +64,8 @@ standard parameter products, station/bifurcation information and auxiliary
 text are included. High-resolution distribution uses compressed `15sec_nc/`
 with `location.txt`; `15sec/` Binary is excluded and restored only when needed.
 Generation directories, scripts and build/log/temporary files are excluded
-according to `cmf_v5_beta/package/README.md`. Map-specific workflows remain
-Git-managed in the development repository; the local data copy is ignored.
+according to `cmf_v5_beta/package/README.md`. Any Git-managed map-specific workflows are protected from Import; the local
+data copy is ignored.
 
 This registration does not change the data or validate its contents. The
 upstream source edition, processing provenance, redistribution conditions and
@@ -88,10 +88,10 @@ Redistribution conditions for this global archive are **not yet confirmed in thi
 - Keep dataset directories aligned with their intended package destinations, for example `inp/ELSE_GPCC/` under both data and package roots.
 - Preserve original data. Do not silently overwrite existing files; retain generation/version and validation evidence when datasets are revised.
 - Development copies must be excluded through dataset-local Git ignore rules (`inp/.gitignore` and `map/.gitignore`). Do not commit the large data to the development repository.
-- Package installation and generation automation remain planned. They must use the external authoritative store and catalog, leaving source data unchanged and creating an independent package output.
+- Developer Import and read-only Diff are implemented in `cmf_v5_beta/package/install_package_data.sh` and `diff_package_data.sh`. Import creates ordinary editable local copies and never deletes target-only files. Both use the same catalog selection/exclusions, leaving this store unchanged. Distribution assembly remains planned.
 
 The logical sibling `cmf_v5_package_data/` may be a symbolic link to externally
 managed storage. Tools must use that logical location without hard-coded
 Dropbox paths and must clearly fail if it or a required dataset is inaccessible;
-no data should be generated or copied as an implicit fallback. Installation
-and package assembly are still planned, not implemented tools.
+no data should be generated or copied as an implicit fallback. Developer Import and Diff use that location by default, with `--source` for an
+alternative store. Distribution-package assembly remains unimplemented.

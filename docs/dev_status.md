@@ -6,6 +6,22 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Package Additional Data Import / Diff (DT-0125, 2026-11-17)
+
+Maintainer explicitly approves implementation, tests, documentation and commit/push
+on existing `feature/package-builder`. Codex owns `package/` tools/tests/catalog,
+package/design documentation and task research records. Use one catalog with an
+optional exclude_patterns column; preserve six existing fields. Shared read-only
+selection/comparison, one-time ordinary-file Import, two-stage conflict approval,
+Git/ignore/path protections and atomic verified copies. No real-data Import,
+external-store edits, assembler, scientific conversion or model changes. Acceptance:
+small temporary fixtures for selection/status/interaction/safety, plus actual
+read-only store Diff when available. No overlapping open repository Issues/PRs
+were found; starting tree clean at3199920e, equal to refreshed project remote.
+Implementation complete:28 tests PASS; real symlinked-store read-only Diff and
+Dry-run select273 source-only files (1811422147 bytes); independent inventory
+and330 source metadata checks pass. No real Import or assembler. See VR-0171.
+
 ### Explorer UI and statistics (DT-0120, 2026-11-17)
 
 Maintainer authorizes the six UI/Inspector/P3-P97/selection refinements, automated
