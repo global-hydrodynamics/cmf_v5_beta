@@ -121,7 +121,22 @@ The NetCDF C library and Python standard library are sufficient. Validation here
 
 ## Convert high-resolution tiles (`s03`)
 
-Copy `s03-convert_highres_netcdf.sh` to the map-local `script_bin2nc/` directory, set `HIRES`, `VARS`, `COMPRESSION_LEVEL` and `JOBS` near the top, then run from that map-local directory. No `MAP_DIR` edit is needed; use `--map-dir PATH` when running elsewhere. The commented `HIRES` and `VARS` examples show the available choices; select only directories and registered file stems present in the target map. The Mekong copy is configured for `1min/`:
+Copy `s03-convert_highres_netcdf.sh` to the map-local `script_bin2nc/` directory, set `HIRES`, `VARS`, `COMPRESSION_LEVEL` and `JOBS` near the top, then run from that map-local directory. No `MAP_DIR` edit is needed; use `--map-dir PATH` when running elsewhere. The commented `HIRES` and `VARS` examples show the available choices; select only directories and registered file stems present in the target map. The template now selects 11 common products: `catmxy`, `catmz100`, `catmzz`,
+`downxy`, `elevtn`, `flddif`, `grdare`, `hand`, `rivwth`, `uparea`, and `visual`.
+The old seven-product default omitted four available products; the converter
+already supports their registered types. The Mekong copy additionally selects
+`flwdir` (12 products) and is configured for `1min/`. Keep `flwdir` selected only
+where that Binary exists; Japan's listed 15sec data do not include it. For Japan,
+set `HIRES="15sec"` and use the 11-product list. Explicit selections remain strict:
+a missing selected input is an error, rather than silently skipping a product.
+
+To complete an older seven-product conversion, update the local script settings
+and run `s03` again **without `--force`**: the seven existing outputs are retained
+and the missing NetCDF products are added. Integer `catmz100`, `catmzz` and
+`visual` remain signed int8; `grdare` remains float32 with registered units and
+missing values. No values, assignment codes or categorical classes are rescaled.
+
+For the bundled Mekong example:
 
 ```sh
 cd map/mekong_15min/script_bin2nc

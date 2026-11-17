@@ -21,7 +21,11 @@ The shared template README documents supported raster layouts, warnings, output 
 
 ## High-resolution tile conversion
 
-Run the map-local `s03` to convert the selected registered `1min/` tile binaries. Its settings at the top of the script select `catmxy`, `downxy`, `elevtn`, `uparea`, `hand`, `flddif`, and `rivwth`:
+Run the map-local `s03` to convert the selected registered `1min/` tile binaries. Its settings select all 12 registered Binary products present in the bundled
+Mekong `1min/`: `catmxy`, `catmz100`, `catmzz`, `downxy`, `elevtn`, `flddif`,
+`flwdir`, `grdare`, `hand`, `rivwth`, `uparea`, and `visual`. Re-running after an
+older seven-product conversion creates the missing NetCDFs and preserves the
+existing outputs (do not pass `--force` unless replacement is intended):
 
 ```sh
 ./s03-convert_highres_netcdf.sh

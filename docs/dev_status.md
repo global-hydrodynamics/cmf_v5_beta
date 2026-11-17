@@ -6,7 +6,15 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
-### Map bin2nc overwrite fix (DT-0127, 2026-11-17)
+Maintainer's latest bin2nc follow-up covers missing high-resolution NetCDFs:
+s03 defaults now include catmz100/catmzz/grdare/visual (11 template/Japan;
+12 Mekong including flwdir). Converter and scientific metadata unchanged.
+Actual native sizes validate for Japan11/Mekong12; missing4/5 outputs confirmed
+read-only.14 tests plus4 subtests PASS including actual temporary s03/NetCDF
+byte comparisons and preservation of seven existing outputs; no real conversion.
+See VR-0173. Same approved feature/package-builder publication scope.
+
+### Map bin2nc overwrite and high-resolution coverage fixes (DT-0127, 2026-11-17)
 
 Maintainer reports s02 interactive y followed by converter exists/--force error.
 Bounded follow-up on existing feature/package-builder: Codex fixes only per-file
