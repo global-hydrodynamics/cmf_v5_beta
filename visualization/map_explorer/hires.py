@@ -16,6 +16,11 @@ from hires_netcdf import NetCDFSource
 from hires_cog import COGSource, RasterCache, sampling, signature
 
 
+EXACT_STATS_MAX_PIXELS = 50_000_000
+SPARSE_STATS_STRATA = 12
+SPARSE_STATS_PATCH = 16
+
+
 def neighbor_difference(values):
     """Maximum valid eight-neighbor absolute elevation difference [m], NOT slope."""
     a = np.ma.asarray(values).astype(float).filled(np.nan)
@@ -150,11 +155,48 @@ class Tile:
             (r1 - r0 <= max_side and c1 - c0 <= max_side),
         )
 
-    def percentiles(self, name, positive=False, allow_empty=False, coarse=None, *, quantiles=(5, 95), inherited=None):
-        """Exact assigned-pixel percentiles with bounded RAM/disk workspace.
+    @property
+    def sparse_statistics(self):
+        return self.geometry.nx * self.geometry.ny > EXACT_STATS_MAX_PIXELS
 
-        Inherited fields are indexed by every native assignment, preserving pixel
-        weighting rather than weighting each coarse cell once. The positive flag remains
+    def _sparse_percentiles(self, name, coarse, quantiles, inherited, positive):
+        """Approximate display limits from fixed native patches across the whole tile.
+
+        Equal raster strata approximate pixel-frequency weighting (not physical area).
+        At most12x12 patches of16x16 pixels are read; ocean/missing/invalid paired
+        assignments are excluded. Neither viewport nor COG overviews define samples.
+        """
+        g = self.geometry
+        row_edges = np.linspace(0, g.ny, min(SPARSE_STATS_STRATA, g.ny) + 1, dtype=int)
+        col_edges = np.linspace(0, g.nx, min(SPARSE_STATS_STRATA, g.nx) + 1, dtype=int)
+        samples = []
+        assigned_count = 0
+        for r0, r1 in zip(row_edges[:-1], row_edges[1:]):
+            height = min(SPARSE_STATS_PATCH, r1 - r0)
+            start_row = r0 + (r1 - r0 - height) // 2
+            rows = np.arange(start_row, start_row + height)
+            for c0, c1 in zip(col_edges[:-1], col_edges[1:]):
+                width = min(SPARSE_STATS_PATCH, c1 - c0)
+                start_col = c0 + (c1 - c0 - width) // 2
+                cols = np.arange(start_col, start_col + width)
+                x, y = self.sample('catmxy', rows, cols)
+                valid, _, _ = assignment(x, y, coarse)
+                assigned_count += int(valid.sum())
+                if not valid.any():
+                    continue
+                values = (self.sample(name, rows, cols)[valid] if inherited is None
+                          else inherited[y[valid] - 1, x[valid] - 1])
+                samples.append(values[np.isfinite(values) & ((values > 0) if positive else True)])
+        if not assigned_count:
+            raise ValueError(f'{self.key}: sparse sample has no valid native assignments; use Manual limits')
+        values = np.concatenate(samples)
+        return tuple(map(float, np.percentile(values, quantiles))) if values.size else (np.nan, np.nan)
+
+    def percentiles(self, name, positive=False, allow_empty=False, coarse=None, *, quantiles=(5, 95), inherited=None):
+        """Assigned-pixel display percentiles: exact on small tiles, sparse on large tiles.
+
+        Inherited fields repeat coarse values for each valid native assignment
+        in the reference population (or sparse sample), not once per coarse cell. The positive flag remains
         for helper compatibility; no Auto path uses it. Auto includes all valid
         finite values in its P5/P95 population before the nonpositive Log fallback.
         """
@@ -166,7 +208,9 @@ class Tile:
                 f"{self.key}: automatic limits require native catmxy and coarse map geometry; use manual limits"
             )
         inherited_id = None if inherited is None else hashlib.sha256(np.ascontiguousarray(inherited).tobytes()).hexdigest()
-        key = (name, bool(positive), tuple(quantiles), "assigned-pixel-p5-p95-cog-v1", inherited_id,
+        policy = (f"assigned-pixel-sparse-patches-{SPARSE_STATS_STRATA}-{SPARSE_STATS_PATCH}-v1"
+                  if self.sparse_statistics else "assigned-pixel-p5-p95-cog-v1")
+        key = (name, bool(positive), tuple(quantiles), policy, inherited_id,
                coarse.nx, coarse.ny, self.source_identity)
         cache_path = None
         if self.cog:
@@ -180,8 +224,8 @@ class Tile:
                         self._stats[key] = tuple(values)
                 except (ValueError, OSError):
                     pass
-            if key not in self._stats and self.geometry.nx * self.geometry.ny > 50_000_000:
-                raise ValueError("Exact native P5/P95 cache unavailable for this large tile; use Manual color limits. No global scan started.")
+        if key not in self._stats and self.sparse_statistics:
+            self._stats[key] = self._sparse_percentiles(name, coarse, quantiles, inherited, positive)
         if key not in self._stats:
             g = self.geometry
             block = max(1, 500000 // g.nx)

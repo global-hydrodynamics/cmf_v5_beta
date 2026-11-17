@@ -246,3 +246,79 @@ def test_optional_cog_fallback_and_window_count_refresh(cog_map):
     assert app._selection_values['unit catchment assigned pixel count'] == app.selection.boundary.pixel_count
     assert f"{app.selection.boundary.pixel_count:,} high-res pixels" in app.selection_summary.object
     app.close()
+
+
+
+def test_sparse_statistics_use_bounded_native_assigned_samples(cog_map, monkeypatch):
+    import hires
+    root, arrays = cog_map
+    monkeypatch.setattr(hires, 'EXACT_STATS_MAX_PIXELS', 1)
+    tile = discover_tiles(root, [])['1min/a']
+    reader = MapReader(root)
+    calls = []
+    original = tile.sample
+    def bounded(name, rows, cols):
+        assert len(rows) <= 16 and len(cols) <= 16
+        if name == 'catmxy':
+            calls.append((rows.copy(), cols.copy()))
+        return original(name, rows, cols)
+    monkeypatch.setattr(tile, 'sample', bounded)
+    monkeypatch.setattr(hires.tempfile, 'TemporaryFile', Mock(side_effect=AssertionError('full-tile workspace')))
+    low, high = tile.percentiles('elevtn')
+    assert len(calls) == 144
+    expected = []
+    inherited_expected = []
+    inherited = reader.read('uparea').astype(float).filled(np.nan)*1e-6
+    for rows, cols in calls:
+        x, y = arrays['catmxy'][:, rows[:, None], cols[None, :]]
+        valid, _, _ = assignment(x, y, reader.geometry)
+        values = arrays['elevtn'][rows[:, None], cols[None, :]]
+        expected.extend(values[valid & np.isfinite(values) & (values != -9999)])
+        inherited_expected.extend(inherited[y[valid]-1, x[valid]-1])
+    np.testing.assert_allclose((low, high), np.percentile(expected, (5,95)))
+    inherited_expected = np.asarray(inherited_expected)
+    np.testing.assert_allclose(tile.percentiles('uparea', inherited=inherited),
+                              np.percentile(inherited_expected[np.isfinite(inherited_expected)], (5,95)))
+    assert len(calls) == 288
+    # Persistent estimated limits do not read any pixels again.
+    fresh = discover_tiles(root, [])['1min/a']
+    monkeypatch.setattr(fresh, 'sample', Mock(side_effect=AssertionError('sparse cache missed')))
+    np.testing.assert_allclose(fresh.percentiles('elevtn'), (low, high))
+
+
+def test_sparse_policy_cache_separate_from_exact_and_log_uses_nonpositive(cog_map, monkeypatch):
+    import hires
+    root, arrays = cog_map
+    tile = discover_tiles(root, [])['1min/a']
+    tile.percentiles('elevtn')
+    exact_keys = set(tile._stats)
+    monkeypatch.setattr(hires, 'EXACT_STATS_MAX_PIXELS', 1)
+    native = tile.sample
+    def shifted(name, rows, cols):
+        values = native(name, rows, cols)
+        return values-50 if name == 'elevtn' else values
+    monkeypatch.setattr(tile, 'sample', shifted)
+    limits = tile.percentiles('elevtn')
+    assert limits[0] < 0 < limits[1]
+    assert len(set(tile._stats)-exact_keys) == 1
+    from background_style import resolve_color_limits
+    assert resolve_color_limits(*limits, True)[0] == .01
+
+
+def test_large_map_sampling_keeps_display_and_manual_limits_usable(cog_map, monkeypatch):
+    import hires
+    monkeypatch.setattr(hires, 'EXACT_STATS_MAX_PIXELS', 1)
+    monkeypatch.setattr(hires.tempfile, 'TemporaryFile', Mock(side_effect=AssertionError('full-tile workspace')))
+    app, _ = app_for(cog_map)
+    assert app.frame.layer is not None and app._background_error is None
+    assert any('approximate P5/P95' in label for label in app.frame.legend)
+    assert 'Approximate P5/P95' in app.background_ui.color_note.object
+    app.set_extent((10.9,11.2,21.8,22.1))
+    app.inspect(11.078125,21.921875)
+    assert app.point_select.value == 'catchment' and app.selected == (2,3)
+    app.highres_auto_limits.value = False
+    app.highres_low.value, app.highres_high.value = 1, 12
+    app.render_view()
+    assert (app.frame.layer.low, app.frame.layer.high) == (1,12)
+    assert not any('approximate P5/P95' in label for label in app.frame.legend)
+    app.close()

@@ -109,16 +109,39 @@ at the viewport edge. Counts are **assigned pixels in the visible window**, not
 complete catchment counts or physical area. Pan recomputes that window; style-only
 changes reuse geometry. Invalid/missing catmxy has no inferred assignment.
 
-Automatic limits retain exact full-tile assigned-native **P5/P95**, including
-pixel-weighted inherited coarse values. Overview samples never determine statistics.
-Bounded row blocks and temporary disk partitioning bound RAM. The disposable exact
-limit cache is under the system temporary directory (`cmf-explorer-native-stats`);
-`CMF_EXPLORER_STATS_CACHE` can select another writable location outside map data.
-Cache keys include source signatures, assignment policy, coarse dimensions and an
-inherited-field content hash. Cold Auto still scans native tile blocks: temporary
-workspace can reach eight bytes/native pixel (Japan about253MB). Above50million
-native pixels, an uncached exact Auto scan is refused explicitly: use Manual limits
-or a previously prepared exact cache. No approximate percentiles are substituted.
+Automatic limits use **P5/P95** over valid native assignments, including
+pixel-weighted inherited coarse values. Tiles with at most50million native pixels
+keep exact full-tile statistics. Larger tiles (including Global1min) use
+**approximate P5/P95 from fixed sparse native samples**, so opening the map does
+not require a full-tile scan or a multi-GB statistics workspace.
+
+The large-tile sample divides the entire raster into12×12 equal pixel strata and
+reads a centered patch of at most16×16 native pixels from each: at most36,864
+pixels. Paired catmx/catmy validation excludes sea, unassigned and invalid pixels;
+finite-value/missing masks are retained. Each sampled assigned pixel contributes
+its inherited coarse value, not one vote per coarse cell. This is an approximate
+pixel-frequency distribution, not physical-area weighting. Fixed patches may miss
+rare/small features or introduce sampling bias; the result is a visualization
+estimate, not an exact whole-tile quantile. No viewport or averaged Overview
+values define these statistics. A sample with no valid assignments reports an
+error and requests Manual limits rather than inventing a range.
+
+Background controls, diagnostics and PNG legend explicitly label large-tile limits
+**Approximate**. Linear/Log and palette-range processing remain the same; Log uses
+P5 if positive, otherwise0.01, after percentile calculation including finite
+nonpositive reference values. Manual limits remain authoritative. Clicked native
+values, catmxy assignments and exposed-edge geometry remain exact and do not use
+the sparse display-statistics sample.
+
+The disposable limit cache is under the system temporary directory
+(`cmf-explorer-native-stats`); `CMF_EXPLORER_STATS_CACHE` can select another writable
+location outside map data. Separate exact/sparse keys include sample policy,
+source signatures, assignment policy, coarse dimensions and an inherited-field
+content hash. Limits are reused on pan/zoom, palette changes and subsequent
+sessions. Smaller exact tiles retain bounded block/disk processing (workspace up
+to eight bytes/native pixel; Japan about253MB). Large sparse tiles create no
+whole-tile statistics workspace. This supersedes the earlier large-tile Manual-only
+restriction; Global can open directly with p01-f04b.
 
 Raw geographic-window arrays share a64MiB session LRU; native outlines keep8 recent
 windows. Cached values precede palette/opacity transforms. File replacement changes
@@ -450,11 +473,13 @@ One **Color Settings** section shows the active representation's controls:
   in metres; it is not physical slope.
 
 Ordinary continuous coarse limits use P5/P95 of all finite source map-cell values
-in physical display units, respecting native missing masks. Terrain uses full-tile
+in physical display units, respecting native missing masks. Terrain normally uses full-tile
 P5/P95 of finite values with valid paired native catmxy indices within coarse bounds.
 Inherited catchment attributes use every assigned pixel's inherited finite value,
 so large pixel populations have proportionate weight. Neither viewport nor display
-sampling participates. Categorical identifiers retain discrete normalization.
+sampling participates. Above50million native pixels the fixed sparse native
+sample described earlier supplies approximate P5/P95 instead; the viewport still
+does not affect limits. Categorical identifiers retain discrete normalization.
 
 For Log, compute percentiles **before** excluding nonpositive values, then use
 `lower=P5 if P5>0 else 0.01`, `upper=P95`. If upper<=lower, show a range error and clear the

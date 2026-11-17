@@ -74,7 +74,7 @@ def apply_opacity(rgba, opacity=1.0):
 def highres_layer(
     image, reader, tile, mode, name, coarse_layer, style=None, terrain_palette="gray", reference_policy="percentile"
 ):
-    """Build one physical-unit DisplayLayer; full-reference limits never use view."""
+    """Build a physical-unit layer; exact or sparse tile limits never use viewport."""
     catchment = mode == "catchment"
     gallery_log = catchment and SCHEMA[name].logarithmic
     options = validate_style(style, gallery_log)

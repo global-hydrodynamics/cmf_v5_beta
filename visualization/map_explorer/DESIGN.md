@@ -1029,3 +1029,42 @@ read-only baseline d6ede25f in a temporary directory, not a switched branch.
 No new scientific knowledge gap was identified: the maintainer specifies LOD and
 selection semantics, while tests independently establish native units/indices/
 true-edge geometry. Execution is evidence of I/O/UI contracts, not model physics.
+
+
+## DT-0136 — Sparse large-tile visualization statistics (2026-11-17)
+
+Maintainer reports that uncached Global1min native statistics block Map Dataset
+loading and explicitly permits sparse sampling for visualization. This supersedes
+the DT-0134 Manual-only guard for tiles above50million pixels; small-tile exact
+statistics, native click/assignment interpretation and scientific inputs remain.
+
+Tile.percentiles selects a separate sparse-patches12-16-v1 cache policy for large
+tiles. Twelve equal raster strata per axis contain one centered16×16 patch each,
+up to144 native windows /36,864 sampled pixels. Very small test dimensions clamp
+patches/strata to native bounds. Only actual native paired catmxy bounded by coarse
+dimensions participates; invalid/sea/unassigned/missing/nonfinite values are
+excluded. Inherited attributes repeat the selected coarse value for every sampled
+valid native pixel. Native terrain and derived difference retain their existing
+units/neighbor interpretation. Approximate limits never use averaged Overview
+values or the current viewport. The output is a deterministic, spatially sparse
+visualization reference; patches can miss rare features and are not guaranteed
+unbiased or equivalent to full-population P5/P95. It is not a physical-area statistic.
+
+Large tiles do not allocate TemporaryFile/memmap for whole-native populations.
+Existing source signatures/coarse shape/inherited content hash invalidate stored
+limits; exact and approximate policies never share a cache entry. Raw sample
+windows reuse the existing bounded raster cache; pan/zoom/style changes reuse
+limits. Manual ranges and Linear/Log handling remain authoritative; nonpositive
+reference values enter percentile estimation before the Log lower-limit policy.
+Empty assignment samples still explicitly request Manual, never fabricate data.
+
+Background controls, frame legend and PNG explicitly say approximate sparse
+native P5/P95. Native Inspector/catmxy clicks and actual boundary coordinates are
+unchanged. The p01-f04b method/settings remain the default; only its large-tile
+Explorer display-limit estimation changes, not the Gallery script/method catalog.
+No converter, scientific map/COG, package definition or model code is changed.
+
+VR-0182 records synthetic masking/cache/manual/native-selection tests, actual
+Japan→Global load with full-stat workspace/high-res NC opens forbidden, and actual
+browser/PNG checks. Old exact-cache values are not presented as sparse estimates;
+the new large-tile cache uses its explicit new policy key.

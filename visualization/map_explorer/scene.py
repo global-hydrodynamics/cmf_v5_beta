@@ -405,7 +405,8 @@ class Scene:
             rgba[land] = np.array([217, 217, 217, 255], dtype="u1").view("<u4")[0]
             frame.legend.append(
                 "Inherited-field reference: manual limits" if (style or {}).get("limits") is not None
-                else "Inherited-field automatic reference: pixel-weighted full-tile assigned P5/P95"
+                else "Inherited-field automatic reference: approximate P5/P95 from fixed sparse native samples"
+                if tile.sparse_statistics else "Inherited-field automatic reference: pixel-weighted full-tile assigned P5/P95"
             )
             frame.legend.append("Unassigned land catmxy=-999: gray; other missing: white")
             frame.legend.append(
@@ -430,7 +431,8 @@ class Scene:
             if (style or {}).get("limits") is not None:
                 reference = "manual limits"
             else:
-                reference = "Full-tile assigned-pixel P5/P95" + (
+                reference = ("Approximate P5/P95 from fixed sparse native samples" if tile.sparse_statistics
+                             else "Full-tile assigned-pixel P5/P95") + (
                     "; Log lower=P5 if positive, otherwise 0.01" if layer.logarithmic else ""
                 )
             frame.legend.append(

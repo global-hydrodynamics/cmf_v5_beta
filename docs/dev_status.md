@@ -6,6 +6,20 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Large-map sparse display limits (DT-0136, 2026-11-17)
+
+Maintainer reports Global load blocked by uncached exact P5/P95 and explicitly
+permits sparse sampling for visualization. Codex owns Explorer native-stat helper,
+labels/cache/tests/docs on existing feature/package-builder. Large tiles use a
+fixed bounded native sample, identified as approximate; smaller exact statistics,
+manual limits, scientific assignments and source data remain unchanged.
+
+DT-0136 complete:399 tests plus3subtests PASS;1existing Windows SKIP. Actual
+Japan-to-Global cold-cache load succeeds without full-stat workspace/high-res NC
+opens. Browser native Catchment/Inspector/PNG verified; original catmxy point
+oracle agrees;147scientific file stats unchanged. See VR-0182.
+
+
 ### Automatic distributed COG resolution (DT-0135, 2026-11-17)
 
 Maintainer requests copy-and-run s05 defaults: MERIT Hydro-derived distributed

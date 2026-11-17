@@ -411,8 +411,12 @@ class BackgroundControls:
                 "pixel-weighted assigned catchment values" if app.background.value == "catchment"
                 else "valid assigned high-res pixels"
             )
+            tile = app.scene.tiles.get(app.hires_source.value)
+            automatic = (f"Approximate P5/P95 from fixed sparse native samples of {population} (display only). "
+                         if tile is not None and tile.sparse_statistics
+                         else f"Automatic full-tile P5/P95 of {population}. ")
             self.color_note.object += (
-                f"Automatic full-tile P5/P95 of {population}. " if self.highres_auto.value
+                automatic if self.highres_auto.value
                 else "Manual physical limits retained. "
             )
             if log:
