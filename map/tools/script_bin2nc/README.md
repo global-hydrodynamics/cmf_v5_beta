@@ -121,20 +121,34 @@ The NetCDF C library and Python standard library are sufficient. Validation here
 
 ## Convert high-resolution tiles (`s03`)
 
-Copy `s03-convert_highres_netcdf.sh` to the map-local `script_bin2nc/` directory, set `HIRES`, `VARS`, `COMPRESSION_LEVEL` and `JOBS` near the top, then run from that map-local directory. No `MAP_DIR` edit is needed; use `--map-dir PATH` when running elsewhere. The commented `HIRES` and `VARS` examples show the available choices; select only directories and registered file stems present in the target map. The template now selects 11 common products: `catmxy`, `catmz100`, `catmzz`,
-`downxy`, `elevtn`, `flddif`, `grdare`, `hand`, `rivwth`, `uparea`, and `visual`.
-The old seven-product default omitted four available products; the converter
-already supports their registered types. The Mekong copy additionally selects
-`flwdir` (12 products) and is configured for `1min/`. Keep `flwdir` selected only
-where that Binary exists; Japan's listed 15sec data do not include it. For Japan,
-set `HIRES="15sec"` and use the 11-product list. Explicit selections remain strict:
-a missing selected input is an error, rather than silently skipping a product.
+Copy `s03-convert_highres_netcdf.sh` to the map-local `script_bin2nc/` directory, set `HIRES`, `VARS`, `COMPRESSION_LEVEL` and `JOBS` near the top, then run from that map-local directory. No `MAP_DIR` edit is needed; use `--map-dir PATH` when running elsewhere. The commented `HIRES` and `VARS` examples show the available choices; select existing resolution directories; absent registered Binary products skip. The standard `VARS="all"` reads every registered high-resolution Binary product
+from the canonical CSV, currently these 12 stems (paired records are one file):
 
-To complete an older seven-product conversion, update the local script settings
-and run `s03` again **without `--force`**: the seven existing outputs are retained
-and the missing NetCDF products are added. Integer `catmz100`, `catmzz` and
-`visual` remain signed int8; `grdare` remains float32 with registered units and
-missing values. No values, assignment codes or categorical classes are rescaled.
+```text
+catmxy catmz100 catmzz downxy elevtn flddif flwdir grdare hand rivwth uparea visual
+```
+
+The full list is printed before conversion. For every area in `location.txt`, an
+absent Binary is listed as `SKIP missing Binary`; it is not a conversion error.
+Existing files must still pass registered type/record/size validation. Unregistered
+files are not converted. A subset can be selected by replacing `all` with stems;
+missing registered inputs also skip in subset mode, while unregistered names fail.
+Choose the actual source resolutions with `HIRES` (Japan: `15sec`, Mekong: `1min`).
+
+Python preflights **all selected resolutions** before creating any output. It
+lists present/missing inputs and existing/new outputs, then asks once in a
+terminal: `Overwrite all N existing selected outputs? [y/N]`. `y` overwrites all
+selected existing outputs; `n`/Enter asks for each output individually. Missing
+Binary inputs never cause unrelated existing NetCDFs to be overwritten. `--force`
+skips confirmation; noninteractive runs without it preserve existing outputs.
+No bulk prompt appears when all outputs are new. The standard CLI also defaults
+to all CSV products and accepts whitespace-separated resolution tags via `--hires`;
+`--interactive-overwrite` enables the prompt policy used by s03.
+
+This replaces the older seven/eleven-product defaults. To add missing outputs
+while preserving existing ones, run noninteractively without `--force`, or answer
+No to Overwrite all and No at the individual prompts. Signed int8 codes, float32
+values, record planes and registered missing values/units are unchanged.
 
 For the bundled Mekong example:
 
@@ -143,9 +157,9 @@ cd map/mekong_15min/script_bin2nc
 ./s03-convert_highres_netcdf.sh
 ```
 
-For each selected variable, `s03` calls the shared high-resolution converter. It reads each tile's geometry from `<MAP_DIR>/<HIRES>/location.txt`, and registered variable names, signed type, record index/count, missing value, and dimensions from `variable_table/map_variables.csv`. Unregistered files are ignored; a registered tile with a missing file, inconsistent metadata, or a Binary size that does not match `location.txt` fails explicitly. A multi-record file such as `catmxy` or `downxy` is written as one NetCDF containing all registered variables in record order.
+For each selected variable, `s03` calls the shared high-resolution converter. It reads each tile's geometry from `<MAP_DIR>/<HIRES>/location.txt`, and registered variable names, signed type, record index/count, missing value, and dimensions from `variable_table/map_variables.csv`. Unregistered files are ignored; absent registered Binary tiles skip. Present tiles with inconsistent metadata or a Binary size that does not match `location.txt` fail explicitly before conversion. A multi-record file such as `catmxy` or `downxy` is written as one NetCDF containing all registered variables in record order.
 
-Outputs are individual tiles at `<MAP_DIR>/<HIRES>_nc/<AREA>.<VAR>.nc`; the wrapper also copies `<MAP_DIR>/<HIRES>/location.txt` to `<MAP_DIR>/<HIRES>_nc/location.txt` as geometry metadata. NetCDF variables use `(lat,lon)` dimensions, cell-center coordinates, and the binary's row/record order; data are copied in bounded chunks and checked by reading each chunk back byte-for-byte. NetCDF4 uses lossless zlib/deflate compression with shuffle and a 256-by-256 maximum chunk shape. `COMPRESSION_LEVEL` defaults to 3; set it to 0–9, where 0 disables deflate. No scaling, offset, precision reduction, or quantization is used. `JOBS` defaults to 8 and controls the maximum number of Python worker processes; use `JOBS=1` for sequential conversion. Python schedules each registered variable/tile pair once, and the shell wrappers do not start background jobs. Existing NetCDF outputs are skipped by default, so changing the level does not recompress files already present; run with `--force` to rebuild them. Forced conversion stages a complete replacement before atomically replacing the previous output, preserving it if conversion fails. The input Binary and source `location.txt` are read-only. A successful conversion verifies stored values and file layout, not scientific correctness or model-reader compatibility.
+Outputs are individual tiles at `<MAP_DIR>/<HIRES>_nc/<AREA>.<VAR>.nc`; the wrapper also copies `<MAP_DIR>/<HIRES>/location.txt` to `<MAP_DIR>/<HIRES>_nc/location.txt` as geometry metadata. NetCDF variables use `(lat,lon)` dimensions, cell-center coordinates, and the binary's row/record order; data are copied in bounded chunks and checked by reading each chunk back byte-for-byte. NetCDF4 uses lossless zlib/deflate compression with shuffle and a 256-by-256 maximum chunk shape. `COMPRESSION_LEVEL` defaults to 3; set it to 0–9, where 0 disables deflate. No scaling, offset, precision reduction, or quantization is used. `JOBS` defaults to 8 and controls the maximum number of Python worker processes; use `JOBS=1` for sequential conversion. Python schedules each registered variable/tile pair once, and the shell wrappers do not start background jobs. Existing NetCDF outputs are preserved in noninteractive mode; terminal s03 runs use the bulk/individual confirmation above. Changing compression alone does not authorize replacement; approve overwrite or run with `--force` to rebuild. Forced conversion stages a complete replacement before atomically replacing the previous output, preserving it if conversion fails. The input Binary and source `location.txt` are read-only. A successful conversion verifies stored values and file layout, not scientific correctness or model-reader compatibility.
 
 Focused tests target CaMa-Flood's Binary-to-NetCDF contract: types, records, coordinates, chunk/task assignment, parallel error reporting, and the requested compression settings. They do not re-test the internal lossless algorithms provided by zlib, HDF5, or NetCDF. Broader map-package and model-reader integration is a separate pre-merge check when required by the change and available data.
 

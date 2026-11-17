@@ -340,38 +340,73 @@ def write_netcdf(
         raise
 
 
-def convert_variable(
-    map_dir: Path,
-    hires: str,
-    variables: list[str],
-    registry_path: Path,
-    force: bool,
-    compression_level: int,
-    jobs: int,
-) -> tuple[int, int]:
-    hires_dir = map_dir / hires
-    areas = read_location(hires_dir / "location.txt")
-    rows = registry_rows(registry_path)
-    output_dir = map_dir / f"{hires}_nc"
-    tasks = []
-    skipped_tasks = []
-    for variable in variables:
-        for area in areas:
-            source = hires_dir / f"{area['carea']}.{variable}.bin"
-            selected = rows_for_tile(rows, hires, str(area["carea"]), variable)
-            if not source.is_file():
-                raise ConversionError(f"registered tile input is missing: {source}")
-            selected = validate_tile(source, area, selected)
-            output = output_dir / f"{area['carea']}.{variable}.nc"
-            task = (source, output, area, selected, compression_level, force)
-            if output.exists() and not force:
-                skipped_tasks.append(task)
-            else:
-                tasks.append(task)
+def registered_variables(rows: list[dict[str, str]]) -> list[str]:
+    """Use canonical high-resolution filename templates, once per Binary product."""
+    prefix, suffix = "<HIRES>/<AREA>.", ".bin"
+    return sorted({name.strip()[len(prefix):-len(suffix)]
+                   for row in rows for name in (row.get("binary_filename") or "").split(";")
+                   if name.strip().startswith(prefix) and name.strip().endswith(suffix)})
 
-    if not tasks and not skipped_tasks:
-        raise ConversionError(f"no tiles found for {hires} {' '.join(variables)}")
-    output_dir.mkdir(parents=True, exist_ok=True)
+
+def plan_conversion(map_dir, hires_tags, variables, registry_path, compression_level):
+    """Validate all present files before prompting or creating any output."""
+    rows = registry_rows(registry_path)
+    variables = registered_variables(rows) if variables == ["all"] else variables
+    planned, missing = [], []
+    for hires in hires_tags:
+        areas = read_location(map_dir / hires / "location.txt")
+        for variable in variables:
+            for area in areas:
+                source = map_dir / hires / f"{area['carea']}.{variable}.bin"
+                selected = rows_for_tile(rows, hires, str(area["carea"]), variable)
+                if not source.is_file():
+                    missing.append(source)
+                    continue
+                selected = validate_tile(source, area, selected)
+                output = map_dir / f"{hires}_nc" / f"{area['carea']}.{variable}.nc"
+                planned.append((source, output, area, selected, compression_level, False))
+    return variables, planned, missing
+
+
+def ask_overwrite(message):
+    while True:
+        try:
+            answer = input(message + " [y/N]: ").strip().lower()
+        except EOFError:
+            return False
+        if answer in ("y", "n", ""):
+            return answer == "y"
+        print("Please answer y or N.", flush=True)
+
+
+def select_tasks(planned, force, interactive):
+    existing = sum(task[1].exists() for task in planned)
+    bulk = force
+    if existing and not force and interactive and sys.stdin.isatty():
+        bulk = ask_overwrite(f"Overwrite all {existing} existing selected outputs?")
+    tasks, skipped = [], []
+    for task in planned:
+        replace = bulk
+        if task[1].exists() and not bulk:
+            replace = (interactive and sys.stdin.isatty()
+                       and ask_overwrite(f"{task[1]} already exists. Overwrite?"))
+        updated = (*task[:-1], bool(replace))
+        (tasks if replace or not task[1].exists() else skipped).append(updated)
+    return tasks, skipped
+
+
+def convert_variable(map_dir, hires, variables, registry_path, force, compression_level, jobs):
+    # Preserve the callable API; missing registered inputs now skip by design.
+    _, planned, missing = plan_conversion(map_dir, [hires], variables, registry_path, compression_level)
+    for source in missing:
+        print(f"SKIP missing Binary: {source}", flush=True)
+    tasks, skipped = select_tasks(planned, force, False)
+    return execute_tasks(tasks, skipped, jobs)
+
+
+def execute_tasks(tasks, skipped_tasks, jobs):
+    for task in tasks:
+        task[1].parent.mkdir(parents=True, exist_ok=True)
     total = len(tasks) + len(skipped_tasks)
     converted = skipped = failed = completed = 0
 
@@ -386,7 +421,7 @@ def convert_variable(
             failed += 1
         source = task[0]
         suffix = f" ({detail})" if detail else ""
-        print(f"[{completed}/{total}] {status:<7} {hires}/{source.name}{suffix}", flush=True)
+        print(f"[{completed}/{total}] {status:<7} {source.parent.name}/{source.name}{suffix}", flush=True)
 
     for task in skipped_tasks:
         report("SKIP", task)
@@ -455,13 +490,14 @@ def main() -> int:
     repo_root = Path(__file__).resolve().parents[3]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--map-dir", type=Path, required=True, help="map root containing high-resolution directories")
-    parser.add_argument("--hires", required=True, help="high-resolution directory tag, such as 1min")
-    selection = parser.add_mutually_exclusive_group(required=True)
+    parser.add_argument("--hires", required=True, help="space-separated high-resolution directory tags, such as 1min or 1min 15sec")
+    selection = parser.add_mutually_exclusive_group()
     selection.add_argument("--variable", help="one registered high-resolution Binary file stem (legacy option)")
-    selection.add_argument("--variables", help="space-separated registered Binary file stems")
+    selection.add_argument("--variables", default="all", help="space-separated registered Binary stems; all (default) uses the CSV")
     parser.add_argument("--jobs", type=int, default=1, help="maximum parallel worker processes (default: 1)")
     parser.add_argument("--registry", type=Path, default=repo_root / "variable_table/map_variables.csv", help="map variable registry")
     parser.add_argument("--force", action="store_true", help="replace existing NetCDF files")
+    parser.add_argument("--interactive-overwrite", action="store_true", help="ask once for all existing outputs, then individually if declined")
     parser.add_argument(
         "--compression-level", type=int, choices=range(10), default=3,
         help="lossless NetCDF4 zlib/deflate level (0 disables deflate; default: 3)",
@@ -476,9 +512,28 @@ def main() -> int:
     if not variables:
         parser.error("--variables must contain at least one variable name")
     try:
-        converted, skipped = convert_variable(
-            args.map_dir, args.hires, variables, args.registry, args.force, args.compression_level, args.jobs
+        hires_tags = list(dict.fromkeys(args.hires.split()))
+        if not hires_tags:
+            raise ConversionError("--hires must contain a directory tag")
+        variables, planned, missing = plan_conversion(
+            args.map_dir, hires_tags, variables, args.registry, args.compression_level
         )
+        print("Registered selection: " + " ".join(variables), flush=True)
+        for source in missing:
+            print(f"SKIP missing Binary: {source}", flush=True)
+        for task in planned:
+            state = "existing output" if task[1].exists() else "new output"
+            print(f"FOUND {task[0]} -> {task[1]} ({state})", flush=True)
+        existing = sum(task[1].exists() for task in planned)
+        print(f"Preflight: present inputs: {len(planned)}; missing inputs: {len(missing)}; "
+              f"existing outputs: {existing}; new outputs: {len(planned) - existing}", flush=True)
+        tasks, skipped_tasks = select_tasks(planned, args.force, args.interactive_overwrite)
+        # Geometry is copied only after all resolutions have passed validation.
+        for hires in hires_tags:
+            output_dir = args.map_dir / f"{hires}_nc"
+            output_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(args.map_dir / hires / "location.txt", output_dir / "location.txt")
+        converted, skipped = execute_tasks(tasks, skipped_tasks, args.jobs)
     except KeyboardInterrupt:
         print("ERROR: interrupted; active conversion workers have been stopped and collected", file=sys.stderr)
         return 130

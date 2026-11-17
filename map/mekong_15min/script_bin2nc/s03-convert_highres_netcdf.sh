@@ -5,16 +5,17 @@ set -eu
 
 # User settings: select available high-resolution directories and variables.
 # Choose one or more available high-resolution map directories.
-# Each selected directory must contain location.txt and registered tile files.
+# Each selected directory must contain location.txt; absent Binary products skip.
 #HIRES="1min 15sec 3sec"
 HIRES="1min"
 
-# Choose registered Binary file stems present in the selected directories.
+# All uses every registered high-resolution product; absent Binary files skip.
+# For a subset, replace all with space-separated registered Binary file stems.
 # Options shown here are high-resolution registry products; a map need not
 # contain every one of them. Multi-record files (catmxy, downxy) are converted
 # with all their registered records together.
 #VARS="catmxy catmz100 catmzz downxy elevtn flddif flwdir grdare hand rivwth uparea visual"
-VARS="catmxy catmz100 catmzz downxy elevtn flddif flwdir grdare hand rivwth uparea visual"
+VARS="all"
 
 # Lossless zlib/deflate compression level (0 disables deflate; range 0-9).
 COMPRESSION_LEVEL=3
@@ -22,7 +23,8 @@ COMPRESSION_LEVEL=3
 # Maximum number of parallel Python worker processes.
 JOBS=8
 
-# Existing NetCDF outputs are skipped by default. Pass --force to replace them.
+# In a terminal, preflight asks Overwrite all; No asks for each existing output.
+# Noninteractive runs preserve existing outputs; --force replaces without prompts.
 FORCE=0
 
 # ----------------------------------------------------------------------
@@ -111,36 +113,13 @@ printf '==================================================\n'
 printf 'Map: %s\nHigh-resolution directories: %s\nVariables: %s\nCompression level: %s\nWorkers: %s\n\n' \
     "$MAP_DIR" "$HIRES" "$VARS" "$COMPRESSION_LEVEL" "$JOBS"
 
-# Preserve the geometry metadata beside the converted tile rasters.
-for re in $HIRES; do
-    SOURCE_LOCATION="$MAP_DIR/$re/location.txt"
-    OUTPUT_DIR="$MAP_DIR/${re}_nc"
-    if [ ! -f "$SOURCE_LOCATION" ]; then
-        printf 'ERROR: high-resolution geometry file not found: %s\n' "$SOURCE_LOCATION" >&2
-        exit 1
-    fi
-    mkdir -p "$OUTPUT_DIR"
-    cp "$SOURCE_LOCATION" "$OUTPUT_DIR/location.txt"
-    printf '[INFO] Copied %s to %s/location.txt\n' "$SOURCE_LOCATION" "$OUTPUT_DIR"
-
-    # Python creates and schedules the registered variable-by-tile tasks.
-    if [ "$FORCE" -eq 1 ]; then
-        if python3 "$CONVERTER" --map-dir "$MAP_DIR" --hires "$re" --variables "$VARS" \
-            --registry "$REGISTRY" --compression-level "$COMPRESSION_LEVEL" --jobs "$JOBS" --force; then
-            :
-        else
-            EXIT_STATUS=$?
-            exit "$EXIT_STATUS"
-        fi
-    else
-        if python3 "$CONVERTER" --map-dir "$MAP_DIR" --hires "$re" --variables "$VARS" \
-            --registry "$REGISTRY" --compression-level "$COMPRESSION_LEVEL" --jobs "$JOBS"; then
-            :
-        else
-            EXIT_STATUS=$?
-            exit "$EXIT_STATUS"
-        fi
-    fi
-done
+# Python validates all selected resolutions before one shared overwrite decision.
+if [ "$FORCE" -eq 1 ]; then
+    python3 "$CONVERTER" --map-dir "$MAP_DIR" --hires "$HIRES" --variables "$VARS" \
+        --registry "$REGISTRY" --compression-level "$COMPRESSION_LEVEL" --jobs "$JOBS" --force
+else
+    python3 "$CONVERTER" --map-dir "$MAP_DIR" --hires "$HIRES" --variables "$VARS" \
+        --registry "$REGISTRY" --compression-level "$COMPRESSION_LEVEL" --jobs "$JOBS" --interactive-overwrite
+fi
 
 printf '\n[SUCCESS] High-resolution Binary-to-NetCDF conversion completed.\n'
