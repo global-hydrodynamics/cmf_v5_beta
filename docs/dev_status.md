@@ -30,6 +30,12 @@ previously ignored the converter's existing-output guard. See research/records/v
 
 ### Map Explorer dataset switching (DT-0126, 2026-11-17)
 
+Latest Explorer UI follow-up adds independent Channel Pixels Opacity (0–100%,
+5% steps; default100%) to Overlay Display Settings, JSON and shared browser/PNG
+RGBA.77 related tests PASS; actual Mekong browser100/50/0% verified. User source
+products are unchanged/excluded; existing feature/package-builder publication
+scope retained. Details/knowledge-gap review VR-0172.
+
 Latest maintainer follow-up: every loaded/switched supported map defaults to
 p01-f04b; only bundled Mekong uses the Gallery extent. Other maps retain their
 full native extent; missing preset inputs keep usable coarse fallback/status.

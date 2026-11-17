@@ -215,7 +215,11 @@ def load_settings(content, reader):
                 or int(value) != value
             ):
                 raise ValueError("Outlet Size must be an integer from 0 to 20 px")
-            if isinstance(expected, float) and (not isinstance(value, (int, float)) or not 0.2 <= value <= 5):
+            if key == "channel_pixels_opacity":
+                if (isinstance(value, bool) or not isinstance(value, (int, float))
+                        or not math.isfinite(value) or not 0 <= value <= 1):
+                    raise ValueError("Channel Pixels opacity must be between 0 and 1")
+            elif isinstance(expected, float) and (not isinstance(value, (int, float)) or not 0.2 <= value <= 5):
                 raise ValueError(f"{key} must be between 0.2 and 5")
         data["layers"] = layers
     ui = data.get("background_ui")

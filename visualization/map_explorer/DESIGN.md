@@ -868,3 +868,15 @@ relax catmxy assignment-unit validation or permit physical units on visual.
 Integer classes and missing codes remain raw and unchanged. Invalid present
 NetCDFs still do not silently fall back to Binary. Discovery is session-scoped;
 restart a running server after a reader fix to rebuild its cached scene/products.
+
+
+### Independent Channel Pixels opacity (2026-11-17)
+
+Channel Pixels remains a separate RGBA image above the raster. Overlay state
+channel_pixels_opacity (0–1, default1) scales only existing alpha via the shared
+apply_opacity helper; it never alters visual categories, assignment masks, RGB,
+background alpha, network, selection or source products. The Overlay FloatSlider
+shows0–100% in5% steps and is disabled when the layer is off/unavailable, retaining
+its value. Both Bokeh and Matplotlib consume the same adjusted image. JSON
+validates finite nonboolean fractions; missing old keys use1 with no schema bump.
+Gallery defaults use1; manual opacity marks the preset Custom as usual.

@@ -24,6 +24,7 @@ OVERLAY_DEFAULTS = dict(
     coarse_grid=False,
     catchment_boundaries=False,
     channel_pixels=False,
+    channel_pixels_opacity=1.0,
     channel_color="#b2182b",
     overland_color="#999999",
     catchment_boundary_color="#4A4A4A",
@@ -382,7 +383,7 @@ class Scene:
                 for code, color in [(10, [131, 198, 237, 255]), (7, [199, 166, 221, 255])]:
                     channel[mask & (visual == code)] = np.asarray(color, dtype="u1").view("<u4")[0]
                 # A separate image keeps channel opacity independent of raster alpha.
-                frame.images.append((channel, edges))
+                frame.images.append((apply_opacity(channel, overlays["channel_pixels_opacity"]), edges))
                 frame.legend.append("FLOW pixels: blue=main channel (10), lavender=small stream (7)")
                 if not native:
                     frame.diagnostics.append(

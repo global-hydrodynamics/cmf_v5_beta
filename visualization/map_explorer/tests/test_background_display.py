@@ -364,3 +364,53 @@ def test_png_colorbar_uses_background_opacity_and_matching_underlay(products, mo
     assert bar.ax.get_facecolor() == to_rgba(app.plot.background_fill_color)
     assert (bar.norm.vmin, bar.norm.vmax) == limits
     assert app.bar.scale_alpha == opacity / 100
+
+
+@pytest.mark.parametrize("opacity", [0, 0.5, 1])
+def test_channel_pixels_opacity_matches_browser_png_and_preserves_other_layers(products, opacity, monkeypatch):
+    app = Explorer(products, products.parent / "channel-opacity")
+    app.raster_type.value = "highres"
+    app.overlay_controls["channel_pixels"].value = True
+    slider = app.overlay_controls["channel_pixels_opacity"]
+    assert slider in app.overlay_styles.objects and not slider.disabled
+    assert slider.start == 0 and slider.end == 1 and slider.value == 1
+    base = app.frame.images[0][0].copy()
+    original = rgba(app.frame.images[1][0]).copy()
+    app.inspect(11.25, 21.75)
+    selection, extent, plot = app.selection, app.extent, app.plot
+    slider.value = opacity
+    channel = rgba(app.frame.images[1][0])
+    np.testing.assert_array_equal(channel[..., :3], original[..., :3])
+    np.testing.assert_array_equal(channel[..., 3], np.rint(original[..., 3].astype(float) * opacity))
+    np.testing.assert_array_equal(app.frame.images[0][0], base)
+    np.testing.assert_array_equal(app.channel_image_source.data["image"][0], app.frame.images[1][0][::-1])
+    assert app.selection is selection and app.extent == extent and app.plot is plot
+    images = []
+    original_imshow = Axes.imshow
+    def capture(ax, image, *args, **kwargs):
+        images.append(np.array(image).copy())
+        return original_imshow(ax, image, *args, **kwargs)
+    monkeypatch.setattr(Axes, "imshow", capture)
+    assert app.export().is_file()
+    np.testing.assert_array_equal(images[1], channel)
+    app.overlay_controls["channel_pixels"].value = False
+    assert slider.disabled and slider.value == opacity
+    app.overlay_controls["channel_pixels"].value = True
+    assert not slider.disabled and slider.value == opacity
+    saved = app.settings()
+    app.load(json.dumps(saved).encode())
+    assert slider.value == opacity
+    saved["layers"]["overlays"].pop("channel_pixels_opacity")
+    app.load(json.dumps(saved).encode())
+    assert slider.value == 1  # Older JSON remains opaque.
+
+
+@pytest.mark.parametrize("value", [-0.1, 1.1, True, "0.5", float("nan"), float("inf")])
+def test_channel_pixel_opacity_invalid_json_does_not_mutate(products, value):
+    app = Explorer(products, products.parent / "channel-opacity-invalid")
+    before = app.settings()
+    bad = app.settings()
+    bad["layers"]["overlays"]["channel_pixels_opacity"] = value
+    with pytest.raises(ValueError, match="Channel Pixels opacity"):
+        app.load(json.dumps(bad).encode())
+    assert app.settings() == before

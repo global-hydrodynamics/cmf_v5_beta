@@ -203,6 +203,10 @@ class Explorer:
                     }.get(key, key.replace("_", " ").title()),
                     value=value,
                 )
+            elif key == "channel_pixels_opacity":
+                self.overlay_controls[key] = pn.widgets.FloatSlider(
+                    name="Channel Pixels Opacity", start=0, end=1, step=0.05, value=value, format="0%"
+                )
             elif isinstance(value, str):
                 self.overlay_controls[key] = pn.widgets.ColorPicker(name=key.replace("_", " ").title(), value=value)
             else:
@@ -448,6 +452,7 @@ class Explorer:
             pn.pane.Markdown("### Overlay Display Settings", margin=(0, 0)),
             self.overlay_controls["catchment_boundary_color"],
             self.boundary_status,
+            self.overlay_controls["channel_pixels_opacity"],
             self.overlay_controls["channel_color"],
             self.overlay_controls["overland_color"],
             self.overlay_controls["bif_width"],
@@ -704,6 +709,10 @@ class Explorer:
                 "catchment_boundaries"
             ].value
             self.overlay_controls["outlet_size"].disabled = not self.overlay_controls["outlets"].value
+            self.overlay_controls["channel_pixels_opacity"].disabled = (
+                not self.overlay_controls["channel_pixels"].value
+                or self.overlay_controls["channel_pixels"].disabled
+            )
         finally:
             self._updating = updating
 

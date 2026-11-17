@@ -444,6 +444,14 @@ own palettes, scales and limits. JSON saves the active style and both type/varia
 choices; inactive profiles are not serialized and restart from defaults after a
 fresh load. No display transform changes scientific source data.
 
+**Channel Pixels Opacity** in **Overlays → Overlay Display Settings** controls
+only the Channel Pixels layer from 0% (transparent) to 100% (opaque), in 5% steps.
+Default is 100%. It is enabled when Channel Pixels can render and is switched on;
+toggling the layer off/on retains the chosen value. Background opacity, river
+vectors and selection highlights are independent. Browser and PNG use the same
+RGBA alpha. JSON saves `layers.overlays.channel_pixels_opacity` as a 0–1 fraction;
+older settings default to 1. Gallery presets restore the default opaque appearance.
+
 **Channel Pixels** appears in **Overlays → Visible Overlays**, immediately
 after Unit Catchment Boundaries. It is enabled only for a visible High-resolution
 Raster whose selected tile has `visual`; otherwise it remains visible but disabled
