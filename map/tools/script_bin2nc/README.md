@@ -34,7 +34,11 @@ The scripts reuse [`convert_map_binary_to_netcdf.py`](../code/convert_map_binary
 
    Files are written to `<map>/netcdf/<binary-stem>.nc`. For example, `nextxy.bin` becomes `nextxy.nc` with `nextx` and `nexty`; `fldhgt.bin` retains all registered floodplain layers. The converter checks registry metadata, map dimensions, record sizes, and reads each written variable/layer back for exact value comparison.
 
-5. Review the conversion log and the NetCDF files in `<map>/netcdf/`. Existing outputs are skipped by default in non-interactive use. In a terminal, each existing output prompts for `y/N`; Enter skips it. Pass `--force` to overwrite selected outputs without prompts:
+5. Review the conversion log and the NetCDF files in `<map>/netcdf/`. Existing outputs are skipped by default in non-interactive use. In a terminal, a preflight summary shows selected, existing and new output counts.
+   `Overwrite all … existing selected outputs? [y/N]` offers one approval for the
+   selected list. Answer `y`/`Y` to overwrite all selected existing outputs without
+   further prompts. Answer `n`/Enter to confirm each existing file individually;
+   Enter at an individual prompt skips that file. Pass `--force` to overwrite selected outputs without prompts:
 
    ```sh
    ./s02-convert_netcdf.sh --force
@@ -242,6 +246,11 @@ from its catmxy/elevtn files in a temporary map; all four restored window files
 matched the corresponding original Binary bytes. No full global file or complete
 map was restored, and original global data were not changed.
 
-Interactive `s02` overwrite approval (`y`/`Y`) passes `--force` to the converter
-for that file only. Later existing outputs still require their own confirmation;
-Enter/`n` preserves them. Explicit `--force` applies to the entire selected list.
+Before `s02` converts anything, it validates every selected input and reports
+selected-input, existing-output and new-output counts. If existing outputs are
+present in a terminal, `Overwrite all … existing selected outputs? [y/N]` asks
+once: `y`/`Y` overwrites all selected outputs without further prompts; `n`/Enter
+uses individual overwrite prompts. At an individual prompt, `y`/`Y` overwrites
+only that file and `n`/Enter preserves it. Unselected outputs are untouched.
+Explicit `--force` skips prompts. Noninteractive use without `--force` still
+preserves existing outputs. No bulk prompt appears when all outputs are new.

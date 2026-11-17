@@ -96,6 +96,7 @@ if [ ! -f "$LIST_FILE" ]; then
 fi
 
 FILE_COUNT=0
+EXISTING_COUNT=0
 SEEN_FILES=""
 while IFS= read -r FILE || [ -n "$FILE" ]; do
     case "$FILE" in
@@ -130,11 +131,41 @@ while IFS= read -r FILE || [ -n "$FILE" ]; do
     esac
     SEEN_FILES="$SEEN_FILES $FILE"
     FILE_COUNT=$((FILE_COUNT + 1))
+    if [ -f "$NETCDF_DIR/${FILE%.bin}.nc" ]; then
+        EXISTING_COUNT=$((EXISTING_COUNT + 1))
+    fi
 done < "$LIST_FILE"
 
 if [ "$FILE_COUNT" -eq 0 ]; then
     printf 'ERROR: no files are selected in %s.\n' "$LIST_FILE" >&2
     exit 1
+fi
+
+# Summarize the complete validated selection before requesting overwrite approval.
+printf '\nConversion summary\n'
+printf 'Map: %s\nOutput directory: %s\n' "$MAP_DIR" "$NETCDF_DIR"
+printf 'Selected inputs: %s; existing outputs: %s; new outputs: %s\n' \
+    "$FILE_COUNT" "$EXISTING_COUNT" "$((FILE_COUNT - EXISTING_COUNT))"
+if [ "$EXISTING_COUNT" -gt 0 ] && [ "$FORCE" -eq 0 ] && [ -t 0 ]; then
+    while :; do
+        printf 'Overwrite all %s existing selected outputs? [y/N]: ' "$EXISTING_COUNT"
+        if ! IFS= read -r ANSWER; then
+            ANSWER=""
+        fi
+        case "$ANSWER" in
+            y|Y)
+                FORCE=1
+                break
+                ;;
+            ""|n|N)
+                printf 'Existing outputs will be confirmed individually.\n'
+                break
+                ;;
+            *)
+                printf 'Please answer y or N.\n' >&2
+                ;;
+        esac
+    done
 fi
 
 mkdir -p "$NETCDF_DIR"

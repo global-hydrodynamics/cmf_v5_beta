@@ -59,6 +59,11 @@ map target. See the [shared guide](../../tools/script_bin2nc/README.md#explicit-
 for a complete external-map example. This rule applies to s01–s03 only;
 legacy t* helper settings are unchanged.
 
-Interactive `s02` overwrite approval (`y`/`Y`) passes `--force` to the converter
-for that file only. Later existing outputs still require their own confirmation;
-Enter/`n` preserves them. Explicit `--force` applies to the entire selected list.
+Before `s02` converts anything, it validates every selected input and reports
+selected-input, existing-output and new-output counts. If existing outputs are
+present in a terminal, `Overwrite all … existing selected outputs? [y/N]` asks
+once: `y`/`Y` overwrites all selected outputs without further prompts; `n`/Enter
+uses individual overwrite prompts. At an individual prompt, `y`/`Y` overwrites
+only that file and `n`/Enter preserves it. Unselected outputs are untouched.
+Explicit `--force` skips prompts. Noninteractive use without `--force` still
+preserves existing outputs. No bulk prompt appears when all outputs are new.
