@@ -6,6 +6,18 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### COG known non-target skips (DT-0133, 2026-11-17)
+
+Maintainer confirms bifprm.nc and legacy rivclim/rivpar containers are outside
+conversion scope and must skip without ERROR. Codex owns converter planning,
+focused tests/docs/records on existing feature/package-builder with commit/push.
+Explicit exclusion reasons avoid opening or generating these inputs, even with
+--force; count as SKIP and successful exit when no target errors exist. Unknown
+or malformed conversion-target rasters retain failure behavior.28 focused tests
+PASS;1 unchanged large-memory case deselected. Actual Mekong shell:0 PASS/50 SKIP/
+0 UNSUPPORTED/0 FAIL, SUCCESS/exit0;47 COGs and source file stats unchanged.
+No numeric conversion/mask/Overview algorithm changes. Details:VR-0179.
+
 ### Map format tools and NetCDF-to-COG (DT-0132, 2026-11-17)
 
 Maintainer explicitly approves format-tool rename and new numeric COG generator

@@ -32,6 +32,12 @@ except ImportError:
     import convert_highres_binary_to_netcdf as hires
 
 DEFAULT_REGISTRY = Path(__file__).resolve().parents[3] / 'variable_table/map_variables.csv'
+# These known non-target inputs coexist with individual numeric raster files.
+EXCLUDED_INPUTS = {
+    'bifprm.nc': 'bifurcation parameter table; not a geographic grid raster',
+    'rivclim.nc': 'legacy consolidated map container; use individual map NetCDF rasters',
+    'rivpar.nc': 'legacy consolidated parameter container; use individual map NetCDF rasters',
+}
 SUPPORTED_DTYPES = {'int8', 'uint8', 'int16', 'uint16', 'int32', 'uint32', 'float32', 'float64'}
 
 
@@ -45,6 +51,7 @@ class Task:
     target: Path
     rows: list
     geometry: dict
+    skip_reason: str = ""
 
 
 @dataclass
@@ -95,10 +102,14 @@ def plan(map_dir, resolutions, variables, registry):
                     matched.add(source)
                     tasks.append(Task(source, map_dir / 'COG' / source.with_suffix('.tif').name,
                                       selected, geometry))
-            # Existing registered nonraster tables (e.g. bifprm) have no grid edges.
+            # Known non-target tables/containers are normal skips, not failed conversions.
             for source in sorted(directory.glob('*.nc')):
                 if source not in matched and (requested is None or source.stem in requested):
-                    tasks.append(Task(source, map_dir / 'COG' / source.with_suffix('.tif').name, [], geometry))
+                    reason = EXCLUDED_INPUTS.get(source.name, '')
+                    if reason:
+                        found.add(source.stem)
+                    tasks.append(Task(source, map_dir / 'COG' / source.with_suffix('.tif').name,
+                                      [], geometry, skip_reason=reason))
         else:
             directory = map_dir / f'{resolution}_nc'
             if not directory.is_dir():
@@ -184,7 +195,7 @@ def nodata_value(var, row):
 def inspect(ds, task):
     """Resolve registered planes before allocating buffers; never silently drop a variable."""
     if not task.rows:
-        raise Unsupported('no registered numeric model-grid raster layout (tables are not rasters)')
+        raise Unsupported('no registered numeric raster mapping for this filename')
     g = task.geometry
     xdim, rx, west, dx = axis(ds, ('lon', 'longitude'), g['nx'], g['west'], g['resolution'])
     ydim, ry, north, dy = axis(ds, ('lat', 'latitude'), g['ny'], g['north'], -g['resolution'])
@@ -296,6 +307,8 @@ def verify(ds, path, bands, dtype, fill, transform, axes, nx, ny, edge, levels):
 
 def convert(task, blocksize=512, compression='DEFLATE', overviews=(2, 4, 8, 16, 32), force=False):
     """Stage tiled TIFF/overviews then COG, verify every native block, atomically publish."""
+    if task.skip_reason:
+        return f'SKIP excluded input: {task.source} ({task.skip_reason})'
     if task.target.exists() and not force:
         return f'SKIP existing COG: {task.target}'
     task.target.parent.mkdir(parents=True, exist_ok=True)

@@ -349,8 +349,12 @@ including noninteractive runs. Skipping does not validate an existing cache.
 A forced replacement is written privately, verified fully and atomically replaced.
 Failure preserves the previous cache and removes temporary files. Independent
 successful files remain if another file fails; no directory-wide rollback occurs.
-The command summarizes PASS/SKIP/UNSUPPORTED/FAIL; unsupported/failed present inputs
-return nonzero. Missing registered inputs/directories are reported and skipped.
+The command summarizes PASS/SKIP/UNSUPPORTED/FAIL. Known non-target files
+`bifprm.nc` (bifurcation table), `rivclim.nc` and `rivpar.nc` (legacy consolidated
+containers) are explicitly configured as reasoned SKIPs, including with --force.
+They are not converted or opened and do not make the command fail. Missing
+registered inputs/directories also skip. Unsupported or failed **conversion-target**
+inputs still return nonzero; unknown files are not silently accepted.
 
 ### Source/output layout and band contract
 
@@ -406,8 +410,8 @@ and final COG. Choose JOBS=1 on constrained machines. Large files use BigTIFF wh
 needed. Compression choices are lossless DEFLATE/LZW/ZSTD/NONE only.
 
 Both NetCDF-4 and regular NetCDF classic rasters are accepted.
-Unsupported inputs are reported explicitly: nonraster bifurcation tables,
-runoff input matrices with INPN/mixed dtype, unregistered spatial content,
+Known non-target tables/containers skip as above. Unsupported conversion-target
+inputs are reported explicitly: runoff input matrices with INPN/mixed dtype, unregistered spatial content,
 packed/unsigned-reinterpreted/quantized NetCDF, inconsistent geometry, differing
 band types or missing codes that cannot share one exact TIFF NoData. Current
 registered raster storage is signed Int8/Int16/Int32/Float32; the writer also
@@ -449,4 +453,4 @@ No full TE-Japan or global product was converted.
 
 Metadata-only inspection of installed TE-Japan accepts35 model-grid plus11
 high-resolution raster files; `flwdir` is absent and `bifprm.nc` is a nonraster
-table reported unsupported. That inspection does not generate full-size COGs.
+table excluded with a reasoned SKIP. That inspection does not generate full-size COGs.

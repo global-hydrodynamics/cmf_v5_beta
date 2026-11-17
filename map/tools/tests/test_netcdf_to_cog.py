@@ -335,7 +335,7 @@ def test_mid_write_failure_preserves_previous_output(tmp_path, monkeypatch):
     assert list(task.target.parent.iterdir()) == [task.target]
 
 
-def test_mixed_storage_types_and_nonraster_tables_report_unsupported(tmp_path):
+def test_mixed_storage_types_and_unmapped_inputs_report_unsupported(tmp_path):
     task, _ = fixture(tmp_path, 'fixture', 'int32', names=['x'])
     with nc.Dataset(task.source, 'a') as ds:
         ds.createVariable('y', 'f4', ('lat','lon'), fill_value=-9999)[:] = 1
@@ -343,7 +343,7 @@ def test_mixed_storage_types_and_nonraster_tables_report_unsupported(tmp_path):
     with pytest.raises(cog.Unsupported, match='mixed storage'):
         cog.convert(task, blocksize=128)
     task.rows = []
-    with pytest.raises(cog.Unsupported, match='tables are not rasters'):
+    with pytest.raises(cog.Unsupported, match='no registered numeric raster mapping'):
         cog.convert(task, blocksize=128)
     assert not task.target.exists()
 
@@ -361,3 +361,29 @@ def test_classic_netcdf_parameter_input(tmp_path):
             out[:] = v[:]
     replacement.replace(task.source)
     assert cog.convert(task,blocksize=128).startswith('PASS')
+
+
+
+@pytest.mark.parametrize('jobs', [1, 2])
+def test_known_non_targets_skip_without_error_or_output(tmp_path, capsys, jobs):
+    task, _ = fixture(tmp_path)
+    root = task.source.parent.parent
+    for name in cog.EXCLUDED_INPUTS:
+        # Not even opened: known exclusions must not depend on table/container schema.
+        (root/'netcdf'/name).write_bytes(b'non-target sentinel')
+    options = ['--map-dir', str(root), '--resolutions', 'base', '--jobs', str(jobs), '--blocksize', '128']
+    assert cog.main(options) == 0
+    text = capsys.readouterr()
+    assert '1 PASS; 3 SKIP; 0 UNSUPPORTED; 0 FAIL' in text.out
+    assert 'UNSUPPORTED' not in text.err and 'FAIL' not in text.err
+    for name, reason in cog.EXCLUDED_INPUTS.items():
+        assert reason in text.out
+        assert not (root/'COG'/Path(name).with_suffix('.tif')).exists()
+        assert (root/'netcdf'/name).read_bytes() == b'non-target sentinel'
+    assert cog.main(options + ['--variables', 'bifprm rivclim rivpar', '--force']) == 0
+    assert '0 PASS; 3 SKIP; 0 UNSUPPORTED; 0 FAIL' in capsys.readouterr().out
+    # An unexpected unmapped raster/file remains an error, rather than silently skipped.
+    with nc.Dataset(root/'netcdf/unknown.nc', 'w'):
+        pass
+    assert cog.main(options) == 1
+    assert 'UNSUPPORTED' in capsys.readouterr().err
