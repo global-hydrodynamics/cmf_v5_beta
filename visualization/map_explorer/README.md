@@ -7,7 +7,11 @@ extent. Other maps start with their full native extent, a supported coarse raste
 and nextxy network; no Mekong-specific extent is applied. High-resolution
 **NetCDF is preferred** for Mekong, TE-Japan and global maps. Existing Binary
 products remain compatible; optional Binary visual/catmz100 fields can supplement
-NetCDF when the corresponding NetCDF product is absent.
+NetCDF when the corresponding NetCDF product is absent. The categorical
+`visual.nc` uses CSV units `code`; Explorer accepts this canonical encoding and
+legacy dimensionless `1` without changing classification values. If regenerated
+products were rejected by an older running server, restart Explorer to load the
+updated reader; no data conversion or units editing is needed.
 
 A standalone, read-only browser for coarse CaMa-Flood river maps. Explore
 rasters, stored downstream connectivity and individual cells without editing

@@ -45,7 +45,7 @@ def nc_products(root, **orientation):
         shape = (2 if name == "catmxy" else 1, tile.geometry.ny, tile.geometry.nx)
         raw = np.asarray(tile.mmap(name)).copy().reshape(shape)
         write_product(directory, name, raw if name == "catmxy" else raw[0], tile.geometry,
-                      "1" if raw.dtype.kind == "i" else "m", **orientation)
+                      "code" if name == "visual" else "1" if raw.dtype.kind == "i" else "m", **orientation)
     return tile
 
 
@@ -125,3 +125,35 @@ def test_all_invalid_netcdf_fields_remove_the_unavailable_tile(products):
     messages = []
     assert "fine/tile" not in discover_tiles(products, messages)
     assert messages and all("invalid NetCDF product skipped" in text for text in messages)
+
+
+@pytest.mark.parametrize("units,available", [("code", True), ("1", True), ("m", False)])
+def test_visual_categorical_units_follow_registry_and_keep_legacy_support(products, units, available):
+    binary = nc_products(products)
+    values = np.array([[0, 1, 2, 3, 5, 7, 10, 25]] * 6, dtype="i1")
+    values[0, 0] = -9
+    write_product(products / "fine_nc", "visual", values, binary.geometry, units)
+    messages = []
+    tile = discover_tiles(products, messages)["fine/tile"]
+    assert ("visual" in tile.files) == available
+    if available:
+        assert tile.files["visual"].suffix == ".nc"
+        np.testing.assert_array_equal(tile.sample("visual", np.arange(6), np.arange(8)), values)
+        assert not messages
+        from scene import Scene
+        from presets import PresetLibrary
+        reader = MapReader(products)
+        missing = PresetLibrary().missing_products("p01-f04b", reader, Scene(reader))
+        assert not any("one high-resolution tile" in item for item in missing)
+    else:
+        assert any("expected units" in message for message in messages)
+
+
+def test_categorical_code_units_do_not_relax_catmxy_assignment_contract(products):
+    nc_products(products)
+    with Dataset(products / "fine_nc/tile.catmxy.nc", "a") as ds:
+        ds["catmxx"].units = "code"
+    messages = []
+    tile = discover_tiles(products, messages)["fine/tile"]
+    assert "catmxy" not in tile.files
+    assert any("expected units" in message for message in messages)

@@ -70,7 +70,9 @@ class NetCDFSource:
                 expected = "1" if dtype.kind == "i" else "km2" if name == "uparea" else "m"
                 if name == "uparea" and actual == "m2":
                     factor = 1e-6  # Native uparea is displayed as km²; never inherit coarse values here.
-                elif actual != expected:
+                # The canonical visual product is categorical (units=code).
+                # Retain legacy dimensionless files without relaxing assignment units.
+                elif actual != expected and not (name == "visual" and actual == "code"):
                     raise ValueError(f"{path.name}:{key}: expected units {expected}, found {actual}")
                 codes = tuple(float(v) for attr in ("_FillValue", "missing_value")
                               for v in np.atleast_1d(getattr(var, attr, [])))

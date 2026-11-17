@@ -30,6 +30,13 @@ previously ignored the converter's existing-output guard. See research/records/v
 
 ### Map Explorer dataset switching (DT-0126, 2026-11-17)
 
+Follow-up: regenerated visual.nc was present but rejected because the reader
+expected units1 rather than canonical CSV units code. Accept code only for visual
+while retaining legacy1; assignment validation remains strict. Three installed
+maps now report p01-f04b missing=[]; Mekong startup applies p01-f04b. Native
+classes match direct NetCDF reads; tests/record in VR-0172. Source data unchanged;
+newly user-generated NetCDFs and unrelated scripts/deletions excluded from commit.
+
 Maintainer follow-up: place infrequently used Load Map controls behind a header
 Map dataset toggle beside Settings panel; initially hidden and independent of
 Visualization/Inspector modes. Existing branch and publication scope retained.

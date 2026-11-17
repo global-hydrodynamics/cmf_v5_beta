@@ -855,3 +855,14 @@ switch transfers the same toggle/drawer to the new Explorer; failed mounting
 restores them to the previous Explorer along with its Pins. The drawer remains
 open until explicitly closed, so loading errors and Pins confirmation stay visible.
 No scientific processing or settings schema changes.
+
+
+### Registered categorical NetCDF units (2026-11-17)
+
+The shared bin2nc converter correctly emits visual as signed int8 with units
+`code`, per the variable CSV. Explorer must accept this categorical unit as well
+as legacy `1`. The compatibility exception is limited to visual; it does not
+relax catmxy assignment-unit validation or permit physical units on visual.
+Integer classes and missing codes remain raw and unchanged. Invalid present
+NetCDFs still do not silently fall back to Binary. Discovery is session-scoped;
+restart a running server after a reader fix to rebuild its cached scene/products.
