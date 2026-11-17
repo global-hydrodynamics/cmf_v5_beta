@@ -1109,3 +1109,24 @@ regional complete centroids remain a low-level scientific helper; the interactiv
 controller no longer invokes them. Main link arrays/classes/automatic omission,
 settings formats and Gallery scripts remain unchanged. VR-0183 provides exact
 synthetic pair/coordinate/seam oracles and actual Global/browser/PNG evidence.
+
+
+## DT-0138 — Zoom-aware -10/-9 endpoint presentation (2026-11-17)
+
+Maintainer reports global red-diamond clutter and requests zoom-only/scaled -10
+markers plus subdued -9 mouth markers. Scene applies one simple geometric rule
+to both types: show only if longitude and latitude spans divided by model-grid
+resolution are each≤60cells (small tolerance for metadata rounding). Wider views
+produce no endpoint points and explain the zoom condition in diagnostics. This
+uses coarse geometry independently of COG/display sampling; camera changes clear
+both mounted point sources. No marker state is added to saved configurations.
+
+Paired(-10,-10) retains red diamonds,reduced from10to7px. Paired(-9,-9) uses6px
+muted blue #6489AE circles at70%opacity. Thin white outlines and identical shared
+style constants keep Bokeh/PNG consistent. Both retain actual outlet coordinates
+in Outlet Vector or computational centers in Grid Center. Raw missing/mixed pairs
+are excluded; missing outlets are reported,not replaced. Network Off clears both.
+No downstream connection/coastline/classification is invented. Main vectors,
+headwater guides,native assignments and source science remain unchanged. This
+supersedes DT-0137's always-visible10px terminal-marker presentation only.
+VR-0184 records exact zoom-boundary/pair/style/position checks and real Global QA.

@@ -22,13 +22,16 @@ plotting scripts, running a Fortran program, or providing model output.
 
 ## Stored terminal markers and Headwater Guides
 
-When a river network is enabled, paired stored `nextx=-10,nexty=-10` endpoints
-appear as **red diamonds with white borders**. Outlet Vector places them at stored
+When a river network is enabled and the view spans at most **60computational
+coarse cells on each axis**, paired stored `nextx=-10,nexty=-10` endpoints
+appear as **7px red diamonds** and paired `nextx=-9,nexty=-9` river mouths as
+**6px muted blue circles** (70%opacity),with thin white borders. Both marker types
+are hidden in wider views so the global overview stays readable. Outlet Vector places them at stored
 outlon/outlat; Grid Center places them at computational centers. Missing outlet
 coordinates are reported and omitted, never replaced silently. Network Off hides
 these markers. Browser and PNG use the same points. A terminal has no downstream
-vector; no artificial connection is added. `-9`, missing and mixed pairs are not
-included. The label is deliberately **terminal (-10)**: regional cutting can also
+vector; no artificial connection is added. The blue markers identify stored -9
+codes,not an independently detected coastline. Missing and mixed pairs are excluded. The label is deliberately **terminal (-10)**: regional cutting can also
 write this code for downstream-outside-domain cells, so it is not uniquely proof
 of a physical inland river mouth.
 

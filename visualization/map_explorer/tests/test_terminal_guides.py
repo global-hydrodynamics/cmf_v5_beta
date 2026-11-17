@@ -28,6 +28,10 @@ def test_minus10_markers_keep_links_and_code_pairs_distinct(products):
     np.testing.assert_array_equal(app.frame.terminal_points, [[outlon[1,1],outlat[1,1]]])
     assert app.terminal_renderer.glyph.marker == 'diamond'
     assert app.terminal_renderer.glyph.fill_color == '#D73027'
+    assert app.terminal_renderer.glyph.size == 7
+    assert app.mouth_renderer.glyph.size == 6 and app.mouth_renderer.glyph.fill_color == '#6489AE'
+    np.testing.assert_array_equal(app.frame.mouth_points,
+        [[outlon[0,2],outlat[0,2]],[outlon[1,3],outlat[1,3]]])
     assert app._network_cache.inspect(1,1)['downstream status'] == 'terminal (-10; no downstream link)'
     native = app._network_cache
     view = app.scene.products.network_view(native, 'outlet_vector')
@@ -39,7 +43,7 @@ def test_minus10_markers_keep_links_and_code_pairs_distinct(products):
     app.representation.value = 'grid_center'
     np.testing.assert_array_equal(app.frame.terminal_points, [[11.5,21.5]])
     app.representation.value = 'off'
-    assert not len(app.terminal_source.data['x'])
+    assert not len(app.terminal_source.data['x']) and not len(app.mouth_source.data['x'])
     app.close()
     # An invalid stored outlet is reported, not replaced with a grid center.
     with Dataset(root/'netcdf/lonlat.nc','a') as ds:
@@ -95,10 +99,10 @@ def test_periodic_native_guide_centroid_wraps_at_seam(tmp_path):
     (tmp_path/'params.txt').write_text('360\n1\n1\n1\n-180\n180\n0\n1\n')
     area = np.zeros((1,360),dtype='<f4');area[0,[0,359]]=1e6;area.tofile(tmp_path/'uparea.bin')
     x = np.full((1,360),-9999,dtype='<i4');y=x.copy()
-    x[0,0]=360;y[0,0]=1;x[0,359]=y[0,359]=-10
+    x[0,0]=360;y[0,0]=1;x[0,359]=y[0,359]=-10;x[0,358]=y[0,358]=-9
     np.stack((x,y)).tofile(tmp_path/'nextxy.bin')
     lon = np.full((1,360),-9999,dtype='<f4');lat=lon.copy()
-    lon[0,0]=179.75;lon[0,359]=179.5;lat[0,[0,359]]=.5
+    lon[0,0]=179.75;lon[0,359]=179.5;lon[0,358]=178.75;lat[0,[0,358,359]]=.5
     np.stack((lon,lat)).tofile(tmp_path/'lonlat.bin')
     high=tmp_path/'fine';high.mkdir()
     (high/'location.txt').write_text('1\nheader\n1 a -180 180 0 1 360 1 1\n')
@@ -111,4 +115,10 @@ def test_periodic_native_guide_centroid_wraps_at_seam(tmp_path):
     assert len(guide)==2 and np.all(np.abs(guide[:,1,0]-guide[:,0,0])<=.25)
     assert np.all(np.abs(guide[:,:,0])>=179.5)  # never an artificial Greenwich centroid
     scene._terminal_markers(frame,view,reader.geometry.extent)
-    np.testing.assert_array_equal(frame.terminal_points,[[179.5,.5]])
+    assert not len(frame.terminal_points) and not len(frame.mouth_points)  # world view
+    exact=Frame();scene._terminal_markers(exact,view,(120,180,0,1))  # sixty coarse cells
+    np.testing.assert_array_equal(exact.terminal_points,[[179.5,.5]])
+    np.testing.assert_array_equal(exact.mouth_points,[[178.75,.5]])
+    wide=Frame();scene._terminal_markers(wide,view,(119.9,180,0,1))
+    assert not len(wide.terminal_points) and not len(wide.mouth_points)
+    assert any('hidden above 60' in message for message in wide.diagnostics)

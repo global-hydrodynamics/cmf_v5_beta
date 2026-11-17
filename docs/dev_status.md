@@ -6,6 +6,19 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Zoom-aware endpoint markers (DT-0138, 2026-11-17)
+
+Maintainer requests subdued -10 markers at wide zoom and subtle blue -9 mouth
+markers. Codex owns Explorer endpoint scene/renderers/tests/docs on existing
+feature/package-builder. Both endpoint types appear only within60coarse cells on
+each axis; smaller7px red diamonds/6px blue circles. Preserve raw paired-code
+validation,scientific positions,river links,guides,settings and source data.
+
+DT-0138 complete: 76 targeted regression tests PASS; Global world markers hidden,
+Nile region 30 paired -10 / 26 paired -9 positions agree with stored data. Actual
+browser and PNG visually checked; 147 source stats unchanged. See VR-0184.
+
+
 ### Stored terminal markers and bounded headwater guides (DT-0137, 2026-11-17)
 
 Maintainer reports missing-looking river vectors/headwater guides, then requests

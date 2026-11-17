@@ -41,7 +41,7 @@ from view_controls import ASPECTS, ASPECT_LABELS, geographic_ratio, aspect_exten
 from presets import VISIBLE_PRESETS
 from inspector import CellInspector
 from pins import PinControls
-from scene import DASH_PIXELS
+from scene import DASH_PIXELS, TERMINAL_MARKER_SIZE, MOUTH_MARKER_SIZE, MOUTH_COLOR
 from scene import Scene, OVERLAY_DEFAULTS, export_scene
 
 pn.extension()
@@ -324,7 +324,11 @@ class Explorer:
         )
         self.terminal_source = ColumnDataSource(dict(x=[], y=[]))
         self.terminal_renderer = self.plot.scatter('x', 'y', source=self.terminal_source, marker='diamond',
-            size=10, fill_color='#D73027', line_color='white', line_width=1, name='terminal-minus10')
+            size=TERMINAL_MARKER_SIZE, fill_color='#D73027', line_color='white', line_width=.5, name='terminal-minus10')
+        self.mouth_source = ColumnDataSource(dict(x=[], y=[]))
+        self.mouth_renderer = self.plot.scatter('x', 'y', source=self.mouth_source, marker='circle',
+            size=MOUTH_MARKER_SIZE, fill_color=MOUTH_COLOR, fill_alpha=.7, line_color='white',
+            line_alpha=.7, line_width=.5, name='mouth-minus9')
         self.arrow_source = ColumnDataSource(dict(x=[], y=[], angle=[], color=[], size=[]))
         self.plot.scatter(
             "x",
@@ -1031,6 +1035,7 @@ class Explorer:
             x=frame.points[:, 0], y=frame.points[:, 1], size=np.full(len(frame.points), frame.point_size)
         )
         self.terminal_source.data = dict(x=frame.terminal_points[:,0], y=frame.terminal_points[:,1])
+        self.mouth_source.data = dict(x=frame.mouth_points[:,0], y=frame.mouth_points[:,1])
         self._overlay_controls_state()
         self.arrow_source.data = frame.arrows
         self.river_ui.detail_note.object = frame.network_detail_note

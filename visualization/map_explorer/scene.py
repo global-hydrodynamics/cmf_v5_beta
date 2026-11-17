@@ -17,6 +17,12 @@ from background_style import PALE_TERRAIN, apply_opacity, highres_layer, neutral
 from river_network import intersects, automatic_detail
 from map_reader import SCHEMA
 
+ENDPOINT_MAX_CELLS = 60
+TERMINAL_MARKER_SIZE = 7
+MOUTH_MARKER_SIZE = 6
+MOUTH_COLOR = "#6489AE"
+
+
 OVERLAY_DEFAULTS = dict(
     channel=False,
     overland=False,
@@ -57,6 +63,7 @@ class Frame:
     point_size: int = 4
     terminal_points: np.ndarray = field(default_factory=lambda: np.empty((0, 2)))
     terminal_location: str = ""
+    mouth_points: np.ndarray = field(default_factory=lambda: np.empty((0, 2)))
     layer: object = None
     legend: list = field(default_factory=list)
     diagnostics: list = field(default_factory=list)
@@ -231,9 +238,15 @@ class Scene:
         return frame
 
     def _terminal_markers(self, frame, network, extent):
-        """Paired -10 is an endpoint, not a fabricated downstream connection."""
-        rows, cols = np.where((network.nextx == -10) & (network.nexty == -10))
+        """Zoomed paired-code endpoints; neither code invents a downstream link."""
         g = self.reader.geometry
+        spans = ((extent[1]-extent[0])/g.resolution, (extent[3]-extent[2])/g.resolution)
+        if max(spans) > ENDPOINT_MAX_CELLS + 1e-8:
+            frame.diagnostics.append(f'Endpoint markers hidden above {ENDPOINT_MAX_CELLS} model-grid cells per axis; zoom in')
+            return
+        paired = (network.nextx == network.nexty) & np.isin(network.nextx, [-10, -9])
+        rows, cols = np.where(paired)
+        codes = network.nextx[rows, cols]
         if getattr(network, 'representation', 'grid_center') == 'outlet_vector':
             lon, lat = self.products.outlets
             x, y = lon[rows, cols], lat[rows, cols]
@@ -243,11 +256,16 @@ class Scene:
             frame.terminal_location = 'computational grid centers'
         valid = np.isfinite(x) & np.isfinite(y)
         if (~valid).any():
-            frame.diagnostics.append(f'{int((~valid).sum())} -10 terminals have no valid {frame.terminal_location}')
+            frame.diagnostics.append(f'{int((~valid).sum())} endpoints have no valid {frame.terminal_location}')
         visible = valid & (x >= extent[0]) & (x <= extent[1]) & (y >= extent[2]) & (y <= extent[3])
-        frame.terminal_points = np.column_stack((x[visible], y[visible]))
-        if visible.any():
-            frame.legend.append(f'Stored -10 terminals (-10,-10): red diamonds at {frame.terminal_location}')
+        terminal = visible & (codes == -10)
+        mouths = visible & (codes == -9)
+        frame.terminal_points = np.column_stack((x[terminal], y[terminal]))
+        frame.mouth_points = np.column_stack((x[mouths], y[mouths]))
+        if terminal.any():
+            frame.legend.append(f'Stored -10 terminals (-10,-10): small red diamonds at {frame.terminal_location}')
+        if mouths.any():
+            frame.legend.append(f'Stored -9 mouths (-9,-9): muted blue circles at {frame.terminal_location}')
 
     def _headwater_guides(self, frame, network, selected, extent, screen, max_side):
         """Native-window centroid to stored outlet: a guide, never a new river link.
@@ -768,8 +786,11 @@ def export_scene(
                 )
             )
     if len(frame.terminal_points):
-        ax.scatter(*frame.terminal_points.T, marker='D', s=(10*72/160)**2,
-                   facecolors='#D73027', edgecolors='white', linewidths=.7, zorder=6)
+        ax.scatter(*frame.terminal_points.T, marker='D', s=(TERMINAL_MARKER_SIZE*72/160)**2,
+                   facecolors='#D73027', edgecolors='white', linewidths=.4, zorder=6)
+    if len(frame.mouth_points):
+        ax.scatter(*frame.mouth_points.T, marker='o', s=(MOUTH_MARKER_SIZE*72/160)**2,
+                   facecolors=MOUTH_COLOR, edgecolors='white', linewidths=.35, alpha=.7, zorder=6)
     if len(frame.points):
         ax.scatter(
             *frame.points.T,
@@ -860,6 +881,9 @@ def export_scene(
     if len(frame.terminal_points):
         handles.append(Line2D([], [], marker='D', mfc='#D73027', mec='white', ls='none',
                               label='Stored -10 terminals (-10,-10)'))
+    if len(frame.mouth_points):
+        handles.append(Line2D([], [], marker='o', mfc=MOUTH_COLOR, mec='white', alpha=.7, ls='none',
+                              label='Stored -9 mouths (-9,-9)'))
     if len(frame.points):
         handles.append(Line2D([], [], marker="o", mfc="white", mec="#555555", ls="none", label="Stored outlets"))
     if selected_coarse_outline is not None:
