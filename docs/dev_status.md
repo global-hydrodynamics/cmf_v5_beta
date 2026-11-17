@@ -548,3 +548,6 @@ DT-0122 completed:315 tests plus3 subtests PASS;1 existing Windows SKIP. Ordinar
 Gallery preset and old-JSON Auto now use the same P5/P95 valid reference. Actual
 Mekong/browser/PNG verified;248 protected hashes unchanged. See VR-0168 for root
 cause (legacy forced minimum), exact ranges and retained masks/units/manual bounds.
+
+DT-0122 published on feature/package-builder in `d77ae9da3b2a73aa8dfb176bcf282894b55f2b4b`; EV-0549 records
+normal push. Existing5010 session was preserved; verified preview uses5011.
