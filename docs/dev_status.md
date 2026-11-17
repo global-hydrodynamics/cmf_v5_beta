@@ -534,3 +534,6 @@ feature/package-builder. Owner Codex; implementation complete,305 tests plus3 su
 end-to-end SKIP. Actual Mekong/browser/PNG/CSV verified;248 protected hashes unchanged.
 See visualization/map_explorer/DESIGN.md and VR-0167. Publication is to this project
 branch only; Windows end-to-end still requires a Windows host.
+
+DT-0121 published on feature/package-builder in `1e2b472e3d4749b2f5cbee4f4bd7f98be801663b`; EV-0545 records normal
+push. Windows real-host QA remains unverified; unrelated TE-Japan deletions excluded.
