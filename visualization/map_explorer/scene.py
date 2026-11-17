@@ -426,28 +426,38 @@ class Scene:
             frame.diagnostics.append("Catchment outlines omitted above 100,000 native edges; zoom in")
 
     def _grid(self, frame, extent):
+        """Render every native computational edge or none; never decimate lines."""
         g = self.reader.geometry
-        xs = (
-            g.west
-            + np.arange(
-                max(0, int((extent[0] - g.west) / g.resolution)),
-                min(g.nx, int(np.ceil((extent[1] - g.west) / g.resolution))) + 1,
-            )
-            * g.resolution
-        )
-        ys = (
-            g.south
-            + np.arange(
-                max(0, int((extent[2] - g.south) / g.resolution)),
-                min(g.ny, int(np.ceil((extent[3] - g.south) / g.resolution))) + 1,
-            )
-            * g.resolution
-        )
-        if len(xs) + len(ys) > 500:
-            frame.diagnostics.append("Coarse grid omitted above 500 lines; zoom in")
+
+        def index(value):
+            # Coordinate arithmetic at minute spacing can straddle an integer by
+            # roundoff. Snap only negligible grid-index error, not partial cells.
+            nearest = round(value)
+            return float(nearest) if abs(value - nearest) <= 1e-8 else value
+
+        columns = max(0., min(extent[1], g.east) - max(extent[0], g.west)) / g.resolution
+        rows = max(0., min(extent[3], g.north) - max(extent[2], g.south)) / g.resolution
+        if not columns or not rows:
             return
+        # Count cell-width spans, so panning alone cannot toggle visibility.
+        # Tolerate sub-pixel rounding of minute spacing in printed params.txt.
+        if columns >= 30 - 1e-5 or rows >= 30 - 1e-5:
+            frame.diagnostics.append(
+                f"Coarse Grid hidden: span {columns:g} columns × {rows:g} rows; "
+                "30 or more cells on either axis. Zoom in for all native grid lines."
+            )
+            return
+        c0 = max(0, int(np.ceil(index((extent[0] - g.west) / g.resolution))))
+        c1 = min(g.nx, int(np.floor(index((extent[1] - g.west) / g.resolution))))
+        r0 = max(0, int(np.ceil(index((g.north - extent[3]) / g.resolution))))
+        r1 = min(g.ny, int(np.floor(index((g.north - extent[2]) / g.resolution))))
+        xs = g.west + np.arange(c0, c1 + 1) * g.resolution
+        ys = g.north - np.arange(r0, r1 + 1) * g.resolution
+        if not len(xs) and not len(ys):
+            return  # Deep zoom entirely inside one computational cell.
         segments = np.asarray(
-            [[[x, extent[2]], [x, extent[3]]] for x in xs] + [[[extent[0], y], [extent[1], y]] for y in ys], dtype=float
+            [[[x, extent[2]], [x, extent[3]]] for x in xs]
+            + [[[extent[0], y], [extent[1], y]] for y in ys], dtype=float
         )
         frame.overlays.insert(0, Overlay(segments, "#b0b0b0", 0.4, "Coarse-grid boundaries"))
 

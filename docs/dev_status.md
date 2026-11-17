@@ -6,6 +6,17 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Explorer all-or-none grid lines (DT-0130, 2026-11-17)
+
+Maintainer requests all native computational edges below30 cells on both axes,
+and no grid when either axis spans30 or more. Codex owns scene/UI/tests/docs on
+approved feature/package-builder; existing commit/push scope retained. Disable
+unrelated adaptive degree graticules; keep axes, selection and catchment outlines.
+54 related tests PASS; real Japan29/30/31 spans and browser29/30 verified;
+PNG29/30 visually inspected. Data and unrelated user changes excluded.
+Details and knowledge-gap review:VR-0176.
+
+
 ### Explorer equal value-range classes (DT-0129, 2026-11-17)
 
 Maintainer explicitly replaces population quartiles/sextiles with4/6 equal

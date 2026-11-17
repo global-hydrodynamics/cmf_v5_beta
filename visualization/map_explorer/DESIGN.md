@@ -930,3 +930,23 @@ the changed convention. No second preset metadata table or schema-version bump.
 Presets reset Log and preserve approved palette anchors/continuous-color exceptions,
 but main-network width classes use current range bins. Static Gallery scripts and
 bifurcation-width population quartiles are outside this correction and untouched.
+
+
+### All-or-none native computational mesh (DT-0130, 2026-11-17)
+
+The maintainer requests binary visibility, not grid-line decimation. Coarse Grid
+uses clipped displayed longitude/latitude spans divided by params resolution:
+if either axis spans >=30 cells, omit the entire mesh and report why in diagnostics.
+Below30 on both axes, draw every native edge within view, with no stride. This
+span convention avoids toggling when a fixed-size view crosses partial cells.
+A1e-5-cell threshold tolerance handles rounded minute spacing; coordinate-index
+roundoff snaps only within1e-8 cells. Horizontal edges are indexed southward from
+the native north edge, consistently with row indexing. Deep zoom within one cell
+has no internal edge and creates no empty overlay.
+
+Bokeh's automatic degree-tick graticules can resemble decimated computational
+lines but are unrelated to params.txt; disable them while retaining axes/ticks.
+Browser and PNG share the explicit overlay geometry. Selection rectangles and
+stored catmxy catchment boundaries are separate renderers and remain visible.
+No input arrays, scientific assignments, model behavior, saved settings or grid
+resolution change. This replaces the old combined500-line omission safeguard.

@@ -634,8 +634,16 @@ Each overlay remains independent of the background and main-network style:
   cells without incoming regional links. Boundary omissions can create candidates;
   these are **not confirmed physical headwaters**. Selected catmxy/uparea are
   required; periodic global centroid guides remain unsupported.
-- **Coarse Grid** retains subtle regular computational edges from params.txt,
-  independently of native catchment boundaries.
+- **Coarse Grid** draws every native computational edge from params.txt only
+  while both displayed map spans are below30 cells. At30 or more cells on either
+  axis, the entire grid overlay is hidden: lines are never thinned. Span is the
+  displayed width/height clipped to map bounds divided by native resolution, so
+  panning a fixed-size view does not toggle visibility (except at domain edges).
+  Tiny rounding tolerance accommodates printed minute-resolution metadata.
+  Bokeh's adaptive degree-tick graticules are disabled; axes/ticks remain.
+  This is the computational grid (Japan1min; Mekong15min), not the high-resolution
+  catmxy pixel grid. Selected Grid rectangles and irregular catchment outlines
+  remain independent; PNG uses the same all-or-none edge geometry.
 
 PNG uses the same typed overlay geometry/color/width/style. Channel dash6/3px
 and Overland dot1/3px patterns use separate fixed-style Bokeh renderers and

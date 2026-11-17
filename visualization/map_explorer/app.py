@@ -265,6 +265,9 @@ class Explorer:
             toolbar_location="above",
             sizing_mode="fixed",
         )
+        # Degree-tick graticules are not native computational cell edges.
+        # Only the explicit Coarse Grid overlay renders a mesh, without thinning.
+        self.plot.grid.visible = False
         self.plot.toolbar.logo = None
         self.basemap_source = ColumnDataSource(dict(image=[], x=[], y=[], dw=[], dh=[]))
         self.basemap_renderer = self.plot.image_rgba(
