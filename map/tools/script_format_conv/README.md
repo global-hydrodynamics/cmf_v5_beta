@@ -133,7 +133,7 @@ absent Binary is listed as `SKIP missing Binary`; it is not a conversion error.
 Existing files must still pass registered type/record/size validation. Unregistered
 files are not converted. A subset can be selected by replacing `all` with stems;
 missing registered inputs also skip in subset mode, while unregistered names fail.
-Choose the actual source resolutions with `HIRES` (Japan: `15sec`, Mekong: `1min`).
+Leave `HIRES` empty to propose the coarsest available Binary resolution (Japan: `15sec`, Mekong: `1min`) and confirm it at the prompt; set `HIRES` explicitly when a particular resolution or list is required.
 
 Python preflights **all selected resolutions** before creating any output. It
 lists present/missing inputs and existing/new outputs, then asks once in a
@@ -206,7 +206,7 @@ cd map/glb_15min/script_format_conv
 ./s04-restore_highres_binary.sh
 ```
 
-Edit only `HIRES`, `VARS` and `JOBS` near the top. The same current-directory
+Adjust `VARS` and `JOBS` near the top as needed; leave `HIRES` empty for automatic selection. The same current-directory
 and `--map-dir PATH` rules as s01–s03 apply. Existing Binary files are skipped;
 use `--force` to replace selected files. The wrapper invokes
 [`convert_highres_netcdf_to_binary.py`](../code/convert_highres_netcdf_to_binary.py),
@@ -220,6 +220,17 @@ python3 map/tools/code/convert_highres_netcdf_to_binary.py \
   --variables "catmxy downxy elevtn uparea hand flddif rivwth" --jobs 8
 # For a limited operation, add --areas "<carea from location.txt>".
 ```
+
+With `HIRES=""`, s04 searches `1min_nc/`, `30sec_nc/`, `15sec_nc/`,
+`5sec_nc/`, `3sec_nc/`, `1sec_nc/` in coarsest-first order. It shows the
+selected NetCDF resolution and asks `[Y/n]`; Enter means Yes. No lists the
+available tags (for example, `1min` or `15sec`) and asks which one to restore.
+Only NetCDF source directories are candidates, regardless of existing Binary
+directories. A Japan map with only `15sec_nc/` therefore selects `15sec`.
+An explicit nonempty `HIRES` list remains the initial proposal. No available
+source, or EOF at confirmation, stops before conversion. `--force` still only
+controls overwriting; it does not bypass resolution confirmation. Existing
+Binary and `location.txt` handling is unchanged.
 
 Inputs are `<HIRES>_nc/<AREA>.<VAR>.nc`; outputs are
 `<HIRES>/<AREA>.<VAR>.bin`. Other resolutions such as `15sec` and `3sec` use
@@ -379,7 +390,9 @@ inputs still return nonzero; unknown files are not silently accepted.
 - `netcdf/<stem>.nc` → `COG/<stem>.tif`: native **model grid**, never aggregated high-res pixels.
 - `<HIRES>_nc/<area>.<stem>.nc` → `COG/<HIRES>/<area>.<stem>.tif`: native high-resolution grid.
 - Overviews are internal to each file; no separate pyramid directory is generated.
-- Generated `COG/` trees are ignored by Git. `package_data.csv` is unchanged.
+- Generated `COG/` trees are normally ignored by Git. The complete repository
+  sample `map/mekong_15min/`, including `COG/`, is explicitly included for Git
+  tracking. `package_data.csv` is unchanged.
 
 The canonical `variable_table/map_variables.csv` controls product selection,
 registered types, names, meanings and record order. `all` considers all registered
@@ -472,3 +485,12 @@ No full TE-Japan or global product was converted.
 Metadata-only inspection of installed TE-Japan accepts35 model-grid plus11
 high-resolution raster files; `flwdir` is absent and `bifprm.nc` is a nonraster
 table excluded with a reasoned SKIP. That inspection does not generate full-size COGs.
+
+For `s03-convert_highres_netcdf.sh`, an empty `HIRES` proposes the coarsest
+installed Binary directory in `1min`, `30sec`, `15sec`, `5sec`, `3sec`, `1sec`
+order. The selected path is shown before `[Y/n]` confirmation (Enter = Yes).
+No lists the available resolution tags and asks which one to use. Explicit
+nonempty `HIRES` lists remain supported as the initial proposal. EOF stops
+execution; `--force` controls output overwriting and does not bypass resolution
+confirmation. The subsequent overwrite confirmation and conversion algorithms
+are unchanged.

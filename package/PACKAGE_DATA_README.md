@@ -64,8 +64,9 @@ standard parameter products, station/bifurcation information and auxiliary
 text are included. High-resolution distribution uses compressed `15sec_nc/`
 with `location.txt`; `15sec/` Binary is excluded and restored only when needed.
 Generation directories, scripts and build/log/temporary files are excluded
-according to `cmf_v5_beta/package/README.md`. Any Git-managed map-specific workflows are protected from Import; the local
-data copy is ignored.
+according to `cmf_v5_beta/package/README.md`. The entire local development copy
+`map/TE-Japan_01min/`, including map-specific script copies, is Git-ignored,
+like `map/glb_15min/`. Shared templates remain tracked under `map/tools/`.
 
 This registration does not change the data or validate its contents. The
 upstream source edition, processing provenance, redistribution conditions and

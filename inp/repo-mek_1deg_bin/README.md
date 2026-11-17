@@ -15,7 +15,7 @@ The grid has 20 longitude columns and 30 latitude rows: cell edges 90–110°E,
 little-endian float32, longitude fastest, north-to-south rows, with no Fortran
 record markers. Units remain `mm day-1`, missing value `-999`, with no scaling,
 aggregation or precision reduction. The existing map-specific
-`inpmat_test-mek_1deg.bin` and its dimension file describe exactly this grid.
+`inpmat_repo-mek_1deg.bin` and its dimension file describe exactly this grid.
 
 Use `CROFFREQ="MON"`, `CROFPRE="Roff____"`, `CROFSUF=".one"`,
 `LINPCDF=.FALSE.`, `IFRQ_INP=24`, and `DROFUNIT=86400000`.

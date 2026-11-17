@@ -8,6 +8,27 @@ The GitHub repository also tracks the Binary `repo-mek_1deg_bin/` and annual Net
 
 For format and compression settings used by NetCDF files generated with v5 tools, see the shared [NetCDF output conventions](../docs/netcdf_output_conventions.md). External NetCDF forcing inputs are not required to use those output settings.
 
+## ELSE_GPCC and the standard `test-1deg` mapping
+
+`test-1deg` identifies the global ELSE_GPCC 1-degree input grid: 360 × 180
+cells, longitude centers −179.5…179.5° and latitude centers 89.5…−89.5°
+(north to south). It connects these two uses of the same spatial grid:
+
+- `inp/ELSE_GPCC/runoffYYYY.nc`: daily runoff, `mm day-1`, for simulations.
+- `map/data/ELSE_GPCC_clm-1981-2010.one`: annual-mean runoff climatology,
+  `mm/s`, for mean discharge and channel-parameter estimation.
+
+Each CaMa-Flood model map needs its own `diminfo_test-1deg.txt` and
+`inpmat_test-1deg.bin`; matching tags do not make matrices interchangeable
+between model maps. The tag is independent of period, units and file format;
+keep the corresponding unit conversion appropriate to each input. See the
+[map workflow explanation](../map/tools/script_params/README.md#standard-else_gpcc-grid-tag)
+and the `ELSE_GPCC` row in [the registry](runoff_datasets.csv).
+
+The regional `repo-mek_1deg` and `repo-mek_1deg_bin` samples use the separate
+20 × 30 grid and `repo-mek_1deg` mapping. ERA5-Land has different geometry and
+retains its own grid tag.
+
 ## Using Your Own Runoff Dataset
 
 1. Prepare runoff files in a supported [Binary or NetCDF layout](#supported-input-formats-and-simulation-settings).

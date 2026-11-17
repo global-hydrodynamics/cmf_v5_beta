@@ -39,7 +39,7 @@ class InputMatrixNamingTests(unittest.TestCase):
             script = script_dir / WRAPPER.name
             script_text = WRAPPER.read_text(encoding="utf-8")
             script_text = script_text.replace(
-                'ROFFTAG="test-E2O_15min_nc"', 'ROFFTAG="rainfall-025"'
+                'ROFFTAG="ERA5land_global"', 'ROFFTAG="rainfall-025"'
             ).replace('HIRES_TAG=""', 'HIRES_TAG="15sec"')
             script.write_text(script_text, encoding="utf-8")
             script.chmod(0o755)
@@ -47,7 +47,7 @@ class InputMatrixNamingTests(unittest.TestCase):
             result = subprocess.run(
                 [str(script)], cwd=root,
                 env=os.environ.copy(),
-                text=True, capture_output=True, check=False,
+                input="\n", text=True, capture_output=True, check=False,
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertTrue((map_root / "diminfo_rainfall-025.txt").is_file())

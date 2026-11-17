@@ -30,8 +30,8 @@ MAP_NETCDF_DIR="${MAPDIR}/netcdf"
 RUNOFF_DIR="${CMF_BASE}/inp/repo-mek_1deg"
 RUNDIR="${SCRIPT_DIR}/out/${PROJ}"
 EXEC_CMF="${CMF_BASE}/out/bin/MAIN_cmf_netcdf"
-DIMINFO="${MAPDIR}/diminfo_test-mek_1deg.txt"
-INPMAT="${MAPDIR}/inpmat_test-mek_1deg.bin"
+DIMINFO="${MAPDIR}/diminfo_repo-mek_1deg.txt"
+INPMAT="${MAPDIR}/inpmat_repo-mek_1deg.bin"
 
 if [ ! -x "$EXEC_CMF" ]; then
     printf '[ERROR] NetCDF model executable not found: %s\n' "$EXEC_CMF" >&2

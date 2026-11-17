@@ -6,6 +6,22 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Map migration consistency and tracking (DT-0139, 2026-11-18)
+
+Maintainer approves accumulated map-tag/registry/hires-wrapper changes and
+publication on existing `feature/package-builder`. Global ELSE_GPCC uses
+`test-1deg`; Mekong-specific mapping uses `repo-mek_1deg`. Whole Global/Japan
+local installations are ignored, while the complete Mekong sample includes
+COG. ERA5land_global replaces the E2O registry example. Resolution-selection
+and confirmation policies are described in the map workflow guides.
+
+Final focused checks:34 tests and75 subtests PASS; both registries valid;
+renamed matrix bytes unchanged. Existing11 historical research-link failures
+remain. No global calculation, package build or scientific equivalence claim.
+Evidence: [VR-0185](../research/records/validation_runs/VR-0185.md).
+This project-branch status is a proposal until integrated into main.
+
+
 ### Zoom-aware endpoint markers (DT-0138, 2026-11-17)
 
 Maintainer requests subdued -10 markers at wide zoom and subtle blue -9 mouth

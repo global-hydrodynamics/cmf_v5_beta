@@ -14,7 +14,7 @@ CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 GAUGE_IN="../../data/GRDC_allocated.csv"  # MERIT Hydro-preallocated GRDC station table.
 GAUGE_OUT="$MAP_DIR/GRDC_alloc.txt"       # CaMa-Flood allocation table written in the map root.
 GAUGE_MODE="multi"                        # Allocation mode: multi or single.
-HIRES_TAG="1min"                          # High-resolution map directory tag (for example, 1min or 15sec).
+HIRES_TAG=""  # Auto-select the coarsest available grid for domain-wide allocation.
 
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
@@ -43,6 +43,20 @@ trap 'exit 143' TERM
 # ----------------------------------------------------------------------
 # End of error handling.
 # ----------------------------------------------------------------------
+
+# Prefer the coarsest installed Binary grid; the data consumer validates its contents.
+AVAILABLE=""
+for tag in 1min 30sec 15sec 5sec 3sec 1sec; do
+    if [ -d "$MAP_DIR/$tag" ]; then
+        AVAILABLE="${AVAILABLE}${AVAILABLE:+ }$tag"
+        if [ -z "$HIRES_TAG" ]; then HIRES_TAG=$tag; fi
+    fi
+done
+if [ -z "$HIRES_TAG" ]; then
+    printf 'ERROR: No Binary high-resolution directory found in %s.\n' "$MAP_DIR" >&2
+    exit 1
+fi
+printf 'Allocation high-resolution map: %s/%s\n' "$MAP_DIR" "$HIRES_TAG"
 
 EXEC_ALLOCATE="$CODE_DIR/allocate_flow_gauge"
 

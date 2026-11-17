@@ -77,8 +77,9 @@
       character*256            :: hires_tag
       character*256            :: diminfo  !! simulation dimension information filename
       parameter                 (mapdir='../')
-      parameter                 (inpmat='inpmat_test-glb_1deg.bin')
-      parameter                 (diminfo='../diminfo_test-glb_1deg.txt')
+! Keep the v4 tag for the global 360 x 180 ELSE_GPCC input grid.
+      parameter                 (inpmat='inpmat_test-1deg.bin')
+      parameter                 (diminfo='../diminfo_test-1deg.txt')
 
 ! Format strings and input buffers.
       character*256            :: buf

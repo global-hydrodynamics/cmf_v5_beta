@@ -7,7 +7,7 @@ set -eu
 # Choose one or more available high-resolution map directories.
 # Each selected directory must contain location.txt; absent Binary products skip.
 #HIRES="1min 15sec 3sec"
-HIRES="1min"
+HIRES=""  # Empty proposes the coarsest installed Binary grid; explicit lists remain supported.
 
 # All uses every registered high-resolution product; absent Binary files skip.
 # For a subset, replace all with space-separated registered Binary file stems.
@@ -105,6 +105,44 @@ if [ ! -f "$CONVERTER" ] || [ ! -f "$REGISTRY" ]; then
     printf 'ERROR: converter not found: %s\n' "$CONVERTER" >&2
     exit 1
 fi
+
+# Prefer the coarsest installed Binary grid; the data consumer validates its contents.
+AVAILABLE=""
+for tag in 1min 30sec 15sec 5sec 3sec 1sec; do
+    if [ -d "$MAP_DIR/$tag" ]; then
+        AVAILABLE="${AVAILABLE}${AVAILABLE:+ }$tag"
+        if [ -z "$HIRES" ]; then HIRES=$tag; fi
+    fi
+done
+if [ -z "$HIRES" ]; then
+    printf 'ERROR: No Binary high-resolution directory found in %s.\n' "$MAP_DIR" >&2
+    exit 1
+fi
+
+printf 'Selected high-resolution map: %s/%s\n' "$MAP_DIR" "$HIRES"
+while :; do
+    printf 'Use this high-resolution map? [Y/n]: '
+    IFS= read -r answer
+    case "$answer" in
+        ""|y|Y|yes|Yes|YES) break ;;
+        n|N|no|No|NO)
+            while :; do
+                printf 'Available resolutions: %s\nChoose resolution: ' "$AVAILABLE"
+                IFS= read -r chosen
+                for tag in $AVAILABLE; do
+                    if [ "$chosen" = "$tag" ]; then
+                        HIRES=$chosen
+                        break 2
+                    fi
+                done
+                printf 'Choose one of the listed resolutions.\n'
+            done
+            break
+            ;;
+        *) printf 'Please answer Yes or No (Enter = Yes).\n' ;;
+    esac
+done
+printf 'Using high-resolution map: %s/%s\n' "$MAP_DIR" "$HIRES"
 
 STEP="Convert selected high-resolution tiles"
 printf '\n==================================================\n'

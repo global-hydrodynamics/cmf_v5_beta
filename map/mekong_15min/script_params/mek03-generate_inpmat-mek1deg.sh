@@ -2,7 +2,7 @@
 # Generate the Mekong map-to-runoff matrix for the 1-degree runoff sample.
 #
 # Inputs: params.txt and 1min/location.txt with 1min.catmxy.bin.
-# Outputs: diminfo_test-mek_1deg.txt and inpmat_test-mek_1deg.bin in the map root.
+# Outputs: diminfo_repo-mek_1deg.txt and inpmat_repo-mek_1deg.bin in the map root.
 set -eu
 
 # Paths
@@ -12,7 +12,7 @@ MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
 CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 
 # Runoff grid and output tag; these describe runoff data, not the river map grid.
-ROFFTAG="test-mek_1deg"  # Runoff sample ID used in the paired output filenames.
+ROFFTAG="repo-mek_1deg"  # Runoff sample ID used in the paired output filenames.
 GRSIZEIN=1                # Runoff grid-cell size (degrees).
 WESTIN=90                 # Western boundary (degrees longitude).
 EASTIN=110                # Eastern boundary (degrees longitude).

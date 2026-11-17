@@ -73,7 +73,7 @@ def test_default_s03_adds_missing_registered_products_losslessly(tmp_path, sourc
     # Simulate the reported state: seven products already converted.
     converter.convert_variable(map_dir, "1min", BASE, REGISTRY, False, 3, 1)
     existing = {path: path.read_bytes() for path in (map_dir / "1min_nc").glob("*.nc")}
-    result = subprocess.run(["sh", str(script)], cwd=script_dir, text=True,
+    result = subprocess.run(["sh", str(script)], cwd=script_dir, input="\n", text=True,
                             capture_output=True, timeout=30)
     assert result.returncode == 0, result.stdout + result.stderr
     assert f"Converted: {len(variables) - 7}" in result.stdout
@@ -98,15 +98,15 @@ def test_default_s03_adds_missing_registered_products_losslessly(tmp_path, sourc
     assert all((binary / f"tile.{variable}.bin").read_bytes() == data
                for variable, data in originals.items())
     transcript = run_tty(
-        script, script_dir, b"invalid\ny\n",
-        f"Overwrite all {len(variables)} existing selected outputs?".encode(),
+        script, script_dir, b"\ninvalid\ny\n",
+        b"Use this high-resolution map? [Y/n]:",
     )
     assert "Please answer y or N" in transcript
     assert "already exists. Overwrite?" not in transcript
     assert f"Converted: {len(variables)}" in transcript
     transcript = run_tty(
-        script, script_dir, b"n\ny\n" + b"n\n" * (len(variables) - 1),
-        f"Overwrite all {len(variables)} existing selected outputs?".encode(),
+        script, script_dir, b"\nn\ny\n" + b"n\n" * (len(variables) - 1),
+        b"Use this high-resolution map? [Y/n]:",
     )
     assert "already exists. Overwrite?" in transcript
     assert "Converted: 1" in transcript

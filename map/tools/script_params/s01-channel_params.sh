@@ -17,7 +17,9 @@ CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 # Runoff format, interpolation, and paired runoff-grid matrix files.
 TYPE="bin"                                     # Runoff format: bin for binary or cdf for NetCDF.
 INTERP="inpmat"                                # Runoff mapping: inpmat for input matrix or near for nearest-grid.
-ROFFTAG="test-glb_1deg"                        # Runoff dataset ID used in both matrix filenames.
+# test-1deg: global ELSE_GPCC 360 x 180 grid; matrix is specific to this model map.
+# Shared grid: inp/ELSE_GPCC/runoffYYYY.nc [mm/day] and map/data/ELSE_GPCC_clm-1981-2010.one [mm/s].
+ROFFTAG="test-1deg"                        # Runoff dataset ID used in both matrix filenames.
 DIMINFO="diminfo_${ROFFTAG}.txt"                 # Simulation dimension information (model and input grids).
 INPMAT="inpmat_${ROFFTAG}.bin"                 # Runoff input matrix file derived from ROFFTAG.
 CROFBIN="../data/ELSE_GPCC_clm-1981-2010.one"  # Annual-mean runoff input [mm/s], relative to the map root.

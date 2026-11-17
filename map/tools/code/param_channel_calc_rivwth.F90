@@ -24,7 +24,7 @@ USE NETCDF
       data                    type /'bin'/
 
       character*256            :: diminfo  !! simulation dimension information filename
-      data                    diminfo /'./diminfo_test-glb_1deg.txt'/
+      data                    diminfo /'./diminfo_test-1deg.txt'/
 
 ! Power-law coefficients and lower limits
       real                     :: HC  !! depth power-law coefficient

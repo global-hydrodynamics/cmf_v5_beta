@@ -74,7 +74,7 @@ fidelity, not independent scientific validation or a new model regression run.
 
 `gosh_test/mek02-2year_netcdf.sh` selects `ROFFTAG="repo-mek_1deg"` and retains
 its existing 2000–2001 run interval, `CROFFREQ="YEAR"`, and
-`INPMAT_TAG="test-mek_1deg"`. That input matrix describes this same grid;
+`INPMAT_TAG="repo-mek_1deg"`. That input matrix describes this same grid;
 its historical tag does not refer to a required runoff directory.
 
 See [input tools and format guidance](../README.md#regional-extraction-from-global-netcdf)

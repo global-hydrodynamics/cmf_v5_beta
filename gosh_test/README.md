@@ -44,10 +44,11 @@ Both scripts keep their existing sample-rerun policy: they replace only their kn
 The river-network choices intentionally differ: mek01 uses
 `map/mekong_15min/nextxy_noedge.bin`, while mek02 uses
 `map/mekong_15min/netcdf/nextxy.nc` (including boundary-affected networks).
-Both retain `INPMAT_TAG="test-mek_1deg"`, `diminfo_test-mek_1deg.txt` and
-`inpmat_test-mek_1deg.bin`: the repository runoff datasets `repo-mek_1deg_bin`
-and `repo-mek_1deg` use the same 1-degree grid, so no matrix rename or regeneration
-is needed.
+Both retain `INPMAT_TAG="repo-mek_1deg"`, `diminfo_repo-mek_1deg.txt` and
+`inpmat_repo-mek_1deg.bin`: the repository runoff datasets `repo-mek_1deg_bin`
+and `repo-mek_1deg` use the same 20 × 30 regional grid and share this mapping.
+The former `test-mek_1deg` mapping pair was renamed without changing its values;
+no regeneration is needed when switching between Binary and NetCDF runoff.
 
 mek02 removes exactly `o_<CVARSOUT variable><year>.nc` for its configured inclusive
 year range before rerunning. The current eight-variable list includes `pthflw`,
@@ -57,7 +58,7 @@ Existing Restart, log, Namelist and annual bookkeeping cleanup is unchanged.
 
 ## Mekong default experiment
 
-`mek01-default_run.sh` uses `src_main/MAIN_cmf`, the tracked 15-minute Mekong map, daily Binary `inp/repo-mek_1deg_bin/` forcing grouped into monthly files (`CROFFREQ="MON"`), reusing the unchanged `test-mek_1deg` input matrix. It runs from 2000-01-01 00:00 to 2000-02-10 00:00 (40 days, end exclusive), with bifurcations and adaptive stepping enabled and reservoir operation disabled. Its default four-thread setup and scientific settings are unchanged. It writes planned output CTLs before the model and Binary Restart CTLs after successful execution; Float64 Restart visualization copies remain explicitly lossy Float32 products.
+`mek01-default_run.sh` uses `src_main/MAIN_cmf`, the tracked 15-minute Mekong map, daily Binary `inp/repo-mek_1deg_bin/` forcing grouped into monthly files (`CROFFREQ="MON"`), reusing the unchanged `repo-mek_1deg` input matrix. It runs from 2000-01-01 00:00 to 2000-02-10 00:00 (40 days, end exclusive), with bifurcations and adaptive stepping enabled and reservoir operation disabled. Its default four-thread setup and scientific settings are unchanged. It writes planned output CTLs before the model and Binary Restart CTLs after successful execution; Float64 Restart visualization copies remain explicitly lossy Float32 products.
 
 ## Mekong annual NetCDF experiment
 

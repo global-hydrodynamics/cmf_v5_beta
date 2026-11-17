@@ -15,7 +15,7 @@ DAM_IN="../../data/GRanD_allocated.csv"   # MERIT Hydro-preallocated GRanD reser
 DAM_RIVER_OUT="$MAP_DIR/GRanD_river.txt"  # Output table for dams mapped to the river network.
 DAM_SMALL_OUT="$MAP_DIR/GRanD_small.txt"  # Output table for dams classified as small by the legacy rule.
 DAM_ERROR_OUT="$MAP_DIR/GRanD_error.txt"  # Output table for dams that could not be mapped.
-HIRES_TAG="1min"                          # High-resolution map directory tag (for example, 1min or 15sec).
+HIRES_TAG=""  # Auto-select the coarsest available grid for domain-wide allocation.
 
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
@@ -44,6 +44,20 @@ trap 'exit 143' TERM
 # ----------------------------------------------------------------------
 # End of error handling.
 # ----------------------------------------------------------------------
+
+# Prefer the coarsest installed Binary grid; the data consumer validates its contents.
+AVAILABLE=""
+for tag in 1min 30sec 15sec 5sec 3sec 1sec; do
+    if [ -d "$MAP_DIR/$tag" ]; then
+        AVAILABLE="${AVAILABLE}${AVAILABLE:+ }$tag"
+        if [ -z "$HIRES_TAG" ]; then HIRES_TAG=$tag; fi
+    fi
+done
+if [ -z "$HIRES_TAG" ]; then
+    printf 'ERROR: No Binary high-resolution directory found in %s.\n' "$MAP_DIR" >&2
+    exit 1
+fi
+printf 'Allocation high-resolution map: %s/%s\n' "$MAP_DIR" "$HIRES_TAG"
 
 EXEC_ALLOCATE="$CODE_DIR/allocate_dam"
 

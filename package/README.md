@@ -218,6 +218,10 @@ found under that path during registration, so no index removal was required.
 
 ## Japan 1-minute map selection
 
+The entire local `map/TE-Japan_01min/` installation is Git-ignored, just like
+`map/glb_15min/`, including local script copies. Use the maintained templates
+under `map/tools/`; this tracking policy does not change catalog selection.
+
 `TE-Japan_01min` uses relative source and target `map/TE-Japan_01min`
 and candidate pattern `**/*`. The authoritative source is the external
 `cmf_v5_package_data/map/TE-Japan_01min/`, including when the store is a

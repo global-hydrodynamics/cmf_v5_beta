@@ -84,3 +84,25 @@ The shared guide documents dependencies, bands, average/nearest internal overvie
 full native byte checks, skip/force/atomic publication and unsupported formats.
 Explorer COG reading is not implemented. Generated caches are not tracked or
 registered in Package Additional Data by this task.
+
+For `s03-convert_highres_netcdf.sh`, an empty `HIRES` proposes the coarsest
+installed Binary directory in `1min`, `30sec`, `15sec`, `5sec`, `3sec`, `1sec`
+order. The selected path is shown before `[Y/n]` confirmation (Enter = Yes).
+No lists the available resolution tags and asks which one to use. Explicit
+nonempty `HIRES` lists remain supported as the initial proposal. EOF stops
+execution; `--force` controls output overwriting and does not bypass resolution
+confirmation. The subsequent overwrite confirmation and conversion algorithms
+are unchanged.
+
+## Binary restoration resolution selection (s04)
+
+With `HIRES=""`, s04 searches `1min_nc/`, `30sec_nc/`, `15sec_nc/`,
+`5sec_nc/`, `3sec_nc/`, `1sec_nc/` in coarsest-first order. It shows the
+selected NetCDF resolution and asks `[Y/n]`; Enter means Yes. No lists the
+available tags (for example, `1min` or `15sec`) and asks which one to restore.
+Only NetCDF source directories are candidates, regardless of existing Binary
+directories. A Japan map with only `15sec_nc/` therefore selects `15sec`.
+An explicit nonempty `HIRES` list remains the initial proposal. No available
+source, or EOF at confirmation, stops before conversion. `--force` still only
+controls overwriting; it does not bypass resolution confirmation. Existing
+Binary and `location.txt` handling is unchanged.

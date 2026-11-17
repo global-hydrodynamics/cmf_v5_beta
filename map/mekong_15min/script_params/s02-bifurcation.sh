@@ -16,7 +16,9 @@ CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 
 # Bifurcation inputs and runoff-grid matrix selection.
 BIFLAYER=5                      # Number of bifori.txt layers to process (1-10).
-ROFFTAG="test-glb_1deg"         # Runoff dataset ID used to derive DIMINFO.
+# test-1deg: global ELSE_GPCC 360 x 180 grid; matrix is specific to this model map.
+# Use the same grid tag as s01, which reads map/data/ELSE_GPCC_clm-1981-2010.one.
+ROFFTAG="test-1deg"         # Runoff dataset ID used to derive DIMINFO.
 DIMINFO="diminfo_${ROFFTAG}.txt"  # Simulation dimension information (model and input grids).
 RIVHGT="rivhgt.bin"             # Channel-depth map used to estimate bifurcation depth.
 BIFPRM_CSV="bifprm.csv"         # Finalized, named bifurcation parameter table.

@@ -172,7 +172,7 @@ If available, you can inspect without saving using `nano tutorial01-get_started.
 | Project | `PROJ="tutorial01-get_started"` |
 | River map | `map/mekong_15min/` |
 | Runoff | `inp/repo-mek_1deg_bin/`, daily Binary records grouped by month |
-| Runoff-to-map mapping | `diminfo_test-mek_1deg.txt` and `inpmat_test-mek_1deg.bin` in the map directory |
+| Runoff-to-map mapping | `diminfo_repo-mek_1deg.txt` and `inpmat_repo-mek_1deg.bin` in the map directory |
 | Period | 2000-01-01 00:00 to 2000-02-10 00:00; end time is exclusive (40 days) |
 | Time step | Base `DT=3600` seconds; adaptive time stepping enabled |
 | Execution | Non-MPI, one OpenMP thread; bifurcation enabled |
@@ -245,7 +245,7 @@ The corresponding GOSH settings identify the dataset, file naming rule, frequenc
 
 ```sh
 ROFFTAG="repo-mek_1deg_bin"
-INPMAT_TAG="test-mek_1deg"
+INPMAT_TAG="repo-mek_1deg"
 RUNOFF_DIR="${CMF_BASE}/inp/${ROFFTAG}/runoff"
 IFRQ_INP=24
 CROFFREQ="MON"
@@ -269,8 +269,8 @@ The runoff grid is 20 × 30 cells, while this Mekong river map is 80 × 120 cell
 cd "${cmf_root}"
 cd map/mekong_15min
 pwd
-ls -lhF diminfo_test-mek_1deg.txt inpmat_test-mek_1deg.bin
-cat diminfo_test-mek_1deg.txt
+ls -lhF diminfo_repo-mek_1deg.txt inpmat_repo-mek_1deg.bin
+cat diminfo_repo-mek_1deg.txt
 ```
 
 ### Expected output
@@ -278,8 +278,8 @@ cat diminfo_test-mek_1deg.txt
 Observed sizes and the descriptor contents:
 
 ```text
--rw-r--r--  1 yamadai  staff   312B Nov  3 08:24 diminfo_test-mek_1deg.txt
--rw-r--r--  1 yamadai  staff   450K Nov  3 08:05 inpmat_test-mek_1deg.bin
+-rw-r--r--  1 yamadai  staff   312B Nov  3 08:24 diminfo_repo-mek_1deg.txt
+-rw-r--r--  1 yamadai  staff   450K Nov  3 08:05 inpmat_repo-mek_1deg.bin
 ```
 
 ```text
@@ -289,7 +289,7 @@ Observed sizes and the descriptor contents:
         20     !! input nXX
         30     !! input nYY
          4     !! input num
-inpmat_test-mek_1deg.bin
+inpmat_repo-mek_1deg.bin
       90.000     !! west  edge
      110.000     !! east  edge
       35.000     !! north edge

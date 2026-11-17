@@ -26,14 +26,28 @@ source `cmf_v5_package_data/map/TE-Japan_01min/`. Its model grid is 1-minute
 15-second. Package selection includes model-grid Binary, `netcdf/`, standard
 parameters and auxiliary text, plus compressed `15sec_nc/` and `location.txt`.
 High-resolution `15sec/` Binary is restored on demand rather than distributed
-in duplicate. Installed data are ignored locally, while map-specific preparation
-scripts and their README files remain in Git. See the
+in duplicate. The entire local `map/TE-Japan_01min/` directory, including
+map-specific script copies and README files, is ignored. Shared maintained
+implementations and templates remain in Git under `map/tools/`. See the
 [Japan selection policy](../package/README.md#japan-1-minute-map-selection).
 Registration does not establish scientific validation or redistribution clearance.
 
+## Standard ELSE_GPCC mapping: `test-1deg`
+
+The standard `diminfo_test-1deg.txt` / `inpmat_test-1deg.bin` pair maps the
+360 × 180 global 1-degree ELSE_GPCC grid onto the selected model map. It is
+used both for global `inp/ELSE_GPCC/runoffYYYY.nc` (daily runoff, `mm day-1`)
+and for `map/data/ELSE_GPCC_clm-1981-2010.one` (annual-mean runoff, `mm/s`)
+when estimating mean discharge and channel parameters. Matrices are specific
+to each model map; a shared runoff-grid tag does not imply a shared matrix.
+`script_region` generates this standard pair for each new regional map.
+Mekong-only `repo-mek_1deg` and ERA5-Land tags describe different input grids.
+See the [input explanation](../inp/README.md#else_gpcc-and-the-standard-test-1deg-mapping)
+and [parameter workflow](tools/script_params/README.md#standard-else_gpcc-grid-tag).
+
 ## Development and test sample
 
-`map/mekong_15min/` is the official GitHub development/test sample. The scripts retained in its map-local preparation directory are maintainer-operated tools to create or refresh this distributed sample from source data in the separate CaMa-Flood distribution package. They are not automated tests; the dataset's presence does not establish scientific validation or production suitability.
+`map/mekong_15min/` is the official GitHub development/test sample. Its complete contents, including `COG/`, are intended for Git tracking; `map/.gitignore` explicitly overrides generic exclusions for this map. The scripts retained in its map-local preparation directory are maintainer-operated tools to create or refresh this distributed sample from source data in the separate CaMa-Flood distribution package. They are not automated tests; the dataset's presence does not establish scientific validation or production suitability.
 
 ## What is a CaMa-Flood river map?
 
@@ -229,5 +243,6 @@ remain authoritative. Optional COGs are generated at `COG/<model-variable>.tif`
 from `netcdf/`, and `COG/<HIRES>/<area>.<variable>.tif` from `<HIRES>_nc/`.
 Native numeric types/values and multiband record/layer order are preserved;
 internal overviews use average for floats and nearest for integer codes/pairs.
-COG trees are ignored by Git. Explorer COG consumption and package inclusion are
+COG trees are normally ignored by Git; the complete repository sample
+`map/mekong_15min/`, including its COGs, is explicitly included. Explorer COG consumption and package inclusion are
 not implemented here. Untracked installed map workflows are not renamed automatically.

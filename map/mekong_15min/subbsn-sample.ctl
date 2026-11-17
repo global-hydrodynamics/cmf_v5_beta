@@ -7,5 +7,5 @@ ydef 120 linear 5.125 0.25
 tdef 1 linear 00Z01jan2000 1yr
 zdef 1 linear 1 1
 vars 1
-subbsn 1 -1,40,4 Sample subbasin identifier at 30,000 / 5,000 km2 thresholds [1]
+subbsn 1 -1,40,4 Sub-basin identifier [1]
 ENDVARS

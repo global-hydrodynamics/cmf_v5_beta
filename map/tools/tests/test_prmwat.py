@@ -125,7 +125,7 @@ class PermanentWaterTests(unittest.TestCase):
         # determine this fixture's expected aggregate; all scientific rules are unchanged.
         self.assertEqual((self.map_root / "prmwat.bin").read_bytes(), expected)
 
-    def test_wrapper_passes_configured_hires_tag_to_program(self) -> None:
+    def test_wrapper_selects_and_confirms_available_hires_before_running(self) -> None:
         work = self.map_root / "wrapper/map/japan/script_params"
         work.mkdir(parents=True)
         map_dir = work.parent
@@ -136,13 +136,38 @@ class PermanentWaterTests(unittest.TestCase):
         executable.chmod(0o755)
         wrapper = work / "s05-permanent_water.sh"
         template = (ROOT / "map/tools/script_params/s05-permanent_water.sh").read_text()
-        for tag in ("1min", "15sec"):
-            wrapper.write_text(template.replace('HIRES_TAG="1min"', f'HIRES_TAG="{tag}"'))
-            result = subprocess.run(["/bin/sh", str(wrapper)], cwd=self.map_root,
-                                    text=True, capture_output=True)
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertEqual((map_dir / "called.args").read_text(), f"{tag}\n")
-        # Input validation is delegated to the real program, not replicated in Shell.
+        wrapper.write_text(template)
+        cases = [
+            ((tag,), "\n", tag) for tag in ("1sec", "3sec", "5sec", "15sec", "30sec", "1min")
+        ] + [
+            (("1min", "15sec", "3sec"), "Yes\n", "3sec"),
+            (("1min", "15sec", "3sec"), "No\n1min\n", "1min"),
+            (("1min", "15sec"), "n\n3sec\n15sec\n", "15sec"),
+            (("1min",), "", None),
+            ((), "\n", None),
+        ]
+        for tags, answers, expected in cases:
+            with self.subTest(tags=tags, answers=answers):
+                for tag in ("1sec", "3sec", "5sec", "15sec", "30sec", "1min"):
+                    directory = map_dir / tag
+                    if directory.exists(): directory.rmdir()
+                for tag in tags: (map_dir / tag).mkdir()
+                # NetCDF-only directories must not participate in Binary selection.
+                (map_dir / "1sec_nc").mkdir(exist_ok=True)
+                called = map_dir / "called.args"
+                called.unlink(missing_ok=True)
+                result = subprocess.run(["/bin/sh", str(wrapper)], cwd=self.map_root,
+                                        input=answers, text=True, capture_output=True)
+                if expected is None:
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertFalse(called.exists())
+                else:
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertEqual(called.read_text(), f"{expected}\n")
+                    if answers.lower().startswith(("n\n", "no\n")):
+                        self.assertIn("Available resolutions:", result.stdout)
+                        for tag in tags: self.assertIn(tag, result.stdout)
+        # Fortran owns metadata and scientific-data validation.
 
     def test_invalid_resolution_is_rejected(self) -> None:
         result = self.run_program("10sec")

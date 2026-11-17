@@ -57,7 +57,7 @@ DT=3600                       # Base timestep [s], multiple of 60; adaptive step
 
 # Daily Binary runoff in monthly files; reuse the unchanged regional input matrix.
 ROFFTAG="repo-mek_1deg_bin"   # Select inp/repo-mek_1deg_bin/runoff.
-INPMAT_TAG="test-mek_1deg"     # Existing input matrix for the identical 20 x 30 grid.
+INPMAT_TAG="repo-mek_1deg"     # Existing input matrix for the identical 20 x 30 grid.
 IFRQ_INP=24                   # Runoff update interval [hours]; examples: 1, 2, 3, 6, 12, 24.
 DROFUNIT=86400000             # Input runoff units / DROFUNIT -> m/s; 86400000 converts mm/day.
 LINPCDF=".FALSE."             # TRUE: read NetCDF runoff; FALSE: read binary runoff.

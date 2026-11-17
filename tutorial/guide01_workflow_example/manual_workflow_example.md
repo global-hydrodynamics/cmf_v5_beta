@@ -113,8 +113,8 @@ The sample inputs used by the runner are repository-level files:
 - Mekong map files under `map/mekong_15min/netcdf/` and
   `map/mekong_15min/`;
 - runoff file `inp/repo-mek_1deg/runoff2000.nc`;
-- input matrix `map/mekong_15min/inpmat_test-mek_1deg.bin` and its dimension
-  description `map/mekong_15min/diminfo_test-mek_1deg.txt`.
+- input matrix `map/mekong_15min/inpmat_repo-mek_1deg.bin` and its dimension
+  description `map/mekong_15min/diminfo_repo-mek_1deg.txt`.
 
 These are inputs, not files produced by this tutorial. The original
 `rivhgt.nc` is read-only. The runner checks for its required inputs before

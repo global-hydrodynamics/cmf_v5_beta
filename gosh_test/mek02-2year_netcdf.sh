@@ -18,7 +18,7 @@ END_YEAR=2001                    # Last simulation year; extend to continue the 
 
 # Runoff dataset and its matching map-specific input matrix.
 ROFFTAG="repo-mek_1deg"     # Selects inp/repo-mek_1deg/ with one NetCDF file per year.
-INPMAT_TAG="test-mek_1deg"     # Selects the existing input matrix for the same 1-degree grid.
+INPMAT_TAG="repo-mek_1deg"     # Selects the existing input matrix for the same 1-degree grid.
 
 # Map input files; LMAPCDF=.FALSE. makes the reader select Binary or NetCDF from each extension.
 MAPDIR="${CMF_BASE}/map/mekong_15min"  # Mekong river-map root containing params.txt and bifprm.txt.
