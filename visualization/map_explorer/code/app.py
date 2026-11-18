@@ -66,7 +66,7 @@ class Explorer:
         self._preset_baseline = None
         if not self.reader.sources:
             raise ValueError("No supported readable rasters. " + "; ".join(self.reader.messages))
-        self.output_dir = Path(output_dir or Path(__file__).parent / "output").resolve()
+        self.output_dir = Path(output_dir or Path(__file__).parent.parent / "output").resolve()
         # Even an explicitly supplied export directory must not be inside input.
         if self.output_dir == self.reader.path or self.reader.path in self.output_dir.parents:
             raise ValueError("Output directory must be outside MAP_DIR")

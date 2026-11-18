@@ -12,12 +12,12 @@ if [ "$explicit_python" != '-' ]; then
         echo '[ERROR] CMF_WSL_PYTHON must name a working Linux Python >=3.10.' >&2
         exit 1
     fi
-    exec "$explicit_python" "$app_dir/launch_desktop.py" "$map_dir" --windows-browser "$windows_powershell" --no-setup
+    exec "$explicit_python" "$app_dir/code/launch_desktop.py" "$map_dir" --windows-browser "$windows_powershell" --no-setup
 fi
 # Probe executability/platform: a macOS or Windows .venv is never reused.
 for candidate in "$repo_dir/.venv/bin/python" "$app_dir/.venv/bin/python" python3; do
     if "$candidate" -c "$probe" >/dev/null 2>&1; then
-        exec "$candidate" "$app_dir/launch_desktop.py" "$map_dir" --windows-browser "$windows_powershell" --no-setup
+        exec "$candidate" "$app_dir/code/launch_desktop.py" "$map_dir" --windows-browser "$windows_powershell" --no-setup
     fi
 done
 echo '[ERROR] No Linux Python >=3.10. Install Python in WSL or set CMF_WSL_PYTHON; see README.' >&2

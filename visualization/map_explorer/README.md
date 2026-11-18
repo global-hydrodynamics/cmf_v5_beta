@@ -1,5 +1,15 @@
 # CaMa-Flood Interactive Map Explorer v3
 
+## Application layout
+
+Top-level Shell/Windows launchers remain the user entry points. All Python
+implementation files, including `launch_desktop.py`, are under `code/`.
+`README.md`, `DESIGN.md`, `requirements.txt` and `presets.csv` remain at the
+application root; tests remain in `tests/`. Existing `.venv/` and `output/`
+locations and launcher arguments are unchanged. Launchers resolve the code
+relative to their own location, independently of the current directory.
+
+
 With no map argument, every launcher opens the repository's bundled
 `map/mekong_15min/` without a folder dialog. Mekong retains the **p01-f04b**
 startup display with Channel + Overland bifurcations and its compatible Gallery
@@ -118,9 +128,10 @@ directory. No source data are written, restored or converted when switching.
 
 Existing numeric `MAP_DIR/COG/RESOLUTION/AREA.FIELD.tif` files supply both display
 and native inspection. Discovery validates COG layout, EPSG:4326, native dimensions,
-pixel edges, signed dtype, band variable names, units and source filename. A COG
-older than its associated NetCDF is rejected. This checks metadata/mtime, not a
-cryptographic provenance hash. Compatible COGs prevent opening that field's high-res
+pixel edges, signed dtype, band variable names, units and source filename.
+Compatible COGs are preferred regardless of the associated NetCDF's modification
+time, which can change during data copying. These compatibility checks do not
+prove content equivalence. Compatible COGs prevent opening that field's high-res
 NetCDF; only filesystem metadata may be checked. No conversion runs in Explorer.
 Missing/incompatible COGs show diagnostics and preserve the existing NetCDF/Binary
 fallback display; fallback does not enable native Catchment interaction.
@@ -859,7 +870,7 @@ CSV schema: `gallery_id` is a foreign key into `visualization_catalog.csv`;
 `network_geometry` (`straight` / `gallery_arcs`) set the main network; flat named overlay
 columns mirror the existing layer controls; `west/east/south/north` are suggested
 degree bounds. Boolean fields use true/false; widths use display units. See the
-header and [presets.py](presets.py) for allowed values. CSV is UTF-8 (BOM accepted)
+header and [presets.py](code/presets.py) for allowed values. CSV is UTF-8 (BOM accepted)
 and Excel-compatible, with no nested JSON fields or duplicated Figure registry.
 
 Presets reproduce essential data/method choices, not exact published graphics.

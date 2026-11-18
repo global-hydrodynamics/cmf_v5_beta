@@ -40,7 +40,7 @@ CHOICES = {
 
 class PresetLibrary:
     def __init__(self, settings_path=None, catalog_path=None):
-        home = Path(__file__).resolve().parent
+        home = Path(__file__).resolve().parent.parent
         self.messages, self.presets = [], {}
         self.catalog_path = Path(catalog_path or home.parent / "visualization_catalog.csv")
         try:

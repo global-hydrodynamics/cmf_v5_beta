@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-REPOSITORY = Path(__file__).resolve().parents[2]
+REPOSITORY = Path(__file__).resolve().parents[3]
 DEFAULT_MAP = REPOSITORY / "map/mekong_15min"
 
 

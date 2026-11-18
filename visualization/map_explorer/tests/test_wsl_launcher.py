@@ -12,7 +12,7 @@ import pytest
 import launch_desktop as desktop
 import wsl_browser as browser
 
-ROOT = Path(desktop.__file__).parent
+ROOT = Path(desktop.__file__).parent.parent
 
 
 def test_windows_browser_command_uses_utf16_numeric_loopback_only():

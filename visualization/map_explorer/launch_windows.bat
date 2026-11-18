@@ -23,7 +23,7 @@ set "PYTHONDONTWRITEBYTECODE=1"
 set "BOKEH_RESOURCES=server"
 set "MPLBACKEND=Agg"
 if not defined MPLCONFIGDIR set "MPLCONFIGDIR=%SCRIPT_DIR%output\.matplotlib"
-py -3 "%SCRIPT_DIR%launch_desktop.py" %*
+py -3 "%SCRIPT_DIR%code\launch_desktop.py" %*
 goto finished
 
 :run_python
@@ -31,7 +31,7 @@ set "PYTHONDONTWRITEBYTECODE=1"
 set "BOKEH_RESOURCES=server"
 set "MPLBACKEND=Agg"
 if not defined MPLCONFIGDIR set "MPLCONFIGDIR=%SCRIPT_DIR%output\.matplotlib"
-"%PYTHON%" "%SCRIPT_DIR%launch_desktop.py" %*
+"%PYTHON%" "%SCRIPT_DIR%code\launch_desktop.py" %*
 
 :finished
 set "LAUNCH_STATUS=%ERRORLEVEL%"

@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from netCDF4 import Dataset
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "code"))
 
 
 @pytest.fixture

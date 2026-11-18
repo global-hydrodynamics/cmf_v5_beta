@@ -103,8 +103,6 @@ class COGSource:
         self.path, self.name, self.geometry = Path(path), name, geometry
         self.cache = cache if cache is not None else RasterCache()
         self.netcdf_path = Path(netcdf_path) if netcdf_path else None
-        if self.netcdf_path and self.netcdf_path.is_file() and self.path.stat().st_mtime_ns < self.netcdf_path.stat().st_mtime_ns:
-            raise ValueError('COG predates its NetCDF source; rebuild explicitly or use fallback')
         with rasterio.open(path) as ds:
             g = geometry
             if ds.crs is None or ds.crs.to_epsg() != 4326 or ds.tags(ns='IMAGE_STRUCTURE').get('LAYOUT') != 'COG':

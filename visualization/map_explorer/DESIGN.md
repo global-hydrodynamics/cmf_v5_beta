@@ -1130,3 +1130,12 @@ No downstream connection/coastline/classification is invented. Main vectors,
 headwater guides,native assignments and source science remain unchanged. This
 supersedes DT-0137's always-visible10px terminal-marker presentation only.
 VR-0184 records exact zoom-boundary/pair/style/position checks and real Global QA.
+
+## Source layout
+
+All Python implementation modules live in `code/`, including the Python
+launcher and WSL browser helper. Platform launchers remain at the project root,
+with metadata/configuration documents, `requirements.txt` and `presets.csv`.
+Tests remain in `tests/` and import from `code/`; repository-relative map
+resolution, root-local `.venv/` and `output/` are preserved. This relocation
+does not change display, selection, scientific readers or settings formats.

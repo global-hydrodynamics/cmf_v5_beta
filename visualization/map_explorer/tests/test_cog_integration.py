@@ -2,6 +2,7 @@
 from pathlib import Path
 from unittest.mock import Mock
 import json
+import os
 
 import numpy as np
 import pytest
@@ -182,7 +183,21 @@ def test_visible_boundary_has_no_artificial_viewport_edges(cog_map):
     assert len(boundary.segments)>=4
 
 
-def test_missing_malformed_and_stale_cog_fallback(cog_map):
+def test_older_cog_remains_preferred_after_netcdf_copy(cog_map):
+    root, _ = cog_map
+    newer = max(p.stat().st_mtime_ns for p in (root/'COG/1min').glob('*.tif')) + 10_000_000_000
+    for path in (root/'1min_nc').glob('*.nc'):
+        os.utime(path, ns=(newer, newer))
+    notes = []
+    tile = discover_tiles(root, notes)['1min/a']
+    assert tile.storage == 'COG'
+    assert set(tile.cog) == set(tile.files)
+    assert all(path.suffix == '.tif' for path in tile.files.values())
+    assert not tile.netcdf
+    assert not any('fallback' in note for note in notes)
+
+
+def test_missing_and_malformed_cog_fallback(cog_map):
     root,_=cog_map
     (root/'COG/1min/a.elevtn.tif').unlink()
     (root/'COG/1min/a.visual.tif').write_bytes(b'bad TIFF')

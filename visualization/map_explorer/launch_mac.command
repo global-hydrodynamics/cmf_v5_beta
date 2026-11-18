@@ -24,7 +24,7 @@ export BOKEH_RESOURCES=server
 export MPLBACKEND=Agg
 export MPLCONFIGDIR="${MPLCONFIGDIR:-$SCRIPT_DIR/output/.matplotlib}"
 
-if "$PYTHON" "$SCRIPT_DIR/launch_desktop.py" "$@"; then
+if "$PYTHON" "$SCRIPT_DIR/code/launch_desktop.py" "$@"; then
     exit 0
 else
     launch_status=$?

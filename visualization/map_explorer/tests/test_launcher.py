@@ -12,7 +12,7 @@ import unittest
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "code"))
 import launch_desktop as launcher
 
 
@@ -58,7 +58,7 @@ class LauncherSetupTests(unittest.TestCase):
         commands = [item.args[0] for item in run.call_args_list]
         self.assertEqual(commands[0], [sys.executable, '-m', 'venv', str(self.directory / '.venv')])
         self.assertEqual(commands[2], [str(self.python), '-m', 'pip', 'install', '-r', str(self.directory / 'requirements.txt')])
-        self.assertEqual(commands[-1], [str(self.python), str(self.directory / 'launch_desktop.py'), *argv])
+        self.assertEqual(commands[-1], [str(self.python), str(self.directory / 'code/launch_desktop.py'), *argv])
         self.assertTrue(all(c[0] == str(self.python) for c in commands[1:]))
 
     def test_existing_local_environment_is_updated_only_after_yes(self):
@@ -127,7 +127,7 @@ class LauncherSetupTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             lines = log.read_text().splitlines()
             self.assertEqual(lines[0], 'local')
-            self.assertEqual(lines[1], str(tools / 'launch_desktop.py'))
+            self.assertEqual(lines[1], str(tools / 'code/launch_desktop.py'))
             self.assertIn(str(map_dir), lines)
             if name == 'run.sh':
                 self.assertIn('5006', lines)

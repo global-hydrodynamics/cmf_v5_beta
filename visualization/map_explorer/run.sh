@@ -21,4 +21,4 @@ export PYTHONDONTWRITEBYTECODE=1
 export BOKEH_RESOURCES=server
 export MPLBACKEND=Agg
 # Keep the terminal entry point's default port; an explicit --port still takes precedence.
-exec "$PYTHON" "$SCRIPT_DIR/launch_desktop.py" --port 5006 "$@"
+exec "$PYTHON" "$SCRIPT_DIR/code/launch_desktop.py" --port 5006 "$@"

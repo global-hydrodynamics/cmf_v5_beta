@@ -84,7 +84,7 @@ def prepare_environment(directory, argv, missing):
         print("Existing data and other environments were not changed. Re-run the launcher to retry.", file=sys.stderr)
         return 1
     print("[SUCCESS] Explorer environment ready; launching.", flush=True)
-    return subprocess.run([str(python), str(directory / "launch_desktop.py"), *argv]).returncode
+    return subprocess.run([str(python), str(directory / "code" / "launch_desktop.py"), *argv]).returncode
 
 
 def main(argv=None):
@@ -98,7 +98,7 @@ def main(argv=None):
     parser.add_argument("--windows-browser", type=Path, help="WSL Windows PowerShell executable for browser interop")
     argv = sys.argv[1:] if argv is None else argv
     args = parser.parse_args(argv)
-    directory = Path(__file__).resolve().parent
+    directory = Path(__file__).resolve().parent.parent
     missing = [name for name in ("numpy", "netCDF4", "matplotlib", "panel", "bokeh", "rasterio")
                if importlib.util.find_spec(name) is None]
     if missing and args.no_setup:
@@ -133,7 +133,7 @@ def main(argv=None):
         with socket.socket() as listener:
             listener.bind(("127.0.0.1", 0))
             port = listener.getsockname()[1]
-    sys.argv = [str(directory/"app.py"), str(selected), "--port", str(port)]
+    sys.argv = [str(directory/"code"/"app.py"), str(selected), "--port", str(port)]
     if args.windows_browser:
         from map_reader import Geometry
         try:
