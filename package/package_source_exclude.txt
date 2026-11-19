@@ -1,0 +1,12 @@
+# Root-relative directories (literal path, no glob patterns).
+/.git/
+/.github/
+/research/
+
+# Literal file basenames, matched at every depth.
+.gitignore
+.gitattributes
+.gitmodules
+
+# package/repo_clean_* and .repo_clean_tmp.* are always excluded internally
+# to prevent previously tracked generated trees from nesting in an archive.

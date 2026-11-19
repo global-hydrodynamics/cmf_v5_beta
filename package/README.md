@@ -1,6 +1,6 @@
 # CaMa-Flood v5 Package Builder
 
-Status: developer Import and read-only Diff are implemented. This root directory holds the Package Builder tools, catalog and documentation. Distribution-package assembly (`make_package.sh`) is still planned and is not implemented.
+Status: committed clean-source extraction, developer Import and read-only Diff are implemented. This root directory holds the Package Builder tools, catalog and documentation. Distribution-package assembly (`make_package.sh`) is still planned and is not implemented.
 
 ## Working-directory layout
 
@@ -36,6 +36,9 @@ The names above describe the intended sibling layout, not hard-coded local paths
 - `diff_package_data.sh`: independently compare authoritative data and local development copies.
 - `package_data.py`: shared selection, bounded-memory comparison and safe copying (Python standard library).
 - `package_data.csv`: the sole dataset selection catalog, used by both commands.
+- `archive_clean_repo.sh`: extract committed `HEAD` to `package/repo_clean_${VER}/` (see below).
+- `archive_clean_repo.py`: standard-library inventory, literal exclusions, blob/mode verification and atomic publication helper.
+- `package_source_exclude.txt`: clean-source exclusions, independent of the additional-data catalog.
 - `make_package.sh`: future independent distribution assembler; **not implemented**.
 
 The commands require Bash, Python 3.8 or newer, and Git. No scientific Python packages or rsync are required. The broader product roles are described in [the development and distribution design](../docs/development_and_distribution_design.md); `package/` is the current approved tooling location.
@@ -273,3 +276,88 @@ registration and local availability are not validation or permission to publish.
 When registering or changing a dataset, update [package_data.csv](package_data.csv) and, when descriptions, provenance or conditions change, PACKAGE_DATA_README.md. The catalog selects dataset files; the README explains their role, source, conversion and unresolved redistribution conditions. See [AGENTS.md](../AGENTS.md) for the agent rule.
 
 NetCDF dataset directories normally omit `_nc`; Binary variants use `_bin` when a distinction is needed. The global NetCDF dataset was renamed from `ELSE_GPCC_nc/` to `ELSE_GPCC/` in both the development repository and the additional-data store. The former global Binary directory has been removed.
+
+
+## Clean beta Git source extraction
+
+Run from any directory using the script path:
+
+```bash
+./package/archive_clean_repo.sh --dry-run
+./package/archive_clean_repo.sh
+```
+
+Edit `VER="v5b01_$(date +%Y%m%d)"` near the top of the Bash script to use a
+fixed version, for example `v5b01_20261119`. The default uses the execution host's
+local date. Versions must start `v5b01_` and use letters, numbers, `_`, `.` or `-`.
+Output is always `package/repo_clean_${VER}/`. Existing paths, including empty
+directories and symlinks, are errors; there is no overwrite option. macOS or Linux
+(including WSL) with Bash, Git, tar and Python 3.8+ are supported. Atomic no-replace
+rename support is required; unsupported hosts fail without publishing output.
+
+The Bash entry point pins one HEAD commit, discovers the repository from its own
+location, inventories Git objects, and pipes `git archive --format=tar` into tar
+in a private temporary directory. The helper removes explicit exclusions and
+verifies every retained file's committed blob hash, size and executable status
+before atomic no-replace publication. This catches export-ignore/export-subst
+attributes that would silently drop or transform retained sources. The same
+commit is written to `PACKAGE_BUILD_INFO.txt`, with version, branch, timestamp,
+repository name, tool and stage. No compile, data overlay or final package build.
+
+Uncommitted tracked edits, staged additions and untracked files cause a warning;
+only the pinned commit is used. Ignored local additional data never enter the
+archive. Already tracked samples remain even when a `.gitignore` pattern would
+otherwise match them. All file payloads and executable flags are retained;
+archive timestamps and provenance timestamps do not promise byte-identical whole
+output trees across executions. Generated build information is the only added
+file. No source file is rewritten to repair links to excluded development logs.
+
+`package_source_exclude.txt` has deliberately small literal syntax:
+
+- `/directory/` or `/parent/directory/`: root-relative directory and descendants.
+- `.gitignore` or another literal basename: files with that name at every depth.
+- Blank lines and full-line `#` comments are ignored. No globs, substring matches,
+  negation, path traversal or inline-comment syntax.
+
+Initial exclusions: root `.git/`, `.github/`, `research/`; `.gitignore`,
+`.gitattributes` and `.gitmodules` files at every depth. Git archive itself never
+contains repository history. Independently of the editable list, root-package
+`repo_clean_*` and `.repo_clean_tmp.*` trees are always excluded, even if accidentally
+tracked. The root ignore rules exclude generated outputs and temporary staging
+under the existing whitelist policy. No tracked build/cache artifacts were found
+in the initial audit; no additional extension-wide filters were introduced.
+Mekong Binary, NetCDF and COG samples remain part of the committed source tree.
+
+Tracked symlinks are reported. Absolute, escaping, cyclic or dangling/excluded
+link targets fail before extraction; links that resolve within the retained tree
+are preserved as links. Nothing follows unsafe targets to copy external data.
+Failure removes only the invocation's mktemp directory, leaving no completed
+output. Concurrent creation of the destination is rejected atomically.
+
+Dry-run performs no extraction and creates no output/staging directory. It prints
+version, pinned full commit ID, branch, planned output, tracked/excluded/retained
+file counts, per-rule exclusion counts, symlinks and estimated retained payload
+bytes from Git blob metadata. Payload size excludes directory overhead and the
+small generated provenance file. Source hashing at real extraction is streamed
+in 1 MiB blocks, without loading map rasters into memory.
+
+For this **beta test edition**, user/developer materials are intentionally kept
+together: AGENTS.md, CONTRIBUTING.md, legacy/, docs/, tests and all other retained
+tracked paths remain. Research logs stay in the development repository but are
+excluded from the clean beta tree. User/developer documentation may be separated
+for a formal release later. This extraction is only the Git-source stage of the
+future Package Builder; additional-data integration and final assembly remain
+unimplemented. Existing Import/Diff commands and package_data.csv are unchanged.
+
+Focused verification (temporary Git fixtures, no real scientific data changes):
+
+```bash
+bash -n package/archive_clean_repo.sh
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s package/tests -p test_archive_clean_repo.py -v
+```
+
+Tests cover exact committed bytes/modes, developer and sample preservation,
+exclusions and literal near matches, dirty/untracked/ignored inputs, another CWD,
+provenance, ignore rules, nested generated outputs, unsafe links, existing output
+protection and cleanup on tar/archive-attribute failures. A real source extraction
+must be checked separately; this is not a model-execution validation.

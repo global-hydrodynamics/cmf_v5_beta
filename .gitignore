@@ -54,3 +54,7 @@ map/tools/**/*.pyc
 __pycache__/
 *.pyc
 *.pyo
+
+# Clean beta sources and invocation-local extraction staging; never Git inputs.
+/package/repo_clean_*/
+/package/.repo_clean_tmp.*/

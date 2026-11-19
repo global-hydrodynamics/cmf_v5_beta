@@ -6,6 +6,16 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Clean beta Git source extraction (DT-0140, 2026-11-19)
+
+Maintainer authorizes package/archive_clean_repo.sh on existing feature/package-builder,
+including tests, actual HEAD extraction, documentation, commit and push. Codex owns
+new archive entry/helper/exclusion list/tests and package/design/status/research docs.
+Scope: committed HEAD only, safe staged publication, exact source bytes/modes,
+explicit development/Git exclusions; keep beta developer docs/legacy/tests/samples.
+No additional-data overlay, final assembler, conversion or model/Explorer changes.
+
+
 ### Map migration consistency and tracking (DT-0139, 2026-11-18)
 
 Maintainer approves accumulated map-tag/registry/hires-wrapper changes and

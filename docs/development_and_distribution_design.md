@@ -466,7 +466,7 @@ Instead, contributors provide focused, tested changes, while maintainers review 
 
 This approach is intended to reduce the technical barriers to community contributions while keeping the CaMa-Flood development and distribution system simple and maintainable.
 
-## 11. Current implementation boundary (2026-11-17)
+## 11. Current implementation boundary (2026-11-19)
 
 The principles above are the adopted direction. Their implementation remains incomplete.
 
@@ -477,7 +477,7 @@ The principles above are the adopted direction. Their implementation remains inc
 | Regression references | Component tests exist; earlier model comparisons are recorded in research. | Independently approve the official model-reference revision, variables, calendar, precision and comparison criteria, then provide a repeatable command. Historical execution success is not this approval. |
 | Migration baseline | Legacy root src/gosh/adm relocation and direct util-to-tools consolidation are committed in 29b889c4; current main inherits them. | Use legacy/ only as reference and the active src_main/config/gosh_test/tools paths for v5 work. |
 | Additional data | `package/install_package_data.sh` implements developer Import; `diff_package_data.sh` provides independent read-only file Diff. The sole `package_data.csv` catalog preserves its six fields and adds optional exclude_patterns. Symlinked sibling stores, bounded-memory comparison, Git/ignore protections and verified atomic local copies are supported. | Distribution version/provenance/redistribution review and independent package assembly remain future work. No real-data Import was performed by the implementation task; see the [package guide](../package/README.md). |
-| Distributed Package | No v5 package assembler or verified generated v5 distribution exists. | Implement separate-output assembly from a selected committed revision and approved data version, followed by structural and execution checks. |
+| Distributed Package | `package/archive_clean_repo.sh` extracts a pinned committed HEAD to `package/repo_clean_${VER}/`, with explicit exclusions, byte/mode validation and build provenance. This is only the clean Git-source stage; no final assembler or verified runnable distribution exists. | Integrate approved additional data in a later independent stage, then verify the assembled package structurally and through approved execution checks. |
 | Legacy packaging instructions | `archive_src.sh`, `doc/make_package.sh` and the old package guide describe v4-oriented workflows. | Preserve them as historical references; do not present them as the v5 assembly command. |
 | Contribution guidance | CONTRIBUTING.md now documents feature branches, focused diffs, two test levels and pre-merge review. | Validate the full contributor workflow with an independently tested feature branch/PR in a later task. |
 | PR validation | The former source/map workflow is removed from active GitHub Actions by maintainer instruction; tests and inputs remain. | Automated CI is temporarily disabled pending a small, reproducible v5 suite. Use the retained manual checks; no replacement workflow is added here. |
@@ -486,7 +486,7 @@ Migration cleanup corrects Guide01's confirmed repository-root calculations with
 
 `doc/` and `etc/` are retained for now. Shared calculation belongs in tools, visualization in visualization, map-specific processing in map, and runoff-specific processing in inp. Category subdirectories under tools should be introduced only when an approved migration needs them; the current shared utility consolidation does not create tools/code.
 
-The intended ignore policy also remains partly unimplemented: the current broad extension rules can hide extensionless source files or expose additional NetCDF data, and 16 Python cache files are currently tracked. Ignore rules cannot protect already tracked files or guarantee that another branch will never track an added-data path. Review dataset destinations and generated-file tracking before implementing installation. Do not introduce a custom protection or coordination service.
+The intended ignore policy also remains partly unimplemented: the current broad extension rules can hide extensionless source files or expose additional NetCDF data, and historical snapshots included tracked Python caches. The 2026-11-19 clean-source inventory finds no tracked Python caches or compiler artifacts. Ignore rules cannot protect already tracked files or guarantee that another branch will never track an added-data path. Review dataset destinations and generated-file tracking before implementing installation. Do not introduce a custom protection or coordination service.
 
 A developer beta may retain unfinished and explicitly labeled legacy features. The generated user package is the intended complete distribution product; this document does not announce that such a v5 package is already available. Tutorial learner-package selection is a separate educational profile described in the tutorial documents, not a rule to delete developer records or reference solutions from Git.
 
@@ -498,6 +498,23 @@ These decisions do not block the present documentation work. Resolve each before
 
 - **Official minimal model test and references (important):** Section 5 requires approved references, but no current single regression contract selects the run period, variables, build/precision settings and tolerances. Earlier 40-day and multi-year Mekong runs are evidence, not an automatic choice of the official reference. This choice controls test cost and numerical acceptance.
 - **Additional-data contract (important):** Select the first datasets, source permissions, destination paths, manifest/version compatibility fields, and copy versus optional read-only links after workflow inspection. Existing mixed code/data directories and absolute legacy links prevent choosing a universal directory-overlay method without further work.
-- **Package selection and equivalence (important):** Specify which developer-only files are excluded, how tutorial learner profiles relate to the full package, and what “equivalent package” means when creation dates differ (Section 3.2). Preserve the Git research history; whether selected research documentation is included in the generated user package is not yet specified. No byte-identical archive guarantee is assumed.
+- **Package selection and equivalence (important):** Specify which developer-only files are excluded, how tutorial learner profiles relate to the full package, and what “equivalent package” means when creation dates differ (Section 3.2). For the beta, preserve AGENTS.md, CONTRIBUTING.md, legacy/, docs/, tests and tracked samples, while excluding research/, .github/ and Git-specific files. Research history remains in Git. Formal releases may separate user/developer documentation later. Equivalent retained source means committed file bytes and executable flags; generated provenance timestamps differ. Additional-data manifests and final-package equivalence remain future decisions.
 
 Recommended sequence: reconcile the migrated policy and existing working-tree changes; approve a minimal-case validation contract; inventory approved additional data; specify package file selection and manifest; implement assembly and focused tests as separate tasks; finally verify the selected source revision in a clean checkout and the generated package in an independent directory. Each implementation stage follows the branch/scope approval and proportional validation rules in AGENTS.md.
+
+
+### Approved beta source-extraction stage (2026-11-19)
+
+The beta intentionally retains developer/AI-agent materials alongside user
+sources. No minimal user-only profile is applied. `package/archive_clean_repo.sh`
+uses git archive for a pinned HEAD, explicit literal exclusions in
+package_source_exclude.txt, safe staging and no-overwrite publication. Root
+research/ and .github/ plus Git-specific files are excluded; research records stay
+in the development repository. Tracked scientific samples are not filtered by
+extensions or ignore status. An in-tree symlink is retained; unsafe links abort.
+
+PACKAGE_BUILD_INFO.txt records source revision/branch, version and execution date.
+The extracted files retain committed bytes/modes; the timestamped provenance is
+not a claim of byte-identical complete archives. No final compressed archive,
+additional-data integration, Fortran compilation or model execution is performed.
+See [the package guide](../package/README.md#clean-beta-git-source-extraction).
