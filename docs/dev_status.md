@@ -6,6 +6,17 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Repository-wide consistency audit (DT-0148, 2026-11-19)
+
+Maintainer requests whole-repository check. Audit complete with findings:
+Explorer403 PASS; components167 PASS/1FAIL and Mekong7 PASS/1FAIL. Both failures
+isolate to working CSV upbasin-row removal; committed-registry control9 PASS.
+Preserved user CSV/37NC edits;37NC/41vars exactly match Binary. Fix active setup/
+build-doc/sample links and regenerate the old-source package after readiness.
+No source repair, model run or main merge. See [audit](repository_consistency_audit_20261119.md)
+and [VR-0194](../research/records/validation_runs/VR-0194.md).
+
+
 ### Guide01 shared executable and current setup (DT-0147, 2026-11-19)
 
 Maintainer requests aligning Guide01 fixes with Tutorial02. Codex owns active
