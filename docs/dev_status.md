@@ -15,6 +15,11 @@ Scope: committed HEAD only, safe staged publication, exact source bytes/modes,
 explicit development/Git exclusions; keep beta developer docs/legacy/tests/samples.
 No additional-data overlay, final assembler, conversion or model/Explorer changes.
 
+DT-0140 complete: 35 package tests PASS; real committed source a39f4ea1
+retains 1,284 files (252,573,268 bytes) plus build provenance. Exact blob/mode
+checks, symlink containment, output protection and ignore checks PASS. No final
+distribution/model validation. See [VR-0186](../research/records/validation_runs/VR-0186.md).
+
 
 ### Map migration consistency and tracking (DT-0139, 2026-11-18)
 
