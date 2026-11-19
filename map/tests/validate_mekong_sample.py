@@ -21,7 +21,7 @@ def read_map_dimensions() -> dict[str, int]:
 
 
 def read_input_dimensions(path: Path) -> dict[str, int]:
-    """Read runoff-grid dimensions and INPN from a v5 inpdim descriptor."""
+    """Read runoff-grid dimensions and INPN from a v5 diminfo descriptor."""
     lines = path.read_text().splitlines()
     return {
         "INPNX": int(lines[3].split()[0]),
@@ -71,7 +71,7 @@ def validate_registered_binary_size(
         product = 1
         for variable in variables:
             if variable == "INPN":
-                descriptor = map_root / path.name.replace("inpmat_", "inpdim_").replace(".bin", ".txt")
+                descriptor = map_root / path.name.replace("inpmat_", "diminfo_").replace(".bin", ".txt")
                 if not descriptor.is_file():
                     raise AssertionError(f"paired input descriptor missing: {descriptor.name}")
                 variable_size = read_input_dimensions(descriptor)["INPN"]
@@ -91,29 +91,39 @@ def validate_registered_binary_size(
 class MekongSampleTests(unittest.TestCase):
     """Check current sample products without freezing the full generated inventory."""
 
-    def test_standard_runoff_pair_uses_inpdim_name_and_matching_geometry(self) -> None:
+    def test_standard_runoff_pair_uses_diminfo_name_and_matching_geometry(self) -> None:
         dims = read_map_dimensions()
-        descriptor = MAP / "inpdim_test-glb_1deg.txt"
+        descriptor = MAP / "diminfo_test-1deg.txt"
         lines = descriptor.read_text().splitlines()
         input_dims = read_input_dimensions(descriptor)
 
         self.assertEqual(dims, {"NX": 80, "NY": 120, "NLFP": 10})
         self.assertEqual(input_dims, {"INPNX": 360, "INPNY": 180, "INPN": 4})
         self.assertEqual([float(lines[i].split()[0]) for i in (7, 8, 9, 10)], [90.0, 110.0, 35.0, 5.0])
-        self.assertEqual(lines[6].strip(), "inpmat_test-glb_1deg.bin")
+        self.assertEqual(lines[6].strip(), "inpmat_test-1deg.bin")
 
         expected_bytes = dims["NX"] * dims["NY"] * input_dims["INPN"] * (4 + 4 + 4)
         self.assertEqual((MAP / lines[6].strip()).stat().st_size, expected_bytes)
 
-    def test_user_configured_runoff_pair_uses_same_inpdim_convention(self) -> None:
-        descriptor = MAP / "inpdim_test-E2O_15min_nc.txt"
-        lines = descriptor.read_text().splitlines()
-        input_dims = read_input_dimensions(descriptor)
-
-        self.assertEqual(input_dims, {"INPNX": 1440, "INPNY": 600, "INPN": 10})
-        self.assertEqual(lines[6].strip(), "inpmat_test-E2O_15min_nc.bin")
-        expected_bytes = 80 * 120 * input_dims["INPN"] * (4 + 4 + 4)
-        self.assertEqual((MAP / lines[6].strip()).stat().st_size, expected_bytes)
+    def test_era5land_registry_pair_uses_same_diminfo_convention(self) -> None:
+        rows = registry_rows()
+        descriptor_rows = [r for r in rows if r["binary_filename"] == "diminfo_ERA5land_global.txt"]
+        matrix_rows = [r for r in rows if r["binary_filename"] == "inpmat_ERA5land_global.bin"]
+        self.assertEqual(len(descriptor_rows), 1)
+        self.assertEqual([r["name"] for r in matrix_rows], ["inpx", "inpy", "inpa"])
+        self.assertEqual([r["dtype"] for r in matrix_rows], ["int32", "int32", "float32"])
+        self.assertTrue(all(not r["sample_availability"] for r in descriptor_rows + matrix_rows))
+        self.assertFalse(any("E2O" in r["binary_filename"] for r in rows))
+        self.assertFalse(any("repo-mek_1deg" in r["binary_filename"] for r in rows))
+        # Validate the layout in a temporary tiny model map; no real ERA5 matrix is claimed.
+        with tempfile.TemporaryDirectory(prefix="cmf-era5-matrix-") as temporary:
+            fixture = Path(temporary)
+            descriptor = fixture / "diminfo_ERA5land_global.txt"
+            descriptor.write_text("2\n3\n10\n3600\n1801\n1\ninpmat_ERA5land_global.bin\n-1\n1\n1.5\n-1.5\n")
+            binary = fixture / "inpmat_ERA5land_global.bin"
+            binary.write_bytes(bytes(2 * 3 * (4 + 4 + 4)))
+            self.assertEqual(read_input_dimensions(descriptor), {"INPNX": 3600, "INPNY": 1801, "INPN": 1})
+            self.assertTrue(validate_registered_binary_size(binary, rows, {"NX": 2, "NY": 3, "NLFP": 10}, fixture))
 
     def test_core_multirecord_and_multilayer_files(self) -> None:
         dims = read_map_dimensions()
@@ -136,7 +146,7 @@ class MekongSampleTests(unittest.TestCase):
         required_base = {
             "nextxy.bin", "ctmare.bin", "elevtn.bin", "nxtdst.bin", "rivlen.bin", "fldhgt.bin",
             "basin.bin", "width.bin", "rivwth.bin", "rivhgt.bin", "rivman.bin",
-            "inpmat_test-glb_1deg.bin", "inpdim_test-glb_1deg.txt",
+            "inpmat_test-1deg.bin", "diminfo_test-1deg.txt",
         }
         actual_base = {path.name for path in MAP.iterdir() if path.is_file()}
         self.assertTrue(required_base <= actual_base, f"missing base-map products: {sorted(required_base - actual_base)}")
@@ -162,8 +172,16 @@ class MekongSampleTests(unittest.TestCase):
         self.assertEqual(set(upstream), {-9999, 0, 1})
 
         rows = registry_rows()
-        self.assertEqual(len(rows_for_sample_file(MAP / "subbsn-sample.bin", rows)), 1)
-        self.assertEqual(len(rows_for_sample_file(MAP / "subcol-sample.bin", rows)), 1)
+        # Concrete variants resolve through standard definitions in s90, not
+        # duplicate registry rows; retain the scientific sample checks above.
+        for name in ("subbsn", "subcol"):
+            self.assertEqual(rows_for_sample_file(MAP / f"{name}-sample.bin", rows), [])
+            standard = rows_for_sample_file(MAP / f"{name}.bin", rows)
+            self.assertEqual(len(standard), 1)
+            self.assertEqual(standard[0]["name"], name)
+            self.assertEqual(standard[0]["dtype"], "int32")
+            self.assertEqual(standard[0]["dimensions"], "NX,NY")
+            self.assertEqual(standard[0]["missing_value"], "-9999")
         self.assertEqual(len(rows_for_sample_file(MAP / "upbasin-2569002.bin", rows)), 1)
 
     def test_sample_binary_sizes_match_registry_types_and_dimensions(self) -> None:
@@ -218,7 +236,7 @@ class MekongSampleTests(unittest.TestCase):
                 validate_registered_binary_size(registered, rows, dims, sample_dir)
 
     def test_required_text_metadata_files_exist(self) -> None:
-        for name in ("params.txt", "bifori.txt", "inpdim_test-glb_1deg.txt", "inpdim_test-E2O_15min_nc.txt"):
+        for name in ("params.txt", "bifori.txt", "diminfo_test-1deg.txt"):
             with self.subTest(path=name):
                 self.assertTrue((MAP / name).is_file())
 

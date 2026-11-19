@@ -6,6 +6,481 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+
+### CTL standard references and s99 variants (DT-0151, 2026-11-19)
+
+Maintainer supplies Japan s99 skips and requests a NetCDF-like variables option.
+Codex owns generate_ctl, shared/Mekong s99 copies, tests/docs/research on existing
+feature/package-builder; preserve prior package/README/COG edits. Explicit --input
+with --variables or exact --reference-binary selects one complete file layout.
+CTL retains companion records; standard positive mpireg-N resolves automatically.
+Shell VARIANTS owns sample subbsn/subcol and station upbasin patterns. Default
+scan, high-resolution layout checks, dry-run and overwrite policy are preserved.
+
+24 CTL/integration tests PASS on Python3.14;23 generator/Shell cases PASS on
+Python3.11. Integer default sentinel portability fixed in the affected path.
+Actual six Japan Binary copies generate correct CTLs with1500x1320/int32 layouts;
+all original Binary hashes unchanged. Shared/Mekong copies and4Shell syntax
+checks pass; local Global/Japan wrappers updated only after confirming no local
+custom edits. No actual CTL regeneration or scientific processing;no commit/push.
+Evidence/limits: [VR-0197](../research/records/validation_runs/VR-0197.md).
+
+
+### COG discovery after registry consolidation (DT-0150, 2026-11-19)
+
+Maintainer reports five unsupported Global NetCDFs after MPI/sample CSV cleanup
+and requests a fix on existing feature/package-builder. Codex owns shared COG
+planner/tests/docs/evidence; preserve concurrent README/package changes.
+Reuse standard positive MPI name resolution; resolve single-variable variants
+by exact canonical NetCDF-variable/CSV identity. No filename-suffix guessing,
+CSV duplication, scientific data, raster/Overview or high-resolution changes.
+
+40 COG regression cases PASS, including the five reported names, skip/force,
+unknown/bad inputs, registered pairs/layers, high-resolution and memory checks.
+Actual Global five-file copies converted through s05 with exact native Int32
+pixel agreement and six original input hashes unchanged. The five missing local
+Global COGs are generated separately without force; NetCDFs remain read-only.
+Unknown multivariable variants stay unsupported; no new material science gap.
+See [VR-0196](../research/records/validation_runs/VR-0196.md). No commit/push.
+
+### Distribution-source consistency fixes (DT-0149, 2026-11-19)
+
+Maintainer authorizes fixing the four source-distribution audit findings while
+excluding tests and existing packages. Setup input paths now match maintained
+runners; build/input docs and current matrix note corrected; historical records
+remain labeled. Static path/syntax/diff and 80 document-link confirmations only.
+No test/model/compiler/setup execution, data generation, CSV change or main merge.
+See [resolved audit](repository_consistency_audit_20261119.md).
+
+
+### Distribution-source consistency audit (DT-0148, 2026-11-19)
+
+Maintainer narrows whole-repository review to material intended for distribution;
+existing generated artifacts, tests and research records are excluded from the
+verdict. Static source audit identified four current-use findings (resolved in DT-0149): stale setup input
+paths, removed compiler-wrapper instructions, deleted Japan sample references,
+and obsolete matrix tag in the current model-plan intro. No implementation/data
+repair or main merge. See [source audit](repository_consistency_audit_20261119.md).
+
+
+### Guide01 shared executable and current setup (DT-0147, 2026-11-19)
+
+Maintainer requests aligning Guide01 fixes with Tutorial02. Codex owns active
+runner/reference MODEL paths, setup/manual/design notes and research on existing
+feature/package-builder. Reuse Tutorial01-built NetCDF-enabled src_main/MAIN_cmf;
+update v5 beta acquisition/main integration note. Preserve Python .venv interface,
+Binary visualization/downscaling, historical authoring records and learner tasks.
+No compilation, install, model execution or data modification in this task.
+
+DT-0147 complete: 6 syntax / 4 path-resolution / 31 local-link checks PASS.
+Runner bodies exact after normalizing MODEL path/comment. Repository .venv
+setup remains required; no runtime claim. See [VR-0193](../research/records/validation_runs/VR-0193.md).
+
+
+### Tutorial02 shared executable (DT-0146, 2026-11-19)
+
+Maintainer confirms Tutorial02 reuses the executable already compiled in
+Tutorial01; repository target is src_main/MAIN_cmf. Codex owns Default/three
+reference EXEC_CMF paths and README/design notes on feature/package-builder.
+No compiler invocation, Binary visualization change or learner-manual authoring.
+Keep scientific Namelists and annual execution/restart behavior unchanged.
+
+DT-0146 complete: 4 syntax / 8 prefix path-resolution checks PASS; all remaining
+script text exact after normalizing path/comment/error text. No compile/model
+execution. See [VR-0192](../research/records/validation_runs/VR-0192.md).
+
+
+### Tutorial01 v5 acquisition and beta assembly documentation (DT-0145, 2026-11-19)
+
+Maintainer requests correcting manual/design acquisition paths and beta-package
+status, then confirms one main merge once v5b01 package preparation is ready.
+Codex owns Tutorial01 manual/two design docs, T01 remaining-issues note and
+status/research on feature/package-builder. Current beta route remains the approved
+branch; default main is the route after integration. No merge is performed here.
+No experiment script, scientific setting, generated data or learner acceptance
+status changes; general beta assembly is distinct from a learner-package run.
+
+DT-0145 complete: v5 acquisition, pre/post-main-merge distinction and optional
+beta assembly documented; 8 local links and remote source paths checked.
+T01 acceptance statuses/science/script unchanged. No merge/model/package run.
+See [VR-0191](../research/records/validation_runs/VR-0191.md).
+
+
+### Variant conversion overwrite confirmation (DT-0144, 2026-11-19)
+
+Maintainer requests s90 summary and y/n overwrite-all behavior like s02.
+Codex owns shared/Mekong s90 copies, focused tests/docs/records on existing
+feature/package-builder with standing commit/push scope. Keep reference mapping,
+converter, registry, science and real datasets unchanged. Declining all asks
+per file; noninteractive mode skips existing; --force retains explicit overwrite.
+
+DT-0144 complete: 23 conversion/workflow tests PASS, including five PTY response
+scenarios; both syntax/shared-copy checks PASS. No real data changes. See
+[VR-0190](../research/records/validation_runs/VR-0190.md).
+
+
+
+### Standard numbered MPI-region conversion (DT-0143, 2026-11-19)
+
+Maintainer authorizes this bounded follow-up on existing feature/package-builder,
+including tests/docs/research and normal commit/push. Owner: Dai Yamazaki;
+Codex implements. Keep DT-0142 variants and all scientific Binary/MPI generation,
+Fortran, visualization, high-resolution and package-builder code unchanged.
+Initial commit 39ca9bd0, clean and equal to fetched upstream; no open v5 Issue/PR.
+
+DT-0143 complete: three numbered CSV rows consolidated into one mpireg.bin/mpireg
+standard definition, preserving common metadata/workflow_stage. s01 discovers
+actual positive numbered MPI files through its existing Python delegate; shared
+and Mekong s02 explicitly reference mpireg.bin. No general numbered-variant rule.
+22 conversion/workflow, 20 CTL on Python 3.14 and 8 Mekong checks PASS; registry valid.
+Existing MPI outputs were compared before replacement; all three regenerated
+NetCDFs match every Binary cell/params coordinate; 78 protected inputs/other
+outputs unchanged. Numbered CTL auto-discovery is outside this conversion scope
+and now skips the three former literal rows; existing CTLs are preserved.
+See [VR-0189](../research/records/validation_runs/VR-0189.md). This project-branch
+status is a proposal until integrated into main.
+
+
+### Registry-based Binary variant conversion (DT-0142, 2026-11-19)
+
+Maintainer authorizes the supplied bounded variant-conversion request on existing
+`feature/package-builder`, including tests/docs/research, the two generated
+Mekong NetCDF samples, commit and normal push. Owner: Dai Yamazaki; Codex implements.
+No branch creation/switch, main publication, scientific computation, Binary/data
+regeneration, high-resolution/COG/Explorer/Fortran/inpmat/package-builder changes.
+No overlapping open v5 Issue/PR found. This branch-local row is a publication
+proposal; main registry has no current package-builder registration row.
+
+DT-0142 complete: existing converter accepts exact `--reference-binary` definitions,
+validates full records before optional variable selection, preserves standard
+names/layout/values/compression and publishes verified outputs atomically.
+Shared and Mekong s90 settings own variant names; only the two sample-specific
+CSV rows were removed. Both generated samples exactly match all 9,600 Binary
+cells and params coordinates; 79 protected existing files equal Git baseline.
+18 conversion/workflow, 20 CTL (Python 3.14) and 8 Mekong tests PASS; registry valid.
+Original/new standard outputs match in four cases. Existing CTL/Python 3.11
+fallback error and 12 historical research-link errors remain out of scope.
+Evidence and knowledge-gap review: [VR-0188](../research/records/validation_runs/VR-0188.md).
+
+### Beta package assembly (DT-0141, 2026-11-19)
+
+Maintainer authorizes assembly from existing clean source and catalog-selected
+Additional Data, tests/docs/research and commit/push on feature/package-builder.
+Codex owns new make_package entry/helper/tests and package/design/status records.
+Default ../../cmf_v5_package_data resolves from the script's package/ directory;
+absolute paths and linked store root supported. Keep Import/Diff, catalog and
+archive tool unchanged. No conversions, model execution or public distribution.
+
+DT-0141 complete: 45 package tests PASS. Actual assembly from existing clean
+source plus 433 selected Additional Data files yields 1,718 entries and
+4,099,509,554 bytes including SHA-256 manifest. Inputs unchanged during assembly;
+package-relative/default/absolute/linked-root and output protection checks PASS.
+No model runtime/public-release claim. See [VR-0187](../research/records/validation_runs/VR-0187.md).
+
+
+### Clean beta Git source extraction (DT-0140, 2026-11-19)
+
+Maintainer authorizes package/archive_clean_repo.sh on existing feature/package-builder,
+including tests, actual HEAD extraction, documentation, commit and push. Codex owns
+new archive entry/helper/exclusion list/tests and package/design/status/research docs.
+Scope: committed HEAD only, safe staged publication, exact source bytes/modes,
+explicit development/Git exclusions; keep beta developer docs/legacy/tests/samples.
+No additional-data overlay, final assembler, conversion or model/Explorer changes.
+
+DT-0140 complete: 35 package tests PASS; real committed source a39f4ea1
+retains 1,284 files (252,573,268 bytes) plus build provenance. Exact blob/mode
+checks, symlink containment, output protection and ignore checks PASS. No final
+distribution/model validation. See [VR-0186](../research/records/validation_runs/VR-0186.md).
+
+
+### Map migration consistency and tracking (DT-0139, 2026-11-18)
+
+Maintainer approves accumulated map-tag/registry/hires-wrapper changes and
+publication on existing `feature/package-builder`. Global ELSE_GPCC uses
+`test-1deg`; Mekong-specific mapping uses `repo-mek_1deg`. Whole Global/Japan
+local installations are ignored, while the complete Mekong sample includes
+COG. ERA5land_global replaces the E2O registry example. Resolution-selection
+and confirmation policies are described in the map workflow guides.
+
+Final focused checks:34 tests and75 subtests PASS; both registries valid;
+renamed matrix bytes unchanged. Existing11 historical research-link failures
+remain. No global calculation, package build or scientific equivalence claim.
+Evidence: [VR-0185](../research/records/validation_runs/VR-0185.md).
+This project-branch status is a proposal until integrated into main.
+
+
+### Zoom-aware endpoint markers (DT-0138, 2026-11-17)
+
+Maintainer requests subdued -10 markers at wide zoom and subtle blue -9 mouth
+markers. Codex owns Explorer endpoint scene/renderers/tests/docs on existing
+feature/package-builder. Both endpoint types appear only within60coarse cells on
+each axis; smaller7px red diamonds/6px blue circles. Preserve raw paired-code
+validation,scientific positions,river links,guides,settings and source data.
+
+DT-0138 complete: 76 targeted regression tests PASS; Global world markers hidden,
+Nile region 30 paired -10 / 26 paired -9 positions agree with stored data. Actual
+browser and PNG visually checked; 147 source stats unchanged. See VR-0184.
+
+
+### Stored terminal markers and bounded headwater guides (DT-0137, 2026-11-17)
+
+Maintainer reports missing-looking river vectors/headwater guides, then requests
+markers at stored nextxy=-10 endpoints. Regional cutting also uses this code;
+labels must not assert an inland-mouth interpretation. Codex owns Explorer scene/network
+annotation/renderers/tests/docs on existing feature/package-builder. Check stored
+links independently, mark paired(-10,-10) without inventing downstream links,
+restore explicitly labeled native-window centroid guides without global scans.
+Scientific inputs and river-link topology remain unchanged.
+
+DT-0137 complete:402 tests plus3subtests PASS;1existing Windows SKIP. Reported
+Global region retains235stored links,with18paired-10 markers and97native-window
+guides. Real browser terminal-cell Inspector/PNG verified;147source stats unchanged.
+See VR-0183;registry scientific fields/workflow_stage unchanged.
+
+
+### Large-map sparse display limits (DT-0136, 2026-11-17)
+
+Maintainer reports Global load blocked by uncached exact P5/P95 and explicitly
+permits sparse sampling for visualization. Codex owns Explorer native-stat helper,
+labels/cache/tests/docs on existing feature/package-builder. Large tiles use a
+fixed bounded native sample, identified as approximate; smaller exact statistics,
+manual limits, scientific assignments and source data remain unchanged.
+
+DT-0136 complete:399 tests plus3subtests PASS;1existing Windows SKIP. Actual
+Japan-to-Global cold-cache load succeeds without full-stat workspace/high-res NC
+opens. Browser native Catchment/Inspector/PNG verified; original catmxy point
+oracle agrees;147scientific file stats unchanged. See VR-0182.
+
+
+### Automatic distributed COG resolution (DT-0135, 2026-11-17)
+
+Maintainer requests copy-and-run s05 defaults: MERIT Hydro-derived distributed
+high-res1min; J-FlwDir-derived distributed high-res15sec. Codex owns COG task
+selection, shared/Mekong shell copies, focused tests and docs on existing
+feature/package-builder. Default auto selects the first existing1min_nc,30sec_nc,15sec_nc directory,
+coarse to fine, as the maintainer subsequently simplifies the policy. Explicit
+resolutions remain authoritative; no map-name/source-family inference.
+No raster algorithm, source data, COG generation or package-definition changes.
+
+DT-0135 complete:32 tests PASS;1 unchanged memory test deselected. Copied templates
+select1min/30sec/15sec and preserve explicit overrides. Actual plans choose
+Global1min,Mekong1min,Japan15sec;147/149/132 source file stats unchanged. Four
+shell syntax checks PASS. No actual scientific raster conversion. See VR-0181.
+
+
+### Explorer COG integration (DT-0134, 2026-11-17)
+
+Maintainer explicitly approves COG display/native interaction integration on
+existing feature/package-builder, including tests/browser/benchmarks/docs and
+commit/push. Codex owns Explorer reader/Tile/Scene/controller/selection/Pins
+integration and tests. Preserve model-grid NetCDF science, exact assigned native
+P5/P95, Gallery methods and source data. No converter/package changes or COG
+regeneration. Automatic Grid for overview/decimated display; Catchment only for
+compatible non-decimated native COG with catmxy. Window-only native boundaries;
+bounded caches and explicit fallback. No overlapping open Issue/PR found.
+
+DT-0134 complete:396 tests plus3 subtests PASS;1 existing Windows SKIP. Actual
+Japan native7products/3pixels exact;0normal high-res NC accesses;22source SHA256
+and stat snapshots unchanged. Actual browser/PNG/Mekong switch and single-trial
+NetCDF baseline benchmark verified. Explicit global-stat/visible-window/centroid
+limits documented. See VR-0180; unrelated user data/deletions remain excluded.
+
+### COG known non-target skips (DT-0133, 2026-11-17)
+
+Maintainer confirms bifprm.nc and legacy rivclim/rivpar containers are outside
+conversion scope and must skip without ERROR. Codex owns converter planning,
+focused tests/docs/records on existing feature/package-builder with commit/push.
+Explicit exclusion reasons avoid opening or generating these inputs, even with
+--force; count as SKIP and successful exit when no target errors exist. Unknown
+or malformed conversion-target rasters retain failure behavior.28 focused tests
+PASS;1 unchanged large-memory case deselected. Actual Mekong shell:0 PASS/50 SKIP/
+0 UNSUPPORTED/0 FAIL, SUCCESS/exit0;47 COGs and source file stats unchanged.
+No numeric conversion/mask/Overview algorithm changes. Details:VR-0179.
+
+### Map format tools and NetCDF-to-COG (DT-0132, 2026-11-17)
+
+Maintainer explicitly approves format-tool rename and new numeric COG generator
+on existing feature/package-builder, including commit/push. Codex owns tracked
+script_format_conv templates/Mekong copy, common converter, focused tests,
+reference paths, registry usage/docs/research. Preserve untracked map workflows,
+scientific values, Binary/NetCDF algorithms and all workflow_stage fields.
+No Explorer COG reader, Package Builder behavior/catalog change or full Japan
+conversion. Acceptance: exact chunk read-back, coordinates, multiband/NoData,
+average-vs-nearest overviews, atomic/overwrite/memory and existing conversion
+regressions.54 related tests plus10 subtests PASS; actual Japan four small-window
+COGs pass strict validation/native bytes and preserve source hashes. Metadata-only
+inspection accepts46 installed raster files; bifprm table is explicitly unsupported.
+512MiB artificial plane passes320MiB RSS guard (observed162.5MiB). No concurrent
+agent claims/open Issues/PRs found. Details and knowledge-gap review:VR-0178.
+
+### gosh_test mek01/mek02 maintenance (DT-0131, 2026-11-17)
+
+Maintainer explicitly approves minimal upkeep on existing feature/package-builder,
+including commit/push. Codex owns only the two maintained Mekong runners, their
+README/isolated tests and records. Keep mek01 nextxy_noedge.bin versus mek02
+nextxy.nc intentionally different; retain test-mek_1deg matrices and all scientific
+Namelist settings. Resolve mek01 root from script location; derive exact mek02
+annual NetCDF cleanup names from CVARSOUT and configured years. Existing Restart,
+log and bookkeeping cleanup unchanged. Three isolated tests PASS; before/after
+Namelists byte-identical; no real model execution or data deletion. See VR-0177.
+
+### Explorer all-or-none grid lines (DT-0130, 2026-11-17)
+
+Maintainer requests all native computational edges below30 cells on both axes,
+and no grid when either axis spans30 or more. Codex owns scene/UI/tests/docs on
+approved feature/package-builder; existing commit/push scope retained. Disable
+unrelated adaptive degree graticules; keep axes, selection and catchment outlines.
+54 related tests PASS; real Japan29/30/31 spans and browser29/30 verified;
+PNG29/30 visually inspected. Data and unrelated user changes excluded.
+Details and knowledge-gap review:VR-0176.
+
+
+### Explorer equal value-range classes (DT-0129, 2026-11-17)
+
+Maintainer explicitly replaces population quartiles/sextiles with4/6 equal
+intervals between min/max in selected Linear/Log space. Codex owns shared River
+styles/UI/config/preset wiring/tests/docs on approved feature/package-builder;
+commit/push scope retained. Separate River Area Scale; full-reference native area
+extrema; manual color ranges separated from full-reference width; physical legend
+labels and cache population isolation. Legacy IDs retained with disclosed new
+meaning; no source-data, model, Background, static Gallery or bifurcation changes.
+376 tests plus3 subtests PASS;1 Windows SKIP. Actual Japan all4 scale/class
+combinations, native-value invariance, browser Linear4/Log6 and PNG verified.
+Details and knowledge-gap review:VR-0175.
+
+### Map Explorer automatic river detail (DT-0128, 2026-11-17)
+
+Maintainer correction supersedes area-based ranking as too aggressive. Auto now
+caches native zero-incoming-nextxy source-cell flags and omits only their outgoing
+links when visible headwater count > threshold5000. Every non-headwater link stays;
+no area ranking, recursive pruning or remaining-link target. All links opt-out and
+same JSON keys retained. Native Japan oracle:52142 heads omitted;79528/131670
+retained, versus previous5000. Zoom562/562 restored with255 heads.48 related tests
+PASS. Scope stays Explorer display/tests/docs on feature/package-builder; data,
+Inspector, selection and scientific classifications unchanged. Details VR-0174.
+
+### Map bin2nc overwrite and high-resolution coverage fixes (DT-0127, 2026-11-17)
+
+Maintainer reports s02 interactive y followed by converter exists/--force error.
+Bounded follow-up on existing feature/package-builder: Codex fixes only per-file
+Shell overwrite authorization in template/Mekong and the current untracked local
+Japan copy; no scientific conversion/format change or data overwrite performed.
+7 tests plus2 subtests PASS including real temporary NetCDF overwrite and skip.
+Maintainer follow-up adds full-list existence preflight/count summary and one
+Overwrite all prompt: Yes approves selected outputs; No/Enter retains per-file
+confirmation.8 tests plus4 subtests PASS including27-file bulk overwrite and
+unselected-output preservation. Updated stale CWD test fixtures and a stub that
+previously ignored the converter's existing-output guard. See research/records/validation_runs/VR-0173.md.
+
+### Map Explorer dataset switching (DT-0126, 2026-11-17)
+
+Latest Explorer UI follow-up adds independent Channel Pixels Opacity (0–100%,
+5% steps; default100%) to Overlay Display Settings, JSON and shared browser/PNG
+RGBA.77 related tests PASS; actual Mekong browser100/50/0% verified. User source
+products are unchanged/excluded; existing feature/package-builder publication
+scope retained. Details/knowledge-gap review VR-0172.
+
+Latest maintainer follow-up: every loaded/switched supported map defaults to
+p01-f04b; only bundled Mekong uses the Gallery extent. Other maps retain their
+full native extent; missing preset inputs keep usable coarse fallback/status.
+19 related tests PASS; actual Japan/global/Mekong switch sequence PASS with
+all3 required overlays ON. Observed loads9.52s/28.47s/0.55s; no source-data edits.
+Existing feature/package-builder scope/publication retained; details VR-0172.
+
+Follow-up: regenerated visual.nc was present but rejected because the reader
+expected units1 rather than canonical CSV units code. Accept code only for visual
+while retaining legacy1; assignment validation remains strict. Three installed
+maps now report p01-f04b missing=[]; Mekong startup applies p01-f04b. Native
+classes match direct NetCDF reads; tests/record in VR-0172. Source data unchanged;
+newly user-generated NetCDFs and unrelated scripts/deletions excluded from commit.
+
+Maintainer follow-up: place infrequently used Load Map controls behind a header
+Map dataset toggle beside Settings panel; initially hidden and independent of
+Visualization/Inspector modes. Existing branch and publication scope retained.
+
+Maintainer approves in-session Map Dataset controls, bundled Mekong no-dialog
+startup across launchers, coherent Explorer replacement with Pins confirmation,
+JSON mismatch rejection, tests/browser/real-map checks, docs and commit/push on
+existing feature/package-builder. Codex owns Explorer controller/launcher/config
+and associated tests/docs/research records. No scientific data/model changes,
+new branch, new server per switch or real-data generation. Start clean61dfe5f2,
+equal to refreshed remote; main coordination and open Issues/PRs checked with no
+overlap. Acceptance: synthetic dimensions/extents/failure/state/session tests,
+actual installed TE-Japan/coarse/Inspector/PNG/browser and return to Mekong;
+optional high-resolution checks with the actual products. Subsequent maintainer
+steering explicitly requires high-resolution NetCDF in Japan, Mekong and global
+maps. Extend native block readers/selection to prefer validated NetCDF, preserving
+Binary compatibility for legacy/missing optional fields and lazy I/O; no restoration
+or scientific-data changes.
+Implementation complete:345 tests plus3 subtests PASS,1 real-Windows SKIP;
+actual browser/Japan native17-pixel selection/Inspector/PNG/OSM/Pins/return and
+lazy global coarse startup verified.433 map metadata entries unchanged.12 unrelated
+inp deletions excluded. Details and knowledge-gap review: VR-0172.
+
+### Package Additional Data Import / Diff (DT-0125, 2026-11-17)
+
+Maintainer explicitly approves implementation, tests, documentation and commit/push
+on existing `feature/package-builder`. Codex owns `package/` tools/tests/catalog,
+package/design documentation and task research records. Use one catalog with an
+optional exclude_patterns column; preserve six existing fields. Shared read-only
+selection/comparison, one-time ordinary-file Import, two-stage conflict approval,
+Git/ignore/path protections and atomic verified copies. No real-data Import,
+external-store edits, assembler, scientific conversion or model changes. Acceptance:
+small temporary fixtures for selection/status/interaction/safety, plus actual
+read-only store Diff when available. No overlapping open repository Issues/PRs
+were found; starting tree clean at3199920e, equal to refreshed project remote.
+Implementation complete:28 tests PASS; real symlinked-store read-only Diff and
+Dry-run select273 source-only files (1811422147 bytes); independent inventory
+and330 source metadata checks pass. No real Import or assembler. See VR-0171.
+
+### Explorer UI and statistics (DT-0120, 2026-11-17)
+
+Maintainer authorizes the six UI/Inspector/P3-P97/selection refinements, automated
+and actual browser/PNG validation, commit and push on existing feature/package-builder.
+Owner Dai Yamazaki; Codex implements. Starting93e425d0 matches fetched origin;
+open Issue/PR searches found no overlapping work. Scope: visualization/map_explorer,
+related documentation and research evidence. Scientific input/model/Gallery scripts
+remain unchanged. Implementation106a41aa published to feature/package-builder.
+All six changes implemented;283 tests +3 subtests PASS, actual
+Mekong/browser/PNG verified,248 protected hashes unchanged. Explicit Gallery/legacy
+exceptions and10 pre-existing research-link failures documented. Design/acceptance:
+Explorer DESIGN.md DT-0120; [VR-0166](../research/records/validation_runs/VR-0166.md).
+
+
+### Explorer background, selection and view (DT-0119, 2026-11-17)
+
+The maintainer explicitly assigns subsequent Explorer work to the existing
+feature/package-builder branch after main integration and requests commit/push
+at completion, overriding the attachment's no-publication instruction. Owner:
+Dai Yamazaki; Codex implements/tests/publishes. Bounded scope:
+visualization/map_explorer background/overlay/Inspector/view controls, relevant
+map-reader usage metadata, documentation and research evidence; no scientific
+data, core-model, Gallery-script or additional-data-store changes. Starting
+1a734f7b equals fetched project branch; open GitHub Issue/PR overlap searches
+returned none. Acceptance: synthetic contracts, complete Explorer regression,
+actual Mekong native comparison, browser rendering and PNG inspection.
+
+Implementation 60fcbee7 published to feature/package-builder; 277 tests and 3
+subtests PASS, actual Mekong/browser/PNG verified, source data unchanged. Known 10
+pre-existing research-link failures are documented. Evidence: [VR-0165](../research/records/validation_runs/VR-0165.md).
+This branch's status remains a proposal until integrated/published through the
+maintainer workflow; main is not a push target.
+
+
+### Parallel research-log integration (2026-11-16)
+
+The maintainer authorizes reconciliation of university main and local
+feature/package-builder research records. Integrate main into the existing
+feature branch without rewriting either history. Retain main IDs;
+runoff records become DT-0118, VR-0164 and EV-0526..EV-0531. Both full histories
+and measured narratives are preserved; see the commit-scoped
+[ID mapping](../research/records/decisions/ADR-0013-reconcile-parallel-research-ids.md).
+After reviewing the resolved state, the maintainer explicitly authorized the
+merge commit and push to feature/package-builder (EV-0533). Main is not a push
+target. No model/scientific or additional-data changes are part of conflict
+resolution.
+
+
 ### Scientific Unit Catchment Inspector (DT-0117, 2026-11-16)
 
 Maintainer authorizes Inspector redesign plus orange solid native / subdued
@@ -460,7 +935,7 @@ The documentation reorganization project was completed and merged to `master` in
 | --- | --- | --- | --- | --- | --- | --- |
 | CaMa-Flood v5 model source and simulation workflow modernization — isolate legacy v4 code and establish independently buildable v5 model/run examples; no GitHub Issue by maintainer direction. | Dai Yamazaki (maintainer); Codex implements approved stages | `feature/gosh-refactor` | [Phase 0/1 plan and validation](model_source_workflow_plan.md); `src_main/`; `gosh_test/`; `inp/test-mek_1deg_nc/`. | Phase 0 and Phase 1A–1D plus individual Binary/NetCDF map-input support are implemented and locally validated on macOS. Separate Binary-only and NetCDF-enabled builds work. Mixed-map 40-day Mekong tests (one variable NetCDF, network-only NetCDF, and all nine core map inputs NetCDF) completed; all five output variables matched the all-Binary baseline bitwise. Converter output was read back and verified exactly. The clarified contract limits individual NetCDF input to variables already read through the legacy Binary path; ECMWF-specific `elevslope` / `mask_slope` remain consolidated-NetCDF-only and produce explicit errors in individual-file mode. The two legacy consolidated slope-reader handle defects have now been corrected: each read uses an open `CRIVPARNC` handle, without changing equations or the individual-file contract. These checks were rerun after the clarification. In three 40-day comparisons, Binary versus NetCDF runoff and Binary versus NetCDF output matched bitwise for `outflw`, `storge`, `sfcelv`, `flddph`, and `fldfrc`. The annual-NetCDF workflow completed 2000 (366 records) and 2001 (365 records), carrying the Binary restart into year two; 731 records total. Runoff conversion is exact for all 731 source float32 fields. Model output metadata was corrected for `cell_methods` and dimensionless `fldfrc` units. Restart variables are now documented in `variable_table/restart_variables.csv`; a separate two-year NetCDF-Restart run completed with exact `outflw`, `storge`, and `sfcelv` agreement against Binary-Restart output. Binary Restart CTLs are generated from the current Namelist and registry; Float64 files use an explicitly lossy Float32 visualization copy because standard GrADS Binary CTLs read 32-bit floats. Synthetic checks cover Float32/Float64, normal/storage-only, and optional restart fields. GrADS runtime reading could not be verified because the local OpenGrADS executable lacks a required dynamic library. These are operational/I/O checks, not scientific validation or broad platform support. Interactive workstation setup is now available through root `s01-setup_fortran.sh` and `s02-python_setup.sh`; both diagnose first, require confirmation for local changes, and leave `adm/Mkinclude` untouched. See the setup section in the project plan and VR-0119. The tutorial plan now requires interactive researcher review between source/data investigation and specification approval. Tutorial 02 has a researcher-approved four-experiment design at [the experiment spec](../tutorial/tutorial02-mekong_netcdf_4exp/tutorial_design.md): Default, No Bifurcation, Kinematic Wave, and No Floodplain; `DT=600`; adaptive stepping for Local Inertial and fixed stepping for Kinematic Wave. All four required annual runoff files (2000–2003) are Git-tracked; the branch currently tracks 2000–2005. Hydrograph and annual-maximum daily-mean discharge comparisons are specified. All four experiment scripts and visualization tools are implemented; all 16 annual segments (2000–2003) completed on macOS with NetCDF runoff, maps, output, and Restart handoffs. Each experiment produced 1,461 daily records with continuous represented dates; the selected-site hydrograph and annual-maximum figures were generated. Simulated reverse flow occurs at Prek Kdam in both Local Inertial cases; the Can Tho Default/No-Bifurcation series differ throughout 2001–2003. No observed discharge validation is claimed. The updated source evidence, result summaries, figures, and unresolved scientific interpretation questions are in [the experiment specification](../tutorial/tutorial02-mekong_netcdf_4exp/tutorial_design.md), DT-0078, DR-0062, and VR-0123. The beginner README and package assembly remain future work.| Legacy `src/` and `gosh/` remain unchanged. NetCDF build has only been exercised on macOS/Homebrew; Linux portability, MPI, `heatlink/`, `sediment/`, and `ICI/` remain unvalidated. The derived NetCDF sample's inclusion in a future v5 downloadable package is undecided because a v5 packaging workflow is not established. No suitable consolidated NetCDF fixture is available, so runtime use of `LSLOPEMOUTH` / `LSLPMIX` in legacy mode remains unverified despite the handle fixes. The current-outflow reader discrepancy was corrected in commit `87abfddf`; the post-fix diagnostic effect has not been runtime-validated (KG-0029). | Retain a fixture-based test of the legacy consolidated route and optional groundwater, mean-sea-level, and MPI paths for a later task (KG-0027); review the Float32 visualization-copy behavior for Float64 Restart (KG-0030); no separate post-fix runtime check is planned per maintainer decision; source-level alignment is documented in KG-0029; decide whether to include `inp/test-mek_1deg_nc/` in a future downloadable v5 package; validate the build on Linux when available. Future Driver/Coupler design goals and open execution-order questions are recorded in [the model-source plan](model_source_workflow_plan.md#future-work-driver-and-coupler-architecture); no interface change is authorized. |
 | Runoff input data tools modernization ([Issue #126](https://github.com/global-hydrodynamics/CaMa-Flood_v4/issues/126); [PR #127](https://github.com/global-hydrodynamics/CaMa-Flood_v4/pull/127)) — improve runoff workflow reproducibility, metadata, tests, and usability. | Dai Yamazaki (maintainer); Codex implements explicitly assigned phases | `feature/runoff-data-tools` | ERA5-Land workflow: `inp/ERA5-Land_download/`; product registry: `inp/runoff_datasets.csv`; user guide: `inp/README.md`; phase evidence: `docs/runoff_data_inventory.md`; model contract: `src/cmf_ctrl_forcing_mod.F90`. | The approved Runoff Input Data Tools changes from `feature/runoff-data-tools` were merged to `master` in PR #127. The registry, reproducible ELSE_GPCC Mekong sample workflow, ERA5-Land download/conversion tools, and associated examples are integrated. Follow-up local v5 work adds the derived annual NetCDF Mekong sample under `inp/test-mek_1deg_nc/`; it is registered separately and reuses the `test-mek_1deg` grid/input matrix. End-to-end model validation of new products is recorded in the model-source project, not treated as completion of every runoff science question. KG-0019 and the ERA5-Land source/metadata questions KG-0022–KG-0024 remain as recorded. | Historical `feature/runoff-data-tools` work is merged; current v5 model I/O work is tracked under `feature/gosh-refactor`. Scientific interpretations in the open knowledge gaps remain unresolved unless explicitly stated in their records. | Resolve the open runoff source/metadata questions when authoritative evidence is available; decide v5 distribution packaging for the derived annual NetCDF sample with the model-source project. |
-| Map data/tools modernization ([Issue #122](https://github.com/global-hydrodynamics/CaMa-Flood_v4/issues/122)) — map metadata, conversion, and processing tools. | Dai Yamazaki (maintainer); Codex implements assigned tasks | `feature/map-data-tools` | Map project plan: `docs/map_data_tools_plan.md`; migration details: `docs/map_params_migration_plan.md`; map metadata and conversion files under `map/`. | Standard channel parameter, permanent-water area, non-MPI bifurcation, and MPI map-preprocessing workflows are implemented in v5 `map/tools/`; the permanent-water migration preserves legacy output on the Mekong sample and is intended for post-processing, not current simulation input. Normal and `MaxMPI` Mekong basin groups plus 4/8/16 region maps matched legacy outputs byte-for-byte. The independent partition diagnostic follows model-local vector membership. s04 can now optionally write `check_bif_bsnmod_mpi.bin` with the legacy basin-change and bifurcation-endpoint classifications before MPI region assignment; focused regression compares both records with the legacy outputs. It writes `bifcol_mpi.bin` from MPI-aggregated basin IDs (independent of process count N, but dependent on `normal`/`MaxMPI` aggregation mode), plus only numbered `mpireg-N.bin` region maps. It runs `analysis_check_mpi_bifurcation` on the numbered `DEFAULT_MPI` map. The optional `analysis_mpi_region_color` can manually create `bsncol_mpi-N.bin` from a selected region map; s04 does not invoke it. No `mpireg.bin` alias is generated. s01-s05 use consistent STEP/SUCCESS/ERROR banners with simulated failure-path coverage. Model execution through `gosh/` and changes to `src/` are outside the current map-tools construction milestone. An incidental build-only probe is recorded in VR-0044; it does not block this milestone. The maintainer confirms `map/src/` is historical v4 and must be preserved; legacy workflows retain `diminfo_` names. v5 uses `ROFFTAG` for paired `inpdim_`/`inpmat_` names and `HIRES_TAG` for high-resolution selection. Allocation Phase B migrated the flow-gauge, dam, and level-gauge allocation tools into `map/tools/` with shared map I/O, explicit single-area `HIRES_TAG` selection, and v4 regression baselines; committed and pushed as `ef9fec9`; see `docs/map_allocation_migration_plan.md`. All five GRDC, GRanD, and MLIT list CSVs present in `map/data/` are designated for Git tracking under their existing names. This does not include source workbooks or unrestricted source databases. `GRanD_alloc+Mekong.csv` supplements the GRanD list with several recently constructed Mekong dams added through Yamazaki Laboratory research; row-level sources and review date are not documented; the v5 level-gauge wrapper now uses the approved `MLIT_LevelGauge_allocated.csv`, while the legacy v4 wrapper remains unchanged. | Legacy v4 interfaces and v5 workflows must remain distinct. Any future model-source or `gosh/` integration is a separate task. | Consider any future scientific changes to legacy thresholds only under separate approval and validation; recover row-level provenance for Mekong GRanD additions if needed. Multi-area allocation is not a required follow-up for the initial migration. Matrix and permanent-water tools process multiple areas by source inspection; full package-scale integration remains pending. Model-side bifurcation integration is now implemented on `feature/gosh-refactor`: simulation accepts the authoritative map-root `bifprm.csv`, NetCDF-enabled builds also accept `<MAPDIR>/netcdf/bifprm.nc`, and legacy `bifprm.txt` remains supported; focused I/O and Restart checks are recorded in VR-0115. Row-level sources for the added Mekong dams remain unresolved. Independent scientific validation is not part of Phase B. The five current list CSVs are designated for tracking. MPI model-runtime pairing with `mpireg-N.bin` and process count belongs to a separately scoped future simulation-workflow task; the model-side bifurcation-table integration is complete as recorded in VR-0115. Preserve `map/src/` and reconcile this branch-local status when publishing. |
+| Map data/tools modernization ([Issue #122](https://github.com/global-hydrodynamics/CaMa-Flood_v4/issues/122)) — map metadata, conversion, and processing tools. | Dai Yamazaki (maintainer); Codex implements assigned tasks | `feature/map-data-tools` | Map project plan: `docs/map_data_tools_plan.md`; migration details: `docs/map_params_migration_plan.md`; map metadata and conversion files under `map/`. | Standard channel parameter, permanent-water area, non-MPI bifurcation, and MPI map-preprocessing workflows are implemented in v5 `map/tools/`; the permanent-water migration preserves legacy output on the Mekong sample and is intended for post-processing, not current simulation input. Normal and `MaxMPI` Mekong basin groups plus 4/8/16 region maps matched legacy outputs byte-for-byte. The independent partition diagnostic follows model-local vector membership. s04 can now optionally write `check_bif_bsnmod_mpi.bin` with the legacy basin-change and bifurcation-endpoint classifications before MPI region assignment; focused regression compares both records with the legacy outputs. It writes `bifcol_mpi.bin` from MPI-aggregated basin IDs (independent of process count N, but dependent on `normal`/`MaxMPI` aggregation mode), plus only numbered `mpireg-N.bin` region maps. It runs `analysis_check_mpi_bifurcation` on the numbered `DEFAULT_MPI` map. The optional `analysis_mpi_region_color` can manually create `bsncol_mpi-N.bin` from a selected region map; s04 does not invoke it. No `mpireg.bin` alias is generated. s01-s05 use consistent STEP/SUCCESS/ERROR banners with simulated failure-path coverage. Model execution through `gosh/` and changes to `src/` are outside the current map-tools construction milestone. An incidental build-only probe is recorded in VR-0044; it does not block this milestone. The maintainer confirms `map/src/` is historical v4 and must be preserved; legacy workflows retain `diminfo_` names. v5 uses `ROFFTAG` for paired `diminfo_`/`inpmat_` names and `HIRES_TAG` for high-resolution selection. Allocation Phase B migrated the flow-gauge, dam, and level-gauge allocation tools into `map/tools/` with shared map I/O, explicit single-area `HIRES_TAG` selection, and v4 regression baselines; committed and pushed as `ef9fec9`; see `docs/map_allocation_migration_plan.md`. All five GRDC, GRanD, and MLIT list CSVs present in `map/data/` are designated for Git tracking under their existing names. This does not include source workbooks or unrestricted source databases. `GRanD_alloc+Mekong.csv` supplements the GRanD list with several recently constructed Mekong dams added through Yamazaki Laboratory research; row-level sources and review date are not documented; the v5 level-gauge wrapper now uses the approved `MLIT_LevelGauge_allocated.csv`, while the legacy v4 wrapper remains unchanged. | Legacy v4 interfaces and v5 workflows must remain distinct. Any future model-source or `gosh/` integration is a separate task. | Consider any future scientific changes to legacy thresholds only under separate approval and validation; recover row-level provenance for Mekong GRanD additions if needed. Multi-area allocation is not a required follow-up for the initial migration. Matrix and permanent-water tools process multiple areas by source inspection; full package-scale integration remains pending. Model-side bifurcation integration is now implemented on `feature/gosh-refactor`: simulation accepts the authoritative map-root `bifprm.csv`, NetCDF-enabled builds also accept `<MAPDIR>/netcdf/bifprm.nc`, and legacy `bifprm.txt` remains supported; focused I/O and Restart checks are recorded in VR-0115. Row-level sources for the added Mekong dams remain unresolved. Independent scientific validation is not part of Phase B. The five current list CSVs are designated for tracking. MPI model-runtime pairing with `mpireg-N.bin` and process count belongs to a separately scoped future simulation-workflow task; the model-side bifurcation-table integration is complete as recorded in VR-0115. Preserve `map/src/` and reconcile this branch-local status when publishing. |
 | CaMa-Flood v4-to-v5 research case study (cross-project activity; no dedicated Issue) — evidence-linked record of discussions through validation across successive projects. | Dai Yamazaki (maintainer; primary framework user); Codex assists with record maintenance | No research-specific branch. Current framework update: `feature/map-data-tools`, by explicit maintainer instruction. | Canonical record set: `research/`; policy: `AGENTS.md`; protocol: `research/study_protocol.md`. | Framework approved. Git-based documentation and map-tools stage narratives are recorded; the pre-documentation parent commit is tagged. `EV-0001` and the current task are in the event log. Earlier ChatGPT discussion details remain queued for maintainer-supplied sources. | Research records span project boundaries; preserve the same `research/` history when branches change or merge. Initial use is single-maintainer, with ordinary Git handling and no locking system. | Continue significant event logging across projects. Review the pending stage/branch-name caveat and discussion summaries; specify concrete v4/v5 task comparisons and resolve package-baseline identity and human-participant ethics before formal evaluation. The map-tools project remains ongoing. |
 
 ## Coordination requiring maintainer decisions
@@ -478,3 +953,47 @@ The v4/v5 build configuration separation is implemented on `feature/gosh-refacto
 Map data/tool work is tracked by Issue [#122](https://github.com/global-hydrodynamics/CaMa-Flood_v4/issues/122). Research logging is a cross-project activity with no dedicated Issue. This dashboard copy is an uncommitted proposal until reconciled with `origin/main`. The B2.4 migration records MPI preprocessing and diagnostics; historical `map/src/` tools and tracked Mekong binaries were not modified. Phase C exposes four shared analysis tools under descriptive names (`analysis_river_point_info`, `analysis_upbasin`, `analysis_subbasin`, `analysis_river_node_latlon`) and a portable, explicitly prepared `script_analysis/` bundle alongside independent standard s06/s07 workflows. The Mekong sample uses a 30,000 km2 subbasin threshold, ID 0 for modeled cells below threshold, and station-labeled `upbasin-<GRDC_ID>.bin`; the historical `map/src/` source tree remains unchanged. The Phase C specification update and its 65-test validation are recorded in DR-0043 and VR-0070; the earlier migration and sample-output milestones remain in VR-0068 and VR-0069.
 
 High-resolution area handling contracts are documented in `docs/map_data_tools_plan.md`: allocation is intentionally single-area; matrix and permanent-water aggregation support multiple areas by source inspection. Multi-area package-scale integration validation is pending and is not claimed as completed. The previous wording that treated multi-area allocation itself as an unresolved defect has been narrowed; see `research/records/knowledge_gaps/KG-0014.md`.
+
+
+DT-0121 branch-local scope: maintainer authorizes WSL launcher and session Pins,
+comparison/CSV, automated and actual Mekong GUI verification, commit/push on existing
+feature/package-builder. Owner Codex; implementation complete,305 tests plus3 subtests PASS and1 Windows
+end-to-end SKIP. Actual Mekong/browser/PNG/CSV verified;248 protected hashes unchanged.
+See visualization/map_explorer/DESIGN.md and VR-0167. Publication is to this project
+branch only; Windows end-to-end still requires a Windows host.
+
+DT-0121 published on feature/package-builder in `1e2b472e3d4749b2f5cbee4f4bd7f98be801663b`; EV-0545 records normal
+push. Windows real-host QA remains unverified; unrelated TE-Japan deletions excluded.
+
+DT-0122: maintainer authorizes investigation/fix of background Auto limits to valid
+P5/P95, including Gallery/legacy entry paths, and nonpositive-only Log fallback0.01.
+Owner Codex on existing feature/package-builder; scientific inputs read-only. Plan
+and scope in visualization/map_explorer/DESIGN.md; inherited attributes remain distinct
+from native pixels, manual limits and River coloring preserved.
+
+DT-0122 completed:315 tests plus3 subtests PASS;1 existing Windows SKIP. Ordinary,
+Gallery preset and old-JSON Auto now use the same P5/P95 valid reference. Actual
+Mekong/browser/PNG verified;248 protected hashes unchanged. See VR-0168 for root
+cause (legacy forced minimum), exact ranges and retained masks/units/manual bounds.
+
+DT-0122 published on feature/package-builder in `d77ae9da3b2a73aa8dfb176bcf282894b55f2b4b`; EV-0549 records
+normal push. Existing5010 session was preserved; verified preview uses5011.
+
+DT-0123: maintainer authorizes initial p01-f04b + Overland ON on existing
+feature/package-builder. Codex owns app startup/tests/docs; canonical preset and
+scientific inputs unchanged. Acceptance: startup/fallback/save-load and actual GUI.
+
+DT-0123 complete:28 focused tests PASS and actual fresh Mekong browser verifies
+p01-f04b + Overland ON. Missing inputs retain usable map; saved settings unaffected.
+See VR-0169. Canonical preset/scientific data unchanged; unrelated deletions excluded.
+
+DT-0124 (maintainer-approved extension on feature/package-builder): f04a Channel
+only; f04b Channel + Overland. All p01 River Map/Explorer display sources now use
+complete nextxy. Blue→Navy exactly matches Gallery anchors and defaults in
+p01-f03a/f04b. Regenerated f02–f05 and Gallery copies; updated docs/catalog and
+legacy JSON migration. Codex owns these visualization files; scientific inputs
+read-only, unrelated23 TE-Japan deletions excluded. Final evidence: VR-0170.
+
+DT-0124 complete:332 tests +15 subtests PASS,1 Windows SKIP; final74 palette
+checks PASS. Actual Mekong/browser and four combined figures visually checked.
+213 protected hashes unchanged. Research retains10 pre-existing broken links.

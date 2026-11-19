@@ -3,3 +3,4 @@ netCDF4>=1.6,<2
 matplotlib>=3.8,<4
 panel>=1.5,<2
 bokeh>=3.5,<4
+rasterio>=1.4,<1.5

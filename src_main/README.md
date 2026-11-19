@@ -12,7 +12,7 @@ The focused output-registry integration suite uses the one-day Mekong sample and
 
 ## Build the stand-alone model
 
-From any directory in the repository, run:
+From the repository or installed package root, run:
 
 ```sh
 make -C src_main all
@@ -30,13 +30,23 @@ Do not use the legacy [`../legacy/gosh/compile.sh`](../legacy/gosh/compile.sh) a
 
 ## NetCDF-enabled build
 
-On macOS or Linux, install GNU Fortran and NetCDF-Fortran so that `gfortran` and `nf-config` are available on `PATH`, then create `config/Mkinclude` as described in the [v5 build guide](../config/README.md). From the repository root, build the isolated v5 NetCDF executable with:
+Use the same `src_main/MAIN_cmf` executable for Binary and NetCDF workflows.
+Prepare the machine-specific `config/Mkinclude` following the
+[v5 build guide](../config/README.md). NetCDF input/output requires
+`DCDF = -DUseCDF_CMF` and the NetCDF-Fortran compiler/link settings provided by
+`nf-config`. From the repository or package root, build with:
 
 ```sh
-./gosh_test/compile_netcdf.sh
+make -C src_main all
 ```
 
-The wrapper uses `config/Mkinclude` for the isolated source/build copy and gets the NetCDF flags from `nf-config`; it leaves the normal `src_main/MAIN_cmf` build and object files intact. It writes `out/bin/MAIN_cmf_netcdf`. The currently verified environment is macOS with Homebrew GNU Fortran and NetCDF; other installations should provide compatible GNU Fortran and NetCDF-Fortran libraries. Set `NF_CONFIG` if the tool has a nonstandard path. See the wrapper and [simulation workflow plan](../docs/model_source_workflow_plan.md) for validation limits.
+There is no separate `gosh_test/compile_netcdf.sh` entry point or
+`out/bin/MAIN_cmf_netcdf` build target in the current workflow. Tutorial01 builds
+this shared executable; Tutorial02 and Guide01 reuse that NetCDF-enabled build
+and copy it into their experiment directories. Do not infer NetCDF support from
+the executable filename alone; it depends on the selected build configuration.
+See the [simulation workflow plan](../docs/model_source_workflow_plan.md) for
+historical build evidence and validation limits.
 
 ## Map input formats
 

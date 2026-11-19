@@ -13,10 +13,12 @@ import ctypes
 import ctypes.util
 import csv
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
 import sys
+import tempfile
 
 
 NC_CLOBBER = 0
@@ -98,6 +100,17 @@ def registered_base_filenames(row: dict[str, str]) -> list[str]:
     return filenames
 
 
+def standard_binary_filename(filename: str) -> str:
+    """Map only positive numbered MPI-region products to their standard row.
+
+    Leading zeros are allowed; an all-zero count is not positive. This is a
+    filename convention only, never an inference about array size or values.
+    """
+    if re.fullmatch(r"mpireg-0*[1-9][0-9]*\.bin", filename):
+        return "mpireg.bin"
+    return filename
+
+
 def conversion_support(rows: list[dict[str, str]]) -> tuple[bool, str]:
     """Check whether all registry rows for one file fit this raster converter."""
     dtypes = {row.get("dtype", "").strip() for row in rows}
@@ -125,7 +138,7 @@ def generate_conversion_list(map_dir: Path, registry_path: Path, list_path: Path
     binary_files = {path.name for path in map_dir.glob("*.bin") if path.is_file()}
     candidates = []
     for filename in sorted(binary_files):
-        file_rows = rows_by_filename.get(filename, [])
+        file_rows = rows_by_filename.get(standard_binary_filename(filename), [])
         if not file_rows:
             print(f"WARNING: {filename} is not registered; it will not be listed.")
             continue
@@ -161,18 +174,35 @@ def generate_conversion_list(map_dir: Path, registry_path: Path, list_path: Path
     return len(candidates)
 
 
-def select_variables(filename: str, rows: list[dict[str, str]], requested: list[str] | None) -> list[dict[str, str]]:
-    matches = [row for row in rows if Path(row.get("binary_filename", "")).name == filename]
-    if not matches and requested:
-        matches = [row for row in rows if row.get("name") in requested]
+def select_variables(
+    filename: str, rows: list[dict[str, str]], requested: list[str] | None,
+    reference_binary: str | None = None,
+) -> list[dict[str, str]]:
+    """Resolve a complete file definition before selecting output variables.
+
+    Explicit references match literal registered base filenames only. The legacy
+    variable-name fallback is retained only when no reference is supplied.
+    """
+    definition = reference_binary if reference_binary is not None else standard_binary_filename(filename)
+    if reference_binary is not None:
+        matches = [dict(row) for row in rows if reference_binary in registered_base_filenames(row)]
+        if not matches:
+            raise ValueError(f"reference Binary {reference_binary!r} is not registered as an exact base filename")
+    else:
+        matches = [dict(row) for row in rows if Path(row.get("binary_filename", "")).name == definition]
+    if not matches and requested and reference_binary is None:
+        # Keep legacy name selection, but validate companion records as well.
+        filenames = {row.get("binary_filename") for row in rows if row.get("name") in requested}
+        matches = [dict(row) for row in rows if row.get("binary_filename") in filenames]
     if not matches:
         raise ValueError(f"{filename} is not registered in variable_table/map_variables.csv; use --variables with a registered variable")
-    if filename.startswith("nextxy"):
+    if definition.startswith("nextxy"):
         for row in matches:
             row["_individual_name"] = "nextx" if row.get("record_index") == "1" else "nexty"
     else:
         for row in matches:
             row["_individual_name"] = row.get("name", "")
+    validate_record_definitions(matches, definition)
     if requested:
         wanted = set(requested)
         selected = [row for row in matches if row["_individual_name"] in wanted or row.get("name") in wanted]
@@ -182,6 +212,24 @@ def select_variables(filename: str, rows: list[dict[str, str]], requested: list[
             raise ValueError(f"variables not registered for {filename}: {', '.join(sorted(missing))}")
         return selected
     return matches
+
+
+def validate_record_definitions(rows: list[dict[str, str]], filename: str) -> None:
+    """Reject ambiguous/incomplete raster layouts before opening an output."""
+    supported, reason = conversion_support(rows)
+    if not supported:
+        raise ValueError(f"{filename}: {reason}")
+    names = [row["_individual_name"] for row in rows]
+    if any(not name or name in {"lon", "lat", "layer"} for name in names) or len(set(names)) != len(names):
+        raise ValueError(f"{filename}: blank, reserved or duplicate NetCDF variable names")
+    indices = [int(row.get("record_index") or "1") for row in rows]
+    if rows[0]["dimensions"] == "NX,NY,NLFP":
+        if indices != [1] or rows[0].get("record_count") not in {"NLFP", ""}:
+            raise ValueError(f"{filename}: layered definition requires record_index=1 and record_count=NLFP")
+    else:
+        counts = {int(row.get("record_count") or "1") for row in rows}
+        if len(counts) != 1 or sorted(indices) != list(range(1, next(iter(counts)) + 1)):
+            raise ValueError(f"{filename}: record_index must cover 1..record_count exactly once with consistent record_count")
 
 
 def native_array(raw: bytes, dtype: str, byte_order: str) -> array.array:
@@ -210,8 +258,13 @@ def put_text(lib: ctypes.CDLL, ncid: int, varid: int, name: str, value: str) -> 
 
 
 def convert(args: argparse.Namespace) -> None:
-    nx, ny, nlfp, resolution, west, east, south, north = read_params(args.map_dir / "params.txt")
-    rows = select_variables(args.input.name, registry_rows(args.registry), args.variables)
+    params = read_params(args.map_dir / "params.txt")
+    nx, ny, nlfp, *_ = params
+    # select_variables validates the complete definition before output filtering.
+    rows = select_variables(
+        args.input.name, registry_rows(args.registry), args.variables,
+        getattr(args, "reference_binary", None),
+    )
     rows.sort(key=lambda row: int(row.get("record_index") or "1"))
     records = nlfp if rows[0].get("dimensions") == "NX,NY,NLFP" else int(rows[0].get("record_count") or "1")
     expected_bytes = nx * ny * records * 4
@@ -224,11 +277,31 @@ def convert(args: argparse.Namespace) -> None:
         raise FileExistsError(f"{args.output} exists; pass --force to replace it")
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
+    # Publish only a closed, fully read-back-verified file. Forced failures retain
+    # an existing destination; no-force publication also rejects a racing writer.
+    descriptor, temporary = tempfile.mkstemp(prefix=f".{args.output.name}.", suffix=".tmp", dir=args.output.parent)
+    os.close(descriptor)
+    staged = Path(temporary)
+    try:
+        write_netcdf(args, rows, params, staged)
+        staged.chmod(0o644)
+        if args.force:
+            os.replace(staged, args.output)
+        else:
+            os.link(staged, args.output)
+    finally:
+        staged.unlink(missing_ok=True)
+    print(f"Converted and verified {', '.join(row['_individual_name'] for row in rows)}: {args.output}")
+
+
+def write_netcdf(args: argparse.Namespace, rows: list[dict[str, str]], params: tuple, output: Path) -> None:
+    """Write the existing individual-file convention and verify each raw record."""
+    nx, ny, nlfp, resolution, west, east, south, north = params
     lib = netcdf_library()
     configure_api(lib)
     ci = ctypes.c_int
     ncid = ci()
-    check(lib, lib.nc_create(os.fsencode(args.output), NC_CLOBBER | NC_NETCDF4, ctypes.byref(ncid)), "create NetCDF file")
+    check(lib, lib.nc_create(os.fsencode(output), NC_CLOBBER | NC_NETCDF4, ctypes.byref(ncid)), "create NetCDF file")
     try:
         lon_dim, lat_dim, layer_dim = ci(), ci(), ci()
         check(lib, lib.nc_def_dim(ncid.value, b"lon", nx, ctypes.byref(lon_dim)), "define lon dimension")
@@ -353,22 +426,23 @@ def convert(args: argparse.Namespace) -> None:
         with args.input.open("rb") as source:
             for row in rows:
                 name = row["_individual_name"]
-                layers = nlfp if row.get("dimensions") == "NX,NY,NLFP" else 1
+                layered = row.get("dimensions") == "NX,NY,NLFP"
+                layers = nlfp if layered else 1
                 record = int(row.get("record_index") or "1")
                 varid = ci()
                 check(lib, lib.nc_inq_varid(ncid.value, name.encode(), ctypes.byref(varid)), f"find {name} for writing")
-                if layers == 1:
+                if not layered:
                     start = (ctypes.c_size_t * 2)(0, 0)
                     count = (ctypes.c_size_t * 2)(ny, nx)
                 for layer in range(1, layers + 1):
-                    file_record = layer if layers > 1 else record
+                    file_record = layer if layered else record
                     source.seek((file_record - 1) * plane_bytes)
                     raw = source.read(plane_bytes)
                     if len(raw) != plane_bytes:
                         raise ValueError(f"{args.input} ended before record {file_record}")
                     data = native_array(raw, row["dtype"], args.byte_order)
                     ctype = ctypes.c_int if row["dtype"] == "int32" else ctypes.c_float
-                    if layers > 1:
+                    if layered:
                         start = (ctypes.c_size_t * 3)(layer - 1, 0, 0)
                         count = (ctypes.c_size_t * 3)(1, ny, nx)
                     writer = lib.nc_put_vara_int if row["dtype"] == "int32" else lib.nc_put_vara_float
@@ -388,7 +462,6 @@ def convert(args: argparse.Namespace) -> None:
                         raise RuntimeError(f"round-trip values differ for {name} record {layer}")
     finally:
         check(lib, lib.nc_close(ncid.value), "close NetCDF file")
-    print(f"Converted and verified {', '.join(row['_individual_name'] for row in rows)}: {args.output}")
 
 
 def main() -> int:
@@ -396,6 +469,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--map-dir", type=Path, required=True, help="map directory containing params.txt")
     parser.add_argument("--input", type=Path, help="registered Binary map file")
+    parser.add_argument("--reference-binary", help="exact registered base Binary filename whose full definition describes the input")
     parser.add_argument("--output", type=Path, help="destination NetCDF file")
     parser.add_argument("--registry", type=Path, default=root / "variable_table/map_variables.csv", help="map variable registry")
     parser.add_argument("--generate-list", action="store_true", help="write a human-editable base-map conversion list")
@@ -412,7 +486,7 @@ def main() -> int:
     args.map_dir = args.map_dir.resolve()
 
     if args.generate_list:
-        if args.input or args.output or args.variables or args.force:
+        if args.input or args.output or args.variables or args.force or args.reference_binary:
             parser.error("--generate-list cannot be combined with conversion options")
         args.registry = args.registry.resolve()
         args.list_file = (args.list_file or args.map_dir / "netcdf/bin2nc_list.txt").resolve()

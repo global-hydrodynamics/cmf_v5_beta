@@ -49,6 +49,95 @@ class GenerateCtlTests(unittest.TestCase):
     def run_generator(self, *, dry_run: bool = False, overwrite: bool = False):
         return generate_directory(self.map_dir, self.registry, dry_run=dry_run, overwrite=overwrite)
 
+    def test_numbered_mpi_standard_definition_and_invalid_names(self):
+        write_registry(self.registry, [row("mpireg.bin", "mpireg", "int32")])
+        for name in ("mpireg-4", "mpireg-8", "mpireg-16", "mpireg-32", "mpireg-0", "mpireg-test"):
+            (self.map_dir / f"{name}.bin").write_bytes(b"\0" * 24)
+        result = self.run_generator()
+        self.assertEqual((result.generated, result.skipped, result.failed), (4, 2, 0))
+        for n in (4, 8, 16, 32):
+            text = (self.map_dir / f"mpireg-{n}.ctl").read_text()
+            self.assertIn(f"dset ^mpireg-{n}.bin", text)
+            self.assertIn("mpireg 1 -1,40,4", text)
+
+    def test_explicit_variant_reference_and_variables_keep_complete_records(self):
+        write_registry(self.registry, [
+            row("nextxy.bin", "nextx", "int32", record_index="1", record_count="2"),
+            row("nextxy.bin", "nexty", "int32", record_index="2", record_count="2"),
+        ])
+        binary = self.map_dir / "experiment.bin"
+        binary.write_bytes(b"\0" * 48)
+        for options in ({'reference_binary': 'nextxy.bin'}, {'variables': ['nexty']}):
+            result = generate_directory(self.map_dir, self.registry, input_file=Path('experiment.bin'), overwrite=True, **options)
+            self.assertEqual((result.generated, result.failed), (1, 0))
+            text = binary.with_suffix('.ctl').read_text()
+            self.assertIn('dset ^experiment.bin', text)
+            self.assertIn('vars 2', text)
+            self.assertLess(text.index('nextx 1'), text.index('nexty 1'))
+        before = binary.with_suffix('.ctl').read_bytes()
+        result = generate_directory(self.map_dir, self.registry, input_file=binary, reference_binary='nextxy.bin')
+        self.assertEqual(result.skipped, 1)
+        self.assertEqual(binary.with_suffix('.ctl').read_bytes(), before)
+        binary.write_bytes(b'bad')
+        result = generate_directory(self.map_dir, self.registry, input_file=binary, reference_binary='nextxy.bin', overwrite=True)
+        self.assertEqual(result.failed, 1)
+        self.assertEqual(binary.with_suffix('.ctl').read_bytes(), before)
+
+    def test_explicit_reference_errors_and_canonical_variable_choice(self):
+        write_registry(self.registry, [row('upbasin.bin', 'upbasin', 'int32'),
+                                      row('upbasin-123.bin', 'upbasin', 'int32')])
+        binary = self.map_dir/'upbasin-456.bin'
+        binary.write_bytes(b'\0'*24)
+        result = generate_directory(self.map_dir, self.registry, input_file=binary, variables=['upbasin'])
+        self.assertEqual(result.generated, 1)
+        for options in ({'reference_binary': 'missing.bin'}, {'reference_binary': 'upbasin*.bin'},
+                        {'reference_binary': 'upbasin.bin', 'variables': ['not_this_variable']}):
+            with self.subTest(options=options):
+                result = generate_directory(self.map_dir, self.registry, input_file=binary, **options)
+                self.assertEqual(result.failed, 1)
+        result = generate_directory(self.map_dir, self.registry, variables=['upbasin'])
+        self.assertEqual(result.failed, 1)
+        result = generate_directory(self.map_dir, self.registry, input_file=Path('missing.bin'), variables=['upbasin'])
+        self.assertEqual(result.failed, 1)
+
+    def test_s99_default_variants_and_single_input_cli(self):
+        import shutil
+        import subprocess
+        root = Path(__file__).resolve().parents[3]
+        work = self.root/'workflow'
+        code = work/'map/tools/code'
+        scripts = work/'map/region/script_params'
+        code.mkdir(parents=True)
+        scripts.mkdir(parents=True)
+        (work/'variable_table').mkdir()
+        shutil.copy2(root/'map/tools/code/generate_ctl.py', code/'generate_ctl.py')
+        shutil.copy2(root/'map/tools/script_params/s99-write_ctl.sh', scripts/'s99-write_ctl.sh')
+        write_registry(work/'variable_table/map_variables.csv', [
+            row('mpireg.bin','mpireg','int32'), row('subbsn.bin','subbsn','int32'),
+            row('subcol.bin','subcol','int32'), row('upbasin.bin','upbasin','int32')])
+        target = scripts.parent
+        write_params(target/'params.txt')
+        filenames = ['mpireg-4','mpireg-8','mpireg-16','subbsn-sample','subcol-sample','upbasin-2587100']
+        for name in filenames:
+            (target/f'{name}.bin').write_bytes(b'\0'*24)
+        script = scripts/'s99-write_ctl.sh'
+        result = subprocess.run(['sh',str(script)], cwd=self.root, capture_output=True, text=True)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        for name in filenames:
+            text = (target/f'{name}.ctl').read_text()
+            self.assertIn(f'dset ^{name}.bin',text)
+            self.assertEqual((target/f'{name}.bin').read_bytes(),b'\0'*24)
+        output=target/'subcol-sample.ctl'
+        output.write_text('preserve existing')
+        result = subprocess.run(['sh',str(script),'--input','subcol-sample.bin','--variables','subcol','--no-overwrite'], capture_output=True,text=True)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assertEqual(output.read_text(),'preserve existing')
+        result = subprocess.run(['sh',str(script),'--input','subcol-sample.bin','--reference-binary','subcol.bin'],capture_output=True,text=True)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assertIn('subcol 1',output.read_text())
+        result = subprocess.run(['sh',str(script),'--variables','subcol'],capture_output=True,text=True)
+        self.assertNotEqual(result.returncode,0)
+
     def test_single_record_float_and_integer_coordinates_and_y_orientation(self):
         write_registry(self.registry, [row("elevtn.bin", "elevtn", "float32"), row("basin.bin", "basin", "int32")])
         (self.map_dir / "elevtn.bin").write_bytes(b"\0" * (3 * 2 * 4))
@@ -135,7 +224,7 @@ class GenerateCtlTests(unittest.TestCase):
         self.assertEqual((result.generated, result.skipped, result.failed), (0, 1, 1))
         self.assertFalse((self.map_dir / "known.ctl").exists())
 
-    def test_input_matrix_uses_its_inpdim_descriptor_and_mixed_record_types(self):
+    def test_input_matrix_uses_its_diminfo_descriptor_and_mixed_record_types(self):
         matrix_rows = []
         for name, dtype, index, long_name, units in (
             ("inpx", "int32", "1", "Input-grid x index", "1"),
@@ -143,7 +232,7 @@ class GenerateCtlTests(unittest.TestCase):
             ("inpa", "float32", "3", "Input-grid overlap area", "m2"),
         ):
             item = row(
-                "inpmat_test-glb_1deg.bin", name, dtype, "NX,NY,INPN",
+                "inpmat_test-1deg.bin", name, dtype, "NX,NY,INPN",
                 record_layout=f"block {index}: {name} levels 1..INPN",
                 record_index=index, record_count="3", missing="0",
                 special="0: unused contribution slot",
@@ -153,16 +242,16 @@ class GenerateCtlTests(unittest.TestCase):
             item["units"] = units
             matrix_rows.append(item)
         write_registry(self.registry, matrix_rows)
-        (self.map_dir / "inpdim_test-glb_1deg.txt").write_text(
+        (self.map_dir / "diminfo_test-1deg.txt").write_text(
             "3 !! nXX\n2 !! nYY\n2 !! floodplain layers\n360 !! input nXX\n"
-            "180 !! input nYY\n4 !! input num\ninpmat_test-glb_1deg.bin\n"
+            "180 !! input nYY\n4 !! input num\ninpmat_test-1deg.bin\n"
             "-1.5 !! west\n1.5 !! east\n1.0 !! north\n-1.0 !! south\n",
             encoding="ascii",
         )
-        (self.map_dir / "inpmat_test-glb_1deg.bin").write_bytes(b"\0" * (3 * 2 * 4 * 3 * 4))
+        (self.map_dir / "inpmat_test-1deg.bin").write_bytes(b"\0" * (3 * 2 * 4 * 3 * 4))
         result = self.run_generator()
         self.assertEqual((result.generated, result.skipped, result.failed), (1, 0, 0))
-        ctl = (self.map_dir / "inpmat_test-glb_1deg.ctl").read_text()
+        ctl = (self.map_dir / "inpmat_test-1deg.ctl").read_text()
         self.assertIn("undef 0", ctl)
         self.assertIn("zdef 4 linear 1 1", ctl)
         self.assertIn("vars 3", ctl)
@@ -172,9 +261,9 @@ class GenerateCtlTests(unittest.TestCase):
         for item in matrix_rows:
             item["missing_value"] = "-7"
         write_registry(self.registry, matrix_rows)
-        (self.map_dir / "inpmat_test-glb_1deg.ctl").unlink()
+        (self.map_dir / "inpmat_test-1deg.ctl").unlink()
         self.assertEqual(self.run_generator().generated, 1)
-        self.assertIn("undef -7", (self.map_dir / "inpmat_test-glb_1deg.ctl").read_text())
+        self.assertIn("undef -7", (self.map_dir / "inpmat_test-1deg.ctl").read_text())
 
     def test_input_matrix_still_accepts_legacy_diminfo_descriptor(self):
         matrix_rows = []

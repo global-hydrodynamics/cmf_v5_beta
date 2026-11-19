@@ -11,6 +11,14 @@ This document refines the Chat AI draft in
 using the current implementation and sample files. It defines this tutorial
 and does not claim that the experiment has been scientifically validated.
 
+
+Guide01 shares Tutorial02's executable prerequisite: reuse the NetCDF-enabled
+`src_main/MAIN_cmf` compiled during Tutorial01. Do not invoke a separate compiler
+wrapper or depend on an out/bin model executable. Keep the repository-local
+Python environment requirement and existing Binary downscaling/visualization
+inputs. This path alignment does not change the approved experiment settings
+or learner edits, and does not establish a new model or learner-package run.
+
 ## 1. Purpose and learning outcomes
 
 The example teaches a controlled sensitivity experiment: change the mapped
@@ -122,8 +130,8 @@ verified settings include `LKINE=.FALSE.` (Local Inertial routing),
 `LADPSTP=.TRUE.`, `DT=600` s, 4 OpenMP threads, and Gregorian leap-year
 handling. It reads individual map NetCDF files under
 `map/mekong_15min/netcdf/`, the 2000 annual runoff file
-`inp/test-mek_1deg_nc/runoff2000.nc`, and the existing
-`inpmat_test-mek_1deg.bin` / `inpdim_test-mek_1deg.txt` pair. Its forcing setup
+`inp/repo-mek_1deg/runoff2000.nc`, and the existing
+`inpmat_repo-mek_1deg.bin` / `diminfo_repo-mek_1deg.txt` pair. Its forcing setup
 uses `CROFFREQ="YEAR"`, `IFRQ_INP=24`, `CVNROF="runoff"`, and
 `DROFUNIT=86400000` for the sample's daily `mm day-1` values.
 

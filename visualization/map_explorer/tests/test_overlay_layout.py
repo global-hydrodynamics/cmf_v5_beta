@@ -1,3 +1,4 @@
+from conftest import install_test_cogs
 """Stored-overlay scientific geometry, styles, pixel sizes and bounded viewport."""
 
 import json
@@ -17,7 +18,10 @@ from test_v2 import products
 
 
 def test_boundary_color_is_independent_of_selection_network_and_bifurcations(products):
+    install_test_cogs(products)
     app = Explorer(products, products.parent / "out")
+    app.set_extent(app.reader.geometry.extent)
+    app.background.value = "catchment"
     app.inspect(11.25, 21.75)
     app.overlay_controls["catchment_boundaries"].value = True
     initial = next(o for o in app.frame.overlays if "assignment boundaries" in o.label)
@@ -32,7 +36,8 @@ def test_boundary_color_is_independent_of_selection_network_and_bifurcations(pro
     for key, values in main.items():
         np.testing.assert_array_equal(app.frame.main[key], values)
     app.background.value = "none"
-    assert next(o for o in app.frame.overlays if "assignment boundaries" in o.label).color == "#0055cc"
+    assert not any("assignment boundaries" in o.label for o in app.frame.overlays)
+    assert app.point_select.value == "grid"
 
 
 def test_bifurcation_dashes_geometry_and_full_channel_width_quantiles(products):
@@ -201,7 +206,7 @@ def test_overlay_roundtrip_and_defaults_for_older_files(products):
     data["layers"]["overlays"].pop("catchment_boundary_color")
     app.load(json.dumps(data).encode())
     assert app.overlay_controls["outlet_size"].value == 4
-    assert app.overlay_controls["catchment_boundary_color"].value == "#646464" and not app.bif_width_mode.value
+    assert app.overlay_controls["catchment_boundary_color"].value == "#4A4A4A" and not app.bif_width_mode.value
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -211,6 +216,12 @@ ROOT = Path(__file__).resolve().parents[3]
 def test_mekong_gallery_legacy_palette_and_mixed_overlay_export(tmp_path):
     app = Explorer(ROOT / "map/mekong_15min", tmp_path)
     app.apply_preset("p01-f03a", use_gallery_extent=True)
+    assert app.river_ui.palette.value == "blue_navy"
+    # Older Gallery settings remain explicit and render their approved quartet.
+    legacy = app.settings()
+    legacy["network_options"]["area_palette"] = "viridis"
+    legacy["network_options"]["area_color_style"] = "gallery_quartiles"
+    app.load(json.dumps(legacy).encode())
     assert app.river_ui.palette.value is None and "viridis" in app.river_ui.legacy_palette.object
     assert set(app.frame.main["color"]) <= set(AREA_COLORS)
     assert len(app.river_ui.palette.options) == 8
@@ -220,5 +231,5 @@ def test_mekong_gallery_legacy_palette_and_mixed_overlay_export(tmp_path):
     app.overlay_controls["catchment_boundaries"].value = True
     app.overlay_controls["outlets"].value = True
     app.overlay_controls["outlet_size"].value = 16
-    assert {o.dash for o in app.frame.overlays} == {"solid", "dashed", "dotted"}
+    assert {"dashed", "dotted"} <= {o.dash for o in app.frame.overlays}
     assert app.export().is_file()

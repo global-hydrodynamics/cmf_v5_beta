@@ -1,12 +1,56 @@
 # River maps and map-preparation tools
 
+For maintained code and workflow changes, see the [shared preprocessing code conventions](../docs/preprocessing_code_conventions.md) and local [agent instructions](AGENTS.md).
+
 The `map/` directory connects CaMa-Flood's river and floodplain representation to the datasets and preprocessing tools used to prepare it. The GitHub source repository supplies map-processing code and documentation, plus the official `mekong_15min` development/test sample. Global source maps such as `glb_15min` are distributed separately in CaMa-Flood data packages. Check the map files included with your package and obtain any additional datasets required by the simulation.
 
 For model setup and example runs, see the [v5 developer execution guide](../gosh_test/README.md). This page is an overview; tool-specific details remain in the component documentation linked below.
 
+## Global additional data
+
+The authoritative global 15-minute map is
+`cmf_v5_package_data/map/glb_15min/`, outside the repository; a local
+`map/glb_15min/` development copy is ignored by Git. The package catalog keeps
+model-grid Binary, `netcdf/`, standard generated parameters and auxiliary text.
+High-resolution distribution uses compressed `1min_nc/` and its `location.txt`;
+`1min/` Binary is restored on demand, not shipped as a duplicate. Generation
+scripts remain maintained in GitHub under `map/tools/`; additional data also
+include `COG/` for immediate visualization and stored generation scripts as
+provenance snapshots. See the
+[package selection policy](../package/README.md#global-15-minute-map-selection)
+and [Binary restoration guide](tools/script_format_conv/README.md#restore-high-resolution-binary-working-files-s04).
+
+## Japan additional data
+
+`TE-Japan_01min/` is supplied through Package Additional Data, with authoritative
+source `cmf_v5_package_data/map/TE-Japan_01min/`. Its model grid is 1-minute
+(1500 × 1320 cells, 123–148°E, 24–46°N); supporting high-resolution maps are
+15-second. Package selection includes model-grid Binary, `netcdf/`, standard
+parameters and auxiliary text, plus compressed `15sec_nc/` and `location.txt`,
+`COG/` visualization inputs and stored generation scripts/source as provenance.
+High-resolution `15sec/` Binary is restored on demand rather than distributed
+in duplicate. The entire local `map/TE-Japan_01min/` directory, including
+map-specific script copies and README files, is ignored. Shared maintained
+implementations and templates remain in Git under `map/tools/`. See the
+[Japan selection policy](../package/README.md#japan-1-minute-map-selection).
+Registration does not establish scientific validation or redistribution clearance.
+
+## Standard ELSE_GPCC mapping: `test-1deg`
+
+The standard `diminfo_test-1deg.txt` / `inpmat_test-1deg.bin` pair maps the
+360 × 180 global 1-degree ELSE_GPCC grid onto the selected model map. It is
+used both for global `inp/ELSE_GPCC/runoffYYYY.nc` (daily runoff, `mm day-1`)
+and for `map/data/ELSE_GPCC_clm-1981-2010.one` (annual-mean runoff, `mm/s`)
+when estimating mean discharge and channel parameters. Matrices are specific
+to each model map; a shared runoff-grid tag does not imply a shared matrix.
+`script_region` generates this standard pair for each new regional map.
+Mekong-only `repo-mek_1deg` and ERA5-Land tags describe different input grids.
+See the [input explanation](../inp/README.md#else_gpcc-and-the-standard-test-1deg-mapping)
+and [parameter workflow](tools/script_params/README.md#standard-else_gpcc-grid-tag).
+
 ## Development and test sample
 
-`map/mekong_15min/` is the official GitHub development/test sample. The scripts retained in its map-local preparation directory are maintainer-operated tools to create or refresh this distributed sample from source data in the separate CaMa-Flood distribution package. They are not automated tests; the dataset's presence does not establish scientific validation or production suitability.
+`map/mekong_15min/` is the official GitHub development/test sample. Its complete contents, including `COG/`, are intended for Git tracking; `map/.gitignore` explicitly overrides generic exclusions for this map. The scripts retained in its map-local preparation directory are maintainer-operated tools to create or refresh this distributed sample from source data in the separate CaMa-Flood distribution package. They are not automated tests; the dataset's presence does not establish scientific validation or production suitability.
 
 ## What is a CaMa-Flood river map?
 
@@ -74,13 +118,13 @@ Examples of maps used by sample runs are listed in [the v5 workflow guide](../go
 
 [`variable_table/map_variables.csv`](../variable_table/map_variables.csv) is the source-linked variable and data-product registry for CaMa-Flood maps. It uses symbolic dimensions such as `NX`, `NY`, and `NLFP`, so the definitions apply across map resolutions and regional domains. It is the primary source for variable names, proposed long names and units, data types, record layouts, numeric stored missing values, meaningful special codes, product variants, distribution roles, and current model-reader mappings.
 
-[`variable_table/map_metadata_spec.md`](../variable_table/map_metadata_spec.md) explains the CSV schema and how it relates to per-map `params.txt`, `mapdim.txt`, runoff/input-grid descriptors, and GrADS CTL files. v5 workflows pair `inpdim_<ROFFTAG>.txt` with `inpmat_<ROFFTAG>.bin`; legacy `diminfo_*.txt` names remain supported for existing v4 data and callers. `ROFFTAG` identifies the runoff/input-grid configuration, while `HIRES_TAG` selects high-resolution map data.
+[`variable_table/map_metadata_spec.md`](../variable_table/map_metadata_spec.md) explains the CSV schema and how it relates to per-map `params.txt`, `mapdim.txt`, runoff/input-grid descriptors, and GrADS CTL files. v5 workflows pair `diminfo_<ROFFTAG>.txt` with `inpmat_<ROFFTAG>.bin`; legacy `diminfo_*.txt` names remain supported for existing v4 data and callers. `ROFFTAG` identifies the runoff/input-grid configuration, while `HIRES_TAG` selects high-resolution map data. The s03 standard is now `ROFFTAG=ERA5land_global`, matching the converted `repo-ERA5land-glb_2day` 0.1-degree runoff grid (3600 × 1801). The tag describes spatial geometry, not a time period or the model-map name (`glb_15min`, for example). Generate the paired matrix/descriptor separately for each model map; identical runoff geometry/order allows reuse across periods on that map. Global-map products are intended for Package Additional Data, and are not generated here.
 
 The bifurcation workflow writes authoritative named `bifprm.csv` at the map root and its static NetCDF-4 counterpart at `netcdf/bifprm.nc`; the simulation reader accepts both plus legacy `bifprm.txt`. IDs in these products are configuration-specific row IDs, with endpoint indices used to identify paths across configurations. The channel-parameter entries describe products users generate or verify for a target map. Data-rich packages may include prepared examples; check the actual package contents before generating replacements. The v5 workflow writes the alternative MERIT Hydro merged width as `rivwth_merit.bin`; the preserved v4 workflow retains its historical `rivwth_gwdlr.bin` output.
 
 ### GrADS CTL generation
 
-The v5 CTL generator is [`map/tools/code/generate_ctl.py`](tools/code/generate_ctl.py), invoked by the map-local [`s02-write_ctl.sh`](tools/script_region/s02-write_ctl.sh) wrapper. It reads `variable_table/map_variables.csv` and map geometry metadata, then validates registered binary layouts and file sizes before writing GrADS descriptors. The current map-tools directory provides CTL generation; a binary-to-NetCDF conversion command is not currently documented as an available map tool.
+The v5 CTL generator is [`map/tools/code/generate_ctl.py`](tools/code/generate_ctl.py), invoked by the map-local [`s02-write_ctl.sh`](tools/script_region/s02-write_ctl.sh) wrapper. It reads `variable_table/map_variables.csv` and map geometry metadata, then validates registered binary layouts and file sizes before writing GrADS descriptors. The maintained [format-conversion workflow](tools/script_format_conv/README.md) also provides Binary-to-NetCDF, high-resolution NetCDF-to-Binary restoration, and optional numeric NetCDF-to-COG caches.
 
 ```sh
 cd map/<map-tag>/script_region
@@ -154,7 +198,7 @@ Check the feature-specific manual or workflow first. For reservoirs, see `src/sr
 
 Map directories are commonly named by region and grid spacing, for example `glb_15min` or `conus_06min`. The model's namelist explicitly names the map paths; scripts commonly set a base such as `FMAP` and build those paths from it. A directory name alone does not establish that its contents are complete or compatible.
 
-The standard binary map path uses files such as `nextxy.bin` (downstream grid indices), `ctmare.bin` (unit-catchment area), `elevtn.bin`, `nxtdst.bin`, `rivlen.bin`, and `fldhgt.bin`; channel parameters may include `rivwth.bin`, `rivhgt.bin`, and `rivman.bin`. Runoff/input-grid descriptors carry dimensions and map bounds: v5 tools name them `inpdim_<ROFFTAG>.txt`, while existing v4 configurations retain `diminfo_*.txt`. The model's namelist key remains `diminfo_file`. Optional files and required names depend on the selected model options. The `NMAP` namelist in `src/cmf_ctrl_maps_mod.F90` shows the paths read by the model, while sample execution scripts show concrete configurations.
+The standard binary map path uses files such as `nextxy.bin` (downstream grid indices), `ctmare.bin` (unit-catchment area), `elevtn.bin`, `nxtdst.bin`, `rivlen.bin`, and `fldhgt.bin`; channel parameters may include `rivwth.bin`, `rivhgt.bin`, and `rivman.bin`. Runoff/input-grid descriptors carry dimensions and map bounds: v5 tools name them `diminfo_<ROFFTAG>.txt`, while existing v4 configurations retain `diminfo_*.txt`. The model's namelist key remains `diminfo_file`. Optional files and required names depend on the selected model options. The `NMAP` namelist in `src/cmf_ctrl_maps_mod.F90` shows the paths read by the model, while sample execution scripts show concrete configurations.
 
 Many legacy `.bin` files are Fortran unformatted direct-access records, but the record contents and numeric types vary by file. For example, the `nextxy` reader expects two integer records; other readers expect real-valued parameters. Text metadata and tables may use `.txt` or `.csv`. The code also contains an optional NetCDF map reader, which requires a NetCDF-enabled build and matching NetCDF variables. Do not infer a complete file specification from the extension alone.
 
@@ -181,3 +225,27 @@ When combining or generating map products, keep dimensions, grid spacing, geogra
 - [Dam/reservoir parameter workflow](src/src_dam/ReadMe.md)
 - [Model source architecture](../src_main/README.md)
 - [Sample simulation workflows](../gosh_test/README.md)
+
+## Simulation dimension information
+
+`diminfo_<TAG>.txt` is **Simulation dimension information**, containing both
+model-grid dimensions (`NX`, `NY`, `NLFP`) and runoff/input-grid dimensions
+(`NXIN`, `NYIN`, `INPN`), plus geographic bounds when applicable.
+`inpmat_<TAG>.bin` separately stores input-to-model cell correspondence.
+The previous v5 `inpdim` name was reverted because it described only part of
+the descriptor's role. File contents and scientific processing are unchanged;
+there is no old-name fallback. Existing `CDIMINFO`/`diminfo_file` interfaces
+are retained. See the [metadata specification](../variable_table/map_metadata_spec.md#diminfo_rofftagtxt--simulation-dimension-information).
+
+
+## Numeric visualization caches
+
+[script_format_conv](tools/script_format_conv/README.md#numeric-netcdf-to-cog-caches-s05)
+replaces the maintained script_bin2nc directory. Scientific Binary/NetCDF inputs
+remain authoritative. Optional COGs are generated at `COG/<model-variable>.tif`
+from `netcdf/`, and `COG/<HIRES>/<area>.<variable>.tif` from `<HIRES>_nc/`.
+Native numeric types/values and multiband record/layer order are preserved;
+internal overviews use average for floats and nearest for integer codes/pairs.
+COG trees are normally ignored by Git; the complete repository sample
+`map/mekong_15min/`, including its COGs, is explicitly included. Explorer COG consumption and package inclusion are
+not implemented here. Untracked installed map workflows are not renamed automatically.

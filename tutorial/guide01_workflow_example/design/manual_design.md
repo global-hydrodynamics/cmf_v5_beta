@@ -16,10 +16,16 @@ The only intended scientific experiment difference remains the approved `+3 m` c
 
 Include the editable learner scripts and approved example images under `sample_figure/`. The starting package has no `map_modify/rivhgt_deep.nc`, no learner-created Deep Channel runner, no model outputs or analysis tables, and no generated figures under `figure/`. The complete map, runner, test, and analysis references are kept under `design/` in the GitHub repository. Generated outputs and modified map data are ignored by Git.
 
-No separate tutorial package assembler exists. A temporary learner snapshot can verify the intended file set, but a complete learner-follow-through has not been performed after this intentional incompleteness change; package reproducibility remains partial.
+The general beta Package Builder exists and retains developer references; no dedicated learner-profile tutorial assembler exists. A temporary learner snapshot can verify the intended file set, but a complete learner-follow-through has not been performed after this intentional incompleteness change; package reproducibility remains partial.
 
 ## Future Learning Checks
 
 - Can the learner identify the `rivhgt` increment and produce a separate map file without modifying the shared map?
 - Can the learner explain which `PROJ` and `RIVHGT` settings distinguish the copied experiment?
 - Can the learner locate the two run directories and the generated comparison figures?
+
+
+Executable prerequisite: as in Tutorial02, reuse NetCDF-enabled
+src_main/MAIN_cmf already compiled during Tutorial01, without a separate compile
+wrapper. Prepare repository .venv for the existing analysis/runner paths. Keep
+Binary visualization/downscaling and approved learner edits unchanged.

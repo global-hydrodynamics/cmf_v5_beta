@@ -4,21 +4,73 @@ This tutorial introduces how to obtain and navigate CaMa-Flood, find the files u
 
 ## 0. Obtain CaMa-Flood
 
-GitHub's default branch contains the files for Tutorial01. Clone the repository:
+Use the v5 repository, `global-hydrodynamics/cmf_v5_beta`. Its default/base
+branch is `main`. The current v5b01 tutorial and renamed input datasets are on
+the approved `feature/package-builder` branch and have not yet been merged into
+`main`. To obtain the version described by this manual during beta preparation:
 
 ```bash
-git clone https://github.com/global-hydrodynamics/CaMa-Flood_v4.git
+git clone --branch feature/package-builder https://github.com/global-hydrodynamics/cmf_v5_beta.git
 ```
 
-This creates a local directory named `CaMa-Flood_v4`. If you prefer not to use Git, open the repository on GitHub, choose **Code → Download ZIP**, then extract the archive. Place the checkout in a suitable working location; no fixed machine-specific path is required.
+This creates `cmf_v5_beta/`. Without Git, select `feature/package-builder` in the
+[v5 repository](https://github.com/global-hydrodynamics/cmf_v5_beta) branch selector
+before choosing **Code → Download ZIP**. Extract the archive and use its root;
+the extracted folder name can differ. Place the checkout in a suitable working
+location; no fixed machine-specific path is required.
 
-The [official CaMa-Flood website](https://global-hydrodynamics.github.io/CaMa-Flood/) provides a separate downloadable distribution package; access requires registration. The supported v5 package for this tutorial is not ready yet. If you prefer that package, wait for its release; an older package is not a substitute for this v5 workflow.
+The maintainer plans to merge the development branch into `main` once the
+**v5b01 package is ready**. After that integration, the standard acquisition
+command will be:
+
+```bash
+git clone https://github.com/global-hydrodynamics/cmf_v5_beta.git
+```
+
+Until the merge is published, do not assume that default `main` contains the
+renamed input paths used below. Use the tutorial and inputs from the same revision.
+
+#### Developer note: constructing a beta package
+
+The repository now provides a two-stage Package Builder. This is optional for
+maintainers preparing a beta testing package; ordinary Tutorial01 users can use
+the bundled Mekong inputs directly without obtaining Additional Data.
+
+In the chosen committed development checkout, set the **same unused `VER`** in
+`package/archive_clean_repo.sh` and `package/make_package.sh`. Configure
+`PACKAGE_DATA_DIR` in make_package.sh: its default
+`../../cmf_v5_package_data` is relative to the script's `package/` directory,
+regardless of CWD; absolute paths are also allowed. Then, from the repository root:
+
+```bash
+# Step 1: extract committed HEAD into package/repo_clean_${VER}/
+./package/archive_clean_repo.sh --dry-run
+./package/archive_clean_repo.sh
+
+# Step 2: assemble the existing clean source and CSV-selected additional data
+cd package
+./make_package.sh --dry-run
+./make_package.sh
+```
+
+Output is `package/cmf_${VER}_pkg/`. Existing same-version outputs are protected;
+choose a new version rather than overwriting them. Assembly uses the existing
+clean tree and does not automatically include later development changes.
+PACKAGE_BUILD_INFO.txt and PACKAGE_MANIFEST.json record the source provenance.
+See the [Package Builder guide](../../package/README.md#assemble-a-beta-testing-package)
+for input selection, integrity checks and limitations.
+
+This produces a **beta testing package**, retaining developer documents and
+`legacy/`; it is not a formal release or a dedicated learner-only package.
+Structural assembly has been checked, but Tutorial01 has not been rerun in that
+assembled package. Local generation does not establish public redistribution
+permission. Older v4 packages are not substitutes for this v5 workflow.
 
 Tutorial01's learner starting state does not contain a compiled `src_main/MAIN_cmf` executable or generated run results. You will build the executable in Section 3 and run the experiment later in this tutorial.
 
 ### Learning Check
 
-- [ ] I can obtain the tutorial files from GitHub's default branch and locate the repository root.
+- [ ] I can obtain the matching v5 beta revision and locate its repository root.
 - [ ] I know that I will build `MAIN_cmf` as part of this tutorial.
 
 ## 1. Find the repository root
@@ -171,8 +223,8 @@ If available, you can inspect without saving using `nano tutorial01-get_started.
 |---|---|
 | Project | `PROJ="tutorial01-get_started"` |
 | River map | `map/mekong_15min/` |
-| Runoff | `inp/test-mek_1deg/`, daily binary files |
-| Runoff-to-map mapping | `inpdim_test-mek_1deg.txt` and `inpmat_test-mek_1deg.bin` in the map directory |
+| Runoff | `inp/repo-mek_1deg_bin/`, daily Binary records grouped by month |
+| Runoff-to-map mapping | `diminfo_repo-mek_1deg.txt` and `inpmat_repo-mek_1deg.bin` in the map directory |
 | Period | 2000-01-01 00:00 to 2000-02-10 00:00; end time is exclusive (40 days) |
 | Time step | Base `DT=3600` seconds; adaptive time stepping enabled |
 | Execution | Non-MPI, one OpenMP thread; bifurcation enabled |
@@ -226,42 +278,39 @@ The commented lines show alternative map products; the uncommented assignments s
 
 ## 6. Inspect runoff forcing
 
-Runoff forcing is water input supplied to the model over time. The sample uses daily binary files on a grid coarser than the river map. Inspect a few dates, including the last day before the exclusive end date:
+Runoff forcing is water input supplied to the model over time. The sample uses daily Binary records grouped into monthly files on a grid coarser than the river map. Inspect the two files covering the 40-day interval:
 
 ```bash
 cd "${cmf_root}"
-cd inp/test-mek_1deg/runoff
+cd inp/repo-mek_1deg_bin/runoff
 pwd
-ls -lhF Roff____20000101.one Roff____20000102.one Roff____20000209.one
+ls -l Roff____200001.one Roff____200002.one
 ```
 
 ### Expected output
 
-The three observed sample files are each 2.3 KB; the exact display may round sizes differently.
-
-```text
--rw-r--r--  1 yamadai  staff   2.3K Nov  3 07:06 Roff____20000101.one
--rw-r--r--  1 yamadai  staff   2.3K Nov  3 07:06 Roff____20000102.one
--rw-r--r--  1 yamadai  staff   2.3K Nov  3 07:06 Roff____20000209.one
-```
+The monthly files contain 31 and 29 daily fields respectively (60 records total).
+Their exact sizes are 74,400 and 69,600 bytes. Each daily field is 2,400 bytes;
+monthly grouping does not average the values.
 
 The corresponding GOSH settings identify the dataset, file naming rule, frequency, and unit conversion:
 
 ```sh
-ROFFTAG="test-mek_1deg"
+ROFFTAG="repo-mek_1deg_bin"
+INPMAT_TAG="repo-mek_1deg"
 RUNOFF_DIR="${CMF_BASE}/inp/${ROFFTAG}/runoff"
 IFRQ_INP=24
-CROFFREQ="DAY"
+CROFFREQ="MON"
 CROFPRE="Roff____"
 CROFSUF=".one"
 DROFUNIT=86400000
 ```
 
-`Roff____` + a date in `YYYYMMDD` form + `.one` makes a daily filename. `IFRQ_INP=24` means the forcing interval is 24 hours. `DROFUNIT` converts the supplied `mm/day` runoff values to the model's `m/s` units. The 40-day interval ends at February 10 00:00, so February 9 is the final daily input date.
+`Roff____` + a month in `YYYYMM` form + `.one` makes a monthly filename containing daily records. `IFRQ_INP=24` means the forcing interval is 24 hours. `DROFUNIT` converts the supplied `mm/day` runoff values to the model's `m/s` units. The 40-day interval ends at February 10 00:00, so February 9 is the final daily input date.
 
 ### Learning Check
 
-- [ ] I can locate a dated daily runoff file in the listed directory.
+- [ ] I can locate a monthly file containing daily runoff records in the listed directory.
 - [ ] I can find the GOSH settings that select the runoff directory and construct its filename.
 
 ## 7. Inspect runoff-to-map mapping
@@ -272,8 +321,8 @@ The runoff grid is 20 × 30 cells, while this Mekong river map is 80 × 120 cell
 cd "${cmf_root}"
 cd map/mekong_15min
 pwd
-ls -lhF inpdim_test-mek_1deg.txt inpmat_test-mek_1deg.bin
-cat inpdim_test-mek_1deg.txt
+ls -lhF diminfo_repo-mek_1deg.txt inpmat_repo-mek_1deg.bin
+cat diminfo_repo-mek_1deg.txt
 ```
 
 ### Expected output
@@ -281,8 +330,8 @@ cat inpdim_test-mek_1deg.txt
 Observed sizes and the descriptor contents:
 
 ```text
--rw-r--r--  1 yamadai  staff   312B Nov  3 08:24 inpdim_test-mek_1deg.txt
--rw-r--r--  1 yamadai  staff   450K Nov  3 08:05 inpmat_test-mek_1deg.bin
+-rw-r--r--  1 yamadai  staff   312B Nov  3 08:24 diminfo_repo-mek_1deg.txt
+-rw-r--r--  1 yamadai  staff   450K Nov  3 08:05 inpmat_repo-mek_1deg.bin
 ```
 
 ```text
@@ -292,7 +341,7 @@ Observed sizes and the descriptor contents:
         20     !! input nXX
         30     !! input nYY
          4     !! input num
-inpmat_test-mek_1deg.bin
+inpmat_repo-mek_1deg.bin
       90.000     !! west  edge
      110.000     !! east  edge
       35.000     !! north edge
@@ -302,16 +351,16 @@ inpmat_test-mek_1deg.bin
 The script points to this pair and turns on input-matrix mapping with `LINTERP`:
 
 ```sh
-INPDIM="${MAPDIR}/inpdim_${ROFFTAG}.txt"
-INPMAT="${MAPDIR}/inpmat_${ROFFTAG}.bin"
+DIMINFO="${MAPDIR}/diminfo_${INPMAT_TAG}.txt"
+INPMAT="${MAPDIR}/inpmat_${INPMAT_TAG}.bin"
 LINTERP=".TRUE."
 ```
 
-`INPDIM` gives the model and input-grid dimensions and names the matrix file. `INPMAT` is the mapping data itself. With `LINTERP` true, runoff is mapped through this matrix. The supplied files already match this sample; Tutorial01 does not regenerate them.
+`DIMINFO` gives the model and input-grid dimensions and names the matrix file. `INPMAT` is the mapping data itself. With `LINTERP` true, runoff is mapped through this matrix. The supplied files already match this sample; Tutorial01 does not regenerate them.
 
 ### Learning Check
 
-- [ ] I can locate the two mapping files and match them to `INPDIM` and `INPMAT`.
+- [ ] I can locate the two mapping files and match them to `DIMINFO` and `INPMAT`.
 - [ ] I can find `LINTERP` in the same GOSH configuration.
 
 ## 8. Run the experiment

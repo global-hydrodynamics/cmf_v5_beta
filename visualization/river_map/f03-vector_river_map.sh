@@ -13,8 +13,7 @@ REPO_ROOT="$(cd "$VISUALIZATION_DIR/.." && pwd)"
 # User settings: tracked coarse- and high-resolution Mekong map products.
 MAP_DIR="$REPO_ROOT/map/mekong_15min"
 UPAREA_FILE="$MAP_DIR/netcdf/uparea.nc"          # Source-cell upstream area [m²].
-NEXTXY_FILE="$MAP_DIR/netcdf/nextxy_noedge.nc"  # One-based downstream cell indices.
-NEXTXY_C_FILE="$MAP_DIR/netcdf/nextxy.nc"       # Standard nextxy links for f03c.
+NEXTXY_FILE="$MAP_DIR/netcdf/nextxy.nc"  # One-based downstream cell indices.
 LONLAT_FILE="$MAP_DIR/netcdf/lonlat.nc"          # Unit-catchment outlet coordinates.
 SUBCOL_FILE="$MAP_DIR/subcol-sample.bin"         # Subbasin display-color categories.
 BSNCOL_FILE="$MAP_DIR/netcdf/bsncol.nc"          # Categorical basin display colors.
@@ -82,7 +81,7 @@ printf '\n[STEP 2/4] Draw the f03b extended outlet network.\n'
 
 printf '\n[STEP 3/4] Draw f03c with a gray subcol background.\n'
 "$PYTHON" "$SCRIPT_DIR/script/f03c-vector_river_map-gray_subcol_background.py" \
-    --uparea "$UPAREA_FILE" --nextxy "$NEXTXY_C_FILE" \
+    --uparea "$UPAREA_FILE" --nextxy "$NEXTXY_FILE" \
     --lonlat "$LONLAT_FILE" --subcol "$SUBCOL_FILE" --params "$PARAMS_FILE" \
     --west "$C_WEST" --east "$C_EAST" --south "$C_SOUTH" --north "$C_NORTH" \
     --figure-width "$PANEL_WIDTH" --figure-height "$PANEL_HEIGHT" \

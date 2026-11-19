@@ -1,6 +1,9 @@
       program param_inpmat_generate
 !==========================================================
 !* PURPOSE: generate input matrix for CaMa-Flood
+! Inputs: base-map geometry and high-resolution catchment assignments.
+! Outputs: simulation dimensions in diminfo and input-to-model correspondence in inpmat.
+! The descriptor configures both grids; it is not only runoff-grid metadata.
 !
 ! (C) D.Yamazaki & E. Dutra  (U-Tokyo/FCUL)  Aug 2019
 !
@@ -83,7 +86,7 @@
       character*256            :: hires
       character*256            :: inpmat  !! input-matrix filename
       character*256            :: hires_tag
-      character*256            :: inpdim  !! input-dimension descriptor filename
+      character*256            :: diminfo  !! simulation dimension information filename
       parameter                 (mapdir='./')
 
 ! Format strings and input buffers.
@@ -98,7 +101,7 @@ print *, 'CALC_INPMAT:'
 
       call getarg(1,hires_tag)
        if( hires_tag=='' ) then
-         print *, 'usage % param_inpmat_generate $HIRES_TAG $GRSIZE $WEST $EAST $NORTH $SOUTH $OLAT $INPDIM $INPMAT'
+         print *, 'usage % param_inpmat_generate $HIRES_TAG $GRSIZE $WEST $EAST $NORTH $SOUTH $OLAT $DIMINFO $INPMAT'
          stop
       endif
       call getarg(2,buf)
@@ -114,7 +117,7 @@ print *, 'CALC_INPMAT:'
       call getarg(7,buf)
        if( buf/='' ) read(buf,*) olat
       call getarg(8,buf)
-       if( buf/='' ) read(buf,*) inpdim
+       if( buf/='' ) read(buf,*) diminfo
       call getarg(9,buf)
        if( buf/='' ) read(buf,*) inpmat
 
@@ -127,7 +130,7 @@ print *, 'CALC_INPMAT:'
       print *, 'nxin, nyin, gsizein:',      nxin,   nyin,   gsizein
       print *, 'west, east, north, south:', westin, eastin, northin, southin
       print *, 'north-south order:   ',     olat
-      print *, 'dimention info file  ',     trim(inpdim)
+      print *, 'dimention info file  ',     trim(diminfo)
       print *, 'input matrix file    ',     trim(inpmat)
 
       open(11,file=param,form='formatted')
@@ -277,7 +280,7 @@ print *, 'CALC_INPMAT:'
       end do
 
 !==========================================================
-! [4] Write the paired inpdim descriptor and three matrix records
+! [4] Write the diminfo descriptor and 3*INPN matrix records
 !==========================================================
       mmax=0
       do iYY=1, nYY
@@ -291,7 +294,7 @@ print *, 'CALC_INPMAT:'
       end do
       print *, 'input_num_max: ', mmax, 'lon lat: ', west+real(iXX0-1)*gsize, north-real(iYY0-1)*gsize, 'ix, iy: ', iXX0, iYY0
 
-      open(11,file=inpdim,form='formatted')
+      open(11,file=diminfo,form='formatted')
       write(11,'(i10,5x,a)') nXX,          '!! nXX'
       write(11,'(i10,5x,a)') nYY,          '!! nYY'
       write(11,'(i10,5x,a)') nflp,         '!! floodplain layer'
@@ -314,6 +317,8 @@ print *, 'CALC_INPMAT:'
 
       wfile1=trim(mapdir)//trim(inpmat)
 print *, trim(wfile1)
+! Each record spans (nXX,nYY), with x fastest: INPN x-index planes,
+! then INPN y-index planes, then INPN overlap-area planes. Preserve this reader contract.
       open(21,file=wfile1,form='unformatted',access='direct',recl=4*nXX*nYY)
       do inum=1, mmax
         write(21,rec=inum)        inpx0(:,:,inum:inum)

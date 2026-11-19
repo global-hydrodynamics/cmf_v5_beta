@@ -6,7 +6,7 @@
 
 This document defines the CSV columns, records the design choices, and explains how the shared variable definitions relate to metadata files distributed with a map. The CSV is the primary source for variable short names, proposed long names, units, data types, symbolic dimensions, binary record positions, missing conventions, distribution roles, and model-reader/NetCDF variable mappings. Do not copy its full variable table into another README or manual.
 
-Dataset-specific dimensions, bounds, and spacing remain in each map dataset's metadata. Input-grid/runoff settings remain in the paired input-grid descriptor and input matrix: v5 uses `inpdim_<ROFFTAG>.txt`; unconverted v4 package maps may retain `diminfo_<ROFFTAG>.txt`. Neither dataset-specific dimensions nor runoff-grid settings belong in the common variable definition.
+Dataset-specific dimensions, bounds, and spacing remain in each map dataset's metadata. Simulation dimensions belong in `diminfo_<ROFFTAG>.txt`, while input-to-model mapping belongs in `inpmat_<ROFFTAG>.bin`. The descriptor includes both model-grid and runoff/input-grid dimensions; the matrix stores their correspondence. Neither dataset-specific dimensions nor runoff-grid settings belong in the common variable definition.
 
 ## CSV format and row model
 
@@ -47,7 +47,7 @@ Assign `A`, `B`, or `C` only when evidence supports the role. Do not classify fr
 | 23 | `input_matrix` | User-configured input-matrix products and paired configuration. |
 | 24 | `MPI` / `bifurcation` | MPI-specific basin aggregation and region products. `bifcol_mpi.bin` colors aggregated basin IDs independent of process count; optional `bsncol_mpi-N.bin` colors N computational regions. |
 | 25 | `river_map_supplement` | Permanent-water area aggregated for post-processing. |
-| 26 | `river_map_supplement` | Optional river-network analysis products, including generic tool outputs and the named Mekong examples `subbsn-sample.bin`, `subcol-sample.bin`, and `upbasin-2569002.bin`. |
+| 26 | `river_map_supplement` | Optional river-network analysis products, including standard `subbsn.bin` / `subcol.bin` definitions and the named upstream-mask example `upbasin-2569002.bin`. |
 | 29 | Unassigned in the current registry | No current row uses this ID. |
 | 31 | `dam_reservoir` / `gauge_alloc` | Allocation workflow text products, including dam, flow-gauge, and level-gauge outputs. |
 | 41 | `inflow_scheme` | Specialized inflow-boundary map variants. |
@@ -104,11 +104,22 @@ Sort rows by ascending numeric `category_id`, then `binary_filename` (case-insen
 
 `verification_status` values in this draft are `verified_source_and_sample`, `verified_source`, `maintainer_confirmed`, `package_observed`, and `provisional_semantics`. `verified_source_and_sample` means the source-derived definition and sample presence have both been checked; it does not mean scientific suitability or correctness has been validated. `maintainer_confirmed` records a maintainer-provided definition that the inspected source only passes through or does not establish independently; it does not imply scientific validation. The `workflow_stage` field separately records the current sample status described above. `provisional_semantics` means product presence or structure may be known while producer, meaning, format, or use remains unresolved. Blank/unknown semantic fields remain intentionally unresolved.
 
-Standard subbasin examples use parameter-independent `subbsn-sample.bin` and `subcol-sample.bin` filenames. Both `s06-subbasin.sh` copies supply explicit output paths and editable example thresholds of 30,000 and 5,000 km2; the second stage preserves Stage 1 IDs and assigns additional IDs only to previously unassigned network cells. The catalog records thresholds and provenance rather than encoding them in filenames. The reusable CLI also permits arbitrary explicit paths, including generic `subbsn.bin` / `subcol.bin`; without paths it writes parameter-labeled `analysis_subbsn_*.bin` / `analysis_subcol_*.bin`. The station wrapper retains `upbasin-<GRDC_ID>.bin` (Mekong: `upbasin-2569002.bin`). Each concrete filename intended for automatic CTL generation has its own registry row. Logical variable names remain `subbsn`, `subcol`, and `upbasin`. These are optional analysis products, not runtime inputs.
+Standard subbasin examples use parameter-independent `subbsn-sample.bin` and `subcol-sample.bin` filenames. Both `s06-subbasin.sh` copies supply explicit output paths and editable example thresholds of 30,000 and 5,000 km2; the second stage preserves Stage 1 IDs and assigns additional IDs only to previously unassigned network cells. The map-local README records sample thresholds and provenance rather than encoding them in filenames or registering separate standard-variable rows. The reusable CLI also permits arbitrary explicit paths, including generic `subbsn.bin` / `subcol.bin`; without paths it writes parameter-labeled `analysis_subbsn_*.bin` / `analysis_subcol_*.bin`. The station wrapper retains `upbasin-<GRDC_ID>.bin` (Mekong: `upbasin-2569002.bin`). The two subbasin sample filenames are variants of the standard definitions, selected in the s90 Shell settings via `--reference-binary subbsn.bin` / `subcol.bin`; automatic CTL discovery does not register or infer these variants. Other registered sample products are unchanged. Logical variable names remain `subbsn`, `subcol`, and `upbasin`. These are optional analysis products, not runtime inputs.
 
 The fields deliberately separate two questions: `distribution_status` describes the product's role in the workflow, while `sample_availability` records where it was actually observed. Package observations do not prove universal distribution. A source program that writes a file does not establish that a corresponding product is shipped. These distinctions should be preserved when adding entries.
 
 The v5 bifurcation workflow distinguishes regular supporting output from optional diagnostics. `bifcol.bin` is generated on every standard run because it is routinely used to visualize the merged basin map. With `check_map`, `param_bif_set_params` writes `check_bif_dphwth.bin` (float32 records `bifdph`, then `bifwth`), and `param_bif_set_basin` writes `check_bif_bsnmod.bin` (int32 records `bifmod`, then `bpoint`). Each diagnostic file has two `NX × NY` direct-access records and is not a model runtime input. The corresponding registry rows use `sub_id=C` to mark these outputs as opt-in: the programs emit them only when `check_map` is requested. This is distinct from `runtime_requirement`, which records whether a product is consumed during model execution. The v5 basin utility no longer writes separate `bifmod.bin` and `bpoint.bin`; those names belong to the unchanged v4 workflow. The legacy v4 `set_bifparam.F90` continues to write `bifdph.bin`, while v5 does not create or replace it. `biftag.bin` is excluded from the v5 product registry; any package or legacy occurrences remain untouched. The registry uses two variable rows per multi-record diagnostic file, preserving record indexes and order.
+
+The registry contains one MPI-region variable definition, `mpireg.bin` / `mpireg`
+(Int32, NX,NY, one record, missing -9999). Positive numbered standard files
+`mpireg-N.bin` reuse it in the Binary-to-NetCDF s01/s02 workflow; N names the
+process count, never the array dimensions or inferred values. The Mekong 4/8/16
+examples, generation/reader provenance, validation rules and CTL reference
+support are described in the [format conversion guide](../map/tools/script_format_conv/README.md#standard-numbered-mpi-region-maps).
+No other variable receives an automatic numbered-name rule. Explicit
+`--reference-binary` still requires an exact registered key; `mpireg-N.bin`
+is not itself a reference key. Workflow stage and common scientific metadata
+are retained from the former numbered rows.
 
 The v5 MPI basin-aggregation step writes `bifcol_mpi.bin`, a visualization of the MPI-aggregated basin IDs. It is created by `param_mpi_set_basin` independently of the requested region count N; its colors may vary with `normal` versus `MaxMPI` aggregation mode. The subsequent partition step writes one persistent model input, `mpireg-N.bin`, for each configured count. Each is a single int32 `NX × NY` direct-access record; `-9999` marks cells outside an assigned MPI region. No unnumbered `mpireg.bin` alias is written. The standalone `analysis_mpi_region_color` reads a selected `mpireg-N.bin` and `params.txt`, then writes a one-record int32 `NX × NY` `bsncol_mpi-N.bin` display-color map for its region IDs. Its `-9999` cells are outside assigned regions; values 1–10 are visualization indices, not MPI rank IDs. This optional non-runtime utility is run manually for any existing numbered partition; the s04 wrapper does not invoke it. The v5 serial and MPI preprocessing consumers use authoritative `bifprm.csv`. The simulation reader accepts CSV and legacy TXT in standard builds, and also accepts the equivalent `<MAPDIR>/netcdf/bifprm.nc` in NetCDF-enabled builds. NetCDF is a representation of the finalized CSV, not a separately calculated table. The visible `bifbsn_mpi.tmp` is an intermediate basin-group raster removed after partition generation and is not a registry product. The registry distinguishes `bifcol_mpi.bin` (MPI-aggregated basins, independent of N) from `bsncol_mpi-N.bin` (optional visualization of the N-region map). The v5 registry does not catalog v4-only products such as separate `bifbsn_mpi.bin`, `bifmod_mpi.bin`, `bpoint_mpi.bin`, `bifprm_mpi.txt`, or `bifprm-<N>.txt`. The unchanged historical implementations remain under `map/src/`.
 
@@ -208,13 +219,23 @@ The package example contains three records: `NX`, `NY`, and `NLFP`. The maintain
 
 The external algorithm's source is not included in this repository. The repository therefore has no in-tree reader/writer for this file; the distributed map package is the reference for its observed three-record representation.
 
-### `inpdim_<ROFFTAG>.txt` — v5 runoff/input-grid configuration
+### `diminfo_<ROFFTAG>.txt` — Simulation dimension information
 
-v5 map workflows pair `inpdim_<ROFFTAG>.txt` with `inpmat_<ROFFTAG>.bin`. `ROFFTAG` identifies the runoff product or input-grid mapping configuration (for example, `test-glb_1deg` or `test-E2O_15min_nc`). It is independent of `HIRES_TAG`, which selects the high-resolution map directory used to generate a mapping, such as `1min` or `15sec`.
+`diminfo_<ROFFTAG>.txt` configures simulation dimensions: model grid `NX, NY`,
+floodplain layers `NLFP`, runoff/input grid `NXIN, NYIN`, input-matrix contributor
+count `INPN`, and optional geographic bounds read when `LGRIDMAP` is enabled.
+`inpmat_<ROFFTAG>.bin` is the separate input-to-model correspondence matrix.
+`ROFFTAG` identifies the runoff product/mapping configuration; `HIRES_TAG`
+independently selects high-resolution lookup data such as `1min` or `15sec`.
 
-The legacy `diminfo_` prefix remains in existing v4 package data and workflows that have not migrated. The v5 CTL generator accepts both `inpdim_` and legacy `diminfo_` companions. The model's namelist/API field remains named `diminfo_file`; that interface name does not dictate the physical descriptor filename. Existing legacy descriptors are retained for backward compatibility while v5 scripts select `inpdim_<ROFFTAG>.txt`.
+The earlier v5 `inpdim` spelling is retired because it incorrectly suggested
+input-grid-only metadata. Restoring `diminfo` clarifies the simulation-wide role
+and aligns naming with v4; it does not establish file-format compatibility by
+itself. The eleven-record format, record values and matrix Binary layout are
+unchanged. `CDIMINFO` and `diminfo_file` remain the existing configuration/API
+names. No old-name fallback or duplicate descriptors are generated.
 
-### Text descriptor format (legacy `diminfo_*.txt` and v5 `inpdim_*.txt`)
+### Text descriptor format (`diminfo_*.txt`)
 
 The standard sample format contains eleven records:
 
@@ -227,6 +248,15 @@ The standard sample format contains eleven records:
 | 8–11 | west, east, north, south map bounds | Destination map domain, in degrees for the inspected geographic grids |
 
 The core run configuration parser reads the dimensions, input-grid dimensions, and `INPN`; when `LGRIDMAP` is true (the inspected default), it also reads the four map bounds. The input matrix is a separate binary file, with records grouped as `INPN` x-index records, `INPN` y-index records, then `INPN` float32 overlap-area records, each covering `NX × NY`.
+
+`src_main/cmf_ctrl_nmlist_mod.F90` reads `NDIMTIME/CDIMINFO` into the global
+simulation dimensions before initialization. The per-input mapping path
+`input_conf_class` → `get_inpmat_index` → `load_inpmat_files` →
+`read_inpmat_diminfo` independently reads the configured `diminfo_file`, checks
+its model shape against `NX, NY, NLFP`, and stores input dimensions and `INPN`
+with the mapping. These paths can read the same physical file when configured
+that way; the per-input descriptor is not automatically taken from `CDIMINFO`.
+This naming change does not consolidate or reorder those reads.
 
 The file combines destination-map geometry with runoff/input-grid configuration. It does not by itself specify runoff-grid spacing, source bounds, longitude convention, or row order; the shell workflow/input dataset provides those. `generate_inpmat.F90` reads the destination grid from `params.txt`, calculates `NXIN`/`NYIN` from configured input bounds and spacing, and writes the descriptor plus paired matrix. Thus `params.txt` and the descriptor repeat some map dimensions/bounds but have distinct roles. v5 `param_inpmat_generate` derives both filenames from `ROFFTAG`; `HIRES_TAG` is passed separately to select high-resolution lookup data.
 
@@ -276,7 +306,7 @@ The maintainer confirmed that the module-level files were previously generated a
 
 ### GrADS CTL generation
 
-The v5 generator is implemented at `map/tools/code/generate_ctl.py`. It combines variable metadata from `map_variables.csv` with dataset-specific geometry read from `params.txt` or `location.txt`. The CSV describes reusable products and record layouts, not sample-map dimensions. It accepts explicit independent-record layouts (including one row per variable with record indices), the documented `NLFP` layered-variable layout, and the regionalization input matrix paired with its dimension description. In a v5 input-matrix filename pair, the shared suffix (for example `_test-glb_1deg`) identifies the runoff-data/configuration variant: `inpmat_<ROFFTAG>.bin` pairs with `inpdim_<ROFFTAG>.txt`. The generator also accepts legacy `diminfo_<ROFFTAG>.txt` descriptors for existing maps. The description supplies `NX`, `NY`, `INPN`, bounds, and the paired binary filename; map dimensions and bounds are checked against `params.txt`. A same-basename `.txt` is also accepted. Unknown dimensions/types and unrecognized record descriptions are skipped; blank missing values use the per-type fallback with a warning; invalid values, conflicting declarations, and binary size/layout mismatches are rejected. It scans one selected directory at a time and does not recurse.
+The v5 generator is implemented at `map/tools/code/generate_ctl.py`. It combines variable metadata from `map_variables.csv` with dataset-specific geometry read from `params.txt` or `location.txt`. The CSV describes reusable products and record layouts, not sample-map dimensions. It accepts explicit independent-record layouts (including one row per variable with record indices), the documented `NLFP` layered-variable layout, and the regionalization input matrix paired with its dimension description. In a v5 input-matrix filename pair, the shared suffix (for example `_test-1deg`) identifies the runoff-data/configuration variant: `inpmat_<ROFFTAG>.bin` pairs with `diminfo_<ROFFTAG>.txt`. The description supplies `NX`, `NY`, `INPN`, bounds, and the paired binary filename; map dimensions and bounds are checked against `params.txt`. A same-basename `.txt` is also accepted. Unknown dimensions/types and unrecognized record descriptions are skipped; blank missing values use the per-type fallback with a warning; invalid values, conflicting declarations, and binary size/layout mismatches are rejected. It scans one selected directory at a time and does not recurse.
 
 The tool follows the existing legacy CTL convention `yrev little_endian` and cell-center coordinates. The standard regional input matrix has three logical variables (`inpx`, `inpy`, `inpa`) with `INPN` levels, matching the two integer-index blocks and one floating-point overlap-area block written by `region_default_inpmat.F90`; unused slots initialized to zero are represented by `undef 0`. This is the distributed mapping for the standard annual runoff climatology used in channel cross-section parameter estimation. It is distinct from the general-purpose `generate_inpmat.F90` utility for user-selected runoff grids. The generator does not read the runoff dataset itself. The CTL tool does not infer or validate alternative endianness or row order.
 
@@ -312,3 +342,37 @@ High-resolution `downxy` stores two signed 16-bit relative offsets on the high-r
 - Package examples, inspected read-only: `glb_15min/params.txt`, `glb_15min/mapdim.txt`, CTLs, `diminfo*.txt`, channel maps, `map/data/ELSE_GPCC_clm-1981-2010.one`, and `map/data/width.bin`.
 
 Current automation status: the previous source/map GitHub Actions workflow is removed pending a redesigned v5 suite. The validation scripts cited above remain manually executable; see [the migration audit](../docs/migration_consistency_audit.md#manual-checks-retained-from-the-retired-workflow).
+
+
+## Standard definitions and experimental Binary names
+
+CSV is the sole definition of variable meaning, type, dimensions, record order,
+units and missing/special values. Shell owns specific experimental filenames.
+`--reference-binary` in the [existing raster converter](../map/tools/code/convert_map_binary_to_netcdf.py)
+selects all rows for an exact registered base filename. Variant input/output stems
+do not rename its variables; `nextxy.bin` remains `nextx` and `nexty`, and the
+legacy `nextxy_noedge` output aliases remain compatible. Full reference layout
+and input size are checked even for a `--variables` subset. Only NX,NY and
+NX,NY,NLFP layouts are supported. See the [variant guide](../map/tools/script_format_conv/README.md#variant-binary-conversion-s90).
+
+Input matrices require a future, separate
+`map/tools/code/convert_inpmat_binary_to_netcdf.py`, still driven by this CSV:
+NX,NY,INPN, mixed inpx/inpy/inpa blocks and diminfo input-grid geometry do not
+fit the ordinary raster engine. This is a design decision, not an implemented
+converter. High-resolution conversion and other sample registry rows are unchanged.
+
+
+The NetCDF-to-COG planner also reuses the positive numbered `mpireg-N` rule.
+For single-variable variant filenames, an exact match between the NetCDF raster
+variable and a unique canonical same-name CSV definition is sufficient; filename
+suffixes are not interpreted. Full storage/geometry validation still applies.
+Unknown multivariable/ambiguous variants remain unsupported. See the
+[COG discovery contract](../map/tools/script_format_conv/README.md#consolidated-csv-definitions-and-variant-netcdf-names).
+
+
+CTL generation accepts explicit `--input` with `--reference-binary` or
+`--variables` to reuse a complete standard definition. Positive numbered MPI
+files resolve automatically; sample/station filenames remain s99 Shell settings.
+Unlike NetCDF output selection, CTL must retain every record in the selected
+layout, including companions of a requested variable. See the
+[CTL variant contract](../map/tools/script_params/README.md#standard-definitions-for-ctl-variants).

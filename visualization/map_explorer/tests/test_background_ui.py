@@ -82,9 +82,9 @@ def test_ui_matches_existing_scene_and_native_selection(products, mode):
     if mode == "coarse":
         assert app.layer.image[0, 0] == 1.0  # source m² → display km²
     app.inspect(11.25, 21.75)
-    assert app.selected == (1, 1) and app.selection.boundary is not None
+    assert app.selected == (1, 1) and app.selection.boundary is None
     app.overlay_controls["catchment_boundaries"].value = True
-    assert any("assignment boundaries" in entry[3] for entry in app.frame.overlays)
+    assert not any("assignment boundaries" in entry[3] for entry in app.frame.overlays)
 
 
 def test_tile_availability_fallback_and_source_selection(products):
@@ -106,7 +106,7 @@ def test_tile_availability_fallback_and_source_selection(products):
     assert "flddif" not in app.highres_variable.options.values()
     assert app.highres_variable.value == "catchment"
     assert "flddif" in app.background_ui.notice.object and "using" in app.background_ui.notice.object
-    assert app.selection.tile_key == 'partial' and app.selection.boundary is not None
+    assert app.selection.tile_key is None and app.selection.boundary is None
     app.highres_variable.value = "difference"
     app.hires_source.value = "fine/tile"
     assert app.highres_variable.value == "difference"
@@ -130,7 +130,7 @@ def test_missing_uparea_and_terrain_requirements(products):
     assert list(app.raster_type.options.values()) == ["coarse"]
     assert "No supported" in app.background_ui.notice.object
     app.inspect(11.25, 21.75)
-    assert app.selection.boundary is not None  # catmxy selection needs no uparea
+    assert app.selected == (1,1) and app.selection.boundary is None  # Grid requires no high-res assignment
 
 
 def test_legacy_and_new_json_round_trip(products):

@@ -67,7 +67,8 @@ def main() -> None:
     mappable = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
     colorbar = fig.colorbar(mappable, cax=cax)
     colorbar.set_label(
-        "Source-cell upstream drainage area (km²)\n(color and line width)"
+        "Source-cell upstream drainage area (km²)\n(color and line width)",
+        fontsize=8, labelpad=0,
     )
     colorbar.locator = LogLocator(base=10, subs=(1.0, 2.0, 5.0), numticks=18)
     colorbar.formatter = FuncFormatter(lambda value, _: f"{value:.0f}")

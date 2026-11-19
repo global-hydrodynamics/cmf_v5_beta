@@ -49,10 +49,14 @@ and unresolved choices are recorded in
 
 Open a terminal and change to the root of your CaMa-Flood checkout. The
 following commands assume that the checkout contains this Guide01 example.
+Use the v5 repository `global-hydrodynamics/cmf_v5_beta`. During current v5b01
+preparation, obtain the matching `feature/package-builder` revision; default
+`main` becomes the standard route after the maintainer's planned merge when the
+package is ready. See the [current acquisition/setup guide](../guide01_how_to_develop_tutorial/00_SETUP.md).
 Confirm the location before saving it in a shell variable:
 
 ```bash
-cd /path/to/CaMa-Flood_v4
+cd /path/to/cmf_v5_beta
 pwd
 ```
 
@@ -65,10 +69,12 @@ git branch --show-current
 ```
 
 `cmf_root` is a shell variable, not a permanent setting; define it again in a
-new terminal. The design and manual are in the GitHub source repository. The future learner
-package excludes the developer-only `design/` directory; no dedicated tutorial
-package assembler is available yet, so this is not a claim that an official
-downloadable learner package has been built.
+new terminal. The design and manual are in the GitHub source repository.
+The general [beta Package Builder](../../package/README.md#assemble-a-beta-testing-package)
+now exists and retains developer/legacy materials. A dedicated learner-profile
+package would exclude `design/`; that profile and a complete fresh-package
+learner run remain unverified. Local beta assembly is not a formal release or
+public redistribution approval.
 
 ### Inspect the example files
 
@@ -112,9 +118,9 @@ The sample inputs used by the runner are repository-level files:
 
 - Mekong map files under `map/mekong_15min/netcdf/` and
   `map/mekong_15min/`;
-- runoff file `inp/test-mek_1deg_nc/runoff2000.nc`;
-- input matrix `map/mekong_15min/inpmat_test-mek_1deg.bin` and its dimension
-  description `map/mekong_15min/inpdim_test-mek_1deg.txt`.
+- runoff file `inp/repo-mek_1deg/runoff2000.nc`;
+- input matrix `map/mekong_15min/inpmat_repo-mek_1deg.bin` and its dimension
+  description `map/mekong_15min/diminfo_repo-mek_1deg.txt`.
 
 These are inputs, not files produced by this tutorial. The original
 `rivhgt.nc` is read-only. The runner checks for its required inputs before
@@ -139,20 +145,16 @@ terminal it diagnoses the environment without changing it. See the
 repository [setup instructions](../../README.md#development-environment-setup)
 for the existing-environment and troubleshooting options.
 
-The run scripts expect the NetCDF-enabled executable at
-`out/bin/MAIN_cmf_netcdf`. If that file is missing, prepare the compiler
-configuration described in the [v5 build guide](../../config/README.md),
-then build the separate NetCDF executable from the repository root:
+Like Tutorial02, Guide01 reuses the NetCDF-enabled `src_main/MAIN_cmf` already
+compiled during Tutorial01. No separate compiler wrapper or second model
+executable is required. The run scripts copy this shared executable into each
+experiment directory. Tutorial01's build must enable `UseCDF_CMF`; see the
+[v5 build guide](../../config/README.md) if configuration needs review.
 
-```bash
-cd "${cmf_root}"
-bash gosh_test/compile_netcdf.sh
-```
-
-This build requires GNU Make, GNU Fortran, and NetCDF-Fortran tools including
-`nf-config`. It writes `out/bin/MAIN_cmf_netcdf`; it does not run either
-experiment. The example scripts use the repository `.venv` interpreter by
-absolute path, so activate or prepare that environment before running them.
+The example scripts still use the repository `.venv/bin/python` by absolute
+path. Prepare that environment with the setup above before running the scripts;
+activating a different environment does not replace this explicit path. No
+Python installation or environment fallback is performed by the run scripts.
 
 ### Learning Check
 

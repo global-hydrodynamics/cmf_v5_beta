@@ -175,7 +175,7 @@ CaMa-Flood_v5/
 
 The specific small test datasets and their existing locations should be confirmed before implementation.
 
-**Current-name clarification:** The tree above is conceptual, not an instruction to rename directories. Current tracked forcing is `inp/test-mek_1deg/` (Binary) and `inp/test-mek_1deg_nc/` (annual NetCDF), with `map/mekong_15min/` as the map. Maintained v5 execution workflows currently live in `gosh_test/`; the conceptual `gosh/` entry does not authorize moving them or treating historical v4 scripts as v5 entry points. Preserve these existing locations unless a separate change is approved.
+**Current-name clarification:** The tree above is conceptual, not an instruction to rename directories. Current tracked forcing is `inp/repo-mek_1deg_bin/` (daily Binary records in monthly files) and `inp/repo-mek_1deg/` (annual NetCDF), with `map/mekong_15min/` as the map. Maintained v5 execution workflows currently live in `gosh_test/`; the conceptual `gosh/` entry does not authorize moving them or treating historical v4 scripts as v5 entry points. Preserve these existing locations unless a separate change is approved.
 
 **A separate `github_test/` data directory is not required.**
 
@@ -466,7 +466,7 @@ Instead, contributors provide focused, tested changes, while maintainers review 
 
 This approach is intended to reduce the technical barriers to community contributions while keeping the CaMa-Flood development and distribution system simple and maintainable.
 
-## 11. Current implementation boundary (2026-11-15)
+## 11. Current implementation boundary (2026-11-19)
 
 The principles above are the adopted direction. Their implementation remains incomplete.
 
@@ -476,8 +476,8 @@ The principles above are the adopted direction. Their implementation remains inc
 | Model and execution entry points | `src_main/`, `config/`, `gosh_test/`, and Tutorial01 provide existing build/run materials with earlier operational evidence. | Consolidate a current clean-clone recipe; do not describe this documentation task as a new model execution or package test. |
 | Regression references | Component tests exist; earlier model comparisons are recorded in research. | Independently approve the official model-reference revision, variables, calendar, precision and comparison criteria, then provide a repeatable command. Historical execution success is not this approval. |
 | Migration baseline | Legacy root src/gosh/adm relocation and direct util-to-tools consolidation are committed in 29b889c4; current main inherits them. | Use legacy/ only as reference and the active src_main/config/gosh_test/tools paths for v5 work. |
-| Additional data | Legacy environments contain larger maps, forcing, derived products and model outputs. | Select datasets by workflow, check provenance/redistribution, and specify the versioned manifest and installation/reference method. A local file or old-package entry is not sufficient redistribution evidence. |
-| Distributed Package | No v5 package assembler or verified generated v5 distribution exists. | Implement separate-output assembly from a selected committed revision and approved data version, followed by structural and execution checks. |
+| Additional data | `package/s01-install_package_data.sh` implements developer Import; `s00-diff_package_data.sh` provides independent read-only file Diff. The sole `package_data.csv` catalog preserves its six fields and adds optional exclude_patterns. Symlinked sibling stores, bounded-memory comparison, Git/ignore protections and verified atomic local copies are supported. | Formal distribution version/provenance/redistribution review remains future work; beta assembly now reuses the same catalog and selection implementation. No real-data Import was performed by the implementation task; see the [package guide](../package/README.md). |
+| Distributed Package | `package/p01-archive_clean_repo.sh` extracts a pinned committed HEAD to `package/repo_clean_${VER}/`, with explicit exclusions, byte/mode validation and build provenance. `package/p02-make_package.sh` independently combines an existing same-version clean tree and catalog-selected additional data with staged verified copies and a SHA-256 manifest. | Directory assembly is implemented; runtime/model scientific validation and formal public release approval remain separate future work. |
 | Legacy packaging instructions | `archive_src.sh`, `doc/make_package.sh` and the old package guide describe v4-oriented workflows. | Preserve them as historical references; do not present them as the v5 assembly command. |
 | Contribution guidance | CONTRIBUTING.md now documents feature branches, focused diffs, two test levels and pre-merge review. | Validate the full contributor workflow with an independently tested feature branch/PR in a later task. |
 | PR validation | The former source/map workflow is removed from active GitHub Actions by maintainer instruction; tests and inputs remain. | Automated CI is temporarily disabled pending a small, reproducible v5 suite. Use the retained manual checks; no replacement workflow is added here. |
@@ -486,7 +486,7 @@ Migration cleanup corrects Guide01's confirmed repository-root calculations with
 
 `doc/` and `etc/` are retained for now. Shared calculation belongs in tools, visualization in visualization, map-specific processing in map, and runoff-specific processing in inp. Category subdirectories under tools should be introduced only when an approved migration needs them; the current shared utility consolidation does not create tools/code.
 
-The intended ignore policy also remains partly unimplemented: the current broad extension rules can hide extensionless source files or expose additional NetCDF data, and 16 Python cache files are currently tracked. Ignore rules cannot protect already tracked files or guarantee that another branch will never track an added-data path. Review dataset destinations and generated-file tracking before implementing installation. Do not introduce a custom protection or coordination service.
+The intended ignore policy also remains partly unimplemented: the current broad extension rules can hide extensionless source files or expose additional NetCDF data, and historical snapshots included tracked Python caches. The 2026-11-19 clean-source inventory finds no tracked Python caches or compiler artifacts. Ignore rules cannot protect already tracked files or guarantee that another branch will never track an added-data path. Review dataset destinations and generated-file tracking before implementing installation. Do not introduce a custom protection or coordination service.
 
 A developer beta may retain unfinished and explicitly labeled legacy features. The generated user package is the intended complete distribution product; this document does not announce that such a v5 package is already available. Tutorial learner-package selection is a separate educational profile described in the tutorial documents, not a rule to delete developer records or reference solutions from Git.
 
@@ -498,6 +498,47 @@ These decisions do not block the present documentation work. Resolve each before
 
 - **Official minimal model test and references (important):** Section 5 requires approved references, but no current single regression contract selects the run period, variables, build/precision settings and tolerances. Earlier 40-day and multi-year Mekong runs are evidence, not an automatic choice of the official reference. This choice controls test cost and numerical acceptance.
 - **Additional-data contract (important):** Select the first datasets, source permissions, destination paths, manifest/version compatibility fields, and copy versus optional read-only links after workflow inspection. Existing mixed code/data directories and absolute legacy links prevent choosing a universal directory-overlay method without further work.
-- **Package selection and equivalence (important):** Specify which developer-only files are excluded, how tutorial learner profiles relate to the full package, and what “equivalent package” means when creation dates differ (Section 3.2). Preserve the Git research history; whether selected research documentation is included in the generated user package is not yet specified. No byte-identical archive guarantee is assumed.
+- **Package selection and equivalence (important):** Specify which developer-only files are excluded, how tutorial learner profiles relate to the full package, and what “equivalent package” means when creation dates differ (Section 3.2). For the beta, preserve AGENTS.md, CONTRIBUTING.md, legacy/, docs/, tests and tracked samples, while excluding research/, .github/ and Git-specific files. Research history remains in Git. Formal releases may separate user/developer documentation later. Equivalent retained source means committed file bytes and executable flags; generated provenance timestamps differ. Beta manifests now record the actual selected-file hashes and totals; official reference/runtime equivalence and public-release policy remain future decisions.
 
 Recommended sequence: reconcile the migrated policy and existing working-tree changes; approve a minimal-case validation contract; inventory approved additional data; specify package file selection and manifest; implement assembly and focused tests as separate tasks; finally verify the selected source revision in a clean checkout and the generated package in an independent directory. Each implementation stage follows the branch/scope approval and proportional validation rules in AGENTS.md.
+
+
+### Approved beta source-extraction stage (2026-11-19)
+
+The beta intentionally retains developer/AI-agent materials alongside user
+sources. No minimal user-only profile is applied. `package/p01-archive_clean_repo.sh`
+uses git archive for a pinned HEAD, explicit literal exclusions in
+package_source_exclude.txt, safe staging and no-overwrite publication. Root
+research/ and .github/ plus Git-specific files are excluded; research records stay
+in the development repository. Tracked scientific samples are not filtered by
+extensions or ignore status. An in-tree symlink is retained; unsafe links abort.
+
+package/PACKAGE_BUILD_INFO.txt records source revision/branch, version and execution date.
+The extracted files retain committed bytes/modes; the timestamped provenance is
+not a claim of byte-identical complete archives. No final compressed archive,
+additional-data integration, Fortran compilation or model execution is performed.
+See [the package guide](../package/README.md#clean-beta-git-source-extraction).
+
+
+### Approved beta assembly stage (2026-11-19)
+
+p02-make_package.sh uses existing package/repo_clean_${VER}/ as source authority and
+package_data.csv as the sole additional-data selection policy. It never reruns
+Git archive or overlays development worktree changes. Output is an independently
+copied package/cmf_${VER}_pkg/, after input/conflict/space checks, bounded verified
+copying and atomic no-replace publication. Existing Import/Diff and extraction
+behavior remain unchanged. Same-content duplicates are retained once; differing
+paths error rather than choose a winner. Inputs stay read-only.
+
+The explicit default PACKAGE_DATA_DIR="../../cmf_v5_package_data" is relative to
+the script's package/ directory, regardless of CWD; absolute paths and linked
+store roots remain supported, including in dry-run. VER must match the existing
+clean directory and build information. No automatic version synchronization.
+
+Manifest provenance inherits the clean source revision/branch, records file and
+Dataset SHA-256 identities and exact package totals, and avoids publishing
+absolute host storage paths. Source version is not a claim of runtime validation.
+Beta developer documents/legacy/tests remain; research/Git administration and
+nested generated trees are not restored. No model execution, conversion,
+compression or public upload is included. Existing unconfirmed redistribution
+conditions remain unconfirmed; local assembly is not approval to distribute.

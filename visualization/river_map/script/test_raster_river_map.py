@@ -69,17 +69,18 @@ class RasterRiverMapTest(unittest.TestCase):
                             f"--{mode}-height", str(height), f"--{mode}-width", str(width),
                             "--dpi", "100", "--output", str(output)]
                     if variable == "subcol":
-                        argv += ["--basin", str(MAP / "netcdf/basin.nc"),
-                                 "--nextxy", str(MAP / "netcdf/nextxy_noedge.nc")]
+                        argv += ["--bsncol", str(MAP / "netcdf/bsncol.nc")]
                     original_save = layout.save_network_panel
 
                     def inspect(fig, ax, cax, args):
-                        image = ax.images[0]
+                        image = ax.images[-1] if variable == "subcol" else ax.images[0]
                         if variable == "subcol":
                             # Independent Fortran (NX,NY) view checks the real
                             # sample's orientation and original cell values.
                             data = np.ndarray((80, 120), dtype="<i4", buffer=args.input.read_bytes(), order="F").T
-                            raw = np.ma.masked_where(data <= 0, data)
+                            with Dataset(MAP / "netcdf/bsncol.nc") as src:
+                                context = np.ma.asarray(src['bsncol'][:]).filled(0)
+                            raw = np.ma.masked_where((data <= 0) | (data > 10) | (context < 1) | (context > 10), data)
                         else:
                             with Dataset(args.input) as source:
                                 raw = np.ma.asarray(source[variable][:], dtype=float)
@@ -131,7 +132,13 @@ class RasterRiverMapTest(unittest.TestCase):
                                                      [str(int(value)) for value in indices])
                                     self.assertEqual(image.get_interpolation(), "nearest")
                                     rgba = image.to_rgba(image.get_array())
-                                    self.assertTrue(np.all(rgba[np.ma.getmaskarray(raw)] == [1, 1, 1, 1]))
+                                    self.assertTrue(np.all(rgba[np.ma.getmaskarray(raw), 3] == 0))
+                                    # Missing subcol inside bsncol coverage reveals the approved gray underlay.
+                                    unassigned=(context>=1)&(context<=10)&np.ma.getmaskarray(raw)
+                                    underlay=ax.images[0].to_rgba(ax.images[0].get_array())
+                                    from matplotlib.colors import to_rgba
+                                    np.testing.assert_allclose(underlay[unassigned],
+                                        np.tile(to_rgba('#b3b3b3'),(int(unassigned.sum()),1)))
                         row = catalog[f"p01-f01{panel}"]
                         self.assertEqual(row["option_name"], option)
                         self.assertEqual(ax.get_title().replace("\n", " "),

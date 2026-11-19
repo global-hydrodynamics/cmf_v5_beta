@@ -25,85 +25,46 @@ def split_assignment(products):
 def test_switching_rules_keeps_grid_catchment_and_nextxy_consistent(split_assignment):
     root, data = split_assignment
     app = Explorer(root, root.parent / "exports")
-    lon, lat = 11.25, 22.25
-    info = app.inspect(lon, lat)
-    assert app.selection.method == "Coarse Grid geographic containment"
-    assert app.selected == (0, 1)
-    assert info["clicked coarse ix (1-based)"] == 2
-    assert info["assigned coarse ix (1-based)"] == 1  # raw clicked B; selected A wins
-    assert info["ix (1-based)"] == 2 and info["iy (1-based)"] == 1
-    assert info["downstream ix (1-based)"] == 4 and info["downstream iy (1-based)"] == 3
-    assert app.selection.coarse_outline[0].tolist() == [[11.0, 23.0], [12.0, 23.0]]
-    assert app.selection.boundary.pixel_count == np.count_nonzero((data[0] == 2) & (data[1] == 1))
-    assert len(app.selected_link.data["x0"]) == 1
-    app.raster_type.value = "highres"  # no new click
-    assert app.selection.clicked == (lon, lat) and app.selected == (1, 0)
-    info = app.inspect(lon, lat, resolve_selection=False)
-    assert info["selection method"] == "High-resolution catmxy assignment"
-    assert info["ix (1-based)"] == 1 and info["iy (1-based)"] == 2
-    assert info["downstream ix (1-based)"] == 4 and info["downstream iy (1-based)"] == 2
-    assert app.selection.coarse_outline[0].tolist() == [[10.0, 22.0], [11.0, 22.0]]
-    assert app.selection.boundary.pixel_count == np.count_nonzero((data[0] == 1) & (data[1] == 2))
-    boundary = app.selection.boundary
-    for variable in ("elevtn", "flddif", "difference", "catchment"):
-        app.highres_variable.value = variable
-        assert app.selected == (1, 0) and app.selection.boundary is boundary
-    app.no_background.value = True
-    assert app.selected == (0, 1) and app.selection.method == "Coarse Grid geographic containment"
-    app.no_background.value = False
-    assert app.selected == (1, 0)
-    app.raster_type.value = "coarse"
-    assert app.selected == (0, 1)
-    # Save/load and presets must also re-evaluate the last click by active rule.
-    saved = app.settings()
-    app.raster_type.value = "highres"
-    app.load(json.dumps(saved).encode())
-    assert app.selected == (0, 1)
-    assert "Selection method" in app.inspection.object
+    lon,lat = 11.25,22.25
+    info = app.inspect(lon,lat)
+    assert app.point_select.disabled and app.point_select.value == "grid"
+    assert app.selected == (0,1) and app.selection.native_pixel is None
+    assert "assigned coarse ix (1-based)" not in info
+    assert info["ix (1-based)"] == 2 and info["downstream ix (1-based)"] == 4
+    assert app.selection.coarse_outline[0].tolist() == [[11.,23.],[12.,23.]]
+    assert app.selection.boundary is None
+    # Old explicit requests/JSON cannot override the effective display mode.
+    app.point_select.value = "catchment"
+    assert app.point_select.value == "grid" and app.selected == (0,1)
+    for mode in ("coarse","catchment","elevtn","flddif","difference","none"):
+        app.background.value = mode
+        assert app.selected == (0,1) and app.selection.boundary is None
+    saved = app.settings(); app.load(json.dumps(saved).encode())
+    assert app.selected == (0,1)
+    # The fallback native reader remains scientifically correct for explicit tooling.
+    extra,assigned = app.scene.inspect(lon,lat,"fine/tile")
+    assert assigned == (1,0) and extra["assigned coarse ix (1-based)"] == 1
 
 
 def test_unassigned_missing_source_and_tile_reassessment(split_assignment):
-    root, data = split_assignment
-    app = Explorer(root, root.parent / "exports")
-    app.inspect(10.25, 22.75)  # unassigned native -999, but geographic coarse grid valid
-    assert app.selected == (0, 0)
-    app.raster_type.value = "highres"
-    assert app.selected is None and app.selection.boundary is None
-    assert app.selection.clicked == (10.25, 22.75)
-    assert not len(app.selected_coarse_source.data["x0"])
-    info = app.inspect(10.25, 22.75, resolve_selection=False)
-    assert info["assigned coarse ix (1-based)"] == -999
-    assert info["native hires ix (1-based)"] == 1
-    app.raster_type.value = "coarse"
-    assert app.selected == (0, 0)
-    # A new tile changes the clicked native assignment and must reassess it.
-    app.inspect(11.25, 22.25)
-    app.raster_type.value = "highres"
-    path = root / "replacement.bin"
-    changed = data.copy()
-    changed[:, 1, 2] = [3, 3]
-    changed.tofile(path)
-    original = app.scene.tiles["fine/tile"]
-    app.scene.tiles["replacement"] = Tile(
-        "replacement", root, "replacement", original.geometry, {**original.files, "catmxy": path}
-    )
-    app.hires_source.options = list(app.scene.tiles)
-    app.hires_source.value = "replacement"
-    assert app.selected == (2, 2) and app.selection.tile_key == "replacement"
-    # High-res terrain without any catmxy must never infer a coarse assignment.
-    for tile in app.scene.tiles.values():
-        tile.files.pop("catmxy", None)
-    app.highres_variable.value = "elevtn"
-    info = app.inspect(11.25, 22.25)
-    assert app.selected is None and "unavailable" in info["selection status"]
-    assert "native hires ix (1-based)" in info
-    app.raster_type.value = "coarse"
-    assert app.selected == (0, 1) and app.selection.boundary is None
+    root,data = split_assignment
+    app = Explorer(root,root.parent/"exports")
+    app.inspect(10.25,22.75)
+    assert app.selected == (0,0) and app.selection.boundary is None
+    app.point_select.value = "catchment"
+    assert app.selected == (0,0) and app.point_select.value == "grid"
     assert len(app.selected_coarse_source.data["x0"]) == 4
+    # Native unassigned codes never contaminate a Grid selection.
+    assert "native hires ix (1-based)" not in app.inspect(10.25,22.75)
+    for tile in app.scene.tiles.values():tile.files.pop("catmxy",None)
+    app.highres_variable.value = "elevtn"
+    assert app.inspect(11.25,22.25)["ix (1-based)"] == 2
+    assert app.selected == (0,1) and not app.cell_inspector.pixel_section.visible
 
 
 def test_coarse_grid_without_assigned_pixels_remains_selected(products):
     app = Explorer(products, products.parent / "exports")
+    app.point_select.value = "grid"
     tile = app.scene.tiles["fine/tile"]
     path = products / "sparse.bin"
     data = tile.mmap("catmxy").copy()
@@ -113,7 +74,7 @@ def test_coarse_grid_without_assigned_pixels_remains_selected(products):
     tile._maps.clear()
     info = app.inspect(11.25, 22.25)
     assert app.selected == (0, 1) and app.selection.boundary is None
-    assert "No pixels assigned" in info["selection status"]
+    assert "Grid selected" in info["selection status"]
     assert len(app.selected_coarse_source.data["x0"]) == 4
 
 
@@ -125,8 +86,9 @@ def test_synthetic_export_matches_browser_selection(split_assignment, raster_typ
     explorer = Explorer(root, root.parent / "exports")
     explorer.set_extent(explorer.reader.geometry.extent)  # Compare complete geometry, not viewport-clipped browser runs.
     explorer.raster_type.value = raster_type
+    explorer.point_select.value = "grid" if raster_type=="coarse" else "catchment"
     explorer.inspect(11.25, 22.25)
-    expected = (0, 1) if raster_type == "coarse" else (1, 0)
+    expected = (0, 1)  # No native COG means automatic Grid for either representation.
     assert explorer.selected == expected
     captured = []
     original = application.export_scene
@@ -139,7 +101,7 @@ def test_synthetic_export_matches_browser_selection(split_assignment, raster_typ
     assert explorer.export().is_file()
     boundary, rectangle = captured[-1]
     for source, segments in [
-        (explorer.selection_boundary_source, boundary.segments),
+        (explorer.selection_boundary_source, np.empty((0,2,2)) if boundary is None else boundary.segments),
         (explorer.selected_coarse_source, rectangle),
     ]:
         browser = np.stack(
@@ -153,26 +115,19 @@ def test_synthetic_export_matches_browser_selection(split_assignment, raster_typ
 
 
 def test_missing_assignment_clears_while_visual_pixels_remain_available(products):
-    app = Explorer(products, products.parent / "exports")
-    app.raster_type.value = "highres"
-    app.highres_variable.value = "elevtn"
+    app = Explorer(products,products.parent/"exports")
+    app.raster_type.value = "highres"; app.highres_variable.value = "elevtn"
     app.overlay_controls["channel_pixels"].value = True
-    app.inspect(11.25, 21.75)
-    assert app.selection.boundary is not None
-    tile = app.scene.tiles["fine/tile"]
-    app.scene.tiles["terrain_only"] = Tile(
-        "terrain_only",
-        tile.directory,
-        tile.prefix,
-        tile.geometry,
-        {key: path for key, path in tile.files.items() if key != "catmxy"},
-    )
-    app.hires_source.options = list(app.scene.tiles)
-    app.hires_source.value = "terrain_only"
-    # Visual codes can be shown without inventing a catmxy assignment.
-    assert 'Error' not in app.status.object and len(app.frame.images)==2
-    assert any('no assignment inferred' in message for message in app.frame.diagnostics)
-    assert app.selection.tile_key == "terrain_only" and app.selected is None
-    assert app.selection.clicked == (11.25, 21.75)
-    assert not len(app.selected_coarse_source.data["x0"])
-    assert not len(app.selection_boundary_source.data["x0"])
+    app.inspect(11.25,21.75)
+    assert app.point_select.value == "grid" and app.selection.boundary is None
+    tile=app.scene.tiles["fine/tile"]
+    app.scene.tiles["terrain_only"] = Tile("terrain_only",tile.directory,tile.prefix,tile.geometry,
+        {k:p for k,p in tile.files.items() if k!="catmxy"})
+    app.hires_source.options=list(app.scene.tiles);app.hires_source.value="terrain_only"
+    assert "automatic limits require native catmxy" in app.status.object
+    app.background_ui.highres_auto.value=False
+    app.highres_low.value,app.highres_high.value=0,50
+    app.render_view()
+    assert len(app.frame.images)==2 and app.selected==(1,1)
+    assert app.selection.native_pixel is None and app.selection.boundary is None
+    assert any("no assignment inferred" in m for m in app.frame.diagnostics)

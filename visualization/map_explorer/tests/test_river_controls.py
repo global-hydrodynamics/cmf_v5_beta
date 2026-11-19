@@ -22,7 +22,7 @@ def reference():
 
 
 @pytest.mark.parametrize("palette", AREA_PALETTES)
-def test_quantile_palette_and_explicit_gallery_exception(palette):
+def test_equal_range_palette_and_explicit_gallery_exception(palette):
     n, r, ids = reference()
     widths, colors, legend, _ = area_style(
         n, r, ids, classification="quartiles", area_palette=palette, color_area=True, scale_width=True
@@ -30,8 +30,8 @@ def test_quantile_palette_and_explicit_gallery_exception(palette):
     np.testing.assert_allclose(widths[:7], [1, 1, 5 / 3, 7 / 3, 7 / 3, 3, 3])
     assert len(set(colors[:7])) == 4 and colors[-1] == "#888888"
     if palette in RIVER_GRADIENTS:
-        assert colors[0] == RIVER_GRADIENTS[palette][0].lower()
-        assert colors[6] == RIVER_GRADIENTS[palette][-1].lower()
+        assert colors[0].lower() == RIVER_GRADIENTS[palette][0].lower()
+        assert colors[6].lower() == RIVER_GRADIENTS[palette][-1].lower()
     elif palette != "shade_rainbow":
         assert colors[0] == to_hex(colormaps[palette](0.0))
         assert colors[6] == to_hex(colormaps[palette](1.0))
@@ -45,7 +45,7 @@ def test_quantile_palette_and_explicit_gallery_exception(palette):
         area_color_style="gallery_quartiles",
     )[1]
     assert old[0] == AREA_COLORS[0] and old[6] == AREA_COLORS[3]
-    assert any("31.6" in label for label in legend)  # 10**1.5, not equal log intervals
+    assert any("31.6" in label for label in legend)  # 10**1.5 is the first equal Log boundary for 1..1e6.
 
 
 @pytest.mark.parametrize("mapping", ["continuous", "six_log"])
@@ -114,9 +114,10 @@ def test_conditional_controls_preferences_and_default_width(products):
     app.color_mode.value = "upstream_area"
     assert app.area_palette.value == "turbo" and app.network_options()["area_limits"] == [1, 10]
     assert app.selection is selected and app.extent == extent
-    for method in ("quartiles", "fixed"):
-        app.classification.value = method
-        assert app.river_ui.auto.disabled and app.river_ui.low.disabled and app.river_ui.high.disabled
+    app.classification.value = "quartiles"
+    assert not app.river_ui.auto.disabled and not app.river_ui.low.disabled
+    app.classification.value = "fixed"
+    assert app.river_ui.auto.disabled and app.river_ui.low.disabled and app.river_ui.high.disabled
     app.classification.value = "six_log"
     assert not app.river_ui.low.disabled
 
@@ -223,7 +224,7 @@ def test_mekong_gallery_exceptions_and_custom_palette(tmp_path):
     app = Explorer(ROOT / "map/mekong_15min", tmp_path)
     app.apply_preset("p01-f03a", use_gallery_extent=True)
     assert set(app.frame.main["color"]) <= set(AREA_COLORS)
-    assert app.river_ui.color_style == "gallery_quartiles" and app.arrow_size.value == 7
+    assert app.river_ui.color_style == "palette" and app.area_palette.value == "blue_navy" and app.arrow_size.value == 7
     app.area_palette.value = "plasma"
     assert not set(app.frame.main["color"]) <= set(AREA_COLORS)
     assert "Custom" in app.preset_status.object
@@ -244,3 +245,93 @@ def test_fixed_legacy_retains_historical_range_and_unknown_endpoint_style():
     np.testing.assert_allclose(widths[:7], [0.5, 1, 1.5, 2, 2.5, 3, 3.5])
     assert widths[-1] == 0.5 and colors[-1] == colors[0]
     assert any("1–1e+06" in label for label in labels)
+
+
+@pytest.mark.parametrize("scale,classes", [("linear", 4), ("linear", 6), ("log", 4), ("log", 6)])
+def test_interval_boundaries_depend_on_range_not_population(scale, classes):
+    values = (1 + 100 * np.arange(classes + 1)).astype(float) if scale == "linear" else 10.**np.arange(classes + 1)
+    method = "quartiles" if classes == 4 else "six_log"
+    def encoded(raw, selected):
+        n = SimpleNamespace(_areas=raw, link_index=np.arange(len(raw)), flexible=np.zeros(len(raw), bool))
+        return area_style(n, SimpleNamespace(), selected, color_area=True, scale_width=True,
+                          area_scale=scale, classification=method, area_palette="plasma")
+    expected_levels = np.minimum(np.arange(classes + 1), classes - 1)
+    expected_widths = 1 + 2 * expected_levels / (classes - 1)
+    w, c, labels, swatches = encoded(values, np.arange(len(values)))
+    np.testing.assert_allclose(w, expected_widths)
+    skewed = np.r_[np.repeat(values[0], 100), values, 0, np.nan]
+    repeated = encoded(skewed, np.arange(100, 100 + len(values)))
+    np.testing.assert_allclose(repeated[0], w)
+    np.testing.assert_array_equal(repeated[1], c)
+    assert repeated[2] == labels
+    assert len(set(c)) == classes
+    assert len([s for s in swatches if s[0].startswith("Color")]) == classes
+    assert any(f"{classes} equal intervals; {scale}" in label for label in labels)
+    assert not any(label.startswith("Color: Q") for label in labels)
+    # Endpoints belong to the first and last colors; exact inner edges enter next class.
+    assert c[0] == to_hex(colormaps["plasma"](0.0))
+    assert c[-1] == to_hex(colormaps["plasma"](1.0))
+
+
+def test_linear_four_manual_color_limits_leave_widths_on_full_range():
+    n = SimpleNamespace(_areas=np.array([1., 101., 201., 301., 401.]),
+                        link_index=np.arange(5), flexible=np.zeros(5, bool))
+    kw = dict(classification="quartiles", area_scale="linear", color_area=True,
+              scale_width=True, area_palette="plasma")
+    widths, original, _, _ = area_style(n, SimpleNamespace(), np.arange(5), **kw)
+    manual_widths, colors, legend, _ = area_style(n, SimpleNamespace(), np.arange(5), area_limits=[101, 301], **kw)
+    np.testing.assert_array_equal(widths, manual_widths)
+    assert colors[0] == colors[1] and colors[3] == colors[4]
+    assert not np.array_equal(colors, original)
+    assert "Color: Linear 1: 101–151 km²" in legend
+    assert "Width: Linear 1: 1–101 km²" in legend
+
+
+def test_scale_roundtrip_legacy_default_and_invalid_input(products):
+    app = Explorer(products, products.parent / "area-range-out")
+    app.classification.value = "quartiles"
+    app.river_ui.scale.value = "linear"
+    state = app.settings()
+    assert state["network_options"]["area_scale"] == "linear"
+    app.load(json.dumps(state).encode())
+    assert app.river_ui.scale.value == "linear"
+    state["network_options"].pop("area_scale")
+    app.load(json.dumps(state).encode())
+    assert app.river_ui.scale.value == "log"
+    assert "equal Log value-range" in app.status.object
+    state = app.settings()
+    state["network_options"]["area_scale"] = "invalid"
+    before = app.settings()
+    with pytest.raises(ValueError, match="area scale"):
+        app.load(json.dumps(state).encode())
+    assert app.settings() == before
+
+
+def test_constant_reference_does_not_manufacture_a_range():
+    n = SimpleNamespace(_areas=np.full(8, 5.), link_index=np.arange(8), flexible=np.zeros(8, bool))
+    for scale in ("linear", "log"):
+        widths, colors, _, _ = area_style(n, SimpleNamespace(), np.arange(8),
+                                         area_scale=scale, classification="quartiles",
+                                         color_area=True, scale_width=True)
+        np.testing.assert_array_equal(widths, np.ones(8))
+        assert len(set(colors)) == 1
+
+
+def test_outlet_view_does_not_inherit_grid_range_cache(products):
+    from map_reader import MapReader
+    from map_products import Products
+    from river_network import RiverNetwork
+    reader = MapReader(products)
+    network = RiverNetwork(reader)
+    area_style(network, reader, network.visible(reader.geometry.extent), color_area=True)
+    old_count = network._area_range_summary[0]
+    maps = Products(reader)
+    lon, lat = maps.outlets
+    lon[network.rows[0], network.cols[0]] = np.nan
+    view = maps.network_view(network, "outlet_vector")
+    assert not hasattr(view, "_area_range_summary")
+    area_style(view, reader, np.arange(len(view.link_index)), color_area=True)
+    raw = view._areas[np.unique(view.link_index)]
+    raw = raw[np.isfinite(raw) & (raw > 0)]
+    assert view._area_range_summary == (len(raw), float(raw.min()), float(raw.max()))
+    assert view._area_range_summary[0] < old_count

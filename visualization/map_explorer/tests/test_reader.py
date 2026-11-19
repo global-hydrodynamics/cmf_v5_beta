@@ -134,3 +134,22 @@ def test_bad_variable_dimensions_and_coordinate_units(map_dir):
     r=MapReader(map_dir)
     assert 'elevtn' not in r.sources
     assert any('exactly the lon' in message for message in r.messages)
+
+
+def test_coarse_log_floor_preserves_zero_negative_and_missing_source_values(map_dir):
+    from map_layers import colorize
+    values = np.array([[-5, 0, 0.001, 1], [2, -9999, 3, 4], [5, 6, 7, 8]], dtype="<f4")
+    path = map_dir / "elevtn.bin"
+    values.tofile(path)
+    before = path.read_bytes()
+    reader = MapReader(map_dir)
+    layer = make_layer(reader, "elevtn", scale="log", limits=(0.1, 10))
+    np.testing.assert_array_equal(layer.image[0, :3], [np.nan,np.nan,0.1])
+    assert np.isnan(layer.image[1, 1])
+    colors = colorize(layer, layer.image)
+    assert colors[0, 2] == colorize(layer, np.array([[0.1]]))[0, 0]
+    assert make_layer(reader, "elevtn", scale="log").low == 0.01
+    with pytest.raises(ValueError,match="logarithmic"):
+        make_layer(reader, "elevtn", scale="log", limits=(0, 10))
+    np.testing.assert_array_equal(reader.read("elevtn")[0, :3], values[0, :3])
+    assert path.read_bytes() == before

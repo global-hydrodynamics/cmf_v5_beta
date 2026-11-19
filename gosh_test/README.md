@@ -30,7 +30,10 @@ PROJ=mek01-default ./mek01-default_run.sh
 PROJ=mek02-custom ./mek02-2year_netcdf.sh
 ```
 
-The first script retains its existing requirement to launch from `gosh_test/`. For a complete path override:
+Both scripts resolve the repository root from their own location, independent of
+launch directory. Running from `gosh_test/` remains the usual workflow; direct
+repository-root invocation also works: `./gosh_test/mek01-default_run.sh` and
+`./gosh_test/mek02-2year_netcdf.sh`. For a complete path override from `gosh_test/`:
 
 ```sh
 PROJ=mek01-custom RUNDIR="/absolute/path/to/my-run" ./mek01-default_run.sh
@@ -38,13 +41,28 @@ PROJ=mek01-custom RUNDIR="/absolute/path/to/my-run" ./mek01-default_run.sh
 
 Both scripts keep their existing sample-rerun policy: they replace only their known generated files in the selected RUNDIR, not the entire directory. Choose another project or explicit RUNDIR to retain an earlier run. Existing outputs under the old root `out/` locations are not moved or deleted by this change. Files unrelated to the selected sample and sibling projects are preserved.
 
+The river-network choices intentionally differ: mek01 uses
+`map/mekong_15min/nextxy_noedge.bin`, while mek02 uses
+`map/mekong_15min/netcdf/nextxy.nc` (including boundary-affected networks).
+Both retain `INPMAT_TAG="repo-mek_1deg"`, `diminfo_repo-mek_1deg.txt` and
+`inpmat_repo-mek_1deg.bin`: the repository runoff datasets `repo-mek_1deg_bin`
+and `repo-mek_1deg` use the same 20 × 30 regional grid and share this mapping.
+The former `test-mek_1deg` mapping pair was renamed without changing its values;
+no regeneration is needed when switching between Binary and NetCDF runoff.
+
+mek02 removes exactly `o_<CVARSOUT variable><year>.nc` for its configured inclusive
+year range before rerunning. The current eight-variable list includes `pthflw`,
+`rivdph` and `fldare`; adding a variable to CVARSOUT automatically includes its
+annual files. Other variable names, year tags and similarly prefixed files remain.
+Existing Restart, log, Namelist and annual bookkeeping cleanup is unchanged.
+
 ## Mekong default experiment
 
-`mek01-default_run.sh` uses `src_main/MAIN_cmf`, the tracked 15-minute Mekong map, daily Binary `inp/test-mek_1deg/` forcing and its matching input matrix. It runs from 2000-01-01 00:00 to 2000-02-10 00:00 (40 days, end exclusive), with bifurcations and adaptive stepping enabled and reservoir operation disabled. Its default four-thread setup and scientific settings are unchanged. It writes planned output CTLs before the model and Binary Restart CTLs after successful execution; Float64 Restart visualization copies remain explicitly lossy Float32 products.
+`mek01-default_run.sh` uses `src_main/MAIN_cmf`, the tracked 15-minute Mekong map, daily Binary `inp/repo-mek_1deg_bin/` forcing grouped into monthly files (`CROFFREQ="MON"`), reusing the unchanged `repo-mek_1deg` input matrix. It runs from 2000-01-01 00:00 to 2000-02-10 00:00 (40 days, end exclusive), with bifurcations and adaptive stepping enabled and reservoir operation disabled. Its default four-thread setup and scientific settings are unchanged. It writes planned output CTLs before the model and Binary Restart CTLs after successful execution; Float64 Restart visualization copies remain explicitly lossy Float32 products.
 
 ## Mekong annual NetCDF experiment
 
-`mek02-2year_netcdf.sh` uses the same `src_main/MAIN_cmf`, built with NetCDF support. It runs 2000–2001 with annual NetCDF forcing from `inp/test-mek_1deg_nc/`, individual NetCDF maps, the Binary input matrix and NetCDF output/Restart. Year two reads the prior year's Restart inside the selected RUNDIR. Years, map selection, output-variable list, timestep and physical settings are unchanged. See the [runoff guide](../inp/README.md#supported-input-formats-and-simulation-settings) for grouping and unit conventions.
+`mek02-2year_netcdf.sh` uses the same `src_main/MAIN_cmf`, built with NetCDF support. It runs 2000–2001 with annual NetCDF forcing from `inp/repo-mek_1deg/`, individual NetCDF maps, the Binary input matrix and NetCDF output/Restart. Year two reads the prior year's Restart inside the selected RUNDIR. Years, map selection, output-variable list, timestep and physical settings are unchanged. See the [runoff guide](../inp/README.md#supported-input-formats-and-simulation-settings) for grouping and unit conventions.
 
 The former separate `compile_netcdf.sh` and `legacy02-longterm_netcdf.sh` files are absent from the current checkout; this change does not restore them or change the maintained scripts' executable selection. Historical consolidated-map/Binary-Restart comparison results remain in [the model-source plan](../docs/model_source_workflow_plan.md); they do not validate every current configuration.
 
@@ -58,4 +76,9 @@ Output-analysis f01 and its shared extractor still default to the previous root 
 
 The tracked Mekong inputs support small developer runs, while larger data support extended tests. Current output metadata are resolved from `CMF_BASE/variable_table/output_variables.csv` unless `COUTVAR_TABLE` overrides it; maintained runners keep CMF_BASE at the repository root.
 
-Validation is limited to syntax, unchanged Namelist templates and short output-directory probes; no full model simulation or numerical validation is claimed. The [development and distribution design](../docs/development_and_distribution_design.md) records broader unfinished regression/package work. Follow [CONTRIBUTING.md](../CONTRIBUTING.md) for proportionate tests and [Tutorial01](../tutorial/README.md) for learner-facing instructions.
+Run the isolated maintenance checks with
+`python3 -m unittest discover -s gosh_test/tests -v` from the repository root.
+They use temporary directories and stub model/CTL commands to check syntax,
+launch-directory independence, exact annual cleanup, future-variable coverage,
+and retention of unrelated files. Before/after Namelists were also compared for
+this maintenance change. No full model simulation or numerical validation is claimed. The [development and distribution design](../docs/development_and_distribution_design.md) records broader unfinished regression/package work. Follow [CONTRIBUTING.md](../CONTRIBUTING.md) for proportionate tests and [Tutorial01](../tutorial/README.md) for learner-facing instructions.

@@ -2,6 +2,15 @@
 
 **Under active development — this is a beta development repository, not an official stable release. Some features, workflows and documentation are incomplete or have not been fully validated.**
 
+## v5b01 — Internal Beta Test Package
+
+**v5b01 is for internal beta testing.** Major restructuring will continue for a while, so interfaces, file layouts and workflows may change between beta versions. This is not a stable release.
+
+- Bug reports and suggestions for useful features are very welcome. Contact the maintainer or use [GitHub Issues](https://github.com/global-hydrodynamics/cmf_v5_beta/issues).
+- When reporting a problem, include the package version (`v5b01`), OS/compiler, reproduction steps and relevant logs.
+- Not all platforms and optional features have been tested. Start with [Tutorial01](tutorial/tutorial01-get_started/manual_tutorial01-get_started.md) and check your intended configuration.
+- The GitHub contribution/push policy is still being organized. **Please hold off on pushing code to GitHub until the guidance is ready.** Feedback is welcome in the meantime.
+
 ## Project Overview
 
 CaMa-Flood (Catchment-based Macro-scale Floodplain) is a river hydrodynamics model for regional, continental and global river and flood simulations. It routes runoff through a river network, represents river channels and floodplain storage using sub-grid topography, computes discharge and flow velocity using the local inertial equation, and diagnoses water level and inundated area from water storage.
@@ -17,7 +26,7 @@ The v5 software effort aims to improve readability and maintainability, make ext
 | Previously exercised | Earlier macOS checks cover stand-alone builds, selected Binary/NetCDF input/output and Restart paths, Mekong simulations, and Tutorial01. See the [model workflow evidence](docs/model_source_workflow_plan.md) and [Tutorial01 validation](research/records/validation_runs/VR-0126.md) for revisions and limits. |
 | Under development | A current end-to-end fresh-clone workflow, independently approved model-regression references and broader platform/optional-feature coverage remain to be established. Earlier runs do not guarantee every current workflow. |
 | Retained legacy | Historical v4 model/build/run files are tracked under `legacy/`. Legacy tools also remain in `etc/` and `map/src/`; some are still dependencies of current examples. |
-| Planned | Versioned Package Additional Data, reproducible v5 user-package assembly and integrated package verification are not yet implemented as a complete workflow. |
+| Package preparation | Beta package assembly tools are implemented. Versioned additional-data management and end-to-end package validation remain incomplete; see the [package guide](package/README.md). |
 
 Automated GitHub Actions checks are temporarily disabled pending a small, reproducible v5 regression suite. Existing checks remain available through the [manual validation guide](docs/migration_consistency_audit.md#manual-checks-retained-from-the-retired-workflow).
 
@@ -53,7 +62,7 @@ source .venv/bin/activate
 
 The setup helpers ask before making local changes and only diagnose without an interactive terminal. Python setup installs `requirements.txt` and the bundled CMF Colormaps package into `.venv/`; existing external environments are supported through the [Python guide](docs/python_environment.md).
 
-The basic experiment uses the tracked `map/mekong_15min/` map, daily Binary forcing in `inp/test-mek_1deg/`, and their matching input matrix. It runs 40 days from 2000-01-01 to 2000-02-10 (end exclusive), without the large additional-data package. Results go to `gosh_test/out/mek01/` (override the project with `PROJ`, or the complete path with `RUNDIR`); reruns replace this sample's known generated outputs. The script must run from `gosh_test/`, as shown above.
+The basic experiment uses the tracked `map/mekong_15min/` map, daily Binary forcing in monthly files under `inp/repo-mek_1deg_bin/`, and their matching input matrix. It runs 40 days from 2000-01-01 to 2000-02-10 (end exclusive), without the large additional-data package. Results go to `gosh_test/out/mek01/` (override the project with `PROJ`, or the complete path with `RUNDIR`); reruns replace this sample's known generated outputs. The script must run from `gosh_test/`, as shown above.
 
 For settings and the two-year NetCDF example, see the [developer execution guide](gosh_test/README.md). For an explained first experiment, use the [Tutorial01 manual](tutorial/tutorial01-get_started/manual_tutorial01-get_started.md). Current v5 execution starts in `gosh_test/`, not the historical `legacy/gosh/`. The full current-revision clean-clone build/run/visualization sequence is not yet verified as an integrated procedure.
 
@@ -62,8 +71,8 @@ For settings and the two-year NetCDF example, see the [developer execution guide
 | Component | Role |
 | --- | --- |
 | **GitHub Repository** | Primary developer environment: source, configuration, documentation, tools and approved small Mekong test inputs. |
-| **Package Additional Data** | Intended separately versioned global/regional maps, larger forcing and other approved data for extended tests and package assembly. The manifest and distribution workflow are still being designed. |
-| **Distributed Package** | Intended complete product for general users, generated from a selected Git revision plus additional data, without `.git/` or Git history. The v5 assembler and verified package are not yet available. |
+| **Package Additional Data** | Separately maintained global/regional maps and forcing, selected through the package data catalog. Store versioning and distribution documentation remain in progress. |
+| **Distributed Package** | The beta assembler combines committed source and selected additional data into an independent directory, without `.git/` or Git history, and records a SHA-256 manifest. v5b01 is being prepared for internal testing; this does not establish full runtime validation. |
 
 Existing v4 packages are separate versioned products; they are not v5 beta releases. See the [development and distribution design](docs/development_and_distribution_design.md) for data policy, reproducibility requirements and open decisions. Dataset-specific access and redistribution terms still apply.
 
@@ -98,7 +107,7 @@ In particular, some output-visualization entry points re-extract data from annua
 
 ## Contributing
 
-Develop an independent contribution on a feature branch, run appropriate checks, review and commit only intended changes, and submit a PR against `main`. Maintainers review and can independently test the branch before merging. [CONTRIBUTING.md](CONTRIBUTING.md) explains the workflow, existing component-test commands and minimal versus extended testing; [AGENTS.md](AGENTS.md) defines shared-project coordination and AI-agent instructions. More specific guides for bug fixes, schemes, tutorials and Gallery contributions are planned.
+During internal beta testing, please send feedback and wait for finalized contribution guidance before pushing code. Once contributions open, develop on a feature branch, run appropriate checks, review and commit only intended changes, and submit a PR against `main`. Maintainers review and can independently test the branch before merging. [CONTRIBUTING.md](CONTRIBUTING.md) explains the workflow, existing component-test commands and minimal versus extended testing; [AGENTS.md](AGENTS.md) defines shared-project coordination and AI-agent instructions. More specific guides for bug fixes, schemes, tutorials and Gallery contributions are planned.
 
 ## Documentation and Legacy References
 

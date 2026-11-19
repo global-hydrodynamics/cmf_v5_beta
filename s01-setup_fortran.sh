@@ -374,10 +374,10 @@ for file in \
     map/mekong_15min/nxtdst.bin map/mekong_15min/rivlen.bin \
     map/mekong_15min/fldhgt.bin map/mekong_15min/rivwth_merit.bin \
     map/mekong_15min/rivhgt.bin map/mekong_15min/rivman.bin \
-    map/mekong_15min/inpdim_test-mek_1deg.txt \
-    map/mekong_15min/inpmat_test-mek_1deg.bin \
-    inp/test-mek_1deg/runoff/Roff____20000101.one \
-    inp/test-mek_1deg/runoff/Roff____20000209.one; do
+    map/mekong_15min/diminfo_repo-mek_1deg.txt \
+    map/mekong_15min/inpmat_repo-mek_1deg.bin \
+    inp/repo-mek_1deg_bin/runoff/Roff____200001.one \
+    inp/repo-mek_1deg_bin/runoff/Roff____200002.one; do
     if [ ! -f "$SCRIPT_DIR/$file" ]; then
         MEK01_DATA=no
     fi
@@ -392,15 +392,15 @@ fi
 
 MEK02_DATA=yes
 for file in \
-    map/mekong_15min/params.txt map/mekong_15min/inpdim_test-mek_1deg.txt \
-    map/mekong_15min/inpmat_test-mek_1deg.bin \
-    map/mekong_15min/netcdf/nextxy_noedge.nc \
+    map/mekong_15min/params.txt map/mekong_15min/diminfo_repo-mek_1deg.txt \
+    map/mekong_15min/inpmat_repo-mek_1deg.bin \
+    map/mekong_15min/netcdf/nextxy.nc \
     map/mekong_15min/netcdf/ctmare.nc map/mekong_15min/netcdf/elevtn.nc \
     map/mekong_15min/netcdf/nxtdst.nc map/mekong_15min/netcdf/rivlen.nc \
     map/mekong_15min/netcdf/fldhgt.nc map/mekong_15min/netcdf/rivwth_merit.nc \
     map/mekong_15min/netcdf/rivhgt.nc map/mekong_15min/netcdf/rivman.nc \
     map/mekong_15min/netcdf/bifprm.nc \
-    inp/test-mek_1deg_nc/runoff2000.nc inp/test-mek_1deg_nc/runoff2001.nc; do
+    inp/repo-mek_1deg/runoff2000.nc inp/repo-mek_1deg/runoff2001.nc; do
     if [ ! -f "$SCRIPT_DIR/$file" ]; then
         MEK02_DATA=no
     fi

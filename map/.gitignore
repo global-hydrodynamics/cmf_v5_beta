@@ -1,0 +1,20 @@
+# Global map data are installed locally for development; the authoritative source
+# is the external cmf_v5_package_data/map/glb_15min/ store. Keep the entire local
+# copy untracked; maintained generators/templates remain under map/tools/.
+/glb_15min/
+
+# Runoff preset intermediates, exports and reference comparisons are generated locally.
+/tools/script_runoff_preset/output/
+
+# Japan 1-minute additional-package data: ignore the whole local installation,
+# including map-local script copies. Shared maintained templates live in tools/.
+/TE-Japan_01min/
+
+# Numeric visualization caches are normally generated locally; the complete
+# repository Mekong sample is explicitly tracked by maintainer policy below.
+**/COG/
+
+# Track the complete official Mekong reference map, including COG/ and nested files.
+# Keep this override after generic exclusions; other maps retain their policies.
+!/mekong_15min/
+!/mekong_15min/**

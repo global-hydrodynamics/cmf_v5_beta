@@ -1,3 +1,4 @@
+from conftest import install_test_cogs
 """View translation, explicit frame policy and Gallery graphical contracts."""
 
 import json
@@ -110,8 +111,8 @@ def test_gradient_mapping_geometry_and_manual_limits(palette, classification):
     width, colors, _, _ = area_style(
         net, reader, ids, color_area=True, scale_width=True, classification=classification, area_palette=palette
     )
-    assert colors[0] == RIVER_GRADIENTS[palette][0].lower()
-    assert colors[6] == RIVER_GRADIENTS[palette][-1].lower()
+    assert colors[0].lower() == RIVER_GRADIENTS[palette][0].lower()
+    assert colors[6].lower() == RIVER_GRADIENTS[palette][-1].lower()
     changed = area_style(
         net,
         reader,
@@ -147,15 +148,18 @@ def test_overlay_groups_and_disabled_styles_retain_preferences(products):
 
 
 def test_selection_style_png_receives_identical_geometry(products, monkeypatch):
+    install_test_cogs(products)
     app = Explorer(products, products.parent / "out")
+    app.set_extent(app.reader.geometry.extent)
+    app.background.value = "catchment"
     app.inspect(11.5, 22.5)
     native = app.selection.boundary.segments.copy()
     coarse = app.selection.coarse_outline.copy()
     assert app.selection_boundary_renderer.glyph.line_color == "#FF7F00"
     assert app.selection_boundary_renderer.glyph.line_width == 3
     assert app.selection_boundary_renderer.glyph.line_dash == "solid"
-    assert app.selected_coarse_renderer.glyph.line_color == "#888888"
-    assert app.selected_coarse_renderer.glyph.line_width == 1
+    assert app.selected_coarse_renderer.glyph.line_color == "#D8C8F0"
+    assert app.selected_coarse_renderer.glyph.line_width == 3
     link = app.selected_link.data
     assert len(link["x1"]) == 1
     expected = (
@@ -199,11 +203,13 @@ def test_selection_style_png_receives_identical_geometry(products, monkeypatch):
     selected = {h.get_label(): h for h in legends if h.get_label().startswith("Selected ")}
     coarse_key = "Selected computational coarse grid cell"
     native_key = next(k for k in selected if k.startswith("Selected stored"))
-    assert selected[coarse_key].get_color() == "#888888" and selected[coarse_key].get_linestyle() == "--"
+    assert selected[coarse_key].get_color() == "#D8C8F0" and selected[coarse_key].get_linestyle() == "--"
     assert selected[native_key].get_color() == "#FF7F00" and selected[native_key].get_linestyle() == "-"
     np.testing.assert_array_equal(captured[10][0], native)
     np.testing.assert_array_equal(captured[9][0], coarse)
-    assert captured[10][1]["colors"] == "#FF7F00" and captured[9][1]["colors"] == "#888888"
+    assert captured[10][1]["colors"] == "#FF7F00" and captured[9][1]["colors"] == "#D8C8F0"
+    assert captured[9][1]["linewidths"] == 3 * 72 / 160
+    assert app.selected_coarse_renderer.glyph.line_dash=="dashed"
     assert captured[10][1]["linewidths"] == 3 * 72 / 160
     assert len(arrows) == 1 and arrows[0][2]["c"] == ["#FFD400"]
     assert [arrows[0][0][0], arrows[0][1][0]] == pytest.approx([link["x1"][0], link["y1"][0]])
@@ -234,7 +240,7 @@ def test_seven_visible_gallery_renderings_and_legacy_library(tmp_path):
             rgba = app.frame.images[0][0].view("u1").reshape(*app.frame.images[0][0].shape, 4)
             assert np.any(np.all(rgba[:, :, :3] == 179, axis=2))
         if identity == "p01-f02a":
-            assert app.network_choice.value == "nextxy_noedge"
+            assert app.network_choice.value == "nextxy"
             assert app.frame.paths["xs"] and len(app.frame.arrows["x"]) > 0
             lengths = list(map(len, app.frame.paths["xs"]))
             assert 2 in lengths and 17 in lengths

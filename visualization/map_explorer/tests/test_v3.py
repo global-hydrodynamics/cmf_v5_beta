@@ -1,4 +1,6 @@
+from conftest import install_test_cogs
 """Native assignment geometry, preset contracts and persistent Explorer state."""
+from conftest import native_assignments
 
 import csv
 import json
@@ -90,7 +92,10 @@ def test_native_assignment_clicks_and_persistent_selection(products):
     a[:, 5, 7] = 1  # disconnected component outside test viewport
     a[0, 0, 2], a[1, 0, 2] = 1, -999  # invalid mixed pair
     a.tofile(path)
+    install_test_cogs(products)
     app = Explorer(products, products.parent / "exports-v3")
+    app.set_extent(app.reader.geometry.extent)
+    app.background.value = "catchment"
     app.background.value = "catchment"
     tile = app.scene.tiles["fine/tile"]
     app.scene.build(app.extent, app.variable.value, app.layer, app.network, app.scene_options(), max_side=2)
@@ -107,8 +112,12 @@ def test_native_assignment_clicks_and_persistent_selection(products):
     app.terrain_palette.value = "pale_terrain"
     app.overlay_controls["catchment_boundaries"].value = False
     app.representation.value = "outlet_vector"
-    assert app.selection.boundary is boundary
-    assert boundary.pixel_count == mask.sum()  # includes off-screen component
+    assert app.selection.boundary is not boundary  # viewport window is recalculated
+    assert 0 < app.selection.boundary.pixel_count < mask.sum()
+    assert elementary_edges(app.selection.boundary.segments, tile.geometry) <= expected_edges(mask)
+    boundary = app.selection.boundary
+    app.terrain_palette.value = "gray"
+    assert app.selection.boundary is boundary  # style-only changes reuse geometry
     assert len(app.selection_boundary_source.data["x0"]) > 0
     for lon, lat, code in [(10.25, 22.75, -999), (10.75, 22.75, -9999), (11.25, 22.75, 1)]:
         info = app.inspect(lon, lat)
@@ -116,9 +125,11 @@ def test_native_assignment_clicks_and_persistent_selection(products):
         assert app.selected is None and app.selection.boundary is None
         assert not len(app.selection_boundary_source.data["x0"])
         assert "ix (1-based)" not in info  # no containing-cell fallback
+    app.point_select.value = "grid"
     app.background.value = "coarse"
     app.inspect(11.25, 21.75)
-    assert app.selected == (1, 1) and app.selection.boundary is not None  # coarse geographic rule
+    assert app.selected == (1, 1) and app.selection.boundary is None  # Grid mode has no native outline
+    app.point_select.value = "catchment"
     app.background.value = "elevtn"
     app.inspect(11.25, 21.75)
     assert app.selection.kind == "catchment" and app.selected == (0, 0)
@@ -131,7 +142,7 @@ def test_presets_catalog_missing_inputs_and_atomic_application(map_dir):
     before = app.settings()
     missing = library.missing_products("p01-f04b", app.reader, app.scene)
     assert any("catmxy" in name for name in missing)
-    assert "nextxy_noedge" in missing
+    assert "nextxy" in missing
     with pytest.raises(ValueError, match="missing"):
         app.apply_preset("p01-f04b")
     assert app.settings() == before
@@ -184,7 +195,7 @@ def test_mekong_presets_native_outline_and_png(tmp_path):
         assert app.plot is plot and "Error" not in app.status.object
     app.apply_preset("p01-f04a", True)
     tile = app.scene.tiles[app.hires_source.value]
-    data = tile.mmap("catmxy")
+    data = native_assignments(tile)
     # These physical locations and native assignments are independently checked;
     # at least one catchment extends beyond its computational geographic cell.
     crossing = False
@@ -195,10 +206,10 @@ def test_mekong_presets_native_outline_and_png(tmp_path):
         info = app.inspect(lon, lat)
         assert app.selected == (y - 1, x - 1)
         mask = (data[0] == x) & (data[1] == y)
-        assert info["unit catchment assigned pixel count"] == np.count_nonzero(mask)
         boundary = app.selection.boundary
-        assert elementary_edges(boundary.segments, tile.geometry) == expected_edges(mask)
-        r0, r1, c0, c1 = boundary.bounds
+        r0,r1,c0,c1=boundary.bounds
+        assert info["unit catchment assigned pixel count"] == np.count_nonzero(mask[r0:r1,c0:c1])
+        assert elementary_edges(boundary.segments,tile.geometry) <= expected_edges(mask)
         g = app.reader.geometry
         crossing |= (
             tile.geometry.west + c0 * tile.geometry.resolution < g.west + (x - 1) * g.resolution
@@ -219,13 +230,16 @@ def test_mekong_presets_native_outline_and_png(tmp_path):
 
 
 def test_source_change_reassesses_outline(products):
+    install_test_cogs(products)
     app = Explorer(products, products.parent / "exports")
+    app.set_extent(app.reader.geometry.extent)
+    app.background.value = "catchment"
     app.background.value = "catchment"
     app.inspect(11.25, 21.75)
     assert app.selection.boundary is not None
     original = app.scene.tiles["fine/tile"]
     app.scene.tiles["another/tile"] = Tile(
-        "another/tile", original.directory, original.prefix, original.geometry, original.files
+        "another/tile", original.directory, original.prefix, original.geometry, original.files, cog=original.cog
     )
     app.hires_source.options = list(app.scene.tiles)
     app.hires_source.value = "another/tile"

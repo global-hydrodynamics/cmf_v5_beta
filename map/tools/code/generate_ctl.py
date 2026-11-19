@@ -174,11 +174,45 @@ def pattern_glob(pattern: str) -> str:
 
 
 def matching_rows(relpath: str, rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    # Standard numbered MPI products share the single mpireg.bin definition.
+    if re.fullmatch(r"mpireg-0*[1-9][0-9]*\.bin", relpath):
+        relpath = "mpireg.bin"
     found: list[dict[str, str]] = []
     for row in rows:
         if any(fnmatch.fnmatchcase(relpath, pattern_glob(pattern)) for pattern in registry_patterns(row)):
             found.append(row)
     return found
+
+
+
+def reference_rows(rows: list[dict[str, str]], reference: str | None,
+                   requested: list[str] | None) -> list[dict[str, str]]:
+    """Select one complete base-file definition; CTL cannot drop record offsets."""
+    if reference is not None:
+        if Path(reference).name != reference or any(c in reference for c in "*?<>[]"):
+            raise CtlValidationError("--reference-binary requires an exact registered base filename")
+        matches = [row for row in rows if reference in registry_patterns(row)]
+        if not matches:
+            raise CtlValidationError(f"reference Binary {reference!r} is not registered")
+    else:
+        wanted = set(requested or [])
+        groups: dict[str, list[dict[str, str]]] = {}
+        for row in rows:
+            for filename in registry_patterns(row):
+                if Path(filename).name == filename and filename.endswith('.bin') and not any(c in filename for c in "*?<>[]"):
+                    groups.setdefault(filename, []).append(row)
+        candidates = {name: group for name, group in groups.items()
+                      if wanted <= {row['name'] for row in group}}
+        if len(wanted) == 1:
+            canonical = next(iter(wanted)) + '.bin'
+            if canonical in candidates:
+                candidates = {canonical: candidates[canonical]}
+        if len(candidates) != 1:
+            raise CtlValidationError("--variables must identify one complete registered file; use --reference-binary for an exact choice")
+        matches = next(iter(candidates.values()))
+    if requested and not set(requested) <= {row['name'] for row in matches}:
+        raise CtlValidationError("--variables names do not belong to the selected reference Binary")
+    return matches
 
 
 def select_area(relpath: str, target: Path, rows: list[dict[str, str]], areas: list[Area]) -> Area:
@@ -238,7 +272,7 @@ def missing_sentinel(row: dict[str, str], dtype: str) -> tuple[int | float, bool
     if not math.isfinite(value):
         raise CtlValidationError("missing-value sentinel must be finite")
     if dtype.startswith("int"):
-        if not value.is_integer():
+        if not float(value).is_integer():
             raise CtlValidationError(f"integer file has non-integer missing value {value}")
         bits = SUPPORTED_TYPES[dtype][0] * 8
         if not -(2 ** (bits - 1)) <= value < 2 ** (bits - 1):
@@ -368,12 +402,10 @@ def read_input_matrix_descriptor(binary_path: Path, grid: Grid,
     candidates = [binary_path.with_suffix(".txt")]
     if stem.startswith("inpmat_"):
         tag = stem[len("inpmat_") :]
-        candidates.append(binary_path.with_name(f"inpdim_{tag}.txt"))
-        # Keep reading existing v4 descriptors while v5 writes inpdim_<ROFFTAG>.
         candidates.append(binary_path.with_name(f"diminfo_{tag}.txt"))
     descriptor = next((path for path in candidates if path.is_file()), None)
     if descriptor is None:
-        raise CtlError("input matrix needs its paired dimension description (.txt, inpdim_*.txt, or legacy diminfo_*.txt)")
+        raise CtlError("input matrix needs its paired dimension description (.txt or diminfo_*.txt)")
     try:
         lines = [line.strip() for line in descriptor.read_text(encoding="utf-8").splitlines() if line.strip()]
     except OSError as exc:
@@ -484,19 +516,35 @@ class Summary:
 
 
 def generate_directory(map_dir: Path, registry_path: Path, *, dry_run: bool = False,
-                       overwrite: bool = False) -> Summary:
+                       overwrite: bool = False, input_file: Path | None = None,
+                       variables: list[str] | None = None, reference_binary: str | None = None) -> Summary:
     target = map_dir.resolve()
     summary = Summary()
     if not target.is_dir():
         print(f"FAILED {target}: target directory does not exist")
         summary.failed = 1
         return summary
-    files = sorted(path for path in target.glob("*.bin") if path.is_file())
+    if (variables is not None or reference_binary is not None) and input_file is None:
+        print("FAILED: --variables/--reference-binary require --input to avoid applying one layout to unrelated files")
+        summary.failed = 1
+        return summary
+    if input_file is not None:
+        path = input_file if input_file.is_absolute() else target / input_file
+        if path.parent.resolve() != target or path.suffix != '.bin' or not path.is_file():
+            print(f"FAILED {path}: --input must be an existing .bin directly in --map-dir")
+            summary.failed = 1
+            return summary
+        # Normalize the parent spelling (e.g. macOS /var versus /private/var)
+        # while retaining the input filename for CTL dset and registry matching.
+        files = [target / path.name]
+    else:
+        files = sorted(path for path in target.glob("*.bin") if path.is_file())
     if not files:
         print(f"No .bin files found directly under {target}")
         return summary
     try:
         rows = read_registry(registry_path)
+        explicit_rows = reference_rows(rows, reference_binary, variables) if reference_binary is not None or variables is not None else None
     except CtlError as exc:
         for path in files:
             print(f"FAILED {path.name}: {exc}")
@@ -529,10 +577,14 @@ def generate_directory(map_dir: Path, registry_path: Path, *, dry_run: bool = Fa
 
     for path in files:
         relpath = path.relative_to(dataset_root).as_posix()
-        matches = matching_rows(relpath, rows)
+        matches = explicit_rows if explicit_rows is not None else matching_rows(relpath, rows)
         if not matches:
-            print(f"SKIP {path.name}: not registered in map_variables.csv")
-            summary.skipped += 1
+            status = "FAILED" if input_file is not None else "SKIP"
+            print(f"{status} {path.name}: not registered in map_variables.csv")
+            if input_file is not None:
+                summary.failed += 1
+            else:
+                summary.skipped += 1
             continue
         try:
             if base_grid is not None:
@@ -588,8 +640,12 @@ def generate_directory(map_dir: Path, registry_path: Path, *, dry_run: bool = Fa
             print(f"FAILED {path.name}: {exc}")
             summary.failed += 1
         except CtlError as exc:
-            print(f"SKIP {path.name}: {exc}")
-            summary.skipped += 1
+            if input_file is not None:
+                print(f"FAILED {path.name}: {exc}")
+                summary.failed += 1
+            else:
+                print(f"SKIP {path.name}: {exc}")
+                summary.skipped += 1
         except OSError as exc:
             print(f"FAILED {path.name}: {exc}")
             summary.failed += 1
@@ -602,10 +658,17 @@ def main(argv: list[str] | None = None) -> int:
                         help="directory to scan directly for .bin files (map root or high-resolution subdirectory)")
     parser.add_argument("--metadata-csv", type=Path, default=default_registry_path(),
                         help="variable registry (default: variable_table/map_variables.csv)")
+    parser.add_argument("--input", type=Path, help="single Binary filename relative to --map-dir, or absolute path inside it")
+    parser.add_argument("--variables", help="comma-separated registry variable names identifying a complete file definition")
+    parser.add_argument("--reference-binary", help="exact registered base Binary filename describing --input")
     parser.add_argument("--dry-run", action="store_true", help="validate and list planned CTLs without writing")
     parser.add_argument("--overwrite", action="store_true", help="replace existing .ctl files")
     args = parser.parse_args(argv)
-    summary = generate_directory(args.map_dir, args.metadata_csv, dry_run=args.dry_run, overwrite=args.overwrite)
+    requested = [name.strip() for name in args.variables.split(',') if name.strip()] if args.variables is not None else None
+    if requested == []:
+        parser.error("--variables must contain at least one variable name")
+    summary = generate_directory(args.map_dir, args.metadata_csv, dry_run=args.dry_run, overwrite=args.overwrite,
+                                 input_file=args.input, variables=requested, reference_binary=args.reference_binary)
     action = "planned" if args.dry_run else "generated"
     print(
         f"Summary: {action}={summary.generated}, skipped={summary.skipped}, "

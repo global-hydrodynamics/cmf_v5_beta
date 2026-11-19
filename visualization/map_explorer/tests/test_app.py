@@ -1,4 +1,5 @@
 """Programmatic GUI integration, scientific display state and reliable PNG export."""
+from conftest import native_assignments
 import json
 from pathlib import Path
 
@@ -93,16 +94,19 @@ def test_mekong_integration(tmp_path):
         binary=np.fromfile(root/f'{name}.bin',dtype='<i4').reshape(2,120,80)
         for record,actual in zip(binary,r.read_network(name)):
             np.testing.assert_array_equal(actual.filled(-9999),record)
-    # Default coarse background selects its geographic grid; native assignment
+    app.point_select.value = "grid"
+    # Explicit Grid mode selects its geographic grid; native assignment
     # codes remain separately inspectable and must not override this rule.
     lon,lat=105.8,10.8
     tile=app.scene.tiles[app.hires_source.value]
     rr,cc=tile.geometry.cell(lon,lat)
-    x,y=map(int,tile.mmap('catmxy')[:,rr,cc])
+    x,y=map(int,native_assignments(tile)[:,rr,cc])
     result=app.inspect(lon,lat)
     rr_geo,cc_geo=r.geometry.cell(lon,lat)
     assert result['ix (1-based)'] == cc_geo+1 and result['iy (1-based)'] == rr_geo+1
-    assert result['assigned coarse ix (1-based)'] == x and result['assigned coarse iy (1-based)'] == y
+    assert 'assigned coarse ix (1-based)' not in result  # Grid clicks do not inspect native assignments.
+    native,assigned = app.scene.inspect(lon,lat,tile.key,cog_only=True)
+    assert assigned == (y-1,x-1)
     for name in r.sources:
         app.variable.value=name
         assert app.layer is not None and 'Error' not in app.status.object

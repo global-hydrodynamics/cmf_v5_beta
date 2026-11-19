@@ -30,7 +30,7 @@ class MekongCtlWrapperIntegrationTests(unittest.TestCase):
                          map_root / "tools" / "code" / "generate_ctl.py")
             shutil.copy2(SAMPLE / "script_region" / "s02-write_ctl.sh",
                          fixture / "script_region" / "s02-write_ctl.sh")
-            for name in ("params.txt", "inpdim_test-glb_1deg.txt", "inpdim_test-E2O_15min_nc.txt"):
+            for name in ("params.txt", "diminfo_test-1deg.txt"):
                 shutil.copy2(SAMPLE / name, fixture / name)
             for path in SAMPLE.glob("*.bin"):
                 shutil.copy2(path, fixture / path.name)
@@ -55,14 +55,20 @@ class MekongCtlWrapperIntegrationTests(unittest.TestCase):
             # failed to receive a descriptor.
             # The Mekong-specific runoff matrix is not registered in the
             # shared map-variable table, so the CTL generator skips it.
+            # The two sample variants likewise use standard definitions through
+            # explicit NetCDF conversion rather than CTL auto-discovery.
+            # Numbered MPI regions now resolve to the standard mpireg row.
             self.assertEqual([summary[:3] for summary in summaries],
-                             [(expected[0] - 1, 1, 0), (expected[1], 0, 0)],
+                             [(expected[0] - 3, 3, 0), (expected[1], 0, 0)],
                              process.stdout + process.stderr)
-            self.assertIn("SKIP inpmat_test-mek_1deg.bin: not registered", process.stdout)
+            self.assertIn("SKIP inpmat_repo-mek_1deg.bin: not registered", process.stdout)
+
+            for variant in ("subbsn-sample.bin", "subcol-sample.bin"):
+                self.assertIn(f"SKIP {variant}: not registered", process.stdout)
 
             base_ctls = list(fixture.glob("*.ctl"))
             high_ctls = list((fixture / "1min").glob("*.ctl"))
-            self.assertEqual(len(base_ctls), expected[0] - 1)
+            self.assertEqual(len(base_ctls), expected[0] - 3)
             self.assertEqual(len(high_ctls), expected[1])
             for ctl in base_ctls + high_ctls:
                 text = ctl.read_text(encoding="utf-8")
@@ -80,7 +86,7 @@ class MekongCtlWrapperIntegrationTests(unittest.TestCase):
             self.assertIn("downx 1 -1,40,4", (fixture / "downxy.ctl").read_text())
             self.assertIn("downy 1 -1,40,4", (fixture / "downxy.ctl").read_text())
             self.assertIn("zdef 10 linear", (fixture / "fldhgt.ctl").read_text())
-            self.assertIn("zdef 4 linear", (fixture / "inpmat_test-glb_1deg.ctl").read_text())
+            self.assertIn("zdef 4 linear", (fixture / "inpmat_test-1deg.ctl").read_text())
             self.assertIn("xdef 1200 linear", (fixture / "1min" / "1min.catmxy.ctl").read_text())
             catmxy_ctl = (fixture / "1min" / "1min.catmxy.ctl").read_text()
             self.assertIn("catmxx 1 -1,40,2,-1", catmxy_ctl)

@@ -1,10 +1,9 @@
 #!/bin/sh
 # Run a 40-day, non-MPI CaMa-Flood simulation on the Mekong sample.
-# Map: map/mekong_15min; forcing: inp/test-mek_1deg (daily mm/day).
+# Map: map/mekong_15min; forcing: inp/repo-mek_1deg_bin (daily mm/day, monthly files).
 # Output, executable, and namelist: gosh_test/out/${PROJ}/.
 #
-# Execution requirement:
-#   Run this script from the gosh_test/ directory.
+# Normally run from gosh_test/; launching from the repository root also works.
 #
 # Example:
 #   cd gosh_test
@@ -12,7 +11,9 @@
 set -eu
 
 # CaMa-Flood base directory (contains src_main/, map/, and inp/).
-CMF_BASE=$(cd .. && pwd)
+# CDPATH= avoids user cd search paths; resolve paths from this script, not the CWD.
+SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+CMF_BASE=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
 
 # -------------------------- User settings ------------------------------
 # Project/output settings. ${VAR:-default} uses the environment value when nonempty.
@@ -54,15 +55,16 @@ LDAMOUT=".FALSE."             # TRUE: enable reservoir operation; FALSE: disable
 LRESTART=".FALSE."            # TRUE: read restart initial conditions; FALSE: initialize without restart data.
 DT=3600                       # Base timestep [s], multiple of 60; adaptive stepping may adjust it.
 
-# Daily binary runoff sample and its matching map-specific input matrix.
-ROFFTAG="test-mek_1deg"       # Select inp/test-mek_1deg/runoff and its input matrix.
+# Daily Binary runoff in monthly files; reuse the unchanged regional input matrix.
+ROFFTAG="repo-mek_1deg_bin"   # Select inp/repo-mek_1deg_bin/runoff.
+INPMAT_TAG="repo-mek_1deg"     # Existing input matrix for the identical 20 x 30 grid.
 IFRQ_INP=24                   # Runoff update interval [hours]; examples: 1, 2, 3, 6, 12, 24.
 DROFUNIT=86400000             # Input runoff units / DROFUNIT -> m/s; 86400000 converts mm/day.
 LINPCDF=".FALSE."             # TRUE: read NetCDF runoff; FALSE: read binary runoff.
-CROFFREQ="DAY"                 # Explicit daily grouping; records are indexed from 00:00 each date.
+CROFFREQ="MON"               # Daily records indexed from 00:00 at each month start.
 LINTERP=".TRUE."              # TRUE: map runoff with input matrix; FALSE: use nearest-grid conversion.
-CROFPRE="Roff____"            # Daily filename prefix: Roff____YYYYMMDD.one.
-CROFSUF=".one"                # Daily filename suffix.
+CROFPRE="Roff____"            # Monthly filename prefix: Roff____YYYYMM.one.
+CROFSUF=".one"                # Monthly filename suffix.
 
 # Daily binary output settings.
 CVARSOUT="outflw,storge,sfcelv,flddph,fldfrc"  # Variables saved in binary output.
@@ -107,8 +109,8 @@ trap 'exit 143' TERM
 RUNOFF_DIR="${CMF_BASE}/inp/${ROFFTAG}/runoff"
 
 # The dimension descriptor and matrix were generated for this map/runoff pair.
-INPDIM="${MAPDIR}/inpdim_${ROFFTAG}.txt"
-INPMAT="${MAPDIR}/inpmat_${ROFFTAG}.bin"
+DIMINFO="${MAPDIR}/diminfo_${INPMAT_TAG}.txt"
+INPMAT="${MAPDIR}/inpmat_${INPMAT_TAG}.bin"
 
 # Source executable; a copy is placed in RUNDIR and executed there.
 EXEC_CMF="${CMF_BASE}/src_main/MAIN_cmf"
@@ -155,7 +157,7 @@ LDAMOUT  = ${LDAMOUT}        ! TRUE: enable reservoir operation; FALSE: disable.
 LRESTART = ${LRESTART}       ! TRUE: read restart initial conditions; FALSE: initialize without restart data.
 /
 &NDIMTIME
-CDIMINFO = "${INPDIM}"       ! Map and runoff-grid dimensions and input-matrix metadata.
+CDIMINFO = "${DIMINFO}"       ! Map and runoff-grid dimensions and input-matrix metadata.
 DT       = ${DT}             ! Base timestep [s], multiple of 60; adaptive stepping may adjust it.
 IFRQ_INP = ${IFRQ_INP}       ! Runoff update interval [hours]; examples: 1, 2, 3, 6, 12, 24.
 /

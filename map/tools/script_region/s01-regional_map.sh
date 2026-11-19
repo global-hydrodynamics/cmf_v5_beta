@@ -45,6 +45,8 @@ EXEC_CUT_DOMAIN="$CODE_DIR/region_cut_domain"
 EXEC_CUT_BIFWAY="$CODE_DIR/region_cut_bifway"
 EXEC_SET_MAP="$CODE_DIR/region_set_map"
 EXEC_COMBINE_HIRES="$CODE_DIR/region_combine_hires"
+# Generate test-1deg for global ELSE_GPCC runoff and map/data/ELSE_GPCC_clm-1981-2010.one.
+# The 360 x 180 input grid is fixed; the generated mapping is specific to the regional model map.
 EXEC_DEFAULT_INPMAT="$CODE_DIR/region_default_inpmat"
 
 # Save the source map and requested bounds for the regionalization programs.
@@ -70,7 +72,7 @@ printf '\n==================================================\n[STEP 4/6] Derive 
 
 # Crop each listed high-resolution source dataset when location.txt exists.
 # Split the supported source tags into one high-resolution directory per loop.
-HDIRS="1min 30sec 15sec 3sec"
+HDIRS="1min 30sec 15sec 5sec 3sec 1sec"
 for HIRES in $HDIRS
 do
   if [ -f "$SOURCE/$HIRES/location.txt" ]; then
@@ -90,8 +92,12 @@ elif [ -f ../30sec/location.txt ]; then
   INPMAT_HIRES="30sec"
 elif [ -f ../15sec/location.txt ]; then
   INPMAT_HIRES="15sec"
+elif [ -f ../5sec/location.txt ]; then
+  INPMAT_HIRES="5sec"
 elif [ -f ../3sec/location.txt ]; then
   INPMAT_HIRES="3sec"
+elif [ -f ../1sec/location.txt ]; then
+  INPMAT_HIRES="1sec"
 fi
 
 if [ -n "$INPMAT_HIRES" ]; then

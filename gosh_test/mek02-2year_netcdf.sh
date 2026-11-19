@@ -17,14 +17,14 @@ START_YEAR=2000                  # First simulation year; starts at January 1 00
 END_YEAR=2001                    # Last simulation year; extend to continue the annual sequence.
 
 # Runoff dataset and its matching map-specific input matrix.
-ROFFTAG="test-mek_1deg_nc"     # Selects inp/test-mek_1deg_nc/ with one NetCDF file per year.
-INPMAT_TAG="test-mek_1deg"     # Selects the existing input matrix for the same 1-degree grid.
+ROFFTAG="repo-mek_1deg"     # Selects inp/repo-mek_1deg/ with one NetCDF file per year.
+INPMAT_TAG="repo-mek_1deg"     # Selects the existing input matrix for the same 1-degree grid.
 
 # Map input files; LMAPCDF=.FALSE. makes the reader select Binary or NetCDF from each extension.
 MAPDIR="${CMF_BASE}/map/mekong_15min"  # Mekong river-map root containing params.txt and bifprm.txt.
 MAP_NETCDF_DIR="${MAPDIR}/netcdf"      # Individual NetCDF map products.
-NEXTXY="${MAP_NETCDF_DIR}/nextxy.nc"       # Includes river networks affected by regional edges.
-#NEXTXY="${MAP_NETCDF_DIR}/nextxy_noedge.nc" # Excludes boundary-affected river networks (default).
+NEXTXY="${MAP_NETCDF_DIR}/nextxy.nc"       # Includes boundary-affected river networks (mek02 default).
+#NEXTXY="${MAP_NETCDF_DIR}/nextxy_noedge.nc" # Excludes boundary-affected networks (mek01 uses this choice).
 #RIVWTH="${MAP_NETCDF_DIR}/rivwth.nc"       # Empirical power-law channel width.
 RIVWTH="${MAP_NETCDF_DIR}/rivwth_merit.nc"  # MERIT Hydro-merged channel width (default).
 
@@ -59,7 +59,7 @@ LRESTCDF=".TRUE."               # TRUE: NetCDF restart; FALSE: Binary restart.
 
 NAMELIST="${RUNDIR}/input_cmf.nam"
 RUNOFF_DIR="${CMF_BASE}/inp/${ROFFTAG}"
-INPDIM="${MAPDIR}/inpdim_${INPMAT_TAG}.txt"
+DIMINFO="${MAPDIR}/diminfo_${INPMAT_TAG}.txt"
 INPMAT="${MAPDIR}/inpmat_${INPMAT_TAG}.bin"
 
 EXEC_CMF="${CMF_BASE}/src_main/MAIN_cmf"
@@ -75,9 +75,16 @@ printf 'RUNOFF_DIR = %s\n' "$RUNOFF_DIR"
 printf '\nOverwriting previous sample results in: %s\n' "$RUNDIR"
 
 mkdir -p "$RUNDIR"
-rm -f "$RUNDIR"/o_outflw*.nc "$RUNDIR"/o_storge*.nc \
-      "$RUNDIR"/o_sfcelv*.nc "$RUNDIR"/o_flddph*.nc \
-      "$RUNDIR"/o_fldfrc*.nc "$RUNDIR"/restart*.bin* \
+# NetCDF names are o_<variable><year>.nc; derive exact names from current settings.
+CLEAN_YEAR=$START_YEAR
+while [ "$CLEAN_YEAR" -le "$END_YEAR" ]; do
+    # Command substitution splits the comma-separated variable list into words.
+    for OUTPUT_VAR in $(printf '%s' "$CVARSOUT" | tr ',' ' '); do
+        rm -f "${RUNDIR}/o_${OUTPUT_VAR}${CLEAN_YEAR}.nc"
+    done
+    CLEAN_YEAR=$((CLEAN_YEAR + 1))
+done
+rm -f "$RUNDIR"/restart*.bin* \
       "$RUNDIR"/restart*.nc \
       "$RUNDIR"/input_cmf*.nam "$RUNDIR"/console_*.log \
       "$RUNDIR"/log_CaMa*.txt "$RUNDIR"/run_time_*.log \
@@ -119,7 +126,7 @@ LDAMOUT = ${LDAMOUT}       ! TRUE enables reservoir operation; FALSE disables it
 LRESTART = ${LRESTART}     ! TRUE reads initial state from CRESTSTO; FALSE starts without a restart.
 /
 &NDIMTIME
-CDIMINFO = "${INPDIM}"    ! Map and runoff-grid dimensions for input mapping.
+CDIMINFO = "${DIMINFO}"    ! Map and runoff-grid dimensions for input mapping.
 DT = ${DT}                 ! Base timestep [s]; adaptive stepping may reduce it.
 IFRQ_INP = ${IFRQ_INP}     ! Runoff update interval [hours].
 /

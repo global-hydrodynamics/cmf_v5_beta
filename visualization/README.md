@@ -16,7 +16,15 @@ read-only CaMa-Flood coarse/high-resolution rasters, unit catchments, outlet-bas
 networks, bifurcations and native cell inspection. Backgrounds, networks and
 additional overlays can be combined independently. The Unit Catchment Inspector
 shows native outlet/area/IDs, layered fldhgt and cached full-regional upstream
-counts, with raw diagnostics retained in an expandable section.
+counts, with raw diagnostics retained in an expandable section. Explicit Grid /
+Catchment selection is background independent; a separate collapsed section
+reports High-res pixel values. Visualization/Inspector are separate top-level
+modes with persistent controls and collapsible Connectivity. Ordinary automatic
+limits use full-reference P5/P95 (pixel-weighted inherited catchment values),
+including Gallery/legacy Auto; Log uses positive P5 or 0.01 for nonpositive P5; selected grids use pale lavender dashed outlines. Optional correctly reprojected OSM,
+independent palette intervals, assignment-only terrain statistics and an explicit
+Apply Aspect Ratio action are documented in the Explorer guide. Local PNG retains
+scientific layers/selection and explicitly excludes online tiles.
 Run `./visualization/map_explorer/run.sh map/mekong_15min` from the repository
 root; PNG/settings export and custom map directories are supported. This tool
 is independent of the Figure workflows below.
@@ -24,6 +32,10 @@ is independent of the Figure workflows below.
 ## Gallery
 
 ### p01 — River Map
+
+All River Map network figures use the complete `nextxy` source, retaining every
+valid stored connection. Blue → Navy uses the Gallery quartet
+`#5E88BE`, `#4F80BF`, `#285A9B`, `#103A70`; it is the default for p01-f03a/f04b.
 
 #### p01-f01 — Raster River Map
 
@@ -56,9 +68,10 @@ See the [figure script](river_map/f03-vector_river_map.sh) and the
 ![p01-f04 River Map Catchment](gallery/p01-f04-river-map-catchment.png)
 
 Two panels combine 1-minute Mekong unit-catchment pixels with the stored
-outlet-based main-channel network and channel bifurcations. Panel a colors
-catchments by upstream area; panel b additionally marks source-defined main-
-channel and small-stream pixels. Observation stations are omitted. See the
+outlet-based main-channel network. **Panel a draws Channel bifurcations only;
+panel b draws Channel + Overland bifurcations**, and additionally marks source-defined
+main-channel and small-stream pixels. Overland paths are subdued green, with
+uniform-width lines and arrows; their stored first-layer bifprm width is zero. Observation stations are omitted. See the
 [figure script](river_map/f04-rivmap_catchment.sh) and the
 [project explanation](river_map/README.md#p01-f04--river-map-catchment).
 
