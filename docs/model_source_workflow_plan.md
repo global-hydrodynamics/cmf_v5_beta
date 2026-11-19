@@ -4,13 +4,17 @@
 
 > Migration note (2026-11-15): Historical branch names, v4 Issue/PR references and dated approvals below are preserved evidence, not current branch assignments. Current v5 development uses cmf_v5_beta/main, src_main/, config/, gosh_test/ and tools/; old root model/build/run files are under legacy/. See [current status](dev_status.md) and [the migration audit](migration_consistency_audit.md).
 
-## Current runoff paths (2026-11-17)
+## Current runoff paths (2026-11-19)
 
 Current repository forcing is `inp/repo-mek_1deg_bin/` (January–February 2000,
 monthly files containing daily records) and `inp/repo-mek_1deg/` (annual NetCDF,
-1979–2010). The existing `test-mek_1deg` Input Matrix tag remains valid for
-both because the grid is unchanged. Earlier milestone paths and conversion
-commands below are historical evidence, not current regeneration instructions;
+1979–2010). Both use the current `repo-mek_1deg` Input Matrix tag:
+`map/mekong_15min/diminfo_repo-mek_1deg.txt` and
+`map/mekong_15min/inpmat_repo-mek_1deg.bin`. The pair was renamed from the old
+tag without changing the runoff grid or matrix values. Current workflows use
+the shared `src_main/MAIN_cmf` executable, with NetCDF enabled when required.
+Earlier milestone paths, separate-executable names and conversion commands
+below are historical evidence, not current regeneration instructions;
 use [the current input guide](../inp/README.md).
 
 ## Status

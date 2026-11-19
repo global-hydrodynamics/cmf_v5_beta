@@ -6,11 +6,21 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Distribution-source consistency fixes (DT-0149, 2026-11-19)
+
+Maintainer authorizes fixing the four source-distribution audit findings while
+excluding tests and existing packages. Setup input paths now match maintained
+runners; build/input docs and current matrix note corrected; historical records
+remain labeled. Static path/syntax/diff and 80 document-link confirmations only.
+No test/model/compiler/setup execution, data generation, CSV change or main merge.
+See [resolved audit](repository_consistency_audit_20261119.md).
+
+
 ### Distribution-source consistency audit (DT-0148, 2026-11-19)
 
 Maintainer narrows whole-repository review to material intended for distribution;
 existing generated artifacts, tests and research records are excluded from the
-verdict. Static source audit retains four current-use findings: stale setup input
+verdict. Static source audit identified four current-use findings (resolved in DT-0149): stale setup input
 paths, removed compiler-wrapper instructions, deleted Japan sample references,
 and obsolete matrix tag in the current model-plan intro. No implementation/data
 repair or main merge. See [source audit](repository_consistency_audit_20261119.md).

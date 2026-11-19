@@ -51,7 +51,6 @@ NetCDF is the standard v5 input format: new NetCDF dataset names normally omit `
 | `repo-mek_1deg_bin/` | Minimal Git-tracked Mekong Binary sample for mek01: 60 daily fields for January–February 2000, grouped into two monthly files (144,000 bytes total). See the [sample README](repo-mek_1deg_bin/README.md). |
 | `repo-mek_1deg/` | Long-term Mekong NetCDF test data, 1979–2010: 32 annual files extracted from global `ELSE_GPCC/`. See the [dataset README](repo-mek_1deg/README.md) for parallel generation and validation. |
 | `repo-ERA5land-jpn_hourly/` | Ten converted hourly NetCDF files for September 1–10, 2007; see the [dataset README](repo-ERA5land-jpn_hourly/README.md). |
-| `test-jpn_6min_1hr/` | Seven derived Japan hourly Binary files for September 3–9, 2007, plus aggregation tools and CTL; see the [sample README](test-jpn_6min_1hr/README.md). The original 1-arcmin input must be supplied separately. |
 
 ## Runoff Dataset Registry
 
@@ -69,14 +68,16 @@ The table below summarizes the sample locations and review state. The CSV is the
 | `repo-mek_1deg_bin/` | Mekong 20 × 30 grid (90–110°E, 5–35°N); daily January–February 2000 data in two monthly Binary files. | Float32 `mm/day`, N-to-S, little-endian, missing value `-999`; `CROFFREQ=MON`, `IFRQ_INP=24`, `DROFUNIT=86400000`. Replaces the former long daily Binary collection. |
 | `repo-mek_1deg/` | Mekong 20 × 30 daily NetCDF runoff for 1979–2010, one file per year (32 files, about 15.6 MiB). | Float32 `mm day-1`, longitude centers 90.5–109.5°E, descending latitude 34.5–5.5°N, missing value `-999`, CF daily bounds; `CROFFREQ=YEAR`. All regional values were checked against global NetCDF; this is extraction fidelity, not model/scientific validation. |
 | `repo-ERA5land-jpn_hourly/` | Converted Japan hourly repository sample, September 1–10, 2007: ten daily files, 24 records each, 17,229,869 bytes total. | [Dataset README](repo-ERA5land-jpn_hourly/README.md); format metadata inspected. GOSH/input-matrix integration and KG-0019 remain open. |
-| `test-jpn_6min_1hr/` | Derived Japan 250 × 220 hourly Binary sample for September 3–9, 2007; seven daily files containing 24 records each. | Spatial aggregation of the separately supplied 1-arcmin source; no temporal averaging. The maintainer's `mm/hour` interpretation remains subject to the [sample guide's unit caveat](test-jpn_6min_1hr/README.md#unit-caveat). |
 
 Historical names such as `test-glb_1deg/`, `test_1deg/`, `ERA5_land/` and
 `ERA5land-jpn_legacy_bin/` describe earlier inventories, not datasets included in
-the current checkout or entries in the current five-row registry. The original
-`test_jpn_1hr/` aggregation source is also absent locally; configure it separately
-when regenerating `test-jpn_6min_1hr/`. Historical provenance and unresolved
-scientific questions remain in [the inventory record](../docs/runoff_data_inventory.md).
+the current checkout or entries in the current five-row registry. The former
+`test-jpn_6min_1hr/` derived Japan Binary sample, its aggregation tools/README and
+original `test_jpn_1hr/` source are no longer included in the current repository
+or distribution selection. They are not required inputs for the maintained
+Mekong workflows. Historical preparation details and unresolved scientific unit
+questions remain in [the inventory record](../docs/runoff_data_inventory.md);
+that record does not imply the removed files are still distributed.
 Optional `ELSE_GPCC/` is supplied through Package Additional Data and is not
 currently installed in this checkout; it is required only for regeneration.
 
