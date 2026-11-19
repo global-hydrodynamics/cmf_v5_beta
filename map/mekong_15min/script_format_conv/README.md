@@ -125,3 +125,14 @@ area. Zero denotes unassigned network, -9999 missing/outside network; positive
 subbsn values are IDs and positive subcol values are display categories.
 See the [variant contract and future inpmat design](../../tools/script_format_conv/README.md#variant-binary-conversion-s90)
 for multi-record inputs, partial selection, errors and atomic file publication.
+
+
+## Standard MPI regions through s01/s02
+
+The existing `mpireg-4.bin`, `mpireg-8.bin` and `mpireg-16.bin` are standard
+MPI partition maps. `s01` discovers these and any other existing positive-numbered
+`mpireg-N.bin` using the single CSV `mpireg.bin` definition. `s02` explicitly
+references that definition and writes `netcdf/mpireg-N.nc`, variable `mpireg`.
+Run the usual list/review/convert sequence above; overwrite prompts and --force
+remain unchanged. No MPI entry is added to s90. See the [standard MPI-region
+contract and provenance](../../tools/script_format_conv/README.md#standard-numbered-mpi-region-maps).

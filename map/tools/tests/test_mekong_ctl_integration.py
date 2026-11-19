@@ -57,17 +57,19 @@ class MekongCtlWrapperIntegrationTests(unittest.TestCase):
             # shared map-variable table, so the CTL generator skips it.
             # The two sample variants likewise use standard definitions through
             # explicit NetCDF conversion rather than CTL auto-discovery.
+            # Numbered MPI regions are resolved by Binary-to-NetCDF only; the
+            # unchanged literal-name CTL discovery likewise skips those three.
             self.assertEqual([summary[:3] for summary in summaries],
-                             [(expected[0] - 3, 3, 0), (expected[1], 0, 0)],
+                             [(expected[0] - 6, 6, 0), (expected[1], 0, 0)],
                              process.stdout + process.stderr)
             self.assertIn("SKIP inpmat_repo-mek_1deg.bin: not registered", process.stdout)
 
-            for variant in ("subbsn-sample.bin", "subcol-sample.bin"):
+            for variant in ("subbsn-sample.bin", "subcol-sample.bin", "mpireg-4.bin", "mpireg-8.bin", "mpireg-16.bin"):
                 self.assertIn(f"SKIP {variant}: not registered", process.stdout)
 
             base_ctls = list(fixture.glob("*.ctl"))
             high_ctls = list((fixture / "1min").glob("*.ctl"))
-            self.assertEqual(len(base_ctls), expected[0] - 3)
+            self.assertEqual(len(base_ctls), expected[0] - 6)
             self.assertEqual(len(high_ctls), expected[1])
             for ctl in base_ctls + high_ctls:
                 text = ctl.read_text(encoding="utf-8")

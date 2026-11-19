@@ -13,6 +13,7 @@ import ctypes
 import ctypes.util
 import csv
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -99,6 +100,17 @@ def registered_base_filenames(row: dict[str, str]) -> list[str]:
     return filenames
 
 
+def standard_binary_filename(filename: str) -> str:
+    """Map only positive numbered MPI-region products to their standard row.
+
+    Leading zeros are allowed; an all-zero count is not positive. This is a
+    filename convention only, never an inference about array size or values.
+    """
+    if re.fullmatch(r"mpireg-0*[1-9][0-9]*\.bin", filename):
+        return "mpireg.bin"
+    return filename
+
+
 def conversion_support(rows: list[dict[str, str]]) -> tuple[bool, str]:
     """Check whether all registry rows for one file fit this raster converter."""
     dtypes = {row.get("dtype", "").strip() for row in rows}
@@ -126,7 +138,7 @@ def generate_conversion_list(map_dir: Path, registry_path: Path, list_path: Path
     binary_files = {path.name for path in map_dir.glob("*.bin") if path.is_file()}
     candidates = []
     for filename in sorted(binary_files):
-        file_rows = rows_by_filename.get(filename, [])
+        file_rows = rows_by_filename.get(standard_binary_filename(filename), [])
         if not file_rows:
             print(f"WARNING: {filename} is not registered; it will not be listed.")
             continue
@@ -171,13 +183,13 @@ def select_variables(
     Explicit references match literal registered base filenames only. The legacy
     variable-name fallback is retained only when no reference is supplied.
     """
-    definition = reference_binary if reference_binary is not None else filename
+    definition = reference_binary if reference_binary is not None else standard_binary_filename(filename)
     if reference_binary is not None:
         matches = [dict(row) for row in rows if reference_binary in registered_base_filenames(row)]
         if not matches:
             raise ValueError(f"reference Binary {reference_binary!r} is not registered as an exact base filename")
     else:
-        matches = [dict(row) for row in rows if Path(row.get("binary_filename", "")).name == filename]
+        matches = [dict(row) for row in rows if Path(row.get("binary_filename", "")).name == definition]
     if not matches and requested and reference_binary is None:
         # Keep legacy name selection, but validate companion records as well.
         filenames = {row.get("binary_filename") for row in rows if row.get("name") in requested}

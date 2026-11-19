@@ -32,3 +32,8 @@ experimental filenames belong in Shell settings, not duplicate variable rows.
 The Mekong `subbsn-sample` / `subcol-sample` definitions therefore resolve from
 `subbsn.bin` / `subcol.bin`. See [the variant contract and separate future
 input-matrix design](map_metadata_spec.md#standard-definitions-and-experimental-binary-names).
+
+
+MPI-region metadata uses only `mpireg.bin` / `mpireg`. Numbered `mpireg-N.bin`
+files are standard MPI process-count products automatically handled by s01/s02,
+not s90 variants. See the [MPI-region conversion contract](../map/tools/script_format_conv/README.md#standard-numbered-mpi-region-maps).

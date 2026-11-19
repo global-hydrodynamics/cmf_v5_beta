@@ -219,19 +219,39 @@ while IFS= read -r FILE <&3 || [ -n "$FILE" ]; do
         done
     fi
 
+    # Only numbered MPI-region maps have a standard filename convention.
+    # All other files retain the converter's existing inference/selection rules.
+    set --
+    case "$FILE" in
+        mpireg-*.bin)
+            MPI_COUNT=${FILE#mpireg-}
+            MPI_COUNT=${MPI_COUNT%.bin}
+            case "$MPI_COUNT" in
+                ""|*[!0-9]*) ;;
+                *)
+                    case "$MPI_COUNT" in
+                        *[1-9]*) set -- --reference-binary mpireg.bin ;;
+                    esac
+                    ;;
+            esac
+            ;;
+    esac
+
     if [ "$OVERWRITE" -eq 1 ]; then
         python3 "$CONVERTER" \
             --map-dir "$MAP_DIR" \
             --registry "$REGISTRY" \
             --input "$MAP_DIR/$FILE" \
             --output "$OUTPUT_FILE" \
+            "$@" \
             --force
     else
         python3 "$CONVERTER" \
             --map-dir "$MAP_DIR" \
             --registry "$REGISTRY" \
             --input "$MAP_DIR/$FILE" \
-            --output "$OUTPUT_FILE"
+            --output "$OUTPUT_FILE" \
+            "$@"
     fi
     CONVERTED=$((CONVERTED + 1))
 done 3< "$LIST_FILE"

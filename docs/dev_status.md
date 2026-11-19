@@ -7,6 +7,27 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 ## Current v5 work
 
 
+### Standard numbered MPI-region conversion (DT-0143, 2026-11-19)
+
+Maintainer authorizes this bounded follow-up on existing feature/package-builder,
+including tests/docs/research and normal commit/push. Owner: Dai Yamazaki;
+Codex implements. Keep DT-0142 variants and all scientific Binary/MPI generation,
+Fortran, visualization, high-resolution and package-builder code unchanged.
+Initial commit 39ca9bd0, clean and equal to fetched upstream; no open v5 Issue/PR.
+
+DT-0143 complete: three numbered CSV rows consolidated into one mpireg.bin/mpireg
+standard definition, preserving common metadata/workflow_stage. s01 discovers
+actual positive numbered MPI files through its existing Python delegate; shared
+and Mekong s02 explicitly reference mpireg.bin. No general numbered-variant rule.
+22 conversion/workflow, 20 CTL on Python 3.14 and 8 Mekong checks PASS; registry valid.
+Existing MPI outputs were compared before replacement; all three regenerated
+NetCDFs match every Binary cell/params coordinate; 78 protected inputs/other
+outputs unchanged. Numbered CTL auto-discovery is outside this conversion scope
+and now skips the three former literal rows; existing CTLs are preserved.
+See [VR-0189](../research/records/validation_runs/VR-0189.md). This project-branch
+status is a proposal until integrated into main.
+
+
 ### Registry-based Binary variant conversion (DT-0142, 2026-11-19)
 
 Maintainer authorizes the supplied bounded variant-conversion request on existing
