@@ -567,13 +567,21 @@ For example, add `"rivwth_experiment.bin:rivwth.bin"` or
 ```sh
 cd map/mekong_15min/script_format_conv
 ./s90-sample_netCDF_conversion.sh
-# Existing outputs are refused; explicitly allow replacement:
+# Skip interactive confirmation and explicitly replace existing outputs:
 ./s90-sample_netCDF_conversion.sh --force
 ```
 
 The target is the parent of the current map-local `script_format_conv/`, matching
 s01–s03. From another working directory, or the shared template directory, supply
 `--map-dir /path/to/map`; a shared template is never implicitly treated as a map.
+Before conversion, s90 prints selected/existing/new output counts. If outputs
+exist, an interactive `Overwrite all ...? [y/N]` prompt applies to the entire
+selection: `y` replaces all; `n` or Enter asks about each existing file. Per-file
+approval does not carry to later files. Invalid answers retry; EOF declines.
+Without a terminal, existing outputs are preserved/skipped and new outputs are
+converted. `--force` (or FORCE=1) explicitly replaces existing outputs without
+prompts. Converted/skipped totals appear at completion, matching s02 behavior.
+
 Outputs retain each input stem: `<map>/netcdf/subbsn-sample.nc` contains `subbsn`,
 and `<map>/netcdf/subcol-sample.nc` contains `subcol`. Only these two generated
 Mekong NetCDF samples are explicitly approved for Git tracking in this task.

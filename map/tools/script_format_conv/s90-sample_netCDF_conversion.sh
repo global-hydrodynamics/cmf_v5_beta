@@ -79,12 +79,11 @@ if [ "$MAP_DIR" = "$REPO_ROOT/map/tools" ]; then
     exit 2
 fi
 
-set --
-if [ "$FORCE" -eq 1 ]; then
-    set -- --force
-fi
+INPUTS=()
+REFERENCES=()
+EXISTING_COUNT=0
 
-NUMBER=0
+# Inspect the full selection before asking about existing outputs.
 for VARIANT in "${VARIANTS[@]}"; do
     # Only literal base filenames are settings here; metadata lives in the CSV.
     case "$VARIANT" in
@@ -98,16 +97,79 @@ for VARIANT in "${VARIANTS[@]}"; do
         *.bin) ;;
         *) printf 'ERROR: expected an input .bin filename: %s\n' "$INPUT" >&2; exit 2 ;;
     esac
+    INPUTS+=("$INPUT")
+    REFERENCES+=("$REFERENCE")
+    if [ -f "$MAP_DIR/netcdf/${INPUT%.bin}.nc" ]; then
+        EXISTING_COUNT=$((EXISTING_COUNT + 1))
+    fi
+done
+
+printf '\nConversion summary\n'
+printf 'Map: %s\nOutput directory: %s\n' "$MAP_DIR" "$MAP_DIR/netcdf"
+printf 'Selected inputs: %s; existing outputs: %s; new outputs: %s\n' \
+    "${#INPUTS[@]}" "$EXISTING_COUNT" "$((${#INPUTS[@]} - EXISTING_COUNT))"
+if [ "$EXISTING_COUNT" -gt 0 ] && [ "$FORCE" -eq 0 ] && [ -t 0 ]; then
+    while :; do
+        printf 'Overwrite all %s existing selected outputs? [y/N]: ' "$EXISTING_COUNT"
+        if ! IFS= read -r ANSWER; then
+            ANSWER=""
+        fi
+        case "$ANSWER" in
+            y|Y) FORCE=1; break ;;
+            ""|n|N) printf 'Existing outputs will be confirmed individually.\n'; break ;;
+            *) printf 'Please answer y or N.\n' >&2 ;;
+        esac
+    done
+fi
+
+NUMBER=0
+CONVERTED=0
+SKIPPED=0
+for INPUT in "${INPUTS[@]}"; do
+    REFERENCE=${REFERENCES[$NUMBER]}
     NUMBER=$((NUMBER + 1))
     STEP="Convert $INPUT using $REFERENCE"
     printf '\n==================================================\n[STEP %s/%s] %s\n==================================================\n\n' "$NUMBER" "${#VARIANTS[@]}" "$STEP"
 
+    OUTPUT_FILE="$MAP_DIR/netcdf/${INPUT%.bin}.nc"
+    OVERWRITE=$FORCE
+    if [ -f "$OUTPUT_FILE" ] && [ "$FORCE" -eq 0 ]; then
+        if [ ! -t 0 ]; then
+            printf 'Existing output preserved in non-interactive mode: %s\n' "$OUTPUT_FILE"
+            SKIPPED=$((SKIPPED + 1))
+            continue
+        fi
+        while :; do
+            printf '%s already exists.\nOverwrite? [y/N]: ' "$OUTPUT_FILE"
+            if ! IFS= read -r ANSWER; then
+                ANSWER=""
+            fi
+            case "$ANSWER" in
+                y|Y) OVERWRITE=1; break ;;
+                ""|n|N)
+                    printf 'Skipping %s.\n' "$INPUT"
+                    SKIPPED=$((SKIPPED + 1))
+                    continue 2
+                    ;;
+                *) printf 'Please answer y or N.\n' >&2 ;;
+            esac
+        done
+    fi
+
+    # Per-file approval must not grant overwrite permission to later files.
+    set --
+    if [ "$OVERWRITE" -eq 1 ]; then
+        set -- --force
+    fi
+
     python3 "$CONVERTER" \
         --map-dir "$MAP_DIR" \
         --input "$MAP_DIR/$INPUT" \
-        --output "$MAP_DIR/netcdf/${INPUT%.bin}.nc" \
+        --output "$OUTPUT_FILE" \
         --reference-binary "$REFERENCE" \
         "$@"
+    CONVERTED=$((CONVERTED + 1))
 done
 
+printf '\nConverted: %s; skipped: %s\n' "$CONVERTED" "$SKIPPED"
 printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"

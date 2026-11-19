@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import shlex
 import csv
 from pathlib import Path
 import shutil
@@ -200,8 +201,9 @@ class VariantConversionTests(unittest.TestCase):
         for name in ('subbsn', 'subcol'):
             self.check_data(self.map/f'netcdf/{name}-sample.nc', {name: values})
         result = run(SCRIPT, self.root, '--map-dir', str(self.map))
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn('pass --force', result.stderr)
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertIn('Existing output preserved in non-interactive mode', result.stdout)
+        self.assertIn('Converted: 0; skipped: 2', result.stdout)
         result = run(SCRIPT, self.root, '--map-dir', str(self.map), '--force')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         result = run(SCRIPT, SCRIPT.parent)
@@ -211,6 +213,69 @@ class VariantConversionTests(unittest.TestCase):
         result = run(SCRIPT, self.root, '--map-dir', str(self.map), '--force')
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('subbsn-sample.bin', result.stderr)
+
+    def test_shell_overwrite_all_and_individual_prompts(self):
+        # Reuse the existing PTY helper; fixture converter checks orchestration,
+        # while the other tests exercise real NetCDF values/layouts.
+        from map.tools.tests.test_bin2nc_workflow import run_tty
+        fixture = self.root/'fixture repository'
+        script = fixture/'map/tools/script_format_conv'/SCRIPT.name
+        script.parent.mkdir(parents=True)
+        shutil.copy2(SCRIPT, script)
+        fake = fixture/'map/tools/code/convert_map_binary_to_netcdf.py'
+        fake.parent.mkdir()
+        fake.write_text("""import argparse
+from pathlib import Path
+p=argparse.ArgumentParser()
+p.add_argument('--map-dir');p.add_argument('--input');p.add_argument('--output')
+p.add_argument('--reference-binary');p.add_argument('--force',action='store_true')
+a=p.parse_args();target=Path(a.output)
+if target.exists() and not a.force: raise SystemExit('force missing')
+target.parent.mkdir(parents=True,exist_ok=True)
+target.write_bytes(Path(a.input).read_bytes())
+print('copied',Path(a.input).name,'force='+str(a.force))
+""")
+        output = self.map/'netcdf'
+        output.mkdir()
+        for name in ('subbsn','subcol'):
+            (self.map/f'{name}-sample.bin').write_bytes(b'new-'+name.encode())
+        shim = self.root/'run-s90.sh'
+        shim.write_text('exec bash '+shlex.quote(str(script))+' --map-dir '+shlex.quote(str(self.map))+'\n')
+        for response, expected, forced, invalid in [
+                (b'y\n', ('subbsn','subcol'), 2, False),
+                (b'bad\ny\n', ('subbsn','subcol'), 2, True),
+                (b'n\ny\nn\n', ('subbsn',), 1, False),
+                (b'\nn\ny\n', ('subcol',), 1, False),
+                (b'n\nn\nn\n', (), 0, False)]:
+            with self.subTest(response=response):
+                for name in ('subbsn','subcol'):
+                    (output/f'{name}-sample.nc').write_bytes(b'old-'+name.encode())
+                text = run_tty(shim, self.root, response, b'Overwrite all 2 existing selected outputs?')
+                self.assertIn('Selected inputs: 2; existing outputs: 2; new outputs: 0',text)
+                self.assertEqual(text.count('force=True'),forced)
+                self.assertEqual('Please answer y or N.' in text,invalid)
+                self.assertIn(f'Converted: {forced}; skipped: {2-forced}',text)
+                for name in ('subbsn','subcol'):
+                    self.assertEqual((output/f'{name}-sample.nc').read_bytes(),
+                                     (b'new-' if name in expected else b'old-')+name.encode())
+                if response.endswith(b'y\n') and response in (b'y\n',b'bad\ny\n'):
+                    self.assertNotIn('Overwrite? [y/N]',text)
+        # Noninteractive preserves existing output but still creates new output.
+        (output/'subcol-sample.nc').unlink()
+        (output/'subbsn-sample.nc').write_bytes(b'preserve')
+        result = subprocess.run(['bash',str(script),'--map-dir',str(self.map)],cwd=self.root,
+                                input='',capture_output=True,text=True)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assertIn('existing outputs: 1; new outputs: 1',result.stdout)
+        self.assertIn('Converted: 1; skipped: 1',result.stdout)
+        self.assertEqual((output/'subbsn-sample.nc').read_bytes(),b'preserve')
+        self.assertEqual((output/'subcol-sample.nc').read_bytes(),b'new-subcol')
+        result = subprocess.run(['bash',str(script),'--map-dir',str(self.map),'--force'],cwd=self.root,
+                                input='',capture_output=True,text=True)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assertNotIn('Overwrite all',result.stdout)
+        self.assertEqual(result.stdout.count('force=True'),2)
+        self.assertEqual((output/'subbsn-sample.nc').read_bytes(),b'new-subbsn')
 
     def test_actual_mekong_pair_under_arbitrary_input_name(self):
         source = ROOT/'map/mekong_15min/nextxy.bin'

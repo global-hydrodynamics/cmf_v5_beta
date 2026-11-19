@@ -6,6 +6,19 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Variant conversion overwrite confirmation (DT-0144, 2026-11-19)
+
+Maintainer requests s90 summary and y/n overwrite-all behavior like s02.
+Codex owns shared/Mekong s90 copies, focused tests/docs/records on existing
+feature/package-builder with standing commit/push scope. Keep reference mapping,
+converter, registry, science and real datasets unchanged. Declining all asks
+per file; noninteractive mode skips existing; --force retains explicit overwrite.
+
+DT-0144 complete: 23 conversion/workflow tests PASS, including five PTY response
+scenarios; both syntax/shared-copy checks PASS. No real data changes. See
+[VR-0190](../research/records/validation_runs/VR-0190.md).
+
+
 
 ### Standard numbered MPI-region conversion (DT-0143, 2026-11-19)
 

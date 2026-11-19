@@ -116,7 +116,10 @@ map `subbsn-sample.bin:subbsn.bin` and `subcol-sample.bin:subcol.bin` to
 `../netcdf/subbsn-sample.nc` (`subbsn`) and `../netcdf/subcol-sample.nc` (`subcol`).
 The CSV defines standard variables; Shell manages concrete experimental filenames.
 These variants no longer appear in the standard conversion list or CTL discovery.
-Existing outputs fail without `--force`; input Binary files remain unchanged.
+Before conversion, selected/existing/new counts are shown. Existing outputs prompt
+`Overwrite all ...? [y/N]`: `y` replaces all; `n` or Enter asks per file. Without a
+terminal they are preserved/skipped; `--force` explicitly replaces them without
+prompts. New outputs are converted normally; Binary inputs remain unchanged.
 
 The original Mekong examples use 30,000 / 5,000 km² two-stage thresholds from
 `s06-subbasin.sh`: Stage 1 IDs/boundaries are preserved and Stage 2 assigns only
