@@ -11,6 +11,14 @@ This document refines the Chat AI draft in
 using the current implementation and sample files. It defines this tutorial
 and does not claim that the experiment has been scientifically validated.
 
+
+Guide01 shares Tutorial02's executable prerequisite: reuse the NetCDF-enabled
+`src_main/MAIN_cmf` compiled during Tutorial01. Do not invoke a separate compiler
+wrapper or depend on an out/bin model executable. Keep the repository-local
+Python environment requirement and existing Binary downscaling/visualization
+inputs. This path alignment does not change the approved experiment settings
+or learner edits, and does not establish a new model or learner-package run.
+
 ## 1. Purpose and learning outcomes
 
 The example teaches a controlled sensitivity experiment: change the mapped

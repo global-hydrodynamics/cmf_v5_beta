@@ -6,6 +6,20 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Guide01 shared executable and current setup (DT-0147, 2026-11-19)
+
+Maintainer requests aligning Guide01 fixes with Tutorial02. Codex owns active
+runner/reference MODEL paths, setup/manual/design notes and research on existing
+feature/package-builder. Reuse Tutorial01-built NetCDF-enabled src_main/MAIN_cmf;
+update v5 beta acquisition/main integration note. Preserve Python .venv interface,
+Binary visualization/downscaling, historical authoring records and learner tasks.
+No compilation, install, model execution or data modification in this task.
+
+DT-0147 complete: 6 syntax / 4 path-resolution / 31 local-link checks PASS.
+Runner bodies exact after normalizing MODEL path/comment. Repository .venv
+setup remains required; no runtime claim. See [VR-0193](../research/records/validation_runs/VR-0193.md).
+
+
 ### Tutorial02 shared executable (DT-0146, 2026-11-19)
 
 Maintainer confirms Tutorial02 reuses the executable already compiled in

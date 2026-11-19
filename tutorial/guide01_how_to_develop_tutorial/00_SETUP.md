@@ -4,11 +4,12 @@ This guide prepares a local CaMa-Flood checkout for following Guide01 and
 developing tutorials with Chat AI and Agent AI. It is written for contributors
 who may be new to Git branches, repository permissions, or AI coding tools.
 
-> **Current checkout note:** In the repository state checked for this guide,
-> Guide01 and its setup scripts are on `feature/gosh-refactor`; the default
-> `master` branch does not yet contain them. Use the branch-specific clone
-> command below until the project confirms that these files have been
-> integrated into the default branch. This branch status can change.
+> **Current v5 beta:** Use `global-hydrodynamics/cmf_v5_beta`. Its default/base
+> branch is `main`; the current v5b01 tutorial/input updates are on the approved
+> `feature/package-builder` branch. The maintainer plans one merge into `main`
+> when v5b01 package preparation is ready. Use the matching beta branch below
+> until that integration is published, then use default `main`. No merge or
+> formal release is implied by these setup instructions.
 
 ## 1. What you need
 
@@ -39,18 +40,20 @@ require a fixed machine-specific path.
 ```bash
 mkdir -p ~/work
 cd ~/work
-git clone --branch feature/gosh-refactor --single-branch \
-  https://github.com/global-hydrodynamics/CaMa-Flood_v4.git
-cd CaMa-Flood_v4
+git clone --branch feature/package-builder --single-branch \
+  https://github.com/global-hydrodynamics/cmf_v5_beta.git
+cd cmf_v5_beta
 ```
 
-`git clone` downloads the selected branch into a new `CaMa-Flood_v4/`
+`git clone` downloads the selected branch into a new `cmf_v5_beta/`
 directory. Cloning this public repository does not require a GitHub account.
 If Git reports that the branch is unavailable, check the repository's current
 branch and tutorial-integration status before switching to another branch.
 
-Create your own branch before editing. A branch is a separate line of work
-that keeps your changes apart from the shared base branch:
+For independent contributor work, create your own branch before editing. For a
+maintainer-coordinated project, keep its approved persistent working branch and
+obtain approval before creating or switching branches; see [AGENTS.md](../../AGENTS.md).
+A personal contribution branch keeps independent changes apart from the shared base:
 
 ```bash
 git switch -c guide01-my-work
@@ -58,7 +61,7 @@ git status --short --branch
 git branch --show-current
 ```
 
-The second command should show your new branch. Check the status whenever you
+The branch command should show your chosen personal branch, or the approved project branch when working on an assigned project. Check the status whenever you
 start or finish a task. If the checkout already contains work, read its status
 and ask its owner before changing or cleaning anything; do not discard
 unfamiliar changes.
@@ -68,7 +71,7 @@ unfamiliar changes.
 You can still develop locally without upstream write permission. To publish
 changes, create a GitHub fork, clone your fork, and push your personal branch
 there. A pull request can then propose the changes to the project repository.
-If your fork does not contain `feature/gosh-refactor`, fetch that branch from
+If your fork does not contain `feature/package-builder`, fetch that branch from
 the project repository and base your personal branch on it. GitHub's fork and
 pull-request help explains the web workflow; repository owners decide whether
 and when to merge contributions. See GitHub's guides to [forking a
@@ -98,7 +101,7 @@ For a broader introduction, see the [Git documentation](https://git-scm.com/book
 
 ## 3. Give Agent AI access to the local checkout
 
-Open or select the cloned `CaMa-Flood_v4/` directory as the Agent AI's
+Open or select the cloned `cmf_v5_beta/` directory as the Agent AI's
 workspace. Grant only the local file access and command execution needed for
 the task. For a documentation task, read/write access to the relevant
 documentation and permission to run read-only checks may be enough. A model
@@ -132,8 +135,8 @@ alternative designs, and how to review results. Start with the public
 repository URL and the branch or commit you are using. For example:
 
 > I am developing a CaMa-Flood tutorial from the
-> `feature/gosh-refactor` branch of
-> https://github.com/global-hydrodynamics/CaMa-Flood_v4. Please review the
+> `feature/package-builder` branch of
+> https://github.com/global-hydrodynamics/cmf_v5_beta. Please review the
 > repository purpose and structure, `tutorial/`, Guide01's authoring approach,
 > and the relevant existing tutorials. Help me identify the scientific and
 > educational decisions that need researcher input before implementation.
@@ -184,24 +187,20 @@ If the helper cannot verify a requirement, follow the [v5 build
 guide](../../config/README.md) for supported configuration templates and
 manual setup. Do not copy v4's `adm/Mkinclude` into the v5 configuration.
 
-The standard model build is:
+Guide01 and Tutorial02 reuse `src_main/MAIN_cmf`, already compiled during
+Tutorial01. That shared executable must have NetCDF support (`UseCDF_CMF`) for
+Guide01's model-grid maps, runoff, output and Restart. This guide does not invoke
+a separate `gosh_test/compile_netcdf.sh` or expect an `out/bin` model executable.
+
+For initial environment preparation only, Tutorial01's standard build command is:
 
 ```bash
 make -C src_main all
 ```
 
-This builds the standard v5 executable. The Guide01 workflow example uses a
-separate NetCDF-enabled executable at `out/bin/MAIN_cmf_netcdf`. After
-preparing `config/Mkinclude`, build it with:
-
-```bash
-bash gosh_test/compile_netcdf.sh
-```
-
-This requires GNU Make, GNU Fortran, and the NetCDF-Fortran `nf-config` tool.
-The wrapper builds in a temporary directory and installs the executable at
-the path above. See [model build
-instructions](../../src_main/README.md#netcdf-enabled-build) for details.
+It produces `src_main/MAIN_cmf` using the active `config/Mkinclude`. If you have
+already completed the NetCDF-enabled Tutorial01 build, reuse it without a second
+build. See the [v5 build guide](../../config/README.md) for configuration details.
 
 ### Python
 
@@ -259,7 +258,7 @@ The sample script keeps its generated run products in the tutorial's ignored
 validation. The Guide01 worked river-depth tutorial is now a sibling of
 Tutorial01 and Tutorial02 at `tutorial/guide01_workflow_example/`. It uses
 NetCDF inputs and outputs, Python analysis, and one-minute downscaling; after
-setup, follow its
+setup, reuse the same executable and follow its
 [learner manual](../guide01_workflow_example/manual_workflow_example.md) for
 those additional steps. The repository root [README](../../README.md) distinguishes
 these development samples from the official data-rich distribution package.

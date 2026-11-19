@@ -4,7 +4,8 @@ set -eu
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 CMF_BASE=$(CDPATH= cd "$SCRIPT_DIR/../../.." && pwd -P)
 PYTHON="$CMF_BASE/.venv/bin/python"
-MODEL="$CMF_BASE/out/bin/MAIN_cmf_netcdf"
+# Reuse the NetCDF-enabled model built in Tutorial01, as in Tutorial02.
+MODEL="$CMF_BASE/src_main/MAIN_cmf"
 MAPDIR="$CMF_BASE/map/mekong_15min"
 MAP_NC="$MAPDIR/netcdf"
 RUNOFF_DIR="$CMF_BASE/inp/repo-mek_1deg"
