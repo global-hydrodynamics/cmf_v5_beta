@@ -2,6 +2,14 @@
 
 **Status:** Researcher-approved four-experiment design, implemented and run for 2000–2003, with output-based checks and reference figures. The learner start includes the working Default script but intentionally omits the three completed alternatives; learners create them by copying and editing configurations. This is a model-behavior comparison, not an observational validation. Scientific interpretation of the selected 15-minute cells and spin-up adequacy remains for maintainer review; see Appendix A.
 
+Tutorial02 assumes Tutorial01 has already compiled the shared
+`src_main/MAIN_cmf` with NetCDF support (`UseCDF_CMF`). Reuse this executable;
+Tutorial02 does not run a separate compiler script or use a second executable
+under out/bin. All four configurations copy the shared executable into their
+own run directories. Keep the current high-resolution Binary visualization
+inputs. Learner-manual authoring and script-comparison presentation are later
+work and are not prerequisites for this executable-path correction.
+
 ## 1. Purpose and learning outcomes
 
 This tutorial uses the CaMa-Flood v5 Mekong sample to demonstrate a four-year simulation with annual Restart handoffs and a controlled comparison of river routing, bifurcation flow, and floodplain representation. Users begin with the Default experiment, then copy its script and change a small number of clearly identified settings to create three variants.
@@ -263,7 +271,7 @@ The Tutorial 02 README provides the Python setup and visualization quick start. 
 
 ### A.3 Execution record
 
-- Historical build record (before the directory rename): `./gosh_sample/compile_netcdf.sh` succeeded on macOS Apple Silicon with GNU Fortran 14.2.0, NetCDF-Fortran 4.6.2 / NetCDF-C 4.9.3, OpenMP, and `SinglePrec_CMF`. The current path is `gosh_test/compile_netcdf.sh`. Existing compiler warnings reported unused imports in `cmf_ctrl_restart_mod.F90` and `MAIN_cmf.F90`, plus a duplicate NetCDF link flag; none prevented the build.
+- Historical build record (before the directory rename): `./gosh_sample/compile_netcdf.sh` succeeded on macOS Apple Silicon with GNU Fortran 14.2.0, NetCDF-Fortran 4.6.2 / NetCDF-C 4.9.3, OpenMP, and `SinglePrec_CMF`. This compiler-wrapper record is historical only; the current workflow reuses the NetCDF-enabled `src_main/MAIN_cmf` built during Tutorial01, without invoking a separate compiler script. Existing compiler warnings reported unused imports in `cmf_ctrl_restart_mod.F90` and `MAIN_cmf.F90`, plus a duplicate NetCDF link flag; none prevented the build.
 - Execution: four scripts ran 2000–2003 sequentially, each with `OMP_NUM_THREADS=4`, producing 16 successful annual model calls. Wall time totals were 231 s (Default), 186 s (No Bifurcation), 115 s (Kinematic Wave), and 110 s (No Floodplain), about 10m42s combined. Per-year elapsed time and status are retained locally under `out/<experiment>/run_time_YEAR.log`.
 - Output checks: all 16 NetCDF files contain expected record counts, `(time,latitude,longitude)` dimensions `(days,120,80)`, `outflw` units `m3/s`, no unmasked non-finite values, and a gap-free represented daily timeline of 1,461 days per experiment. The interval-ending January 1 records were assigned to the prior year's December 31 interval.
 - Restart checks: each experiment wrote four NetCDF Restart boundary files from 2001-01-01 through 2004-01-01. Logs show each 2001–2003 invocation reading the preceding year's Restart. NetCDF signatures and paths were checked.

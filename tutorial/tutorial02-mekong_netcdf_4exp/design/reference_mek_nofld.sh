@@ -29,12 +29,13 @@ MAPDIR="${CMF_BASE}/map/mekong_15min"
 MAP_NETCDF_DIR="${MAPDIR}/netcdf"
 RUNOFF_DIR="${CMF_BASE}/inp/repo-mek_1deg"
 RUNDIR="${SCRIPT_DIR}/out/${PROJ}"
-EXEC_CMF="${CMF_BASE}/out/bin/MAIN_cmf_netcdf"
+# Reuse the NetCDF-enabled model already built in Tutorial01; do not compile here.
+EXEC_CMF="${CMF_BASE}/src_main/MAIN_cmf"
 DIMINFO="${MAPDIR}/diminfo_repo-mek_1deg.txt"
 INPMAT="${MAPDIR}/inpmat_repo-mek_1deg.bin"
 
 if [ ! -x "$EXEC_CMF" ]; then
-    printf '[ERROR] NetCDF model executable not found: %s\n' "$EXEC_CMF" >&2
+    printf '[ERROR] Tutorial01 model executable not found: %s\n' "$EXEC_CMF" >&2
     exit 1
 fi
 

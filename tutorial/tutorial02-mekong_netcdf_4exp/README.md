@@ -10,6 +10,14 @@ available; see [`design/manual_design.md`](design/manual_design.md) for its
 planned activity sequence. The experiment's scientific settings and evidence
 are documented in [`tutorial_design.md`](tutorial_design.md).
 
+Tutorial02 reuses `src_main/MAIN_cmf`, already compiled during Tutorial01.
+That build must enable NetCDF input/output (`UseCDF_CMF`) for Tutorial02's map,
+runoff, output and Restart files. No separate `gosh_test/compile_netcdf.sh` step
+or `out/bin/MAIN_cmf_netcdf` executable is used. The Default and three reference
+configurations copy this shared executable into their experiment directories.
+The current visualization workflow continues to use high-resolution Binary data;
+no NetCDF/COG migration is required for these figures.
+
 Tutorial 02 compares the four Mekong model configurations described in
 [`tutorial_design.md`](tutorial_design.md). Figure 4 uses the bundled
 `cmf_colormap` package for its annual-maximum discharge comparison. The repository

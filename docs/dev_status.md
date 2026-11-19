@@ -6,6 +6,19 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Tutorial02 shared executable (DT-0146, 2026-11-19)
+
+Maintainer confirms Tutorial02 reuses the executable already compiled in
+Tutorial01; repository target is src_main/MAIN_cmf. Codex owns Default/three
+reference EXEC_CMF paths and README/design notes on feature/package-builder.
+No compiler invocation, Binary visualization change or learner-manual authoring.
+Keep scientific Namelists and annual execution/restart behavior unchanged.
+
+DT-0146 complete: 4 syntax / 8 prefix path-resolution checks PASS; all remaining
+script text exact after normalizing path/comment/error text. No compile/model
+execution. See [VR-0192](../research/records/validation_runs/VR-0192.md).
+
+
 ### Tutorial01 v5 acquisition and beta assembly documentation (DT-0145, 2026-11-19)
 
 Maintainer requests correcting manual/design acquisition paths and beta-package
