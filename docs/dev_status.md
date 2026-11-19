@@ -6,6 +6,43 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+
+### CTL standard references and s99 variants (DT-0151, 2026-11-19)
+
+Maintainer supplies Japan s99 skips and requests a NetCDF-like variables option.
+Codex owns generate_ctl, shared/Mekong s99 copies, tests/docs/research on existing
+feature/package-builder; preserve prior package/README/COG edits. Explicit --input
+with --variables or exact --reference-binary selects one complete file layout.
+CTL retains companion records; standard positive mpireg-N resolves automatically.
+Shell VARIANTS owns sample subbsn/subcol and station upbasin patterns. Default
+scan, high-resolution layout checks, dry-run and overwrite policy are preserved.
+
+24 CTL/integration tests PASS on Python3.14;23 generator/Shell cases PASS on
+Python3.11. Integer default sentinel portability fixed in the affected path.
+Actual six Japan Binary copies generate correct CTLs with1500x1320/int32 layouts;
+all original Binary hashes unchanged. Shared/Mekong copies and4Shell syntax
+checks pass; local Global/Japan wrappers updated only after confirming no local
+custom edits. No actual CTL regeneration or scientific processing;no commit/push.
+Evidence/limits: [VR-0197](../research/records/validation_runs/VR-0197.md).
+
+
+### COG discovery after registry consolidation (DT-0150, 2026-11-19)
+
+Maintainer reports five unsupported Global NetCDFs after MPI/sample CSV cleanup
+and requests a fix on existing feature/package-builder. Codex owns shared COG
+planner/tests/docs/evidence; preserve concurrent README/package changes.
+Reuse standard positive MPI name resolution; resolve single-variable variants
+by exact canonical NetCDF-variable/CSV identity. No filename-suffix guessing,
+CSV duplication, scientific data, raster/Overview or high-resolution changes.
+
+40 COG regression cases PASS, including the five reported names, skip/force,
+unknown/bad inputs, registered pairs/layers, high-resolution and memory checks.
+Actual Global five-file copies converted through s05 with exact native Int32
+pixel agreement and six original input hashes unchanged. The five missing local
+Global COGs are generated separately without force; NetCDFs remain read-only.
+Unknown multivariable variants stay unsupported; no new material science gap.
+See [VR-0196](../research/records/validation_runs/VR-0196.md). No commit/push.
+
 ### Distribution-source consistency fixes (DT-0149, 2026-11-19)
 
 Maintainer authorizes fixing the four source-distribution audit findings while

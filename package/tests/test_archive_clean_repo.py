@@ -17,7 +17,7 @@ class ArchiveTests(unittest.TestCase):
         self.repo.mkdir()
         self.git("init", "-q")
         (self.repo / "package").mkdir()
-        for name in ("archive_clean_repo.sh", "archive_clean_repo.py", "package_source_exclude.txt"):
+        for name in ("p01-archive_clean_repo.sh", "archive_clean_repo.py", "package_source_exclude.txt"):
             shutil.copy2(PACKAGE / name, self.repo / "package" / name)
         self.put(".gitignore", "/package/repo_clean_*/\n/package/.repo_clean_tmp.*/\n/additional/\n")
         for name in ("AGENTS.md", "CONTRIBUTING.md", "LICENSE", "src_main/model.F90",
@@ -39,7 +39,7 @@ class ArchiveTests(unittest.TestCase):
         (self.repo / "tools/link").symlink_to("../src_main")
         self.commit()
         self.commit_id = self.git("rev-parse", "HEAD").strip()
-        self.script = self.repo / "package/archive_clean_repo.sh"
+        self.script = self.repo / "package/p01-archive_clean_repo.sh"
         self.version = self.script.read_text().split('VER="', 1)[1].split('"', 1)[0]
         # Freeze the date in this fixture to avoid midnight-sensitive tests.
         self.script.write_text(self.script.read_text().replace(self.version, "v5b01_test"))
@@ -89,12 +89,22 @@ class ArchiveTests(unittest.TestCase):
         self.assertTrue((self.output / "tools/link").is_symlink())
         self.assertEqual(os.readlink(self.output / "tools/link"), "../src_main")
         self.assertIn("Source commit: " + self.commit_id,
-                      (self.output / "PACKAGE_BUILD_INFO.txt").read_text())
+                      (self.output / "package/PACKAGE_BUILD_INFO.txt").read_text())
+        self.assertFalse((self.output / "PACKAGE_BUILD_INFO.txt").exists())
         self.assertEqual(self.git("check-ignore", "package/repo_clean_v5b01_test/src_main/model.F90").strip(),
                          "package/repo_clean_v5b01_test/src_main/model.F90")
         (self.output / "sentinel").write_text("keep")
         self.assertNotEqual(self.run_archive().returncode, 0)
         self.assertEqual((self.output / "sentinel").read_text(), "keep")
+
+    def test_tracked_nested_build_info_cannot_be_overwritten(self):
+        self.put("package/PACKAGE_BUILD_INFO.txt", "retained source provenance")
+        self.commit()
+        result = self.run_archive()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("conflict with generated provenance", result.stderr)
+        self.assertFalse(self.output.exists())
+        self.assertEqual((self.repo / "package/PACKAGE_BUILD_INFO.txt").read_text(), "retained source provenance")
 
     def test_generated_tree_is_never_nested_even_if_forced_tracked(self):
         self.put("package/repo_clean_old/old.txt", "never nest\n")

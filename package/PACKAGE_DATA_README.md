@@ -96,7 +96,7 @@ external snapshots implicitly during catalog maintenance.
 - Keep dataset directories aligned with their intended package destinations, for example `inp/ELSE_GPCC/` under both data and package roots.
 - Preserve original data. Do not silently overwrite existing files; retain generation/version and validation evidence when datasets are revised.
 - Development copies must be excluded through dataset-local Git ignore rules (`inp/.gitignore` and `map/.gitignore`). Do not commit the large data to the development repository.
-- Developer Import and read-only Diff are implemented in `cmf_v5_beta/package/install_package_data.sh` and `diff_package_data.sh`. Import creates ordinary editable local copies and never deletes target-only files. Both use the same catalog selection/exclusions, leaving this store unchanged. Distribution assembly remains planned.
+- Developer Import and read-only Diff are implemented in `cmf_v5_beta/package/s01-install_package_data.sh` and `s00-diff_package_data.sh`. Import creates ordinary editable local copies and never deletes target-only files. Both use the same catalog selection/exclusions, leaving this store unchanged. Beta distribution-directory assembly is implemented by `cmf_v5_beta/package/p01-archive_clean_repo.sh` followed by `p02-make_package.sh`; runtime validation and public release approval remain separate.
 
 The logical sibling `cmf_v5_package_data/` may be a symbolic link to externally
 managed storage. Tools must use that logical location without hard-coded

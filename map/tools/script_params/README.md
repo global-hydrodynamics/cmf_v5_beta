@@ -215,3 +215,39 @@ The coarser grid is preferred for domain-wide allocation; directory presence
 alone does not establish full coverage. The existing Fortran checks still
 apply, including the single-area requirement. A Japan map with only `15sec/`
 selects `15sec`. No numerical or allocation algorithm is changed.
+
+
+### Standard definitions for CTL variants
+
+The shared Python generator accepts `--input FILE.bin` with
+`--reference-binary registered.bin` or `--variables name[,name...]`. The input
+is a filename relative to `--map-dir`, or an absolute path directly inside it.
+Explicit selection requires one input so a layout cannot be applied accidentally
+to unrelated binaries. Reference filenames are exact registered keys; variable
+names must identify one complete base-file definition. For a single canonical
+variable, its same-name `.bin` row is preferred; ambiguous choices fail rather
+than guessing. Missing inputs/references, invalid names and size/layout conflicts
+fail with nonzero status.
+
+CTL describes the whole Binary record sequence: `--variables nexty` resolves the
+complete `nextxy.bin` layout, retaining nextx and nexty in order. It does not
+remove unselected records or change Binary offsets. Dtype, dimensions, sentinels
+and labels remain in CSV; CTL dset/output retain the actual input filename.
+Existing --dry-run and overwrite/no-overwrite behavior is preserved.
+
+From a map-local script_params/ or script_format_conv/:
+
+```sh
+./s99-write_ctl.sh --input subcol-sample.bin --variables subcol
+./s99-write_ctl.sh --input subbsn-sample.bin --reference-binary subbsn.bin --dry-run
+./s99-write_ctl.sh --input nextxy-experiment.bin --reference-binary nextxy.bin
+```
+
+Default s99 still scans registered existing files. Positive numbered mpireg-N.bin
+now automatically uses mpireg.bin in the generator. Its top-level VARIANTS Shell
+setting adds existing subbsn-sample.bin:subbsn.bin, subcol-sample.bin:subcol.bin and
+upbasin-*.bin:upbasin.bin products; adjust these concrete names/patterns for other
+experiments. They can first appear as SKIP in the ordinary registry scan and
+are then handled in the explicit variant pass. No absent Binary is generated.
+High-resolution handling is unchanged: only existing .bin inputs produce CTLs;
+NetCDF-only *_nc directories have no Binary CTLs to write.

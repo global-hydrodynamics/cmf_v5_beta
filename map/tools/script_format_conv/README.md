@@ -385,6 +385,29 @@ They are not converted or opened and do not make the command fail. Missing
 registered inputs/directories also skip. Unsupported or failed **conversion-target**
 inputs still return nonzero; unknown files are not silently accepted.
 
+### Consolidated CSV definitions and variant NetCDF names
+
+Numbered `mpireg-N.nc` files reuse the CSV `mpireg.bin` definition and retain
+numbered COG stems. The positive-integer rule is shared with Binary-to-NetCDF;
+`--variables mpireg` selects the existing numbered family, while explicit stems
+such as `--variables 'mpireg-4 mpireg-8'` select individual files. Invalid/zero
+MPI counts gain no automatic mapping.
+
+For a nonstandard single-variable filename (for example `subbsn-sample.nc`,
+`subcol-sample.nc` or `width-experiment.nc`), COG discovery reads only NetCDF
+metadata and looks for exactly one raster variable whose name matches the
+canonical same-name CSV file/variable definition. It does not guess scientific
+identity from a filename suffix. The CSV remains the definition of type,
+dimensions and meaning; existing storage, geometry, NoData and full native-byte
+checks still apply before publication. No duplicate sample rows are needed.
+`--variables` accepts these resolved variant file stems as well as registered
+stems. `all` includes them automatically.
+
+Ambiguous/multivariable unknown names remain unsupported rather than guessed;
+known registered pairs/layers and high-resolution products retain their existing
+handling. Known table/legacy-container exclusions remain reasoned SKIPs. Missing
+optional registered inputs remain SKIPs; this does not indicate a malformed CSV.
+
 ### Source/output layout and band contract
 
 - `netcdf/<stem>.nc` → `COG/<stem>.tif`: native **model grid**, never aggregated high-res pixels.
@@ -543,11 +566,10 @@ retains the legacy name fallback for custom input names. Both work here, but the
 standard Shell path uses explicit reference selection rather than guessing rows.
 
 `s90` remains for sample/experimental variants and has no MPI entries. The future
-inpmat converter remains separate and unimplemented, as documented below. This
-numbered-name resolver is scoped to Binary-to-NetCDF; unchanged literal-name CTL
-auto-discovery no longer lists numbered MPI binaries from the consolidated CSV.
-Existing committed MPI CTLs remain unchanged; no CTL/MPI-generation algorithm is
-modified by this task.
+inpmat converter remains separate and unimplemented, as documented below.
+CTL generation also resolves numbered MPI files to mpireg.bin; s99 supports
+explicit variant references and Shell-owned sample/station mappings. See the
+[CTL reference interface](../script_params/README.md#standard-definitions-for-ctl-variants).
 
 ## Variant Binary conversion (`s90`)
 

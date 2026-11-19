@@ -114,8 +114,8 @@ The registry contains one MPI-region variable definition, `mpireg.bin` / `mpireg
 (Int32, NX,NY, one record, missing -9999). Positive numbered standard files
 `mpireg-N.bin` reuse it in the Binary-to-NetCDF s01/s02 workflow; N names the
 process count, never the array dimensions or inferred values. The Mekong 4/8/16
-examples, generation/reader provenance, validation rules and unchanged CTL
-limitations are described in the [format conversion guide](../map/tools/script_format_conv/README.md#standard-numbered-mpi-region-maps).
+examples, generation/reader provenance, validation rules and CTL reference
+support are described in the [format conversion guide](../map/tools/script_format_conv/README.md#standard-numbered-mpi-region-maps).
 No other variable receives an automatic numbered-name rule. Explicit
 `--reference-binary` still requires an exact registered key; `mpireg-N.bin`
 is not itself a reference key. Workflow stage and common scientific metadata
@@ -360,3 +360,19 @@ Input matrices require a future, separate
 NX,NY,INPN, mixed inpx/inpy/inpa blocks and diminfo input-grid geometry do not
 fit the ordinary raster engine. This is a design decision, not an implemented
 converter. High-resolution conversion and other sample registry rows are unchanged.
+
+
+The NetCDF-to-COG planner also reuses the positive numbered `mpireg-N` rule.
+For single-variable variant filenames, an exact match between the NetCDF raster
+variable and a unique canonical same-name CSV definition is sufficient; filename
+suffixes are not interpreted. Full storage/geometry validation still applies.
+Unknown multivariable/ambiguous variants remain unsupported. See the
+[COG discovery contract](../map/tools/script_format_conv/README.md#consolidated-csv-definitions-and-variant-netcdf-names).
+
+
+CTL generation accepts explicit `--input` with `--reference-binary` or
+`--variables` to reuse a complete standard definition. Positive numbered MPI
+files resolve automatically; sample/station filenames remain s99 Shell settings.
+Unlike NetCDF output selection, CTL must retain every record in the selected
+layout, including companions of a requested variable. See the
+[CTL variant contract](../map/tools/script_params/README.md#standard-definitions-for-ctl-variants).

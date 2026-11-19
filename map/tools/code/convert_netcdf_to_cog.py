@@ -82,6 +82,34 @@ def resolve_resolutions(map_dir, requested):
     return requested
 
 
+
+def rows_for_base_variant(source, groups):
+    """Resolve a standard MPI filename or a single canonical NetCDF variable.
+
+    Single-variable variants carry their variable identity inside NetCDF; do not
+    guess it from suffixes or infer a choice among multi-variable/alias groups.
+    Metadata only is opened here. Full storage/geometry checks remain in inspect.
+    """
+    standard = base.standard_binary_filename(source.stem + '.bin')[:-4]
+    if standard != source.stem:
+        return groups.get(standard, [])
+    if source.stem.startswith('mpireg-'):
+        return []
+    try:
+        with netCDF4.Dataset(source, 'r') as ds:
+            names = [name for name, var in ds.variables.items() if len(var.dimensions) >= 2]
+    except (OSError, RuntimeError):
+        # Keep malformed inputs as per-file conversion errors, not plan aborts.
+        return []
+    if len(names) != 1:
+        return []
+    selected = groups.get(names[0], [])
+    if (len(selected) == 1 and selected[0]['name'] == names[0]
+            and selected[0]['dimensions'] in ('NX,NY', 'NX,NY,NLFP')):
+        return selected
+    return []
+
+
 def plan(map_dir, resolutions, variables, registry):
     """Use the canonical CSV for filenames, record order, types and scientific labels."""
     rows = hires.registry_rows(registry)
@@ -106,7 +134,11 @@ def plan(map_dir, resolutions, variables, registry):
                 if requested is not None and stem not in requested:
                     continue
                 found.add(stem)
-                sources = sorted(directory.glob(stem + '.nc'))
+                sources = set(directory.glob(stem + '.nc'))
+                if stem == 'mpireg':
+                    sources.update(source for source in directory.glob('mpireg-*.nc')
+                                   if base.standard_binary_filename(source.stem + '.bin') == 'mpireg.bin')
+                sources = sorted(sources)
                 if not sources:
                     print(f'SKIP missing registered NetCDF: {directory / (stem + ".nc")}')
                 for source in sources:
@@ -119,10 +151,11 @@ def plan(map_dir, resolutions, variables, registry):
             for source in sorted(directory.glob('*.nc')):
                 if source not in matched and (requested is None or source.stem in requested):
                     reason = EXCLUDED_INPUTS.get(source.name, '')
-                    if reason:
+                    selected = [] if reason else rows_for_base_variant(source, groups)
+                    if reason or selected:
                         found.add(source.stem)
                     tasks.append(Task(source, map_dir / 'COG' / source.with_suffix('.tif').name,
-                                      [], geometry, skip_reason=reason))
+                                      selected, geometry, skip_reason=reason))
         else:
             directory = map_dir / f'{resolution}_nc'
             if not directory.is_dir():
@@ -379,7 +412,7 @@ def main(argv=None):
     parser.add_argument('--resolutions', default='auto',
                         help='auto: base plus first available 1min_nc, 30sec_nc, 15sec_nc; '
                              'or explicit tags, e.g. "base 1min"')
-    parser.add_argument('--variables', default='all', help='registered file stems separated by spaces')
+    parser.add_argument('--variables', default='all', help='registered or resolved variant file stems separated by spaces; mpireg selects its numbered family')
     parser.add_argument('--registry', type=Path, default=DEFAULT_REGISTRY)
     parser.add_argument('--blocksize', type=int, default=512)
     parser.add_argument('--compression', choices=['DEFLATE', 'LZW', 'ZSTD', 'NONE'], default='DEFLATE')

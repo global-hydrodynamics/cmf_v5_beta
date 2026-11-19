@@ -17,6 +17,9 @@ import sys
 from collections import Counter
 
 
+BUILD_INFO = "package/PACKAGE_BUILD_INFO.txt"
+
+
 def git(repo, *args):
     return subprocess.check_output(["git", "-C", str(repo), *args])
 
@@ -113,8 +116,10 @@ def plan(repo, commit, excludes, output, version, branch):
     directories, names = rules(excludes)
     removed = {name: excluded(name, directories, names) for name in all_entries}
     kept = {name: entry for name, entry in all_entries.items() if removed[name] is None}
-    if "PACKAGE_BUILD_INFO.txt" in all_entries:
-        raise ValueError("Tracked PACKAGE_BUILD_INFO.txt would conflict with generated provenance")
+    if "package" in kept:
+        raise ValueError("Source package/ must be a real directory, not a tracked file or symlink")
+    if any(name in (BUILD_INFO, "PACKAGE_BUILD_INFO.txt") or name.startswith(BUILD_INFO + "/") for name in all_entries):
+        raise ValueError(f"Tracked {BUILD_INFO} would conflict with generated provenance")
     check_links(repo, kept)
     if git(repo, "status", "--porcelain", "--untracked-files=normal").strip():
         print("WARNING: Uncommitted/untracked changes exist; only the pinned HEAD commit is extracted.", file=sys.stderr)
@@ -197,12 +202,13 @@ def main():
             elif path.is_dir() and not any(path.iterdir()):
                 path.rmdir()
     verify_tree(tree, entries)
-    (tree / "PACKAGE_BUILD_INFO.txt").write_text(
+    (tree / BUILD_INFO).parent.mkdir(parents=True, exist_ok=True)
+    (tree / BUILD_INFO).write_text(
         f"Package version: {version}\nSource repository: cmf_v5_beta\nSource commit: {commit}\n"
         f"Source branch: {branch}\nArchive date: {timestamp}\n"
-        "Archive tool: package/archive_clean_repo.sh\nPackage stage: Clean Git source extraction\n")
+        "Archive tool: package/p01-archive_clean_repo.sh\nPackage stage: Clean Git source extraction\n")
     publish(tree, output)
-    print(f"Verified {len(entries)} committed files plus PACKAGE_BUILD_INFO.txt")
+    print(f"Verified {len(entries)} committed files plus {BUILD_INFO}")
 
 
 if __name__ == "__main__":

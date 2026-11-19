@@ -476,8 +476,8 @@ The principles above are the adopted direction. Their implementation remains inc
 | Model and execution entry points | `src_main/`, `config/`, `gosh_test/`, and Tutorial01 provide existing build/run materials with earlier operational evidence. | Consolidate a current clean-clone recipe; do not describe this documentation task as a new model execution or package test. |
 | Regression references | Component tests exist; earlier model comparisons are recorded in research. | Independently approve the official model-reference revision, variables, calendar, precision and comparison criteria, then provide a repeatable command. Historical execution success is not this approval. |
 | Migration baseline | Legacy root src/gosh/adm relocation and direct util-to-tools consolidation are committed in 29b889c4; current main inherits them. | Use legacy/ only as reference and the active src_main/config/gosh_test/tools paths for v5 work. |
-| Additional data | `package/install_package_data.sh` implements developer Import; `diff_package_data.sh` provides independent read-only file Diff. The sole `package_data.csv` catalog preserves its six fields and adds optional exclude_patterns. Symlinked sibling stores, bounded-memory comparison, Git/ignore protections and verified atomic local copies are supported. | Formal distribution version/provenance/redistribution review remains future work; beta assembly now reuses the same catalog and selection implementation. No real-data Import was performed by the implementation task; see the [package guide](../package/README.md). |
-| Distributed Package | `package/archive_clean_repo.sh` extracts a pinned committed HEAD to `package/repo_clean_${VER}/`, with explicit exclusions, byte/mode validation and build provenance. `package/make_package.sh` independently combines an existing same-version clean tree and catalog-selected additional data with staged verified copies and a SHA-256 manifest. | Directory assembly is implemented; runtime/model scientific validation and formal public release approval remain separate future work. |
+| Additional data | `package/s01-install_package_data.sh` implements developer Import; `s00-diff_package_data.sh` provides independent read-only file Diff. The sole `package_data.csv` catalog preserves its six fields and adds optional exclude_patterns. Symlinked sibling stores, bounded-memory comparison, Git/ignore protections and verified atomic local copies are supported. | Formal distribution version/provenance/redistribution review remains future work; beta assembly now reuses the same catalog and selection implementation. No real-data Import was performed by the implementation task; see the [package guide](../package/README.md). |
+| Distributed Package | `package/p01-archive_clean_repo.sh` extracts a pinned committed HEAD to `package/repo_clean_${VER}/`, with explicit exclusions, byte/mode validation and build provenance. `package/p02-make_package.sh` independently combines an existing same-version clean tree and catalog-selected additional data with staged verified copies and a SHA-256 manifest. | Directory assembly is implemented; runtime/model scientific validation and formal public release approval remain separate future work. |
 | Legacy packaging instructions | `archive_src.sh`, `doc/make_package.sh` and the old package guide describe v4-oriented workflows. | Preserve them as historical references; do not present them as the v5 assembly command. |
 | Contribution guidance | CONTRIBUTING.md now documents feature branches, focused diffs, two test levels and pre-merge review. | Validate the full contributor workflow with an independently tested feature branch/PR in a later task. |
 | PR validation | The former source/map workflow is removed from active GitHub Actions by maintainer instruction; tests and inputs remain. | Automated CI is temporarily disabled pending a small, reproducible v5 suite. Use the retained manual checks; no replacement workflow is added here. |
@@ -506,14 +506,14 @@ Recommended sequence: reconcile the migrated policy and existing working-tree ch
 ### Approved beta source-extraction stage (2026-11-19)
 
 The beta intentionally retains developer/AI-agent materials alongside user
-sources. No minimal user-only profile is applied. `package/archive_clean_repo.sh`
+sources. No minimal user-only profile is applied. `package/p01-archive_clean_repo.sh`
 uses git archive for a pinned HEAD, explicit literal exclusions in
 package_source_exclude.txt, safe staging and no-overwrite publication. Root
 research/ and .github/ plus Git-specific files are excluded; research records stay
 in the development repository. Tracked scientific samples are not filtered by
 extensions or ignore status. An in-tree symlink is retained; unsafe links abort.
 
-PACKAGE_BUILD_INFO.txt records source revision/branch, version and execution date.
+package/PACKAGE_BUILD_INFO.txt records source revision/branch, version and execution date.
 The extracted files retain committed bytes/modes; the timestamped provenance is
 not a claim of byte-identical complete archives. No final compressed archive,
 additional-data integration, Fortran compilation or model execution is performed.
@@ -522,7 +522,7 @@ See [the package guide](../package/README.md#clean-beta-git-source-extraction).
 
 ### Approved beta assembly stage (2026-11-19)
 
-make_package.sh uses existing package/repo_clean_${VER}/ as source authority and
+p02-make_package.sh uses existing package/repo_clean_${VER}/ as source authority and
 package_data.csv as the sole additional-data selection policy. It never reruns
 Git archive or overlays development worktree changes. Output is an independently
 copied package/cmf_${VER}_pkg/, after input/conflict/space checks, bounded verified

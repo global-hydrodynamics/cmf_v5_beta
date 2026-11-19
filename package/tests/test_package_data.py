@@ -356,19 +356,19 @@ class PackageDataTest(unittest.TestCase):
         self.assertEqual(tracked.read_text(), "original")
 
     def test_wrappers_from_another_cwd_and_noninteractive_exit(self):
-        for filename in ("package_data.py", "install_package_data.sh", "diff_package_data.sh"):
+        for filename in ("package_data.py", "s01-install_package_data.sh", "s00-diff_package_data.sh"):
             shutil.copyfile(Path(data.__file__).parent / filename, self.repo / "package" / filename)
-        diff = subprocess.run(["bash", str(self.repo / "package/diff_package_data.sh"), "--dataset", "ELSE_GPCC", "--details"],
+        diff = subprocess.run(["bash", str(self.repo / "package/s00-diff_package_data.sh"), "--dataset", "ELSE_GPCC", "--details"],
                               cwd=self.base, capture_output=True, text=True)
         self.assertEqual(diff.returncode, 0, diff.stderr)
         self.assertIn("Selected source files: 1", diff.stdout)
         self.conflict()
-        install = subprocess.run(["bash", str(self.repo / "package/install_package_data.sh"), "--yes"],
+        install = subprocess.run(["bash", str(self.repo / "package/s01-install_package_data.sh"), "--yes"],
                                  cwd=self.base, input="y\ny\ny\n", capture_output=True, text=True)
         self.assertEqual(install.returncode, 2)
         self.assertIn("confirmation unavailable", install.stderr)
         self.assertFalse((self.repo / "inp/ELSE_GPCC").exists())
-        dry = subprocess.run(["bash", str(self.repo / "package/install_package_data.sh"), "--dry-run"],
+        dry = subprocess.run(["bash", str(self.repo / "package/s01-install_package_data.sh"), "--dry-run"],
                              cwd=self.base, capture_output=True, text=True)
         self.assertEqual(dry.returncode, 0, dry.stderr)
         self.assertIn("Dry-run: no files changed", dry.stdout)

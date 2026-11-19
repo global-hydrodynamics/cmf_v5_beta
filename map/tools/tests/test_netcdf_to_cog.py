@@ -441,3 +441,58 @@ def test_auto_resolution_scope_and_explicit_compatibility(tmp_path, capsys):
     for invalid in ([], ['base', 'auto'], ['../1min']):
         with pytest.raises(ValueError, match='resolutions must'):
             cog.resolve_resolutions(tmp_path, invalid)
+
+
+@pytest.mark.parametrize('stem,variable', [
+    ('mpireg-4','mpireg'), ('mpireg-8','mpireg'), ('mpireg-16','mpireg'),
+    ('subbsn-sample','subbsn'), ('subcol-sample','subcol'),
+])
+def test_consolidated_registry_names_convert_to_cog(tmp_path, stem, variable):
+    task, arrays = fixture(tmp_path, stem, 'int32', names=[variable])
+    root = task.source.parent.parent
+    before = hashlib.sha256(task.source.read_bytes()).hexdigest()
+    options = ['--map-dir',str(root),'--resolutions','base','--variables',stem,
+               '--jobs','1','--blocksize','128']
+    assert cog.main(options) == 0
+    with rio.open(task.target) as ds:
+        assert ds.count == 1 and ds.dtypes == ('int32',)
+        assert ds.nodata == -9999
+        np.testing.assert_array_equal(ds.read(1), arrays[0])
+        assert ds.tags(1)['registry_name'] == variable
+    prior = task.target.read_bytes()
+    assert cog.main(options) == 0
+    assert task.target.read_bytes() == prior
+    assert hashlib.sha256(task.source.read_bytes()).hexdigest() == before
+
+
+def test_mpi_family_and_canonical_single_variable_variant_resolution(tmp_path):
+    for n in (4,8,16,32):
+        task, _ = fixture(tmp_path, f'mpireg-{n}', 'int32', names=['mpireg'])
+    root = task.source.parent.parent
+    tasks = cog.plan(root, ['base'], ['mpireg'], REGISTRY)
+    assert {t.source.name for t in tasks} == {f'mpireg-{n}.nc' for n in (4,8,16,32)}
+    assert len(tasks) == 4
+    # A renamed raster is resolved by its canonical variable, not its stem.
+    variant, _ = fixture(tmp_path, 'width-experiment', names=['rivwth'])
+    selected = cog.plan(root, ['base'], ['width-experiment'], REGISTRY)
+    assert len(selected) == 1 and selected[0].rows[0]['binary_filename'] == 'rivwth.bin'
+    assert cog.convert(selected[0], blocksize=128).startswith('PASS')
+    for invalid in ('mpireg-0','mpireg-test','mpireg--4'):
+        invalid_task, _ = fixture(tmp_path, invalid, 'int32', names=['mpireg'])
+        groups = {'mpireg': tasks[0].rows}
+        assert cog.rows_for_base_variant(invalid_task.source, groups) == []
+
+
+def test_variant_resolution_rejects_ambiguous_multivariable_and_bad_storage(tmp_path):
+    task, _ = fixture(tmp_path, 'unknown-pair', 'int32', names=['nextx','nexty'])
+    root = task.source.parent.parent
+    tasks = cog.plan(root, ['base'], ['all'], REGISTRY)
+    assert len(tasks) == 1 and tasks[0].rows == []
+    with pytest.raises(cog.Unsupported, match='no registered numeric raster mapping'):
+        cog.convert(tasks[0], blocksize=128)
+    assert not task.target.exists()
+    bad, _ = fixture(tmp_path/'bad', 'subcol-sample', 'float32', names=['subcol'])
+    tasks = cog.plan(bad.source.parent.parent, ['base'], ['all'], REGISTRY)
+    with pytest.raises(cog.Unsupported, match='registry-conflicting storage dtype'):
+        cog.convert(tasks[0], blocksize=128)
+    assert not bad.target.exists()

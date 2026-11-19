@@ -30,16 +30,37 @@ The names above describe the intended sibling layout, not hard-coded local paths
 - Preserve source data and generate the package in an independent output directory.
 - Future scripts must derive the repository root from their own location and avoid embedded absolute paths, so relocation remains possible.
 
+## Numbered workflow
+
+Generated metadata belongs inside each output tree's `package/` directory:
+`repo_clean_${VER}/package/PACKAGE_BUILD_INFO.txt` is retained as
+`cmf_${VER}_pkg/package/PACKAGE_BUILD_INFO.txt`, and assembly writes
+`cmf_${VER}_pkg/package/PACKAGE_MANIFEST.json`. Neither is written at the output
+root. Recreate old clean trees with `p01` before using `p02`; existing outputs
+are never moved or overwritten automatically.
+
+
+- `s00-diff_package_data.sh`: compare additional data and local development copies (read-only).
+- `s01-install_package_data.sh`: import selected additional data into the development checkout when needed.
+- `p01-archive_clean_repo.sh`: extract committed source for the chosen package version.
+- `p02-make_package.sh`: assemble that clean source with the authoritative additional data.
+
+The `s` commands support local development; package creation uses `p01` then
+`p02`. Commit intended source/document changes before `p01`, and use the same
+`VER` for both package steps. An Import run is not required before assembly;
+`p02` reads the external additional-data store directly. Number prefixes apply
+only to Shell entry points; Python helper names are unchanged.
+
 ## Tools
 
-- `install_package_data.sh`: one-time developer setup, copying selected data into this checkout.
-- `diff_package_data.sh`: independently compare authoritative data and local development copies.
+- `s01-install_package_data.sh`: one-time developer setup, copying selected data into this checkout.
+- `s00-diff_package_data.sh`: independently compare authoritative data and local development copies.
 - `package_data.py`: shared selection, bounded-memory comparison and safe copying (Python standard library).
 - `package_data.csv`: the sole dataset selection catalog, used by both commands.
-- `archive_clean_repo.sh`: extract committed `HEAD` to `package/repo_clean_${VER}/` (see below).
+- `p01-archive_clean_repo.sh`: extract committed `HEAD` to `package/repo_clean_${VER}/` (see below).
 - `archive_clean_repo.py`: standard-library inventory, literal exclusions, blob/mode verification and atomic publication helper.
 - `package_source_exclude.txt`: clean-source exclusions, independent of the additional-data catalog.
-- `make_package.sh`: assemble the existing clean tree and CSV-selected additional data into `cmf_${VER}_pkg/`.
+- `p02-make_package.sh`: assemble the existing clean tree and CSV-selected additional data into `cmf_${VER}_pkg/`.
 - `make_package.py`: read-only planning, verified staged assembly and SHA-256 manifest.
 
 The commands require Bash, Python 3.8 or newer, and Git. No scientific Python packages or rsync are required. The broader product roles are described in [the development and distribution design](../docs/development_and_distribution_design.md); `package/` is the current approved tooling location.
@@ -60,7 +81,7 @@ The commands require Bash, Python 3.8 or newer, and Git. No scientific Python pa
 
 The initial ELSE_GPCC row selects runoff*.nc for 1979–2010. The conversion script beside those data is not selected or copied. To register a dataset, add a unique row with relative paths, the intended pattern, format and description; ensure local installation paths are ignored before copying and do not overwrite existing files without approval.
 
-cmf_v5_beta/ is the Git development checkout, cmf_v5_package_data/ holds authoritative additional data outside Git, and package/cmf_${VER}_pkg/ is the independently assembled beta distribution. Import changes only local development copies; make_package.sh separately produces the distribution directory.
+cmf_v5_beta/ is the Git development checkout, cmf_v5_package_data/ holds authoritative additional data outside Git, and package/cmf_${VER}_pkg/ is the independently assembled beta distribution. Import changes only local development copies; p02-make_package.sh separately produces the distribution directory.
 
 ## Import and Diff commands
 
@@ -70,12 +91,12 @@ current working directory. The default source is the logical sibling
 an external-storage location. Use `--source` if the sibling is not available:
 
 ```bash
-./package/diff_package_data.sh
-./package/diff_package_data.sh --source /path/to/cmf_v5_package_data --details
-./package/diff_package_data.sh --dataset glb_15min --output /tmp/data_diff.csv
-./package/install_package_data.sh --dry-run
-./package/install_package_data.sh --source /path/to/cmf_v5_package_data
-./package/install_package_data.sh --dataset glb_15min
+./package/s00-diff_package_data.sh
+./package/s00-diff_package_data.sh --source /path/to/cmf_v5_package_data --details
+./package/s00-diff_package_data.sh --dataset glb_15min --output /tmp/data_diff.csv
+./package/s01-install_package_data.sh --dry-run
+./package/s01-install_package_data.sh --source /path/to/cmf_v5_package_data
+./package/s01-install_package_data.sh --dataset glb_15min
 ```
 
 `--dataset` accepts a catalog ID and may be repeated. Every selected source dataset
@@ -157,7 +178,7 @@ forcing an overwrite. No failure generates substitute scientific data.
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s package/tests -v
-bash -n package/install_package_data.sh package/diff_package_data.sh
+bash -n package/s01-install_package_data.sh package/s00-diff_package_data.sh
 ```
 
 The tests use small temporary Git repositories and synthetic bytes; they cover
@@ -284,8 +305,8 @@ NetCDF dataset directories normally omit `_nc`; Binary variants use `_bin` when 
 Run from any directory using the script path:
 
 ```bash
-./package/archive_clean_repo.sh --dry-run
-./package/archive_clean_repo.sh
+./package/p01-archive_clean_repo.sh --dry-run
+./package/p01-archive_clean_repo.sh
 ```
 
 Edit `VER="v5b01_$(date +%Y%m%d)"` near the top of the Bash script to use a
@@ -302,7 +323,7 @@ in a private temporary directory. The helper removes explicit exclusions and
 verifies every retained file's committed blob hash, size and executable status
 before atomic no-replace publication. This catches export-ignore/export-subst
 attributes that would silently drop or transform retained sources. The same
-commit is written to `PACKAGE_BUILD_INFO.txt`, with version, branch, timestamp,
+commit is written to `package/PACKAGE_BUILD_INFO.txt`, with version, branch, timestamp,
 repository name, tool and stage. No compile, data overlay or final package build.
 
 Uncommitted tracked edits, staged additions and untracked files cause a warning;
@@ -346,14 +367,14 @@ For this **beta test edition**, user/developer materials are intentionally kept
 together: AGENTS.md, CONTRIBUTING.md, legacy/, docs/, tests and all other retained
 tracked paths remain. Research logs stay in the development repository but are
 excluded from the clean beta tree. User/developer documentation may be separated
-for a formal release later. This extraction is only the Git-source stage. The separate make_package.sh
+for a formal release later. This extraction is only the Git-source stage. The separate p02-make_package.sh
 assembly stage described below integrates additional data. Existing Import/Diff
 commands and package_data.csv are unchanged.
 
 Focused verification (temporary Git fixtures, no real scientific data changes):
 
 ```bash
-bash -n package/archive_clean_repo.sh
+bash -n package/p01-archive_clean_repo.sh
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s package/tests -p test_archive_clean_repo.py -v
 ```
 
@@ -368,19 +389,19 @@ must be checked separately; this is not a model-execution validation.
 
 This produces a **CaMa-Flood v5 beta testing package**, not a formal release.
 Set matching `VER` values in both entry points; no automatic synchronization is
-attempted. archive_clean_repo.sh defaults to the local run date, whereas
-make_package.sh initially uses the explicit `v5b01_20261119` setting. To package
+attempted. p01-archive_clean_repo.sh defaults to the local run date, whereas
+p02-make_package.sh initially uses the explicit `v5b01_20261119` setting. To package
 another version, edit the values before running:
 
 ```bash
 # From the repository root:
-./package/archive_clean_repo.sh --dry-run
-./package/archive_clean_repo.sh
+./package/p01-archive_clean_repo.sh --dry-run
+./package/p01-archive_clean_repo.sh
 
 # Run assembly from package/ (or call it by path from any other directory):
 cd package
-./make_package.sh --dry-run
-./make_package.sh
+./p02-make_package.sh --dry-run
+./p02-make_package.sh
 ```
 
 An existing clean tree is reused without running archive again. Both commands
@@ -392,7 +413,7 @@ nested generated trees are rejected rather than reintroduced or silently pruned.
 An excluded data path already in clean sources is a policy conflict and errors;
 assembly never deletes authoritative clean inputs to resolve it.
 
-User settings at the top of make_package.sh:
+User settings at the top of p02-make_package.sh:
 
 ```bash
 VER="v5b01_20261119"
@@ -401,14 +422,14 @@ PACKAGE_DATA_DIR="../../cmf_v5_package_data"
 ```
 
 **Relative additional-data paths are resolved from the directory containing
-make_package.sh (`package/`), never the current working directory or repository
+p02-make_package.sh (`package/`), never the current working directory or repository
 root.** The default reaches the external sibling of cmf_v5_beta. Absolute paths
 are supported. The store root may be a symlink; selected dataset children may not
 be symlinks, following existing Import/Diff policy. Dry-run uses exactly the same
 path resolution and validation as assembly and creates no files or bytecode.
 
 The clean input must be `package/repo_clean_${VER}/`, contain matching version and
-valid commit/branch/stage fields in PACKAGE_BUILD_INFO.txt, and retain major
+valid commit/branch/stage fields in package/PACKAGE_BUILD_INFO.txt, and retain major
 source directories. It is the sole source-tree authority. The tool does not copy
 from the development worktree, rerun Git archive or update an old clean tree with
 new builder/source files. To include later source changes, explicitly create a
@@ -437,7 +458,7 @@ Only an entirely verified tree is published with the existing atomic no-replace
 publisher. Failure cleans the invocation's temporary tree; no existing package
 is removed or overwritten.
 
-PACKAGE_MANIFEST.json contains version/date, inherited source commit and branch,
+package/PACKAGE_MANIFEST.json contains version/date, inherited source commit and branch,
 clean version, builder version/code SHA-256, CSV SHA-256, Dataset IDs/counts/bytes,
 per-file relative paths/sizes/types/SHA-256 and Dataset content fingerprints.
 For symlinks the checksum covers link text. No Additional Data version is invented:
@@ -457,7 +478,7 @@ redistribution are separate decisions.
 Verification with small temporary fixtures (no real-data copies):
 
 ```bash
-bash -n package/make_package.sh
+bash -n package/p02-make_package.sh
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s package/tests -v
 ```
 

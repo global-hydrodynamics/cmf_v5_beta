@@ -24,7 +24,7 @@ class AssemblyTests(unittest.TestCase):
         self.base = Path(self.temp.name)
         self.package = self.base / "development checkout/package"
         self.package.mkdir(parents=True)
-        for name in ('make_package.sh', 'make_package.py', 'package_data.py', 'archive_clean_repo.py', 'package_data.csv'):
+        for name in ('p02-make_package.sh', 'make_package.py', 'package_data.py', 'archive_clean_repo.py', 'package_data.csv'):
             shutil.copy2(builder.PACKAGE / name, self.package / name)
         self.version = 'v5b01_20261119'
         self.clean = self.package / ('repo_clean_' + self.version)
@@ -38,10 +38,10 @@ class AssemblyTests(unittest.TestCase):
         self.put(self.clean, 'CONTRIBUTING.md', b'contributing')
         self.put(self.clean, 'tools/run.sh', b'#!/bin/sh\nexit 0\n').chmod(0o755)
         (self.clean / 'tools/link').symlink_to('../src_main')
-        self.put(self.clean, 'PACKAGE_BUILD_INFO.txt',
+        self.put(self.clean, 'package/PACKAGE_BUILD_INFO.txt',
             ('Package version: ' + self.version + '\nSource repository: cmf_v5_beta\nSource commit: ' + 'a'*40 +
              '\nSource branch: feature/package-builder\nArchive date: 2026-11-19T00:00:00+0900\n'
-             'Archive tool: package/archive_clean_repo.sh\nPackage stage: Clean Git source extraction\n').encode())
+             'Archive tool: package/p01-archive_clean_repo.sh\nPackage stage: Clean Git source extraction\n').encode())
         self.put(self.source, 'inp/ELSE_GPCC/runoff2000.nc', b'runoff')
         self.put(self.source, 'inp/ELSE_GPCC/convert.py', b'not selected')
         for name, resolution in [('glb_15min','1min'), ('TE-Japan_01min','15sec')]:
@@ -85,6 +85,10 @@ class AssemblyTests(unittest.TestCase):
         self.assertTrue((self.output/'map/TE-Japan_01min/COG/15sec/tile.tif').is_file())
         for path in ('map/glb_15min/1min', 'map/TE-Japan_01min/15sec', 'inp/ELSE_GPCC/convert.py', '.git', 'research'):
             self.assertFalse((self.output/path).exists(), path)
+        self.assertEqual(builder.MANIFEST, 'package/PACKAGE_MANIFEST.json')
+        self.assertTrue((self.output/'package/PACKAGE_BUILD_INFO.txt').is_file())
+        self.assertFalse((self.output/'PACKAGE_BUILD_INFO.txt').exists())
+        self.assertFalse((self.output/'PACKAGE_MANIFEST.json').exists())
         on_disk = json.loads((self.output/builder.MANIFEST).read_text())
         self.assertEqual(manifest, on_disk)
         self.assertEqual(on_disk['source_git_commit'], 'a'*40)
@@ -104,7 +108,7 @@ class AssemblyTests(unittest.TestCase):
     def test_cli_default_is_package_relative_from_multiple_cwds_and_dry_writes_nothing(self):
         before = self.snapshot(self.base)
         for cwd in (self.package, self.package.parent, Path('/private/tmp')):
-            result = subprocess.run(['bash', str(self.package/'make_package.sh'), '--dry-run'],
+            result = subprocess.run(['bash', str(self.package/'p02-make_package.sh'), '--dry-run'],
                                     cwd=cwd, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn(str(self.source), result.stdout)
@@ -117,7 +121,7 @@ class AssemblyTests(unittest.TestCase):
         linked.symlink_to(self.source, target_is_directory=True)
         self.assertEqual(self.plan(str(linked))['selected'], default['selected'])
         self.assertEqual(self.plan(str(self.source))['selected'], default['selected'])
-        script = self.package/'make_package.sh'
+        script = self.package/'p02-make_package.sh'
         script.write_text(script.read_text().replace('../../cmf_v5_package_data', str(linked)))
         result = subprocess.run(['bash', str(script)], cwd='/private/tmp', capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -132,12 +136,25 @@ class AssemblyTests(unittest.TestCase):
         with self.assertRaisesRegex(data.DataError, 'missing'):
             self.plan()
         (self.base/'elsewhere').rename(self.source)
-        (self.clean/'PACKAGE_BUILD_INFO.txt').write_text('Package version: wrong\n')
+        (self.clean/'package/PACKAGE_BUILD_INFO.txt').write_text('Package version: wrong\n')
         with self.assertRaisesRegex(data.DataError, 'version'):
             self.plan()
         shutil.rmtree(self.clean)
         with self.assertRaisesRegex(data.DataError, 'Clean Repository'):
             self.plan()
+
+    def test_old_root_provenance_and_reserved_manifest_are_rejected(self):
+        nested = self.clean/'package/PACKAGE_BUILD_INFO.txt'
+        legacy = self.clean/'PACKAGE_BUILD_INFO.txt'
+        nested.rename(legacy)
+        with self.assertRaisesRegex(data.DataError, 'package/PACKAGE_BUILD_INFO.txt'):
+            self.plan()
+        self.assertFalse(self.output.exists())
+        legacy.rename(nested)
+        (self.clean/builder.MANIFEST).write_text('old manifest')
+        with self.assertRaisesRegex(data.DataError, 'reserved'):
+            self.plan()
+        self.assertFalse(self.output.exists())
 
     def test_clean_source_cannot_force_excluded_binary_into_distribution(self):
         self.put(self.clean, 'map/glb_15min/1min/raw.bin', b'not distributable')

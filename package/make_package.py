@@ -18,13 +18,13 @@ import sys
 import tempfile
 
 import package_data as data
-from archive_clean_repo import publish
+from archive_clean_repo import BUILD_INFO, publish
 
 PACKAGE = Path(__file__).resolve().parent
 MAJOR_DIRS = ("src_main", "config", "tools", "map", "inp", "gosh_test", "tutorial",
               "visualization", "variable_table", "package", "legacy", "docs")
 BUILDER_VERSION = "1"
-MANIFEST = "PACKAGE_MANIFEST.json"
+MANIFEST = "package/PACKAGE_MANIFEST.json"
 
 
 def forbidden(name):
@@ -58,7 +58,7 @@ def tree_files(root):
         for name in files:
             path = Path(parent) / name
             relative = path.relative_to(root).as_posix()
-            if forbidden(relative) or relative == MANIFEST:
+            if forbidden(relative) or relative in (MANIFEST, "PACKAGE_MANIFEST.json", "PACKAGE_BUILD_INFO.txt"):
                 raise data.DataError(f"Forbidden/reserved path in clean tree: {relative}")
             mode = path.lstat().st_mode
             if stat.S_ISLNK(mode):
@@ -72,9 +72,9 @@ def tree_files(root):
 
 
 def build_info(clean, version):
-    path = clean / "PACKAGE_BUILD_INFO.txt"
-    if not path.is_file() or path.is_symlink():
-        raise data.DataError("Missing regular PACKAGE_BUILD_INFO.txt in clean tree")
+    path = clean / BUILD_INFO
+    if (clean / "package").is_symlink() or not path.is_file() or path.is_symlink():
+        raise data.DataError(f"Missing regular {BUILD_INFO} in clean tree; regenerate it with p01")
     info = {}
     for line in path.read_text().splitlines():
         key, sep, value = line.partition(": ")
@@ -139,7 +139,7 @@ def plan(package, version, configured_source):
             count, size, duplicates = 0, 0, 0
             for relative, path in sorted(files.items()):
                 name = (dataset.target / relative).as_posix()
-                if forbidden(name) or name in (MANIFEST, "PACKAGE_BUILD_INFO.txt"):
+                if forbidden(name) or name in (MANIFEST, BUILD_INFO, "PACKAGE_MANIFEST.json", "PACKAGE_BUILD_INFO.txt"):
                     raise data.DataError(f"Catalog would restore a forbidden/reserved path: {name}")
                 data.no_symlinks(clean, PurePosixPath(name))
                 snapshot = data.stamp(path)
@@ -284,6 +284,7 @@ def write_manifest(tree, manifest):
         payload = (json.dumps(manifest, indent=2, ensure_ascii=True) + '\n').encode()
         size = base_size + len(payload)
         if manifest['package_totals']['bytes'] == size:
+            (tree / MANIFEST).parent.mkdir(parents=True, exist_ok=True)
             (tree / MANIFEST).write_bytes(payload)
             return payload
         manifest['package_totals']['bytes'] = size
