@@ -476,8 +476,8 @@ The principles above are the adopted direction. Their implementation remains inc
 | Model and execution entry points | `src_main/`, `config/`, `gosh_test/`, and Tutorial01 provide existing build/run materials with earlier operational evidence. | Consolidate a current clean-clone recipe; do not describe this documentation task as a new model execution or package test. |
 | Regression references | Component tests exist; earlier model comparisons are recorded in research. | Independently approve the official model-reference revision, variables, calendar, precision and comparison criteria, then provide a repeatable command. Historical execution success is not this approval. |
 | Migration baseline | Legacy root src/gosh/adm relocation and direct util-to-tools consolidation are committed in 29b889c4; current main inherits them. | Use legacy/ only as reference and the active src_main/config/gosh_test/tools paths for v5 work. |
-| Additional data | `package/install_package_data.sh` implements developer Import; `diff_package_data.sh` provides independent read-only file Diff. The sole `package_data.csv` catalog preserves its six fields and adds optional exclude_patterns. Symlinked sibling stores, bounded-memory comparison, Git/ignore protections and verified atomic local copies are supported. | Distribution version/provenance/redistribution review and independent package assembly remain future work. No real-data Import was performed by the implementation task; see the [package guide](../package/README.md). |
-| Distributed Package | `package/archive_clean_repo.sh` extracts a pinned committed HEAD to `package/repo_clean_${VER}/`, with explicit exclusions, byte/mode validation and build provenance. This is only the clean Git-source stage; no final assembler or verified runnable distribution exists. | Integrate approved additional data in a later independent stage, then verify the assembled package structurally and through approved execution checks. |
+| Additional data | `package/install_package_data.sh` implements developer Import; `diff_package_data.sh` provides independent read-only file Diff. The sole `package_data.csv` catalog preserves its six fields and adds optional exclude_patterns. Symlinked sibling stores, bounded-memory comparison, Git/ignore protections and verified atomic local copies are supported. | Formal distribution version/provenance/redistribution review remains future work; beta assembly now reuses the same catalog and selection implementation. No real-data Import was performed by the implementation task; see the [package guide](../package/README.md). |
+| Distributed Package | `package/archive_clean_repo.sh` extracts a pinned committed HEAD to `package/repo_clean_${VER}/`, with explicit exclusions, byte/mode validation and build provenance. `package/make_package.sh` independently combines an existing same-version clean tree and catalog-selected additional data with staged verified copies and a SHA-256 manifest. | Directory assembly is implemented; runtime/model scientific validation and formal public release approval remain separate future work. |
 | Legacy packaging instructions | `archive_src.sh`, `doc/make_package.sh` and the old package guide describe v4-oriented workflows. | Preserve them as historical references; do not present them as the v5 assembly command. |
 | Contribution guidance | CONTRIBUTING.md now documents feature branches, focused diffs, two test levels and pre-merge review. | Validate the full contributor workflow with an independently tested feature branch/PR in a later task. |
 | PR validation | The former source/map workflow is removed from active GitHub Actions by maintainer instruction; tests and inputs remain. | Automated CI is temporarily disabled pending a small, reproducible v5 suite. Use the retained manual checks; no replacement workflow is added here. |
@@ -498,7 +498,7 @@ These decisions do not block the present documentation work. Resolve each before
 
 - **Official minimal model test and references (important):** Section 5 requires approved references, but no current single regression contract selects the run period, variables, build/precision settings and tolerances. Earlier 40-day and multi-year Mekong runs are evidence, not an automatic choice of the official reference. This choice controls test cost and numerical acceptance.
 - **Additional-data contract (important):** Select the first datasets, source permissions, destination paths, manifest/version compatibility fields, and copy versus optional read-only links after workflow inspection. Existing mixed code/data directories and absolute legacy links prevent choosing a universal directory-overlay method without further work.
-- **Package selection and equivalence (important):** Specify which developer-only files are excluded, how tutorial learner profiles relate to the full package, and what “equivalent package” means when creation dates differ (Section 3.2). For the beta, preserve AGENTS.md, CONTRIBUTING.md, legacy/, docs/, tests and tracked samples, while excluding research/, .github/ and Git-specific files. Research history remains in Git. Formal releases may separate user/developer documentation later. Equivalent retained source means committed file bytes and executable flags; generated provenance timestamps differ. Additional-data manifests and final-package equivalence remain future decisions.
+- **Package selection and equivalence (important):** Specify which developer-only files are excluded, how tutorial learner profiles relate to the full package, and what “equivalent package” means when creation dates differ (Section 3.2). For the beta, preserve AGENTS.md, CONTRIBUTING.md, legacy/, docs/, tests and tracked samples, while excluding research/, .github/ and Git-specific files. Research history remains in Git. Formal releases may separate user/developer documentation later. Equivalent retained source means committed file bytes and executable flags; generated provenance timestamps differ. Beta manifests now record the actual selected-file hashes and totals; official reference/runtime equivalence and public-release policy remain future decisions.
 
 Recommended sequence: reconcile the migrated policy and existing working-tree changes; approve a minimal-case validation contract; inventory approved additional data; specify package file selection and manifest; implement assembly and focused tests as separate tasks; finally verify the selected source revision in a clean checkout and the generated package in an independent directory. Each implementation stage follows the branch/scope approval and proportional validation rules in AGENTS.md.
 
@@ -518,3 +518,27 @@ The extracted files retain committed bytes/modes; the timestamped provenance is
 not a claim of byte-identical complete archives. No final compressed archive,
 additional-data integration, Fortran compilation or model execution is performed.
 See [the package guide](../package/README.md#clean-beta-git-source-extraction).
+
+
+### Approved beta assembly stage (2026-11-19)
+
+make_package.sh uses existing package/repo_clean_${VER}/ as source authority and
+package_data.csv as the sole additional-data selection policy. It never reruns
+Git archive or overlays development worktree changes. Output is an independently
+copied package/cmf_${VER}_pkg/, after input/conflict/space checks, bounded verified
+copying and atomic no-replace publication. Existing Import/Diff and extraction
+behavior remain unchanged. Same-content duplicates are retained once; differing
+paths error rather than choose a winner. Inputs stay read-only.
+
+The explicit default PACKAGE_DATA_DIR="../../cmf_v5_package_data" is relative to
+the script's package/ directory, regardless of CWD; absolute paths and linked
+store roots remain supported, including in dry-run. VER must match the existing
+clean directory and build information. No automatic version synchronization.
+
+Manifest provenance inherits the clean source revision/branch, records file and
+Dataset SHA-256 identities and exact package totals, and avoids publishing
+absolute host storage paths. Source version is not a claim of runtime validation.
+Beta developer documents/legacy/tests remain; research/Git administration and
+nested generated trees are not restored. No model execution, conversion,
+compression or public upload is included. Existing unconfirmed redistribution
+conditions remain unconfirmed; local assembly is not approval to distribute.

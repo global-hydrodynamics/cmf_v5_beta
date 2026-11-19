@@ -1,6 +1,6 @@
 # CaMa-Flood v5 Package Builder
 
-Status: committed clean-source extraction, developer Import and read-only Diff are implemented. This root directory holds the Package Builder tools, catalog and documentation. Distribution-package assembly (`make_package.sh`) is still planned and is not implemented.
+Status: clean-source extraction, beta distribution-directory assembly, developer Import and read-only Diff are implemented. This root directory holds the Package Builder tools, catalog and documentation. Local assembly does not authorize public redistribution or establish scientific runtime validity.
 
 ## Working-directory layout
 
@@ -11,14 +11,14 @@ work/
 │   ├── map/
 │   ├── inp/
 │   ├── tools/
-│   └── package/              # Package Builder workspace (current location)
+│   └── package/              # Tools, repo_clean_${VER}/ and cmf_${VER}_pkg/
 ├── cmf_v5_package_data/      # Authoritative additional data, outside Git
 │   ├── map/
 │   └── inp/
-└── cmf_v5b01_pkg/            # Independently generated beta 01 package
+└── ...                      # Additional external work directories, if needed
 ```
 
-The names above describe the intended sibling layout, not hard-coded local paths. Each package version has its own output directory.
+The names above describe the intended sibling layout, not hard-coded local paths. Each package version has its own independent output directory under package/.
 
 ## Principles
 
@@ -39,7 +39,8 @@ The names above describe the intended sibling layout, not hard-coded local paths
 - `archive_clean_repo.sh`: extract committed `HEAD` to `package/repo_clean_${VER}/` (see below).
 - `archive_clean_repo.py`: standard-library inventory, literal exclusions, blob/mode verification and atomic publication helper.
 - `package_source_exclude.txt`: clean-source exclusions, independent of the additional-data catalog.
-- `make_package.sh`: future independent distribution assembler; **not implemented**.
+- `make_package.sh`: assemble the existing clean tree and CSV-selected additional data into `cmf_${VER}_pkg/`.
+- `make_package.py`: read-only planning, verified staged assembly and SHA-256 manifest.
 
 The commands require Bash, Python 3.8 or newer, and Git. No scientific Python packages or rsync are required. The broader product roles are described in [the development and distribution design](../docs/development_and_distribution_design.md); `package/` is the current approved tooling location.
 
@@ -59,7 +60,7 @@ The commands require Bash, Python 3.8 or newer, and Git. No scientific Python pa
 
 The initial ELSE_GPCC row selects runoff*.nc for 1979–2010. The conversion script beside those data is not selected or copied. To register a dataset, add a unique row with relative paths, the intended pattern, format and description; ensure local installation paths are ignored before copying and do not overwrite existing files without approval.
 
-cmf_v5_beta/ is the Git development checkout, cmf_v5_package_data/ holds authoritative additional data outside Git, and cmf_v5b01_pkg/ is the future independently generated distribution. Import changes only the local development copies. A generated distribution is not produced by these tools.
+cmf_v5_beta/ is the Git development checkout, cmf_v5_package_data/ holds authoritative additional data outside Git, and package/cmf_${VER}_pkg/ is the independently assembled beta distribution. Import changes only local development copies; make_package.sh separately produces the distribution directory.
 
 ## Import and Diff commands
 
@@ -200,8 +201,8 @@ maintained or independently reproducible entry point.
 High-resolution Binary directories remain excluded (`1min/` for Global,
 `15sec/` for Japan); restore them from compressed NetCDF when required.
 The catalog selects existing files only; it does not generate missing COGs or
-refresh provenance snapshots. Import/Diff enforce the same selection. No
-assembler is introduced by this policy change.
+refresh provenance snapshots. Import/Diff and beta assembly enforce the same
+selection; no raster generation is performed.
 
 ### Exclusion semantics and implementation boundary
 
@@ -345,9 +346,9 @@ For this **beta test edition**, user/developer materials are intentionally kept
 together: AGENTS.md, CONTRIBUTING.md, legacy/, docs/, tests and all other retained
 tracked paths remain. Research logs stay in the development repository but are
 excluded from the clean beta tree. User/developer documentation may be separated
-for a formal release later. This extraction is only the Git-source stage of the
-future Package Builder; additional-data integration and final assembly remain
-unimplemented. Existing Import/Diff commands and package_data.csv are unchanged.
+for a formal release later. This extraction is only the Git-source stage. The separate make_package.sh
+assembly stage described below integrates additional data. Existing Import/Diff
+commands and package_data.csv are unchanged.
 
 Focused verification (temporary Git fixtures, no real scientific data changes):
 
@@ -361,3 +362,108 @@ exclusions and literal near matches, dirty/untracked/ignored inputs, another CWD
 provenance, ignore rules, nested generated outputs, unsafe links, existing output
 protection and cleanup on tar/archive-attribute failures. A real source extraction
 must be checked separately; this is not a model-execution validation.
+
+
+## Assemble a beta testing package
+
+This produces a **CaMa-Flood v5 beta testing package**, not a formal release.
+Set matching `VER` values in both entry points; no automatic synchronization is
+attempted. archive_clean_repo.sh defaults to the local run date, whereas
+make_package.sh initially uses the explicit `v5b01_20261119` setting. To package
+another version, edit the values before running:
+
+```bash
+# From the repository root:
+./package/archive_clean_repo.sh --dry-run
+./package/archive_clean_repo.sh
+
+# Run assembly from package/ (or call it by path from any other directory):
+cd package
+./make_package.sh --dry-run
+./make_package.sh
+```
+
+An existing clean tree is reused without running archive again. Both commands
+refuse existing same-version outputs; retain them and choose a new version when
+needed. Assembly output: `package/cmf_${VER}_pkg/`. It contains independent real
+copies of the clean sources and additional datasets. AGENTS.md, CONTRIBUTING.md,
+legacy/ and developer documentation remain. Git administration/research files and
+nested generated trees are rejected rather than reintroduced or silently pruned.
+An excluded data path already in clean sources is a policy conflict and errors;
+assembly never deletes authoritative clean inputs to resolve it.
+
+User settings at the top of make_package.sh:
+
+```bash
+VER="v5b01_20261119"
+# Relative to the package/ directory; absolute paths are also permitted.
+PACKAGE_DATA_DIR="../../cmf_v5_package_data"
+```
+
+**Relative additional-data paths are resolved from the directory containing
+make_package.sh (`package/`), never the current working directory or repository
+root.** The default reaches the external sibling of cmf_v5_beta. Absolute paths
+are supported. The store root may be a symlink; selected dataset children may not
+be symlinks, following existing Import/Diff policy. Dry-run uses exactly the same
+path resolution and validation as assembly and creates no files or bytecode.
+
+The clean input must be `package/repo_clean_${VER}/`, contain matching version and
+valid commit/branch/stage fields in PACKAGE_BUILD_INFO.txt, and retain major
+source directories. It is the sole source-tree authority. The tool does not copy
+from the development worktree, rerun Git archive or update an old clean tree with
+new builder/source files. To include later source changes, explicitly create a
+new clean version with the extraction stage first. Build-info source revision is
+inherited as provenance; assembly checks current clean contents, not Git history.
+
+Planning reuses load_catalog/files_for/file_pattern/exclude_patterns/no_symlinks
+from package_data.py. It requires every registered dataset, reports all detected
+missing/invalid datasets and differing-path conflicts before copying, and shows
+clean/dataset counts and bytes, duplicate counts, exclusion rules and total size.
+Same-path identical regular files are retained once; different contents or type/
+symlink conflicts stop the build. Source/destination containment is rejected.
+A conservative free-space check reserves planned payload, the largest in-flight
+file and directory/manifest overhead. This cannot guarantee against later disk
+exhaustion, which is handled as a failed, unpublished build.
+
+Assembly copies into a private same-filesystem temporary tree, reusing the 1 MiB
+chunk verified copier. Source executable modes are restored (Import deliberately
+makes local data editable instead). Safe internal relative clean symlinks remain
+links; additional data are copied as real files, never links to the external
+store. The tool verifies the complete source/data union, all copied bytes, clean
+file modes and symlink containment, then records hashes. It detects changes to
+selected files, clean inventory and CSV through device/inode/size/mode/time
+snapshots; this is best-effort detection, not a filesystem snapshot or lock.
+Only an entirely verified tree is published with the existing atomic no-replace
+publisher. Failure cleans the invocation's temporary tree; no existing package
+is removed or overwritten.
+
+PACKAGE_MANIFEST.json contains version/date, inherited source commit and branch,
+clean version, builder version/code SHA-256, CSV SHA-256, Dataset IDs/counts/bytes,
+per-file relative paths/sizes/types/SHA-256 and Dataset content fingerprints.
+For symlinks the checksum covers link text. No Additional Data version is invented:
+`version: null` accompanies content fingerprints. Relative configured store paths
+are recorded with their package/-directory basis; an absolute host path is
+redacted to its store basename. Console diagnostics may show resolved paths.
+The file inventory excludes the manifest itself to avoid self-hashing; package
+counts/bytes explicitly include it. Timestamps vary between builds; data hashes
+and Dataset fingerprints identify retained contents independently of timestamps.
+
+These structural checks do not compile Fortran, run model science, regenerate
+NetCDF/COG, compress an archive, upload a release or establish redistribution
+permission. Existing unresolved licenses/attribution/provenance in
+PACKAGE_DATA_README.md remain unresolved. Local generation and external public
+redistribution are separate decisions.
+
+Verification with small temporary fixtures (no real-data copies):
+
+```bash
+bash -n package/make_package.sh
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s package/tests -v
+```
+
+The assembly tests cover package-relative defaults from multiple CWDs, absolute
+and linked root paths, no-write dry-run, missing/version/containment/output errors,
+CSV selection/COGs/raw-Binary exclusions, identical/different collisions,
+chunked copies, corruption/mutation/space failures, cleanup, executable modes,
+manifest totals/hashes, safe links and unchanged inputs. Real-data dry-run and
+one actual package build are separate integration checks, documented in research.

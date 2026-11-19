@@ -58,3 +58,7 @@ __pycache__/
 # Clean beta sources and invocation-local extraction staging; never Git inputs.
 /package/repo_clean_*/
 /package/.repo_clean_tmp.*/
+
+# Assembled beta distributions and invocation-local staging.
+/package/cmf_*_pkg/
+/package/.cmf-package-*/

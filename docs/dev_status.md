@@ -6,6 +6,22 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Beta package assembly (DT-0141, 2026-11-19)
+
+Maintainer authorizes assembly from existing clean source and catalog-selected
+Additional Data, tests/docs/research and commit/push on feature/package-builder.
+Codex owns new make_package entry/helper/tests and package/design/status records.
+Default ../../cmf_v5_package_data resolves from the script's package/ directory;
+absolute paths and linked store root supported. Keep Import/Diff, catalog and
+archive tool unchanged. No conversions, model execution or public distribution.
+
+DT-0141 complete: 45 package tests PASS. Actual assembly from existing clean
+source plus 433 selected Additional Data files yields 1,718 entries and
+4,099,509,554 bytes including SHA-256 manifest. Inputs unchanged during assembly;
+package-relative/default/absolute/linked-root and output protection checks PASS.
+No model runtime/public-release claim. See [VR-0187](../research/records/validation_runs/VR-0187.md).
+
+
 ### Clean beta Git source extraction (DT-0140, 2026-11-19)
 
 Maintainer authorizes package/archive_clean_repo.sh on existing feature/package-builder,
