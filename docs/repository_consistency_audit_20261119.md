@@ -1,74 +1,72 @@
-# Repository consistency audit — 2026-11-19
+# Distribution-source consistency audit — 2026-11-19
 
-Scope: source/tool/data/document/package consistency on feature/package-builder,
-baseline88524b24. Read-only investigation of implementation and scientific data;
-only this report and status/research evidence are added. No main merge performed.
+## Scope
 
-## Outcome
+Following the maintainer's scope correction, inspect only sources, maintained
+execution scripts, configuration, user documentation and dataset registration
+intended for the forthcoming beta distribution. Existing generated package/clean
+trees are excluded. Test execution/results/test code and research/administrative
+records are excluded from the audit verdict. No further test suite is run.
 
-Most maintained components pass, but current working-tree validation is not
-fully green and the existing assembled package is not the latest beta source.
-Fix active diagnostics/documentation and reconcile the user-edited registry
-before declaring package readiness. Then generate a fresh clean/package version.
+This is a static source/path/name consistency review, not a compilation, model
+run, scientific validation or inspection of an assembled distribution. Preserve
+uncommitted scientific data and maintainer metadata. No source repair here.
 
-## Actionable findings
+## Remaining current-use inconsistencies
 
-| Priority | Finding | Evidence and implication |
-| --- | --- | --- |
-| Before merge/package | Setup checks retired forcing paths and DAY filenames | [s01-setup_fortran.sh](../s01-setup_fortran.sh), lines379–380/403, checks test-mek_1deg/test-mek_1deg_nc. Current mek01 uses repo-mek_1deg_bin monthly Roff____200001/200002.one; mek02 uses repo-mek_1deg annual runoff2000/2001.nc. It also checks nextxy_noedge.nc while maintained mek02 chooses nextxy.nc. The diagnostic can incorrectly report missing inputs. |
-| Before merge/package | Current build README points to deleted wrapper | [src_main/README.md](../src_main/README.md), lines29–39, tells readers to run gosh_test/compile_netcdf.sh and expects out/bin/MAIN_cmf_netcdf. Actual supported target is src_main/MAIN_cmf with configured NetCDF support. |
-| Reconcile working tree | Uncommitted registry removes upbasin-2569002 definition | Existing Binary/CTL remain tracked. Map registry schema still validates, but Mekong sample test and CTL integration fail. With a temporary HEAD-registry control, all9 corresponding tests pass. Do not silently restore/edit maintainer CSV: decide whether to retain the literal row or add approved standard variant support and align tests. |
-| Documentation | Input README advertises a deleted Japan Binary sample | [inp/README.md](../inp/README.md), lines54/72, links to absent test-jpn_6min_1hr/README.md. [Runoff inventory](runoff_data_inventory.md) also retains one link. Mark historical/removed status or correct the intended current product; do not invent replacement data. |
-| Fresh packaging required | Existing clean/assembled trees predate recent fixes | Both provenance files retain sourcea39f4ea1. Existing assembled Tutorial02 and Guide01 still reference out/bin/MAIN_cmf_netcdf; latest source fixes are not in those copies. Keep protected outputs and generate a new matching unused VER after source readiness; no automatic rearchive occurred. |
-| Current intro | Model workflow plan still says old matrix tag remains current | [docs/model_source_workflow_plan.md](model_source_workflow_plan.md), opening paragraph, says test-mek_1deg remains valid; current pair is repo-mek_1deg. Distinguish current header from preserved historical milestone text. |
+1. **Fortran setup sample checks use retired input paths.**
+   [s01-setup_fortran.sh](../s01-setup_fortran.sh), lines379–380 and403,
+   still checks test-mek_1deg daily DAY filenames and test-mek_1deg_nc.
+   Current mek01/Tutorial01 use inp/repo-mek_1deg_bin/runoff/ with monthly
+   Roff____200001.one and Roff____200002.one. Current mek02 uses
+   inp/repo-mek_1deg/runoff2000.nc and runoff2001.nc. The setup can therefore
+   incorrectly label installed samples incomplete. Its mek02 map list also
+   checks nextxy_noedge.nc while maintained mek02 selects nextxy.nc.
 
-## Executed checks
+2. **Model build README points to a removed entry point.**
+   [src_main/README.md](../src_main/README.md), lines29–39, describes the
+   missing gosh_test/compile_netcdf.sh and out/bin/MAIN_cmf_netcdf. Align the
+   active instructions with the configured src_main/MAIN_cmf target and the
+   Tutorial01-built executable reused by Tutorial02/Guide01. Preserve genuinely
+   historical build evidence separately from current commands.
 
-| Check | Result |
-| --- | --- |
-| Full Explorer pytest | 403 PASS,1Windows SKIP,3subtests PASS,94.02s |
-| Package/GOSH/conversion/CTL/input-matrix/research-validator/colormap component pytest | 167 PASS,1FAIL,1SKIP,1memory test deselected,65subtests PASS,34.73s |
-| Mekong sample validator on working CSV | 7PASS,1FAIL; missing upbasin registration |
-| Temporary committed-CSV control: Mekong validator plus CTL wrapper integration | 9PASS; working CSV not changed |
-| Map registry | PASS:86rows,72numeric missing values,14blank/unresolved values allowed by schema |
-| Runoff registry | PASS:5rows |
-| Tracked Python syntax | 192PASS |
-| Tracked Shell syntax | 186PASS;1historical failure in etc/legacy_migrated/old_levee/x03-downscale.sh at line24 |
-| Tracked data/docs/Fortran/C permission scan | No executable data/docs/Fortran/C source misuse found |
-| Tracked symlinks | One internal link; no absolute/out-of-tree link found |
-| Markdown path-only link scan | 64broken links total;3outside historical record trees, all pointing to removed Japan sample. Anchors/external URLs were not checked. |
-| Research record validator |12pre-existing broken historical/moved-source links; no structural failures |
-| Regenerated Mekong NetCDF versus Binary |37files/41variables exactly match raw arrays and params coordinates |
-| Preservation snapshot |203tracked scientific file size/mtime_ns/inode snapshots unchanged; working registry SHA-256 unchanged during audit |
+3. **Input documentation lists a removed Japan Binary sample as current.**
+   [inp/README.md](../inp/README.md), lines54/72/78, lists/links
+   test-jpn_6min_1hr/, which is no longer present. Clarify removed/historical
+   status or document the intended existing product; do not invent replacement
+   data. [Runoff inventory](runoff_data_inventory.md) has another link to the
+   absent sample README, which should be labeled as historical evidence.
 
-The component failure is generated base CTL count33/skip7 instead of34/skip6,
-consistent with removing the upbasin row. Both failing tests reflect the same
-registry-selection mismatch; they do not show numerical corruption. Retained
-NetCDF changes are uncommitted user work, not modified by the audit.
+4. **Current model-workflow introduction retains an obsolete matrix tag.**
+   [model source plan](model_source_workflow_plan.md), opening paragraph,
+   still says test-mek_1deg is the current mapping tag. Current maintained
+   scripts and descriptors use repo-mek_1deg, with
+   diminfo_repo-mek_1deg.txt/inpmat_repo-mek_1deg.bin. Update the current
+   introduction; older milestone spellings can remain historical.
 
-The initial combined component collection hit an uninstalled cmf_colormap in
-the Explorer environment. Rerun used its existing src directory through
-PYTHONPATH, with no installation; the table reports that completed run.
+## Consistent current source relationships
 
-## Limits and historical material
+- Tutorial01, Tutorial02 and Guide01 active runners use src_main/MAIN_cmf;
+  Tutorial02/Guide01 assume the NetCDF-enabled Tutorial01 build.
+- Maintained simulation scripts and tutorial inputs use the renamed
+  repo-mek_1deg/repo-mek_1deg_bin products and matching matrix pair.
+- Current converter entry paths are script_format_conv; experimental variants
+  and positive numbered MPI files use their documented standard definitions.
+- Explorer uses code/ implementation paths and the current subcol/subbsn sample
+  NetCDF conventions. No new runtime/browser claim is made by this review.
+- Visualization catalog contains28unique IDs;83script/image/documentation paths
+  resolve. Map/runoff/output registry source/doc references have no missing
+  maintained code path; one optional Global Binary location metadata path is
+  absent locally and is not treated as a required installed source dependency.
+- No maintained-source executable data/docs/Fortran/C permission misuse or unsafe
+  tracked symlink was found. Old transcripts/legacy examples are not current
+  runnable instructions and are not blanket-renamed.
 
-No model scientific simulation, Fortran compilation, full large-map conversion,
-public redistribution, new real package build or browser visual QA. Existing
-Explorer tests are automatic state/rendering tests, not new browser interaction.
-The large320MiB process-budget test is intentionally deselected in this audit.
-Root .venv is absent; the available Explorer Python lacks xarray. Guide01's
-analysis/downscale adapter runtime was already blocked by that missing dependency;
-its documented repository environment must be prepared before a full learner run.
+The working map CSV currently omits the concrete upbasin-2569002.bin row.
+That file is outside registered conversion selection. This is a maintainer
+metadata choice to preserve, not a test-driven request to restore the row.
+Scientific data and working CSV were not edited by the audit.
 
-Historical v4/legacy sources and numbered tutorial authoring transcripts remain
-references. Their old names are not automatically current bugs. The one legacy
-Shell syntax failure and12research broken links are reported without rewriting
-history. The path-only link scanner excludes fenced code and does not check all
-Markdown forms/anchors, so64is a scanner count, not a complete documentation proof.
-
-Main remains older than the approved project branch (58commits behind at fetch).
-The maintainer's main merge remains conditional on v5b01 readiness; successful
-component tests alone do not authorize that merge or establish model validity.
-
-Temporary detailed logs/scripts are under /private/tmp/cmf-audit-* and are not
-version-controlled. Source findings are not repaired in this audit task.
+General beta assembly implementation remains source material, but its existing
+generated artifacts and remake scheduling are outside this audit. No verdict
+is made about them. Main integration is not performed here.
