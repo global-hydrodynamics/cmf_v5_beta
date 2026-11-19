@@ -47,7 +47,7 @@ Assign `A`, `B`, or `C` only when evidence supports the role. Do not classify fr
 | 23 | `input_matrix` | User-configured input-matrix products and paired configuration. |
 | 24 | `MPI` / `bifurcation` | MPI-specific basin aggregation and region products. `bifcol_mpi.bin` colors aggregated basin IDs independent of process count; optional `bsncol_mpi-N.bin` colors N computational regions. |
 | 25 | `river_map_supplement` | Permanent-water area aggregated for post-processing. |
-| 26 | `river_map_supplement` | Optional river-network analysis products, including generic tool outputs and the named Mekong examples `subbsn-sample.bin`, `subcol-sample.bin`, and `upbasin-2569002.bin`. |
+| 26 | `river_map_supplement` | Optional river-network analysis products, including standard `subbsn.bin` / `subcol.bin` definitions and the named upstream-mask example `upbasin-2569002.bin`. |
 | 29 | Unassigned in the current registry | No current row uses this ID. |
 | 31 | `dam_reservoir` / `gauge_alloc` | Allocation workflow text products, including dam, flow-gauge, and level-gauge outputs. |
 | 41 | `inflow_scheme` | Specialized inflow-boundary map variants. |
@@ -104,7 +104,7 @@ Sort rows by ascending numeric `category_id`, then `binary_filename` (case-insen
 
 `verification_status` values in this draft are `verified_source_and_sample`, `verified_source`, `maintainer_confirmed`, `package_observed`, and `provisional_semantics`. `verified_source_and_sample` means the source-derived definition and sample presence have both been checked; it does not mean scientific suitability or correctness has been validated. `maintainer_confirmed` records a maintainer-provided definition that the inspected source only passes through or does not establish independently; it does not imply scientific validation. The `workflow_stage` field separately records the current sample status described above. `provisional_semantics` means product presence or structure may be known while producer, meaning, format, or use remains unresolved. Blank/unknown semantic fields remain intentionally unresolved.
 
-Standard subbasin examples use parameter-independent `subbsn-sample.bin` and `subcol-sample.bin` filenames. Both `s06-subbasin.sh` copies supply explicit output paths and editable example thresholds of 30,000 and 5,000 km2; the second stage preserves Stage 1 IDs and assigns additional IDs only to previously unassigned network cells. The catalog records thresholds and provenance rather than encoding them in filenames. The reusable CLI also permits arbitrary explicit paths, including generic `subbsn.bin` / `subcol.bin`; without paths it writes parameter-labeled `analysis_subbsn_*.bin` / `analysis_subcol_*.bin`. The station wrapper retains `upbasin-<GRDC_ID>.bin` (Mekong: `upbasin-2569002.bin`). Each concrete filename intended for automatic CTL generation has its own registry row. Logical variable names remain `subbsn`, `subcol`, and `upbasin`. These are optional analysis products, not runtime inputs.
+Standard subbasin examples use parameter-independent `subbsn-sample.bin` and `subcol-sample.bin` filenames. Both `s06-subbasin.sh` copies supply explicit output paths and editable example thresholds of 30,000 and 5,000 km2; the second stage preserves Stage 1 IDs and assigns additional IDs only to previously unassigned network cells. The map-local README records sample thresholds and provenance rather than encoding them in filenames or registering separate standard-variable rows. The reusable CLI also permits arbitrary explicit paths, including generic `subbsn.bin` / `subcol.bin`; without paths it writes parameter-labeled `analysis_subbsn_*.bin` / `analysis_subcol_*.bin`. The station wrapper retains `upbasin-<GRDC_ID>.bin` (Mekong: `upbasin-2569002.bin`). The two subbasin sample filenames are variants of the standard definitions, selected in the s90 Shell settings via `--reference-binary subbsn.bin` / `subcol.bin`; automatic CTL discovery does not register or infer these variants. Other registered sample products are unchanged. Logical variable names remain `subbsn`, `subcol`, and `upbasin`. These are optional analysis products, not runtime inputs.
 
 The fields deliberately separate two questions: `distribution_status` describes the product's role in the workflow, while `sample_availability` records where it was actually observed. Package observations do not prove universal distribution. A source program that writes a file does not establish that a corresponding product is shipped. These distinctions should be preserved when adding entries.
 
@@ -331,3 +331,21 @@ High-resolution `downxy` stores two signed 16-bit relative offsets on the high-r
 - Package examples, inspected read-only: `glb_15min/params.txt`, `glb_15min/mapdim.txt`, CTLs, `diminfo*.txt`, channel maps, `map/data/ELSE_GPCC_clm-1981-2010.one`, and `map/data/width.bin`.
 
 Current automation status: the previous source/map GitHub Actions workflow is removed pending a redesigned v5 suite. The validation scripts cited above remain manually executable; see [the migration audit](../docs/migration_consistency_audit.md#manual-checks-retained-from-the-retired-workflow).
+
+
+## Standard definitions and experimental Binary names
+
+CSV is the sole definition of variable meaning, type, dimensions, record order,
+units and missing/special values. Shell owns specific experimental filenames.
+`--reference-binary` in the [existing raster converter](../map/tools/code/convert_map_binary_to_netcdf.py)
+selects all rows for an exact registered base filename. Variant input/output stems
+do not rename its variables; `nextxy.bin` remains `nextx` and `nexty`, and the
+legacy `nextxy_noedge` output aliases remain compatible. Full reference layout
+and input size are checked even for a `--variables` subset. Only NX,NY and
+NX,NY,NLFP layouts are supported. See the [variant guide](../map/tools/script_format_conv/README.md#variant-binary-conversion-s90).
+
+Input matrices require a future, separate
+`map/tools/code/convert_inpmat_binary_to_netcdf.py`, still driven by this CSV:
+NX,NY,INPN, mixed inpx/inpy/inpa blocks and diminfo input-grid geometry do not
+fit the ordinary raster engine. This is a design decision, not an implemented
+converter. High-resolution conversion and other sample registry rows are unchanged.

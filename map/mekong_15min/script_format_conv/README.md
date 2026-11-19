@@ -106,3 +106,22 @@ An explicit nonempty `HIRES` list remains the initial proposal. No available
 source, or EOF at confirmation, stops before conversion. `--force` still only
 controls overwriting; it does not bypass resolution confirmation. Existing
 Binary and `location.txt` handling is unchanged.
+
+## Sample variants (`s90`)
+
+`./s90-sample_netCDF_conversion.sh` uses a byte-identical copy of the
+[shared template](../../tools/script_format_conv/s90-sample_netCDF_conversion.sh).
+Run here, or pass `--map-dir PATH` explicitly. The top-level `VARIANTS` settings
+map `subbsn-sample.bin:subbsn.bin` and `subcol-sample.bin:subcol.bin` to
+`../netcdf/subbsn-sample.nc` (`subbsn`) and `../netcdf/subcol-sample.nc` (`subcol`).
+The CSV defines standard variables; Shell manages concrete experimental filenames.
+These variants no longer appear in the standard conversion list or CTL discovery.
+Existing outputs fail without `--force`; input Binary files remain unchanged.
+
+The original Mekong examples use 30,000 / 5,000 km² two-stage thresholds from
+`s06-subbasin.sh`: Stage 1 IDs/boundaries are preserved and Stage 2 assigns only
+previously unassigned network cells. Thresholds do not guarantee minimum segment
+area. Zero denotes unassigned network, -9999 missing/outside network; positive
+subbsn values are IDs and positive subcol values are display categories.
+See the [variant contract and future inpmat design](../../tools/script_format_conv/README.md#variant-binary-conversion-s90)
+for multi-record inputs, partial selection, errors and atomic file publication.

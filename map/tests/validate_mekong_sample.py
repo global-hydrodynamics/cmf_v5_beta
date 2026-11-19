@@ -172,8 +172,16 @@ class MekongSampleTests(unittest.TestCase):
         self.assertEqual(set(upstream), {-9999, 0, 1})
 
         rows = registry_rows()
-        self.assertEqual(len(rows_for_sample_file(MAP / "subbsn-sample.bin", rows)), 1)
-        self.assertEqual(len(rows_for_sample_file(MAP / "subcol-sample.bin", rows)), 1)
+        # Concrete variants resolve through standard definitions in s90, not
+        # duplicate registry rows; retain the scientific sample checks above.
+        for name in ("subbsn", "subcol"):
+            self.assertEqual(rows_for_sample_file(MAP / f"{name}-sample.bin", rows), [])
+            standard = rows_for_sample_file(MAP / f"{name}.bin", rows)
+            self.assertEqual(len(standard), 1)
+            self.assertEqual(standard[0]["name"], name)
+            self.assertEqual(standard[0]["dtype"], "int32")
+            self.assertEqual(standard[0]["dimensions"], "NX,NY")
+            self.assertEqual(standard[0]["missing_value"], "-9999")
         self.assertEqual(len(rows_for_sample_file(MAP / "upbasin-2569002.bin", rows)), 1)
 
     def test_sample_binary_sizes_match_registry_types_and_dimensions(self) -> None:

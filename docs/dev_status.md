@@ -6,6 +6,28 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+
+### Registry-based Binary variant conversion (DT-0142, 2026-11-19)
+
+Maintainer authorizes the supplied bounded variant-conversion request on existing
+`feature/package-builder`, including tests/docs/research, the two generated
+Mekong NetCDF samples, commit and normal push. Owner: Dai Yamazaki; Codex implements.
+No branch creation/switch, main publication, scientific computation, Binary/data
+regeneration, high-resolution/COG/Explorer/Fortran/inpmat/package-builder changes.
+No overlapping open v5 Issue/PR found. This branch-local row is a publication
+proposal; main registry has no current package-builder registration row.
+
+DT-0142 complete: existing converter accepts exact `--reference-binary` definitions,
+validates full records before optional variable selection, preserves standard
+names/layout/values/compression and publishes verified outputs atomically.
+Shared and Mekong s90 settings own variant names; only the two sample-specific
+CSV rows were removed. Both generated samples exactly match all 9,600 Binary
+cells and params coordinates; 79 protected existing files equal Git baseline.
+18 conversion/workflow, 20 CTL (Python 3.14) and 8 Mekong tests PASS; registry valid.
+Original/new standard outputs match in four cases. Existing CTL/Python 3.11
+fallback error and 12 historical research-link errors remain out of scope.
+Evidence and knowledge-gap review: [VR-0188](../research/records/validation_runs/VR-0188.md).
+
 ### Beta package assembly (DT-0141, 2026-11-19)
 
 Maintainer authorizes assembly from existing clean source and catalog-selected

@@ -218,10 +218,12 @@ class AnalysisMigrationTests(unittest.TestCase):
         shutil.copy2(v5_map / "upbasin.bin", v5_map / "upbasin-2569002.bin")
         shutil.copy2(v5_map / "subcol.bin", v5_map / "subcol-sample.bin")
         for name in ("params.txt", "upbasin-2569002.bin", "subbsn-sample.bin", "subcol-sample.bin"):
-            shutil.copy2(v5_map / name, ctl_dir / name)
+            # CTL auto-discovery registers standard names; samples are variants.
+            standard = name.replace("subbsn-sample", "subbsn").replace("subcol-sample", "subcol")
+            shutil.copy2(v5_map / name, ctl_dir / standard)
         result = generate_directory(ctl_dir, ROOT / "variable_table" / "map_variables.csv")
         self.assertEqual(result.generated, 3, result)
-        for stem, variable in (("upbasin-2569002", "upbasin"), ("subbsn-sample", "subbsn"), ("subcol-sample", "subcol")):
+        for stem, variable in (("upbasin-2569002", "upbasin"), ("subbsn", "subbsn"), ("subcol", "subcol")):
             ctl = (ctl_dir / f"{stem}.ctl").read_text(encoding="utf-8")
             self.assertIn(f"{variable} 1", ctl)
             self.assertIn("undef", ctl)

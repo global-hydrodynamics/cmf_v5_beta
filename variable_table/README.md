@@ -25,3 +25,10 @@ a generated, validated pair in the Mekong repository sample. The regional
 `repo-mek_1deg` mapping is deliberately dataset-specific and is not registered
 in this shared table. Migration source references point to current code;
 references with no verified current counterpart have been removed.
+
+
+Map Binary variants reuse standard rows through `--reference-binary`; specific
+experimental filenames belong in Shell settings, not duplicate variable rows.
+The Mekong `subbsn-sample` / `subcol-sample` definitions therefore resolve from
+`subbsn.bin` / `subcol.bin`. See [the variant contract and separate future
+input-matrix design](map_metadata_spec.md#standard-definitions-and-experimental-binary-names).

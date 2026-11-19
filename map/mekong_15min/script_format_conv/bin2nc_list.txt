@@ -54,6 +54,5 @@ bifcol_mpi.bin
 prmwat.bin
 
 # [26] river_map_analysis
-#subbsn-sample.bin
-#subcol-sample.bin
+# Sample variants are converted separately by s90-sample_netCDF_conversion.sh.
 #upbasin-2569002.bin
