@@ -6,6 +6,22 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Tutorial01 v5 acquisition and beta assembly documentation (DT-0145, 2026-11-19)
+
+Maintainer requests correcting manual/design acquisition paths and beta-package
+status, then confirms one main merge once v5b01 package preparation is ready.
+Codex owns Tutorial01 manual/two design docs, T01 remaining-issues note and
+status/research on feature/package-builder. Current beta route remains the approved
+branch; default main is the route after integration. No merge is performed here.
+No experiment script, scientific setting, generated data or learner acceptance
+status changes; general beta assembly is distinct from a learner-package run.
+
+DT-0145 complete: v5 acquisition, pre/post-main-merge distinction and optional
+beta assembly documented; 8 local links and remote source paths checked.
+T01 acceptance statuses/science/script unchanged. No merge/model/package run.
+See [VR-0191](../research/records/validation_runs/VR-0191.md).
+
+
 ### Variant conversion overwrite confirmation (DT-0144, 2026-11-19)
 
 Maintainer requests s90 summary and y/n overwrite-all behavior like s02.

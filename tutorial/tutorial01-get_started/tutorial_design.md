@@ -4,7 +4,30 @@
 
 ## Section 0: Obtain CaMa-Flood
 
-GitHub's default `master` branch now contains Tutorial01 and its setup scripts. Learners can clone the repository or download a ZIP from the repository's **Code** menu. Place the checkout in a suitable working directory; do not assume a fixed machine-specific path. The supported official v5 distribution package for this tutorial is not yet available, so older packages are not a substitute.
+The v5 source repository is `global-hydrodynamics/cmf_v5_beta`, with default/base
+branch `main`. Current v5b01 work, including the input names in this design, is on
+`feature/package-builder`. During preparation, obtain that approved branch or its
+ZIP so tutorial instructions and bundled data match. The maintainer plans one
+merge into `main` when the v5b01 package is ready; after the merge, default `main`
+becomes the standard acquisition route. This document does not claim that the
+merge or formal release has already occurred. Place the checkout in a suitable
+working directory; do not assume a machine-specific path.
+
+The general beta Package Builder is implemented: archive committed sources with
+`package/archive_clean_repo.sh`, then assemble the existing clean tree and
+CSV-selected Additional Data with `package/make_package.sh`. Set the same unused
+VER in both scripts. The Additional Data default `../../cmf_v5_package_data` is
+relative to the script's `package/` directory, independent of CWD; absolute paths
+are supported. Output is `package/cmf_${VER}_pkg/`; existing outputs are protected.
+See the [package guide](../../package/README.md#assemble-a-beta-testing-package).
+This is an optional maintainer workflow, not a new learner activity or requirement
+to obtain Additional Data for the bundled Mekong example.
+
+The generated beta retains developer materials/legacy and excludes research/Git
+administration. It is not a formal release or a dedicated learner-profile
+package. Assembly checks do not replace Tutorial01 execution checks, which remain
+pending in the assembled package. Existing public-redistribution uncertainties
+remain; older v4 distributions are not a supported substitute.
 
 Before the learner starts, the distributable tutorial checkout must not contain a compiled `src_main/MAIN_cmf` executable or Tutorial01-generated results. The learner builds the model with `make all` and then runs the sample. Do not remove shared developer build products while editing the source repository; verify this initial state in a clean learner snapshot.
 
@@ -14,7 +37,7 @@ Tutorial01 introduces repository navigation and a first model run; it does not t
 
 | Stage | Operational skills | Basic relationship to identify | Observable evidence of learning |
 | --- | --- | --- | --- |
-| Obtain CaMa-Flood | Clone the default `master` branch or download its ZIP. Locate the resulting root folder. | GitHub is the standard Tutorial01 route; the supported official v5 package is a future release. | The learner can obtain the repository from the default branch and identify its root. |
+| Obtain CaMa-Flood | Obtain the matching v5 beta branch/ZIP; use default main after the planned v5b01 integration. Locate the root folder. | GitHub sources and locally assembled beta packages are distinct from a formal release. | The learner obtains a matching tutorial/data revision and identifies its root. |
 | Find the repository | Confirm the root with `pwd`, assign `cmf_root`, and inspect it with `ls -lF` for directories and executable scripts. | `ls -lF` adds display markers such as `/` for directories and `*` for executables; these markers are not filename characters. | The learner can locate `src_main/`, `map/`, `inp/`, and identify directory and executable markers in the listing. |
 | Prepare the environment | Run the setup scripts, recognize check results and prompts, and locate the suggested configuration. | Identify that the suggested root `Mkinclude` is separate from active `config/Mkinclude`; recognize Python setup as optional for this tutorial. | The learner can follow the setup instructions and avoid replacing an active configuration without a backup. |
 | Build the model | Run `make all` in `src_main/` and locate `MAIN_cmf`. | Identify that the executable is produced in `src_main/` from model source. | The learner can find the executable after building. |
@@ -25,14 +48,14 @@ Tutorial01 introduces repository navigation and a first model run; it does not t
 | Run an experiment | Execute the Tutorial01 script from its documented directory and identify `PROJ` and `RUNDIR`. | Match the project name to the output directory shown by the script. | The learner can run the script, recognize its success message, and locate the selected run directory. |
 | Locate results | List the project output and inspect the model log. | Identify which generated file is discharge output and which file is the model log. | The learner can locate `outflw2000.bin`, `log_CaMa.txt`, and see evidence that the run completed. |
 
-Starting from a clean learner checkout of `master` with bundled Mekong samples and a prepared local build configuration, the learner builds the model, runs the 40-day experiment, and locates results under `tutorial/tutorial01-get_started/out/${PROJ}/`. The distributed starting state omits the compiled `src_main/MAIN_cmf` executable and generated Tutorial01 outputs. The supported official v5 package is not yet available; the tutorial has not been verified against older distribution packages.
+Starting from a clean matching v5 beta checkout (default `main` after integration) with bundled Mekong samples and a prepared local build configuration, the learner builds the model, runs the 40-day experiment, and locates results under `tutorial/tutorial01-get_started/out/${PROJ}/`. The distributed starting state omits the compiled `src_main/MAIN_cmf` executable and generated Tutorial01 outputs. General beta assembly is available, but Tutorial01 has not been verified in the assembled beta package or older distributions.
 
 ## Repository layout to introduce
 
 The manual should show a compact tree based on the actual repository, including:
 
 ```text
-CaMa-Flood_v4/
+cmf_v5_beta/
 ├── config/Mkinclude                 # Active v5 compiler configuration
 ├── src_main/                        # v5 Fortran source and MAIN_cmf after build
 ├── map/mekong_15min/                # Bundled 80 x 120 river map
@@ -52,7 +75,7 @@ The repository also contains root setup scripts and shared tools; include them i
 
 ## Starting state and prerequisites
 
-- The verified learner source is the default `master` checkout, which contains `src_main/`, `config/`, the bundled `map/mekong_15min/` and `inp/repo-mek_1deg_bin/` samples, the root `s01-setup_fortran.sh` and `s02-python_setup.sh`, and Tutorial01. Require a clean package start without `src_main/MAIN_cmf` or Tutorial01 run outputs. The official v5 package for this workflow is a future distribution; older packages are not a supported substitute.
+- Use a matching v5 beta source revision: feature/package-builder before the planned v5b01 merge, main afterward. It contains src_main/, config/, bundled Mekong map/runoff inputs, setup scripts and Tutorial01. Require a clean learner snapshot without compiled MAIN_cmf or Tutorial01 results; do not clean a shared development checkout to produce it. The general beta builder exists, but learner-profile packaging and Tutorial01 execution in its output remain unverified.
 - The current state of `src_main/MAIN_cmf` and Tutorial01's `out/` is not prescribed. `make all` builds or updates the required executable, and the sample script replaces only its known generated files on rerun. Sample map, runoff, and matching input-matrix data are included; no scientific data download or map generation is required.
 - GNU Make, GNU Fortran with OpenMP, and NetCDF-Fortran are available. Run `s01-setup_fortran.sh`, review its recommended configuration, and manually copy the staged `Mkinclude` to the existing `config/Mkinclude` location before building.
 - Run `s02-python_setup.sh` for Python environment diagnosis/setup. Tutorial01's CTL tools use Python standard-library features; installing the full optional requirements set is not required for the sample run.
@@ -71,7 +94,7 @@ The repository also contains root setup scripts and shared tools; include them i
 
 ## Required workflow
 
-1. Direct learners to GitHub. Provide `git clone https://github.com/global-hydrodynamics/CaMa-Flood_v4.git` or instructions to use **Code → Download ZIP** from the default branch. Do not direct learners to a temporary feature branch. Explain that the official v5 package is not yet available and users should wait rather than use an older package. Ask learners to place the obtained checkout in a suitable location.
+1. Direct learners to `https://github.com/global-hydrodynamics/cmf_v5_beta`. During v5b01 preparation, show `git clone --branch feature/package-builder https://github.com/global-hydrodynamics/cmf_v5_beta.git`, or select that branch before Download ZIP. State that the default/base branch is main and becomes the standard route after the maintainer's planned merge when v5b01 is ready. Explain beta assembly as an optional developer note, not formal release/model validation. Use a matching tutorial/data revision and a suitable local working directory.
 2. Confirm the current development checkout root with `pwd`, define `cmf_root="$(pwd)"`, and inspect it with `ls -lF`. Explain that `/` marks directories and `*` normally marks executable files; suffixes are display markers, not part of filenames.
 3. Prepare the Fortran and Python environments using the root setup scripts.
 4. Activate `config/Mkinclude` by copying the reviewed staged `Mkinclude` manually; `config/` already exists.
@@ -86,7 +109,7 @@ Map generation and visualization are not required.
 ## Acceptance criteria
 
 - Running `make all` from `src_main/` returns zero and leaves an executable `MAIN_cmf`, whether it is newly built or updated.
-- Section 0 identifies the default GitHub branch as the tutorial source and states that the supported official v5 distribution is not yet available.
+- Section 0 identifies the v5 repository, distinguishes the current beta branch from main and the planned v5b01 merge, and documents two-stage beta assembly without claiming formal release or model validation.
 - The root-directory demonstration uses `ls -lF`, with observed output showing directory and executable markers and an explanation that suffixes are not part of filenames.
 - The standalone tutorial script defines the default `PROJ`, constructs its `RUNDIR` under `out/${PROJ}/`, does not call or source `gosh_test/mek01-default_run.sh`, and runs from its documented directory.
 - Tutorial01 and the model return zero; `log_CaMa.txt` reaches normal calculation completion.

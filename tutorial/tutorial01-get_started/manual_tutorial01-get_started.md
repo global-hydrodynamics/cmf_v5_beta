@@ -4,21 +4,73 @@ This tutorial introduces how to obtain and navigate CaMa-Flood, find the files u
 
 ## 0. Obtain CaMa-Flood
 
-GitHub's default branch contains the files for Tutorial01. Clone the repository:
+Use the v5 repository, `global-hydrodynamics/cmf_v5_beta`. Its default/base
+branch is `main`. The current v5b01 tutorial and renamed input datasets are on
+the approved `feature/package-builder` branch and have not yet been merged into
+`main`. To obtain the version described by this manual during beta preparation:
 
 ```bash
-git clone https://github.com/global-hydrodynamics/CaMa-Flood_v4.git
+git clone --branch feature/package-builder https://github.com/global-hydrodynamics/cmf_v5_beta.git
 ```
 
-This creates a local directory named `CaMa-Flood_v4`. If you prefer not to use Git, open the repository on GitHub, choose **Code → Download ZIP**, then extract the archive. Place the checkout in a suitable working location; no fixed machine-specific path is required.
+This creates `cmf_v5_beta/`. Without Git, select `feature/package-builder` in the
+[v5 repository](https://github.com/global-hydrodynamics/cmf_v5_beta) branch selector
+before choosing **Code → Download ZIP**. Extract the archive and use its root;
+the extracted folder name can differ. Place the checkout in a suitable working
+location; no fixed machine-specific path is required.
 
-The [official CaMa-Flood website](https://global-hydrodynamics.github.io/CaMa-Flood/) provides a separate downloadable distribution package; access requires registration. The supported v5 package for this tutorial is not ready yet. If you prefer that package, wait for its release; an older package is not a substitute for this v5 workflow.
+The maintainer plans to merge the development branch into `main` once the
+**v5b01 package is ready**. After that integration, the standard acquisition
+command will be:
+
+```bash
+git clone https://github.com/global-hydrodynamics/cmf_v5_beta.git
+```
+
+Until the merge is published, do not assume that default `main` contains the
+renamed input paths used below. Use the tutorial and inputs from the same revision.
+
+#### Developer note: constructing a beta package
+
+The repository now provides a two-stage Package Builder. This is optional for
+maintainers preparing a beta testing package; ordinary Tutorial01 users can use
+the bundled Mekong inputs directly without obtaining Additional Data.
+
+In the chosen committed development checkout, set the **same unused `VER`** in
+`package/archive_clean_repo.sh` and `package/make_package.sh`. Configure
+`PACKAGE_DATA_DIR` in make_package.sh: its default
+`../../cmf_v5_package_data` is relative to the script's `package/` directory,
+regardless of CWD; absolute paths are also allowed. Then, from the repository root:
+
+```bash
+# Step 1: extract committed HEAD into package/repo_clean_${VER}/
+./package/archive_clean_repo.sh --dry-run
+./package/archive_clean_repo.sh
+
+# Step 2: assemble the existing clean source and CSV-selected additional data
+cd package
+./make_package.sh --dry-run
+./make_package.sh
+```
+
+Output is `package/cmf_${VER}_pkg/`. Existing same-version outputs are protected;
+choose a new version rather than overwriting them. Assembly uses the existing
+clean tree and does not automatically include later development changes.
+PACKAGE_BUILD_INFO.txt and PACKAGE_MANIFEST.json record the source provenance.
+See the [Package Builder guide](../../package/README.md#assemble-a-beta-testing-package)
+for input selection, integrity checks and limitations.
+
+This produces a **beta testing package**, retaining developer documents and
+`legacy/`; it is not a formal release or a dedicated learner-only package.
+Structural assembly has been checked, but Tutorial01 has not been rerun in that
+assembled package. Local generation does not establish public redistribution
+permission. Older v4 packages are not substitutes for this v5 workflow.
 
 Tutorial01's learner starting state does not contain a compiled `src_main/MAIN_cmf` executable or generated run results. You will build the executable in Section 3 and run the experiment later in this tutorial.
 
 ### Learning Check
 
-- [ ] I can obtain the tutorial files from GitHub's default branch and locate the repository root.
+- [ ] I can obtain the matching v5 beta revision and locate its repository root.
 - [ ] I know that I will build `MAIN_cmf` as part of this tutorial.
 
 ## 1. Find the repository root
