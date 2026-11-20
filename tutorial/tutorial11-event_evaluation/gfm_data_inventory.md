@@ -319,6 +319,16 @@ export MPLCONFIGDIR="$PWD/data/Rhine_2021_test/cache/matplotlib"
 ```
 
 
+## Repository sample
+
+At the maintainer's request, [gfm_sample/](gfm_sample/README.md) now contains
+unchanged copies of the six small harmonised science/quality TIFFs (30,474 bytes),
+a provenance/interpretation README and SHA-256 manifest. Source/copy hashes and
+GeoTIFF grids/masks were checked. Rounded count diagnostics, processed rasters,
+raw COGs, logs, caches and environments are excluded from this repository sample.
+Provider data rights remain distinct from software licensing; inclusion does
+not assign a new data licence. Full processing still needs the external bundle.
+
 ## Suitability and unresolved issues
 
 **The one-day acquisition test succeeded and is suitable for initial visual

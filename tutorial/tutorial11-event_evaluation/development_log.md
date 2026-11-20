@@ -203,3 +203,87 @@ valid-pixel footprints, event-specific quality screening, formal data
 attribution/redistribution details and model-time/water-definition matching
 remain for future work. July 14/16 usability was not established by this
 single-day test. No additional acquisition was started to resolve those points.
+
+
+## 2026-11-20 — Atlantis storage audit and preservation plan
+
+**Objective:** Audit storage and propose a minimal Git/Dropbox preservation set,
+without deleting, moving, copying or rebuilding existing files/environments.
+No acquisition or Git commit/push was authorized or performed.
+
+**Work performed:** Read-only directory/inode/allocation inventory, per-directory
+top-20 files and type counts; checked package metadata, source Git status and
+lock/spec hashes; reviewed GFM cache/fetch code; compared selected content hashes
+and Tutorial figure copies. Distinguished logical content, reported allocation
+and hardlink sharing. Created /Users/yamadai/work/Atlantis/storage_audit.md and
+appended this log only.
+
+**Findings:** About 7.84 GiB of archive is the superseded environment, not GFM
+imagery. Its 286 Conda packages and 275 Python metadata distributions match the
+active environment by identity/version, but its private/tmp prefix no longer
+exists. There is one active installed environment, source/.pixi/envs/default;
+eight pixi.toml declarations do not mean eight installed environments. Source
+has no tracked modifications. About 7.21 GiB of regular-file allocation is
+shared between environment and cache; du order explains source's 720 MiB
+increment. Small-file allocation overhead also inflates reported usage.
+
+**Reuse checks:** No complete 20 m GFM COG is preserved. The 4 KiB header probe
+cannot supply pixels, and the configured data cache contains a font list only.
+Read small windows from all 18 local TIFFs and performed a network-disabled,
+in-memory 128x128 processed-fraction to 4x5 one-arcmin harmonisation. Bytecode
+and PAM writes were disabled. No output files were written by these checks.
+Native reclassification still needs original COG reacquisition; current fetch
+code does not resume from existing processed outputs.
+
+**Preservation proposal:** Git references comprise three existing documents,
+two existing figures, four currently local helper scripts and the audit report,
+about 0.3--0.35 MiB in total. Scripts require the external workspace layout or a
+separately authorized portability change; they should not simply be run inside
+Tutorial 11. The default Git plan adds no GFM TIFF. A 34-file Dropbox set totals
+38,698,351 bytes (36.91 MiB), including data/evidence/version definitions; a
+minimal data-only subset is 18,917,278 bytes. Installed environments, package/
+font caches and regenerable Atlantis PNGs are excluded. Original COGs are
+absent from this set. A six-TIFF Git sample is optional (30,474 bytes), subject
+to GFM redistribution review.
+
+**Candidates, not actions:** The old environment is the major future deletion
+candidate (~7.84 GiB allocation). Cache-only removal would expose about 1.45 GiB
+unshared allocation, not its entire displayed size. No files were deleted or
+transferred. Previous log entries remain unchanged.
+
+**Unresolved:** GFM-specific licence/attribution, server-side snapshot and
+compression effects on actual freed space, native-COG/local-STAC offline replay,
+and a lean GFM-only environment remain unverified. Preserve the documented
+harmonised diagnostic-count rounding caveat with any shared data. No source,
+environment or scientific data was changed by this audit.
+
+**Final read-integrity check:** Decoded all 18 complete TIFF arrays offline;
+shape, valid counts, zero counts and minima/maxima match the saved inventory.
+No data output, acquisition, environment change or Git publication was performed.
+
+
+## 2026-11-20 — Add the small GFM sample to Tutorial 11
+
+**Objective / authorization:** The maintainer explicitly requested creating a
+Tutorial 11 directory, copying the six recommended harmonised TIFFs and pushing
+the result on the existing working branch.
+
+**Work performed:** Created `gfm_sample/` with the six unchanged science/quality
+TIFFs (30,474 bytes), `README.md` and `SHA256SUMS`. Added an inventory link and
+provenance, grid, nodata, daily-composite and quality interpretation details.
+Preserved all previous development-log entries, including the pending storage
+audit record from the preceding task. No external storage audit report was
+copied into Git.
+
+**Validation:** Source/copy SHA-256 and exact six-file/30,474-byte scope checked;
+GeoTIFF readability, dtype, CRS, extent, one-arcmin spacing, nodata and main
+fraction statistics checked. Rounded count diagnostics and larger files are
+excluded. Source files remain unchanged; no acquisition or environment change
+was performed. Existing untracked discharge observations are not included.
+
+**Limitations:** The sample supports initial raster inspection, not native
+reprocessing or a complete event evaluation. GFM-specific attribution and
+redistribution terms remain unverified; no new data licence is asserted.
+
+**Result:** Small repository sample prepared for commit and push on the
+existing `feature/package-builder` branch. No branch switch or main push.
