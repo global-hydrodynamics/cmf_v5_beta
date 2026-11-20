@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import os
+import platform
 from pathlib import Path
 import socket
 import subprocess
@@ -40,6 +42,45 @@ def choose_map(default):
     return Path(value.strip('"')) if value else default
 
 
+def macos_setup_error():
+    """Bound automatic setup to CPython/OS/CPU combinations with wheel support.
+
+    pip remains the authority on the complete dependency wheel intersection;
+    these checks provide an actionable message before creating a venv.
+    """
+    version = platform.mac_ver()[0]
+    try:
+        major = int(version.split(".")[0])
+    except ValueError:
+        major = 0
+    if (platform.python_implementation() != "CPython" or
+            not (3, 10) <= sys.version_info[:2] <= (3, 13) or
+            major < 11 or platform.machine() not in ("arm64", "x86_64")):
+        return ("Automatic macOS setup requires CPython 3.10–3.13 on macOS 11+ "
+                "(arm64 or x86_64). Install a matching Python from python.org, "
+                "then retry. Homebrew/GDAL are not required. "
+                "The selected interpreter determines the wheel architecture.")
+    if major < 14 and sys.version_info[:2] >= (3, 13):
+        return ("macOS 11–13 automatic setup requires CPython 3.10–3.12; "
+                "CPython 3.13 needs macOS 14+ dependency wheels. "
+                "Install Python 3.12 from python.org and retry; no GDAL installation is needed.")
+    return None
+
+
+def macos_setup_environment(environment):
+    """Keep inherited Python/pip settings from redirecting the local install.
+
+    Use pip's default PyPI index and disable config files for this subprocess
+    only. Do not alter the user's pip config, active environment or shell.
+    """
+    env = {key: value for key, value in os.environ.items()
+           if not key.startswith("PIP_") and
+           key not in ("PYTHONPATH", "PYTHONHOME", "PYTHONUSERBASE")}
+    env["PIP_CONFIG_FILE"] = os.devnull
+    env["VIRTUAL_ENV"] = str(environment)
+    return env
+
+
 def prepare_environment(directory, argv, missing):
     """Install only after explicit terminal consent, in the Explorer-local venv.
 
@@ -49,6 +90,14 @@ def prepare_environment(directory, argv, missing):
     """
     environment = directory / ".venv"
     python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+    macos = sys.platform == "darwin"
+    if macos:
+        print(f"Runtime: Python {platform.python_version()} ({platform.python_implementation()}); "
+              f"macOS {platform.mac_ver()[0]}; CPU {platform.machine()}", flush=True)
+        error = macos_setup_error()
+        if error:
+            print(f"[ERROR] {error}", file=sys.stderr)
+            return 1
     print("Missing dependencies: " + ", ".join(missing), file=sys.stderr)
     print(f"Selected Python: {sys.executable}", file=sys.stderr)
     print(f"Explorer environment to create/update: {environment}", flush=True)
@@ -64,27 +113,43 @@ def prepare_environment(directory, argv, missing):
         print("[INFO] Setup cancelled; no environment changes made.")
         return 0
 
+    run_options = {"env": macos_setup_environment(environment)} if macos else {}
     try:
         if environment.is_symlink():
             raise OSError(f"Refusing to install into a linked environment: {environment}")
         if not python.is_file() or not (environment / "pyvenv.cfg").is_file():
             print(f"[STEP] Creating {environment}", flush=True)
-            subprocess.run([sys.executable, "-m", "venv", str(environment)], check=True)
+            subprocess.run([sys.executable, "-m", "venv", str(environment)], check=True, **run_options)
         # A stale or malformed .venv must not redirect pip into Conda/system Python.
         subprocess.run([str(python), "-c",
                         "import sys; from pathlib import Path; "
                         "assert sys.prefix != sys.base_prefix and "
                         "Path(sys.prefix).resolve() == Path(sys.argv[1]).resolve(), 'Not the requested isolated venv'",
-                        str(environment)], check=True)
+                        str(environment)], check=True, **run_options)
         print("[STEP] Installing Map Explorer requirements", flush=True)
-        subprocess.run([str(python), "-m", "pip", "install", "-r", str(directory / "requirements.txt")], check=True)
-        subprocess.run([str(python), "-c", "import numpy, netCDF4, matplotlib, panel, bokeh, rasterio"], check=True)
+        # Source releases can outrank older compatible wheels. On macOS require
+        # wheels for every dependency: pip can select rasterio 1.4.1 on macOS
+        # 11–13 rather than trying to compile newer GDAL-dependent releases.
+        install = [str(python), "-m", "pip", "install"]
+        if macos:
+            install += ["--only-binary=:all:", "--no-user"]
+        requirements = "requirements-macos.txt" if macos else "requirements.txt"
+        install += ["-r", str(directory / requirements)]
+        subprocess.run(install, check=True, **run_options)
+        subprocess.run([str(python), "-c", "import numpy, netCDF4, matplotlib, panel, bokeh, rasterio"],
+                       check=True, **run_options)
     except (OSError, subprocess.CalledProcessError) as exc:
         print(f"[ERROR] Environment setup failed: {exc}", file=sys.stderr)
+        if macos:
+            print("macOS setup uses binary wheels only; no source/GDAL build was attempted. "
+                  "Check the pip error above for unavailable wheels, network/TLS or disk errors. "
+                  "Retry the same launcher and approve setup again; completed downloads/packages "
+                  "in this local .venv can be reused. Do not install GDAL to fix this setup.",
+                  file=sys.stderr)
         print("Existing data and other environments were not changed. Re-run the launcher to retry.", file=sys.stderr)
         return 1
     print("[SUCCESS] Explorer environment ready; launching.", flush=True)
-    return subprocess.run([str(python), str(directory / "code" / "launch_desktop.py"), *argv]).returncode
+    return subprocess.run([str(python), str(directory / "code" / "launch_desktop.py"), *argv], **run_options).returncode
 
 
 def main(argv=None):
@@ -101,6 +166,16 @@ def main(argv=None):
     directory = Path(__file__).resolve().parent.parent
     missing = [name for name in ("numpy", "netCDF4", "matplotlib", "panel", "bokeh", "rasterio")
                if importlib.util.find_spec(name) is None]
+    if sys.platform == "darwin":
+        # A partial installation can have a module spec but an unloadable native
+        # extension. Offer the same local repair prompt rather than crashing.
+        for name in ("numpy", "netCDF4", "matplotlib", "panel", "bokeh", "rasterio"):
+            if name not in missing:
+                try:
+                    __import__(name)
+                except (ImportError, OSError, ValueError) as exc:
+                    print(f"[INFO] Cannot import {name}: {exc}", file=sys.stderr)
+                    missing.append(name)
     if missing and args.no_setup:
         print("[ERROR] Missing WSL Python packages: " + ", ".join(missing), file=sys.stderr)
         print("Create a Linux venv and install requirements manually; see README Windows Launcher (WSL).", file=sys.stderr)

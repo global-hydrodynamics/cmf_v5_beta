@@ -1,0 +1,6 @@
+# macOS installer only; Linux/Windows keep requirements.txt unchanged.
+--only-binary=:all:
+-r requirements.txt
+# Older macOS selects netCDF4 1.6.5 wheels built with the NumPy 1.x ABI.
+# CPython 3.13 requires newer macOS/wheels and supports NumPy 2.
+numpy<2; python_version < "3.13"

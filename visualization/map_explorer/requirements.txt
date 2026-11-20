@@ -3,4 +3,6 @@ netCDF4>=1.6,<2
 matplotlib>=3.8,<4
 panel>=1.5,<2
 bokeh>=3.5,<4
+# Keep 1.4.1 eligible: its arm64 wheel supports macOS 11–13.
+# macOS automatic setup requires wheels for ALL packages (no GDAL source build).
 rasterio>=1.4,<1.5
