@@ -11,7 +11,21 @@ if [ -z "${PYTHON:-}" ]; then
 fi
 if [ -z "${PYTHON:-}" ]; then
     for candidate in "$SCRIPT_DIR/.venv/bin/python" \
-        "$REPO_ROOT/.venv/bin/python" /opt/homebrew/bin/python3 /usr/local/bin/python3; do
+        "$REPO_ROOT/.venv/bin/python" \
+        /Library/Frameworks/Python.framework/Versions/3.12/bin/python3 \
+        /opt/homebrew/bin/python3.12 \
+        /usr/local/bin/python3.12 \
+        /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 \
+        /opt/homebrew/bin/python3.11 \
+        /usr/local/bin/python3.11 \
+        /Library/Frameworks/Python.framework/Versions/3.10/bin/python3 \
+        /opt/homebrew/bin/python3.10 \
+        /usr/local/bin/python3.10 \
+        /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
+        /opt/homebrew/bin/python3.13 \
+        /usr/local/bin/python3.13 \
+        /opt/homebrew/bin/python3 \
+        /usr/local/bin/python3; do
         if [ -x "$candidate" ]; then
             PYTHON="$candidate"
             break

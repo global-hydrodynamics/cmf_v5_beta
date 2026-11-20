@@ -330,7 +330,8 @@ executed checks and current limits; no model simulation equivalence is claimed.
 
 ## Install and launch
 
-Python 3.10+ with NumPy, netCDF4, Matplotlib, Panel and Bokeh is required.
+Python 3.10+ with NumPy, netCDF4, Matplotlib, Panel, Bokeh and rasterio is required.
+macOS automatic setup has the narrower supported combinations below.
 Activate the usual CaMa-Flood Python environment if it already contains them.
 If dependencies are missing, an interactive launcher asks **[y/N]** before
 creating/updating the isolated `visualization/map_explorer/.venv/` and installing
@@ -339,7 +340,8 @@ means no environment changes. Downloads require network access. After successful
 installation, the launcher restarts using that environment with the same map,
 port and browser options. Failed setup stops with an error and can be retried.
 Conda, system Python and the shared repository `.venv/` are not modified.
-An independent installation, run from the repository root, is:
+For macOS use the dedicated instructions below. An independent Linux installation,
+run from the repository root, is:
 
 ```sh
 python3 -m venv visualization/map_explorer/.venv
@@ -379,7 +381,9 @@ stopped. Choose another map afterward through Map Dataset, or pass an explicit
 map path on the command line. No Tk/folder-dialog dependency is needed.
 
 Both launchers use an explicit `PYTHON` if supplied, then active `VIRTUAL_ENV`,
-app-local `.venv`, then repository `.venv`. macOS also checks Homebrew locations;
+app-local `.venv`, then repository `.venv`. macOS then checks standard python.org
+Framework, Homebrew and `/usr/local` paths by Python version (3.12, 3.11,
+3.10, then 3.13), followed by unversioned Python paths; no Homebrew installation is required;
 Windows then tries `py -3` and `python`. A `PYTHON` override must name an executable,
 without flags.
 
@@ -400,6 +404,78 @@ If executable permissions were lost when copying the Mac launcher, restore them 
 `chmod +x visualization/map_explorer/launch_mac.command`.
 The Windows batch wrapper is supplied but has not been executed on Windows
 in this macOS development session.
+
+
+### macOS first installation and recovery (β05b01 follow-up)
+
+Install CPython from [python.org](https://www.python.org/downloads/macos/) if it
+is not already installed. Extract the package into a writable local folder, then
+double-click `launch_mac.command`. Answer `y` at the **one setup confirmation**.
+The launcher creates/repairs only this Explorer's `.venv`, installs binary wheels,
+checks native imports, and starts the bundled Mekong map. Keep Terminal open.
+No Homebrew, GDAL installation, `gdal-config`, compiler, or Tk is required.
+A working Python installation and network access to PyPI/files.pythonhosted.org
+are prerequisites; the launcher does not install Python or bypass Gatekeeper.
+
+| Automatic setup | Python | Interpreter architecture |
+| --- | --- | --- |
+| macOS 11–13 | CPython 3.10–3.12 | arm64 or x86_64 |
+| macOS 14+ | CPython 3.10–3.13 | arm64 or x86_64 |
+
+These are the automatic installer's supported combinations, subject to an
+available complete wheel set. The interpreter's architecture determines pip's
+wheel tags; use a native arm64 Python on Apple Silicon. Rosetta/x86_64 on Apple
+Silicon has not been runtime-tested. Python 3.9, 3.14+, PyPy, older macOS and
+unknown architectures receive a pre-install diagnostic instead of a source build.
+Already working manually managed environments are not upgraded automatically.
+
+**Why the old installation failed:** the ordinary `rasterio>=1.4,<1.5` requirement
+also admits source releases. Pip can choose a newer source release ahead of an
+older compatible wheel. Rasterio 1.4.2–1.4.4 arm64 wheels target macOS 14+, whereas
+[1.4.1 has macOS 11+ arm64 wheels](https://pypi.org/project/rasterio/1.4.1/#files).
+On macOS 11–13 the old installer could therefore attempt compilation and fail
+because `gdal-config` was absent. Updating pip alone does not create compatible
+wheels. Rasterio's [binary wheels include GDAL](https://rasterio.readthedocs.io/en/stable/installation.html).
+The reported user's exact macOS version was not supplied; the failure was
+reproduced on macOS 13.7.8 arm64 with CPython 3.12.3.
+
+The macOS installer uses **`requirements-macos.txt`**: it includes the shared
+requirements and requires **wheels for every dependency**. Pip can select an
+older compatible release without pinning all platforms to it. For Python before
+3.13 it also requires NumPy <2: macOS 11–13 may select netCDF4 1.6.5 wheels built
+for the NumPy 1.x ABI, which otherwise fail during import with NumPy 2. Newer
+macOS/CPython 3.13 uses newer wheels. Windows/Linux requirements and installer
+commands are unchanged. Installation settings apply only to the child process:
+pip config files and inherited `PIP_*`/Python-path redirections are ignored, using
+the default PyPI index. They are never rewritten. A private-index-only or
+custom-pip-certificate deployment needs a separately managed environment; normal
+system HTTPS proxy/certificate settings remain in effect.
+
+**Restart:** an intact local environment launches without another installation
+prompt. **Failed installation:** correct the reported network/disk problem and
+run the same launcher again, approving the same local setup prompt. A partial
+`.venv` is reused; a module whose native extension cannot import also triggers
+repair. Setup failures keep their pip diagnostic and print Python/macOS/CPU
+information. No source-build retry is attempted and no GDAL installation is
+suggested. If no complete wheel set exists, choose a supported interpreter/OS;
+the launcher cannot make an incompatible wheel run. Symlinked `.venv` targets
+and interpreter-prefix mismatches are refused to protect other environments.
+
+For a manual **macOS-only** installation from the repository/package root:
+
+```sh
+python3 -m venv visualization/map_explorer/.venv
+visualization/map_explorer/.venv/bin/python -m pip install --only-binary=:all: -r visualization/map_explorer/requirements-macos.txt
+./visualization/map_explorer/launch_mac.command
+```
+
+Validation distinguishes runtime execution from wheel availability: actual clean
+venv installation, server/document startup, restart and failed-install recovery
+are checked on macOS 13.7.8 arm64 / CPython 3.12.3 with `gdal-config` absent from
+PATH. Other supported OS/Python/CPU combinations are checked through pip's
+cross-target wheel resolution, not claimed as runtime or Finder tests on those
+machines. This workstation is not a freshly provisioned macOS installation.
+
 
 ## Operation and independent layers
 

@@ -7,6 +7,27 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 ## Current v5 work
 
 
+### Map Explorer macOS wheel installation (DT-0152, 2026-11-20)
+
+Maintainer authorizes environment-only repair on existing feature/package-builder.
+Codex owns Explorer launcher/setup requirements/tests/README and supporting records;
+no open overlapping Issue/PR found. No scientific GUI, data, package artifacts or
+other-platform installer behavior changes. Dedicated macOS wheel-only requirements
+let pip select compatible older rasterio, and NumPy <2 (Python <3.13) avoids the
+older netCDF4 wheel ABI mismatch. Runtime/OS/CPU diagnostics, subprocess pip/Python
+isolation and import-failure repair preserve existing environments. python.org
+and versioned optional Python locations are recognized without requiring Homebrew.
+
+37 tests plus17subtests PASS;1existing real-Windows SKIP;10cross-target complete
+wheel graphs PASS. Actual macOS13.7.8 arm64/CPython3.12.3 temporary clean-venv
+first launch, normal restart, failed install and recovery PASS with gdal-config
+absent. Real browser renders Mekong/p01-f04b. Native app automation unavailable:
+Finder double-click/default-browser auto-open and clean-OS acceptance remain
+unverified. 14pre-existing research-link errors are preserved. See
+[VR-0198](../research/records/validation_runs/VR-0198.md) for diagnosis, harness
+iterations, exact supported setup envelope and validation limits.
+
+
 ### CTL standard references and s99 variants (DT-0151, 2026-11-19)
 
 Maintainer supplies Japan s99 skips and requests a NetCDF-like variables option.
