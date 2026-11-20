@@ -99,3 +99,107 @@ update are included in this task's commit.
 **Next steps:** Confirm units/time zone and grid metadata, resolve the missing
 Bonn selection with ECMWF, and document provider/citation details before planning
 quantitative event evaluation.
+
+
+## 2026-11-20 — GFM acquisition: change from eight days to a one-day test
+
+**Objective and maintainer decision:** Complete and inspect one day before
+attempting a longer satellite-data acquisition. Use **2021-07-15 only** and
+retain the original box **5.6–10.0°E, 49.5–52.9°N**. Do not restart the eight-day
+fetch, optimise at large scale, modify Atlantis source or implement evaluation
+metrics. Keep all external software, environments, data, logs and checking
+scripts in `/Users/yamadai/work/Atlantis/`; keep only documentation,
+reproduction instructions and selected figures in Tutorial 11.
+
+**Initial attempt and preserved evidence:** The 13–20 July catalogue search
+succeeded (125 tile products, 73 distinct exact UTC timestamps). The actual
+fetch ran for approximately 30 minutes without completed GeoTIFF outputs and
+was manually interrupted (exit 130). This is not evidence of an authentication
+failure. Default CLI logging did not expose item-level warnings/progress. The
+proposed eight-day restart did not execute before the maintainer changed the
+strategy. Logs, complete catalogue, pre-change inventory draft, historical
+scripts and the original environment are retained under the dedicated
+`archive/eight_day_attempt/` directory.
+
+**Setup and one-day checkpoint:** Inspected current `opageo/atlantis` at commit
+`9371dc4fc421949caf9a2a8eb03e5fb962872820`, including README, CLI, GFM overview,
+pipeline and Pixi setup. Moved the external checkout/Pixi/cache to the dedicated
+workspace. Pixi rejected relocation of the old environment, which was preserved
+in the archive; recreated the environment from the unchanged lock. Shared
+Python and existing CaMa-Flood environments were not altered. The requested
+workspace is an alias of `/Volumes/work06_P32_84T/work_06/Atlantis/`.
+
+The fresh one-day search confirmed **14 products and 10 exact UTC timestamp
+groups**. Started `Rhine_2021_test` with verbose logging, the unchanged box,
+`strategy all`, harmonisation and plotting, plus support-count diagnostics.
+Transport settings remain default; CURL headers and a one-second process-tree
+RSS monitor provide measurement only. At this checkpoint the raster run is
+still in progress; no successful raster inspection is claimed yet.
+
+**Interpretation established from source:** The CLI merges acquisitions by UTC
+date. A daily raster is not an instantaneous flood map. Fractions are stored as
+0–100 percent with 255 nodata; zero can include rounded small fractions.
+Reference water alone does not establish SAR observation. Valid support uses
+the flood-or-water validity rule. These definitions and the distinction between
+catalogue footprints and valid pixels are documented in `gfm_data_inventory.md`.
+
+**Completion of the one-day checkpoint:** The acquisition completed with exit 0
+at **18:30:15 JST**, after **955.06 s (15 min 55 s)** from 18:14:20. The final
+checklist records 14/14 items and one plotted/harmonised date. The original box
+was retained; no smaller-box or multi-day acquisition followed.
+
+**Measured load and outputs:** Accessed 74 distinct COG URLs. The CURL log has
+10,882 successful single-range GET responses, totalling 440,598,472 compressed
+payload bytes (420.19 MiB), including rereads and excluding HEAD/bodyless
+responses and protocol overhead. Unique source-file sizes total 278.63 MiB.
+OS waited-child maximum RSS was 12.03 GiB; the one-second sampled process-tree
+RSS sum peaked at 11.27 GiB (not unique physical memory). Produced 18 GeoTIFFs
+and 18 Atlantis PNGs, 20,352,520 bytes total, outside Git. Metadata/log/cache and
+inspection figures are additional files. No HTTP 4xx/5xx response was recorded.
+
+**Inspection and validation:** The processed grid is 6,123 × 4,732 at nominal
+80 m; the harmonised grid is 264 × 204, EPSG:4326, 1/60-degree spacing, correctly
+aligned over the requested box. Main fraction values are 0–45%; 23,721 cells
+(44.045%) have some valid input, 30,135 are nodata, and 294 have positive
+fractions. Kept nodata separate from zero. Processed percentage/support-ratio
+and valid-mask/positive-denominator checks passed. There are 437 processed
+cells with positive flood support rounded to zero. Inspected exclusion and
+advisory code distributions separately; valid contribution does not mean full
+cell observation or quality-cleared usability. Opened both selected figures
+and checked geographic axes, legends, equal map extents and readable export
+layout. Fixed the local checker to match actual hyphenated harmonised date
+filenames; retained its first path-error log. No re-download was needed.
+
+**Important finding / unresolved issue:** Harmonised diagnostic counts lose
+fractional support through rounding in the pinned Atlantis
+`write_harmonised_raster` function. The harmonised flood-count TIFF is all zero
+although the main fraction has 294 positive cells. Do not reconstruct fractions
+or observation masks from these harmonised count files. Processed diagnostics
+passed their consistency check and remain available for traceability. Atlantis
+source was left unchanged; preserving diagnostic floats and verifying their
+masks is a proposed future fix, not implemented work.
+
+**Tutorial files created/updated:**
+
+- `gfm_data_inventory.md`: acquisition/version/procedure, measurement definitions,
+  file structure/sizes, timestamp/footprint metadata, results and limitations.
+- `flood_event_overview.md`: current upstream/workspace, the completed one-day
+  test, data definitions and observation-data clarification.
+- `figure/gfm_2021-07-15_1arcmin.png`: daily fraction and valid-input coverage.
+- `figure/gfm_2021-07-15_quality_1arcmin.png`: stored quality-companion codes.
+- `development_log.md`: append-only strategy, execution and result record.
+
+**Result and stopping point:** One-day acquisition and local inspection
+completed. No large/raw dataset, dependency or checking script is added to the
+CaMa-Flood repository; source discharge hashes remain unchanged. No model
+metrics, large optimisation or Atlantis source change was made. The eight-day
+fetch remains stopped. This day supports exploratory inspection of observed
+areas, not an event-wide peak-inundation evaluation.
+
+**Knowledge-gap review:** Resolved current upstream/CLI, fraction/support
+meaning, native codes, target-grid geometry and diagnostic-export rounding
+through source and actual-file checks. Independent pass IDs, per-acquisition
+valid-pixel footprints, event-specific quality screening, formal data
+attribution/redistribution details and model-time/water-definition matching
+remain for future work. July 14/16 usability was not established by this
+single-day test. No additional acquisition was started to resolve those points.

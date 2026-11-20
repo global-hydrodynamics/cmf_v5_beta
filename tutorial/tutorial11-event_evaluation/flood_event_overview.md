@@ -12,7 +12,8 @@ Two evidence sources are kept separate:
 
 - **ECMWF correspondence:** information supplied by the maintainer from the
   email thread **“D2 report and deliverable,” 3–13 November 2026**. The original
-  emails and attachments have not been inspected for this documentation task.
+  email thread has not been independently inspected. Subsequent inspection of
+  the supplied observation files is recorded in [the observation inventory](observation_data_inventory.md).
 - **Public documentation:** information checked against the provider and
   research references linked below on 20 November 2026. Product descriptions do
   not establish that particular event files have already been obtained.
@@ -42,17 +43,20 @@ time zone, and any required initialization period remain to be confirmed.
 
 ## 2. River discharge data
 
-### 2.1 Information shared by ECMWF
+### 2.1 Supplied files and correspondence
 
-According to the maintainer's summary of the correspondence, **Cinzia Mazzetti**
-provided the archive **`stations_data.tar.gz`**, containing 2021 discharge series
-in **CSV and NetCDF** and coordinates corresponding to the CaMa-Flood grid.
-The archive itself was not opened or added to this repository in this task.
+**Cinzia Mazzetti** supplied the discharge archive. The initial correspondence
+summary named Lobith/153, Bonn/6 and Maxau/28. Read-only inspection of the
+extracted files has since confirmed **Lobith/153, Speyer/63 and Maxau/28**;
+Bonn/6 is absent. Do not substitute Speyer for Bonn in a model comparison.
+The original `stations_data.tar.gz` has not been opened in these tasks; the
+extracted CSV and NetCDF were inspected. See the [observation data inventory](observation_data_inventory.md)
+for exact structures, coordinates, areas, statistics and unresolved metadata.
 
-| Identifier in the supplied data | Station | Country | Reported period | Reported time resolution |
+| Identifier in the actual supplied files | Station | Country | Represented interval year | Time resolution |
 | --- | --- | --- | --- | --- |
 | `153` | Lobith | Netherlands | 2021 | 6 hours |
-| `6` | Bonn | Germany | 2021 | 6 hours |
+| `63` | Speyer | Germany | 2021 | 6 hours |
 | `28` | Maxau | Germany | 2021 | 6 hours |
 
 These identifiers are those reported for the supplied archive; they are not
@@ -61,27 +65,32 @@ assumed to be universal national station identifiers.
 The values are **six-hour mean discharge**, and each timestamp denotes the
 **end of the aggregation interval**. Thus, a value labelled by time `t`
 represents the preceding six-hour interval, not an instantaneous measurement
-at `t`. The precise time zone and file metadata still require inspection.
+at `t`. The precise source time zone is not declared in the inspected files; the
+observation inventory records the available metadata and verification limits.
 
 ### 2.2 Provenance and interpretation to confirm
 
-The transfer of files by ECMWF does **not** establish that these series are
-observations or that ECMWF is their original producer. Before treating them as
-an evaluation reference, confirm:
+The maintainer and NetCDF description identify the files as observations.
+Transfer by ECMWF does not establish the original observing agency. Before
+quantitative evaluation, confirm the remaining metadata:
 
-- Whether each series is observed discharge, simulated discharge, a forecast,
-  or another processed product; identify the original provider and processing.
-- Discharge units, missing values, quality flags, temporal coverage and time
-  zone, and consistency between the CSV and NetCDF representations.
+- The original observing agency and processing history. The maintainer confirms
+  the supplied series are observations, and the NetCDF description identifies
+  them as CEMS observed discharge; neither establishes the original agency.
+- Discharge units, source time zone and quality-flag interpretation. Missing
+  values, temporal coverage and CSV/NetCDF consistency were checked in the
+  observation inventory; they are not unresolved file-inspection tasks.
 - The meaning and coordinate reference system of the supplied coordinates,
   including whether they identify a station, a model-cell centre or an outlet,
   and which CaMa-Flood grid/version they refer to.
-- The licence, attribution requirements, access restrictions and permission to
-  redistribute the archive or derived extracts.
+- The formal licence identifier and required attribution. The maintainer has
+  now confirmed permission to share and redistribute the observations in the
+  tutorial; that confirmation is recorded in the observation inventory.
 
-No observation status, open-data licence or redistribution permission is
-asserted here. The tutorial's intended use of open observational discharge data
-remains a future objective, not an established property of this archive.
+The supplied files contain 1,460 records per station, with no missing values or
+time gaps; CSV values match NetCDF after float32 representation. Neither file
+declares discharge/area units or the original time zone. Do not infer a named
+open-data licence from the confirmed sharing permission.
 
 ## 3. ECMWF CaMa-Flood simulations
 
@@ -131,20 +140,46 @@ remain to be reviewed. No satellite data were downloaded for this task.
 
 ## 5. Data processing tools: Atlantis
 
-The correspondence identifies **Atlantis**, developed through **ECMWF Code for
-Earth**, as a candidate tool for obtaining satellite inundation data and
-converting them to the **CaMa-Flood 1-arcmin grid**:
+The current official repository is [opageo/atlantis](https://github.com/opageo/atlantis),
+confirmed on 2026-11-20. The initially supplied `ECMWFCode4Earth/atlantis` URL
+returned 404 during the earlier background review and is not the installation
+source used here.
 
-[ECMWFCode4Earth/atlantis](https://github.com/ECMWFCode4Earth/atlantis)
+The Rhine test uses commit `9371dc4fc421949caf9a2a8eb03e5fb962872820`, installed
+as `0.1.0rc3.dev2+g9371dc4fc` in a separate **Pixi** environment. The current
+[installation guide](https://github.com/opageo/atlantis/blob/9371dc4fc421949caf9a2a8eb03e5fb962872820/docs/pixi-setup.md)
+recommends Pixi for the GDAL/HDF4 stack; uv remains a supported alternative.
+The external checkout, Pixi environment, data, logs and inspection scripts are
+managed under `/Users/yamadai/work/Atlantis/`, outside the CaMa-Flood repository.
+No existing CaMa-Flood Python environment is modified.
 
-The proposed use is to prepare satellite-derived flood information on the grid
-of the recommended ECMWF experiment for later comparison. This is a reported
-intended use, not a verified statement that a particular Atlantis version
-supports every candidate product or an already implemented tutorial workflow.
-The supplied repository URL returned **404 / Not Found** during this review;
-access status, current location, code version, supported data sources and
-licence therefore remain to be confirmed with the collaborators. No alternative
-repository is assumed to be equivalent.
+Atlantis queries the public [EODC STAC service](https://stac.eodc.eu/api/v1),
+collection `GFM`, and reads its source COGs. For this GFM path no NASA token or
+ECMWF S3 credential setup is needed. Generic `atlantis setup`, which can alter
+AWS profiles and fetch unrelated assets, was not run.
+
+The confirmed default GFM ladder is **20 m source pixel sampling → factor-4
+coarsening and geographic processed grid (nominally about 80 m) → canonical
+1-arcmin EPSG:4326 grid**. Derived flood fractions use valid observation counts,
+not a categorical interpolation of the 0/1/255 source codes. Saved fractions are
+integer percentages (0–100); 255 is nodata. A zero percentage can reflect
+rounding of a small observed fraction and is distinct from unobserved pixels.
+`--strategy all` produces **daily groups**, potentially combining several
+acquisition times; it does not preserve each acquisition as a separate raster.
+
+The [GFM data inventory](gfm_data_inventory.md) records the exact command,
+source timestamps, actual retrieval outcome, coverage, plots and limitations.
+The initial eight-day STAC query returned 125 tile products at 73 distinct
+timestamps, including July 14–16. These are catalogue counts, not proof that
+every tile contains valid observations over the target area. The long-running
+eight-day retrieval was interrupted before raster outputs. The maintainer
+limited the first completed test to **15 July only**, retaining the same box;
+the multi-day acquisition is not resumed by this task. The single-day test
+completed successfully in **15 min 55 s**, with a 264 × 204 one-arcmin grid.
+Some valid input is present in **44.045% of target cells**; missing cells are
+not treated as dry. The main fraction has 294 positive cells and a 0–45% range.
+A rounding limitation in the harmonised diagnostic-count export is documented
+in the inventory; it is not interpreted as zero flood occurrence.
 
 The example domain and satellite observation window supplied for exploration are:
 
@@ -152,14 +187,19 @@ The example domain and satellite observation window supplied for exploration are
 | --- | --- |
 | Longitude bounds | 5.6–10.0°E |
 | Latitude bounds | 49.5–52.9°N |
-| Satellite observation period | 2021-07-13 to 2021-07-20 |
+| Initial candidate satellite window | 2021-07-13 to 2021-07-20 |
+| Current acquisition test | **2021-07-15 only** |
 | Intended target grid | CaMa-Flood, 1 arcmin |
 
-This bounding box is a regional subset, not the entire Rhine catchment. It is
-also distinct from the broader candidate discharge-analysis window in Section 1.
-The exact target-grid alignment, treatment of invalid/unobserved pixels,
-representation of permanent water, temporal correspondence and conversion
-method remain future decisions. Conversion to a model grid does not remove
+This bounding box is a regional subset, not the entire Rhine catchment. The
+supplied station coordinates place Lobith inside it, but Maxau and Speyer south
+of its 49.5°N boundary. Satellite and discharge targets therefore do not have
+identical spatial support. The satellite dates also differ from the broader
+candidate discharge-analysis window in Section 1.
+The single-day output was verified on the canonical Atlantis one-arcmin grid.
+Exact correspondence with the chosen model map, quality screening, permanent
+water conventions and temporal matching remain for subsequent evaluation
+planning. Conversion to a model grid does not remove
 satellite uncertainty or create observations where coverage is missing.
 
 ## 6. Relevance to Tutorial 11
@@ -173,7 +213,9 @@ Tutorial 11 is intended eventually to cover:
 
 This documentation establishes context and data questions only. Specific
 metrics, event-selection rules and implementation design are **not decided**.
-Neither evaluations nor data-processing code have been implemented here.
+No model evaluation has been implemented. Initial satellite acquisition and
+inspection scripts are documented in the GFM inventory; they do not define
+evaluation metrics.
 
 ## 7. References and data provenance
 
@@ -188,8 +230,9 @@ inspection of the original email thread or attachments.
 
 This source supplies the station/archive details attributed to Cinzia Mazzetti;
 the experiments attributed to Gianpaolo Balsamo; the recommended experiment;
-the candidate dates/domain; the Kuro Siwo event identifiers; and the proposed
-Atlantis use. Public dataset documentation does not independently verify those
+the candidate dates/domain; the Kuro Siwo event identifiers; and the initial
+Atlantis proposal. Later file inspection and live GFM retrieval have their own
+inventories and development-log entries. Public dataset documentation does not independently verify those
 collaboration-specific details. No raw email, attachment or contact details
 beyond the named contributors are reproduced.
 
@@ -202,16 +245,21 @@ beyond the named contributors are reproduced.
 - NASA, [MODIS `MCDWD_L3` product entry](https://ladsweb.modaps.eosdis.nasa.gov/missions-and-measurements/products/MCDWD_L3), [global flood products](https://www.earthdata.nasa.gov/global-flood-product) and [MODIS product user guide](https://www.earthdata.nasa.gov/s3fs-public/2024-04/MCDWD_UserGuide_RevD.pdf).
 - Kuro Siwo, [project repository](https://github.com/Orion-AI-Lab/KuroSiwo), [publisher dataset card](https://huggingface.co/datasets/orion-ai-lab/Kuro-Siwo-Webdataset) and [dataset paper](https://arxiv.org/abs/2311.12056).
 - Copernicus EMS, [EMSR517 activation](https://mapping.emergency.copernicus.eu/activations/EMSR517/) and [Rapid Mapping FAQ](https://mapping.emergency.copernicus.eu/about/faqs/).
-- Atlantis, [collaboration-supplied repository URL](https://github.com/ECMWFCode4Earth/atlantis); unavailable during this review, as noted in Section 5.
+- Atlantis, [current official repository](https://github.com/opageo/atlantis),
+  [CLI reference](https://github.com/opageo/atlantis/blob/9371dc4fc421949caf9a2a8eb03e5fb962872820/docs/cli.md),
+  [GFM pipeline](https://github.com/opageo/atlantis/blob/9371dc4fc421949caf9a2a8eb03e5fb962872820/docs/gfm/pipeline.md) and
+  [Pixi setup](https://github.com/opageo/atlantis/blob/9371dc4fc421949caf9a2a8eb03e5fb962872820/docs/pixi-setup.md).
 
 Public sources were consulted on **2026-11-20**. Their current descriptions may
 reflect processing versions newer than those used for July 2021.
 
 ### 7.3 Licence and redistribution status
 
-The supplied station archive and ECMWF experiments have **unconfirmed origin
-and/or usage terms**. Do not label them open observational data or include them
-in a tutorial distribution without confirming those points.
+The maintainer has confirmed that the supplied discharge observations may be
+shared and redistributed in the tutorial. The original observing agency and
+formal licence identifier remain unspecified in the files. ECMWF simulation
+access and redistribution terms remain unconfirmed; the discharge permission
+does not automatically cover the experiments.
 
 The Kuro Siwo repository states a CC BY dataset licence, and the linked publisher
 card specifies CC BY 4.0. Confirm the chosen dataset version and assets, retain
@@ -219,9 +267,12 @@ required attribution, and distinguish dataset rights from a software licence.
 For GFM, NASA MODIS and EMSR517, consult the provider-specific terms and required
 acknowledgements before redistribution; these conditions have not been reviewed
 for a tutorial package. In particular, access to a derived flood map is not
-permission to redistribute its source satellite imagery. Atlantis's licence
-could not be checked. Public availability of a webpage alone is not evidence
+permission to redistribute its source satellite imagery. Atlantis code is Apache-2.0 according to the current repository. That software
+licence does not determine the redistribution terms of source GFM COGs; the
+large/raw raster outputs are kept outside Git; selected inspection figures are
+retained in the tutorial. Public availability of a webpage alone is not evidence
 that every linked input or derived asset can be redistributed.
 
-The immediate next step is a review of the actual files, metadata, coverage and
-permissions, followed by a separately agreed event-evaluation workflow.
+The one-day file/coverage inspection is recorded in the GFM inventory. Further
+work should resolve its quality/diagnostic limitations and remaining provenance
+questions before a separately agreed event-evaluation workflow.
