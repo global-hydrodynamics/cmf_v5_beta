@@ -411,3 +411,64 @@ OR denominator; area overlap is a documented local GDAL approximation. Review
 these choices before model comparison. No evaluation metrics, model run,
 afternoon processing or Gallery publication performed. See
 [gfm_3sec_workflow.md](gfm_3sec_workflow.md) for exact commands and evidence.
+
+## 2026-11-22 — Native GFM 20 m categorical classification
+
+**Task:** Produce the requested single-band uint8 classification for the local
+S1A morning GFM pass, with focused L1 checks. No download, 3-second regeneration,
+model-grid aggregation or model run was performed.
+
+**Inputs and method:** The saved `native_mosaic.json` described a 17,843 × 19,791
+20 m Equi7 Europe mosaic, but its referenced `native_mosaic.tif` was absent.
+Processed the 37 checksum-matched raw COG assets in blocks using the existing
+`gfm_common.merge_observation` same-pass, earliest-joint-valid priority. The
+intermediate metadata, raw inputs, `old/`, and existing 3-second products were
+not modified. Source combination frequencies are stored as per-item
+observations including overlaps, separately from selected mosaic class counts.
+
+**Classification/result:** Common-valid `F=0,W=0` is Land; `F=1,W=1` is Flood;
+`F=0,W=1` is Permanent/Seasonal for reference 1/2, otherwise Other water.
+With no common-valid observation, observed exclusion is Code 5, then a partial
+F/W classification is Code 6; otherwise Code 255. Reference-only pixels remain
+NoData. Counts: Land 91,545,271; Flood 183,271; Permanent 3,373,440; Seasonal
+111,434; Other 0; Exclusion 157,673,029; Inconsistent 63,491; NoData
+100,180,877. No selected direct Flood/Water contradiction occurred. The
+source/output Flood counts both equal 183,271 pixels, 73.3084 km² under 400 m²
+planar pixel area; this is not geodesic area or scientific flood validation.
+
+**Files and checks:** Added `scripts/s04-export_gfm_20m_class.py`, updated
+`gfm_3sec_workflow.md`, and generated
+`figure/gfm_20210715_20m_class.png` (436,930 bytes). The external
+`tiles_20m/S1A_o038784_dt049389/gfm_20210715_20m_class.tif` is a single-band
+uint8 ZSTD COG, 23,458,035 bytes, SHA-256
+`56036e1bba7a3bca603221caa8ba0e8aa31cf322997e2efe8dfb6afe4f9483df`;
+`classification.json` records classes, source tuple counts, grid and provenance.
+Synthetic class precedence passed. The first real-data attempt exposed a
+pre-publication check opening the final filename before the temporary COG was
+moved; this was corrected before any TIFF was published, and the one-pass export
+was rerun. The actual COG reopened with the same CRS, shape, transform and exact
+decoded values as the pre-COG classified raster; allowed codes, class counts and
+NoData passed. The confirmation figure was visually inspected.
+
+**Limits:** Duplicate valid observations retain the established earliest-valid
+selection; 244 flood and 244 water overlap disagreements are recorded and not
+promoted to separate classes. Exclusion and NoData remain distinct. Dataset-
+specific GFM redistribution terms still need confirmation; the GeoTIFF and JSON
+were left outside Git. No commit or push was made in this task.
+
+## 2026-11-22 — Establish the event evaluation process
+
+**Objective:** Consolidate Tutorial 11's reusable event-evaluation workflow
+without replacing the original planning proposal or treating candidate work as
+completed validation.
+
+**Work performed:** Added `event_evaluation_process.md` with six stages covering
+event/watershed selection, separate domains, observation acquisition and
+preprocessing, model execution, model–observation matching, and performance
+evaluation. Distinguished current map/GFM examples from unimplemented Rhine
+simulation, matching and scoring; linked the existing f06, GOSH and Tutorial 11
+reference documents. Added a short link from the event-specific findings report.
+
+**Validation:** Checked the new local references against existing files and
+reviewed status statements against the event setup, domain and GFM workflow
+notes. No code, data processing, model run, or figure regeneration was performed.

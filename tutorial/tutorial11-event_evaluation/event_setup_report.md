@@ -3,6 +3,8 @@
 **Prepared:** 2026-11-21
 **Status:** Candidate setup only; no model simulation or new GFM acquisition was performed.
 
+The reusable six-stage workflow is documented in [event_evaluation_process.md](event_evaluation_process.md).
+
 ## Result
 
 Two planning figures now separate whole-watershed simulation planning from localized flood-observation planning:

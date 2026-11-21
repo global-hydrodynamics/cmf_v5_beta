@@ -284,3 +284,77 @@ edge-kernel mismatch and its resolution are recorded in KG-0038 / VR-0200.
 The joint-validity choice and approximate area method remain explicit scientific
 review points before evaluation, without blocking this acquisition workflow.
 No unsupported claim about event-peak completeness or model skill is made.
+
+## Native 20 m categorical classification export — 2026-11-22
+
+The separate `scripts/s04-export_gfm_20m_class.py` derives a compact categorical
+view of the **same S1A morning pass** from the four native GFM layers. It keeps
+the original 20 m Equi7 Europe grid, CRS, pixel alignment and NoData value; it
+does not reproject, resample, or feed the 3-arcsecond products back into this
+classification. The prior `intermediate/<pass>/native_mosaic.json` remains, but
+its referenced `native_mosaic.tif` was absent. The exporter therefore reads the
+37 checksum-matched local raw COGs in blocks and reuses
+`gfm_common.merge_observation` so overlap ownership stays with the earliest
+joint-valid observation. It does not recreate or modify the intermediate
+mosaic, `old/`, raw assets, or 3-second outputs.
+
+Classification precedence follows the selected mosaic state:
+
+1. Earliest common-valid observation (`Flood` and `Water` each 0/1, `Exclusion=0`).
+2. If no such observation exists, `Exclusion` where the existing mosaic marks
+   an observed quality exclusion.
+3. Otherwise, partial Flood/Water observations are `Inconsistent`; no usable
+   observation is `NoData`. Reference-only water is never an observation.
+4. Within a common-valid observation, `F=0,W=0` is Land; `F=1,W=1` is Flood;
+   `F=0,W=1` uses reference code 1/2 for Permanent/Seasonal water and otherwise
+   Other water. A direct `F=1,W=0` contradiction is Inconsistent.
+
+| Code | Class | Pixels | Rule |
+| ---: | --- | ---: | --- |
+| 0 | Land | 91,545,271 | selected `F=0, W=0` |
+| 1 | Flood | 183,271 | selected `F=1, W=1` |
+| 2 | Permanent water | 3,373,440 | selected `F=0, W=1`, reference 1 |
+| 3 | Seasonal water | 111,434 | selected `F=0, W=1`, reference 2 |
+| 4 | Other water | 0 | selected `F=0, W=1`, reference 0/255 |
+| 5 | Exclusion | 157,673,029 | no joint-valid observation; excluded in mosaic |
+| 6 | Inconsistent | 63,491 | partial Flood/Water classification; direct selected F/W contradictions: 0 |
+| 255 | NoData | 100,180,877 | no usable daily classification, including reference-only context |
+
+The source-tuple frequencies are recorded in `classification.json`. Their counts
+are per Item/source-pixel observation and include same-pass overlaps; they are
+not unique mosaic-pixel totals. The selected mosaic contains 95,213,416
+joint-valid pixels. Existing overlap diagnostics report 244 flood and 244 water
+code disagreements among duplicate valid candidates; the existing earliest-valid
+ownership rule resolves these for the output, and the disagreement counts remain
+visible in the JSON. No source-level `F=1,W=0` combinations were found.
+
+The selected source Flood mask and output Flood class both contain 183,271
+pixels, a difference of zero. At 20 m, planar projected pixel area is 400 m²;
+this gives 73.3084 km² for both. This is area in the Equi7 projected plane, not
+an ellipsoidal/geodesic area or a flood-accuracy assessment.
+
+The output is a single-band uint8, NoData=255, tiled lossless ZSTD COG at
+`~/work/Atlantis/data/Rhine_2021_3sec/tiles_20m/S1A_o038784_dt049389/`.
+Its size is 23,458,035 bytes (about 22.37 MiB), versus 353,130,813 raw
+classification bytes (about 15.1:1). The report stores class definitions,
+source paths and checksums, all observed source tuple counts, output grid,
+size and SHA-256. The confirmation map is
+[figure/gfm_20210715_20m_class.png](figure/gfm_20210715_20m_class.png) (436,930 bytes).
+
+Run locally with the existing Atlantis Python environment; no download or
+3-second conversion is invoked:
+
+```bash
+PY="$HOME/work/Atlantis/source/.pixi/envs/default/bin/python"
+export PYTHONDONTWRITEBYTECODE=1 GDAL_PAM_ENABLED=NO PROJ_NETWORK=OFF
+"$PY" -B tutorial/tutorial11-event_evaluation/scripts/s04-export_gfm_20m_class.py
+```
+
+**Validation:** A small synthetic precedence check passed. The real COG was
+reopened and checked for single-band uint8, defined codes, NoData, native CRS,
+shape, transform and exact decoded equality with the pre-COG classification.
+The full 20 m confirmation figure was rendered and visually inspected. The
+GFM/Copernicus source attribution and dataset-specific redistribution terms
+still need confirmation before the GeoTIFF is copied into CaMa-Flood or otherwise
+redistributed. The generated GeoTIFF and its JSON remain external; only this
+script, workflow note, development log and small PNG are Git candidates.
