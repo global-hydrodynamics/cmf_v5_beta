@@ -26,6 +26,11 @@ legacy dimensionless `1` without changing classification values. If regenerated
 products were rejected by an older running server, restart Explorer to load the
 updated reader; no data conversion or units editing is needed.
 
+The Gallery also includes **p01-f06 · OSM_background**, a static river-network
+map with OSM Standard. Use `visualization/river_map/f06-OSM_background.sh` to
+reproduce that two-layer figure. Explorer's online OSM remains a browser-only
+context layer and is intentionally omitted from ordinary PNG exports.
+
 A standalone, read-only browser for coarse CaMa-Flood river maps. Explore
 rasters, stored downstream connectivity and individual cells without editing
 plotting scripts, running a Fortran program, or providing model output.

@@ -287,3 +287,20 @@ redistribution terms remain unverified; no new data licence is asserted.
 
 **Result:** Small repository sample prepared for commit and push on the
 existing `feature/package-builder` branch. No branch switch or main push.
+
+
+## 2026-11-21 — Basin-wide event domains and OSM Gallery sample
+
+**Objective:** Separate full-watershed simulation planning from localized flood-observation planning, and add a reusable OSM-backed CaMa river-network example.
+
+**Work performed:** Inspected the global 15-minute `basin`, `nextxy`, `uparea` and COG products; mapped model Basin IDs 74 and 1299, supplied gauges and report-documented localities. Created the two required planning figures, separate candidate simulation/observation bboxes, an impact-location CSV, and event setup report/plan. Assessed Map Explorer's basin/network, OSM, Pin, import and PNG-export capabilities. Added Gallery method **p01-f06 · OSM_background**, its extent-limited renderer and OSM attribution.
+
+**Files created or updated:** `event_setup_plan.md`, `evaluation_domain.md`, `event_setup_report.md`, `impact_locations.csv`, `figure/event_basin_overview.png`, `figure/event_flood_impact_area.png`, `visualization/river_map/script/f06-OSM_background.py`, `visualization/river_map/f06-OSM_background.sh`, `visualization/gallery/p01-f06-OSM_background.png`, and the related Visualization README/catalog entries.
+
+**Decisions and limitations:** Simulation extent is derived from the complete model basin group plus a two-cell margin, not from the impact towns. At 0.25°, model ID 74 combines Rhine and Meuse/Vesdre routing and is not a pure natural Rhine watershed; ID 1299 includes separate nearby cells around Gete/Halen and Dyle/Wavre. The rectangle and satellite AOIs remain candidates. Town coordinates are approximate place-centre markers, not flood polygons. The existing 2021-07-15 GFM test does not cover all proposed AOIs and has partial valid-pixel coverage. No new GFM data or model simulation was run. OSM tiles were fetched only for the plotted extents and credited. Map Explorer supports browser OSM and manual Pins but not CSV point import or OSM-included PNG export; no broad GUI change was made.
+
+**Testing performed:** Parsed the impact CSV and Gallery catalog, checked relevant Markdown links, ran `bash -n` and Python AST syntax validation, generated the OSM-backed Gallery image from the checked-in script, tested its `--no-osm` path, reviewed the two event figures, and ran `git diff --check`. No model run or GFM download was performed.
+
+**Location-source clarification:** Wavre is treated as a Dyle locality (not Gete); its 15–16 July impact is cited to the municipal summary. Halen is recorded separately on the Gete/Velpe system. Coordinates remain approximate place centres. See the links in `impact_locations.csv`.
+
+**Result:** The requested map products and reproducible general Gallery example are prepared. Hydrologic basin identity, boundary conditions, scene coverage, station metadata and evaluation choices remain to be confirmed before simulation.

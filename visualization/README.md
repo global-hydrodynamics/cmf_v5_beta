@@ -86,6 +86,18 @@ upstream-area-colored channels; the second uses the `pale_terrain` palette
 and black channels. See the [figure script](river_map/f05-hires_background.sh)
 and the [project explanation](river_map/README.md#p01-f05--high-resolution-background).
 
+#### p01-f06 — River Network on OpenStreetMap
+
+![p01-f06 OSM_background](gallery/p01-f06-OSM_background.png)
+
+**Visualization method:** `p01-f06 · OSM_background`. The figure overlays the
+CaMa-Flood outlet-to-outlet river network on OSM Standard for the exact
+3–12°E, 46–53°N extent. It contains no basin, impact, station, raster or
+colorbar layer. OSM tiles are downloaded only for the requested map extent,
+cached outside the repository, and credited in the image. Reproduce it with
+[the figure launcher](river_map/f06-OSM_background.sh); the
+[method notes](river_map/README.md#p01-f06-osm_background) describe its inputs.
+
 ### p02 — Output Analysis
 
 #### p02-f01 — Discharge Raster

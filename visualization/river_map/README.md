@@ -22,6 +22,31 @@ Entry points resolve repository paths relative to their own location, so they
 can also be run from another current directory. Extend this README with a
 descriptive section for each Figure added to the project.
 
+## p01-f06-OSM_background
+
+**Visualization method:** `p01-f06 · OSM_background` (Gallery ID `p01-f06a`).
+This is a compact geographic context map of the CaMa-Flood vector network on
+OSM Standard, using bbox `[3, 46, 12, 53]` (west, south, east, north). It uses
+the existing `f03a` outlet-to-outlet geometry, full-map upstream-area color and
+width classes, and does not add a raster or event-specific layer.
+
+```bash
+./visualization/river_map/f06-OSM_background.sh
+```
+
+The launcher can be run from any current directory. Edit its map, bbox, Python
+command or output settings at the top; the Python script also accepts these as
+CLI arguments, including `--no-osm`. OSM tiles are limited to the requested
+extent and cached under the user cache directory. If OSM is unavailable, the
+script still writes the river-only map. The figure retains
+[OpenStreetMap attribution](https://www.openstreetmap.org/copyright).
+
+The interactive Map Explorer can display OSM beneath its normal scientific
+layers, but its standard PNG export intentionally excludes online basemaps.
+This standalone Gallery renderer is the reproducible export for this sample.
+The global 15-minute map is Package Additional Data and must be installed at
+`map/glb_15min/` before generating the figure.
+
 ## p01-f01 — Raster River Map
 
 ![Raster River Map](figure/f01-raster_river_map.png)

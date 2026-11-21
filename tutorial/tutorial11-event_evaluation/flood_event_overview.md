@@ -276,3 +276,14 @@ that every linked input or derived asset can be redistributed.
 The one-day file/coverage inspection is recorded in the GFM inventory. Further
 work should resolve its quality/diagnostic limitations and remaining provenance
 questions before a separately agreed event-evaluation workflow.
+
+
+## Basin-wide event setup maps
+
+The domain-planning workflow and current candidate bounds are documented in
+[event_setup_plan.md](event_setup_plan.md), [evaluation_domain.md](evaluation_domain.md),
+and [event_setup_report.md](event_setup_report.md). Its standard figures are
+[the basin overview](figure/event_basin_overview.png) and
+[the flood-impact map](figure/event_flood_impact_area.png). Approximate town-centre
+markers are catalogued in [impact_locations.csv](impact_locations.csv); they are
+not measured flood extents.
