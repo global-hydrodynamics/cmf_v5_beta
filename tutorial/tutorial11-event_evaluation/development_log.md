@@ -334,3 +334,28 @@ Set the f06b local-information extent to 4–8°E, 49–52°N. Both f06 panels
 now use 1° labeled major ticks and 0.5° unlabeled minor ticks for longitude
 and latitude. The f06a zoom rectangle reads the same extent from the existing
 external CSV. The change affects map presentation only.
+
+
+## 2026-11-21 — Publish p01-f06 OSM Background in the Gallery
+
+**Authorization:** The maintainer explicitly requested formal Gallery
+publication of `p01-f06 — OSM_background` on `feature/package-builder`.
+
+**Work performed:** Registered f06a (default basin overview) and f06b (local
+event information) using the existing per-panel catalog schema. Updated the
+River Map project README, the Visualization Gallery README, and the catalog;
+replaced the Gallery image with the latest combined project Figure. Reviewed
+the development/review/publication workflow and clarified structured
+event-specific settings, project README image order, and attribution/provenance
+for hosted basemaps. The OSM cache refreshes after seven days under the public
+tile policy fallback. Panel titles and geographic axis labels were aligned with
+the shared figure guideline.
+
+**Validation:** Regenerated both panels and the combined Figure with OSM tiles;
+visually checked river layers, event points, AOIs, legend, attribution and labels.
+Verified the Gallery PNG SHA-256 equals the project composite, catalog IDs are
+unique, CSV parses, links and files exist, and `git diff --check` passes.
+
+**Limitations:** Basin ID 74 combines Rhine and Meuse/Vesdre model routing.
+Locality markers are approximate towns, and candidate AOIs are not confirmed
+satellite coverage or observed inundation boundaries.

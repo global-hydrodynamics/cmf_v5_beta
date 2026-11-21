@@ -21,7 +21,7 @@
     "x_tick_interval": 1.0,
     "y_tick_interval": 1.0,
     "dpi": 180,
-    "title": "OSM_background-default",
+    "title": "p01-f06a OSM Background: Default Basin Overview",
     "subtitle": "CaMa-Flood Basin ID 74: Rhine and Meuse/Vesdre routing group"
   },
   "panel_b": {
@@ -35,7 +35,7 @@
     "x_tick_interval": 1.0,
     "y_tick_interval": 1.0,
     "dpi": 180,
-    "title": "OSM_background-local_info",
+    "title": "p01-f06b OSM Background: Local Information",
     "subtitle": "July 2021 reported localities; approximate town centers",
     "plot_group_colors": {
       "rhine_tributaries": "#c62828",

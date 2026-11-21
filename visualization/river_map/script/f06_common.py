@@ -27,6 +27,7 @@ _spec.loader.exec_module(_f03)
 from river_map_common import read_map_raster, validate_extent
 
 OSM_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+OSM_CACHE_TTL_SECONDS = 7 * 24 * 60 * 60
 OSM_ATTRIBUTION = "© OpenStreetMap contributors · openstreetmap.org/copyright"
 USER_AGENT = "CaMaFloodMapExplorerGallery/1.0 (https://github.com/global-hydrodynamics/cmf_v5_beta)"
 
@@ -65,7 +66,8 @@ def read_osm(extent: tuple[float, float, float, float], cache: Path):
         for col in range(c0, c1 + 1):
             x, y = col % (2**zoom), row
             path = cache / f"{zoom}_{x}_{y}.png"
-            if not path.exists():
+            cache_is_fresh = path.exists() and time.time() - path.stat().st_mtime < OSM_CACHE_TTL_SECONDS
+            if not cache_is_fresh:
                 request = Request(OSM_URL.format(z=zoom, x=x, y=y), headers={"User-Agent": USER_AGENT})
                 with urlopen(request, timeout=20) as response:
                     path.write_bytes(response.read())
@@ -151,8 +153,8 @@ def format_axes(ax, extent, x_interval: float, y_interval: float):
     ax.yaxis.set_major_locator(MultipleLocator(y_interval))
     ax.xaxis.set_minor_locator(MultipleLocator(0.5))
     ax.yaxis.set_minor_locator(MultipleLocator(0.5))
-    ax.set_xlabel("Longitude [°E]")
-    ax.set_ylabel("Latitude [°N]")
+    ax.set_xlabel("Longitude")
+    ax.set_ylabel("Latitude")
     ax.tick_params(which="major", direction="out", length=4, labelsize=9)
     ax.tick_params(which="minor", direction="out", length=2)
     ax.spines["top"].set_visible(False)

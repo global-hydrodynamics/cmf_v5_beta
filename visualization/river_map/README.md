@@ -21,50 +21,6 @@ Entry points resolve repository paths relative to their own location, so they
 can also be run from another current directory. Extend this README with a
 descriptive section for each Figure added to the project.
 
-## f06 — OSM_background
-
-The f06 figure combines two River Map panels, following the project's figure
-naming pattern: `f06` is the combined figure, `f06a` is the default basin
-overview, and `f06b` is the local event-information map. These are development
-examples related to Tutorial 11; f06 is not currently registered as a Gallery
-method.
-
-- **f06a — OSM_background-default:** Basin ID 74 and its CaMa-Flood routed
-  network, with the f06b extent marked. Basin ID 74 combines Rhine and
-  Meuse/Vesdre model routing; it is not a pure natural Rhine watershed.
-- **f06b — OSM_background-local_info:** zoom to 4.0–8.0°E, 49.0–52.0°N,
-  with Tutorial 11 report-based localities and two candidate observation
-  domains. The boxes are candidate AOIs, not measured flood boundaries. Town
-  coordinates are approximate; Halen has lower coordinate confidence.
-
-Run the standard River Map entry point after Python setup:
-
-```bash
-./visualization/river_map/f06-OSM_background.sh
-```
-
-It creates the two panels and combines them into the following project figures:
-
-- `visualization/river_map/figure/f06a-OSM_background-default.png`
-- `visualization/river_map/figure/f06b-OSM_background-local_info.png`
-- `visualization/river_map/figure/f06-OSM_background.png`
-
-OSM tiles are limited to each panel extent and cached under the user cache
-folder. The OSM background is rendered with alpha 0.72 / 0.68 and a small white
-blend (0.08 / 0.10); the f06a basin-exterior gray veil uses alpha 0.36 so the
-OSM context remains visible while the CaMa-Flood network stays prominent. If
-OSM is unavailable, both panels still render the map overlays and river
-network. Both panels label each 1° major tick and also show 0.5° minor
-ticks. OpenStreetMap is credited on both panels.
-
-Event-specific plotting settings are in
-[`data/f06_settings.json`](data/f06_settings.json); localities and AOI extents
-are in [`f06b_plot.csv`](data/f06b_plot.csv) and
-[`f06b_zoomup.csv`](data/f06b_zoomup.csv). Their provenance and limitations
-are documented in [`data/README.md`](data/README.md). The global 15-minute map
-is Package Additional Data and must be installed at `map/glb_15min/` before
-generating these figures.
-
 ## p01-f01 — Raster River Map
 
 ![Raster River Map](figure/f01-raster_river_map.png)
@@ -690,3 +646,57 @@ grid in `figure/f05-hires_background.png`, with panels a–c above d–f. The
 individual panel scripts can also be run independently. Every panel embeds
 its map-area bounds and geographic extent in PNG metadata; the combiner checks
 these values and aligns maps without resizing panel images.
+
+## p01-f06 — OSM Background
+
+![p01-f06 OSM Background](figure/f06-OSM_background.png)
+
+**Figure:** OSM Standard basemap with the CaMa-Flood vector river network.
+Panel **f06a — OSM_background-default** provides basin context, emphasizes
+model Basin ID 74, and marks the local-map extent. Panel **f06b —
+OSM_background-local_info** shows report-based July 2021 impact localities and
+candidate satellite-observation areas. River colors and widths retain the
+upstream-area classes used by the River Map network renderer.
+
+Basin ID 74 is the model's Rhine–Meuse/Vesdre routing group, not a pure natural
+Rhine watershed boundary. The locality markers are approximate town positions,
+not observed inundation polygons. The outlined satellite-observation regions
+are candidate AOIs, not confirmed scene coverage or measured flood extents.
+Halen has lower coordinate confidence and is marked `(?)`.
+
+| Input | Use and availability |
+| --- | --- |
+| `map/glb_15min/params.txt` | Global 15-minute map geometry; Package Additional Data. |
+| `map/glb_15min/netcdf/basin.nc` | Basin ID raster for f06a; Package Additional Data. |
+| `map/glb_15min/netcdf/uparea.nc`, `nextxy.nc`, `lonlat.nc` | Upstream-area classes and routed river links for both panels; Package Additional Data. |
+| `data/f06_settings.json` | Panel extents, basin ID, labels, tick spacing, OSM/mask style, and locality-group appearance. |
+| `data/f06b_zoomup.csv`, `data/f06b_plot.csv` | Candidate AOIs and sourced event-locality points; Git-tracked plotting data. |
+| OSM Standard tiles | Online basemap tiles fetched for each displayed extent; internet access required unless tiles are cached. |
+
+The JSON and CSV files keep Rhine-event values outside the reusable drawing
+code. `f06-OSM_background.sh` selects the map, settings/data files, cache and
+figure paths, then runs one Python panel script per panel and combines them.
+Run it from any current directory after the standard Python setup:
+
+```bash
+./visualization/river_map/f06-OSM_background.sh
+```
+
+It writes the assembled figure and both panels under `figure/`:
+
+- `figure/f06-OSM_background.png` — complete Figure, also published below in the Gallery.
+- `figure/f06a-OSM_background-default.png` — basin overview.
+- `figure/f06b-OSM_background-local_info.png` — local event information.
+
+OSM attribution is printed on both panels as **© OpenStreetMap contributors**
+with a link to the copyright page. Tiles are cached locally for up to seven
+days before the script requests them again. OpenStreetMap data is available under the
+[ODbL](https://osmfoundation.org/wiki/License/Licence_and_Legal_FAQ); tile
+requests to the public service must also follow its [Tile Usage
+Policy](https://operations.osmfoundation.org/policies/tiles/), including
+visible attribution, an identifying User-Agent, caching requirements and the
+prohibition on bulk tile downloads.
+
+The OSM background is part of this River Map Figure workflow. Map Explorer's
+browser OSM context layer is separate and is not included in its ordinary PNG
+exports.

@@ -25,6 +25,18 @@ practices that can evolve as the Gallery grows.
 - Ensure the visualization supports the stated scientific question. A
   plausible-looking image is not evidence that its interpretation is correct.
 
+### External basemaps and geographic overlays
+
+- Record the source and license/usage conditions for external basemaps and
+  overlay data. Keep required attribution visible in the exported Figure, not
+  only in the project README.
+- For hosted map tiles, follow the provider's current service policy as well as
+  the data license. Document access/caching constraints and distinguish a
+  basemap from scientific observations or model-derived boundaries.
+- Identify the provenance and uncertainty of points, regions and boundaries.
+  A town marker is not an inundation polygon, and a candidate observation box
+  is not proof of valid scene coverage.
+
 ### River-network topology and direction
 
 - When a Figure represents the complete network within its stated domain,
@@ -151,13 +163,14 @@ colorbar-related layout difference.
   project root, editable input and display settings there, and Python or other
   plotting implementation under `script/`. This makes the run configuration
   easy to find while keeping plotting logic separate.
-- Put user-adjustable visualization parameters in the user-facing Shell
-  script whenever practical. Examples include color limits and ticks, colors,
-  line widths, dates or periods, map extents, and displayed variables or
-  features. Pass these settings to Python through command-line arguments or
-  environment variables instead of requiring users to edit plotting code.
-  Keep Python responsible for drawing and interpretation logic, and avoid
-  maintaining the same setting independently in both Shell and Python.
+- Put execution paths, output destinations and a small number of common
+  user-adjustable options in the user-facing Shell script. For many related
+  locations, regions or event-specific display parameters, a readable
+  JSON/CSV or similar external file is appropriate; let the Shell select its
+  path and avoid duplicating values between Shell and data files. Pass settings
+  to Python through arguments or a configuration file rather than requiring
+  users to edit plotting code. Keep Python responsible for drawing and
+  scientific processing.
 - Save the default output as PNG under the owning project's `figure/`
   directory. Git-track all project-local figure PNGs, including individual
   panels and assembled figures. Keep generated files with the visualization
