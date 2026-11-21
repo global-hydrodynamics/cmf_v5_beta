@@ -171,6 +171,8 @@ The proposed v5 tutorial workflow and its current decisions are documented in [`
 
 Before creating or substantially modifying a CaMa-Flood visualization, consult [`visualization/visualization_catalog.csv`](visualization/visualization_catalog.csv) for related methods and read [`visualization/figure_making_guideline.md`](visualization/figure_making_guideline.md) for shared scientific and visual conventions. Identify an adapted method by both its current catalog ID and a natural-language description; IDs may change. Follow [`visualization/repository_development_guide.md`](visualization/repository_development_guide.md) when adding or updating projects in `visualization/`: track generated project-local PNGs under `<project>/figure/`, and add, replace, or remove Gallery figures only with explicit user authorization. A successful run or `Tested` catalog status is not publication approval. These resources also apply to tutorial and manual figures, but do not require tutorials to import scripts from the Gallery.
 
+For Visualization development tasks—including creating or modifying figures, updating the Gallery or catalog, and visualization work in Tutorials—use the [`cama-visualization` Skill](.agents/skills/cama-visualization/SKILL.md). It provides the task workflow and checks for the formal guides above; it does not replace them.
+
 ## Source Code Readability for `map/tools/`
 
 For maintained preprocessing code in both `map/` and `inp/`, follow the
