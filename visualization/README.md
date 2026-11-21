@@ -2,7 +2,7 @@
 
 Browse CaMa-Flood figures explicitly selected for Gallery publication.
 Project-local figures are tracked and documented in their project READMEs;
-the combined p01-f01 through p01-f05 figures below are the current
+the combined p01-f01 through p01-f06 figures below are the current
 Gallery selections.
 
 ## Interactive exploration
@@ -85,6 +85,18 @@ river network. The first row uses grayscale terrain backgrounds and
 upstream-area-colored channels; the second uses the `pale_terrain` palette
 and black channels. See the [figure script](river_map/f05-hires_background.sh)
 and the [project explanation](river_map/README.md#p01-f05--high-resolution-background).
+
+
+#### p01-f06 — OSM Background
+
+![p01-f06 OSM Background](gallery/p01-f06-OSM_background.png)
+
+OSM and CaMa-Flood vector rivers combine a basin-wide overview (f06a) with a
+local map of reported flood-impact places (f06b). Event-specific settings,
+localities and candidate observation areas are read from JSON/CSV files. This
+Figure supports geographic context and evaluation-area planning; markers are
+not observed inundation extents. See the [figure script](river_map/f06-OSM_background.sh)
+and [project documentation](river_map/README.md#p01-f06--osm-background).
 
 ### p02 — Output Analysis
 

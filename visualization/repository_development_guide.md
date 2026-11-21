@@ -190,56 +190,69 @@ from the figure, and any important comparisons or overlays. Treat external
 images as references, not automatically as approved Gallery material; record
 their source and permissions before redistribution.
 
-## Develop a visualization
+## Develop, review, and publish a visualization
 
-Use this sequence as a guide; review may lead back to an earlier step.
+Keep these stages distinct. Review may return the work to Development. Completing
+Development or Review, or assigning `Tested` status, does not authorize Gallery
+publication.
+
+### Step 1 — Development
 
 1. Follow [semantic discovery and reuse](#semantic-discovery-and-reuse-by-ai-agents)
-   to find suitable methods in `visualization_catalog.csv`, then inspect their
-   scripts and documentation.
-2. Define the scientific question, intended audience, variables, units,
-   temporal meaning, spatial extent, and comparison being shown.
-3. Select an existing descriptive visualization project or create a new one
-   with a project-root user entry point and `script/` and `figure/`
-   subdirectories. Do not create an empty example project just to reserve an ID.
-4. Assign the next available project and Figure IDs and decide whether the
-   Figure needs panel IDs. IDs are catalog references and may be renumbered;
-   descriptive directory and script names must stand on their own.
-5. Put the user-facing Shell entry point at the project root, with editable
-   input and display settings, and put Python/data/plotting implementation under
-   `script/`. Give the entry point and PNG output matching descriptive
-   basenames. Keep scientific inputs read-only, write working outputs to the
-   owning project's `figure/`, and use PNG by default. Follow the
-   [Visualization Data Policy](#visualization-data-policy) when choosing and
-   documenting inputs. The Shell entry point may invoke Python or shared
-   libraries; it should not duplicate complex plotting logic.
-6. Generate and inspect the Figure. Check scientific semantics, data masks,
-   units, scales, readability, overlays, and the intended interpretation.
-   Record important settings and transformations.
-7. Add or update one catalog row per panel or option. Leave unknown
-   information blank rather than guessing. Use the status values below.
-8. Keep every generated PNG under the project's `figure/` directory in Git,
-   including individual panels and assembled Figures. Update these files when
-   the scripts regenerate them; do not add broad ignore rules for project
-   figures.
-9. Treat Gallery publication as a separate operation. Only after the user
-   explicitly authorizes it, copy the selected project Figure to
-   `visualization/gallery/` with its project ID in the filename, add its entry
-   to `visualization/README.md`, and fill the corresponding catalog
-   `gallery_image` field. Never infer authorization from successful execution,
-   visual review, or catalog status. Normal Figure scripts must not create,
-   replace, or remove Gallery images.
-10. Consider whether the reviewed example teaches a visual practice that
-    should be added to `figure_making_guideline.md`.
-11. Recheck paths, catalog rows, and links. Review the final diff and confirm
-    project Figures are tracked and Gallery changes have explicit user
-    authorization. Continue to exclude unrelated caches and intermediate
-    computational data where appropriate.
+   to search the catalog and inspect plausible methods, scripts and project
+   documentation.
+2. Define the scientific question, audience, variables, units, temporal
+   meaning, spatial extent and intended comparison. Choose a project and
+   descriptive Figure/Panel names using the conventions above.
+3. Keep one user-facing Shell entry point per Figure at the project root,
+   implementations under `script/`, and PNG outputs under `figure/`. For a
+   multi-panel Figure, use one panel script per panel where practical and let
+   the Figure Shell run panels and assemble the complete image.
+4. Put execution paths, output destinations, and a small number of common
+   run/display options in the Shell settings. For many related locations,
+   regions, or event-specific display parameters, use a readable JSON/CSV or
+   similar data file instead. The Shell should expose the path to that file;
+   do not maintain the same values in both places. Python handles drawing and
+   scientific processing. Keep inputs read-only and document the data and
+   setting sources.
+5. Generate all panel and complete-Figure PNGs in the owning project's
+   `figure/` directory. Keep those project assets Git-tracked and update them
+   when scripts regenerate them. Normal Figure scripts must not modify Gallery
+   images.
+6. Add or update one catalog row per panel/option with `Proposed` or `Available`
+   status as appropriate. Leave unknown information blank rather than guessing.
 
-Do not build an automated publisher or ID manager for this initial framework.
-Gallery publication is a deliberate review and copy step. Updating a Gallery
-image requires a deliberate replacement; rerunning a project script must
-never overwrite it automatically.
+### Step 2 — Review
+
+1. Run the Figure workflow and inspect the saved, assembled image at its
+   expected display size, as well as individual panels where useful.
+2. Check scientific meaning, input provenance, units, coordinate conventions,
+   masks, extents, categories, labels, layer order, legibility and the intended
+   interpretation. Visual polish does not establish scientific correctness.
+3. Resolve review findings, update the project README and catalog, and set
+   `Tested` only after the script runs successfully and the resulting Figure
+   has been reviewed. Gallery publication remains separate.
+
+### Step 3 — Gallery publication
+
+Only after explicit user authorization, copy the selected complete Project
+Figure to `visualization/gallery/` using its project Figure ID, add its concise
+entry and image to `visualization/README.md`, and fill the catalog's
+`gallery_image` field. Update the project README if needed, but keep its full
+technical explanation there. Replacing or removing an existing Gallery asset
+also requires explicit authorization. Successful rendering, visual review,
+`Tested` status, or a nonblank project-local Figure is not publication approval.
+
+### Short agent checklist
+
+Before work: read the visualization guides; search for reusable methods; agree
+on Figure, Panel, script and PNG names; verify scientific meaning and data
+provenance; choose Shell settings versus structured external data deliberately.
+
+Before completion: generate and visually review the combined Figure; check
+scientific interpretation, layout and map aspect; update the project README and
+catalog; verify project PNG tracking and links; confirm explicit authorization
+before changing any Gallery image or Gallery entry.
 
 ## Multi-panel Figure workflow
 

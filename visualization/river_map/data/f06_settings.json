@@ -1,0 +1,49 @@
+{
+  "panel_a": {
+    "extent": [
+      3.0,
+      46.0,
+      12.0,
+      53.0
+    ],
+    "target_basin_id": 74,
+    "zoom_region_id": "f06b_zoomup",
+    "zoom_label": "Local impact map extent",
+    "figure_size": [
+      10.2,
+      7.8
+    ],
+    "osm_alpha": 0.72,
+    "osm_white_mix": 0.08,
+    "mask_alpha": 0.36,
+    "mask_color": "#858585",
+    "basin_outline_color": "#d89000",
+    "x_tick_interval": 1.0,
+    "y_tick_interval": 1.0,
+    "dpi": 180,
+    "title": "p01-f06a OSM Background: Default Basin Overview",
+    "subtitle": "CaMa-Flood Basin ID 74: Rhine and Meuse/Vesdre routing group"
+  },
+  "panel_b": {
+    "zoom_region_id": "f06b_zoomup",
+    "figure_size": [
+      11.4,
+      7.8
+    ],
+    "osm_alpha": 0.68,
+    "osm_white_mix": 0.1,
+    "x_tick_interval": 1.0,
+    "y_tick_interval": 1.0,
+    "dpi": 180,
+    "title": "p01-f06b OSM Background: Local Information",
+    "subtitle": "July 2021 reported localities; approximate town centers",
+    "plot_group_colors": {
+      "rhine_tributaries": "#c62828",
+      "comparison_rivers": "#6a51a3"
+    },
+    "plot_group_labels": {
+      "rhine_tributaries": "Rhine tributaries",
+      "comparison_rivers": "Meuse and comparison rivers"
+    }
+  }
+}

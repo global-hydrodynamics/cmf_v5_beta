@@ -10,6 +10,7 @@ These evolving instructions implement the framework principles in the [tutorial 
 - Treat the design specification as the intended user workflow and acceptance contract. Source and data show current behavior; they do not authorize scientific changes.
 - Report conflicts, missing inputs, and unresolved scientific decisions instead of guessing.
 - Reuse maintained tools and workflows where they fit. Avoid duplicate configurations, scientific algorithms, and general-purpose frameworks without a concrete need.
+- Before creating a tutorial figure, inspect the [Visualization Gallery](../visualization/README.md) and [`visualization_catalog.csv`](../visualization/visualization_catalog.csv) for scientifically aligned methods. Reuse or adapt a suitable method; create a new method when no existing one fits. Apply the [visualization development guidance](../visualization/repository_development_guide.md) and, for visualization work, the `cama-visualization` Skill. A tutorial figure task does not authorize publication to `visualization/gallery/`.
 
 ## Implement the tutorial
 
