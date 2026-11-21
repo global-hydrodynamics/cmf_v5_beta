@@ -36,3 +36,16 @@ Impact markers are approximate town-centre coordinates used to locate report-doc
 ## Map Explorer
 
 Explorer supports model rasters, river network, online OSM and manually clicked Pins. It does not import the impact CSV or domain rectangles, select complete basins as an operation, or export OSM tiles in standard PNGs. The static figures therefore use a reproducible plotting script and documented source map products; no general GUI redesign is included.
+
+## 2026-11-21 observation acquisition update
+
+The separately executed morning GFM workflow uses **4–8°E, 49–52°N** and produces
+a CaMa-aligned 3-second observation tile. This extends the requested western
+coverage beyond the previous 5.6°E boundary, but footprint intersection alone is
+not usable observation coverage. Speyer and Maxau (both east of 8°E) remain
+outside this new tile. The morning pass contains gaps/quality exclusions and
+must not be treated as complete event-peak evidence. Review the actual
+[flood and valid-support Figure](figure/gfm_20210715_3sec_validation.png) and
+[processing/validation note](gfm_3sec_workflow.md) before final AOI selection.
+Existing impact locations and candidate domains remain provisional; no model
+run or evaluation-domain optimization was performed.

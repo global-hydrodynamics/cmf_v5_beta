@@ -360,3 +360,28 @@ pixel inspection. Dataset attribution/redistribution terms should be checked
 separately from the software Apache-2.0 licence. Large/raw outputs stay outside
 Git. These issues concern subsequent evaluation and do not justify treating
 unobserved pixels as dry.
+
+## 2026-11-21: native four-layer acquisition and 3-second tile
+
+A new, separate workflow covers **4–8°E, 49–52°N** on 2021-07-15. The original
+workspace described above is now preserved under `~/work/Atlantis/old/`; its
+data and results were not overwritten. The new search inventories 17 GFM Items:
+11 S1A morning Items (05:49:37–05:51:42 UTC, orbit 038784 / relative 37,
+descending) and 6 S1B afternoon Items (17:47:55–17:50:00 UTC, orbit 027808 /
+relative 132, ascending). The old search's evening times must not be reused for
+this different bbox. Only the morning pass was downloaded and converted.
+
+Unlike the earlier CLI test, **complete original native COGs are now preserved**:
+37 unique files, 52,333,157 bytes, representing exactly flood extent, water
+extent, reference water and exclusion layers for all 11 morning Items. Shared
+asset URLs are stored once and referenced independently by each local STAC Item.
+The download took 62.66 seconds and 118.84 MiB peak process RSS. No old raw cache
+was assumed to contain these source files.
+
+The new output is a 4800×3600 EPSG:4326 AOI tile at 1/1200° aligned to a 20×20
+subdivision of the actual CaMa global one-minute map. Its conservative common
+valid mask and native overlap handling differ explicitly from the previous
+Atlantis harmonisation; the old sample is not a numerical baseline for it.
+See [GFM 3-second workflow, reproduction and validation results](gfm_3sec_workflow.md)
+and [the full Item summary](metadata/gfm_20210715_items.csv). This is data
+inspection, not a model skill or flood-peak evaluation.

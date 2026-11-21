@@ -1018,3 +1018,18 @@ read-only, unrelated23 TE-Japan deletions excluded. Final evidence: VR-0170.
 DT-0124 complete:332 tests +15 subtests PASS,1 Windows SKIP; final74 palette
 checks PASS. Actual Mekong/browser and four combined figures visually checked.
 213 protected hashes unchanged. Research retains10 pre-existing broken links.
+
+DT-0154: maintainer-approved Tutorial 11 GFM acquisition/3-second workflow on
+existing feature/package-builder; Codex owns Tutorial 11 scripts, tests, compact
+metadata/inspection Figure and linked research records. Acquire 2021-07-15,
+4–8°E/49–52°N, morning pass only; preserve external old/ and model maps; keep
+raw rasters/environments outside Git. Acceptance: actual acquisition, native
+mask/overlap/20×20 alignment checks, offline full replay, visual inspection,
+documentation and normal commit/push. No model evaluation or Gallery publication.
+See [the workflow/results note](../tutorial/tutorial11-event_evaluation/gfm_3sec_workflow.md).
+
+DT-0154 complete: actual 37-COG acquisition and 4800×3600 conversion; 13 focused
+tests and all-cell checks PASS, communication-blocked full replay bitwise equal
+for all 13 fields. Figure rendered/reviewed; 204,586 old-tree metadata entries
+unchanged. Code/docs/small metadata/Figure only enter Git. VR-0200 records the
+scientific limits and 14 unchanged baseline research-link failures.

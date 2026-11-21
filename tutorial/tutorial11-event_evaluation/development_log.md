@@ -359,3 +359,55 @@ unique, CSV parses, links and files exist, and `git diff --check` passes.
 **Limitations:** Basin ID 74 combines Rhine and Meuse/Vesdre model routing.
 Locality markers are approximate towns, and candidate AOIs are not confirmed
 satellite coverage or observed inundation boundaries.
+
+## 2026-11-21 — Native GFM acquisition and CaMa-aligned 3-second tiling
+
+**Task:** Implement and execute separate native four-layer acquisition and local
+3-second conversion for 15 July 2021, 4–8°E / 49–52°N.
+
+**Existing work:** Yesterday's entire workspace had been moved to `old/`.
+Reused the pinned Atlantis checkout/environment via a prefix-restoring symlink;
+created new data/log directories. Did not reinstall, modify Atlantis, or change
+old files. Canonical new scripts are Git-managed here; external workspace
+scripts and the Figure reference them through symlinks.
+
+**Work performed:** Re-searched STAC (17 Items), grouped by platform/orbit/
+datatake, and confirmed official orbit metadata. Acquired only the 11-Item S1A
+morning descending pass, relative orbit 37, 05:49:37–05:51:42 UTC: four layers,
+37 original COGs, 49.91 MiB in 62.66 s. Afternoon Items remain inventoried only.
+Implemented blockwise common-grid earliest-valid mosaic, common flood/water/
+quality masking, binary area-support warps and 4800×3600 EPSG:4326 output.
+Verified the actual CaMa NetCDF's 1-minute geometry and 20×20 subdivision.
+
+**Issue found and corrected:** All-cell validation exposed different GDAL
+min/max versus average edge footprints in source-owner rasters. Replaced raw
+ID warps with per-owner binary-support warps using the same average kernel;
+owner closure now differs by at most 5.96e-8. Kept the failed check in external
+logs and described the correction rather than weakening provenance validation.
+
+**Results:** Final conversion 289.42 s, 883.59 MiB peak process RSS; 13 fields,
+7,258,263 cells with usable support (42.00384%), 21,078 with positive flood
+fraction. Unknown flood/water fractions remain -9999. Independent complete
+regeneration with blocked socket connections and 256-cell rather than 512-cell
+blocks produces bitwise identical decoded arrays for all fields (306.28 s).
+All 37 local COGs reused, zero network bytes. Thirteen focused tests and actual
+all-cell validation pass. Rendered and inspected the three-panel Figure;
+corrected a colorbar-label collision and added a measured clearance check.
+
+**Files:** New `scripts/s01-download_gfm.py`, `s02-convert_gfm_3sec.py`,
+`s03-validate_gfm_3sec.py`, shared contracts/tests, Figure Shell/Python and PNG,
+compact Item/asset/validation metadata, and `gfm_3sec_workflow.md`. Updated GFM
+inventory, domain context, development status and research records. Raw COGs,
+3sec rasters, native intermediates, environment and full logs stay outside Git.
+
+**Preservation:** All 204,586 old-tree metadata entries match the pre-task
+snapshot; Atlantis remains clean. CaMa map data and original discharge/GFM
+samples are unchanged. Research validator retains 14 pre-existing historical
+broken links; no new ones were added.
+
+**Unresolved/scientific limits:** The morning mosaic is incomplete and is not
+a daily/event maximum. Conservative joint validity differs from yesterday's
+OR denominator; area overlap is a documented local GDAL approximation. Review
+these choices before model comparison. No evaluation metrics, model run,
+afternoon processing or Gallery publication performed. See
+[gfm_3sec_workflow.md](gfm_3sec_workflow.md) for exact commands and evidence.
