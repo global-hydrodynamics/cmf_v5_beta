@@ -22,12 +22,12 @@ reproducibility evaluation tutorial developed in collaboration with ECMWF.
   experiments, including the reported six-hour mean/end-timestamp convention.
 - Described candidate satellite flood-extent products and the intended Atlantis
   use; checked public provider documentation and recorded verification limits.
-- Created `flood_event_overview.md` and this development log. No analysis code,
+- Created `01_flood_event_overview.md` and this development log. No analysis code,
   datasets, README or existing files were changed.
 
 **Files created:**
 
-- [flood_event_overview.md](flood_event_overview.md)
+- [01_flood_event_overview.md](../01_flood_event_overview.md)
 - `development_log.md`
 
 **Decisions and unresolved questions:**
@@ -55,9 +55,9 @@ and NetCDF, and prepare an initial July hydrograph without model evaluation.
 
 **Files inspected:**
 
-- `stations_data/allstations.csv`
-- `stations_data/Qobs_06_2021_st153_63_28.csv`
-- `stations_data/Qobs_06_2021_st153_63_28.nc`
+- `../stations_data/allstations.csv`
+- `../stations_data/Qobs_06_2021_st153_63_28.csv`
+- `../stations_data/Qobs_06_2021_st153_63_28.nc`
 
 **Checks performed:** Inventoried sizes, structures, NetCDF dimensions/types and
 attributes; joined station metadata by ID; checked time decoding, cadence,
@@ -68,8 +68,8 @@ assumption. Source SHA-256 values were checked before and after the work.
 
 **Files created:**
 
-- [observation_data_inventory.md](observation_data_inventory.md)
-- [figure/observed_discharge_2021-07.png](figure/observed_discharge_2021-07.png)
+- [observation_data_inventory.md](../observation_data_inventory.md)
+- [observed discharge figure](../figure/observed_discharge_2021-07.png)
 
 **Main findings and decisions:**
 
@@ -141,7 +141,7 @@ date. A daily raster is not an instantaneous flood map. Fractions are stored as
 0–100 percent with 255 nodata; zero can include rounded small fractions.
 Reference water alone does not establish SAR observation. Valid support uses
 the flood-or-water validity rule. These definitions and the distinction between
-catalogue footprints and valid pixels are documented in `gfm_data_inventory.md`.
+catalogue footprints and valid pixels are documented in `../gfm_data_inventory.md`.
 
 **Completion of the one-day checkpoint:** The acquisition completed with exit 0
 at **18:30:15 JST**, after **955.06 s (15 min 55 s)** from 18:14:20. The final
@@ -181,12 +181,12 @@ masks is a proposed future fix, not implemented work.
 
 **Tutorial files created/updated:**
 
-- `gfm_data_inventory.md`: acquisition/version/procedure, measurement definitions,
+- `../gfm_data_inventory.md`: acquisition/version/procedure, measurement definitions,
   file structure/sizes, timestamp/footprint metadata, results and limitations.
-- `flood_event_overview.md`: current upstream/workspace, the completed one-day
+- `01_flood_event_overview.md`: current upstream/workspace, the completed one-day
   test, data definitions and observation-data clarification.
-- `figure/gfm_2021-07-15_1arcmin.png`: daily fraction and valid-input coverage.
-- `figure/gfm_2021-07-15_quality_1arcmin.png`: stored quality-companion codes.
+- `../figure/gfm_2021-07-15_1arcmin.png`: daily fraction and valid-input coverage.
+- `../figure/gfm_2021-07-15_quality_1arcmin.png`: stored quality-companion codes.
 - `development_log.md`: append-only strategy, execution and result record.
 
 **Result and stopping point:** One-day acquisition and local inspection
@@ -295,13 +295,13 @@ existing `feature/package-builder` branch. No branch switch or main push.
 
 **Work performed:** Inspected the global 15-minute `basin`, `nextxy`, `uparea` and COG products; mapped model Basin IDs 74 and 1299, supplied gauges and report-documented localities. Created the two required planning figures, separate candidate simulation/observation bboxes, an impact-location CSV, and event setup report/plan. Assessed Map Explorer's basin/network, OSM, Pin, import and PNG-export capabilities. Added Gallery method **p01-f06 · OSM_background**, its extent-limited renderer and OSM attribution.
 
-**Files created or updated:** `event_setup_plan.md`, `evaluation_domain.md`, `event_setup_report.md`, `impact_locations.csv`, `figure/event_basin_overview.png`, `figure/event_flood_impact_area.png`, `visualization/river_map/script/f06-OSM_background.py`, `visualization/river_map/f06-OSM_background.sh`, `visualization/gallery/p01-f06-OSM_background.png`, and the related Visualization README/catalog entries.
+**Files created or updated:** `event_setup_plan.md`, `../evaluation_domain.md`, `event_setup_report.md`, `../impact_locations.csv`, `../figure/event_basin_overview.png`, `../figure/event_flood_impact_area.png`, `../../../visualization/river_map/script/f06-OSM_background.py`, `../../../visualization/river_map/f06-OSM_background.sh`, `../../../visualization/gallery/p01-f06-OSM_background.png`, and the related Visualization README/catalog entries.
 
 **Decisions and limitations:** Simulation extent is derived from the complete model basin group plus a two-cell margin, not from the impact towns. At 0.25°, model ID 74 combines Rhine and Meuse/Vesdre routing and is not a pure natural Rhine watershed; ID 1299 includes separate nearby cells around Gete/Halen and Dyle/Wavre. The rectangle and satellite AOIs remain candidates. Town coordinates are approximate place-centre markers, not flood polygons. The existing 2021-07-15 GFM test does not cover all proposed AOIs and has partial valid-pixel coverage. No new GFM data or model simulation was run. OSM tiles were fetched only for the plotted extents and credited. Map Explorer supports browser OSM and manual Pins but not CSV point import or OSM-included PNG export; no broad GUI change was made.
 
 **Testing performed:** Parsed the impact CSV and Gallery catalog, checked relevant Markdown links, ran `bash -n` and Python AST syntax validation, generated the OSM-backed Gallery image from the checked-in script, tested its `--no-osm` path, reviewed the two event figures, and ran `git diff --check`. No model run or GFM download was performed.
 
-**Location-source clarification:** Wavre is treated as a Dyle locality (not Gete); its 15–16 July impact is cited to the municipal summary. Halen is recorded separately on the Gete/Velpe system. Coordinates remain approximate place centres. See the links in `impact_locations.csv`.
+**Location-source clarification:** Wavre is treated as a Dyle locality (not Gete); its 15–16 July impact is cited to the municipal summary. Halen is recorded separately on the Gete/Velpe system. Coordinates remain approximate place centres. See the links in `../impact_locations.csv`.
 
 **Result:** The requested map products and reproducible general Gallery example are prepared. Hydrologic basin identity, boundary conditions, scene coverage, station metadata and evaluation choices remain to be confirmed before simulation.
 
@@ -310,7 +310,7 @@ existing `feature/package-builder` branch. No branch switch or main push.
 
 **Objective:** Separate the default basin overview from local event annotations,
 make Rhine-specific plotting settings editable data, and align names with the
-River Map figure/panel convention.
+River Map ../figure/panel convention.
 
 **Work performed:** Replaced the single renderer with dedicated f06a and f06b
 entry points and a shared OSM/network helper; added `f06_settings.json`; kept
@@ -394,9 +394,9 @@ All 37 local COGs reused, zero network bytes. Thirteen focused tests and actual
 all-cell validation pass. Rendered and inspected the three-panel Figure;
 corrected a colorbar-label collision and added a measured clearance check.
 
-**Files:** New `scripts/s01-download_gfm.py`, `s02-convert_gfm_3sec.py`,
+**Files:** New `../scripts/s01-download_gfm.py`, `s02-convert_gfm_3sec.py`,
 `s03-validate_gfm_3sec.py`, shared contracts/tests, Figure Shell/Python and PNG,
-compact Item/asset/validation metadata, and `gfm_3sec_workflow.md`. Updated GFM
+compact Item/asset/validation metadata, and `../gfm_3sec_workflow.md`. Updated GFM
 inventory, domain context, development status and research records. Raw COGs,
 3sec rasters, native intermediates, environment and full logs stay outside Git.
 
@@ -410,7 +410,7 @@ a daily/event maximum. Conservative joint validity differs from yesterday's
 OR denominator; area overlap is a documented local GDAL approximation. Review
 these choices before model comparison. No evaluation metrics, model run,
 afternoon processing or Gallery publication performed. See
-[gfm_3sec_workflow.md](gfm_3sec_workflow.md) for exact commands and evidence.
+[gfm_3sec_workflow.md](../gfm_3sec_workflow.md) for exact commands and evidence.
 
 ## 2026-11-22 — Native GFM 20 m categorical classification
 
@@ -436,9 +436,9 @@ NoData. Counts: Land 91,545,271; Flood 183,271; Permanent 3,373,440; Seasonal
 source/output Flood counts both equal 183,271 pixels, 73.3084 km² under 400 m²
 planar pixel area; this is not geodesic area or scientific flood validation.
 
-**Files and checks:** Added `scripts/s04-export_gfm_20m_class.py`, updated
-`gfm_3sec_workflow.md`, and generated
-`figure/gfm_20210715_20m_class.png` (436,930 bytes). The external
+**Files and checks:** Added `../scripts/s04-export_gfm_20m_class.py`, updated
+`../gfm_3sec_workflow.md`, and generated
+`../figure/gfm_20210715_20m_class.png` (436,930 bytes). The external
 `tiles_20m/S1A_o038784_dt049389/gfm_20210715_20m_class.tif` is a single-band
 uint8 ZSTD COG, 23,458,035 bytes, SHA-256
 `56036e1bba7a3bca603221caa8ba0e8aa31cf322997e2efe8dfb6afe4f9483df`;
@@ -462,7 +462,7 @@ were left outside Git. No commit or push was made in this task.
 without replacing the original planning proposal or treating candidate work as
 completed validation.
 
-**Work performed:** Added `event_evaluation_process.md` with six stages covering
+**Work performed:** Added `../event_evaluation_process.md` with six stages covering
 event/watershed selection, separate domains, observation acquisition and
 preprocessing, model execution, model–observation matching, and performance
 evaluation. Distinguished current map/GFM examples from unimplemented Rhine

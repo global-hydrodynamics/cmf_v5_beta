@@ -29,9 +29,9 @@ candidate setting to a validated choice because a map or script can display it.
 been inspected. On the current 0.25° map, Basin ID 74 combines Rhine and
 Meuse/Vesdre routing; it is not a pure natural Rhine watershed. Basin ID 1299
 also covers nearby cells. Rhine-only versus combined-group scope remains open.
-See [event overview](flood_event_overview.md),
+See [event overview](01_flood_event_overview.md),
 [candidate domains](evaluation_domain.md), and
-[event setup findings](event_setup_report.md).
+[event setup findings](development_log/event_setup_report.md).
 
 ## 2. Select separate simulation and observation domains
 
@@ -63,8 +63,8 @@ satellite coverage.
 basin/impact planning figures are documented. Basin interpretation, boundary
 conditions and observation coverage still need confirmation. Values and
 caveats are in [evaluation_domain.md](evaluation_domain.md) and
-[event_setup_report.md](event_setup_report.md); the original planning proposal
-remains in [event_setup_plan.md](event_setup_plan.md).
+[event_setup_report.md](development_log/event_setup_report.md); the original planning proposal
+remains in [event_setup_plan.md](development_log/event_setup_plan.md).
 
 ## 3. Acquire and preprocess observations
 
