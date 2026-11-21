@@ -11,6 +11,7 @@ from urllib.request import Request, urlopen
 
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
+from matplotlib.lines import Line2D
 import numpy as np
 from PIL import Image
 import rasterio
@@ -135,6 +136,53 @@ def draw_network(ax, segments, classes):
                 segments[selected], colors=color, linewidths=width * 72 * 0.55,
                 alpha=0.96, zorder=3 + area_class * 0.1, capstyle="round",
             ))
+
+
+def draw_point_groups(ax, points, styles, show_labels: bool = True):
+    """Draw configured event locations inside the current map extent."""
+    west, east = ax.get_xlim()
+    south, north = ax.get_ylim()
+    handles = []
+    counts = {}
+    for group, style in styles.items():
+        selected = [
+            point for point in points
+            if point["plot_group"] == group
+            and west <= float(point["longitude"]) <= east
+            and south <= float(point["latitude"]) <= north
+        ]
+        if not selected:
+            continue
+        color = style["color"]
+        marker = style.get("marker", "o")
+        size = float(style.get("size", 30))
+        ax.scatter(
+            [float(point["longitude"]) for point in selected],
+            [float(point["latitude"]) for point in selected],
+            s=size, marker=marker, facecolor=color, edgecolor="white",
+            linewidth=0.7, alpha=float(style.get("alpha", 0.92)), zorder=5,
+        )
+        handles.append(Line2D(
+            [0], [0], marker=marker, linestyle="none", markersize=6,
+            markerfacecolor=color, markeredgecolor="white", label=style["label"],
+        ))
+        counts[group] = len(selected)
+        if show_labels:
+            for point in selected:
+                lon, lat = float(point["longitude"]), float(point["latitude"])
+                dx, dy = float(point.get("label_dx", 0.08)), float(point.get("label_dy", 0.08))
+                label = point["plot_label"]
+                if point.get("coordinate_confidence") == "low":
+                    label += " (?)"
+                ax.annotate(
+                    label, (lon, lat), xytext=(lon + dx, lat + dy), textcoords="data",
+                    fontsize=7, color="#222222", ha="left" if dx >= 0 else "right",
+                    va="center",
+                    bbox=dict(facecolor="white", alpha=0.78, edgecolor="none", pad=1.2),
+                    arrowprops=dict(arrowstyle="-", color=color, linewidth=0.55, alpha=0.8),
+                    zorder=6,
+                )
+    return handles, counts
 
 
 def draw_attribution(ax):

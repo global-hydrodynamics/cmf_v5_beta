@@ -1,0 +1,4 @@
+location_id,place,plot_label,river_group,longitude,latitude,plot_group,label_dx,label_dy,coordinate_confidence,source
+153,Lobith,Lobith (153),Rhine,6.10833,51.84444,existing_gauges,0.10,0.09,medium,stations_data/allstations.csv
+63,Speyer,Speyer (63),Rhine,8.44876,49.32379,existing_gauges,0.10,0.04,medium,stations_data/allstations.csv
+28,Maxau,Maxau (28),Rhine,8.30561,49.03896,existing_gauges,0.10,-0.08,medium,stations_data/allstations.csv

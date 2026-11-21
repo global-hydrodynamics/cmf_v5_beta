@@ -24,6 +24,7 @@ def main():
     parser.add_argument("--settings", type=Path, default=RIVER_MAP_DIR / "data/f06_settings.json")
     parser.add_argument("--zoomup-file", type=Path, default=RIVER_MAP_DIR / "data/f06b_zoomup.csv")
     parser.add_argument("--plot-file", type=Path, default=RIVER_MAP_DIR / "data/f06b_plot.csv")
+    parser.add_argument("--station-file", type=Path)
     parser.add_argument("--tile-cache", type=Path, default=Path.home() / ".cache/cmf_flood_osm_tiles")
     parser.add_argument("--no-osm", action="store_true")
     parser.add_argument("--output", type=Path, required=True)
@@ -34,6 +35,8 @@ def main():
     extent = tuple(float(zoom[key]) for key in ("west", "south", "east", "north"))
     _, _, segments, classes = common.read_network(args.map_dir, extent)
     points = common.read_csv(args.plot_file)
+    if args.station_file is not None:
+        points.extend(common.read_csv(args.station_file))
 
     fig, ax = plt.subplots(figsize=tuple(settings["figure_size"]))
     if not args.no_osm:
@@ -54,37 +57,25 @@ def main():
                                      linestyle=row["linestyle"], label=row["short_label"]))
 
     common.draw_network(ax, segments, classes)
-    point_handles = []
-    for group, color in settings["plot_group_colors"].items():
-        selected = [point for point in points if point["plot_group"] == group]
-        ax.scatter(
-            [float(point["longitude"]) for point in selected],
-            [float(point["latitude"]) for point in selected],
-            s=30, marker="o", facecolor=color, edgecolor="white", linewidth=0.7,
-            alpha=0.92, zorder=5,
-        )
-        point_handles.append(Line2D([0], [0], marker="o", linestyle="none", markersize=6,
-                                    markerfacecolor=color, markeredgecolor="white",
-                                    label=settings["plot_group_labels"][group]))
-        for point in selected:
-            lon, lat = float(point["longitude"]), float(point["latitude"])
-            dx, dy = float(point["label_dx"]), float(point["label_dy"])
-            label = point["plot_label"]
-            if point["coordinate_confidence"] == "low":
-                label += " (?)"
-            ax.annotate(
-                label, (lon, lat), xytext=(lon + dx, lat + dy), textcoords="data",
-                fontsize=7, color="#222222", ha="left" if dx >= 0 else "right", va="center",
-                bbox=dict(facecolor="white", alpha=0.78, edgecolor="none", pad=1.2),
-                arrowprops=dict(arrowstyle="-", color=color, linewidth=0.55, alpha=0.8), zorder=6,
-            )
+    point_styles = {
+        group: {
+            "color": color,
+            "label": settings["plot_group_labels"][group],
+            "marker": "o",
+            "size": 30,
+        }
+        for group, color in settings["plot_group_colors"].items()
+    }
+    for group, style in settings.get("additional_point_groups", {}).items():
+        point_styles[group] = style
+    common.format_axes(ax, extent, settings["x_tick_interval"], settings["y_tick_interval"])
+    point_handles, point_counts = common.draw_point_groups(ax, points, point_styles)
     ax.legend(handles=point_handles + region_handles, loc="center left",
               bbox_to_anchor=(1.01, 0.5), fontsize=8, framealpha=0.9, borderpad=0.6)
-    common.format_axes(ax, extent, settings["x_tick_interval"], settings["y_tick_interval"])
     ax.set_title(settings["title"] + "\n" + settings["subtitle"], fontsize=10)
     common.draw_attribution(ax)
     common.save_figure(fig, args.output, int(settings["dpi"]))
-    print(f"Plotted {len(points)} localities from {args.plot_file}; AOI extents from {args.zoomup_file}")
+    print(f"Plotted in-extent point counts {point_counts}; AOI extents from {args.zoomup_file}")
 
 
 if __name__ == "__main__":

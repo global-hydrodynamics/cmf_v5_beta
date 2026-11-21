@@ -472,3 +472,21 @@ reference documents. Added a short link from the event-specific findings report.
 **Validation:** Checked the new local references against existing files and
 reviewed status statements against the event setup, domain and GFM workflow
 notes. No code, data processing, model run, or figure regeneration was performed.
+
+
+## 2026-11-22 — Tutorial 11 Step 2 spatial domain and observation design
+
+**Objective:** Reassess candidate model and observation domains using the current CaMa-Flood map, reported impacts, supplied gauges and existing 15 July GFM product; render and visually review two planning maps.
+
+**Work performed:**
+
+- Reused the f06a/f06b River Map renderers with Tutorial-local JSON/CSV settings and a Tutorial entry-point shell. Shared renderers gained optional point-group rendering and candidate-domain overlays; default settings remain available.
+- Inspected the 0.25° glb_15min Basin raster and grid metadata: ID 74 has 391 cells, ID 1299 has 19 cells; the candidate rectangle remains provisional.
+- Used the existing GFM validation record, not a new acquisition. The 15 July product has 42.0038% valid target cells; support is patchy.
+- Replaced the candidate-domain note with 02_domain_and_observation_design.md, recording visual review, recommendations, evidence status and Step 3 questions. Updated direct links and preserved the earlier setup plan/report and planning figures.
+
+**Files created or updated:** Tutorial 11 Step 2 settings, gauge plotting CSV, rendering shell and two figures; shared f06 helper/panel scripts; the Step 2 design document, direct links and this log. No GFM download, model run, Gallery publication or Catalog update was performed.
+
+**Result and decisions:** Keep 3.125–12.125°E, 45.875–52.375°N as a provisional outer model window only. Do not call Basin ID 74 a natural Rhine basin. Retain separate Ahr–Erft–Swist/Kyll/Prüm and Meuse–Vesdre–Gete–Dyle observation AOIs. Additional tributary gauges and GFM acquisition-level valid coverage remain to be verified.
+
+**Validation:** Both rendered figures were reviewed visually; f06 panels used existing map data and local OSM tile cache where available. Shell/Python syntax, configuration/CSV parsing, output paths, links and git diff --check were checked. No model simulation or new observation retrieval was run.
