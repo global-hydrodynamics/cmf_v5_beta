@@ -32,7 +32,7 @@ method.
 - **f06a — OSM_background-default:** Basin ID 74 and its CaMa-Flood routed
   network, with the f06b extent marked. Basin ID 74 combines Rhine and
   Meuse/Vesdre model routing; it is not a pure natural Rhine watershed.
-- **f06b — OSM_background-local_info:** zoom to 4.0–8.0°E, 49.2–51.6°N,
+- **f06b — OSM_background-local_info:** zoom to 4.0–8.0°E, 49.0–52.0°N,
   with Tutorial 11 report-based localities and two candidate observation
   domains. The boxes are candidate AOIs, not measured flood boundaries. Town
   coordinates are approximate; Halen has lower coordinate confidence.
@@ -54,7 +54,8 @@ folder. The OSM background is rendered with alpha 0.72 / 0.68 and a small white
 blend (0.08 / 0.10); the f06a basin-exterior gray veil uses alpha 0.36 so the
 OSM context remains visible while the CaMa-Flood network stays prominent. If
 OSM is unavailable, both panels still render the map overlays and river
-network. OpenStreetMap is credited on both panels.
+network. Both panels label each 1° major tick and also show 0.5° minor
+ticks. OpenStreetMap is credited on both panels.
 
 Event-specific plotting settings are in
 [`data/f06_settings.json`](data/f06_settings.json); localities and AOI extents

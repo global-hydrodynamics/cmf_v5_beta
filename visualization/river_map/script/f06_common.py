@@ -149,9 +149,12 @@ def format_axes(ax, extent, x_interval: float, y_interval: float):
     ax.set_aspect(1.0 / math.cos(math.radians((south + north) / 2.0)))
     ax.xaxis.set_major_locator(MultipleLocator(x_interval))
     ax.yaxis.set_major_locator(MultipleLocator(y_interval))
+    ax.xaxis.set_minor_locator(MultipleLocator(0.5))
+    ax.yaxis.set_minor_locator(MultipleLocator(0.5))
     ax.set_xlabel("Longitude [°E]")
     ax.set_ylabel("Latitude [°N]")
-    ax.tick_params(direction="out", length=4, labelsize=9)
+    ax.tick_params(which="major", direction="out", length=4, labelsize=9)
+    ax.tick_params(which="minor", direction="out", length=2)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 

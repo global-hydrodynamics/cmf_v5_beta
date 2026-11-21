@@ -326,3 +326,11 @@ registration while retaining the image file as an untouched local change.
 The AOI boxes are candidates, not observed inundation extents; locality points
 are approximate town centers. OSM rendering uses its existing graceful
 fallback. No hydrologic interpretation or model data were changed.
+
+
+## 2026-11-21 — Adjust f06 map extent and geographic ticks
+
+Set the f06b local-information extent to 4–8°E, 49–52°N. Both f06 panels
+now use 1° labeled major ticks and 0.5° unlabeled minor ticks for longitude
+and latitude. The f06a zoom rectangle reads the same extent from the existing
+external CSV. The change affects map presentation only.

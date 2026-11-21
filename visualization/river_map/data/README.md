@@ -9,9 +9,8 @@ outside the drawing code.
   than silently writing a substitute.
 - `f06b_zoomup.csv` stores the f06b extent and two candidate observation
   domains documented in `../../../tutorial/tutorial11-event_evaluation/evaluation_domain.md`.
-  The f06b extent (4.0–8.0°E, 49.2–51.6°N) is the union of those domains with a
-  0.2° margin. The regional rectangles are candidate observation AOIs, not
-  observed flood boundaries.
+  The f06b extent is 4.0–8.0°E, 49.0–52.0°N. The regional rectangles are
+  candidate observation AOIs, not observed flood boundaries.
 - `f06b_plot.csv` copies report-based localities and source notes from
   `../../../tutorial/tutorial11-event_evaluation/impact_locations.csv`, adding
   short plot labels, symbol groups and label offsets. Coordinates identify

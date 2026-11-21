@@ -1,16 +1,24 @@
 {
   "panel_a": {
-    "extent": [3.0, 46.0, 12.0, 53.0],
+    "extent": [
+      3.0,
+      46.0,
+      12.0,
+      53.0
+    ],
     "target_basin_id": 74,
     "zoom_region_id": "f06b_zoomup",
     "zoom_label": "Local impact map extent",
-    "figure_size": [10.2, 7.8],
+    "figure_size": [
+      10.2,
+      7.8
+    ],
     "osm_alpha": 0.72,
     "osm_white_mix": 0.08,
     "mask_alpha": 0.36,
     "mask_color": "#858585",
     "basin_outline_color": "#d89000",
-    "x_tick_interval": 2.0,
+    "x_tick_interval": 1.0,
     "y_tick_interval": 1.0,
     "dpi": 180,
     "title": "OSM_background-default",
@@ -18,11 +26,14 @@
   },
   "panel_b": {
     "zoom_region_id": "f06b_zoomup",
-    "figure_size": [11.4, 7.8],
+    "figure_size": [
+      11.4,
+      7.8
+    ],
     "osm_alpha": 0.68,
-    "osm_white_mix": 0.10,
+    "osm_white_mix": 0.1,
     "x_tick_interval": 1.0,
-    "y_tick_interval": 0.5,
+    "y_tick_interval": 1.0,
     "dpi": 180,
     "title": "OSM_background-local_info",
     "subtitle": "July 2021 reported localities; approximate town centers",
