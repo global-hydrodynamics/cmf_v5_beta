@@ -3,9 +3,8 @@
 This project contains raster and network visualizations of CaMa-Flood river maps.
 Each Figure has a project-root Shell entry point with editable settings and
 Python implementations under `script/`. Working images are written to
-`figure/`; selected combined figures are published separately in the
-[Visualization Gallery](../README.md). The current Gallery includes p01-f01
-through p01-f05.
+`figure/`; selected figures are published separately in the
+[Visualization Gallery](../README.md).
 
 ## Run a figure
 
@@ -24,28 +23,45 @@ descriptive section for each Figure added to the project.
 
 ## p01-f06-OSM_background
 
-**Visualization method:** `p01-f06 · OSM_background` (Gallery ID `p01-f06a`).
-This is a compact geographic context map of the CaMa-Flood vector network on
-OSM Standard, using bbox `[3, 46, 12, 53]` (west, south, east, north). It uses
-the existing `f03a` outlet-to-outlet geometry, full-map upstream-area color and
-width classes, and does not add a raster or event-specific layer.
+**Visualization method:** `p01-f06 · OSM_background`. Panel a (`p01-f06a`)
+shows the CaMa-Flood vector network over lightly softened OSM Standard at 50%
+opacity. It emphasizes Basin ID 74 from `map/glb_15min/netcdf/basin.nc`; every
+other grid cell, including missing basin cells, is covered by a 50%-transparent
+gray mask. Basin ID 74 combines Rhine and Meuse/Vesdre model routing and is not
+a pure natural Rhine watershed. A red dashed rectangle marks the f06b zoom
+extent.
+
+Panel b (`p01-f06b`) zooms to 4.0–8.0°E, 49.2–51.6°N. It plots the Tutorial 11
+report-based locality markers and two colored rectangles for its candidate
+observation domains. The red region covers Ahr/Erft/Kyll/Prüm impacts; the
+purple region covers Meuse/Vesdre/Gete/Dyle comparison localities. These boxes
+are observation AOIs, not measured inundation boundaries. Town coordinates are
+approximate centers; Halen has lower coordinate confidence and is marked `(?)`.
+The two panels are intended as examples of adding a zoom extent, points, labels
+and region boxes to a river map.
 
 ```bash
 ./visualization/river_map/f06-OSM_background.sh
 ```
 
-The launcher can be run from any current directory. Edit its map, bbox, Python
-command or output settings at the top; the Python script also accepts these as
-CLI arguments, including `--no-osm`. OSM tiles are limited to the requested
-extent and cached under the user cache directory. If OSM is unavailable, the
-script still writes the river-only map. The figure retains
-[OpenStreetMap attribution](https://www.openstreetmap.org/copyright).
+The launcher can be run from any current directory. Edit the map, panel-a bbox,
+target basin, Python command or output settings at the top. OSM tiles are
+limited to each panel's extent and cached under the user cache directory. The
+figure credits [OpenStreetMap](https://www.openstreetmap.org/copyright). If OSM
+is unavailable, both panels still render their map overlays and river network.
 
-The interactive Map Explorer can display OSM beneath its normal scientific
-layers, but its standard PNG export intentionally excludes online basemaps.
-This standalone Gallery renderer is the reproducible export for this sample.
-The global 15-minute map is Package Additional Data and must be installed at
-`map/glb_15min/` before generating the figure.
+Working figures are written to:
+
+- `visualization/river_map/figure/f06a-OSM_background.png`
+- `visualization/river_map/figure/f06b-impact_localities.png`
+
+Overlay settings and plotting data are stored under [`data/`](data/README.md).
+The source and confidence information in `f06b_plot.csv` are derived from
+[Tutorial 11 impact locations](../../tutorial/tutorial11-event_evaluation/impact_locations.csv)
+and its [candidate observation domains](../../tutorial/tutorial11-event_evaluation/evaluation_domain.md).
+The current Gallery image remains a separately maintained snapshot under
+`visualization/gallery/`. The global 15-minute map is Package Additional Data
+and must be installed at `map/glb_15min/` before generating the figures.
 
 ## p01-f01 — Raster River Map
 
