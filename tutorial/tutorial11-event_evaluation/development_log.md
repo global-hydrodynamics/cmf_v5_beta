@@ -304,3 +304,25 @@ existing `feature/package-builder` branch. No branch switch or main push.
 **Location-source clarification:** Wavre is treated as a Dyle locality (not Gete); its 15–16 July impact is cited to the municipal summary. Halen is recorded separately on the Gete/Velpe system. Coordinates remain approximate place centres. See the links in `impact_locations.csv`.
 
 **Result:** The requested map products and reproducible general Gallery example are prepared. Hydrologic basin identity, boundary conditions, scene coverage, station metadata and evaluation choices remain to be confirmed before simulation.
+
+
+## 2026-11-21 — Refine River Map f06 panels
+
+**Objective:** Separate the default basin overview from local event annotations,
+make Rhine-specific plotting settings editable data, and align names with the
+River Map figure/panel convention.
+
+**Work performed:** Replaced the single renderer with dedicated f06a and f06b
+entry points and a shared OSM/network helper; added `f06_settings.json`; kept
+Tutorial 11-derived locality and candidate-AOI data in CSV. The launcher now
+writes `f06a-OSM_background-default.png` and
+`f06b-OSM_background-local_info.png`, then combines them as
+`f06-OSM_background.png`. OSM styling uses a subtle white blend and alpha
+0.72/0.68; the f06a exterior basin veil uses alpha 0.36. f06b uses regular
+1-degree longitude and 0.5-degree latitude ticks. Removed the f06 Gallery
+registration while retaining the image file as an untouched local change.
+
+**Limitations:** Basin ID 74 combines Rhine and Meuse/Vesdre model routing.
+The AOI boxes are candidates, not observed inundation extents; locality points
+are approximate town centers. OSM rendering uses its existing graceful
+fallback. No hydrologic interpretation or model data were changed.

@@ -20,7 +20,7 @@ Prepare a reproducible CaMa-Flood v5 evaluation of the July 2021 western Europea
 - **Basin Overview:** full model basin class and routed network, named rivers, stations, reported impact localities, candidate simulation rectangle and separate candidate GFM AOIs.
 - **Flood Impact Area:** OSM background, routed network, categorized impact localities, available model-basin boundaries, in-range stations, candidate GFM AOIs and optional model grid.
 
-See [evaluation_domain.md](evaluation_domain.md) for current candidate extents and limits. The Gallery method [p01-f06 · OSM_background](../../visualization/river_map/README.md#p01-f06--osm-background) is a general map example, not an event-specific analysis.
+See [evaluation_domain.md](evaluation_domain.md) for current candidate extents and limits. The River Map development example [f06 — OSM_background](../../visualization/river_map/README.md#f06--osm_background) illustrates a basin overview and a local impact map; it is not a substitute for these event-planning figures.
 
 ## Map Explorer capability assessment
 

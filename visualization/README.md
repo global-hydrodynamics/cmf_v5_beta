@@ -86,22 +86,6 @@ upstream-area-colored channels; the second uses the `pale_terrain` palette
 and black channels. See the [figure script](river_map/f05-hires_background.sh)
 and the [project explanation](river_map/README.md#p01-f05--high-resolution-background).
 
-#### p01-f06 — River Network on OpenStreetMap
-
-![p01-f06 OSM_background](gallery/p01-f06-OSM_background.png)
-
-**Visualization method:** `p01-f06 · OSM_background`. Panel a overlays the
-CaMa-Flood network on softened OSM Standard at 50% opacity, masks cells outside
-Basin ID 74 in gray, and marks the f06b zoom rectangle. Panel b zooms to
-4.0–8.0°E, 49.2–51.6°N, plotting Tutorial 11 impact localities and candidate
-observation-domain boxes. The boxes are not measured flood boundaries, and
-locality coordinates are approximate town centers. Basin ID 74 combines Rhine
-and Meuse/Vesdre model routing; it is not a pure natural Rhine watershed. Run
-[the figure launcher](river_map/f06-OSM_background.sh) to generate both current
-working figures under `river_map/figure/`. The image shown above is a separately
-maintained Gallery snapshot. See the
-[method notes](river_map/README.md#p01-f06-osm_background) and
-[plot-data notes](river_map/data/README.md).
 
 ### p02 — Output Analysis
 

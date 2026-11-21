@@ -21,47 +21,48 @@ Entry points resolve repository paths relative to their own location, so they
 can also be run from another current directory. Extend this README with a
 descriptive section for each Figure added to the project.
 
-## p01-f06-OSM_background
+## f06 — OSM_background
 
-**Visualization method:** `p01-f06 · OSM_background`. Panel a (`p01-f06a`)
-shows the CaMa-Flood vector network over lightly softened OSM Standard at 50%
-opacity. It emphasizes Basin ID 74 from `map/glb_15min/netcdf/basin.nc`; every
-other grid cell, including missing basin cells, is covered by a 50%-transparent
-gray mask. Basin ID 74 combines Rhine and Meuse/Vesdre model routing and is not
-a pure natural Rhine watershed. A red dashed rectangle marks the f06b zoom
-extent.
+The f06 figure combines two River Map panels, following the project's figure
+naming pattern: `f06` is the combined figure, `f06a` is the default basin
+overview, and `f06b` is the local event-information map. These are development
+examples related to Tutorial 11; f06 is not currently registered as a Gallery
+method.
 
-Panel b (`p01-f06b`) zooms to 4.0–8.0°E, 49.2–51.6°N. It plots the Tutorial 11
-report-based locality markers and two colored rectangles for its candidate
-observation domains. The red region covers Ahr/Erft/Kyll/Prüm impacts; the
-purple region covers Meuse/Vesdre/Gete/Dyle comparison localities. These boxes
-are observation AOIs, not measured inundation boundaries. Town coordinates are
-approximate centers; Halen has lower coordinate confidence and is marked `(?)`.
-The two panels are intended as examples of adding a zoom extent, points, labels
-and region boxes to a river map.
+- **f06a — OSM_background-default:** Basin ID 74 and its CaMa-Flood routed
+  network, with the f06b extent marked. Basin ID 74 combines Rhine and
+  Meuse/Vesdre model routing; it is not a pure natural Rhine watershed.
+- **f06b — OSM_background-local_info:** zoom to 4.0–8.0°E, 49.2–51.6°N,
+  with Tutorial 11 report-based localities and two candidate observation
+  domains. The boxes are candidate AOIs, not measured flood boundaries. Town
+  coordinates are approximate; Halen has lower coordinate confidence.
+
+Run the standard River Map entry point after Python setup:
 
 ```bash
 ./visualization/river_map/f06-OSM_background.sh
 ```
 
-The launcher can be run from any current directory. Edit the map, panel-a bbox,
-target basin, Python command or output settings at the top. OSM tiles are
-limited to each panel's extent and cached under the user cache directory. The
-figure credits [OpenStreetMap](https://www.openstreetmap.org/copyright). If OSM
-is unavailable, both panels still render their map overlays and river network.
+It creates the two panels and combines them into the following project figures:
 
-Working figures are written to:
+- `visualization/river_map/figure/f06a-OSM_background-default.png`
+- `visualization/river_map/figure/f06b-OSM_background-local_info.png`
+- `visualization/river_map/figure/f06-OSM_background.png`
 
-- `visualization/river_map/figure/f06a-OSM_background.png`
-- `visualization/river_map/figure/f06b-impact_localities.png`
+OSM tiles are limited to each panel extent and cached under the user cache
+folder. The OSM background is rendered with alpha 0.72 / 0.68 and a small white
+blend (0.08 / 0.10); the f06a basin-exterior gray veil uses alpha 0.36 so the
+OSM context remains visible while the CaMa-Flood network stays prominent. If
+OSM is unavailable, both panels still render the map overlays and river
+network. OpenStreetMap is credited on both panels.
 
-Overlay settings and plotting data are stored under [`data/`](data/README.md).
-The source and confidence information in `f06b_plot.csv` are derived from
-[Tutorial 11 impact locations](../../tutorial/tutorial11-event_evaluation/impact_locations.csv)
-and its [candidate observation domains](../../tutorial/tutorial11-event_evaluation/evaluation_domain.md).
-The current Gallery image remains a separately maintained snapshot under
-`visualization/gallery/`. The global 15-minute map is Package Additional Data
-and must be installed at `map/glb_15min/` before generating the figures.
+Event-specific plotting settings are in
+[`data/f06_settings.json`](data/f06_settings.json); localities and AOI extents
+are in [`f06b_plot.csv`](data/f06b_plot.csv) and
+[`f06b_zoomup.csv`](data/f06b_zoomup.csv). Their provenance and limitations
+are documented in [`data/README.md`](data/README.md). The global 15-minute map
+is Package Additional Data and must be installed at `map/glb_15min/` before
+generating these figures.
 
 ## p01-f01 — Raster River Map
 
