@@ -1,6 +1,6 @@
 {
   "schema": "cmf-tutorial11-gfm-focus-extractions-1",
-  "source_focus_areas": "metadata/f03c_focus_areas.json",
+  "source_focus_areas": "metadata/03c_focus_areas.json",
   "focus_selection_status": "proposed",
   "source_classification_raster": "observation/GFM_extent/GFM_S1A_20210715_o038784_dt049389_extent20m.tif",
   "source_classification_sha256": "ce449f65dbeeceacb5b7f2c493b70603d74f42a7e41127ed8fcff67bc20e10de",

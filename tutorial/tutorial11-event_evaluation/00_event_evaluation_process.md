@@ -36,11 +36,13 @@ missing inputs or other ordinary processing failures still do.
   without requiring the agent's exploratory session.
 - `01_*.md`, `02_*.md`, etc. record research results, rationale and uncertainty.
 - CSV/JSON catalogs, handoff values and event-specific settings belong under
-  `metadata/` where appropriate. Prefix metadata filenames with their owning
-  Step number (for example, `02_domain_selection.json` and
-  `03a_satellite_pass_inventory.csv`) unless a file is intentionally shared
-  across Steps. A downstream handoff uses one fixed filename; revise its
-  contents in place instead of adding `_v2` or `_final` variants.
+  `metadata/` where appropriate. Name Step-owned metadata with its producing
+  Step prefix: `01_`, `02_`, `03a_`, `03b_`, `03c_` or `03d_`. Keep that
+  prefix when a later Step consumes the file. Use `event_` for event-specific
+  settings shared across Steps; retain the existing names
+  `event_figure_settings.json` and `event_map_extents.csv`. A downstream
+  handoff uses one fixed filename; revise its contents in place instead of
+  adding `_v2` or `_final` variants.
 
 Prompts, reproducible Shell workflows and research outputs serve different
 purposes. Save the current processing and Figure settings, including their
@@ -330,7 +332,7 @@ require an approval state for later execution. See the
 ### p03d — Extract native GFM focus areas
 
 Run `bash s03d-extract_gfm_focus_areas.sh` to read the proposed WGS84 boxes in
-`metadata/f03c_focus_areas.json` and extract each one from the existing native
+`metadata/03c_focus_areas.json` and extract each one from the existing native
 classification COG. The densified projected bbox is rounded outward to source
 pixel boundaries; outputs retain the source Equi7 CRS, 20 m resolution,
 pixel alignment, uint8 class codes and NoData=255 without resampling or

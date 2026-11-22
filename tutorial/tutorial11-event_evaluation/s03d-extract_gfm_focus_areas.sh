@@ -8,7 +8,7 @@ TUTORIAL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 "$PYTHON_CMD" "$TUTORIAL_DIR/script/s03d-extract_gfm_focus_areas.py" \
     --tutorial-dir "$TUTORIAL_DIR" \
-    --focus-areas "$TUTORIAL_DIR/metadata/f03c_focus_areas.json" \
+    --focus-areas "$TUTORIAL_DIR/metadata/03c_focus_areas.json" \
     --source-tiff "$TUTORIAL_DIR/observation/GFM_extent/GFM_S1A_20210715_o038784_dt049389_extent20m.tif" \
     --source-metadata "$TUTORIAL_DIR/observation/GFM_extent/GFM_S1A_20210715_o038784_dt049389_extent20m.json" \
     --output-dir "$TUTORIAL_DIR/observation/GFM_extent" \
