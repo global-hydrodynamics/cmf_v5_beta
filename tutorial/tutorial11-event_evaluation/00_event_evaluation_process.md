@@ -253,6 +253,25 @@ the large p03b source COGs under `Atlantis/` to Git; the AOI-clipped
 classification COG and its processing JSON are inputs for later Tutorial
 steps.
 
+For a compact view of the selected pass, run
+`bash f03c-flood_fraction_1min.sh`. It bins native 20 m pixel centres into
+global WGS84 1-arc-minute cells inside the Step 2 satellite-analysis bbox
+(west/south inclusive, east/north exclusive), without reprojecting or
+resampling the source raster. Flood Fraction is class-1 pixels divided by
+class-0–4 pixels, in percent; classes 5, 6 and 255 are excluded. A cell with
+no valid classified pixels is NoData, while a covered cell with zero Flood
+pixels is a valid 0%. The Git-tracked output is
+`observation/GFM_extent/GFM_S1A_20210715_o038784_dt049389_floodfrac_1min.tif`;
+the valid-pixel count companion is kept under ignored `Atlantis/analysis/`.
+The OSM/CaMa context Figure is
+`figure/f03c-gfm_flood_fraction_1min.png`; it overlays purple reported-impact
+localities and names from `metadata/01_impact_locations.csv`. These reported
+locations are distinct from satellite-detected Flood pixels. This derived
+fraction map is a spatial screening aid, not a replacement for the native
+classification or an independent validation of GFM observations. To redraw the
+Figure from the existing fraction raster without rerunning aggregation, use
+`bash f03c-flood_fraction_1min.sh --figure-only`.
+
 For each product, record provider and version, source identifiers, acquisition
 or aggregation time, spatial and temporal support, units, grid/CRS, nodata and
 quality masks, processing, citation and redistribution terms. Preserve original
