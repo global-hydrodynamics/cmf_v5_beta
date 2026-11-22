@@ -120,9 +120,11 @@ Adjacent tiled products can share timestamps. These counts do not establish
 10 independent overpasses. Monthly/reference-water asset filenames can include
 historical reference intervals; those are not additional event acquisition
 dates. The timestamp list uses the item datetime metadata.
-Catalogue tile footprints indicate potential
-intersection, not valid SAR pixels. Exact item IDs and footprint intersections
-are preserved locally in `stac_items.json` and `acquisition_footprints.csv`.
+GFM STAC `geometry` indicates Equi7 tile-product coverage and potential AOI
+intersection, not original Sentinel-1 scene geometry or valid SAR pixels. The
+source Sentinel-1 product `GeoFootprint` is tracked separately for the Step 3a
+pass survey. Exact GFM Item IDs and tile coverage remain in the local
+`stac_items.json` and `acquisition_footprints.csv`.
 `strategy all` produces a **daily composite**, combining multiple timestamps,
 not separate rasters for every time. Its flood distribution is not a snapshot
 of the flood peak at one instant.

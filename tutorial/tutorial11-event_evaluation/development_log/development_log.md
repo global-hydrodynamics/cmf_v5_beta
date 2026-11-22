@@ -515,3 +515,21 @@ reinstalled: the existing 15 July cache was reused and other dates were queried
 read-only from the EODC STAC API. No satellite assets were downloaded. Added the
 Step 3a inventory and process handoff; pass selection remains for researcher
 review.
+
+## 2026-11-22 — Correct Step 3a satellite footprint interpretation
+
+Rechecked the GFM STAC geometry against item projection metadata and the
+`derived_from` source product IDs. STAC geometry repeats the geographic
+outline of Equi7 tile products, not the original Sentinel-1 scene footprint.
+Retrieved metadata-only Copernicus Data Space OData `GeoFootprint` values for
+all 72 unique source GRD products across the 18 passes; no raster assets were
+requested. For the 14 July S1B pass, 10 Items resolve to 4 source product
+slices and 4 Equi7 tiles, with only 4 unique STAC tile geometries. Updated the
+pass inventory to distinguish Items, tiles, source products and passes; the
+figure now uses one uniform-opacity compound footprint per pass to prevent
+overlap darkening.
+
+**Validation:** inventory/metadata counts and orbit attributes were compared
+against the cached STAC and Copernicus product responses. Figures were
+regenerated from the tracked acquisition geometries and visually inspected; no
+image assets or model data were downloaded.

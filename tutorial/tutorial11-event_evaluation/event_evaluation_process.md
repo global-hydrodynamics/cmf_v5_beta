@@ -112,9 +112,11 @@ interval meaning and coordinate-to-model-cell mapping.
 For GFM, survey catalogue availability before requesting imagery. Read the
 event-specific search interval and candidate bbox from the Step 2 configuration,
 search one date at a time into separate cache directories, group STAC Items by
-verified Sentinel-1 platform/orbit/datatake, and compare the actual item
-footprints on a shared map extent. A footprint is catalogue product coverage,
-not valid flood-observation pixels. Select pass IDs for researcher review before
+verified Sentinel-1 platform/orbit/datatake, and compare both source Sentinel-1
+product GeoFootprints and GFM Equi7 tile coverage on a shared map extent. These
+are different geometries: tile Items
+within a pass are not independent observations, and neither geometry is a map
+of valid flood-observation pixels. Select pass IDs for researcher review before
 downloading any COGs. For the subsequent acquisition and processing steps, use
 the separate Atlantis environment and the local workflow in the [GFM workflow
 note](gfm_3sec_workflow.md); its `s01`–`s03` steps acquire, convert and validate

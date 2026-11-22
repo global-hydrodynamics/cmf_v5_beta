@@ -75,19 +75,69 @@ acquisition passes**. Daily counts are:
 | 2021-07-19 | 12 | 2 |
 | 2021-07-20 | 15 | 2 |
 
-All 18 pass IDs, source time ranges, Item counts, AOI-intersecting Item counts,
-and the Item IDs are recorded in
-[`metadata/satellite_pass_inventory.csv`](metadata/satellite_pass_inventory.csv).
-The two 15 July orbit enrichments are recorded in
+All 18 pass IDs, source time ranges, STAC Item counts, unique Sentinel-1
+source product counts, Equi7 tile counts, AOI intersections and source IDs are
+recorded in [`metadata/satellite_pass_inventory.csv`](metadata/satellite_pass_inventory.csv).
+Relative orbit and ascending/descending direction for all passes are in
 [`metadata/satellite_orbit_metadata.csv`](metadata/satellite_orbit_metadata.csv).
+The source product geometries are retained separately in
+[`metadata/sentinel1_acquisition_footprints.geojson`](metadata/sentinel1_acquisition_footprints.geojson).
+
+### Geometry investigation: GFM tile coverage versus Sentinel-1 acquisition
+
+The first version of the comparison map drew each GFM STAC Item's `geometry`.
+That geometry describes the GFM Item's spatial coverage on its `Equi7Tile`, not
+the original Sentinel-1 acquisition swath. The Items also carry `proj:geometry`,
+`proj:bbox`, `proj:shape` and `proj:transform` describing the projected Equi7
+tile grid; for example, each 20 m tile is 15,000 × 15,000 pixels (300 km per
+side). The WGS84 STAC `geometry` is the geographic outline used to locate that
+tile. Geometry coordinates are GeoJSON longitude, latitude; they are not a
+valid-pixel mask or the area actually classified as flood.
+
+Each GFM Item links to a source Sentinel-1 product with `rel=derived_from`.
+The linked EODC Sentinel-1 STAC Item URL was not available for the checked
+product, so source metadata were queried from the public
+[Copernicus Data Space OData Products catalogue](https://catalogue.dataspace.copernicus.eu/odata/v1/Products).
+Its `GeoFootprint` and `ContentDate`, plus `orbitDirection` and
+`relativeOrbitNumber` product attributes, identify the source GRD product's
+acquisition geometry and orbit. The compact geometries used here are stored
+with the source product IDs, acquisition times and provenance in the GeoJSON
+above. Only catalogue metadata were requested; no Sentinel-1 image or GFM COG
+was downloaded. The original GRD SAFE record was preferred when the catalogue
+also exposed a COG copy of the same source product. Across 72 matched SAFE/COG
+records, their GeoFootprint vertices agreed within 5×10⁻¹³ degrees; the SAFE
+record was retained once per source product to avoid duplicate slice geometry.
+
+For `S1B_o027786_dt0350E0` on 2021-07-14, the 10 GFM STAC Items resolve to 4
+unique source product IDs (four consecutive 25-second source slices) and 4
+Equi7 tile IDs. The tile geometry has only 4 unique shapes: the same tile outline
+is repeated across different source timestamps. Thus 10 Items are not 10
+independent observations; they are tile products from one acquisition pass.
+Repeated translucent plotting of those Item polygons caused darker overlap
+areas that could be mistaken for repeated observations or stronger coverage.
+Three of the four source product footprints intersect the candidate bbox; this
+is a geometric footprint check, not a pixel-validity assessment. The updated
+map draws the source product footprints as one compound filled shape per pass,
+with one teal color and fixed opacity. Overlapping slices are painted once, and
+no convex hull or interpolated coverage is introduced.
+
+The 15 July pair demonstrates why the geometry distinction matters. The S1A
+morning descending pass has 11 STAC Items and 3 of 5 source product footprints
+intersect the candidate 4–8°E, 49–52°N bbox. The S1B evening ascending pass has
+6 STAC Items (2 tile IDs), but **none of its 5 source product footprints
+intersect that bbox**; its actual source footprint lies farther west. The GFM
+tile bounds overlap the bbox even though the source scenes do not. The S1B pass
+is therefore not a same-AOI observation comparator under the current candidate
+bounds. It could be reconsidered only if the observation domain is deliberately
+expanded west to address a separate locality, not from the Item geometry alone.
 
 Each panel is one acquisition pass. All panels use the same expanded geographic
 extent, map scale, OSM background and `glb_15min` CaMa-Flood river vectors. The
 orange dashed rectangle is the same candidate 4–8°E, 49–52°N satellite analysis
-domain in every panel. Teal translucent polygons are the actual STAC `geometry`
-for each Item in that pass; adjacent Item polygons are drawn individually, not
-expanded into a convex hull. The pages are split chronologically because there
-are 18 passes:
+domain in every panel. Teal is now the Copernicus source GRD `GeoFootprint`,
+not the STAC Item tile geometry. Every title distinguishes STAC Item count,
+source product count and tile count and labels the verified orbit direction.
+The pages are split chronologically because there are 18 passes:
 
 ![GFM pass footprints, page 1](figure/f03a-gfm-pass-footprints-01.png)
 
@@ -95,33 +145,38 @@ are 18 passes:
 
 ![GFM pass footprints, page 3](figure/f03a-gfm-pass-footprints-03.png)
 
-The maps compare catalogue product footprints with the candidate AOI. A STAC
-footprint describes the catalogue item's spatial coverage; it is **not** the
-distribution of valid flood-observation pixels. It does not establish usable
-flood classifications, quality, exclusion status, or coverage of a particular
-river reach. The catalogue search was itself spatially filtered by the same
-candidate bbox, so the recorded AOI-intersection counts confirm returned
-geometry intersection rather than rank the passes by valid observation area.
+The maps compare source acquisition footprints with the candidate AOI. A
+Copernicus product `GeoFootprint` is the catalogued source-product coverage; it
+is **not** the distribution of valid GFM flood-observation pixels. It does not
+establish usable flood classifications, quality, exclusion status, or coverage
+of a particular river reach. The inventory retains the STAC Item/AOI and
+source-product/AOI intersections separately; the search was spatially filtered
+by the same candidate bbox, so those counts are not a ranking of valid observed
+flood area.
 
 ## Candidate comparison for researcher review
 
-The catalogue returns two acquisitions per day on 13, 14, 15, 16, 19 and 20
-July, and three on 17 and 18 July. The panels show meaningful footprint-shape
-and tile-coverage differences inside the same AOI, while the individual STAC
-Items are mostly 20 m Equi7 tile products. No pass can be selected solely from
-the queried footprint.
+The catalogue returns two passes per day on 13, 14, 15, 16, 19 and 20 July,
+and three on 17 and 18 July. Within a pass, multiple source GRD slices may
+partly overlap along track, and each slice may be represented by several GFM
+Equi7 tile Items. These levels are separately counted in the inventory; their
+overlap does not mean independent overpasses or stronger observed flooding. No
+pass can be selected solely from product geometry.
 
 For a first image-download review, the 15 July morning
 `S1A_o038784_dt049389` (11 Items; relative orbit 37, descending) is the most
 directly linked to the existing native GFM sample already processed for this
-Tutorial. The 15 July evening `S1B_o027808_dt03517A` (6 Items; relative orbit
-132, ascending) offers a same-day, different-orbit acquisition for comparison.
-These are practical candidates, not a scientific ranking or approval. The
+Tutorial. The 15 July evening `S1B_o027808_dt03517A` (6 Items, 5 source products,
+relative orbit 132, ascending) does **not** cover the current candidate bbox:
+zero source product GeoFootprints intersect it, despite all 6 GFM tile Items
+intersecting. Do not treat it as a same-AOI comparison unless the observation
+domain is intentionally expanded west for a stated evaluation purpose. These
+are candidate-screening findings, not a scientific ranking or approval. The
 other 13–20 July passes could help describe temporal evolution; prioritize
-them only after comparing event-response timing, valid-pixel masks, data-layer
-availability, licensing and the intended evaluation question. A footprint
-intersection does not mean that all items in the pass are useful over the
-reported impact localities.
+them only after comparing source acquisition coverage, event-response timing,
+valid-pixel masks, data-layer availability, licensing and the intended
+evaluation question. An acquisition-footprint intersection still does not mean
+that the GFM pixels are valid or useful over the reported impact localities.
 
 ## Reproduce and hand over to Step 3b
 
@@ -134,10 +189,14 @@ bash tutorial/tutorial11-event_evaluation/s03a-satellite_availability_survey.sh
 
 The wrapper issues one catalogue-only request per date, creates date-separated
 local catalogue outputs and logs in the ignored Tutorial `Atlantis/` folder,
-then writes the tracked pass inventory and three footprint pages. The
-visualization reuses `visualization/river_map/script/f06_common.py`; it does
-not alter the Gallery or Catalog. OSM tiles are fetched/cached by that shared
-renderer and attributed on every panel.
+then writes the tracked pass inventory and three source-footprint pages using
+the tracked acquisition GeoJSON. Updating the search period requires updating
+that GeoJSON from Copernicus Data Space source-product metadata; if a source
+footprint is missing, the renderer stops rather than substituting a GFM tile
+outline. The visualization reuses
+`visualization/river_map/script/f06_common.py`; it does not alter the Gallery
+or Catalog. OSM tiles are fetched/cached by that shared renderer and attributed
+on every panel.
 
 Before Step 3b downloads anything, the researcher should review candidate
 passes against the reported flood localities, acquisition time, all four

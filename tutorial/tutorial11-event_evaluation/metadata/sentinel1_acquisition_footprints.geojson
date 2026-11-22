@@ -1,0 +1,3470 @@
+{
+  "type": "FeatureCollection",
+  "name": "Copernicus Sentinel-1 acquisition footprints",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210713T060645_20210713T060710_038755_0492B5",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                3.496208,
+                51.225571
+              ],
+              [
+                3.996153,
+                52.717949
+              ],
+              [
+                0.107231,
+                53.133476
+              ],
+              [
+                -0.0,
+                52.703147519965
+              ],
+              [
+                -0.265277,
+                51.638565
+              ],
+              [
+                -0.0,
+                51.609438788055
+              ],
+              [
+                3.496208,
+                51.225571
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210713T060645_20210713T060710_038755_0492B5",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210713T060645_20210713T060710_038755_0492B5_9FAF.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-13T06:06:45.990000Z",
+        "acquisition_end_utc": "2021-07-13T06:07:10.987000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38755,
+        "relative_orbit": 8,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210713T060645_20210713T060710_038755_0492B5"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210713T060710_20210713T060735_038755_0492B5",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                3.014948,
+                49.731907
+              ],
+              [
+                3.496179,
+                51.225479
+              ],
+              [
+                -0.0,
+                51.609370911167
+              ],
+              [
+                -0.263727,
+                51.638329
+              ],
+              [
+                -0.627851,
+                50.142811
+              ],
+              [
+                0.0,
+                50.071990049598
+              ],
+              [
+                3.014948,
+                49.731907
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210713T060710_20210713T060735_038755_0492B5",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210713T060710_20210713T060735_038755_0492B5_E2A6.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-13T06:07:10.989000Z",
+        "acquisition_end_utc": "2021-07-13T06:07:35.988000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38755,
+        "relative_orbit": 8,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210713T060710_20210713T060735_038755_0492B5"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210713T060735_20210713T060800_038755_0492B5",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                2.554465,
+                48.236683
+              ],
+              [
+                3.014916,
+                49.731819
+              ],
+              [
+                0.0,
+                50.071918137514
+              ],
+              [
+                -0.626493,
+                50.14259
+              ],
+              [
+                -0.979079,
+                48.646164
+              ],
+              [
+                0.0,
+                48.532704468153
+              ],
+              [
+                2.554465,
+                48.236683
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210713T060735_20210713T060800_038755_0492B5",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210713T060735_20210713T060800_038755_0492B5_1140.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-13T06:07:35.989000Z",
+        "acquisition_end_utc": "2021-07-13T06:08:00.988000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38755,
+        "relative_orbit": 8,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210713T060735_20210713T060800_038755_0492B5"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210713T060800_20210713T060825_038755_0492B5",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                2.111927,
+                46.740162
+              ],
+              [
+                2.554438,
+                48.236595
+              ],
+              [
+                0.0,
+                48.532627615538
+              ],
+              [
+                -0.977624,
+                48.645924
+              ],
+              [
+                -1.320672,
+                47.148773
+              ],
+              [
+                0.0,
+                46.9915623539
+              ],
+              [
+                2.111927,
+                46.740162
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210713T060800_20210713T060825_038755_0492B5",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210713T060800_20210713T060825_038755_0492B5_5D3B.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-13T06:08:00.990000Z",
+        "acquisition_end_utc": "2021-07-13T06:08:25.987000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38755,
+        "relative_orbit": 8,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210713T060800_20210713T060825_038755_0492B5"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210713T171557_20210713T171622_038762_0492ED",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                7.292182,
+                47.357533
+              ],
+              [
+                10.733236,
+                47.762718
+              ],
+              [
+                10.380049,
+                49.259102
+              ],
+              [
+                6.836998,
+                48.852768
+              ],
+              [
+                7.292182,
+                47.357533
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210713T171557_20210713T171622_038762_0492ED",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210713T171557_20210713T171622_038762_0492ED_DA31.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-13T17:15:57.632000Z",
+        "acquisition_end_utc": "2021-07-13T17:16:22.630000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38762,
+        "relative_orbit": 15,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210713T171557_20210713T171622_038762_0492ED"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210713T171622_20210713T171647_038762_0492ED",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                6.83697,
+                48.852859
+              ],
+              [
+                10.381522,
+                49.259338
+              ],
+              [
+                10.02768,
+                50.755821
+              ],
+              [
+                6.372648,
+                50.347931
+              ],
+              [
+                6.83697,
+                48.852859
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210713T171622_20210713T171647_038762_0492ED",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210713T171622_20210713T171647_038762_0492ED_4ADA.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-13T17:16:22.632000Z",
+        "acquisition_end_utc": "2021-07-13T17:16:47.630000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38762,
+        "relative_orbit": 15,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210713T171622_20210713T171647_038762_0492ED"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210713T171647_20210713T171712_038762_0492ED",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                6.37262,
+                50.348022
+              ],
+              [
+                10.029201,
+                50.756054
+              ],
+              [
+                9.654533,
+                52.250805
+              ],
+              [
+                5.877787,
+                51.840374
+              ],
+              [
+                6.37262,
+                50.348022
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210713T171647_20210713T171712_038762_0492ED",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210713T171647_20210713T171712_038762_0492ED_CBC0.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-13T17:16:47.632000Z",
+        "acquisition_end_utc": "2021-07-13T17:17:12.631000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38762,
+        "relative_orbit": 15,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210713T171647_20210713T171712_038762_0492ED"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210713T171712_20210713T171737_038762_0492ED",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                5.877757,
+                51.840466
+              ],
+              [
+                9.65596,
+                52.251026
+              ],
+              [
+                9.276656,
+                53.745667
+              ],
+              [
+                5.367621,
+                53.332249
+              ],
+              [
+                5.877757,
+                51.840466
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210713T171712_20210713T171737_038762_0492ED",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210713T171712_20210713T171737_038762_0492ED_4214.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-13T17:17:12.632000Z",
+        "acquisition_end_utc": "2021-07-13T17:17:37.631000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38762,
+        "relative_orbit": 15,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210713T171712_20210713T171737_038762_0492ED"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210713T171737_20210713T171802_038762_0492ED",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                5.36759,
+                53.33234
+              ],
+              [
+                9.278282,
+                53.745903
+              ],
+              [
+                8.886636,
+                55.239822
+              ],
+              [
+                4.833096,
+                54.822643
+              ],
+              [
+                5.36759,
+                53.33234
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210713T171737_20210713T171802_038762_0492ED",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210713T171737_20210713T171802_038762_0492ED_CA80.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-13T17:17:37.632000Z",
+        "acquisition_end_utc": "2021-07-13T17:18:02.631000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38762,
+        "relative_orbit": 15,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210713T171737_20210713T171802_038762_0492ED"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210715T054937_20210715T055002_038784_049389",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                8.436128,
+                53.691898
+              ],
+              [
+                8.976969,
+                55.181759
+              ],
+              [
+                4.863722,
+                55.601681
+              ],
+              [
+                4.469674,
+                54.108009
+              ],
+              [
+                8.436128,
+                53.691898
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210715T054937_20210715T055002_038784_049389",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210715T054937_20210715T055002_038784_049389_14DA.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-15T05:49:37.397000Z",
+        "acquisition_end_utc": "2021-07-15T05:50:02.396000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38784,
+        "relative_orbit": 37,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210715T054937_20210715T055002_038784_049389"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210715T055002_20210715T055027_038784_049389",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                7.920334,
+                52.200443
+              ],
+              [
+                8.436096,
+                53.691811
+              ],
+              [
+                4.471164,
+                54.107788
+              ],
+              [
+                4.089767,
+                52.613396
+              ],
+              [
+                7.920334,
+                52.200443
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210715T055002_20210715T055027_038784_049389",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210715T055002_20210715T055027_038784_049389_9A21.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-15T05:50:02.398000Z",
+        "acquisition_end_utc": "2021-07-15T05:50:27.396000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38784,
+        "relative_orbit": 37,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210715T055002_20210715T055027_038784_049389"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210715T055027_20210715T055052_038784_049389",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                7.426427,
+                50.707634
+              ],
+              [
+                7.920304,
+                52.200356
+              ],
+              [
+                4.091205,
+                52.613174
+              ],
+              [
+                3.72058,
+                51.118118
+              ],
+              [
+                7.426427,
+                50.707634
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210715T055027_20210715T055052_038784_049389",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210715T055027_20210715T055052_038784_049389_5004.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-15T05:50:27.398000Z",
+        "acquisition_end_utc": "2021-07-15T05:50:52.397000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38784,
+        "relative_orbit": 37,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210715T055027_20210715T055052_038784_049389"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210715T055052_20210715T055117_038784_049389",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                6.95202,
+                49.21365
+              ],
+              [
+                7.426398,
+                50.707546
+              ],
+              [
+                3.721971,
+                51.117897
+              ],
+              [
+                3.361044,
+                49.622269
+              ],
+              [
+                6.95202,
+                49.21365
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210715T055052_20210715T055117_038784_049389",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210715T055052_20210715T055117_038784_049389_2074.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-15T05:50:52.398000Z",
+        "acquisition_end_utc": "2021-07-15T05:51:17.396000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38784,
+        "relative_orbit": 37,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210715T055052_20210715T055117_038784_049389"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210715T055117_20210715T055142_038784_049389",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                6.497469,
+                47.718063
+              ],
+              [
+                6.951993,
+                49.213562
+              ],
+              [
+                3.362528,
+                49.622032
+              ],
+              [
+                3.012448,
+                48.125439
+              ],
+              [
+                6.497469,
+                47.718063
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210715T055117_20210715T055142_038784_049389",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210715T055117_20210715T055142_038784_049389_ACA6.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-15T05:51:17.397000Z",
+        "acquisition_end_utc": "2021-07-15T05:51:42.396000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38784,
+        "relative_orbit": 37,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210715T055117_20210715T055142_038784_049389"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210716T174041_20210716T174106_038806_049431",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                1.067389,
+                47.529991
+              ],
+              [
+                4.503781,
+                47.933739
+              ],
+              [
+                4.155232,
+                49.430565
+              ],
+              [
+                0.616525,
+                49.025818
+              ],
+              [
+                1.067389,
+                47.529991
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210716T174041_20210716T174106_038806_049431",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210716T174041_20210716T174106_038806_049431_2FA1.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-16T17:40:41.820000Z",
+        "acquisition_end_utc": "2021-07-16T17:41:06.817000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38806,
+        "relative_orbit": 59,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210716T174041_20210716T174106_038806_049431"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210716T174106_20210716T174131_038806_049431",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                0.616498,
+                49.025906
+              ],
+              [
+                4.156712,
+                49.430801
+              ],
+              [
+                3.795961,
+                50.926697
+              ],
+              [
+                0.144693,
+                50.520145
+              ],
+              [
+                0.616498,
+                49.025906
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210716T174106_20210716T174131_038806_049431",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210716T174106_20210716T174131_038806_049431_6F93.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-16T17:41:06.819000Z",
+        "acquisition_end_utc": "2021-07-16T17:41:31.818000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38806,
+        "relative_orbit": 59,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210716T174106_20210716T174131_038806_049431"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210716T174131_20210716T174156_038806_049431",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                0.144664,
+                50.520233
+              ],
+              [
+                3.797487,
+                50.926933
+              ],
+              [
+                3.430871,
+                52.422417
+              ],
+              [
+                -0.0,
+                52.050705910375
+              ],
+              [
+                -0.342633,
+                52.013584
+              ],
+              [
+                -0.0,
+                50.963564539213
+              ],
+              [
+                0.144664,
+                50.520233
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210716T174131_20210716T174156_038806_049431",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210716T174131_20210716T174156_038806_049431_5B0F.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-16T17:41:31.819000Z",
+        "acquisition_end_utc": "2021-07-16T17:41:56.817000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38806,
+        "relative_orbit": 59,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210716T174131_20210716T174156_038806_049431"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210717T053329_20210717T053354_038813_049468",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                12.141037,
+                52.514584
+              ],
+              [
+                12.661987,
+                54.005524
+              ],
+              [
+                8.666807,
+                54.422276
+              ],
+              [
+                8.282697,
+                52.928146
+              ],
+              [
+                12.141037,
+                52.514584
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210717T053329_20210717T053354_038813_049468",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210717T053329_20210717T053354_038813_049468_BB2B.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-17T05:33:29.813000Z",
+        "acquisition_end_utc": "2021-07-17T05:33:54.811000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38813,
+        "relative_orbit": 66,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210717T053329_20210717T053354_038813_049468"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210717T053354_20210717T053419_038813_049468",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                11.640132,
+                51.022385
+              ],
+              [
+                12.141006,
+                52.514492
+              ],
+              [
+                8.284145,
+                52.927925
+              ],
+              [
+                7.908843,
+                51.433247
+              ],
+              [
+                11.640132,
+                51.022385
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210717T053354_20210717T053419_038813_049468",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210717T053354_20210717T053419_038813_049468_0CC0.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-17T05:33:54.812000Z",
+        "acquisition_end_utc": "2021-07-17T05:34:19.811000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38813,
+        "relative_orbit": 66,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210717T053354_20210717T053419_038813_049468"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210717T053419_20210717T053444_038813_049468",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                11.163373,
+                49.528378
+              ],
+              [
+                11.640103,
+                51.022293
+              ],
+              [
+                7.910243,
+                51.433022
+              ],
+              [
+                7.548876,
+                49.937313
+              ],
+              [
+                11.163373,
+                49.528378
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210717T053419_20210717T053444_038813_049468",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210717T053419_20210717T053444_038813_049468_2FEB.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-17T05:34:19.813000Z",
+        "acquisition_end_utc": "2021-07-17T05:34:44.812000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38813,
+        "relative_orbit": 66,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210717T053419_20210717T053444_038813_049468"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210717T053444_20210717T053509_038813_049468",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                10.700237,
+                48.033714
+              ],
+              [
+                11.163343,
+                49.528286
+              ],
+              [
+                7.550369,
+                49.937077
+              ],
+              [
+                7.193573,
+                48.441124
+              ],
+              [
+                10.700237,
+                48.033714
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210717T053444_20210717T053509_038813_049468",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210717T053444_20210717T053509_038813_049468_B3B1.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-17T05:34:44.813000Z",
+        "acquisition_end_utc": "2021-07-17T05:35:09.812000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38813,
+        "relative_orbit": 66,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210717T053444_20210717T053509_038813_049468"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210718T061432_20210718T061457_038828_0494E5",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                1.980875,
+                52.838734
+              ],
+              [
+                2.507456,
+                54.329453
+              ],
+              [
+                -0.0,
+                54.589629336055
+              ],
+              [
+                -1.533886,
+                54.748787
+              ],
+              [
+                -1.920461,
+                53.254692
+              ],
+              [
+                -0.0,
+                53.049933651414
+              ],
+              [
+                1.980875,
+                52.838734
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210718T061432_20210718T061457_038828_0494E5",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210718T061432_20210718T061457_038828_0494E5_683F.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-18T06:14:32.993000Z",
+        "acquisition_end_utc": "2021-07-18T06:14:57.991000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38828,
+        "relative_orbit": 81,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210718T061432_20210718T061457_038828_0494E5"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210718T061457_20210718T061522_038828_0494E5",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                1.479067,
+                51.346306
+              ],
+              [
+                1.980844,
+                52.838642
+              ],
+              [
+                -0.0,
+                53.049853568582
+              ],
+              [
+                -1.919001,
+                53.254471
+              ],
+              [
+                -2.292452,
+                51.759544
+              ],
+              [
+                -0.0,
+                51.508364493924
+              ],
+              [
+                1.479067,
+                51.346306
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210718T061457_20210718T061522_038828_0494E5",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210718T061457_20210718T061522_038828_0494E5_8CF5.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-18T06:14:57.993000Z",
+        "acquisition_end_utc": "2021-07-18T06:15:22.992000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38828,
+        "relative_orbit": 81,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210718T061457_20210718T061522_038828_0494E5"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210718T061522_20210718T061547_038828_0494E5",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                0.999019,
+                49.852497
+              ],
+              [
+                1.479037,
+                51.346214
+              ],
+              [
+                -0.0,
+                51.50828080234
+              ],
+              [
+                -2.290898,
+                51.759308
+              ],
+              [
+                -2.653027,
+                50.263687
+              ],
+              [
+                -0.0,
+                49.964978229045
+              ],
+              [
+                0.999019,
+                49.852497
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210718T061522_20210718T061547_038828_0494E5",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210718T061522_20210718T061547_038828_0494E5_E620.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-18T06:15:22.993000Z",
+        "acquisition_end_utc": "2021-07-18T06:15:47.990000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38828,
+        "relative_orbit": 81,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210718T061522_20210718T061547_038828_0494E5"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210718T061547_20210718T061612_038828_0494E5",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                0.533969,
+                48.357792
+              ],
+              [
+                0.998991,
+                49.852409
+              ],
+              [
+                0.0,
+                49.964893809292
+              ],
+              [
+                -2.651522,
+                50.263451
+              ],
+              [
+                -3.00796,
+                48.767391
+              ],
+              [
+                0.0,
+                48.419541732542
+              ],
+              [
+                0.533969,
+                48.357792
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210718T061547_20210718T061612_038828_0494E5",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210718T061547_20210718T061612_038828_0494E5_87BE.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-18T06:15:47.992000Z",
+        "acquisition_end_utc": "2021-07-18T06:16:12.991000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38828,
+        "relative_orbit": 81,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210718T061547_20210718T061612_038828_0494E5"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210718T172429_20210718T172454_038835_049522",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                4.909188,
+                48.411625
+              ],
+              [
+                8.421824,
+                48.817841
+              ],
+              [
+                8.070476,
+                50.314533
+              ],
+              [
+                4.45001,
+                49.907063
+              ],
+              [
+                4.909188,
+                48.411625
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210718T172429_20210718T172454_038835_049522",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210718T172429_20210718T172454_038835_049522_B4B8.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-18T17:24:29.267000Z",
+        "acquisition_end_utc": "2021-07-18T17:24:54.266000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38835,
+        "relative_orbit": 88,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210718T172429_20210718T172454_038835_049522"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210718T172454_20210718T172519_038835_049522",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                4.449983,
+                49.907154
+              ],
+              [
+                8.073509,
+                50.314915
+              ],
+              [
+                7.700675,
+                51.809772
+              ],
+              [
+                3.9599,
+                51.399761
+              ],
+              [
+                4.449983,
+                49.907154
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210718T172454_20210718T172519_038835_049522",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210718T172454_20210718T172519_038835_049522_4DC0.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-18T17:24:54.267000Z",
+        "acquisition_end_utc": "2021-07-18T17:25:19.266000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38835,
+        "relative_orbit": 88,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210718T172454_20210718T172519_038835_049522"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210718T172519_20210718T172544_038835_049522",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                3.959871,
+                51.399849
+              ],
+              [
+                7.702088,
+                51.809994
+              ],
+              [
+                7.326868,
+                53.304928
+              ],
+              [
+                3.45708,
+                52.892155
+              ],
+              [
+                3.959871,
+                51.399849
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210718T172519_20210718T172544_038835_049522",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210718T172519_20210718T172544_038835_049522_7655.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-18T17:25:19.268000Z",
+        "acquisition_end_utc": "2021-07-18T17:25:44.267000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38835,
+        "relative_orbit": 88,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210718T172519_20210718T172544_038835_049522"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210718T172544_20210718T172609_038835_049522",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                3.45705,
+                52.892246
+              ],
+              [
+                7.32833,
+                53.305149
+              ],
+              [
+                6.940559,
+                54.799305
+              ],
+              [
+                2.930099,
+                54.383018
+              ],
+              [
+                3.45705,
+                52.892246
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210718T172544_20210718T172609_038835_049522",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210718T172544_20210718T172609_038835_049522_A064.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-18T17:25:44.268000Z",
+        "acquisition_end_utc": "2021-07-18T17:26:09.267000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38835,
+        "relative_orbit": 88,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210718T172544_20210718T172609_038835_049522"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210720T055811_20210720T055836_038857_0495CC",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                5.968617,
+                52.49559
+              ],
+              [
+                6.488529,
+                53.986732
+              ],
+              [
+                2.493194,
+                54.403767
+              ],
+              [
+                2.110057,
+                52.90947
+              ],
+              [
+                5.968617,
+                52.49559
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210720T055811_20210720T055836_038857_0495CC",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210720T055811_20210720T055836_038857_0495CC_B448.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-20T05:58:11.411000Z",
+        "acquisition_end_utc": "2021-07-20T05:58:36.410000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38857,
+        "relative_orbit": 110,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210720T055811_20210720T055836_038857_0495CC"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210720T055836_20210720T055901_038857_0495CC",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                5.471757,
+                51.002804
+              ],
+              [
+                5.968587,
+                52.495502
+              ],
+              [
+                2.111357,
+                52.90926
+              ],
+              [
+                1.739985,
+                51.414131
+              ],
+              [
+                5.471757,
+                51.002804
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210720T055836_20210720T055901_038857_0495CC",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210720T055836_20210720T055901_038857_0495CC_0D72.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-20T05:58:36.411000Z",
+        "acquisition_end_utc": "2021-07-20T05:59:01.411000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38857,
+        "relative_orbit": 110,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210720T055836_20210720T055901_038857_0495CC"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210720T055901_20210720T055926_038857_0495CC",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                4.993641,
+                49.508976
+              ],
+              [
+                5.471728,
+                51.002716
+              ],
+              [
+                1.741669,
+                51.413883
+              ],
+              [
+                1.378901,
+                49.918297
+              ],
+              [
+                4.993641,
+                49.508976
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210720T055901_20210720T055926_038857_0495CC",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210720T055901_20210720T055926_038857_0495CC_B5D5.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-20T05:59:01.413000Z",
+        "acquisition_end_utc": "2021-07-20T05:59:26.411000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38857,
+        "relative_orbit": 110,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210720T055901_20210720T055926_038857_0495CC"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210720T055926_20210720T055951_038857_0495CC",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                4.535578,
+                48.013649
+              ],
+              [
+                4.993613,
+                49.508884
+              ],
+              [
+                1.380119,
+                49.918083
+              ],
+              [
+                1.028301,
+                48.421635
+              ],
+              [
+                4.535578,
+                48.013649
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210720T055926_20210720T055951_038857_0495CC",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210720T055926_20210720T055951_038857_0495CC_E496.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-20T05:59:26.413000Z",
+        "acquisition_end_utc": "2021-07-20T05:59:51.411000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38857,
+        "relative_orbit": 110,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210720T055926_20210720T055951_038857_0495CC"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210720T055951_20210720T060016_038857_0495CC",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                4.093917,
+                46.517117
+              ],
+              [
+                4.535553,
+                48.013561
+              ],
+              [
+                1.029751,
+                48.421402
+              ],
+              [
+                0.686123,
+                46.924263
+              ],
+              [
+                4.093917,
+                46.517117
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210720T055951_20210720T060016_038857_0495CC",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210720T055951_20210720T060016_038857_0495CC_19F6.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-20T05:59:51.412000Z",
+        "acquisition_end_utc": "2021-07-20T06:00:16.411000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38857,
+        "relative_orbit": 110,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210720T055951_20210720T060016_038857_0495CC"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210720T170802_20210720T170827_038864_049606",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                9.026507,
+                48.427891
+              ],
+              [
+                12.552017,
+                48.835026
+              ],
+              [
+                12.19013,
+                50.330631
+              ],
+              [
+                8.556261,
+                49.921883
+              ],
+              [
+                9.026507,
+                48.427891
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210720T170802_20210720T170827_038864_049606",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210720T170802_20210720T170827_038864_049606_8225.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-20T17:08:02.189000Z",
+        "acquisition_end_utc": "2021-07-20T17:08:27.187000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38864,
+        "relative_orbit": 117,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210720T170802_20210720T170827_038864_049606"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210720T170827_20210720T170852_038864_049606",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                8.556232,
+                49.92197
+              ],
+              [
+                12.193026,
+                50.331001
+              ],
+              [
+                11.831292,
+                51.826836
+              ],
+              [
+                8.076813,
+                51.41592
+              ],
+              [
+                8.556232,
+                49.92197
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210720T170827_20210720T170852_038864_049606",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210720T170827_20210720T170852_038864_049606_E18A.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-20T17:08:27.189000Z",
+        "acquisition_end_utc": "2021-07-20T17:08:52.187000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38864,
+        "relative_orbit": 117,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210720T170827_20210720T170852_038864_049606"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210720T170852_20210720T170917_038864_049606",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                8.076783,
+                51.416012
+              ],
+              [
+                11.832849,
+                51.827068
+              ],
+              [
+                11.451608,
+                53.321388
+              ],
+              [
+                7.567387,
+                52.907475
+              ],
+              [
+                8.076783,
+                51.416012
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210720T170852_20210720T170917_038864_049606",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210720T170852_20210720T170917_038864_049606_7304.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-20T17:08:52.189000Z",
+        "acquisition_end_utc": "2021-07-20T17:09:17.187000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38864,
+        "relative_orbit": 117,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210720T170852_20210720T170917_038864_049606"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1A_IW_GRDH_1SDV_20210720T170917_20210720T170942_038864_049606",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                7.567356,
+                52.907566
+              ],
+              [
+                11.453069,
+                53.321609
+              ],
+              [
+                11.065307,
+                54.815708
+              ],
+              [
+                7.039808,
+                54.398262
+              ],
+              [
+                7.567356,
+                52.907566
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1A_IW_GRDH_1SDV_20210720T170917_20210720T170942_038864_049606",
+        "catalogue_product_name": "S1A_IW_GRDH_1SDV_20210720T170917_20210720T170942_038864_049606_8B81.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-20T17:09:17.189000Z",
+        "acquisition_end_utc": "2021-07-20T17:09:42.187000Z",
+        "satellite": "S1A",
+        "absolute_orbit": 38864,
+        "relative_orbit": 117,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1A_IW_GRDH_1SDV_20210720T170917_20210720T170942_038864_049606"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210714T055740_20210714T055805_027786_0350E0",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                5.772313,
+                51.833801
+              ],
+              [
+                6.282386,
+                53.325584
+              ],
+              [
+                2.318225,
+                53.744743
+              ],
+              [
+                1.940798,
+                52.250095
+              ],
+              [
+                5.772313,
+                51.833801
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210714T055740_20210714T055805_027786_0350E0",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210714T055740_20210714T055805_027786_0350E0_4BA4.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-14T05:57:40.160000Z",
+        "acquisition_end_utc": "2021-07-14T05:58:05.159000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27786,
+        "relative_orbit": 110,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210714T055740_20210714T055805_027786_0350E0"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210714T055805_20210714T055830_027786_0350E0",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                5.280736,
+                50.340946
+              ],
+              [
+                5.772283,
+                51.833714
+              ],
+              [
+                1.942224,
+                52.249874
+              ],
+              [
+                1.572488,
+                50.754822
+              ],
+              [
+                5.280736,
+                50.340946
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210714T055805_20210714T055830_027786_0350E0",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210714T055805_20210714T055830_027786_0350E0_6900.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-14T05:58:05.160000Z",
+        "acquisition_end_utc": "2021-07-14T05:58:30.159000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27786,
+        "relative_orbit": 110,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210714T055805_20210714T055830_027786_0350E0"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210714T055830_20210714T055855_027786_0350E0",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                4.81351,
+                48.846149
+              ],
+              [
+                5.280708,
+                50.340855
+              ],
+              [
+                1.574008,
+                50.754585
+              ],
+              [
+                1.218851,
+                49.258377
+              ],
+              [
+                4.81351,
+                48.846149
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210714T055830_20210714T055855_027786_0350E0",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210714T055830_20210714T055855_027786_0350E0_D08A.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-14T05:58:30.160000Z",
+        "acquisition_end_utc": "2021-07-14T05:58:55.159000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27786,
+        "relative_orbit": 110,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210714T055830_20210714T055855_027786_0350E0"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210714T055855_20210714T055920_027786_0350E0",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                4.360958,
+                47.350471
+              ],
+              [
+                4.813482,
+                48.846062
+              ],
+              [
+                1.220324,
+                49.258141
+              ],
+              [
+                0.871065,
+                47.761517
+              ],
+              [
+                4.360958,
+                47.350471
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210714T055855_20210714T055920_027786_0350E0",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210714T055855_20210714T055920_027786_0350E0_2649.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-14T05:58:55.161000Z",
+        "acquisition_end_utc": "2021-07-14T05:59:20.159000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27786,
+        "relative_orbit": 110,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210714T055855_20210714T055920_027786_0350E0"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210714T170707_20210714T170732_027793_03510C",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                9.239958,
+                47.652679
+              ],
+              [
+                12.684191,
+                48.05703
+              ],
+              [
+                12.327277,
+                49.553185
+              ],
+              [
+                8.780014,
+                49.147526
+              ],
+              [
+                9.239958,
+                47.652679
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210714T170707_20210714T170732_027793_03510C",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210714T170707_20210714T170732_027793_03510C_AB21.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-14T17:07:07.013000Z",
+        "acquisition_end_utc": "2021-07-14T17:07:32.011000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27793,
+        "relative_orbit": 117,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210714T170707_20210714T170732_027793_03510C"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210714T170732_20210714T170757_027793_03510C",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                8.779986,
+                49.147614
+              ],
+              [
+                12.328759,
+                49.553421
+              ],
+              [
+                11.969114,
+                51.049507
+              ],
+              [
+                8.308583,
+                50.64204
+              ],
+              [
+                8.779986,
+                49.147614
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210714T170732_20210714T170757_027793_03510C",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210714T170732_20210714T170757_027793_03510C_F777.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-14T17:07:32.013000Z",
+        "acquisition_end_utc": "2021-07-14T17:07:57.011000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27793,
+        "relative_orbit": 117,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210714T170732_20210714T170757_027793_03510C"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210714T170757_20210714T170822_027793_03510C",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                8.308555,
+                50.642132
+              ],
+              [
+                11.970503,
+                51.049732
+              ],
+              [
+                11.595443,
+                52.544621
+              ],
+              [
+                7.811962,
+                52.13456
+              ],
+              [
+                8.308555,
+                50.642132
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210714T170757_20210714T170822_027793_03510C",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210714T170757_20210714T170822_027793_03510C_B380.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-14T17:07:57.013000Z",
+        "acquisition_end_utc": "2021-07-14T17:08:22.011000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27793,
+        "relative_orbit": 117,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210714T170757_20210714T170822_027793_03510C"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210714T170822_20210714T170847_027793_03510C",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                7.811932,
+                52.134647
+              ],
+              [
+                11.597023,
+                52.544857
+              ],
+              [
+                11.212235,
+                54.039192
+              ],
+              [
+                7.294709,
+                53.625885
+              ],
+              [
+                7.811932,
+                52.134647
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210714T170822_20210714T170847_027793_03510C",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210714T170822_20210714T170847_027793_03510C_9099.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-14T17:08:22.013000Z",
+        "acquisition_end_utc": "2021-07-14T17:08:47.011000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27793,
+        "relative_orbit": 117,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210714T170822_20210714T170847_027793_03510C"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210714T170847_20210714T170900_027793_03510C",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                7.294677,
+                53.625973
+              ],
+              [
+                11.213721,
+                54.039417
+              ],
+              [
+                10.996445,
+                54.865242
+              ],
+              [
+                6.999064,
+                54.449787
+              ],
+              [
+                7.294677,
+                53.625973
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210714T170847_20210714T170900_027793_03510C",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210714T170847_20210714T170900_027793_03510C_04F2.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-14T17:08:47.013000Z",
+        "acquisition_end_utc": "2021-07-14T17:09:00.832000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27793,
+        "relative_orbit": 117,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210714T170847_20210714T170900_027793_03510C"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210715T174755_20210715T174820_027808_03517A",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -0.672163,
+                46.427551
+              ],
+              [
+                0.0,
+                46.5080967451
+              ],
+              [
+                2.700496,
+                46.831699
+              ],
+              [
+                2.357666,
+                48.32906
+              ],
+              [
+                0.0,
+                48.05397404903
+              ],
+              [
+                -1.111674,
+                47.924267
+              ],
+              [
+                -0.672163,
+                46.427551
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210715T174755_20210715T174820_027808_03517A",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210715T174755_20210715T174820_027808_03517A_3888.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-15T17:47:55.114000Z",
+        "acquisition_end_utc": "2021-07-15T17:48:20.112000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27808,
+        "relative_orbit": 132,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210715T174755_20210715T174820_027808_03517A"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210715T174820_20210715T174845_027808_03517A",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -1.111701,
+                47.924355
+              ],
+              [
+                -0.0,
+                48.054058799007
+              ],
+              [
+                2.359113,
+                48.3293
+              ],
+              [
+                2.006023,
+                49.82576
+              ],
+              [
+                -0.0,
+                49.597888092191
+              ],
+              [
+                -1.569575,
+                49.419594
+              ],
+              [
+                -1.111701,
+                47.924355
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210715T174820_20210715T174845_027808_03517A",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210715T174820_20210715T174845_027808_03517A_0112.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-15T17:48:20.114000Z",
+        "acquisition_end_utc": "2021-07-15T17:48:45.112000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27808,
+        "relative_orbit": 132,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210715T174820_20210715T174845_027808_03517A"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210715T174845_20210715T174910_027808_03517A",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -1.569602,
+                49.419685
+              ],
+              [
+                0.0,
+                49.597972122345
+              ],
+              [
+                2.007377,
+                49.825985
+              ],
+              [
+                1.648996,
+                51.322113
+              ],
+              [
+                0.0,
+                51.139837640166
+              ],
+              [
+                -2.041699,
+                50.914154
+              ],
+              [
+                -1.569602,
+                49.419685
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210715T174845_20210715T174910_027808_03517A",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210715T174845_20210715T174910_027808_03517A_EA3A.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-15T17:48:45.114000Z",
+        "acquisition_end_utc": "2021-07-15T17:49:10.112000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27808,
+        "relative_orbit": 132,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210715T174845_20210715T174910_027808_03517A"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210715T174910_20210715T174935_027808_03517A",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -2.041728,
+                50.914246
+              ],
+              [
+                0.0,
+                51.139917015675
+              ],
+              [
+                1.650393,
+                51.322334
+              ],
+              [
+                1.279898,
+                52.81757
+              ],
+              [
+                0.0,
+                52.679900145262
+              ],
+              [
+                -2.535935,
+                52.407127
+              ],
+              [
+                -2.041728,
+                50.914246
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210715T174910_20210715T174935_027808_03517A",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210715T174910_20210715T174935_027808_03517A_8726.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-15T17:49:10.114000Z",
+        "acquisition_end_utc": "2021-07-15T17:49:35.112000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27808,
+        "relative_orbit": 132,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210715T174910_20210715T174935_027808_03517A"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210715T174935_20210715T175000_027808_03517A",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -2.535966,
+                52.407219
+              ],
+              [
+                -0.0,
+                52.679975239967
+              ],
+              [
+                1.281489,
+                52.817806
+              ],
+              [
+                0.899044,
+                54.312271
+              ],
+              [
+                0.0,
+                54.218175591764
+              ],
+              [
+                -3.053331,
+                53.898609
+              ],
+              [
+                -2.535966,
+                52.407219
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210715T174935_20210715T175000_027808_03517A",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210715T174935_20210715T175000_027808_03517A_CEF3.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-15T17:49:35.114000Z",
+        "acquisition_end_utc": "2021-07-15T17:50:00.112000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27808,
+        "relative_orbit": 132,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210715T174935_20210715T175000_027808_03517A"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210716T054037_20210716T054102_027815_0351B0",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                10.624618,
+                53.96862
+              ],
+              [
+                11.172349,
+                55.457951
+              ],
+              [
+                6.991658,
+                55.883087
+              ],
+              [
+                6.594573,
+                54.389706
+              ],
+              [
+                10.624618,
+                53.96862
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210716T054037_20210716T054102_027815_0351B0",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210716T054037_20210716T054102_027815_0351B0_E546.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-16T05:40:37.085000Z",
+        "acquisition_end_utc": "2021-07-16T05:41:02.082000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27815,
+        "relative_orbit": 139,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210716T054037_20210716T054102_027815_0351B0"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210716T054102_20210716T054127_027815_0351B0",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                10.103587,
+                52.477455
+              ],
+              [
+                10.624585,
+                53.968529
+              ],
+              [
+                6.596073,
+                54.389484
+              ],
+              [
+                6.212903,
+                52.895199
+              ],
+              [
+                10.103587,
+                52.477455
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210716T054102_20210716T054127_027815_0351B0",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210716T054102_20210716T054127_027815_0351B0_E4FA.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-16T05:41:02.084000Z",
+        "acquisition_end_utc": "2021-07-16T05:41:27.083000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27815,
+        "relative_orbit": 139,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210716T054102_20210716T054127_027815_0351B0"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210716T054127_20210716T054152_027815_0351B0",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                9.5978,
+                50.985825
+              ],
+              [
+                10.103557,
+                52.477364
+              ],
+              [
+                6.214351,
+                52.894978
+              ],
+              [
+                5.835085,
+                51.400684
+              ],
+              [
+                9.5978,
+                50.985825
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210716T054127_20210716T054152_027815_0351B0",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210716T054127_20210716T054152_027815_0351B0_37E7.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-16T05:41:27.084000Z",
+        "acquisition_end_utc": "2021-07-16T05:41:52.083000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27815,
+        "relative_orbit": 139,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210716T054127_20210716T054152_027815_0351B0"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210716T054152_20210716T054217_027815_0351B0",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                9.125757,
+                49.491257
+              ],
+              [
+                9.597774,
+                50.985733
+              ],
+              [
+                5.836628,
+                51.400448
+              ],
+              [
+                5.480758,
+                49.904331
+              ],
+              [
+                9.125757,
+                49.491257
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210716T054152_20210716T054217_027815_0351B0",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210716T054152_20210716T054217_027815_0351B0_7AC8.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-16T05:41:52.085000Z",
+        "acquisition_end_utc": "2021-07-16T05:42:17.082000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27815,
+        "relative_orbit": 139,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210716T054152_20210716T054217_027815_0351B0"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210716T054217_20210716T054242_027815_0351B0",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                8.661607,
+                47.996666
+              ],
+              [
+                9.125729,
+                49.491165
+              ],
+              [
+                5.482251,
+                49.904095
+              ],
+              [
+                5.125216,
+                48.40818
+              ],
+              [
+                8.661607,
+                47.996666
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210716T054217_20210716T054242_027815_0351B0",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210716T054217_20210716T054242_027815_0351B0_A1FE.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-16T05:42:17.084000Z",
+        "acquisition_end_utc": "2021-07-16T05:42:42.083000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27815,
+        "relative_orbit": 139,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210716T054217_20210716T054242_027815_0351B0"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210717T062221_20210717T062246_027830_035220",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -0.420174,
+                51.806652
+              ],
+              [
+                0.0,
+                53.033710918062
+              ],
+              [
+                0.090593,
+                53.298275
+              ],
+              [
+                -0.0,
+                53.30785626225
+              ],
+              [
+                -3.85894,
+                53.715984
+              ],
+              [
+                -4.237659,
+                52.221481
+              ],
+              [
+                -0.420174,
+                51.806652
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210717T062221_20210717T062246_027830_035220",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210717T062221_20210717T062246_027830_035220_EAB9.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-17T06:22:21.989000Z",
+        "acquisition_end_utc": "2021-07-17T06:22:46.987000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27830,
+        "relative_orbit": 154,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210717T062221_20210717T062246_027830_035220"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210717T173144_20210717T173209_027837_035258",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                3.159292,
+                47.424496
+              ],
+              [
+                6.598101,
+                47.829041
+              ],
+              [
+                6.247609,
+                49.325619
+              ],
+              [
+                2.706754,
+                48.920025
+              ],
+              [
+                3.159292,
+                47.424496
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210717T173144_20210717T173209_027837_035258",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210717T173144_20210717T173209_027837_035258_F882.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-17T17:31:44.460000Z",
+        "acquisition_end_utc": "2021-07-17T17:32:09.457000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27837,
+        "relative_orbit": 161,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210717T173144_20210717T173209_027837_035258"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210717T173209_20210717T173234_027837_035258",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                2.706727,
+                48.920113
+              ],
+              [
+                6.248949,
+                49.325844
+              ],
+              [
+                5.890636,
+                50.821918
+              ],
+              [
+                2.237713,
+                50.414623
+              ],
+              [
+                2.706727,
+                48.920113
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210717T173209_20210717T173234_027837_035258",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210717T173209_20210717T173234_027837_035258_8010.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-17T17:32:09.458000Z",
+        "acquisition_end_utc": "2021-07-17T17:32:34.457000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27837,
+        "relative_orbit": 161,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210717T173209_20210717T173234_027837_035258"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210717T173234_20210717T173259_027837_035258",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                2.237684,
+                50.414715
+              ],
+              [
+                5.892158,
+                50.822155
+              ],
+              [
+                5.52333,
+                52.317471
+              ],
+              [
+                1.748526,
+                51.907829
+              ],
+              [
+                2.237684,
+                50.414715
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210717T173234_20210717T173259_027837_035258",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210717T173234_20210717T173259_027837_035258_CC89.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-17T17:32:34.459000Z",
+        "acquisition_end_utc": "2021-07-17T17:32:59.458000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27837,
+        "relative_orbit": 161,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210717T173234_20210717T173259_027837_035258"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210717T173259_20210717T173324_027837_035258",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                1.748496,
+                51.907921
+              ],
+              [
+                5.524903,
+                52.317703
+              ],
+              [
+                5.145961,
+                53.812389
+              ],
+              [
+                1.238476,
+                53.399761
+              ],
+              [
+                1.748496,
+                51.907921
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210717T173259_20210717T173324_027837_035258",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210717T173259_20210717T173324_027837_035258_228F.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-17T17:32:59.459000Z",
+        "acquisition_end_utc": "2021-07-17T17:33:24.458000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27837,
+        "relative_orbit": 161,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210717T173259_20210717T173324_027837_035258"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210718T052552_20210718T052617_027844_035293",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                12.683068,
+                47.832432
+              ],
+              [
+                13.138565,
+                49.327793
+              ],
+              [
+                9.568177,
+                49.73307
+              ],
+              [
+                9.216999,
+                48.23658
+              ],
+              [
+                12.683068,
+                47.832432
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210718T052552_20210718T052617_027844_035293",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210718T052552_20210718T052617_027844_035293_DF75.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-18T05:25:52.601000Z",
+        "acquisition_end_utc": "2021-07-18T05:26:17.600000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27844,
+        "relative_orbit": 168,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210718T052552_20210718T052617_027844_035293"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210719T060558_20210719T060623_027859_035300",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                3.62273,
+                51.563614
+              ],
+              [
+                4.12843,
+                53.055702
+              ],
+              [
+                0.193142,
+                53.473866
+              ],
+              [
+                0.0,
+                52.704453765326
+              ],
+              [
+                -0.182093,
+                51.979057
+              ],
+              [
+                0.0,
+                51.959174534456
+              ],
+              [
+                3.62273,
+                51.563614
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210719T060558_20210719T060623_027859_035300",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210719T060558_20210719T060623_027859_035300_C94F.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-19T06:05:58.720000Z",
+        "acquisition_end_utc": "2021-07-19T06:06:23.719000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27859,
+        "relative_orbit": 8,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210719T060558_20210719T060623_027859_035300"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210719T060623_20210719T060648_027859_035300",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                3.136614,
+                50.070274
+              ],
+              [
+                3.6227,
+                51.563526
+              ],
+              [
+                0.0,
+                51.959133714862
+              ],
+              [
+                -0.179092,
+                51.978691
+              ],
+              [
+                -0.545385,
+                50.48333
+              ],
+              [
+                -0.0,
+                50.422147325437
+              ],
+              [
+                3.136614,
+                50.070274
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210719T060623_20210719T060648_027859_035300",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210719T060623_20210719T060648_027859_035300_2193.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-19T06:06:23.721000Z",
+        "acquisition_end_utc": "2021-07-19T06:06:48.720000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27859,
+        "relative_orbit": 8,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210719T060623_20210719T060648_027859_035300"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210719T060648_20210719T060713_027859_035300",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                2.671854,
+                48.575432
+              ],
+              [
+                3.136585,
+                50.070183
+              ],
+              [
+                0.0,
+                50.422075878674
+              ],
+              [
+                -0.543874,
+                50.483093
+              ],
+              [
+                -0.898367,
+                48.986916
+              ],
+              [
+                0.0,
+                48.883375169719
+              ],
+              [
+                2.671854,
+                48.575432
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210719T060648_20210719T060713_027859_035300",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210719T060648_20210719T060713_027859_035300_ED53.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-19T06:06:48.721000Z",
+        "acquisition_end_utc": "2021-07-19T06:07:13.718000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27859,
+        "relative_orbit": 8,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210719T060648_20210719T060713_027859_035300"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210719T060713_20210719T060738_027859_035300",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                2.224889,
+                47.079166
+              ],
+              [
+                2.671827,
+                48.57534
+              ],
+              [
+                -0.0,
+                48.883297576494
+              ],
+              [
+                -0.897037,
+                48.986691
+              ],
+              [
+                -1.242317,
+                47.489651
+              ],
+              [
+                0.0,
+                47.342572201179
+              ],
+              [
+                2.224889,
+                47.079166
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210719T060713_20210719T060738_027859_035300",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210719T060713_20210719T060738_027859_035300_F147.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-19T06:07:13.720000Z",
+        "acquisition_end_utc": "2021-07-19T06:07:38.719000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27859,
+        "relative_orbit": 8,
+        "orbit_direction": "DESCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210719T060713_20210719T060738_027859_035300"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210719T171528_20210719T171553_027866_035336",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                7.048686,
+                48.08828
+              ],
+              [
+                10.573199,
+                48.498154
+              ],
+              [
+                10.220256,
+                49.994576
+              ],
+              [
+                6.588723,
+                49.583424
+              ],
+              [
+                7.048686,
+                48.08828
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210719T171528_20210719T171553_027866_035336",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210719T171528_20210719T171553_027866_035336_5877.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-19T17:15:28.305000Z",
+        "acquisition_end_utc": "2021-07-19T17:15:53.303000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27866,
+        "relative_orbit": 15,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210719T171528_20210719T171553_027866_035336"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210719T171553_20210719T171618_027866_035336",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                6.588696,
+                49.583515
+              ],
+              [
+                10.221614,
+                49.994801
+              ],
+              [
+                9.855014,
+                51.49012
+              ],
+              [
+                6.105885,
+                51.07682
+              ],
+              [
+                6.588696,
+                49.583515
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210719T171553_20210719T171618_027866_035336",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210719T171553_20210719T171618_027866_035336_1AD4.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-19T17:15:53.305000Z",
+        "acquisition_end_utc": "2021-07-19T17:16:18.303000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27866,
+        "relative_orbit": 15,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210719T171553_20210719T171618_027866_035336"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210719T171618_20210719T171643_027866_035336",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                6.105855,
+                51.076908
+              ],
+              [
+                9.8567,
+                51.490368
+              ],
+              [
+                9.48174,
+                52.985184
+              ],
+              [
+                5.604451,
+                52.569126
+              ],
+              [
+                6.105855,
+                51.076908
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210719T171618_20210719T171643_027866_035336",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210719T171618_20210719T171643_027866_035336_E944.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-19T17:16:18.305000Z",
+        "acquisition_end_utc": "2021-07-19T17:16:43.303000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27866,
+        "relative_orbit": 15,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210719T171618_20210719T171643_027866_035336"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210719T171643_20210719T171708_027866_035336",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                5.60442,
+                52.569214
+              ],
+              [
+                9.483191,
+                52.985409
+              ],
+              [
+                9.098734,
+                54.479706
+              ],
+              [
+                5.082115,
+                54.060265
+              ],
+              [
+                5.60442,
+                52.569214
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210719T171643_20210719T171708_027866_035336",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210719T171643_20210719T171708_027866_035336_7C49.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-19T17:16:43.305000Z",
+        "acquisition_end_utc": "2021-07-19T17:17:08.303000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27866,
+        "relative_orbit": 15,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210719T171643_20210719T171708_027866_035336"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "S1B_IW_GRDH_1SDV_20210719T171708_20210719T171733_027866_035336",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                5.082083,
+                54.060352
+              ],
+              [
+                9.100236,
+                54.479927
+              ],
+              [
+                8.701799,
+                55.973419
+              ],
+              [
+                4.532945,
+                55.549747
+              ],
+              [
+                5.082083,
+                54.060352
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "source_product_id": "S1B_IW_GRDH_1SDV_20210719T171708_20210719T171733_027866_035336",
+        "catalogue_product_name": "S1B_IW_GRDH_1SDV_20210719T171708_20210719T171733_027866_035336_503A.SAFE",
+        "product_type": "IW_GRDH_1S",
+        "acquisition_start_utc": "2021-07-19T17:17:08.304000Z",
+        "acquisition_end_utc": "2021-07-19T17:17:33.303000Z",
+        "satellite": "S1B",
+        "absolute_orbit": 27866,
+        "relative_orbit": 15,
+        "orbit_direction": "ASCENDING",
+        "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+        "source_item_href": "https://stac.eodc.eu/api/v1/collections/SENTINEL1_GRD/items/S1B_IW_GRDH_1SDV_20210719T171708_20210719T171733_027866_035336"
+      }
+    }
+  ]
+}
