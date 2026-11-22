@@ -1,0 +1,442 @@
+{
+  "schema": "cmf-tutorial11-gfm-native-classification-1",
+  "pass_id": "S1A_o038784_dt049389",
+  "satellite": "S1A",
+  "date": "2021-07-15",
+  "orbit_direction": "DESCENDING",
+  "selection_status": "proposed",
+  "input_manifest": "Atlantis/catalogue/2021-07-15/metadata/download_manifest_S1A_o038784_dt049389.csv",
+  "input_manifest_sha256": "5d867eba73671609de7ab53ab59273f7a86ab2f04a5a75159fde162a65d944ec",
+  "aoi_wgs84_bbox_west_south_east_north": [
+    4.0,
+    49.0,
+    8.0,
+    52.0
+  ],
+  "aoi_projected_bounds": [
+    4390715.845231204,
+    1804609.35790513,
+    4747391.046255697,
+    2200258.2326291353
+  ],
+  "aoi_projected_crs": "EPSG:27704",
+  "input_summary": "Atlantis/catalogue/2021-07-15/metadata/download_summary_S1A_o038784_dt049389.json",
+  "input_summary_sha256": "10c1503e9e4debb0e4fc55d7efb4c9605a4042d076101937bc592aeda7fb6254",
+  "dataset_root_relative_to_tutorial": "Atlantis",
+  "input_item_count": 11,
+  "input_unique_cog_count": 37,
+  "input_layers": [
+    "ensemble_flood_extent",
+    "ensemble_water_extent",
+    "reference_water_mask",
+    "exclusion_mask"
+  ],
+  "item_processing_order": [
+    {
+      "stac_item_id": "ENSEMBLE_FLOOD_20210715T054937_VV_EU020M_E045N021T3",
+      "datetime_utc": "2021-07-15T05:49:37+00:00"
+    },
+    {
+      "stac_item_id": "ENSEMBLE_FLOOD_20210715T055002_VV_EU020M_E045N021T3",
+      "datetime_utc": "2021-07-15T05:50:02+00:00"
+    },
+    {
+      "stac_item_id": "ENSEMBLE_FLOOD_20210715T055027_VV_EU020M_E042N018T3",
+      "datetime_utc": "2021-07-15T05:50:27+00:00"
+    },
+    {
+      "stac_item_id": "ENSEMBLE_FLOOD_20210715T055027_VV_EU020M_E042N021T3",
+      "datetime_utc": "2021-07-15T05:50:27+00:00"
+    },
+    {
+      "stac_item_id": "ENSEMBLE_FLOOD_20210715T055027_VV_EU020M_E045N018T3",
+      "datetime_utc": "2021-07-15T05:50:27+00:00"
+    },
+    {
+      "stac_item_id": "ENSEMBLE_FLOOD_20210715T055027_VV_EU020M_E045N021T3",
+      "datetime_utc": "2021-07-15T05:50:27+00:00"
+    },
+    {
+      "stac_item_id": "ENSEMBLE_FLOOD_20210715T055052_VV_EU020M_E042N018T3",
+      "datetime_utc": "2021-07-15T05:50:52+00:00"
+    },
+    {
+      "stac_item_id": "ENSEMBLE_FLOOD_20210715T055052_VV_EU020M_E042N021T3",
+      "datetime_utc": "2021-07-15T05:50:52+00:00"
+    },
+    {
+      "stac_item_id": "ENSEMBLE_FLOOD_20210715T055052_VV_EU020M_E045N018T3",
+      "datetime_utc": "2021-07-15T05:50:52+00:00"
+    },
+    {
+      "stac_item_id": "ENSEMBLE_FLOOD_20210715T055117_VV_EU020M_E042N018T3",
+      "datetime_utc": "2021-07-15T05:51:17+00:00"
+    },
+    {
+      "stac_item_id": "ENSEMBLE_FLOOD_20210715T055117_VV_EU020M_E045N018T3",
+      "datetime_utc": "2021-07-15T05:51:17+00:00"
+    }
+  ],
+  "source_files": [
+    {
+      "asset_key": "0b1d1c9eca43f776",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/0b1d1c9eca43f776_ENSEMBLE_FLOOD_20210715T055052_VV_EU020M_E042N021T3.tif",
+      "file_size_bytes": 127617,
+      "sha256": "7021f751ed0f51c50a438aff415d939ec36da35943d61a761975765a8a13b331"
+    },
+    {
+      "asset_key": "0e08ce20a5593208",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/0e08ce20a5593208_EXCLUSION_LAYER_20210715T055052_VV_EU020M_E045N018T3.tif",
+      "file_size_bytes": 4196509,
+      "sha256": "d9fc23386563d9f8439187a33e896fa5765b61face4f20fd96615cc1ddac5a68"
+    },
+    {
+      "asset_key": "130ca82bdb2381d2",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/130ca82bdb2381d2_EXCLUSION_LAYER_20210715T055117_VV_EU020M_E042N018T3.tif",
+      "file_size_bytes": 3753701,
+      "sha256": "a0ee05873acf1ac2aa5a370fb505a7381b4cab7130e90028e298e273d4837329"
+    },
+    {
+      "asset_key": "182790d22250b5f3",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/182790d22250b5f3_ENSEMBLE_FLOOD_20210715T055052_VV_EU020M_E045N018T3.tif",
+      "file_size_bytes": 214982,
+      "sha256": "1f689dabb4a8687c0f49929173913e99f306ac75621c3d505d94d263dcff8118"
+    },
+    {
+      "asset_key": "1ab50df19b2ba49e",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/1ab50df19b2ba49e_REFERENCE_WATER_OUT_S1-_IW_GRDH_1S-V_20170701T054151_20210731T060714_MONTH-_E042N018T3_EU020M_V04.tif",
+      "file_size_bytes": 3656552,
+      "sha256": "0928d5d0418ffad7fcdc547fafddc549df7c0e841547993c2840ae06f896896a"
+    },
+    {
+      "asset_key": "294db522703c1c76",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/294db522703c1c76_EXCLUSION_LAYER_20210715T055052_VV_EU020M_E042N021T3.tif",
+      "file_size_bytes": 148171,
+      "sha256": "4ea5d2996f51539474bc56bbf642f38c93fd4d8296104b9b2000748d1f7982d9"
+    },
+    {
+      "asset_key": "2e77d45419313645",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/2e77d45419313645_OBSERVED_WATER_20210715T055027_VV_EU020M_E045N021T3.tif",
+      "file_size_bytes": 691292,
+      "sha256": "bd524da1c2958b62bbbc64170a198b79a3054ca01245f8469f464a11a3b29738"
+    },
+    {
+      "asset_key": "3a48a25634f2c271",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/3a48a25634f2c271_REFERENCE_WATER_OUT_S1-_IW_GRDH_1S-V_20170701T054101_20210731T171619_MONTH-_E045N018T3_EU020M_V04.tif",
+      "file_size_bytes": 3595226,
+      "sha256": "080cf6a17405745d9ab6e257a7474ef3c14f14e9897ce90e716aa6d9a954b3eb"
+    },
+    {
+      "asset_key": "3ed535051ee5c8dd",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/3ed535051ee5c8dd_EXCLUSION_LAYER_20210715T055002_VV_EU020M_E045N021T3.tif",
+      "file_size_bytes": 5665418,
+      "sha256": "02422f1b29a052321387de61139c13d7a88b564c29d57b43a5811c1802ff0dc1"
+    },
+    {
+      "asset_key": "40fc845af169bcc1",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/40fc845af169bcc1_ENSEMBLE_FLOOD_20210715T055117_VV_EU020M_E042N018T3.tif",
+      "file_size_bytes": 160929,
+      "sha256": "329f338aef27a7a2bd59922c9a238674883e1480c993c50f86f8afd2d3cbf4f1"
+    },
+    {
+      "asset_key": "449d4bb9ae8e86f0",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/449d4bb9ae8e86f0_ENSEMBLE_FLOOD_20210715T055117_VV_EU020M_E045N018T3.tif",
+      "file_size_bytes": 164595,
+      "sha256": "6ac702d993117a3d2225582d4302b3541d5a2a56fc19ba4be696f03115957488"
+    },
+    {
+      "asset_key": "466c1f2f289c743d",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/466c1f2f289c743d_OBSERVED_WATER_20210715T054937_VV_EU020M_E045N021T3.tif",
+      "file_size_bytes": 147177,
+      "sha256": "94df2dd04d73f05465b4037af03a97127cc380570facc7c6bc53f049bec63144"
+    },
+    {
+      "asset_key": "472005302bb1be73",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/472005302bb1be73_REFERENCE_WATER_OUT_S1-_IW_GRDH_1S-V_20170701T054011_20210731T171709_MONTH-_E045N021T3_EU020M_V04.tif",
+      "file_size_bytes": 4086888,
+      "sha256": "5d0ea1914015331ba038711af64af5eb341d2a04b6bb3d250a55aa81a7063930"
+    },
+    {
+      "asset_key": "49b592b4bbe358e4",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/49b592b4bbe358e4_OBSERVED_WATER_20210715T055052_VV_EU020M_E042N021T3.tif",
+      "file_size_bytes": 128122,
+      "sha256": "9e271f0e263fbfcbb30d340bc8aa8229f7bcc75d15b7566ece59b60ac3481632"
+    },
+    {
+      "asset_key": "4e1394516155d1f9",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/4e1394516155d1f9_ENSEMBLE_FLOOD_20210715T055027_VV_EU020M_E045N018T3.tif",
+      "file_size_bytes": 185938,
+      "sha256": "5813ee649139090aaa29322707c95fcc2d73ed0f610cff52545e521835d27738"
+    },
+    {
+      "asset_key": "594699170a739916",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/594699170a739916_ENSEMBLE_FLOOD_20210715T055052_VV_EU020M_E042N018T3.tif",
+      "file_size_bytes": 141233,
+      "sha256": "f430003051157d7e833614bdcf3034e827afe930e06a5e6d901145eab2acf628"
+    },
+    {
+      "asset_key": "5a1fd0a5cf42b5e0",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/5a1fd0a5cf42b5e0_ENSEMBLE_FLOOD_20210715T054937_VV_EU020M_E045N021T3.tif",
+      "file_size_bytes": 166370,
+      "sha256": "3cdf5a4501afe95f9613869f9ec2fef515d3cdb5902d0f3c4b93dc93dcbf209d"
+    },
+    {
+      "asset_key": "5d25c2810eb6a0a2",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/5d25c2810eb6a0a2_EXCLUSION_LAYER_20210715T055027_VV_EU020M_E045N018T3.tif",
+      "file_size_bytes": 3638238,
+      "sha256": "269cba7adb3488fe300b20e47519251bc7e71c20bf18545d742e83573e77a09e"
+    },
+    {
+      "asset_key": "6332910a8c4f8860",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/6332910a8c4f8860_REFERENCE_WATER_OUT_S1-_IW_GRDH_1S-V_20170701T174040_20210731T060649_MONTH-_E042N021T3_EU020M_V04.tif",
+      "file_size_bytes": 4480481,
+      "sha256": "e19dcc31e87c511a01d6819da10a553a13b378bcd51ebe5313b25f53d172ea1b"
+    },
+    {
+      "asset_key": "6440399769cfb7ce",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/6440399769cfb7ce_ENSEMBLE_FLOOD_20210715T055027_VV_EU020M_E042N021T3.tif",
+      "file_size_bytes": 134421,
+      "sha256": "468629e1725c7be6a4c95cccb29a2218607fe2f4e76dd731a3665a31ad5c986d"
+    },
+    {
+      "asset_key": "6e0a9543ad1edd04",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/6e0a9543ad1edd04_OBSERVED_WATER_20210715T055027_VV_EU020M_E042N021T3.tif",
+      "file_size_bytes": 261576,
+      "sha256": "8ee1d98db6636831bc9430e1100bee3013d71eac1b9f0bda2dae3720a2a35021"
+    },
+    {
+      "asset_key": "80a9c6ff6ffb2e2f",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/80a9c6ff6ffb2e2f_OBSERVED_WATER_20210715T055027_VV_EU020M_E042N018T3.tif",
+      "file_size_bytes": 133790,
+      "sha256": "be52b02a9eaa9ba30a093adc9d6f82665ade141334f02d3d393e7cf4f3ea65c1"
+    },
+    {
+      "asset_key": "89b2fcda2dcf91aa",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/89b2fcda2dcf91aa_OBSERVED_WATER_20210715T055052_VV_EU020M_E042N018T3.tif",
+      "file_size_bytes": 213725,
+      "sha256": "ca00ecdcd3e08db010d35e65013ade4d0dbfdf57149191e2655b7362a5775eb1"
+    },
+    {
+      "asset_key": "9137efbbbbce8a8d",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/9137efbbbbce8a8d_OBSERVED_WATER_20210715T055027_VV_EU020M_E045N018T3.tif",
+      "file_size_bytes": 358583,
+      "sha256": "12135e7b72a167a233e24546970d37495889943d834f645e10997f66c14b6ee6"
+    },
+    {
+      "asset_key": "93ae50b522947f95",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/93ae50b522947f95_EXCLUSION_LAYER_20210715T054937_VV_EU020M_E045N021T3.tif",
+      "file_size_bytes": 130619,
+      "sha256": "917679b7a8ca76b0015d41367efd3ca25d8ed6a61b904fa1a6d1bcd10db32668"
+    },
+    {
+      "asset_key": "9a0808e1c72f7554",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/9a0808e1c72f7554_EXCLUSION_LAYER_20210715T055027_VV_EU020M_E045N021T3.tif",
+      "file_size_bytes": 7159777,
+      "sha256": "59b60f2d0a5f0b329bf36cbc5879cd8ae1afa5819737bab3292206554bb56040"
+    },
+    {
+      "asset_key": "9d6bfd12f14c6152",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/9d6bfd12f14c6152_OBSERVED_WATER_20210715T055002_VV_EU020M_E045N021T3.tif",
+      "file_size_bytes": 741244,
+      "sha256": "4afaffc8ab24d5834dabc21b11964edf8dedcaec1c76d325525e6a0cdc56b3f8"
+    },
+    {
+      "asset_key": "9f20f8b5ad8a91d6",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/9f20f8b5ad8a91d6_OBSERVED_WATER_20210715T055052_VV_EU020M_E045N018T3.tif",
+      "file_size_bytes": 334344,
+      "sha256": "ebbb3856381fe58446ce344a86d03a044dbb2fcbce271451d007c7aa0dd94ba9"
+    },
+    {
+      "asset_key": "a2e24b080c06f1e6",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/a2e24b080c06f1e6_OBSERVED_WATER_20210715T055117_VV_EU020M_E045N018T3.tif",
+      "file_size_bytes": 229558,
+      "sha256": "83d92cfe7a6979432d9dbca8f21d137fd7d707c8cb305e2d40c50886da9d9c21"
+    },
+    {
+      "asset_key": "a5876df3611f47b8",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/a5876df3611f47b8_ENSEMBLE_FLOOD_20210715T055027_VV_EU020M_E045N021T3.tif",
+      "file_size_bytes": 215025,
+      "sha256": "c11b752fb2bec8bd23ad4a7d980b661ef2303f3995d25732cd147c0c38d24223"
+    },
+    {
+      "asset_key": "b16c52cac3b59cbd",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/b16c52cac3b59cbd_ENSEMBLE_FLOOD_20210715T055027_VV_EU020M_E042N018T3.tif",
+      "file_size_bytes": 124832,
+      "sha256": "2a2df279cdbb9dbdf232218b4c4c342c67f125520fb31839757a48595288d2d7"
+    },
+    {
+      "asset_key": "b30d02bfaae651ff",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/b30d02bfaae651ff_ENSEMBLE_FLOOD_20210715T055002_VV_EU020M_E045N021T3.tif",
+      "file_size_bytes": 415332,
+      "sha256": "b720b9832a3c9ce9770ebd38cc1d99f87d1ec05d671214ebd636a15b7fec2160"
+    },
+    {
+      "asset_key": "ccd214d8850eda1e",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/ccd214d8850eda1e_EXCLUSION_LAYER_20210715T055117_VV_EU020M_E045N018T3.tif",
+      "file_size_bytes": 1268068,
+      "sha256": "bb40662f88594c30eb4e3fda6581e5dcbd90a2016856212ceffa8d7b8e6d52a8"
+    },
+    {
+      "asset_key": "d94582e54f965ab1",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/d94582e54f965ab1_OBSERVED_WATER_20210715T055117_VV_EU020M_E042N018T3.tif",
+      "file_size_bytes": 285027,
+      "sha256": "cccf01ffe8d7c24247644f44bd2fdc08faba543fdbab9e5b63473104a4675c1f"
+    },
+    {
+      "asset_key": "ee5415d8f85e85c0",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/ee5415d8f85e85c0_EXCLUSION_LAYER_20210715T055027_VV_EU020M_E042N018T3.tif",
+      "file_size_bytes": 297478,
+      "sha256": "46c8fcc7e47dbe5b8adcd8576d4c3685e3384cf267d46d429efc0f85fecd72f1"
+    },
+    {
+      "asset_key": "f69015e2f2bcd315",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/f69015e2f2bcd315_EXCLUSION_LAYER_20210715T055027_VV_EU020M_E042N021T3.tif",
+      "file_size_bytes": 1062597,
+      "sha256": "fcd39d1aa6303ac7aae12732d86f140555a8a36cb6e2d9f02414f49ef018ef64"
+    },
+    {
+      "asset_key": "fae61d6af16662e3",
+      "local_path": "catalogue/2021-07-15/raw/S1A_o038784_dt049389/assets/fae61d6af16662e3_EXCLUSION_LAYER_20210715T055052_VV_EU020M_E042N018T3.tif",
+      "file_size_bytes": 3617722,
+      "sha256": "fbbe4823165df5ed71b5db35bc1a995969db77be47c09f3da27d079822df1dae"
+    }
+  ],
+  "source_class_codes": {
+    "ensemble_flood_extent": {
+      "0": "not flooded",
+      "1": "flooded",
+      "255": "NoData"
+    },
+    "ensemble_water_extent": {
+      "0": "not water",
+      "1": "water",
+      "255": "NoData"
+    },
+    "reference_water_mask": {
+      "0": "not reference water",
+      "1": "permanent",
+      "2": "seasonal",
+      "255": "NoData"
+    },
+    "exclusion_mask": {
+      "0": "not excluded",
+      "1": "excluded",
+      "255": "NoData"
+    }
+  },
+  "classification_codes": {
+    "0": {
+      "class": "Land",
+      "meaning": "F=0 and W=0 in selected common-valid observation",
+      "pixel_count": 91484129
+    },
+    "1": {
+      "class": "Flood",
+      "meaning": "F=1 and W=1 in selected common-valid observation",
+      "pixel_count": 182974
+    },
+    "2": {
+      "class": "Permanent water",
+      "meaning": "F=0,W=1 and reference=1",
+      "pixel_count": 3372171
+    },
+    "3": {
+      "class": "Seasonal water",
+      "meaning": "F=0,W=1 and reference=2",
+      "pixel_count": 111433
+    },
+    "4": {
+      "class": "Other water",
+      "meaning": "F=0,W=1 and reference is 0 or 255",
+      "pixel_count": 0
+    },
+    "5": {
+      "class": "Exclusion",
+      "meaning": "No common-valid observation; the selected mosaic marks exclusion",
+      "pixel_count": 157602754
+    },
+    "6": {
+      "class": "Inconsistent",
+      "meaning": "Valid F=1,W=0 or observed partial F/W classification",
+      "pixel_count": 62162
+    },
+    "255": {
+      "class": "NoData",
+      "meaning": "No flood/water observation; includes reference-only coverage",
+      "pixel_count": 100014182
+    }
+  },
+  "classification_precedence": [
+    "Reuse script/s04-export_gfm_20m_class.py encode_classification and gfm_common.merge_observation without changing their rules.",
+    "Per-pixel owner is the earliest Item with Flood and Water both known and Exclusion=0; ties are ordered by STAC Item ID.",
+    "Reference water refines only an observed W=1 class; reference-only pixels remain NoData.",
+    "NoData and Exclusion are distinct; partial Flood/Water observations use Inconsistent."
+  ],
+  "mosaic_selection_statistics": {
+    "valid_candidates": 95425524,
+    "duplicate_candidates": 274817,
+    "conflicting_flood": 244,
+    "conflicting_water": 244,
+    "selected_valid_pixels": 95150707,
+    "selected_flood_pixels": 182974,
+    "selected_water_pixels": 3666578,
+    "selected_exclusion_pixels": 157602754,
+    "selected_partial_pixels": 62162,
+    "selected_reference_only_pixels": 100014182
+  },
+  "grid": {
+    "width": 17835,
+    "height": 19783,
+    "dimensions": [
+      17835,
+      19783
+    ],
+    "crs_wkt": "PROJCS[\"Azimuthal_Equidistant\",GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]],PROJECTION[\"Azimuthal_Equidistant\"],PARAMETER[\"latitude_of_center\",53],PARAMETER[\"longitude_of_center\",24],PARAMETER[\"false_easting\",5837287.81977],PARAMETER[\"false_northing\",2121415.69617],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+    "transform": [
+      20.0,
+      0.0,
+      4390700.0,
+      0.0,
+      -20.0,
+      2200260.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "bounds": [
+      4390700.0,
+      1804600.0,
+      4747400.0,
+      2200260.0
+    ],
+    "pixel_size_m": [
+      20.0,
+      20.0
+    ],
+    "dtype": "uint8",
+    "count": 1,
+    "nodata": 255.0,
+    "image_structure": {
+      "LAYOUT": "COG",
+      "COMPRESSION": "ZSTD",
+      "INTERLEAVE": "BAND"
+    }
+  },
+  "output": {
+    "file": "GFM_S1A_20210715_o038784_dt049389_extent20m.tif",
+    "bytes": 23445565,
+    "sha256": "ce449f65dbeeceacb5b7f2c493b70603d74f42a7e41127ed8fcff67bc20e10de",
+    "format": "single-band lossless COG",
+    "compression": "ZSTD",
+    "raw_uint8_bytes": 352829805,
+    "compression_ratio": 15.048893255504826,
+    "inspection_figure": "Atlantis/runs/p03c/GFM_S1A_20210715_o038784_dt049389_extent20m_inspection.png"
+  },
+  "software": {
+    "python": "3.11.11",
+    "rasterio": "1.4.3",
+    "gdal": "3.10.3"
+  },
+  "runtime_seconds": 55.38319937500637,
+  "license_note": "Source is Copernicus EMS Global Flood Monitoring. Confirm applicable CEMS/GFM redistribution terms before publishing the derived GeoTIFF."
+}

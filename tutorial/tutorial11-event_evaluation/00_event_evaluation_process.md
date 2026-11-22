@@ -168,10 +168,80 @@ figures rather than creating versioned copies.
 
 `03a_selected_passes.json` is the intended Step 3b input contract: it identifies
 pass IDs, catalogue dates and requested layers. Its `status` fields describe
-review state and must not be treated as an execution gate. Existing download
-Shells retain their ordinary input/file checks; this workflow update does not
-add approval checks or alter download behavior. The current Tutorial 11
-`s03b-download_gfm.sh` is not yet wired to read this selection JSON.
+review state and must not be treated as an execution gate. The Tutorial 11
+`s03b-download_gfm.sh` reads the selected pass/date/layers and the Step 2
+satellite-analysis bounds, acquires the native 20 m COGs under the ignored
+`Atlantis/` directory, then writes a download manifest and summary for each
+pass. Existing acquisitions are reused on rerun.
+
+The handover files are stored beside the acquisition metadata as
+`Atlantis/catalogue/<date>/metadata/download_manifest_<pass-id>.csv` and
+`download_summary_<pass-id>.json`. Each CSV `local_path` is relative to the
+Tutorial's `Atlantis/` root. The Summary's `dataset_root` is `Atlantis` relative
+to the Tutorial directory, and its `manifest_path` is relative to that root;
+p03c resolves CSV paths from `dataset_root`. The summary's `ready_for_p03c` is
+computed from selected Item/layer correspondence, file presence, recorded
+size/checksum and GeoTIFF readability. It does not
+depend on Human review or the selection's `proposed`/`approved` status. p03c
+uses the Manifest as its input list and does not repeat STAC search or download;
+it must not proceed with incomplete or unreadable inputs. Regenerate the
+handover without acquiring data by running
+`script/s03b-build_download_manifest.py` with the selection, catalogue and
+Atlantis-root arguments used by the Shell.
+
+### p03c — Native 20 m classification mosaic
+
+Run `bash s03c-classify_gfm_extent.sh` to create a one-band, lossless uint8 COG in
+`observation/GFM_extent/` from the p03b Manifest. For each pass, p03c reads the
+Satellite analysis domain bbox from Step 2's
+`metadata/02_domain_selection.json`, projects its WGS84 boundary with edge
+densification, and clips the classification mosaic to the smallest outward
+pixel-aligned rectangle that contains that projected AOI. The output keeps the
+source Equi7 Europe CRS, 20 m pixel size and pixel alignment; it does not
+reproject, resample, or apply an exact polygon mask. Its bounds and dimensions
+are recorded with the original WGS84 bbox in the neighboring processing JSON.
+Each selected pass is written separately. For the current S1A 2021-07-15 pass,
+the output name is
+`GFM_S1A_20210715_o038784_dt049389_extent20m.tif`; its neighboring JSON records
+the input Manifest/Summary, source COG hashes, grid, class counts and processing
+order. A small inspection image and temporary processing files are kept only
+under ignored `Atlantis/runs/p03c/`.
+
+The script reuses the existing `script/s04-export_gfm_20m_class.py` class
+encoding and `gfm_common.merge_observation` rules. Source codes remain
+unchanged: flood and water extent use 0/1/255, reference water uses 0/1/2/255,
+and exclusion uses 0/1/255. The derived class codes are 0 Land, 1 Flood,
+2 Permanent water, 3 Seasonal water, 4 Other water, 5 Exclusion,
+6 Inconsistent, and 255 NoData. The earliest Item with jointly known flood
+and water values and no exclusion owns each valid pixel; reference water only
+refines an observed water pixel. Reference-only coverage remains NoData.
+Exclusion is kept distinct from missing coverage, and incomplete or conflicting
+flood/water classifications are not silently treated as dry.
+
+**Tutorial 11 p03c result:** The selected `S1A_o038784_dt049389` pass (11 STAC
+Items, 37 input COGs; 52,333,157 input bytes) produced an AOI-clipped 17,835 ×
+19,783 pixel COG of 23,445,565 bytes. Its EPSG:27704 bounds are
+`[4390700, 1804600, 4747400, 2200260]` metres, containing the projected Step 2
+WGS84 bbox `[4, 49, 8, 52]` with 20 m source-grid alignment. Class counts are
+0=91,484,129; 1=182,974; 2=3,372,171; 3=111,433; 4=0; 5=157,602,754;
+6=62,162; 255=100,014,182. The counts sum to the 352,829,805 output pixels.
+The mosaic recorded 274,817 overlapping valid candidates, with 244 flood and
+244 water classification conflicts; the existing deterministic earliest-Item
+rule was retained and its counts are in the provenance JSON. Every pixel in
+the AOI output matched the corresponding window of the previous full-extent
+COG (352,829,805 pixels; zero differences). This consistency check does not
+independently validate GFM scientific interpretation or event-wide coverage.
+
+The earlier 30,000 × 30,000 pixel, 32,093,269-byte full-tile output was
+replaced using the same filename. AOI clipping reduced the pixel count by
+60.8% and the file size by 8,647,704 bytes (27.0%).
+
+The default command expects a Python environment with rasterio, NumPy and
+Matplotlib. Re-running `bash s03c-classify_gfm_extent.sh` updates the fixed
+GeoTIFF and JSON filenames from the current Manifest and Step 2 AOI. Do not add
+the large p03b source COGs under `Atlantis/` to Git; the AOI-clipped
+classification COG and its processing JSON are inputs for later Tutorial
+steps.
 
 For each product, record provider and version, source identifiers, acquisition
 or aggregation time, spatial and temporal support, units, grid/CRS, nodata and
@@ -189,36 +259,38 @@ are different geometries: tile Items
 within a pass are not independent observations, and neither geometry is a map
 of valid flood-observation pixels. Record an initial pass recommendation in the fixed
 `metadata/03a_selected_passes.json` and present it for researcher review; the
-`proposed` status is descriptive and does not gate a later Step. For the subsequent acquisition and processing steps, use
-the separate Atlantis environment and the local workflow in the [GFM workflow
-note](gfm_3sec_workflow.md); its `s01`–`s03` steps acquire, convert and validate
-the selected 3-arcsecond product. The native 20 m classification exporter and
-its class rules are documented there as well. Do not infer full-event coverage
-from one pass, a bounding box, or a rendered map.
+`proposed` status is descriptive and does not gate a later Step. For the
+subsequent acquisition and processing steps, use the separate Atlantis
+environment and the local scripts under `script/`. Earlier `s01`–`s03` steps
+acquire, convert and validate the selected 3-arcsecond product. Do not infer
+full-event coverage from one pass, a bounding box, or a rendered map.
 
 **Tutorial 11 status:** The focused 14–16 July 2021 catalogue survey returned
 45 STAC Items grouped into 6 acquisition passes over the candidate bbox,
 centered on the 15 July disaster date; source acquisition-footprint comparisons
 were rendered. The earlier 13–20 July scan remains in development history.
-Image assets were not downloaded during the survey. Separately, a 15 July 2021 S1A morning GFM pass was acquired and
-3-arcsecond preprocessing was exercised; a native 20 m classification and
-inspection figure were produced. These are limited examples, not a complete
-multi-day event dataset or observation archive. The local Atlantis environment
+Image assets were not downloaded as part of the catalogue survey itself.
+Separately, the selected 15 July 2021 S1A morning pass has 11 Items and 37
+native 20 m COGs (49.91 MiB) in the ignored Tutorial-local `Atlantis/` store.
+Its per-pass download manifest and summary record file paths, integrity and
+readiness for p03c. p03c produced one native-grid classified COG in the
+Tutorial's Git-managed `observation/GFM_extent/`; it and its class counts are
+recorded above. The earlier 3-arcsecond preprocessing remains a limited
+example, not a complete multi-day event dataset or observation archive. The
+local Atlantis environment
 was unavailable during the catalogue survey; direct read-only EODC STAC results
-were used for this survey and the `s03a-satellite_availability.sh` wrapper is
-ready to repeat the metadata search when the environment is available. The
-separate `s03b-download_gfm.sh` wrapper currently acquires its explicitly
-configured native 20 m COG layers; it is not yet wired to read
-`metadata/03a_selected_passes.json`. `f03a-satellite_footprints.sh` redraws
-figures from cached metadata. Discharge units/time zone
+were used for that survey, and the `s03a-satellite_availability.sh` wrapper is
+ready to repeat the metadata search when the environment is available.
+`s03b-download_gfm.sh` reads `metadata/03a_selected_passes.json`, reuses matching
+local COGs, and refreshes the handover files on each successful run.
+`f03a-satellite_footprints.sh` redraws figures from cached metadata. Discharge units/time zone
 and GFM-specific redistribution clearance remain unresolved. The
 `S1A_o038784_dt049389` first-processing candidate is recorded as `proposed` in
 `metadata/03a_selected_passes.json`; this does not certify its coverage or
 require an approval state for later execution. See the
 [Step 3a satellite data survey](03_satellite_data_survey.md),
-[observation inventory](observation_data_inventory.md),
-[GFM inventory](gfm_data_inventory.md), and
-[GFM processing note](gfm_3sec_workflow.md).
+[observation inventory](observation_data_inventory.md), and the
+[p03c output provenance](observation/GFM_extent/GFM_S1A_20210715_o038784_dt049389_extent20m.json).
 
 ## 4. Configure and run CaMa-Flood
 
@@ -293,7 +365,7 @@ existing inventory, maps or preprocessing products.
 | --- | --- | --- |
 | Event and watershed | Event background and candidate Basin IDs inspected | Decide hydrologic target and validate model routing against basin evidence |
 | Domains | Candidate simulation/observation bboxes and planning maps | Confirm full-basin scope, boundary treatment and valid sensor coverage |
-| Observations | Discharge inventory; catalogue survey of 18 GFM passes; one GFM pass acquired/preprocessed; native 20 m classification example | Review and select passes, resolve metadata/rights, then obtain fit-for-purpose temporal/spatial coverage |
+| Observations | Discharge inventory; catalogue survey of 18 GFM passes; one GFM pass acquired and classified at native 20 m | Review pass coverage and data terms, then obtain fit-for-purpose temporal/spatial coverage |
 | CaMa-Flood run | Existing v5 build/run documentation and generic GOSH examples | Configure, run and validate a specific event experiment |
 | Matching | Data products and their grids/time semantics documented in part | Approve and implement spatial/temporal matching rules |
 | Evaluation | No event performance results | Define metrics and report uncertainty and support |

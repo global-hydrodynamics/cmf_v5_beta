@@ -26,6 +26,28 @@ fi
 
 echo "Read selected pass(es), date(s), layers and analysis bbox from metadata JSON."
 echo "Save native GFM COGs and run logs under $ATLANTIS_DIR."
-"$PYTHON_CMD" "$TUTORIAL_DIR/script/s01-download_gfm.py" "${DOWNLOAD_ARGS[@]}"
+DOWNLOAD_STATUS=0
+if "$PYTHON_CMD" "$TUTORIAL_DIR/script/s01-download_gfm.py" "${DOWNLOAD_ARGS[@]}"; then
+    DOWNLOAD_STATUS=0
+else
+    DOWNLOAD_STATUS=$?
+fi
 
-echo "Native GFM acquisition complete. No reprojection, mosaic conversion or classification was run."
+MANIFEST_STATUS=0
+if "$PYTHON_CMD" -B "$TUTORIAL_DIR/script/s03b-build_download_manifest.py" \
+    --selection-json "$SELECTION_JSON" \
+    --catalogue-root "$ATLANTIS_DIR/catalogue" \
+    --atlantis-root "$ATLANTIS_DIR"; then
+    MANIFEST_STATUS=0
+else
+    MANIFEST_STATUS=$?
+fi
+
+if (( DOWNLOAD_STATUS != 0 )); then
+    exit "$DOWNLOAD_STATUS"
+fi
+if (( MANIFEST_STATUS != 0 )); then
+    exit "$MANIFEST_STATUS"
+fi
+
+echo "Native GFM acquisition and p03c handover complete. No reprojection, mosaic conversion or classification was run."
