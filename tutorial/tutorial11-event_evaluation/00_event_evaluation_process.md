@@ -1,92 +1,233 @@
-# Flood Event Evaluation Process
+# Rhine 2021 Flood Event Evaluation: Research Plan and Analysis Workflow
 
-**Status:** Reusable six-stage process. Tutorial 11 contains a partially developed Rhine 2021 sample; its maps and GFM products do not mean that a CaMa-Flood event simulation or quantitative evaluation has been completed.
+**Current scope:** This Tutorial develops an evaluation of CaMa-Flood for the
+July 2021 western European floods, with a focus on the Rhine and related
+regional river systems. Event research, spatial planning and GFM preparation
+have produced sample outputs. A Rhine event simulation, model–observation
+matching and quantitative performance evaluation have not been completed.
 
-## Agent workflow and report roles
+## 1. Research Objective
 
-Each `pXX-*.md` file is the Agent Workflow entry point. The agent receives inputs from the preceding Step, performs the research or processing, saves reusable data/settings, and prepares both a researcher-facing Survey Report and a developer-facing Work Report. After a first complete run, Human review is recommended and can lead to revisions; no review response is required for downstream processing. `proposed` and `approved` describe review state only and never gate execution. Missing inputs and failed data checks remain ordinary errors.
+The research objective is to assess how well CaMa-Flood reproduces flood
+behavior during the July 2021 event, using river discharge and satellite-derived
+flood information where their spatial and temporal support permits comparison.
+The event affected several connected and neighboring river systems. The
+evaluation therefore needs to state whether a result concerns the Rhine main
+stem, Rhine tributaries, or a broader model routing group; these are not
+automatically interchangeable targets.
 
-- **Agent Workflow Prompt — `pXX-*.md`:** defines inputs, tasks, outputs and reusable instructions. It is not a record that the work has been executed.
-- **AI Survey Report — `AI_survey_report/`:** explains findings, quantitative evidence, scientific interpretation, uncertainty, figures and next research decisions. Write for the investigator/requester, not as a terminal log. Embed existing Figures by relative Markdown paths with captions; do not duplicate or regenerate images just for the report.
-- **AI Work Report — `AI_work_report/`:** records the actual inputs, scripts/commands, outputs, checks, issues and handoffs for developers and future agents. When reconstructed after the original work, state that it is reconstructed from retained artifacts and distinguish recorded results from checks performed during reconstruction. Do not invent environment details or tests.
-- **`metadata/`:** machine-readable Step handoffs. Preserve producing-Step prefixes when downstream Steps consume the data. Do not edit scientific settings merely to improve documentation.
-- **`sXX-*.sh` / `fXX-*.sh`:** reproducible processing and Figure entry points from saved inputs. They supplement, but do not replace, the Prompt or the reports.
-- **`development_log/`:** chronological project history and design changes. Keep it distinct from current Survey and Work Reports.
+The study first establishes what happened and where impacts were reported. It
+then relates affected reaches and available observations to the CaMa-Flood
+network, and designs separate simulation and observation domains. Satellite
+acquisitions and discharge records must be prepared with their timing,
+resolution, masks, missing data and provenance intact. A CaMa-Flood event run
+can then be configured for the selected hydrologic scope. Finally, model output
+must be matched to each observation type and evaluated with metrics that account
+for valid observation support and uncertainty.
 
-Report names are fixed: `AI_survey_report/01_flood_event_overview.md`, `02_analysis_domain_design.md`, `03a_satellite_availability.md`, `03b_gfm_download.md`, `03c_gfm_classification.md`, and `03d_focus_area_extraction.md`; corresponding Work Reports use the same Step names under `AI_work_report/`, with `01_event_research.md` and `02_domain_design.md` for the first two. Update the same file on later review; do not create `_v2` or `_final` variants.
+The expected scientific outcome is a documented assessment of discharge and
+flood-extent reproduction, including its limits and uncertainty. The present
+Tutorial is still a preparation and data-processing sample: no event-specific
+CaMa-Flood simulation or quantitative skill result is available yet. Step 1
+background and evidence are summarized in the [event Survey Report](AI_survey_report/01_flood_event_overview.md).
 
-Python files under `script/` follow the parent Step/Figure naming rules below: an `sXX` and `fXX` sharing Step-specific code use `sXX-*`; `fXX-*` is for code used only by that Figure; `event_*` is reserved for code shared across different Steps.
+## 2. Human–AI Collaborative Analysis
 
-## Step inputs, tasks and outputs
+### 2.1 Human–AI Workflow
 
-| Workflow | Inputs | Main task | Survey/Work reports and handoff |
-| --- | --- | --- | --- |
-| **p01 — Event research** | Event identity, period and research objective | Review sources, build impact inventory and Figure 1 | `AI_survey_report/01_flood_event_overview.md`; `AI_work_report/01_event_research.md`; `metadata/01_impact_locations.csv`; Figure 1 |
-| **p02 — Domain design** | Step 1 report/inventory/Figure, CaMa map, available gauges | Trace routing groups; design simulation and observation extents; Figure 2 | `AI_survey_report/02_analysis_domain_design.md`; `AI_work_report/02_domain_design.md`; `metadata/02_domain_selection.json`; Figure 2 |
-| **p03a — Availability** | Step 2 period/domain and event context | Search catalogue and compare acquisition footprints; propose passes | Separate 3a reports; `metadata/03a_*`; selected-pass JSON; Figure 3a |
-| **p03b — Download** | Selected-pass JSON, domain JSON and Step 3a catalogue | Acquire/reuse selected native GFM COGs and verify manifest | Separate 3b reports; ignored `Atlantis/` COGs, per-pass manifest and summary |
-| **p03c — Classification** | p03b manifest/COGs and Step 2 domain | Native-grid classification, 1-minute Flood Fraction, focus selection and Figure 3c | Separate 3c reports; classification/provenance, fraction raster, `metadata/03c_focus_areas.json`, Figure 3c |
-| **p03d — Extraction** | Classification raster and 3c focus JSON | Extract source-aligned 20 m focus areas and Figure 3d | Separate 3d reports; crop GeoTIFFs and `metadata/03d_extracted_areas.json`; Figure 3d |
-| **4 — Simulation** | Adopted/candidate domains, forcing and model setup | Configure/run a specified CaMa-Flood event experiment | Future development; no event-specific Rhine run is recorded |
-| **5 — Matching** | Model output and observation metadata | Define spatial, temporal and variable correspondence | Future development; no reusable matching tool/rule is complete |
-| **6 — Evaluation** | Matched data and agreed target/metrics | Quantify and report event performance and uncertainty | Future development; no event score or validation claim is implied |
+The researcher defines the study objective and gives the AI agent the relevant
+Step Prompt, data access and event-specific constraints. The agent inspects
+existing inputs, conducts the requested research or analysis, and prepares the
+reproducible processing, metadata, figures and reports needed for the next
+Step. It explains evidence, interpretation and unresolved questions so the
+researcher can assess the result.
 
-## 1. Select and research the event
+Research proceeds through feedback when useful: the researcher reviews the
+scientific interpretation and may request a correction, alternative analysis
+or additional evidence; the agent updates affected outputs and reports. Review
+is recommended, but its absence does not stop later processing. The details for
+review states, errors and agent conduct are defined in the Tutorial's
+[AI-supported analysis rules](AGENTS.md). The six-stage scientific workflow
+below is the research plan; per-Step execution instructions are in the
+corresponding Prompts.
 
-Use [p01-event_research.md](p01-event_research.md). Establish the event chronology, major rivers, reported damage/localities, potential observations and source uncertainty. Figure 1 markers are approximate locality coordinates, not flood boundaries. Do not decide model Basin IDs or final domains here. Complete the initial report, CSV and Figure before offering optional review.
+### 2.2 Directory and File Structure
 
-**Rhine 2021 sample:** Step 1 documents intense rainfall over 13–15 July 2021 and reported impacts across Germany, Belgium, Luxembourg and the Netherlands. Ahr/Erft tributaries, the Moselle system and the separate Meuse basin are distinguished. Fourteen localities are catalogued in `metadata/01_impact_locations.csv`; the listed places are not claimed exhaustive. Supplied discharge files contain Lobith, Speyer and Maxau, not Bonn; they are described as six-hour means with end-of-interval timestamps. Units, source time zone and original observing agency remain unresolved. See the [observation inventory](observation/observation_data_inventory.md).
+| Directory or file | Role |
+| --- | --- |
+| [`AGENTS.md`](AGENTS.md) | Common AI-supported analysis rules for Tutorial 11 |
+| [`00_event_evaluation_process.md`](00_event_evaluation_process.md) | Research objective, methods, stage relationships and current status |
+| [`pXX-*.md`](p01-event_research.md) | Human-facing entry point and Agent Workflow for each Step |
+| `sXX-*.sh` | Reproducible data acquisition, processing or calculation |
+| `fXX-*.sh` | Reproducible Figure generation |
+| [`script/`](script/) | Python programs used by the processing and Figure workflows |
+| [`metadata/`](metadata/) | Machine-readable configuration, results and Step handoffs |
+| [`observation/`](observation/) | Observation data and their inventories; some data are local/ignored |
+| `Atlantis/` | Ignored local catalogue caches, downloaded assets and run records |
+| [`figure/`](figure/) | Figures used to inspect and explain research results |
+| [`AI_survey_report/`](AI_survey_report/01_flood_event_overview.md) | Researcher-facing findings and scientific interpretation |
+| [`AI_work_report/`](AI_work_report/01_event_research.md) | Technical execution record and handoff for developers and agents |
+| [`development_log/`](development_log/development_log.md) | Chronological development decisions and history |
+| [`tests/`](tests/) | Focused checks for Tutorial processing workflows |
 
-## 2. Design simulation and observation domains
+The Step Prompts and [Tutorial 11 rules](AGENTS.md) define how these artifacts
+are maintained. The table describes their purpose rather than repeating their
+naming or report-writing rules.
 
-Use [p02-analysis_domain.md](p02-analysis_domain.md). Inspect the selected CaMa map's `basin`, `uparea` and `nextxy` as appropriate. Derive Basin IDs from the current map and trace the target upstream network and outlet. A model routing group is not necessarily a natural watershed. Simulation bounds contain the required upstream contributing area/routed network and outlet; do not size them only around damage points. Satellite analysis bounds may be smaller or split into several areas. Keep the map viewport distinct from both domains.
+### 2.3 How to Use This Tutorial
 
-**Rhine 2021 sample:** On `glb_15min` (0.25°), sampled event localities and the three supplied gauges associate with Basin ID 74; Halen and Wavre associate with ID 1299. ID 74 is a Rhine–Meuse/Vesdre model routing group, not a pure natural Rhine watershed. The provisional simulation rectangle is 3.125–12.125°E, 45.875–52.375°N. The candidate satellite analysis rectangle is 4–8°E, 49–52°N, based on an existing target-grid extent. Neither is a finalized, fully validated domain. Figure 2 and supporting evidence are in the [Step 2 Survey Report](AI_survey_report/02_analysis_domain_design.md). The `metadata/02_domain_selection.json` remains the machine-readable handoff; its values and statuses are unchanged by this report reorganization.
+Start with [p01-event_research.md](p01-event_research.md) and provide the event
+and research objective. Review the resulting report and Figure, and request
+changes where the evidence or interpretation needs attention. Continue through
+the relevant Step Prompts, using each step's saved outputs as inputs to the
+next. Human review is a recommended research practice, not a software approval
+gate. Step-specific instructions, files and handoffs are documented in the
+corresponding `pXX-*.md` file.
 
-## 3. Acquire and preprocess observations
+## 3. Analysis Workflow
 
-### 3a. Survey satellite availability
+### Step 1 — Event Research
 
-Use [p03a-satellite_availability.md](p03a-satellite_availability.md). Search the configured period and bbox into date-separated local catalogue caches, group by verified Sentinel-1 platform/absolute orbit/datatake, compare source GRD `GeoFootprint` with GFM tile coverage, and record a proposed pass. Tile geometry, source-product footprint and valid flood pixels are different concepts. Neither footprint proves useful valid observation. `s03a` prepares metadata; `f03a` draws only from saved metadata/cache and does not repeat search.
+**Objective:** establish the event chronology, affected river systems, reported
+impact localities and potential observation sources that frame the evaluation.
+**Method:** review scientific literature, public reports and other traceable
+sources; distinguish reported impacts from approximate map locations; compile
+an impact inventory and map reported localities with river context. These
+outputs give Step 2 geographic and temporal evidence without deciding model
+Basin IDs or final evaluation domains. See [p01](p01-event_research.md), the
+[event Survey Report](AI_survey_report/01_flood_event_overview.md), the
+[Work Report](AI_work_report/01_event_research.md),
+[`metadata/01_impact_locations.csv`](metadata/01_impact_locations.csv), and
+[Figure 1](figure/f01-reported_flood_impacts.png).
 
-**Sample:** The focused 14–16 July 2021 search contains 45 STAC Items, 6 passes and 27 source product slices. The current `metadata/03a_selected_passes.json` proposes 15 July S1A descending pass `S1A_o038784_dt049389` (11 Items; 5 source products; 3 source footprints intersect the candidate AOI). The 15 July S1B evening pass has no source-product footprint intersecting the current AOI. Catalogue geometry is not an observation-validity mask. See the [3a Survey Report](AI_survey_report/03a_satellite_availability.md).
+### Step 2 — Analysis Domain Design
 
-### 3b. Download selected GFM assets
+**Objective:** define candidate spatial and temporal scopes that can support a
+hydrologically meaningful model run and observation analysis. **Method:** map
+target reaches and gauge/impact locations onto the selected CaMa-Flood network;
+use basin identifiers, upstream-area information and downstream connectivity
+to assess routing groups, contributing networks and outlets. Keep the
+simulation domain, satellite-analysis domain and map viewport separate. A
+simulation window must contain the required upstream network and outlet, not
+just damaged locations. Model routing groups may differ from natural
+watersheds. The saved Figure and domain settings provide a reviewable handoff
+to satellite availability work; they are candidate design, not a configured
+simulation. See [p02](p02-analysis_domain.md), the [domain Survey Report](AI_survey_report/02_analysis_domain_design.md),
+the [Work Report](AI_work_report/02_domain_design.md),
+[`metadata/02_domain_selection.json`](metadata/02_domain_selection.json), and
+[Figure 2](figure/f02-analysis_domain_design.png).
 
-Use [p03b-download_gfm.md](p03b-download_gfm.md). `s03b-download_gfm.sh` reads selected passes/layers and the Step 2 bbox; it writes native COGs and a per-pass manifest/summary under ignored `Atlantis/`. The manifest is the next Step's input list. The summary's `ready_for_p03c` checks selected-item/layer mapping, files, checksums and readability; it does not depend on Human review. Do not reproject, mosaic or classify during 3b.
+### Step 3 — Satellite Observation Preparation
 
-**Sample:** 11 selected Items produced 44 Item/layer references for four layers and 37 unique COG assets. The current summary records all 37 verified (52,333,157 bytes), no missing/failed files, and `ready_for_p03c: true`. The manifest lives under the ignored local `Atlantis/` directory. See the [3b Survey Report](AI_survey_report/03b_gfm_download.md).
+#### Step 3a — Satellite Availability
 
-### 3c. Classify and select focus areas
+**Objective:** identify acquisitions that may provide useful event observations
+for the candidate satellite-analysis area. **Method:** search the configured
+period and extent in the GFM catalogue, group catalogue Items by their source
+Sentinel-1 acquisition, and compare acquisition metadata and footprints. A GFM
+tile footprint is not the original Sentinel-1 acquisition footprint, and
+neither proves that valid flood pixels exist at a locality. The output is a
+proposed pass selection and a documented basis for acquisition, not a claim of
+complete event coverage. See [p03a](p03a-satellite_availability.md), the
+[availability Survey Report](AI_survey_report/03a_satellite_availability.md),
+the [Work Report](AI_work_report/03a_satellite_availability.md),
+[`metadata/03a_selected_passes.json`](metadata/03a_selected_passes.json), and
+[Figure 3a](figure/f03a-gfm-pass-footprints-01.png).
 
-Use [p03c-gfm_classification.md](p03c-gfm_classification.md). The native categorical mosaic keeps source CRS/grid/alignment and distinguishes Land, Flood, permanent/seasonal/other water, Exclusion, Inconsistent and NoData. Do not turn missing observations into dry pixels. The 1-arc-minute Flood Fraction is class 1 divided by valid classes 0–4; a cell with no valid class is NoData. It is not a full cell-area inundation percentage. Focus selection should use flood counts and valid support, not reported-impact proximity. Save proposed boxes and their count/area/storage tradeoffs in the fixed `metadata/03c_focus_areas.json`.
+#### Step 3b — GFM Download
 
-**Sample:** The original source provenance records a 17,835 × 19,783 single-band uint8 COG, 20 m, lossless, 23,445,565 bytes, and the class counts in its JSON. The fraction raster is 240 × 180 EPSG:4326 at 1 arc minute; 35,225 cells have valid classified support and the fraction range is 0–75.91241%. Fifteen proposed focus areas retain 140,228 of 160,301 1-minute Flood pixels (87.48%) over about 9.78% of the candidate AOI. Projected, outward-aligned windows cover 34,950,179 unique pixels (90.09% fewer than the source extent); separate-file compression was estimated at 2,098,447 bytes. These are screening/storage diagnostics, not an optimized selection or complete flood inventory. The monolithic source TIFF is absent from the current worktree; these source statistics are inherited from its retained processing JSON, not freshly read from that TIFF. See the [3c Survey Report](AI_survey_report/03c_gfm_classification.md).
+**Objective:** acquire the native GFM assets for selected passes and establish
+a traceable input list for processing. **Method:** obtain or reuse the
+requested GFM layers without resampling, and record Item-to-asset paths,
+integrity and readability in a manifest and summary under the ignored local
+`Atlantis/` workspace. Step 3c consumes that manifest rather than repeating
+catalogue search or download. The local download record is not a Git-tracked
+data package. See [p03b](p03b-download_gfm.md), the [download Survey Report](AI_survey_report/03b_gfm_download.md),
+the [Work Report](AI_work_report/03b_gfm_download.md), and
+[`s03b-download_gfm.sh`](s03b-download_gfm.sh).
 
-### 3d. Extract focus areas
+#### Step 3c — GFM Classification and Focus-Area Selection
 
-Use [p03d-focus_area_extraction.md](p03d-focus_area_extraction.md). `s03d` projects each WGS84 bbox and snaps its rectangle outward to the existing 20 m grid without reprojecting, resampling or reclassifying. `metadata/03d_extracted_areas.json` is the formal downstream handoff; it lists source identity, class definitions, per-area WGS84/projected bounds, output path, dimensions, size and class counts. `f03d` builds Figure 3d from that manifest. The Figure uses OSM context and class layers; the CaMa river network is omitted. Crops may include source pixels just beyond the WGS84 boxes because bounds are snapped outward.
+**Objective:** prepare an interpretable observation product and identify
+compact regions for detailed native-resolution work. **Method:** classify the
+selected observation on its native 20 m grid while preserving categorical
+meaning, NoData, exclusions and the source grid. Aggregate flood detections and
+valid classified support to a one-arc-minute Flood Fraction for regional
+screening, then select focus areas using flood counts and support. This
+fraction is conditional on valid classification and is not a full-cell
+inundated-area fraction. Focus boxes are a subset for storage and inspection,
+not a complete flood inventory. See [p03c](p03c-gfm_classification.md), the
+[classification Survey Report](AI_survey_report/03c_gfm_classification.md),
+the [Work Report](AI_work_report/03c_gfm_classification.md),
+[`metadata/03c_focus_areas.json`](metadata/03c_focus_areas.json), and
+[Figure 3c](figure/f03c-gfm_flood_fraction_1min.png).
 
-**Sample:** Metadata lists 15 crop GeoTIFFs with total 2,113,624 bytes (2.016 MiB), about 90.98% smaller than the recorded 23,445,565-byte monolithic source COG. All 15 listed crop files and Figure 3d are present in the current worktree. The source TIFF itself is absent, so the percentage uses recorded source size; no raster comparison is claimed by this documentation task. See the [3d Survey Report](AI_survey_report/03d_focus_area_extraction.md).
+#### Step 3d — Focus-Area Extraction
 
-## 4. Configure and run CaMa-Flood
+**Objective:** reduce the detailed observation data to the selected regions
+while retaining the native grid and classes. **Method:** project each focus
+box and extract source-pixel-aligned 20 m windows without reprojecting,
+resampling or changing classes. The extraction metadata indexes bounds,
+dimensions, class counts and output files; the resulting maps support visual
+inspection and prepare observation data for a later model comparison. Crop
+edges follow the native grid and may extend slightly beyond the requested
+geographic boxes. See [p03d](p03d-focus_area_extraction.md), the [extraction
+Survey Report](AI_survey_report/03d_focus_area_extraction.md), the [Work
+Report](AI_work_report/03d_focus_area_extraction.md),
+[`metadata/03d_extracted_areas.json`](metadata/03d_extracted_areas.json), and
+[Figure 3d](figure/f03d-gfm_focus_areas_20m.png).
 
-Before an event run, confirm map/version, forcing coverage/units/calendar, initialization and upstream inflow, domain mask and boundaries, restart treatment, outputs and time support. Record the exact experiment and runtime logs. The current GOSH examples are references, not a configured Rhine experiment. A successful launch alone is not scientific validation.
+### Step 4 — CaMa-Flood Event Simulation
 
-**Sample status:** No Rhine-specific CaMa-Flood simulation has been configured or run. The target of Rhine-only versus combined routing group, final basin scope and boundary treatment remain open.
+**Objective:** simulate the selected event and river-system scope with suitable
+forcing, initialization and boundary treatment. **Method:** configure an
+event-specific CaMa-Flood experiment using the domain and observation plan,
+then retain the exact model, forcing, time, restart and output configuration.
+The experiment design and execution remain future work. Current sample runs
+and maps do not constitute a Rhine event simulation.
 
-## 5. Match model output and observations
+### Step 5 — Observation–Model Matching
 
-Before scoring, define grid/CRS and spatial mapping, time intervals and acquisition/composite support, variables, units, missing/excluded/permanent-water handling and provenance. Do not fill satellite gaps with dry labels. The supplied discharge timestamps denote interval ends, but source timezone and units are unspecified. Station-to-model-cell and GFM-to-model support rules remain to be designed.
+**Objective:** put simulated and observed quantities on defensible common
+spatial, temporal and variable support. **Method:** define how discharge
+stations map to model reaches/cells and how satellite classifications map to
+the model grid; account for acquisition/composite timing, units, masks,
+permanent water, missing coverage and resolution. Matching rules and reusable
+implementation have not yet been established. This Step depends on both a
+completed simulation and documented observation support.
 
-**Sample status:** No reusable matching implementation or approved matching rule is recorded.
+### Step 6 — Event Evaluation
 
-## 6. Evaluate performance
+**Objective:** quantify and interpret the model's reproduction of river-flow
+and flood-extent behavior. **Method:** select metrics for the scientific
+question after matching rules and valid observation support are defined;
+report sample coverage, uncertainty and limits separately for discharge and
+satellite extent. No event performance score, calibration result or validation
+conclusion has been produced. Do not infer model skill from the current
+observation figures alone.
 
-Choose metrics after the scientific target, valid support, masks, time match and uncertainty are agreed. Report area/period, valid sample counts, missing/excluded coverage, units, thresholds and uncertainty; separate discharge from flood-extent evaluation. Do not infer event skill from one visual overlay.
+## 4. Expected Outcomes and Current Status
 
-**Sample status:** No event performance score, calibration or validation result is recorded.
+The intended outcome is a reproducible, evidence-based assessment of CaMa-Flood
+for the July 2021 event: selected observation and simulation scopes, prepared
+discharge and satellite data, an event experiment, documented model–observation
+correspondence, and quantitative results with uncertainty. The retained
+Prompts, processing scripts, metadata, figures and reports support that work,
+but preparation outputs must not be confused with evaluation results.
 
-## Record maintenance
+| Stage | Existing artifacts and execution evidence | Current research status |
+| --- | --- | --- |
+| **1 — Event research** | Impact inventory, Figure 1, observation inventory, Prompt and reports exist. Reports were reconstructed from retained evidence; the original research and mapping outputs are preserved. | Event context is documented; impact locations are selected examples, and observation provenance questions remain. |
+| **2 — Domain design** | Candidate domain JSON, Figure 2, Prompt and reports exist. | Candidate bounds and mapped routing groups are documented; hydrologic scope and model boundary conditions are not final. |
+| **3a — Availability** | Pass metadata, selected-pass JSON, Figure 3a, Prompt and reports exist. | Catalogue survey is documented; pass selection is `proposed`, and footprints do not establish valid flood-pixel coverage. |
+| **3b — Download** | Local `Atlantis/` manifest, summary and COG assets are present; the Prompt, downloader and reports exist. | The retained summary records acquisition checks and readiness for p03c. The assets are local/ignored and are not distributed through Git. |
+| **3c — Classification** | Flood Fraction raster, focus-area metadata and Figure 3c are present; processing entry points and reports exist. The full-extent 20 m classification TIFF is absent from the current workspace; its provenance record remains. | Processing and screening are recorded, but the full source raster is unavailable here for a new pixel-level check. Focus areas remain proposals and do not represent all detected flooding. |
+| **3d — Extraction** | Extraction metadata, 15 focus-area 20 m rasters and Figure 3d are present; extraction/figure entry points and reports exist. | Focus crops are prepared; they are derived observation subsets, not model comparisons or validation results. |
+| **4 — Simulation** | No Rhine event simulation setup or result is recorded. | Experimental domain, forcing, initialization, boundary conditions and run remain to be designed and executed. |
+| **5 — Matching** | No approved matching method or reusable implementation is recorded. | Spatial, temporal and variable correspondence remains to be designed. |
+| **6 — Evaluation** | No quantitative event score or model-performance report is recorded. | Metrics, valid-sample treatment and uncertainty analysis remain future work. |
 
-When a Step is completed, update its Survey Report and Work Report along with the relevant handoff metadata as part of that Step. This document owns the common workflow; reports explain event-specific findings; Work Reports record how current results were produced; and `development_log/` preserves historical decisions. Existing Rhine reports reconstructed after the work are explicitly marked as retrospective and do not claim reruns.
+The Step Prompts, Survey Reports and Work Reports are linked in the Analysis
+Workflow above. They provide the detailed instructions, scientific evidence and
+execution record respectively; this document explains how those activities
+form one research plan.
