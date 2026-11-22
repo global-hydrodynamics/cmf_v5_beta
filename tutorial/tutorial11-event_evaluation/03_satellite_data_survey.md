@@ -1,4 +1,4 @@
-# Tutorial 11 — Step 3a: Satellite Observation Availability Survey
+# Tutorial 11 — Step 3a: Satellite Data Survey
 
 **Status:** Catalogue availability survey completed for candidate review. No GFM
 COG assets were downloaded and no pass is approved yet for observation use.

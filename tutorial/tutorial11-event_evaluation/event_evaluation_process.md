@@ -30,7 +30,7 @@ been inspected. On the current 0.25° map, Basin ID 74 combines Rhine and
 Meuse/Vesdre routing; it is not a pure natural Rhine watershed. Basin ID 1299
 also covers nearby cells. Rhine-only versus combined-group scope remains open.
 See [event overview](01_flood_event_overview.md),
-[candidate domains](02_domain_and_observation_design.md), and
+[candidate domains](02_analysis_domain_design.md), and
 [event setup findings](development_log/event_setup_report.md).
 
 ## 2. Select separate simulation and observation domains
@@ -96,7 +96,7 @@ review. Candidate bboxes and the current map's basin IDs and
 location-to-network traces have been inspected, but natural-watershed
 interpretation, final inclusion of neighboring routing groups, boundary
 conditions and observation coverage still need confirmation. Values and
-caveats are in [02_domain_and_observation_design.md](02_domain_and_observation_design.md) and
+caveats are in [02_analysis_domain_design.md](02_analysis_domain_design.md) and
 [event_setup_report.md](development_log/event_setup_report.md); the original planning proposal
 remains in [event_setup_plan.md](development_log/event_setup_plan.md).
 
@@ -139,7 +139,7 @@ separate `s03b-download_gfm.sh` wrapper acquires the selected native 20 m COG
 layers, while `f03a-satellite_footprints.sh` only redraws figures from cached
 metadata. Discharge units/time zone
 and GFM-specific redistribution clearance remain unresolved. See the
-[Step 3a availability survey](03_satellite_availability_survey.md),
+[Step 3a satellite data survey](03_satellite_data_survey.md),
 [observation inventory](observation_data_inventory.md),
 [GFM inventory](gfm_data_inventory.md), and
 [GFM processing note](gfm_3sec_workflow.md).

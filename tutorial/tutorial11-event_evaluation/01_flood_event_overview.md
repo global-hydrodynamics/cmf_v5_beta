@@ -289,8 +289,10 @@ measured inundation boundaries. The figure uses the existing
 impact summary, country, river, source URL, coordinate source and coordinate
 confidence for each location. The map also uses its plotting-group and label-
 placement fields; the coordinates and report fields remain the event evidence,
-while those extra fields only control presentation. Regenerate Figures 1 and 2
-with [`f01-f02-event_figures.sh`](f01-f02-event_figures.sh).
+while those extra fields only control presentation. Regenerate Figure 1 with
+[`f01-reported_flood_impacts.sh`](f01-reported_flood_impacts.sh). Figure 2 is
+generated separately with
+[`f02-analysis_domain.sh`](f02-analysis_domain.sh).
 
 | River system | Reported localities in the reviewed sources | Countries |
 | --- | --- | --- |
@@ -301,7 +303,7 @@ with [`f01-f02-event_figures.sh`](f01-f02-event_figures.sh).
 | Gete / Dyle | Halen, Wavre | Belgium |
 
 This is a summary of the existing source review, not a claim that the list is
-exhaustive. See [Step 2 — Domain selection](02_domain_and_observation_design.md)
+exhaustive. See [Step 2 — Domain selection](02_analysis_domain_design.md)
 for how these locations were compared with CaMa-Flood routing groups and used
 to define candidate simulation and satellite-analysis domains in
 [Figure 2](figure/f02-simulation_observation_domain_design.png).

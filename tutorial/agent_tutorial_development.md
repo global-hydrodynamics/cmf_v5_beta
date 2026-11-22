@@ -18,6 +18,7 @@ These evolving instructions implement the framework principles in the [tutorial 
 - For multiple experiments, keep generated files in project-specific subdirectories such as `out/${PROJ}/`. A rerun may replace that project's documented products but must preserve sibling projects and their outputs.
 - Preserve scientific settings, model behavior, file formats, and established interfaces unless an approved design explicitly requires a change.
 - Make prerequisites, inputs, working directories, settings, expected outputs, and success criteria clear and reproducible.
+- Keep filenames concise: use the required step or figure identifier plus a short, distinct subject. Avoid repeating context already clear from the parent directory or using long chains of near-synonyms.
 - Keep runtime outputs and build products in tutorial-specific ignored locations. Track only intentional deliverables called for by the design, such as reviewed reference figures.
 - For post-analysis figures, save processed data fields or series used directly in plotting under the tutorial's `out/analysis/` directory, preferably in NetCDF with coordinates, units, period, source files, and processing metadata. Plot from this saved analysis dataset where practical. Do not duplicate contextual background layers (for example, elevation used only as a backdrop) unless they are themselves an analysis result.
 - Scripts should be understandable to their intended learners. Do not turn a small tutorial into a validation framework or duplicate checks already performed by the model.
