@@ -14,13 +14,13 @@ from rasterio.transform import from_origin
 from rasterio.warp import Resampling
 from rasterio.windows import Window
 
-SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+PYTHON_DIR = Path(__file__).resolve().parents[1] / "script"
+sys.path.insert(0, str(PYTHON_DIR))
 import gfm_common as common
 
 
 def load(name, filename):
-    spec = importlib.util.spec_from_file_location(name, SCRIPTS / filename)
+    spec = importlib.util.spec_from_file_location(name, PYTHON_DIR / filename)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module

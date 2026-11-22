@@ -17,7 +17,7 @@ The current settings are:
 | --- | --- | --- |
 | Event context | 2021-07-13–2021-07-15 | Documented core rainfall period; not a complete event or model period |
 | Event analysis window | 2021-07-10–2021-07-25 | Candidate context window, not an approved simulation period |
-| Satellite catalogue search | 2021-07-13–2021-07-20, inclusive | Candidate search period |
+| Satellite catalogue search | 2021-07-14–2021-07-16, inclusive | Focused candidate search around 15 July, the central disaster date for this survey |
 | Simulation period | Undecided | Must be selected after hydrologic scope, forcing and initialization are reviewed |
 | Simulation domain | 3.125–12.125°E, 45.875–52.375°N | Candidate rectangle from Step 2; full watershed and boundaries still need confirmation |
 | Satellite analysis domain | 4–8°E, 49–52°N | Candidate bounds based on the existing GFM target-grid extent, not a validated coverage boundary |
@@ -28,15 +28,16 @@ change the catalogue query bbox or analysis extent.
 
 ## Search method and Atlantis status
 
-The tracked command is
-[`s03a-satellite_availability_survey.sh`](s03a-satellite_availability_survey.sh).
-It reads period and bbox values from the Step 2 JSON and calls the existing
-[`s01-download_gfm.py`](scripts/s01-download_gfm.py) once per date with
-`--catalogue-only`. Each day has a distinct output directory under
-`Atlantis/catalogue/YYYY-MM-DD/metadata/` and a separate runner/log directory
-under `Atlantis/runs/YYYY-MM-DD/`; the Tutorial-local `Atlantis/` directory is
-ignored and is intended for catalogue caches, logs and any future data
-products. No satellite assets are requested by the catalogue-only mode.
+Run `s03a-satellite_availability.sh` to read dates and bbox from the Step 2
+JSON, then call the existing [`s01-download_gfm.py`](script/s01-download_gfm.py)
+once per date with `--catalogue-only`. It caches STAC Items and Copernicus orbit
+metadata under `Atlantis/catalogue/YYYY-MM-DD/` and logs under
+`Atlantis/runs/YYYY-MM-DD/`; no satellite COG assets are requested. The helper
+then writes the Git-tracked pass inventory, orbit table and source acquisition
+footprints. `f03a-satellite_footprints.sh` renders the figure from those local
+catalogues and tracked metadata only; it does not search or download. The
+Tutorial-local `Atlantis/` directory is ignored and holds acquisition caches,
+logs and data.
 
 For this run, the expected local Atlantis links were unavailable:
 `~/work/Atlantis/source` points to the missing `old/source`, and
@@ -61,26 +62,23 @@ STAC Items for the other passes.
 
 ## Results and footprint figures
 
-The 8 daily catalogue responses contain **114 STAC Items grouped into 18
-acquisition passes**. Daily counts are:
+The focused 3-day catalogue responses contain **45 STAC Items grouped into 6
+acquisition passes and 27 unique source product slices**. The earlier 13–20
+July scan is retained in development history, but is outside the current review
+scope. Daily counts are:
 
 | UTC date | STAC Items | Distinct passes |
 | --- | ---: | ---: |
-| 2021-07-13 | 11 | 2 |
 | 2021-07-14 | 16 | 2 |
 | 2021-07-15 | 17 | 2 |
 | 2021-07-16 | 12 | 2 |
-| 2021-07-17 | 16 | 3 |
-| 2021-07-18 | 15 | 3 |
-| 2021-07-19 | 12 | 2 |
-| 2021-07-20 | 15 | 2 |
 
-All 18 pass IDs, source time ranges, STAC Item counts, unique Sentinel-1
+The 6 in-scope pass IDs, source time ranges, STAC Item counts, unique Sentinel-1
 source product counts, Equi7 tile counts, AOI intersections and source IDs are
 recorded in [`metadata/satellite_pass_inventory.csv`](metadata/satellite_pass_inventory.csv).
-Relative orbit and ascending/descending direction for all passes are in
+Relative orbit and ascending/descending direction for the same six passes are in
 [`metadata/satellite_orbit_metadata.csv`](metadata/satellite_orbit_metadata.csv).
-The source product geometries are retained separately in
+The 27 source product geometries for this focused window are retained separately in
 [`metadata/sentinel1_acquisition_footprints.geojson`](metadata/sentinel1_acquisition_footprints.geojson).
 
 ### Geometry investigation: GFM tile coverage versus Sentinel-1 acquisition
@@ -137,13 +135,9 @@ orange dashed rectangle is the same candidate 4–8°E, 49–52°N satellite ana
 domain in every panel. Teal is now the Copernicus source GRD `GeoFootprint`,
 not the STAC Item tile geometry. Every title distinguishes STAC Item count,
 source product count and tile count and labels the verified orbit direction.
-The pages are split chronologically because there are 18 passes:
+All six passes fit on one page, ordered chronologically:
 
-![GFM pass footprints, page 1](figure/f03a-gfm-pass-footprints-01.png)
-
-![GFM pass footprints, page 2](figure/f03a-gfm-pass-footprints-02.png)
-
-![GFM pass footprints, page 3](figure/f03a-gfm-pass-footprints-03.png)
+![GFM pass footprints, 14–16 July](figure/f03a-gfm-pass-footprints-01.png)
 
 The maps compare source acquisition footprints with the candidate AOI. A
 Copernicus product `GeoFootprint` is the catalogued source-product coverage; it
@@ -156,8 +150,7 @@ flood area.
 
 ## Candidate comparison for researcher review
 
-The catalogue returns two passes per day on 13, 14, 15, 16, 19 and 20 July,
-and three on 17 and 18 July. Within a pass, multiple source GRD slices may
+The selected window returns two passes on each of 14, 15 and 16 July. Within a pass, multiple source GRD slices may
 partly overlap along track, and each slice may be represented by several GFM
 Equi7 tile Items. These levels are separately counted in the inventory; their
 overlap does not mean independent overpasses or stronger observed flooding. No
@@ -172,11 +165,12 @@ zero source product GeoFootprints intersect it, despite all 6 GFM tile Items
 intersecting. Do not treat it as a same-AOI comparison unless the observation
 domain is intentionally expanded west for a stated evaluation purpose. These
 are candidate-screening findings, not a scientific ranking or approval. The
-other 13–20 July passes could help describe temporal evolution; prioritize
-them only after comparing source acquisition coverage, event-response timing,
-valid-pixel masks, data-layer availability, licensing and the intended
-evaluation question. An acquisition-footprint intersection still does not mean
-that the GFM pixels are valid or useful over the reported impact localities.
+14 and 16 July passes provide the immediate before/after context around the
+central 15 July date. Prioritize them only after comparing source acquisition
+coverage, event-response timing, valid-pixel masks, data-layer availability,
+licensing and the intended evaluation question. An acquisition-footprint
+intersection still does not mean that the GFM pixels are valid or useful over
+the reported impact localities.
 
 ## Reproduce and hand over to Step 3b
 
@@ -184,16 +178,19 @@ With the existing Atlantis Python environment active, from the repository root
 run:
 
 ```bash
-bash tutorial/tutorial11-event_evaluation/s03a-satellite_availability_survey.sh
+bash tutorial/tutorial11-event_evaluation/s03a-satellite_availability.sh
+bash tutorial/tutorial11-event_evaluation/f03a-satellite_footprints.sh
+bash tutorial/tutorial11-event_evaluation/s03b-download_gfm.sh
 ```
 
-The wrapper issues one catalogue-only request per date, creates date-separated
-local catalogue outputs and logs in the ignored Tutorial `Atlantis/` folder,
-then writes the tracked pass inventory and three source-footprint pages using
-the tracked acquisition GeoJSON. Updating the search period requires updating
-that GeoJSON from Copernicus Data Space source-product metadata; if a source
-footprint is missing, the renderer stops rather than substituting a GFM tile
-outline. The visualization reuses
+`s03a` acquires STAC and orbit/source-footprint metadata only. `f03a` regenerates
+the one-page footprint comparison from local catalogues and metadata without
+network search. `s03b` downloads the selected 15 July S1A descending pass in
+native 20 m COG form. The downloader is fixed to four layers needed by the
+classification workflow: `ensemble_flood_extent`, `ensemble_water_extent`,
+`reference_water_mask`, and `exclusion_mask`. It reuses matching catalogues and
+completed assets on rerun. It does not convert, reproject, or classify data.
+The visualization reuses
 `visualization/river_map/script/f06_common.py`; it does not alter the Gallery
 or Catalog. OSM tiles are fetched/cached by that shared renderer and attributed
 on every panel.
@@ -202,7 +199,7 @@ Before Step 3b downloads anything, the researcher should review candidate
 passes against the reported flood localities, acquisition time, all four
 required GFM layers, valid/exclusion masks, data-use terms and the event
 hydrographs. Decide whether the existing 15 July S1A pass is sufficient for a
-first processing example and whether the same-day S1B or selected earlier/later
-passes add useful spatial or temporal coverage. Then record selected pass IDs
+first processing example and whether the 14 and 16 July passes add useful
+temporal context. Then record selected pass IDs
 and the selection rationale before requesting COG assets. No satellite image
 download, flood-map computation or model comparison was performed in Step 3a.

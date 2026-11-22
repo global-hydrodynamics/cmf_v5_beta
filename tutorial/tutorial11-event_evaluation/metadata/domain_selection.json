@@ -38,10 +38,11 @@
   },
   "satellite_analysis": {
     "search_period": {
-      "start_date": "2021-07-13",
-      "end_date": "2021-07-20",
+      "start_date": "2021-07-14",
+      "end_date": "2021-07-16",
       "inclusive": true,
-      "status": "candidate"
+      "status": "candidate",
+      "selection_note": "Focused three-day search around 2021-07-15, the central disaster date for this survey; the broader 2021-07-13 to 2021-07-20 scan is retained in development history."
     },
     "domain": {
       "bbox_west_south_east_north": [

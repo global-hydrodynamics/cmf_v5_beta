@@ -533,3 +533,33 @@ overlap darkening.
 against the cached STAC and Copernicus product responses. Figures were
 regenerated from the tracked acquisition geometries and visually inspected; no
 image assets or model data were downloaded.
+
+## 2026-11-22 — Focus Step 3a survey on 14–16 July
+
+Narrowed the catalogue review window to 14–16 July 2021, centered on 15 July
+as the disaster date of interest. The Step 2 JSON remains the single source of
+the search-period setting; the summarizer now filters cached date directories
+to that inclusive range so earlier broad-scan caches cannot add extra panels.
+Regenerated the pass inventory and one six-panel figure from the existing
+metadata cache: 45 STAC Items, 6 acquisition passes and 27 source product
+slices. Removed the now-out-of-scope second and third generated figure pages.
+No catalogue query, COG/SAR download or model run was performed.
+
+## 2026-11-22 — Separate Step 3a metadata, f03a plotting and Step 3b download
+
+Moved the Tutorial 11 GFM Python programs and `gfm_common.py` into the
+canonical `script/` directory, updated their imports, tests and active workflow
+references, and kept the historical development-log paths unchanged. Split
+the former combined survey wrapper into `s03a-satellite_availability.sh`
+(STAC plus Copernicus metadata), `f03a-satellite_footprints.sh` (local-only
+figure rendering), and `s03b-download_gfm.sh` (the selected 15 July S1A
+descending pass and the four required native layers). The Step 2 JSON remains
+the shared 14–16 July survey-period source. Atlantis caches, logs and raw
+downloads remain under the ignored Tutorial `Atlantis/` directory.
+
+**Checks:** Shell syntax and Python AST checks passed. The metadata builder was
+run against existing local catalogues only (45 STAC Items, 6 passes, 27 source
+footprints), and f03a regenerated and visually checked its one-page figure.
+The existing GFM unit-test module could not import the converter because this
+Python environment lacks `pyproj`; no dependency was installed. The actual
+s03a network search and s03b COG download were not run.

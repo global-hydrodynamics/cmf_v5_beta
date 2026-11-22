@@ -78,10 +78,12 @@ The shared [`metadata/domain_selection.json`](metadata/domain_selection.json)
 records the event context, candidate event-analysis window, satellite search
 period and bbox, candidate simulation bbox, and the undecided simulation
 period. Step 3a reads the satellite dates and bbox from this file; the search
-values are not repeated in its shell settings. The 13–20 July search is a
-catalogue-survey interval, while 4–8°E, 49–52°N remains a candidate analysis
-domain based on the previously processed target grid. Neither is a confirmed
-event-observation interval or valid-pixel boundary. The simulation period is
-still undecided and must not be inferred from the search dates. See the
+values are not repeated in its shell settings. The current 14–16 July search
+centers the catalogue survey on the 15 July disaster date; the earlier
+13–20 July scan is retained in development history. The 4–8°E, 49–52°N bbox
+remains a candidate analysis domain based on the previously processed target
+grid. Neither is a confirmed event-observation interval or valid-pixel
+boundary. The simulation period is still undecided and must not be inferred
+from the search dates. See the
 [Step 3a availability survey](03_satellite_availability_survey.md) for the
 observed STAC passes, footprint maps and remaining selection decisions.

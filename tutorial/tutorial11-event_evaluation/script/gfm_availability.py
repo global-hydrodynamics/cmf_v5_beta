@@ -115,9 +115,12 @@ def footprint_overlaps(geometry, extent):
                for ring in polygon_rings(geometry))
 
 
-def load_passes(catalogue_root, extent):
+def load_passes(catalogue_root, extent, start_date, end_date):
     groups = {}
     for catalogue in sorted(catalogue_root.glob("*/metadata/stac_items.json")):
+        catalogue_date = catalogue.parent.parent.name
+        if not start_date <= catalogue_date <= end_date:
+            continue
         data = json.loads(catalogue.read_text(encoding="utf-8"))
         for item in data["features"]:
             source = parse_source(item)
@@ -165,6 +168,92 @@ def read_orbit_lookup(path):
         return {}
     with path.open(newline="", encoding="utf-8") as stream:
         return {row["pass_id"]: row for row in csv.DictReader(stream)}
+
+
+def source_metadata(catalogue_root, passes):
+    """Collect source-product geometry and orbit attributes cached by s01."""
+    source_ids = {source_id for group in passes for source_id in group["source_product_ids"]}
+    products_by_source = {source_id: [] for source_id in source_ids}
+    response_files = sorted(catalogue_root.glob("*/metadata/orbit_*.json"))
+    response_files += sorted(catalogue_root.glob("source_products_by_date/*.json"))
+    for path in response_files:
+        response = json.loads(path.read_text(encoding="utf-8"))
+        products = response.get("products", response.get("value", []))
+        for product in products:
+            name = product.get("Name", "")
+            for source_id in source_ids:
+                if name.startswith(source_id):
+                    products_by_source[source_id].append(product)
+
+    footprints = {}
+    orbit_metadata = {}
+    features = []
+    for group in passes:
+        pass_products = []
+        for source_id in group["source_product_ids"]:
+            candidates = products_by_source[source_id]
+            if not candidates:
+                raise ValueError(f"No Copernicus OData metadata cached for {source_id}; rerun s03a")
+            product = sorted(candidates, key=lambda item: "_COG" in item["Name"])[0]
+            geometry = product.get("GeoFootprint")
+            if not geometry:
+                raise ValueError(f"No GeoFootprint in Copernicus metadata for {source_id}")
+            attributes = {item["Name"]: item["Value"] for item in product.get("Attributes", [])}
+            footprints[source_id] = geometry
+            pass_products.append((source_id, product, attributes))
+            content_date = product.get("ContentDate", {})
+            features.append({
+                "type": "Feature",
+                "id": source_id,
+                "geometry": geometry,
+                "properties": {
+                    "source_product_id": source_id,
+                    "catalogue_product_name": product["Name"],
+                    "acquisition_start_utc": content_date.get("Start", ""),
+                    "acquisition_end_utc": content_date.get("End", ""),
+                    "satellite": group["platform"],
+                    "absolute_orbit": group["absolute_orbit"],
+                    "relative_orbit": attributes.get("relativeOrbitNumber"),
+                    "orbit_direction": attributes.get("orbitDirection"),
+                    "geometry_source": "Copernicus Data Space OData Products.GeoFootprint (SRID 4326)",
+                    "source_item_href": next(
+                        link["href"]
+                        for item in group["items"]
+                        for link in item.get("links", [])
+                        if link.get("rel") == "derived_from"
+                        and link["href"].rstrip("/").rsplit("/", 1)[-1] == source_id
+                    ),
+                },
+            })
+        relative = {str(attributes.get("relativeOrbitNumber")) for _, _, attributes in pass_products}
+        directions = {str(attributes.get("orbitDirection")) for _, _, attributes in pass_products}
+        if len(relative) != 1 or len(directions) != 1:
+            raise ValueError(f"Conflicting or missing Copernicus orbit attributes for {group['pass_id']}")
+        orbit_metadata[group["pass_id"]] = {
+            "relative_orbit": next(iter(relative)),
+            "orbit_direction": next(iter(directions)),
+        }
+    return orbit_metadata, footprints, features
+
+
+def write_source_metadata(orbit_metadata, footprints_features, orbit_path, footprint_path):
+    orbit_path.parent.mkdir(parents=True, exist_ok=True)
+    with orbit_path.open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.DictWriter(
+            stream, fieldnames=["pass_id", "relative_orbit", "orbit_direction", "source"],
+            lineterminator="\n",
+        )
+        writer.writeheader()
+        for pass_id, values in sorted(orbit_metadata.items()):
+            writer.writerow({
+                "pass_id": pass_id,
+                **values,
+                "source": "Copernicus Data Space OData source product Attributes",
+            })
+    footprint_path.write_text(
+        json.dumps({"type": "FeatureCollection", "features": footprints_features}, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 def write_inventory(passes, path, orbit_metadata, acquisition_footprints, extent):
@@ -223,13 +312,18 @@ def draw_pages(passes, acquisition_footprints, orbit_metadata, map_dir, view_ext
     output_dir.mkdir(parents=True, exist_ok=True)
     page_size = 6
     page_count = (len(passes) + page_size - 1) // page_size
+    expected_outputs = {
+        f"f03a-gfm-pass-footprints-{page_index + 1:02d}.png"
+        for page_index in range(page_count)
+    }
     for page_index in range(page_count):
         page = passes[page_index * page_size:(page_index + 1) * page_size]
         fig, axes = plt.subplots(2, 3, figsize=(15, 10), squeeze=False)
         fig.suptitle(
-            "Original Sentinel-1 acquisition footprints by pass\n"
-            f"Candidate satellite analysis domain: {aoi_extent[0]}–{aoi_extent[2]}°E, "
-            f"{aoi_extent[1]}–{aoi_extent[3]}°N · page {page_index + 1}/{page_count}",
+            "Original Sentinel-1 acquisition footprints by pass · 14–16 July 2021\n"
+            f"Centered on 15 July disaster date · candidate domain: "
+            f"{aoi_extent[0]}–{aoi_extent[2]}°E, {aoi_extent[1]}–{aoi_extent[3]}°N · "
+            f"page {page_index + 1}/{page_count}",
             fontsize=14, y=0.985,
         )
         for axis_index, ax in enumerate(axes.flat):
@@ -287,10 +381,15 @@ def draw_pages(passes, acquisition_footprints, orbit_metadata, map_dir, view_ext
                             wspace=0.25, hspace=0.32)
         output = output_dir / f"f03a-gfm-pass-footprints-{page_index + 1:02d}.png"
         river.save_figure(fig, output, 180)
+    for stale in output_dir.glob("f03a-gfm-pass-footprints-*.png"):
+        if stale.name not in expected_outputs:
+            stale.unlink()
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--mode", choices=["metadata", "figure"], required=True,
+                        help="metadata: summarize cached STAC/OData; figure: render existing metadata only")
     parser.add_argument("--domain-config", type=Path,
                         default=TUTORIAL_DIR / "metadata/domain_selection.json")
     parser.add_argument("--catalogue-root", type=Path,
@@ -316,10 +415,28 @@ def main():
         aoi_extent[0] - view_margin, aoi_extent[1] - view_margin,
         aoi_extent[2] + view_margin, aoi_extent[3] + view_margin,
     )
-    passes = load_passes(args.catalogue_root, aoi_extent)
+    search_period = config["satellite_analysis"]["search_period"]
+    passes = load_passes(
+        args.catalogue_root, aoi_extent,
+        search_period["start_date"], search_period["end_date"],
+    )
     if not passes:
-        raise SystemExit("No STAC items found in the configured catalogue directories")
-    acquisition_footprints = load_acquisition_footprints(args.acquisition_footprints)
+        raise SystemExit("No cached STAC items in the configured date range; run s03a-satellite_availability.sh first")
+    if args.mode == "metadata":
+        orbit_metadata, acquisition_footprints, source_features = source_metadata(args.catalogue_root, passes)
+        write_source_metadata(orbit_metadata, source_features,
+                              args.orbit_metadata, args.acquisition_footprints)
+    else:
+        if not args.orbit_metadata.is_file() or not args.acquisition_footprints.is_file():
+            raise SystemExit("Step 3a metadata is missing; run s03a-satellite_availability.sh first")
+        acquisition_footprints = load_acquisition_footprints(args.acquisition_footprints)
+        orbit_metadata = read_orbit_lookup(args.orbit_metadata)
+        missing_passes = sorted({group["pass_id"] for group in passes} - orbit_metadata.keys())
+        if missing_passes:
+            raise SystemExit(
+                "Step 3a orbit metadata is missing for " + ", ".join(missing_passes)
+                + "; run s03a-satellite_availability.sh first"
+            )
     missing = sorted({source_id for group in passes for source_id in group["source_product_ids"]}
                      - acquisition_footprints.keys())
     if missing:
@@ -329,32 +446,33 @@ def main():
             + f"\nUpdate {args.acquisition_footprints} from Copernicus Data Space OData metadata; "
               "GFM tile geometry is not used as a substitute."
         )
-    orbit_metadata = read_orbit_lookup(args.orbit_metadata)
-    args.summary_dir.mkdir(parents=True, exist_ok=True)
-    write_inventory(passes, args.inventory_output, orbit_metadata,
-                    acquisition_footprints, aoi_extent)
-    features = []
-    for group in passes:
-        for item in group["items"]:
-            features.append({
-                "type": "Feature", "geometry": item["geometry"],
-                "properties": {
-                    "pass_id": group["pass_id"], "platform": group["platform"],
-                    "absolute_orbit": group["absolute_orbit"],
-                    "datatake": group["datatake"], "item_id": item["id"],
-                    "source_product_id": source_product_id(item),
-                    "equi7_tile": item.get("properties", {}).get("Equi7Tile", ""),
-                    "datetime": item["properties"]["datetime"],
-                    "candidate_aoi_overlap": footprint_overlaps(item["geometry"], aoi_extent),
-                    "geometry_meaning": "GFM Equi7 tile product coverage, not source acquisition footprint",
-                },
-            })
-    (args.summary_dir / "gfm_pass_footprints.geojson").write_text(
-        json.dumps({"type": "FeatureCollection", "features": features}, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    draw_pages(passes, acquisition_footprints, orbit_metadata, args.map_dir, view_extent,
-               aoi_extent, args.tile_cache, args.figure_dir, args.no_osm)
+    if args.mode == "metadata":
+        args.summary_dir.mkdir(parents=True, exist_ok=True)
+        write_inventory(passes, args.inventory_output, orbit_metadata,
+                        acquisition_footprints, aoi_extent)
+        features = []
+        for group in passes:
+            for item in group["items"]:
+                features.append({
+                    "type": "Feature", "geometry": item["geometry"],
+                    "properties": {
+                        "pass_id": group["pass_id"], "platform": group["platform"],
+                        "absolute_orbit": group["absolute_orbit"],
+                        "datatake": group["datatake"], "item_id": item["id"],
+                        "source_product_id": source_product_id(item),
+                        "equi7_tile": item.get("properties", {}).get("Equi7Tile", ""),
+                        "datetime": item["properties"]["datetime"],
+                        "candidate_aoi_overlap": footprint_overlaps(item["geometry"], aoi_extent),
+                        "geometry_meaning": "GFM Equi7 tile product coverage, not source acquisition footprint",
+                    },
+                })
+        (args.summary_dir / "gfm_pass_footprints.geojson").write_text(
+            json.dumps({"type": "FeatureCollection", "features": features}, indent=2) + "\n",
+            encoding="utf-8",
+        )
+    else:
+        draw_pages(passes, acquisition_footprints, orbit_metadata, args.map_dir, view_extent,
+                   aoi_extent, args.tile_cache, args.figure_dir, args.no_osm)
     source_count = sum(group["source_product_count"] for group in passes)
     print(f"Summarized {sum(p['item_count'] for p in passes)} STAC Items into "
           f"{len(passes)} acquisition passes and {source_count} source product slices")

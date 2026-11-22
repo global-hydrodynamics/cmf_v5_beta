@@ -1,19 +1,7 @@
 pass_id,relative_orbit,orbit_direction,source
-S1A_o038755_dt0492B5,8,DESCENDING,Copernicus Data Space OData source product Attributes
-S1A_o038762_dt0492ED,15,ASCENDING,Copernicus Data Space OData source product Attributes
 S1A_o038784_dt049389,37,DESCENDING,Copernicus Data Space OData source product Attributes
 S1A_o038806_dt049431,59,ASCENDING,Copernicus Data Space OData source product Attributes
-S1A_o038813_dt049468,66,DESCENDING,Copernicus Data Space OData source product Attributes
-S1A_o038828_dt0494E5,81,DESCENDING,Copernicus Data Space OData source product Attributes
-S1A_o038835_dt049522,88,ASCENDING,Copernicus Data Space OData source product Attributes
-S1A_o038857_dt0495CC,110,DESCENDING,Copernicus Data Space OData source product Attributes
-S1A_o038864_dt049606,117,ASCENDING,Copernicus Data Space OData source product Attributes
 S1B_o027786_dt0350E0,110,DESCENDING,Copernicus Data Space OData source product Attributes
 S1B_o027793_dt03510C,117,ASCENDING,Copernicus Data Space OData source product Attributes
 S1B_o027808_dt03517A,132,ASCENDING,Copernicus Data Space OData source product Attributes
 S1B_o027815_dt0351B0,139,DESCENDING,Copernicus Data Space OData source product Attributes
-S1B_o027830_dt035220,154,DESCENDING,Copernicus Data Space OData source product Attributes
-S1B_o027837_dt035258,161,ASCENDING,Copernicus Data Space OData source product Attributes
-S1B_o027844_dt035293,168,DESCENDING,Copernicus Data Space OData source product Attributes
-S1B_o027859_dt035300,8,DESCENDING,Copernicus Data Space OData source product Attributes
-S1B_o027866_dt035336,15,ASCENDING,Copernicus Data Space OData source product Attributes

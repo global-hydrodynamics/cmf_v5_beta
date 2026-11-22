@@ -124,16 +124,20 @@ the selected 3-arcsecond product. The native 20 m classification exporter and
 its class rules are documented there as well. Do not infer full-event coverage
 from one pass, a bounding box, or a rendered map.
 
-**Tutorial 11 status:** The 13–20 July 2021 catalogue survey returned 114 STAC
-Items grouped into 18 acquisition passes over the candidate bbox; actual STAC
-footprint comparisons were rendered. Image assets were not downloaded during
-the survey. Separately, a 15 July 2021 S1A morning GFM pass was acquired and
+**Tutorial 11 status:** The focused 14–16 July 2021 catalogue survey returned
+45 STAC Items grouped into 6 acquisition passes over the candidate bbox,
+centered on the 15 July disaster date; source acquisition-footprint comparisons
+were rendered. The earlier 13–20 July scan remains in development history.
+Image assets were not downloaded during the survey. Separately, a 15 July 2021 S1A morning GFM pass was acquired and
 3-arcsecond preprocessing was exercised; a native 20 m classification and
 inspection figure were produced. These are limited examples, not a complete
 multi-day event dataset or observation archive. The local Atlantis environment
 was unavailable during the catalogue survey; direct read-only EODC STAC results
-were used for this survey and the existing `s01 --catalogue-only` wrapper is
-ready to repeat it when the environment is available. Discharge units/time zone
+were used for this survey and the `s03a-satellite_availability.sh` wrapper is
+ready to repeat the metadata search when the environment is available. The
+separate `s03b-download_gfm.sh` wrapper acquires the selected native 20 m COG
+layers, while `f03a-satellite_footprints.sh` only redraws figures from cached
+metadata. Discharge units/time zone
 and GFM-specific redistribution clearance remain unresolved. See the
 [Step 3a availability survey](03_satellite_availability_survey.md),
 [observation inventory](observation_data_inventory.md),

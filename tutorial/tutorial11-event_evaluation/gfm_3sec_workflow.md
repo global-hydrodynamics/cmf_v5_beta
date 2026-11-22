@@ -8,8 +8,11 @@ identity and local reuse, convert the morning pass to 3-arcsecond EPSG:4326,
 validate, document and commit/push code plus small inspection figures. No model
 run, afternoon processing, multi-day acquisition or Gallery publication.
 
-This file records design, scientific contracts and actual execution results. Scripts have one canonical copy in this tutorial's
-`scripts/`; the external Atlantis workspace references them through symlinks.
+This file records design, scientific contracts and actual execution results.
+Step 3 Python programs and shared GFM contracts have one canonical copy in
+this tutorial's `script/`. If the external Atlantis workspace exposes them
+through `scripts/` symlinks, those links should target this canonical directory;
+do not edit a second copy there.
 Downloaded data and run logs stay outside Git.
 
 ## Existing environment and protected history
@@ -112,22 +115,22 @@ GROUP="S1A_o038784_dt049389"
 export PYTHONDONTWRITEBYTECODE=1 GDAL_PAM_ENABLED=NO PROJ_NETWORK=OFF
 
 # Search/inventory first. Reruns reuse the matching saved request/catalogue.
-"$PY" -B "$T11/scripts/s01-download_gfm.py" --catalogue-only
+"$PY" -B "$T11/script/s01-download_gfm.py" --catalogue-only
 # Exactly four layers, two download workers, complete original COG files.
-"$PY" -B "$T11/scripts/s01-download_gfm.py" --group "$GROUP"
+"$PY" -B "$T11/script/s01-download_gfm.py" --group "$GROUP"
 # Verify completed local files and use zero network bytes on reuse.
-"$PY" -B "$T11/scripts/s01-download_gfm.py" --group "$GROUP" --offline
+"$PY" -B "$T11/script/s01-download_gfm.py" --group "$GROUP" --offline
 # Local conversion: no Atlantis download/catalogue code is called.
-"$PY" -B "$T11/scripts/s02-convert_gfm_3sec.py" --group "$GROUP"
-"$PY" -B "$T11/scripts/s03-validate_gfm_3sec.py" \
+"$PY" -B "$T11/script/s02-convert_gfm_3sec.py" --group "$GROUP"
+"$PY" -B "$T11/script/s03-validate_gfm_3sec.py" \
   --output "$WORK/data/Rhine_2021_3sec/tiles_3sec/$GROUP" \
   --report "$WORK/logs/gfm_validation.json"
 # Independent full regeneration, changing only the processing block size.
-"$PY" -B "$T11/scripts/s02-convert_gfm_3sec.py" --group "$GROUP" \
+"$PY" -B "$T11/script/s02-convert_gfm_3sec.py" --group "$GROUP" \
   --output "$WORK/data/Rhine_2021_3sec/tiles_3sec_offline" \
   --intermediate "$WORK/data/Rhine_2021_3sec/intermediate_offline" \
   --block 256 --rebuild-native
-"$PY" -B "$T11/scripts/s03-validate_gfm_3sec.py" \
+"$PY" -B "$T11/script/s03-validate_gfm_3sec.py" \
   --output "$WORK/data/Rhine_2021_3sec/tiles_3sec/$GROUP" \
   --compare-output "$WORK/data/Rhine_2021_3sec/tiles_3sec_offline/$GROUP" \
   --report "$WORK/logs/gfm_replay_validation.json"
@@ -209,9 +212,9 @@ official orbit responses, complete native COGs and intermediate files stay local
 
 ## Ownership and storage
 
-The canonical code is in this tutorial. The external `scripts/` directory uses
-symlinks to it; `old/scripts/` remains historical and is never used as a second
-editable copy. Git contains code, tests, this method/results note, a compact
+The canonical code is in this tutorial's `script/`. An external Atlantis
+workspace may expose it through `scripts/` symlinks; `old/scripts/` remains
+historical and is never used as a second editable copy. Git contains code, tests, this method/results note, a compact
 Item CSV and an inspection PNG. All raw/processed rasters, intermediate native
 mosaics, environments and complete execution logs remain outside Git. The
 external `figure/` may reference the Git-managed PNG by symlink. No old file or
@@ -287,7 +290,7 @@ No unsupported claim about event-peak completeness or model skill is made.
 
 ## Native 20 m categorical classification export — 2026-11-22
 
-The separate `scripts/s04-export_gfm_20m_class.py` derives a compact categorical
+The separate `script/s04-export_gfm_20m_class.py` derives a compact categorical
 view of the **same S1A morning pass** from the four native GFM layers. It keeps
 the original 20 m Equi7 Europe grid, CRS, pixel alignment and NoData value; it
 does not reproject, resample, or feed the 3-arcsecond products back into this
@@ -347,7 +350,7 @@ Run locally with the existing Atlantis Python environment; no download or
 ```bash
 PY="$HOME/work/Atlantis/source/.pixi/envs/default/bin/python"
 export PYTHONDONTWRITEBYTECODE=1 GDAL_PAM_ENABLED=NO PROJ_NETWORK=OFF
-"$PY" -B tutorial/tutorial11-event_evaluation/scripts/s04-export_gfm_20m_class.py
+"$PY" -B tutorial/tutorial11-event_evaluation/script/s04-export_gfm_20m_class.py
 ```
 
 **Validation:** A small synthetic precedence check passed. The real COG was
