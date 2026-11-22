@@ -243,20 +243,28 @@ uses 3600 × 1801 input cells and is not interchangeable with the 111 × 91
 regional subset. Record the actual map/grid pairing and index checks for Step
 14. See [p13](p13-runoff_input_matrix.md), the [Survey Report](AI_survey_report/13_runoff_input_matrix.md), the [Work Report](AI_work_report/13_runoff_input_matrix.md), and [`metadata/13_runoff_input_matrix.json`](metadata/13_runoff_input_matrix.json).
 
-### Step 14 — Simulation Setup
+### Step 14 — Simulation Setup and Execution
 
-Decide the model simulation and spin-up periods, forcing coverage, initialization,
-boundary conditions and runtime settings using the Step 11 map, Step 12 runoff
-Registry and Step 13 Input Matrix result. Create a reproducible GOSH script.
-This Step prepares the experiment; it does not claim a completed event run.
-No Rhine 2021 simulation has been performed.
+Use the Step 11 regional map, Step 12 runoff Registry and Step 13 regional
+Input Matrix to define and run the requested experiment. The Rhine 2021 sample
+has one 20-day, hourly, cold-start run from 2021-07-01 00:00 to the exclusive
+end 2021-07-21 00:00. It uses daily ERA5-Land NetCDF input and hourly NetCDF
+outputs plus an end-of-run NetCDF Restart. The execution completed, but this
+is an operational run rather than a spun-up, calibrated or scientifically
+validated event reconstruction. KG-0019 remains open. See [p14](p14-simulation_setup.md),
+the [Survey Report](AI_survey_report/14_simulation_setup.md), the
+[Work Report](AI_work_report/14_simulation_setup.md), and
+[`metadata/14_simulation_setup.json`](metadata/14_simulation_setup.json).
+Generated experiment files are kept under the Git-ignored
+`experiment/Rhine2021/` directory.
 
 ### Step 15 — Event Simulation
 
-Run the configured experiment and record the exact inputs, settings,
-execution environment, logs and outputs. No Rhine 2021 event simulation has
-been completed; map, runoff and setup artifacts are inputs, not a simulation
-result.
+The initial cold-start execution is recorded in Step 14. Further event runs
+with scientifically justified initialization or revised forcing are not
+complete. Subsequent work should inspect/visualize the Step 14 outputs and
+establish defensible observation matching; do not interpret this one run as a
+performance result.
 
 ### Step 16 — Observation–Model Matching
 
@@ -297,8 +305,8 @@ but preparation outputs must not be confused with evaluation results.
 | **11 — Regional map** | Local `map/Rhine_15min/` contains map, parameter, NetCDF/COG products and map-local workflow copies matching the requested domain; outputs were inspected, not regenerated for this Step. | Existing products are available to Steps 12–14; upstream hydrology and parameter scientific validation are not established by this inspection. |
 | **12 — Runoff preparation** | Existing local Rhine ERA5-Land source and converted data, Step 12 Prompt, metadata and reports are recorded; data were inspected, not reacquired or reconverted for this Step. | Hourly labels and grid structure are documented; KG-0019 remains open and simulation/spin-up dates remain undecided. |
 | **13 — Runoff Input Matrix** | Rhine-specific 111 × 91 matrix/diminfo were generated from the actual ERA5-Land grid using the map-local 1-minute catchment assignment; focused dimensions and index checks are recorded. | Pair the regional matrix with the Step 12 Registry and metadata in Step 14; runtime reader behavior remains untested. |
-| **14 — Simulation setup** | No Rhine event experiment setup or GOSH script is recorded. | Simulation/spin-up period and configuration remain future work. |
-| **15 — Event simulation** | No Rhine event simulation result is recorded. | Run the configured model and retain execution evidence. |
+| **14 — Simulation setup and execution** | `s14-run_simulation.sh` ran the 20-day hourly cold-start experiment; hourly NetCDF output variables and the final NetCDF Restart were inspected. | Operational completion only; cold-start sensitivity and ERA5-Land time attribution remain unresolved. |
+| **15 — Further event simulation** | No additional or spun-up Rhine run is recorded. | Future runs may be considered after output review and scientific initialization/forcing decisions. |
 | **16 — Matching** | No matching method or implementation is recorded. | Spatial, temporal and variable correspondence remains to be designed. |
 | **17 — Evaluation** | No quantitative event score or performance report is recorded. | Metrics, valid-sample treatment and uncertainty analysis remain future work. |
 

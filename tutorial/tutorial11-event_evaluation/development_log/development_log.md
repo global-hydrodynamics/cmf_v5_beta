@@ -653,3 +653,14 @@ assignment; it is separate from the 3600 × 1801 global `ERA5land_global` pair.
 Checked the actual NetCDF coordinates, generated diminfo, matrix dimensions and
 indices for all active river cells, plus representative Rhine locations. Map
 binaries remain ignored. No model run was performed, and KG-0019 remains open.
+
+
+## 2026-11-23 — Run Tutorial 11 Rhine cold-start experiment
+
+Added `s14-run_simulation.sh` and ran one 20-day hourly simulation with the
+Step 11 Rhine map, Step 12 ERA5-Land daily NetCDF files and Step 13 regional
+Input Matrix. The model completed 480 steps, wrote eight hourly NetCDF output
+files and a final NetCDF Restart at 2021-07-21 00:00. Run products remain in
+the ignored `experiment/Rhine2021/` directory. This cold-start run is an
+operational demonstration only; it does not assess model skill or resolve
+KG-0019.

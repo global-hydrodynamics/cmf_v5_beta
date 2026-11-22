@@ -67,3 +67,9 @@ converter boundary treatment). Step 14 should use this regional matrix/diminfo
 pair with the Tutorial Registry, choose experiment/spin-up dates, verify forcing
 coverage and runtime settings, and prepare a reproducible GOSH script. The
 simulation period remains undecided here.
+
+
+The subsequent Step 14 cold-start run consumed this regional matrix and
+completed. Its experiment settings, generated outputs and operational checks
+are recorded in `metadata/14_simulation_setup.json` and
+`AI_work_report/14_simulation_setup.md`; that run does not resolve KG-0019.

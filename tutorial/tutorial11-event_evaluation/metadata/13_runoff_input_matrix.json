@@ -218,5 +218,6 @@
       "Create the reproducible GOSH script."
     ],
     "simulation_period": "undecided"
-  }
+  },
+  "step14_execution_reference": "metadata/14_simulation_setup.json"
 }
