@@ -189,22 +189,38 @@ bash tutorial/tutorial11-event_evaluation/s03b-download_gfm.sh
 
 `s03a` acquires STAC and orbit/source-footprint metadata only. `f03a` regenerates
 the one-page footprint comparison from local catalogues and metadata without
-network search. `s03b` downloads the selected 15 July S1A descending pass in
-native 20 m COG form. The downloader is fixed to four layers needed by the
-classification workflow: `ensemble_flood_extent`, `ensemble_water_extent`,
-`reference_water_mask`, and `exclusion_mask`. It reuses matching catalogues and
-completed assets on rerun. It does not convert, reproject, or classify data.
+network search. `s03b` reads the selected pass and analysis bounds from the
+Step 3a/2 JSON, then downloads or reuses native 20 m COGs. The downloader uses
+the four layers needed by the classification workflow:
+`ensemble_flood_extent`, `ensemble_water_extent`, `reference_water_mask`, and
+`exclusion_mask`. After a successful acquisition, it writes a per-pass
+`download_manifest_<pass-id>.csv` and `download_summary_<pass-id>.json` under
+`Atlantis/catalogue/<date>/metadata/`. CSV paths are relative to the Tutorial's
+`Atlantis/` root. The summary reports `ready_for_p03c` after matching selected
+STAC Items/layers and checking file size, checksum and GeoTIFF readability.
+This status is independent of Human review; missing or unreadable files leave
+the pass unready. p03c uses this Manifest to find its inputs and does not need
+to repeat STAC search or download. The downloader does not convert, reproject,
+or classify data.
 The visualization reuses
 `visualization/river_map/script/f06_common.py`; it does not alter the Gallery
 or Catalog. OSM tiles are fetched/cached by that shared renderer and attributed
 on every panel.
 
-The fixed `metadata/03a_selected_passes.json` is the intended Step 3b
-selection interface. It currently records the 15 July S1A pass as `proposed`;
-status is descriptive and does not block a Step 3b run. The existing
-`s03b-download_gfm.sh` still uses explicit pass settings and has not been
-connected to that JSON in this task. Human review of the candidate against
-reported localities, acquisition time, required layers, valid/exclusion masks,
-data-use terms and event hydrographs remains the recommended research process.
+The fixed `metadata/03a_selected_passes.json` is the Step 3b selection
+interface. It currently records the 15 July S1A pass as `proposed`; status is
+descriptive and does not block a Step 3b run. Human review of the candidate
+against reported localities, acquisition time, required layers,
+valid/exclusion masks, data-use terms and event hydrographs remains the
+recommended research process. Rebuild the handover from existing files without
+repeating acquisition with:
+
+```bash
+python3 -B tutorial/tutorial11-event_evaluation/script/s03b-build_download_manifest.py \
+  --selection-json tutorial/tutorial11-event_evaluation/metadata/03a_selected_passes.json \
+  --catalogue-root tutorial/tutorial11-event_evaluation/Atlantis/catalogue \
+  --atlantis-root tutorial/tutorial11-event_evaluation/Atlantis
+```
+
 No satellite image download, flood-map computation or model comparison was
 performed as part of the Step 3a survey.

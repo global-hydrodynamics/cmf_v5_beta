@@ -306,4 +306,4 @@ This is a summary of the existing source review, not a claim that the list is
 exhaustive. See [Step 2 — Domain selection](02_analysis_domain_design.md)
 for how these locations were compared with CaMa-Flood routing groups and used
 to define candidate simulation and satellite-analysis domains in
-[Figure 2](figure/f02-simulation_observation_domain_design.png).
+[Figure 2](figure/f02-analysis_domain_design.png).

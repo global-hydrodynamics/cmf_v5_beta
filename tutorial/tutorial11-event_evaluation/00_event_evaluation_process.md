@@ -16,13 +16,17 @@ A reusable `pXX-*.md` Prompt is the entry point for an AI agent to carry out a
 research Step. On the first run, the agent completes the available
 investigation, prepares and executes necessary processing/visualization
 scripts, records evidence-based recommendations and settings as `proposed`,
-and presents the result. The researcher reviews scientific meaning and fit to
-the research purpose, gives feedback, and may request revisions. The agent
-updates the same files and reruns affected work; iteration has no fixed count.
-An agent does not silently represent its recommendation as a Human-approved
-scientific decision. Status fields document review state only; they are not
-program execution gates. A later Step may use complete `proposed` values unless
-a separate scientific or data-access rule requires a decision.
+and leaves outputs ready for the next Step. Human review is recommended, not a
+workflow gate: the researcher may give feedback and request revisions, while
+no response leaves complete outputs `proposed` and the workflow continues.
+When the researcher reviews and adopts a recommendation, record it as
+`approved` where the output has a review-status field. The agent updates the
+same files and reruns affected work when requested; it does not wait for a
+response, approval, or a fixed iteration count. Status fields document review
+state only and never control execution. Ordinary processing errors, including
+missing required inputs, are handled as before. This is fail-open with respect
+to review status: absent Human approval does not pause the workflow, while
+missing inputs or other ordinary processing failures still do.
 
 - `pXX-*.md` describes and guides the complete Agent Workflow; it is not a
   substitute for the executed research result.
@@ -39,11 +43,12 @@ a separate scientific or data-access rule requires a decision.
   contents in place instead of adding `_v2` or `_final` variants.
 
 Prompts, reproducible Shell workflows and research outputs serve different
-purposes. Save the adopted processing and final reviewed Figure settings; do
-not create Shells for every exploratory attempt. A Prompt may direct an agent
-to create or update the needed `sXX` and `fXX` entry points and run them. This
-Tutorial's Rhine 2021 files are a worked sample and are not rerun when a Prompt
-is adapted for another event.
+purposes. Save the current processing and Figure settings, including their
+proposed/reviewed status where applicable; do not create Shells for every
+exploratory attempt. A Prompt may direct an agent to create or update the
+needed `sXX` and `fXX` entry points and run them. This Tutorial's Rhine 2021
+files are a worked sample and are not rerun when a Prompt is adapted for
+another event.
 
 ## 1. Select and research the flood event
 
@@ -54,16 +59,20 @@ public reports and reliable news; distinguishes evidence, interpretation and
 uncertainty; creates `01_flood_event_overview.md` and
 `metadata/01_impact_locations.csv`; prepares and runs
 `f01-reported_flood_impacts.sh`; and visually checks Figure 1. It presents the
-sources, outputs and remaining questions to the Human. The Human reviews the
-science, sources, location choices and map, then gives feedback. The agent
-revises and reruns applicable work as needed until the Human accepts the result.
-Keep the final Figure reproducible from its CSV, saved display settings and
-Shell. Literature research itself need not be reproducible by Shell.
+sources, outputs and remaining questions to the Human. Human review of the
+science, sources, location choices and map is recommended. If the researcher
+does not respond, the complete Step 1 outputs remain proposed and can be used
+by Step 2; they are not treated as approved. Feedback may prompt revisions to
+the same files and reruns of affected work, without waiting for an iteration
+to be declared complete. Keep the Figure reproducible from its CSV, saved
+display settings and Shell. Literature research itself need not be
+reproducible by Shell.
 
 Do not finalize CaMa-Flood Basin IDs, routing groups, simulation bounds or
 satellite-analysis domains during Step 1; those decisions require the map-based
-Step 2 assessment. The accepted overview and impact inventory provide Step 2's
-river, locality, timing and uncertainty evidence.
+Step 2 assessment. The Step 1 overview and impact inventory provide Step 2's
+river, locality, timing and uncertainty evidence, with their review status
+recorded separately from their availability as inputs.
 
 **Tutorial 11 status:** The Rhine 2021 sample already contains the event overview,
 `metadata/01_impact_locations.csv`, Figure 1 and its generation Shell. These
@@ -130,9 +139,10 @@ The workflow is iterative:
    Figure settings in metadata and ensure `f02-analysis_domain.sh` regenerates
    Figure 2 from the saved settings. Status does not gate the Shell or later
    Steps when required values are present.
-7. Hand the reviewed domain design and its caveats to Step 3. Later evidence
-   about actual satellite coverage, forcing support or model boundaries may
-   justify revisiting a candidate.
+7. Hand the current domain design and its caveats to Step 3, whether it remains
+   `proposed` or has been reviewed. Later evidence about actual satellite
+   coverage, forcing support or model boundaries may justify revisiting a
+   candidate.
 
 Model Basin IDs and natural watersheds are not necessarily one-to-one. Check
 whether a routing group combines or divides natural basins, and use routed
@@ -289,7 +299,7 @@ and GFM-specific redistribution clearance remain unresolved. The
 `metadata/03a_selected_passes.json`; this does not certify its coverage or
 require an approval state for later execution. See the
 [Step 3a satellite data survey](03_satellite_data_survey.md),
-[observation inventory](observation_data_inventory.md), and the
+[observation inventory](observation/observation_data_inventory.md), and the
 [p03c output provenance](observation/GFM_extent/GFM_S1A_20210715_o038784_dt049389_extent20m.json).
 
 ## 4. Configure and run CaMa-Flood

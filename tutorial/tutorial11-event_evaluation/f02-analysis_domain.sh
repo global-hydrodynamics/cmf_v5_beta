@@ -19,7 +19,7 @@ cd "$REPO_ROOT"
     --map-dir "$MAP_DIR" --settings "$SETTINGS" --zoomup-file "$ZOOMUP_FILE" \
     --plot-file "$IMPACT_FILE" --station-file "$GAUGE_FILE" \
     --tile-cache "$TILE_CACHE" \
-    --output "$FIGURE_DIR/f02-simulation_observation_domain_design.png"
+    --output "$FIGURE_DIR/f02-analysis_domain_design.png"
 
 printf '\n[ SUCCESS ] Tutorial 11 Figure 2 written to %s\n' \
-    "$FIGURE_DIR/f02-simulation_observation_domain_design.png"
+    "$FIGURE_DIR/f02-analysis_domain_design.png"

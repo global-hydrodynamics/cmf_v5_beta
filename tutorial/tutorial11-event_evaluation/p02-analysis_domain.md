@@ -64,8 +64,9 @@ Complete this workflow:
    neighboring groups. Derive Basin IDs from this map; never carry IDs over
    from Tutorial 11 or another map. Model routing groups may combine or divide
    natural watersheds. If the evidence cannot establish the connection or full
-   contributing area, state the limitation and ask the researcher rather than
-   guessing.
+   contributing area, record the limitation and keep the recommendation
+   `proposed`; do not guess or wait for review before preparing the remaining
+   outputs. Report missing required inputs as ordinary processing errors.
 3. Propose three distinct extents, with bounds in W/S/E/N order, units,
    rationale, status and uncertainty:
    - **Simulation domain:** include the required full upstream contributing

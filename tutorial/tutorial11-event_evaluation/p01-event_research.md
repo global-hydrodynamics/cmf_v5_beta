@@ -64,14 +64,18 @@ Complete the following workflow:
    unavailable, report the limitation instead of claiming a successful visual
    review.
 6. Present the overview, source basis, CSV, Figure and remaining uncertainties
-   to the researcher. Ask for specific scientific or location decisions where
-   evidence is insufficient. Revise the research outputs or Figure when the
-   researcher gives feedback; repeat review as needed, with no fixed iteration
-   count. Do not treat silence as scientific approval.
-7. After the researcher accepts the Step 1 result, preserve the reviewed
-   overview, CSV, Figure, event-local settings and reproducible Figure Shell.
-   Hand off major rivers, impacted areas, documented timing, candidate
-   satellite-search period/observations and unresolved questions to Step 2.
+   to the researcher. Human review is recommended, but do not wait for a reply
+   or approval before completing the first run or handing complete outputs to
+   Step 2. Ask for specific scientific or location decisions where evidence is
+   insufficient, record unresolved issues, and make evidence-supported
+   recommendations without guessing.
+7. If the researcher gives feedback, update the same research outputs or
+   Figure settings and rerun affected work. If the researcher adopts the
+   recommendations, record `approved` in the relevant review metadata; without
+   review, leave them `proposed`. Preserve the current overview, CSV, Figure,
+   event-local settings and reproducible Figure Shell. Hand off major rivers,
+   impacted areas, documented timing, candidate satellite-search
+   period/observations and unresolved questions to Step 2 in either case.
 
 Do not choose or finalize CaMa-Flood Basin IDs, simulation domains or satellite
 analysis domains in Step 1. Do not present candidate observations as acquired
@@ -94,8 +98,10 @@ validation from successful plotting alone.
 | `figure/f01-reported_flood_impacts.png` | Map of reported-impact localities |
 
 The agent performs the research, prepares and runs the mapping workflow, and
-presents the evidence for review. The researcher checks source accuracy,
-impact selection, coordinate confidence and the Figure, then decides whether
-the result is accepted and Step 2 may begin. Tutorial 11 already contains a
-Step 1 sample for the July 2021 western European floods; this Prompt is for
-future events and must not be run to recreate it.
+presents the evidence for optional review. The researcher is encouraged to
+check source accuracy, impact selection, coordinate confidence and the Figure.
+If there is no review, Step 2 may still begin from complete `proposed` outputs;
+if the researcher adopts the result, record that state as `approved`. Neither
+status controls script execution. Tutorial 11 already contains a Step 1 sample
+for the July 2021 western European floods; this Prompt is for future events and
+must not be run to recreate it.

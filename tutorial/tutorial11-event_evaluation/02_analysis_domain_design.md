@@ -6,11 +6,11 @@
 
 Step 2 uses the event background, supplied impact-location table, supplied discharge inventory, existing GFM processing, and the CaMa-Flood v5 glb_15min map to compare model routing groups with reported impacts and candidate observation areas.
 
-Figure 1 in [the Step 1 event overview](01_flood_event_overview.md) records the reported impact localities from `01_impact_locations.csv`. Figure 2 below carries those same points into the domain review, where they are considered alongside the mapped routing groups, gauges and candidate extents. Both figures reuse the shared River Map p01-f06 f06b/f06a renderers with Tutorial-local settings. They are planning aids, not hydrologic validation. Impact markers are approximate locality coordinates, not observed flood boundaries. Gauge coordinates are copied from `stations_data/allstations.csv`; their datum and exact station-location convention are not declared.
+Figure 1 in [the Step 1 event overview](01_flood_event_overview.md) records the reported impact localities from `metadata/01_impact_locations.csv`. Figure 2 below carries those same points into the domain review, where they are considered alongside the mapped routing groups, gauges and candidate extents. Both figures reuse the shared River Map p01-f06 f06b/f06a renderers with Tutorial-local settings. They are planning aids, not hydrologic validation. Impact markers are approximate locality coordinates, not observed flood boundaries. Gauge coordinates are copied from `stations_data/allstations.csv`; their datum and exact station-location convention are not declared.
 
 ## Figure 2 — Simulation and Observation Domain Design
 
-![Figure 2 — Simulation and Observation Domain Design](figure/f02-simulation_observation_domain_design.png)
+![Figure 2 — Simulation and Observation Domain Design](figure/f02-analysis_domain_design.png)
 
 Regenerate Figure 2 from the repository root with
 `bash tutorial/tutorial11-event_evaluation/f02-analysis_domain.sh`
