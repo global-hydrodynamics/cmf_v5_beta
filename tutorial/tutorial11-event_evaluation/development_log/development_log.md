@@ -490,3 +490,28 @@ notes. No code, data processing, model run, or figure regeneration was performed
 **Result and decisions:** Keep 3.125–12.125°E, 45.875–52.375°N as a provisional outer model window only. Do not call Basin ID 74 a natural Rhine basin. Retain separate Ahr–Erft–Swist/Kyll/Prüm and Meuse–Vesdre–Gete–Dyle observation AOIs. Additional tributary gauges and GFM acquisition-level valid coverage remain to be verified.
 
 **Validation:** Both rendered figures were reviewed visually; f06 panels used existing map data and local OSM tile cache where available. Shell/Python syntax, configuration/CSV parsing, output paths, links and git diff --check were checked. No model simulation or new observation retrieval was run.
+
+## 2026-11-22 — Refine Step 2 basin selection and candidate-domain map
+
+**Work performed:** Rechecked the current `map/glb_15min/COG` basin, uparea and nextxy rasters at the reported impact-locality and supplied-gauge cells. Basin ID 74 maps the sampled Rhine/Meuse/Vesdre-side localities and the three supplied gauges; Halen and Wavre map to ID 1299. Updated the reusable Step 2 process with the full-upstream-watershed rule and map-derived Basin ID procedure. Revised f01a to distinguish the candidate simulation and satellite-analysis rectangles, show IDs 74 and 1299, and retain a map viewport wider than the candidate boxes. The satellite candidate uses the bounds of the existing processed GFM target grid; this relationship and its incomplete valid support are now explicit. f01b remains supplementary local detail.
+
+**Validation and limits:** Rendered f01a/f01b from existing map, point and OSM-cache inputs and visually inspected them. The Tutorial shell syntax, Python AST, JSON/CSV parsing and `git diff --check` passed. The ambient `python3` lacked Matplotlib, so rendering used the repository `.venv`; no downloaded observations or model run were used. At 0.25° resolution and with approximate locality coordinates, cell assignment and nextxy tracing support model-routing-group association only; they do not prove natural catchment boundaries or precise site-to-channel correspondence. Final simulation scope, boundary treatment and satellite coverage remain subject to human/scientific review. No commit or push was made.
+
+## 2026-11-22 — Renumber Tutorial 11 event and domain figures
+
+**Work performed:** Recast the local OSM impact map as Tutorial Fig. 1 (Step 1) with town labels and distinct river-system colors, and the wide basin/domain map as Fig. 2 (Step 2). Fig. 1 has no candidate AOI boxes; Fig. 2 retains the candidate simulation and satellite-analysis bounds. Added existing river-group and cartographic label fields to `impact_locations.csv` and used that Tutorial catalog as the point input for both maps. Renamed the figure-generation wrapper and output images, updated the Step 1/Step 2 documents and reusable process links, and kept the Gallery/Catalog unchanged.
+
+**Validation and limits:** Regenerated both figures from the existing glb_15min map and cached OSM tiles, then visually inspected each. The 14 reported localities appear in Fig. 1, grouped by river system; Fig. 2 shows the two candidate boxes, IDs 74/1299, impacts and gauges. Shell syntax, Python AST, JSON/CSV parsing, local Markdown links and `git diff --check` passed. Rendering used the repository `.venv` because ambient `python3` lacks Matplotlib. No model run, new observation acquisition, Gallery publication, commit or push was performed.
+# 2026-11-22 — Step 3a satellite availability survey
+
+Read the Step 2 machine-readable domain selection and searched GFM STAC metadata
+for 2021-07-13 through 2021-07-20 at the candidate bbox 4–8°E, 49–52°N. The
+date-separated results contain 114 STAC Items grouped into 18 Sentinel-1
+platform/orbit/datatake passes. Reused River Map f06 shared drawing helpers to
+make three same-extent OSM, CaMa river-network and STAC-footprint comparison
+pages, then visually reviewed the AOI frame, footprint shapes, labels and scale.
+The expected Atlantis source/Pixi targets were broken, so no environment was
+reinstalled: the existing 15 July cache was reused and other dates were queried
+read-only from the EODC STAC API. No satellite assets were downloaded. Added the
+Step 3a inventory and process handoff; pass selection remains for researcher
+review.

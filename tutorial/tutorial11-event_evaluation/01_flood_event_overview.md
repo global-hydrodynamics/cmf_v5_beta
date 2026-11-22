@@ -278,12 +278,30 @@ work should resolve its quality/diagnostic limitations and remaining provenance
 questions before a separately agreed event-evaluation workflow.
 
 
-## Basin-wide event setup maps
+## Step 1 — Reported flood impacts
 
-The domain-planning workflow and current candidate bounds are documented in
-[event_setup_plan.md](development_log/event_setup_plan.md), [02_domain_and_observation_design.md](02_domain_and_observation_design.md),
-and [event_setup_report.md](development_log/event_setup_report.md). Its standard figures are
-[the basin overview](figure/event_basin_overview.png) and
-[the flood-impact map](figure/event_flood_impact_area.png). Approximate town-centre
-markers are catalogued in [impact_locations.csv](impact_locations.csv); they are
-not measured flood extents.
+![Figure 1 — Reported Flood Impacts](figure/f01-reported_flood_impacts.png)
+
+Figure 1 locates towns and places where flooding was reported in the sources
+reviewed for this event. Markers are approximate locality coordinates, not
+measured inundation boundaries. The figure uses the existing
+[impact-location catalog](impact_locations.csv), which records the reported
+impact summary, country, river, source URL, coordinate source and coordinate
+confidence for each location. The map also uses its plotting-group and label-
+placement fields; the coordinates and report fields remain the event evidence,
+while those extra fields only control presentation. Regenerate Figures 1 and 2
+with [`f01-f02-event_figures.sh`](f01-f02-event_figures.sh).
+
+| River system | Reported localities in the reviewed sources | Countries |
+| --- | --- | --- |
+| Ahr | Schuld, Altenahr, Bad Neuenahr-Ahrweiler, Sinzig | Germany |
+| Erft / Swist | Bad Münstereifel, Euskirchen, Blessem / Erftstadt | Germany |
+| Kyll / Prüm | Kordel, Prümzurlay | Germany |
+| Vesdre / Meuse | Verviers, Pepinster, Valkenburg | Belgium, Netherlands |
+| Gete / Dyle | Halen, Wavre | Belgium |
+
+This is a summary of the existing source review, not a claim that the list is
+exhaustive. See [Step 2 — Domain selection](02_domain_and_observation_design.md)
+for how these locations were compared with CaMa-Flood routing groups and used
+to define candidate simulation and satellite-analysis domains in
+[Figure 2](figure/f02-simulation_observation_domain_design.png).

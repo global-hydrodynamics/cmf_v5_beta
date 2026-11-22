@@ -59,6 +59,27 @@ def main():
     )
     ax.contour(plot_lon, plot_lat, target.astype(np.uint8), levels=[0.5],
                colors=[settings["basin_outline_color"]], linewidths=0.7, zorder=2)
+    basin_handles = []
+    if settings.get("basin_legend_label"):
+        basin_handles.append(Line2D(
+            [0], [0], color=settings["basin_outline_color"], linewidth=1.2,
+            label=settings["basin_legend_label"],
+        ))
+    # Optional event-specific model routing groups are configured outside this
+    # shared renderer so Basin IDs are not embedded in generic drawing logic.
+    for overlay in settings.get("basin_overlays", []):
+        overlay_id = int(overlay["basin_id"])
+        overlay_mask = np.isfinite(plot_basin) & (plot_basin == overlay_id)
+        if not np.any(overlay_mask):
+            raise SystemExit(f"ERROR: Basin ID {overlay_id} is absent from the f06a extent")
+        ax.contour(
+            plot_lon, plot_lat, overlay_mask.astype(np.uint8), levels=[0.5],
+            colors=[overlay["color"]], linewidths=0.9, zorder=2.2,
+        )
+        basin_handles.append(Line2D(
+            [0], [0], color=overlay["color"], linewidth=1.2,
+            label=overlay["legend_label"],
+        ))
     west, south, east, north = (float(zoom[key]) for key in ("west", "south", "east", "north"))
     ax.add_patch(Rectangle(
         (west, south), east - west, north - south, fill=False,
@@ -68,12 +89,11 @@ def main():
             fontsize=8, weight="bold", zorder=4,
             bbox=dict(facecolor="white", alpha=0.86, edgecolor="none", pad=2))
     common.draw_network(ax, segments, classes)
-    domain_handles = []
-    if settings.get("basin_legend_label"):
-        domain_handles.append(Line2D(
-            [0], [0], color=settings["basin_outline_color"], linewidth=1.2,
-            label=settings["basin_legend_label"],
-        ))
+    domain_handles = list(basin_handles)
+    domain_handles.append(Line2D(
+        [0], [0], color=zoom["color"], linewidth=1.8,
+        linestyle=zoom["linestyle"], label=settings["zoom_label"],
+    ))
     for box in settings.get("domain_boxes", []):
         box_west, box_south, box_east, box_north = (
             float(box[key]) for key in ("west", "south", "east", "north")

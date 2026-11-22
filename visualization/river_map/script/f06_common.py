@@ -138,7 +138,7 @@ def draw_network(ax, segments, classes):
             ))
 
 
-def draw_point_groups(ax, points, styles, show_labels: bool = True):
+def draw_point_groups(ax, points, styles, show_labels: bool = True, group_field: str = "plot_group"):
     """Draw configured event locations inside the current map extent."""
     west, east = ax.get_xlim()
     south, north = ax.get_ylim()
@@ -147,7 +147,7 @@ def draw_point_groups(ax, points, styles, show_labels: bool = True):
     for group, style in styles.items():
         selected = [
             point for point in points
-            if point["plot_group"] == group
+            if point[group_field] == group
             and west <= float(point["longitude"]) <= east
             and south <= float(point["latitude"]) <= north
         ]

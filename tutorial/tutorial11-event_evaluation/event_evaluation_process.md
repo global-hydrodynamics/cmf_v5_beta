@@ -37,11 +37,31 @@ See [event overview](01_flood_event_overview.md),
 
 ### Simulation domain
 
-Include the complete selected model-represented watershed and routed network,
-including the upstream boundary and downstream outlet. If the executable needs
-a rectangular window, derive it from the whole basin and record the margin,
-domain mask and boundary treatment. Confirm that map version, grid, forcing,
-initialization and configuration support the proposed extent.
+CaMa-Flood represents river-basin water dynamics. For a flood evaluation, the
+simulation must include the complete upstream contributing area and routed
+network of the target river, together with the required downstream outlet.
+Do not define the simulation domain from only the damaged locations, and do not
+make a small rectangle an objective in itself. A rectangular model window may
+enclose the whole target watershed and include surrounding cells needed for
+domain boundaries. A large full-basin domain is appropriate when required by
+the evaluation question.
+
+Identify the model Basin IDs from the map data for each event; do not carry a
+Basin ID from another map or hard-code an ID as a natural watershed name. Begin
+with target rivers, impact localities and gauges from Step 1, map them to cells,
+inspect the map's `basin` and `uparea` data, and trace `nextxy` connections to
+understand upstream and downstream routing. Check the spatial extent and
+neighboring routing groups, then choose a window that contains the full
+required watershed and outlet. If basin labels alone do not establish the
+connection, use the routed network. Record map name and resolution, IDs,
+target watershed, domain bounds, boundary margin, mask and rationale. Model
+Basin IDs may combine or divide natural watersheds; state that distinction.
+Whether to include a neighboring routing group depends on map connectivity and
+the evaluation purpose.
+
+Confirm that map version, grid, forcing, initialization and configuration
+support the proposed extent. The satellite/observation domain may be smaller
+than the simulation domain.
 
 ### Observation domain
 
@@ -51,16 +71,30 @@ smaller or non-contiguous; they do not need to equal the simulation domain.
 Record each W/S/E/N bbox, time interval, target rivers/locations, data source,
 selection rationale and whether coverage is only a candidate.
 
-For a visual review, use the reproducible River Map example
+For a visual review, use the reported-impact localities and river systems
+summarized in Tutorial Figure 1 and its linked `impact_locations.csv`; carry
+those same locations forward into the domain review. Use the reproducible River Map example
 [f06 — OSM Background](../../visualization/river_map/README.md): **f06a** shows
 basin/network context and the local extent; **f06b** shows event localities and
 candidate observation areas. Its event-specific inputs are kept in the linked
-JSON/CSV files. The two Tutorial 11 planning figures are separate event
-artifacts; neither f06 nor a town marker proves an observed inundation extent or
-satellite coverage.
+JSON/CSV files. In the Tutorial 11 Step 2 figure, show a map extent broader
+than the candidate simulation window, the candidate simulation and observation
+boxes with distinct labels, and the relevant model routing groups, impacts and
+gauges. A processed satellite target grid is evidence about the existing
+product; it is not automatically a selected observation domain. If its bounds
+are reused as a candidate, document that relationship and show the limited
+valid-observation support. Neither a town marker nor a rendered rectangle
+proves an observed inundation extent or complete satellite coverage.
 
-**Tutorial 11 status:** Candidate simulation and observation bboxes and the
-basin/impact planning figures are documented. Basin interpretation, boundary
+Use the sequence **candidate extents → visual review against map connectivity
+and event evidence → human decision → documented final domains**. A figure used
+for this review presents candidates, not an approved model setup.
+
+**Tutorial 11 status:** Figure 1 summarizes reported impact localities for
+Step 1; Figure 2 carries them into the candidate simulation/observation-domain
+review. Candidate bboxes and the current map's basin IDs and
+location-to-network traces have been inspected, but natural-watershed
+interpretation, final inclusion of neighboring routing groups, boundary
 conditions and observation coverage still need confirmation. Values and
 caveats are in [02_domain_and_observation_design.md](02_domain_and_observation_design.md) and
 [event_setup_report.md](development_log/event_setup_report.md); the original planning proposal
@@ -75,21 +109,31 @@ observations and distinguish missing or excluded support from a valid dry
 classification. For discharge, confirm station identity, units, time zone,
 interval meaning and coordinate-to-model-cell mapping.
 
-For GFM, the demonstrated path uses the separate Atlantis environment and local
-STAC/COG workflow. Search and inventory first, identify a same-pass group by
-source metadata, acquire only the required native layers, and process that pass
-without mixing different acquisitions. Follow the exact commands and outputs in
-the [GFM workflow note](gfm_3sec_workflow.md); its `s01`–`s03` steps acquire,
-convert and validate the selected 3-arcsecond product. The native 20 m
-classification exporter and its class rules are documented there as well. Do
-not infer full-event coverage from one pass, a bounding box, or a rendered map.
+For GFM, survey catalogue availability before requesting imagery. Read the
+event-specific search interval and candidate bbox from the Step 2 configuration,
+search one date at a time into separate cache directories, group STAC Items by
+verified Sentinel-1 platform/orbit/datatake, and compare the actual item
+footprints on a shared map extent. A footprint is catalogue product coverage,
+not valid flood-observation pixels. Select pass IDs for researcher review before
+downloading any COGs. For the subsequent acquisition and processing steps, use
+the separate Atlantis environment and the local workflow in the [GFM workflow
+note](gfm_3sec_workflow.md); its `s01`–`s03` steps acquire, convert and validate
+the selected 3-arcsecond product. The native 20 m classification exporter and
+its class rules are documented there as well. Do not infer full-event coverage
+from one pass, a bounding box, or a rendered map.
 
-**Tutorial 11 status:** Supplied discharge files and a 15 July 2021 S1A morning
-GFM pass have been inventoried. The one-day GFM acquisition and 3-arcsecond
-preprocessing were exercised; a native 20 m classification and inspection
-figure were produced. These are limited examples, not a multi-day event dataset
-or a completed observation archive. Discharge units/time zone and GFM-specific
-redistribution clearance remain unresolved. See the
+**Tutorial 11 status:** The 13–20 July 2021 catalogue survey returned 114 STAC
+Items grouped into 18 acquisition passes over the candidate bbox; actual STAC
+footprint comparisons were rendered. Image assets were not downloaded during
+the survey. Separately, a 15 July 2021 S1A morning GFM pass was acquired and
+3-arcsecond preprocessing was exercised; a native 20 m classification and
+inspection figure were produced. These are limited examples, not a complete
+multi-day event dataset or observation archive. The local Atlantis environment
+was unavailable during the catalogue survey; direct read-only EODC STAC results
+were used for this survey and the existing `s01 --catalogue-only` wrapper is
+ready to repeat it when the environment is available. Discharge units/time zone
+and GFM-specific redistribution clearance remain unresolved. See the
+[Step 3a availability survey](03_satellite_availability_survey.md),
 [observation inventory](observation_data_inventory.md),
 [GFM inventory](gfm_data_inventory.md), and
 [GFM processing note](gfm_3sec_workflow.md).
@@ -164,7 +208,7 @@ existing inventory, maps or preprocessing products.
 | --- | --- | --- |
 | Event and watershed | Event background and candidate Basin IDs inspected | Decide hydrologic target and validate model routing against basin evidence |
 | Domains | Candidate simulation/observation bboxes and planning maps | Confirm full-basin scope, boundary treatment and valid sensor coverage |
-| Observations | Discharge inventory; one GFM pass acquired/preprocessed; native 20 m classification example | Resolve metadata/rights and obtain fit-for-purpose temporal/spatial coverage |
+| Observations | Discharge inventory; catalogue survey of 18 GFM passes; one GFM pass acquired/preprocessed; native 20 m classification example | Review and select passes, resolve metadata/rights, then obtain fit-for-purpose temporal/spatial coverage |
 | CaMa-Flood run | Existing v5 build/run documentation and generic GOSH examples | Configure, run and validate a specific event experiment |
 | Matching | Data products and their grids/time semantics documented in part | Approve and implement spatial/temporal matching rules |
 | Evaluation | No event performance results | Define metrics and report uncertainty and support |

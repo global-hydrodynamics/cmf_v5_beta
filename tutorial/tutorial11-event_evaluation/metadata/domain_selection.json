@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "event": "July 2021 Western European Floods",
+  "event_context_period": {
+    "start_date": "2021-07-13",
+    "end_date": "2021-07-15",
+    "status": "documented_context",
+    "meaning": "Core intense-rainfall interval cited in 01_flood_event_overview.md; not a complete impact or simulation period."
+  },
+  "event_analysis_window": {
+    "start_date": "2021-07-10",
+    "end_date": "2021-07-25",
+    "status": "candidate",
+    "meaning": "Candidate window from the event overview for examining the event and surrounding response; not an approved model period."
+  },
+  "simulation": {
+    "period": {
+      "start_date": null,
+      "end_date": null,
+      "status": "undecided"
+    },
+    "domain": {
+      "map": "glb_15min",
+      "resolution": "0.25 degree",
+      "candidate_basin_ids": [
+        74,
+        1299
+      ],
+      "bbox_west_south_east_north": [
+        3.125,
+        45.875,
+        12.125,
+        52.375
+      ],
+      "status": "candidate"
+    },
+    "selection_note": "Candidate outer window covering the inspected model routing-group cell envelopes and margins. Confirm the full target watershed, group scope, active-cell mask and boundary treatment before use."
+  },
+  "satellite_analysis": {
+    "search_period": {
+      "start_date": "2021-07-13",
+      "end_date": "2021-07-20",
+      "inclusive": true,
+      "status": "candidate"
+    },
+    "domain": {
+      "bbox_west_south_east_north": [
+        4.0,
+        49.0,
+        8.0,
+        52.0
+      ],
+      "status": "candidate",
+      "basis": "Step 2 candidate area using the existing processed GFM target-grid bounds; valid support for the 2021-07-15 pass is incomplete and patchy."
+    }
+  },
+  "references": [
+    "01_flood_event_overview.md",
+    "02_domain_and_observation_design.md",
+    "03_satellite_availability_survey.md"
+  ]
+}
