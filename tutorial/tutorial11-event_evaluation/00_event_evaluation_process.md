@@ -340,12 +340,14 @@ handover manifest: it records each source bbox, actual projected bounds, file
 path, dimensions, size and class counts, plus the shared grid and class
 definitions. `proposed` remains descriptive and does not gate extraction.
 
-Run `bash f08d-gfm_focus_areas_20m.sh` to recreate
-`figure/f08d-gfm_focus_areas_20m.png` from that manifest. It shows the native
-categorical classes with the OSM background and `glb_15min` river network.
-These local maps are inspection views of the selected observation crops; they
-do not imply that unobserved pixels are dry or that the selected areas validate
-hydrologic performance.
+Run `bash f03d-gfm_focus_areas_20m.sh` to recreate
+`figure/f03d-gfm_focus_areas_20m.png` from that manifest. It shows the native
+categorical classes over a softened OSM background; the model river network
+is omitted so the observation classes remain prominent. These local maps are
+inspection views of the selected observation crops; they do not imply that
+unobserved pixels are dry or that the selected areas validate hydrologic
+performance. Land and Exclusion are drawn at 50% opacity to reveal OSM below;
+water classes use 60% opacity, while NoData remains transparent.
 
 ## 4. Configure and run CaMa-Flood
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render extracted GFM focus rasters with OSM and CaMa-Flood river context."""
+"""Render extracted GFM focus rasters with OSM context."""
 from __future__ import annotations
 
 import argparse
@@ -11,7 +11,7 @@ import sys
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm, ListedColormap
+from matplotlib.colors import BoundaryNorm, ListedColormap, to_rgba
 from matplotlib.patches import Patch
 from matplotlib.ticker import MaxNLocator
 import numpy as np
@@ -32,9 +32,11 @@ CLASS_NAMES = {
     4: "Other water", 5: "Exclusion", 6: "Inconsistent", 255: "NoData (transparent)",
 }
 CLASS_COLORS = {
-    0: "#d9e5c7", 1: "#e53935", 2: "#174a7e", 3: "#49a6cf",
-    4: "#8764a8", 5: "#5a5a5a", 6: "#f39c12", 255: "#eeeeee",
+    0: "#f7f7f2", 1: "#e53935", 2: "#00aedd", 3: "#0066ad",
+    4: "#8764a8", 5: "#c9c9c9", 6: "#f39c12", 255: "#eeeeee",
 }
+CLASS_OPACITY = {0: 0.50, 1: 0.60, 2: 0.60, 3: 0.60,
+                 4: 0.60, 5: 0.50, 6: 0.85, 255: 0.0}
 OSM_CONTEXT_EXTENT = (3.5, 48.7, 9.8, 51.9)
 
 
@@ -70,7 +72,7 @@ def crop_osm(image: np.ndarray, extent: tuple[float, float, float, float],
         raise ValueError(f"OSM cache extent does not cover panel: {extent}")
     crop = Image.fromarray(image[y0:y1, x0:x1])
     crop = crop.resize(output_size, resample=Image.Resampling.BILINEAR)
-    softened = Image.blend(crop, Image.new("RGB", output_size, "white"), 0.40)
+    softened = Image.blend(crop, Image.new("RGB", output_size, "white"), 0.20)
     return np.asarray(softened)
 
 
@@ -89,13 +91,10 @@ def render(args: argparse.Namespace) -> None:
         paths.append(path)
 
     views = [focus_view(area["source_wgs84_bbox_west_south_east_north"]) for area in areas]
-    river_extent = (
-        min(x[0] for x in views), min(x[1] for x in views),
-        max(x[2] for x in views), max(x[3] for x in views),
-    )
-    _, _, segments, classes = river.read_network(Path(args.map_dir), river_extent)
     osm_context = river.read_osm(OSM_CONTEXT_EXTENT, Path(args.tile_cache).expanduser())
-    cmap = ListedColormap([CLASS_COLORS[code] for code in CLASS_CODES])
+    cmap = ListedColormap([
+        to_rgba(CLASS_COLORS[code], CLASS_OPACITY[code]) for code in CLASS_CODES
+    ])
     cmap.set_bad((0, 0, 0, 0))
     norm = BoundaryNorm([-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 255.5], cmap.N)
 
@@ -114,14 +113,13 @@ def render(args: argparse.Namespace) -> None:
         panel_osm = crop_osm(osm_context, view_extent, (panel_width, 650))
         ax.imshow(
             panel_osm, extent=(view_extent[0], view_extent[2], view_extent[1], view_extent[3]),
-            origin="upper", alpha=0.55, zorder=0,
+            origin="upper", alpha=0.85, zorder=0,
         )
         masked = np.ma.masked_equal(data, 255)
         ax.imshow(
             masked, extent=raster_extent, origin="upper", interpolation="nearest",
-            cmap=cmap, norm=norm, alpha=0.90, zorder=2,
+            cmap=cmap, norm=norm, zorder=2,
         )
-        river.draw_network(ax, segments, classes)
         west, south, east, north = map(
             float, area["source_wgs84_bbox_west_south_east_north"]
         )
@@ -175,7 +173,6 @@ def main() -> None:
     parser.add_argument("--tutorial-dir", required=True)
     parser.add_argument("--extracted-areas", required=True)
     parser.add_argument("--figure-output", required=True)
-    parser.add_argument("--map-dir", required=True)
     parser.add_argument("--tile-cache", required=True)
     render(parser.parse_args())
 
