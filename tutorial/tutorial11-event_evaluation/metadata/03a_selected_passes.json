@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "event": "July 2021 Western European Floods",
+  "status": "proposed",
+  "source_domain_config": "02_domain_selection.json",
+  "required_gfm_layers": [
+    "ensemble_flood_extent",
+    "ensemble_water_extent",
+    "reference_water_mask",
+    "exclusion_mask"
+  ],
+  "passes": [
+    {
+      "pass_id": "S1A_o038784_dt049389",
+      "catalogue_date": "2021-07-15",
+      "satellite": "S1A",
+      "absolute_orbit": 38784,
+      "relative_orbit": 37,
+      "orbit_direction": "DESCENDING",
+      "datatake": "049389",
+      "start_utc": "2021-07-15T05:49:37Z",
+      "end_utc": "2021-07-15T05:51:42Z",
+      "stac_item_count": 11,
+      "source_product_count": 5,
+      "source_products_overlapping_candidate_aoi": 3,
+      "status": "proposed",
+      "rationale": "Most directly linked to the existing native GFM sample already processed for this Tutorial; a useful first processing candidate, not a scientific ranking or complete event record."
+    }
+  ],
+  "limitations": [
+    "The satellite analysis domain in 02_domain_selection.json is a candidate, not an approved observation boundary.",
+    "Source-product footprint intersections do not establish valid GFM flood-classification pixels; the existing processed sample has incomplete, patchy valid support.",
+    "The 14 and 16 July passes remain available in 03a_satellite_pass_inventory.csv for before/after comparison and are not selected in this initial proposal.",
+    "The evening 15 July S1B pass has no source-product GeoFootprints intersecting the current candidate AOI, despite GFM tile overlap."
+  ]
+}

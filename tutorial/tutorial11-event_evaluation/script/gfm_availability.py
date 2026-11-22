@@ -391,17 +391,17 @@ def main():
     parser.add_argument("--mode", choices=["metadata", "figure"], required=True,
                         help="metadata: summarize cached STAC/OData; figure: render existing metadata only")
     parser.add_argument("--domain-config", type=Path,
-                        default=TUTORIAL_DIR / "metadata/domain_selection.json")
+                        default=TUTORIAL_DIR / "metadata/02_domain_selection.json")
     parser.add_argument("--catalogue-root", type=Path,
                         default=TUTORIAL_DIR / "Atlantis/catalogue")
     parser.add_argument("--summary-dir", type=Path,
                         default=TUTORIAL_DIR / "Atlantis/summary")
     parser.add_argument("--inventory-output", type=Path,
-                        default=TUTORIAL_DIR / "metadata/satellite_pass_inventory.csv")
+                        default=TUTORIAL_DIR / "metadata/03a_satellite_pass_inventory.csv")
     parser.add_argument("--orbit-metadata", type=Path,
-                        default=TUTORIAL_DIR / "metadata/satellite_orbit_metadata.csv")
+                        default=TUTORIAL_DIR / "metadata/03a_satellite_orbit_metadata.csv")
     parser.add_argument("--acquisition-footprints", type=Path,
-                        default=TUTORIAL_DIR / "metadata/sentinel1_acquisition_footprints.geojson")
+                        default=TUTORIAL_DIR / "metadata/03a_sentinel1_acquisition_footprints.geojson")
     parser.add_argument("--map-dir", type=Path, default=REPO_ROOT / "map/glb_15min")
     parser.add_argument("--tile-cache", type=Path,
                         default=Path.home() / ".cache/cmf_flood_osm_tiles")

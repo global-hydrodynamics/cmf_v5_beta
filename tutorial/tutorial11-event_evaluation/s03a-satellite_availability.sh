@@ -5,7 +5,7 @@ set -euo pipefail
 PYTHON_CMD="python3"
 
 TUTORIAL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOMAIN_CONFIG="$TUTORIAL_DIR/metadata/domain_selection.json"
+DOMAIN_CONFIG="$TUTORIAL_DIR/metadata/02_domain_selection.json"
 ATLANTIS_DIR="$TUTORIAL_DIR/Atlantis"
 CATALOGUE_ROOT="$ATLANTIS_DIR/catalogue"
 
@@ -41,8 +41,8 @@ echo "[STEP 2/2] Write the pass inventory, orbit directions and source acquisiti
     --domain-config "$DOMAIN_CONFIG" \
     --catalogue-root "$CATALOGUE_ROOT" \
     --summary-dir "$ATLANTIS_DIR/summary" \
-    --inventory-output "$TUTORIAL_DIR/metadata/satellite_pass_inventory.csv" \
-    --orbit-metadata "$TUTORIAL_DIR/metadata/satellite_orbit_metadata.csv" \
-    --acquisition-footprints "$TUTORIAL_DIR/metadata/sentinel1_acquisition_footprints.geojson"
+    --inventory-output "$TUTORIAL_DIR/metadata/03a_satellite_pass_inventory.csv" \
+    --orbit-metadata "$TUTORIAL_DIR/metadata/03a_satellite_orbit_metadata.csv" \
+    --acquisition-footprints "$TUTORIAL_DIR/metadata/03a_sentinel1_acquisition_footprints.geojson"
 
 echo "Metadata survey complete. No figures or satellite COG assets were downloaded."

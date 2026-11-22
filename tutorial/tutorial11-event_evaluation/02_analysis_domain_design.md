@@ -75,7 +75,7 @@ The existing detailed [event background](01_flood_event_overview.md), [discharge
 
 ### Machine-readable handoff to Step 3
 
-The shared [`metadata/domain_selection.json`](metadata/domain_selection.json)
+The shared [`metadata/02_domain_selection.json`](metadata/02_domain_selection.json)
 records the event context, candidate event-analysis window, satellite search
 period and bbox, candidate simulation bbox, and the undecided simulation
 period. Step 3a reads the satellite dates and bbox from this file; the search

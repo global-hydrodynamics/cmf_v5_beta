@@ -1,14 +1,17 @@
 # Tutorial 11 — Step 3a: Satellite Data Survey
 
-**Status:** Catalogue availability survey completed for candidate review. No GFM
-COG assets were downloaded and no pass is approved yet for observation use.
+**Status:** Catalogue availability survey completed. No GFM COG assets were
+downloaded during the survey. The existing first-processing candidate is
+recorded as proposed; no pass is scientifically approved for event evaluation.
 
 ## Purpose and configuration handoff
+
+For future events, use the reusable [p03a satellite availability Agent Workflow](p03a-satellite_availability.md). This Rhine 2021 survey is a worked sample and is not rerun by that Prompt.
 
 Step 3a searches acquisition metadata, groups STAC Items by their verified
 Sentinel-1 source identity, maps each pass footprint, and compares candidate
 coverage before any image download. It follows the time and spatial handoff in
-[`metadata/domain_selection.json`](metadata/domain_selection.json), which is
+[`metadata/02_domain_selection.json`](metadata/02_domain_selection.json), which is
 the shared configuration for Step 2 and this survey.
 
 The current settings are:
@@ -75,11 +78,11 @@ scope. Daily counts are:
 
 The 6 in-scope pass IDs, source time ranges, STAC Item counts, unique Sentinel-1
 source product counts, Equi7 tile counts, AOI intersections and source IDs are
-recorded in [`metadata/satellite_pass_inventory.csv`](metadata/satellite_pass_inventory.csv).
+recorded in [`metadata/03a_satellite_pass_inventory.csv`](metadata/03a_satellite_pass_inventory.csv).
 Relative orbit and ascending/descending direction for the same six passes are in
-[`metadata/satellite_orbit_metadata.csv`](metadata/satellite_orbit_metadata.csv).
+[`metadata/03a_satellite_orbit_metadata.csv`](metadata/03a_satellite_orbit_metadata.csv).
 The 27 source product geometries for this focused window are retained separately in
-[`metadata/sentinel1_acquisition_footprints.geojson`](metadata/sentinel1_acquisition_footprints.geojson).
+[`metadata/03a_sentinel1_acquisition_footprints.geojson`](metadata/03a_sentinel1_acquisition_footprints.geojson).
 
 ### Geometry investigation: GFM tile coverage versus Sentinel-1 acquisition
 
@@ -156,21 +159,22 @@ Equi7 tile Items. These levels are separately counted in the inventory; their
 overlap does not mean independent overpasses or stronger observed flooding. No
 pass can be selected solely from product geometry.
 
-For a first image-download review, the 15 July morning
+For an initial processing example, the 15 July morning
 `S1A_o038784_dt049389` (11 Items; relative orbit 37, descending) is the most
 directly linked to the existing native GFM sample already processed for this
-Tutorial. The 15 July evening `S1B_o027808_dt03517A` (6 Items, 5 source products,
-relative orbit 132, ascending) does **not** cover the current candidate bbox:
-zero source product GeoFootprints intersect it, despite all 6 GFM tile Items
-intersecting. Do not treat it as a same-AOI comparison unless the observation
-domain is intentionally expanded west for a stated evaluation purpose. These
-are candidate-screening findings, not a scientific ranking or approval. The
-14 and 16 July passes provide the immediate before/after context around the
-central 15 July date. Prioritize them only after comparing source acquisition
-coverage, event-response timing, valid-pixel masks, data-layer availability,
-licensing and the intended evaluation question. An acquisition-footprint
-intersection still does not mean that the GFM pixels are valid or useful over
-the reported impact localities.
+Tutorial. It is recorded as the initial `proposed` pass in
+[`metadata/03a_selected_passes.json`](metadata/03a_selected_passes.json), not as
+a scientific ranking or approved event dataset. The 15 July evening
+`S1B_o027808_dt03517A` (6 Items, 5 source products, relative orbit 132,
+ascending) does **not** cover the current candidate bbox: zero source product
+GeoFootprints intersect it, despite all 6 GFM tile Items intersecting. Do not
+treat it as a same-AOI comparison unless the observation domain is intentionally
+expanded west for a stated evaluation purpose. The 14 and 16 July passes provide
+before/after context around the central 15 July date. Their relative priority
+remains open pending review of coverage, event-response timing, valid-pixel
+masks, data-layer availability, licensing and the evaluation question. An
+acquisition-footprint intersection does not mean the GFM pixels are valid or
+useful over reported impact localities.
 
 ## Reproduce and hand over to Step 3b
 
@@ -195,11 +199,12 @@ The visualization reuses
 or Catalog. OSM tiles are fetched/cached by that shared renderer and attributed
 on every panel.
 
-Before Step 3b downloads anything, the researcher should review candidate
-passes against the reported flood localities, acquisition time, all four
-required GFM layers, valid/exclusion masks, data-use terms and the event
-hydrographs. Decide whether the existing 15 July S1A pass is sufficient for a
-first processing example and whether the 14 and 16 July passes add useful
-temporal context. Then record selected pass IDs
-and the selection rationale before requesting COG assets. No satellite image
-download, flood-map computation or model comparison was performed in Step 3a.
+The fixed `metadata/03a_selected_passes.json` is the intended Step 3b
+selection interface. It currently records the 15 July S1A pass as `proposed`;
+status is descriptive and does not block a Step 3b run. The existing
+`s03b-download_gfm.sh` still uses explicit pass settings and has not been
+connected to that JSON in this task. Human review of the candidate against
+reported localities, acquisition time, required layers, valid/exclusion masks,
+data-use terms and event hydrographs remains the recommended research process.
+No satellite image download, flood-map computation or model comparison was
+performed as part of the Step 3a survey.

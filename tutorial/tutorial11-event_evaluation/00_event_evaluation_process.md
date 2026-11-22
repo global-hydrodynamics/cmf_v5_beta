@@ -13,13 +13,16 @@ candidate setting to a validated choice because a map or script can display it.
 ## Agent-driven workflow and file roles
 
 A reusable `pXX-*.md` Prompt is the entry point for an AI agent to carry out a
-research Step: investigate, prepare necessary processing or visualization
-scripts, execute them, and present evidence and uncertainties to the
-researcher. The researcher checks scientific meaning and fit to the research
-purpose, gives feedback, and asks for revision when needed. Iteration has no
-fixed count. Human approval is required for scientific choices; an agent does
-not silently finalize them. Once accepted, preserve the result and hand it to
-the next Step.
+research Step. On the first run, the agent completes the available
+investigation, prepares and executes necessary processing/visualization
+scripts, records evidence-based recommendations and settings as `proposed`,
+and presents the result. The researcher reviews scientific meaning and fit to
+the research purpose, gives feedback, and may request revisions. The agent
+updates the same files and reruns affected work; iteration has no fixed count.
+An agent does not silently represent its recommendation as a Human-approved
+scientific decision. Status fields document review state only; they are not
+program execution gates. A later Step may use complete `proposed` values unless
+a separate scientific or data-access rule requires a decision.
 
 - `pXX-*.md` describes and guides the complete Agent Workflow; it is not a
   substitute for the executed research result.
@@ -29,7 +32,11 @@ the next Step.
   without requiring the agent's exploratory session.
 - `01_*.md`, `02_*.md`, etc. record research results, rationale and uncertainty.
 - CSV/JSON catalogs, handoff values and event-specific settings belong under
-  `metadata/` where appropriate.
+  `metadata/` where appropriate. Prefix metadata filenames with their owning
+  Step number (for example, `02_domain_selection.json` and
+  `03a_satellite_pass_inventory.csv`) unless a file is intentionally shared
+  across Steps. A downstream handoff uses one fixed filename; revise its
+  contents in place instead of adding `_v2` or `_final` variants.
 
 Prompts, reproducible Shell workflows and research outputs serve different
 purposes. Save the adopted processing and final reviewed Figure settings; do
@@ -76,11 +83,14 @@ set to another event.
 
 The agent reviews the Step 1 evidence and selected map, proposes initial
 domains, prepares and runs `f02-analysis_domain.sh`, and presents the Figure,
-routing evidence, bounds and open questions to the Human. The Human reviews
-the scientific target and candidate choices. The agent adjusts domains or
-Figure settings and reruns the Figure in response to feedback until the Human
-accepts the design. Save the final settings, rationale and reproducible Shell
-for Step 3; do not treat the first candidate as approved.
+routing evidence, bounds and open questions to the Human. Researcher review
+and iteration are recommended parts of the scientific process; the initial
+complete `proposed` design may be passed to a later Step without waiting for
+approval. When feedback is available, the agent adjusts domains or Figure
+settings and reruns affected work. Status is descriptive metadata, not an
+execution condition. Save the current settings, rationale and reproducible
+Shell for Step 3; do not represent a candidate as approved without the
+researcher's decision.
 
 The workflow is iterative:
 
@@ -106,17 +116,20 @@ The workflow is iterative:
    Choose a broad enough viewport to explain the geographic context; label
    proposed bounds as candidates and distinguish them from processed product
    coverage.
-5. Review the map, network evidence, proposed bounds and uncertainties with
-   the researcher. Adjust target rivers, routing groups, domains or viewport
-   as needed. Repeat until the researcher approves the domain choices; there
-   is no preset number of review rounds. A viewport-only change must not be
-   recorded as a change to an analysis domain.
-6. Record the selection evidence, rationale, uncertainty and remaining
-   questions in `02_analysis_domain_design.md`. Store spatial and temporal
-   handoff values and their candidate/approved/undecided status in
-   `metadata/domain_selection.json`; keep event-specific figure settings in
-   metadata. Ensure `f02-analysis_domain.sh` regenerates the final reviewed
-   Figure 2 from the saved settings.
+5. On the initial Prompt run, choose and save the best-supported candidate
+   domains, mark their review state `proposed`, and generate Figure 2 before
+   presenting the result. Do not wait for Human approval to produce the first
+   complete candidate. The researcher may then review and request revisions;
+   the agent updates the same settings and reruns the Figure as needed. There
+   is no preset review-round count. A viewport-only change must not be recorded
+   as a change to an analysis domain.
+6. Record the evidence, rationale, uncertainty and questions in
+   `02_analysis_domain_design.md`. Store spatial/temporal handoff values in the
+   fixed `metadata/02_domain_selection.json`; use `proposed`, `approved` or
+   `undecided` as descriptive status where appropriate. Keep event-specific
+   Figure settings in metadata and ensure `f02-analysis_domain.sh` regenerates
+   Figure 2 from the saved settings. Status does not gate the Shell or later
+   Steps when required values are present.
 7. Hand the reviewed domain design and its caveats to Step 3. Later evidence
    about actual satellite coverage, forcing support or model boundaries may
    justify revisiting a candidate.
@@ -143,6 +156,23 @@ the original planning proposal and setup findings remain in
 
 ## 3. Acquire and preprocess observations
 
+For a new event's GFM survey, use [p03a — Satellite Availability Agent
+Workflow](p03a-satellite_availability.md). On its first run, the agent reads
+`metadata/02_domain_selection.json`, runs `s03a-satellite_availability.sh` for
+catalogue/orbit metadata only, renders pass comparisons with
+`f03a-satellite_footprints.sh`, and records an evidence-based initial
+recommendation in the fixed `metadata/03a_selected_passes.json`. The initial
+selection is `proposed`; it is ready for Human review but is not blocked from
+being read by a later Step. Feedback updates the same settings, metadata and
+figures rather than creating versioned copies.
+
+`03a_selected_passes.json` is the intended Step 3b input contract: it identifies
+pass IDs, catalogue dates and requested layers. Its `status` fields describe
+review state and must not be treated as an execution gate. Existing download
+Shells retain their ordinary input/file checks; this workflow update does not
+add approval checks or alter download behavior. The current Tutorial 11
+`s03b-download_gfm.sh` is not yet wired to read this selection JSON.
+
 For each product, record provider and version, source identifiers, acquisition
 or aggregation time, spatial and temporal support, units, grid/CRS, nodata and
 quality masks, processing, citation and redistribution terms. Preserve original
@@ -157,8 +187,9 @@ verified Sentinel-1 platform/orbit/datatake, and compare both source Sentinel-1
 product GeoFootprints and GFM Equi7 tile coverage on a shared map extent. These
 are different geometries: tile Items
 within a pass are not independent observations, and neither geometry is a map
-of valid flood-observation pixels. Select pass IDs for researcher review before
-downloading any COGs. For the subsequent acquisition and processing steps, use
+of valid flood-observation pixels. Record an initial pass recommendation in the fixed
+`metadata/03a_selected_passes.json` and present it for researcher review; the
+`proposed` status is descriptive and does not gate a later Step. For the subsequent acquisition and processing steps, use
 the separate Atlantis environment and the local workflow in the [GFM workflow
 note](gfm_3sec_workflow.md); its `s01`–`s03` steps acquire, convert and validate
 the selected 3-arcsecond product. The native 20 m classification exporter and
@@ -176,10 +207,14 @@ multi-day event dataset or observation archive. The local Atlantis environment
 was unavailable during the catalogue survey; direct read-only EODC STAC results
 were used for this survey and the `s03a-satellite_availability.sh` wrapper is
 ready to repeat the metadata search when the environment is available. The
-separate `s03b-download_gfm.sh` wrapper acquires the selected native 20 m COG
-layers, while `f03a-satellite_footprints.sh` only redraws figures from cached
-metadata. Discharge units/time zone
-and GFM-specific redistribution clearance remain unresolved. See the
+separate `s03b-download_gfm.sh` wrapper currently acquires its explicitly
+configured native 20 m COG layers; it is not yet wired to read
+`metadata/03a_selected_passes.json`. `f03a-satellite_footprints.sh` redraws
+figures from cached metadata. Discharge units/time zone
+and GFM-specific redistribution clearance remain unresolved. The
+`S1A_o038784_dt049389` first-processing candidate is recorded as `proposed` in
+`metadata/03a_selected_passes.json`; this does not certify its coverage or
+require an approval state for later execution. See the
 [Step 3a satellite data survey](03_satellite_data_survey.md),
 [observation inventory](observation_data_inventory.md),
 [GFM inventory](gfm_data_inventory.md), and
@@ -187,7 +222,10 @@ and GFM-specific redistribution clearance remain unresolved. See the
 
 ## 4. Configure and run CaMa-Flood
 
-After the watershed and domains are approved:
+Use the current Step 2 domain values when they contain the inputs required by
+the model. Their `proposed`/`approved` labels document research review; they
+do not block scripts from running. Human review is recommended before treating
+the chosen setup as a scientifically accepted evaluation design:
 
 1. Select and record the CaMa-Flood source revision, map/grid version, runoff
    forcing, model configuration, Input Matrix and dimension metadata.

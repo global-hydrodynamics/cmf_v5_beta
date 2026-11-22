@@ -3,9 +3,11 @@
 ## Purpose
 
 Step 2 connects Step 1's reported rivers and impact localities to a specific
-CaMa-Flood map. The agent investigates routed basin structure, proposes
-simulation and satellite-analysis domains, prepares Figure 2, and iterates
-with the researcher until the domain design is accepted and reproducible.
+CaMa-Flood map. On the first run, the agent investigates routed basin
+structure, chooses and records evidence-based proposed simulation and
+satellite-analysis domains, prepares Figure 2, and presents the results for
+researcher review. The researcher may request revisions; the agent updates the
+same settings and regenerates the Figure as needed.
 
 ## Human instructions
 
@@ -19,8 +21,8 @@ After reviewing the Step 1 evidence, give the AI agent the paths to:
 
 Run the workflow in that event's own directory. Researchers do not need to
 supply Basin IDs or initial bounding boxes: the agent should inspect the
-selected map and propose evidence-based candidates. Keep Tutorial 11's Rhine
-2021 sample unchanged.
+selected map and choose initial evidence-based candidates without waiting
+for approval at each choice. Keep Tutorial 11's Rhine 2021 sample unchanged.
 
 ## Example AI agent prompt
 
@@ -43,6 +45,11 @@ worked example: do not edit them or copy their Basin IDs, domains, viewing
 extent, gauges or event settings. Inspect the supplied event evidence and the
 actual selected CaMa-Flood map. Distinguish verified facts, interpretations,
 candidate choices, human-approved decisions and unresolved questions.
+
+Complete this workflow on the first Prompt run; do not stop after presenting
+initial ideas. Save first-run candidate values with `status: "proposed"`. This
+status records review state only and is not a program execution gate. Later
+review iterations update the same files; do not create versioned filenames.
 
 Complete this workflow:
 
@@ -83,22 +90,26 @@ Complete this workflow:
    that explains the geography rather than copying Rhine bounds. Inspect the
    saved Figure and correct readability or placement problems.
 5. Present the map, map-connectivity evidence, proposed bounds, rationale and
-   open questions to the researcher. Ask for decisions where the scientific
-   target or evidence is ambiguous. Revise target rivers, domains, viewport,
-   settings or annotations based on feedback and rerun Figure 2 as needed.
-   Continue until the researcher accepts the domain design; the iteration
-   count is not fixed. Clearly distinguish viewport-only changes from changes
-   to analysis domains. Do not mark a scientific choice approved on the
-   researcher's behalf.
-6. After approval, update `02_analysis_domain_design.md` with map/version,
-   examined routing evidence, selected or candidate ranges, rationale,
-   limitations and unresolved items. Record spatial/temporal handoff and
-   candidate/approved/undecided status in `metadata/domain_selection.json`.
+   open questions to the researcher after saving the initial candidates and
+   Figure 2. Ask for decisions where the scientific target or evidence is
+   ambiguous. Revise target rivers, domains, viewport, settings or annotations
+   in response to feedback, update the same files and rerun Figure 2 as needed.
+   Continue review as useful; the iteration count is not fixed. Clearly
+   distinguish viewport-only changes from changes to analysis domains. Record
+   `proposed` or `approved` as informative review metadata where appropriate;
+   neither status is a Shell/Python execution gate.
+6. On the first run, create or update `02_analysis_domain_design.md` with
+   map/version, examined routing evidence, recommended ranges, rationale,
+   limitations and unresolved items. Save the initial spatial/temporal handoff
+   in `metadata/02_domain_selection.json` with proposed values marked
+   `proposed`; retain null/undecided values where evidence is insufficient.
    Store event-specific Figure settings in metadata. Ensure
-   `f02-analysis_domain.sh` reproduces the final reviewed
-   `figure/f02-analysis_domain_design.png` from those saved settings. Keep the
-   final reviewed result; intermediate trial figures need not be retained.
-7. Hand the reviewed design and uncertainties to Step 3. Later scene
+   `f02-analysis_domain.sh` reproduces Figure 2 from those settings. After
+   researcher feedback, revise the same report/settings and regenerate the
+   Figure. Do not create `_v2`, `_final` or similar files.
+7. Hand the current design and uncertainties to Step 3. Complete `proposed`
+   values may be used when their required inputs are present; researcher review
+   can revise them but is not an execution precondition. Later scene
    availability, valid-observation support, forcing or model-boundary evidence
    may require reconsideration.
 
@@ -114,17 +125,18 @@ Do not claim hydrologic validation from a successful figure render.
 | Output | Role |
 | --- | --- |
 | `02_analysis_domain_design.md` | Domain rationale, evidence and caveats |
-| `metadata/domain_selection.json` | Spatial/temporal handoff and decision status |
+| `metadata/02_domain_selection.json` | Spatial/temporal handoff and decision status |
 | Figure settings under `metadata/` | Reproducible event-specific display configuration |
 | `f02-analysis_domain.sh` | Reproducible Figure 2 entry point |
-| `figure/f02-analysis_domain_design.png` | Reviewed simulation/observation domain map |
+| `figure/f02-analysis_domain_design.png` | Candidate or reviewed simulation/observation domain map |
 
-The agent performs the map investigation, proposes initial candidates, prepares
-the Figure and incorporates researcher feedback. The researcher confirms
-whether the upstream area/outlet is sufficient, model groups are interpreted
-correctly, observation candidates fit the research purpose, and uncertainty
-is documented. Step 2 records an accepted design for later work; it does not
-guarantee satellite coverage or final model boundary conditions.
+The agent completes the initial map investigation, candidate selection,
+Figure and proposed settings before presenting them. Researcher review is the
+recommended scientific workflow, not a software gate: downstream scripts may
+consume valid `proposed` settings, and no script must require `approved`. The
+researcher can request changes, which the agent applies to the same files.
+Step 2 does not guarantee satellite coverage or final model boundary
+conditions.
 
 Tutorial 11 already has a provisional Rhine 2021 Step 2 example. This Prompt is
 for future events and must not be run there to recreate or change its existing

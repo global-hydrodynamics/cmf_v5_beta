@@ -11,7 +11,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SETTINGS="$SCRIPT_DIR/metadata/event_figure_settings.json"
 ZOOMUP_FILE="$SCRIPT_DIR/metadata/event_map_extents.csv"
 IMPACT_FILE="$SCRIPT_DIR/metadata/01_impact_locations.csv"
-GAUGE_FILE="$SCRIPT_DIR/metadata/step2_gauges.csv"
+GAUGE_FILE="$SCRIPT_DIR/metadata/02_gauges.csv"
 FIGURE_DIR="$SCRIPT_DIR/figure"
 cd "$REPO_ROOT"
 

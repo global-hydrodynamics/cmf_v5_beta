@@ -17,13 +17,13 @@ CATALOGUE_DIR="$ATLANTIS_DIR/catalogue/$DATE"
 RUN_DIR="$ATLANTIS_DIR/runs/download_$PASS_ID"
 
 if [[ ! -s "$CATALOGUE_DIR/metadata/stac_items.json" || \
-      ! -s "$TUTORIAL_DIR/metadata/satellite_pass_inventory.csv" ]]; then
+      ! -s "$TUTORIAL_DIR/metadata/03a_satellite_pass_inventory.csv" ]]; then
     printf 'Step 3a catalogue or pass inventory is missing. Run bash s03a-satellite_availability.sh first.\n' >&2
     exit 1
 fi
 if ! awk -F, -v pass="$PASS_ID" -v date="$DATE" \
         '$1 == pass && $2 == "S1A" && $5 == "DESCENDING" && substr($7, 1, 10) == date { found=1 } END { exit !found }' \
-        "$TUTORIAL_DIR/metadata/satellite_pass_inventory.csv"; then
+        "$TUTORIAL_DIR/metadata/03a_satellite_pass_inventory.csv"; then
     printf 'PASS_ID %s is not in the current Step 3a inventory. Review the inventory or set PASS_ID explicitly.\n' "$PASS_ID" >&2
     exit 1
 fi
