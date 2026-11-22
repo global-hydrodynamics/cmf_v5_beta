@@ -7,7 +7,7 @@ Reconstructed from retained Tutorial 11 documents, impact inventory, station inv
 ## Inputs
 
 - Historical source: former root `01_flood_event_overview.md` (now migrated to the Survey Report)
-- `metadata/01_impact_locations.csv`; `observation/observation_data_inventory.md`
+- `metadata/01_impact_locations.csv`; `observation/README.md` and `metadata/04_discharge_dataset.json`
 - `figure/f01-reported_flood_impacts.png`; `f01-reported_flood_impacts.sh`
 
 ## Actions Performed

@@ -47,7 +47,7 @@ scientific interpretation and may request a correction, alternative analysis
 or additional evidence; the agent updates affected outputs and reports. Review
 is recommended, but its absence does not stop later processing. The details for
 review states, errors and agent conduct are defined in the Tutorial's
-[AI-supported analysis rules](AGENTS.md). The six-stage scientific workflow
+[AI-supported analysis rules](AGENTS.md). The staged scientific workflow
 below is the research plan; per-Step execution instructions are in the
 corresponding Prompts.
 
@@ -177,34 +177,61 @@ Report](AI_work_report/03d_focus_area_extraction.md),
 [`metadata/03d_extracted_areas.json`](metadata/03d_extracted_areas.json), and
 [Figure 3d](figure/f03d-gfm_focus_areas_20m.png).
 
-### Step 4 — CaMa-Flood Event Simulation
+### Step 4 — River Discharge Observation Preparation
 
-**Objective:** simulate the selected event and river-system scope with suitable
-forcing, initialization and boundary treatment. **Method:** configure an
-event-specific CaMa-Flood experiment using the domain and observation plan,
-then retain the exact model, forcing, time, restart and output configuration.
-The experiment design and execution remain future work. Current sample runs
-and maps do not constitute a Rhine event simulation.
+**Objective:** prepare the supplied river-gauge observations for later
+event-evaluation work. **Method:** retain source files unchanged, identify
+stations by ID, check time coverage/cadence/missing values and CSV–NetCDF
+consistency, and plot the supplied July values without interpolation. The
+Rhine sample uses data supplied by ECMWF, so station search and download are
+omitted. Units, source time zone, original observing agency and exact map
+allocation remain unresolved; the provided `Cama*` values are references, not
+verified matching assignments. See [p04](p04-discharge_observations.md), the
+[Survey Report](AI_survey_report/04_discharge_observations.md), the
+[Work Report](AI_work_report/04_discharge_observations.md),
+[`observation/README.md`](observation/README.md),
+[`metadata/04_discharge_inventory.csv`](metadata/04_discharge_inventory.csv),
+[`metadata/04_discharge_dataset.json`](metadata/04_discharge_dataset.json), and
+[Figure 4](figure/f04-observed_discharge.png).
 
-### Step 5 — Observation–Model Matching
+### Step 5 — Water-Level Observation Preparation
 
-**Objective:** put simulated and observed quantities on defensible common
-spatial, temporal and variable support. **Method:** define how discharge
-stations map to model reaches/cells and how satellite classifications map to
-the model grid; account for acquisition/composite timing, units, masks,
-permanent water, missing coverage and resolution. Matching rules and reusable
-implementation have not yet been established. This Step depends on both a
-completed simulation and documented observation support.
+Water-level observation preparation is reserved for a future Step. Its input
+data, provenance, vertical datum, units, timing and quality controls have not
+yet been established.
 
-### Step 6 — Event Evaluation
+### Steps 6–10 — Reserved
 
-**Objective:** quantify and interpret the model's reproduction of river-flow
-and flood-extent behavior. **Method:** select metrics for the scientific
-question after matching rules and valid observation support are defined;
-report sample coverage, uncertainty and limits separately for discharge and
-satellite extent. No event performance score, calibration result or validation
-conclusion has been produced. Do not infer model skill from the current
-observation figures alone.
+Steps 6–10 are intentionally reserved for future research activities and are
+not currently specified or implemented.
+
+### Step 11 — Model Experiment Setup
+
+Design a reproducible event-specific CaMa-Flood experiment using the selected
+hydrologic scope and prepared observations. Model version, map, forcing,
+initialization, boundary conditions and outputs remain to be specified.
+
+### Step 12 — Event Simulation
+
+Run the configured experiment and document the exact inputs, settings,
+execution environment and outputs. No Rhine 2021 event simulation has been
+completed; sample runs and maps do not constitute one.
+
+### Step 13 — Observation–Model Matching
+
+Define defensible spatial, temporal and variable correspondence between
+simulation output, discharge stations, water levels and satellite
+classifications. Account for units, time semantics, grid/station mapping,
+masks, permanent water, missing coverage and resolution. Matching rules and
+reusable implementation have not been established.
+
+### Step 14 — Event Evaluation
+
+Quantify and interpret model performance only after the simulation and
+matching support are defined. Select metrics for the research question, and
+report sample coverage, uncertainty and limitations separately by observation
+type. No event performance score, calibration result or validation conclusion
+has been produced. Do not infer model skill from observation figures alone.
 
 ## 4. Expected Outcomes and Current Status
 
@@ -217,15 +244,19 @@ but preparation outputs must not be confused with evaluation results.
 
 | Stage | Existing artifacts and execution evidence | Current research status |
 | --- | --- | --- |
-| **1 — Event research** | Impact inventory, Figure 1, observation inventory, Prompt and reports exist. Reports were reconstructed from retained evidence; the original research and mapping outputs are preserved. | Event context is documented; impact locations are selected examples, and observation provenance questions remain. |
+| **1 — Event research** | Impact inventory, Figure 1, observation data guide, Prompt and reports exist. Reports were reconstructed from retained evidence; the original research and mapping outputs are preserved. | Event context is documented; impact locations are selected examples, and observation provenance questions remain. |
 | **2 — Domain design** | Candidate domain JSON, Figure 2, Prompt and reports exist. | Candidate bounds and mapped routing groups are documented; hydrologic scope and model boundary conditions are not final. |
 | **3a — Availability** | Pass metadata, selected-pass JSON, Figure 3a, Prompt and reports exist. | Catalogue survey is documented; pass selection is `proposed`, and footprints do not establish valid flood-pixel coverage. |
 | **3b — Download** | Local `Atlantis/` manifest, summary and COG assets are present; the Prompt, downloader and reports exist. | The retained summary records acquisition checks and readiness for p03c. The assets are local/ignored and are not distributed through Git. |
 | **3c — Classification** | Flood Fraction raster, focus-area metadata and Figure 3c are present; processing entry points and reports exist. The full-extent 20 m classification TIFF is absent from the current workspace; its provenance record remains. | Processing and screening are recorded, but the full source raster is unavailable here for a new pixel-level check. Focus areas remain proposals and do not represent all detected flooding. |
 | **3d — Extraction** | Extraction metadata, 15 focus-area 20 m rasters and Figure 3d are present; extraction/figure entry points and reports exist. | Focus crops are prepared; they are derived observation subsets, not model comparisons or validation results. |
-| **4 — Simulation** | No Rhine event simulation setup or result is recorded. | Experimental domain, forcing, initialization, boundary conditions and run remain to be designed and executed. |
-| **5 — Matching** | No approved matching method or reusable implementation is recorded. | Spatial, temporal and variable correspondence remains to be designed. |
-| **6 — Evaluation** | No quantitative event score or model-performance report is recorded. | Metrics, valid-sample treatment and uncertainty analysis remain future work. |
+| **4 — Discharge observations** | Provider-supplied source files, Step 4 inventory/metadata, Figure 4 and reports are recorded. | Three Rhine gauge series are prepared; unit, time zone, original observing agency and verified model-cell mapping remain unresolved. |
+| **5 — Water levels** | No water-level dataset or preparation workflow is recorded. | Reserved for future work. |
+| **6–10 — Reserved** | No activities are specified. | Future research stages. |
+| **11 — Model setup** | No Rhine event experiment setup is recorded. | Domain, forcing, initialization, boundary conditions and model configuration remain to be designed. |
+| **12 — Simulation** | No Rhine event simulation result is recorded. | Event run remains future work. |
+| **13 — Matching** | No matching method or implementation is recorded. | Spatial, temporal and variable correspondence remains to be designed. |
+| **14 — Evaluation** | No quantitative event score or performance report is recorded. | Metrics, valid-sample treatment and uncertainty analysis remain future work. |
 
 The Step Prompts, Survey Reports and Work Reports are linked in the Analysis
 Workflow above. They provide the detailed instructions, scientific evidence and

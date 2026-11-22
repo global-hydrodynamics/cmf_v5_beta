@@ -49,4 +49,4 @@ Use the reported river/locality inventory as Step 2 input. Trace the relevant re
 - [Rhineland-Palatinate environmental authority, July 2021 flood report (PDF)](https://lfu.rlp.de/fileadmin/lfu/Startseitenbeitraege/2022/Hochwasser_im_Juli2021_1_.pdf)
 - [GFM product documentation](https://extwiki.eodc.eu/GFM/PUM/Products); [NASA MCDWD product](https://ladsweb.modaps.eosdis.nasa.gov/missions-and-measurements/products/MCDWD_L3); [Kuro Siwo](https://github.com/Orion-AI-Lab/KuroSiwo); [Copernicus EMSR517](https://mapping.emergency.copernicus.eu/activations/EMSR517/)
 
-See also the [observation inventory](../observation/observation_data_inventory.md) and the [Step 3a availability report](03a_satellite_availability.md).
+See also the [observation data guide](../observation/README.md), the [Step 4 discharge report](04_discharge_observations.md), and the [Step 3a availability report](03a_satellite_availability.md).

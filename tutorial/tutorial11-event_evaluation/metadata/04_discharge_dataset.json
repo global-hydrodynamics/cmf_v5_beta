@@ -1,0 +1,303 @@
+{
+  "schema_version": 1,
+  "step": "04",
+  "dataset_name": "CEMS Observed Discharge Time Series",
+  "provider": "ECMWF; supplied by Cinzia Mazzetti",
+  "redistribution": {
+    "status": "maintainer_confirmed_for_tutorial",
+    "formal_open_license": "not identified"
+  },
+  "original_observing_agency": null,
+  "source_files": [
+    {
+      "path": "observation/stations_data/allstations.csv",
+      "role": "Station metadata supplied with the dataset",
+      "size_bytes": 755,
+      "sha256": "885f0e920e0b72ea222dbff0efc894509f49970223a86338e1a7cc5987cc2613"
+    },
+    {
+      "path": "observation/stations_data/Qobs_06_2021_st153_63_28.csv",
+      "role": "ECMWF-supplied discharge time series (CSV)",
+      "size_bytes": 61676,
+      "sha256": "a7ea1c49f74139fa1f0393a384a0f105578d29252349457b2e98c64436d90431"
+    },
+    {
+      "path": "observation/stations_data/Qobs_06_2021_st153_63_28.nc",
+      "role": "ECMWF-supplied discharge time series (NetCDF4)",
+      "size_bytes": 34807,
+      "sha256": "90e45b36f45093c925a1047f44f46d5955ce41b31838bcf7f6db95ac8a6e2fb1"
+    }
+  ],
+  "source_layout": {
+    "station_metadata_csv": {
+      "records": 3,
+      "columns": 27
+    },
+    "discharge_csv": {
+      "records": 1460,
+      "columns": 4,
+      "header": [
+        "Timestamp",
+        "153",
+        "63",
+        "28"
+      ],
+      "timestamp_format": "YYYY-MM-DD HH:MM; no timezone suffix"
+    },
+    "discharge_netcdf": {
+      "format": "NETCDF4",
+      "dimensions": {
+        "time": 1460,
+        "station": 3
+      },
+      "variables": {
+        "discharge": {
+          "type": "float32",
+          "dimensions": [
+            "time",
+            "station"
+          ],
+          "units": null
+        },
+        "time": {
+          "type": "int64",
+          "units": "hours since 2021-01-01 06:00:00",
+          "calendar": "proleptic_gregorian"
+        },
+        "station": {
+          "type": "int64",
+          "values": [
+            153,
+            63,
+            28
+          ]
+        }
+      }
+    }
+  },
+  "time_series": {
+    "record_count_per_station": 1460,
+    "station_ids_in_time_series_order": [
+      153,
+      63,
+      28
+    ],
+    "start_as_supplied": "2021-01-01 06:00:00",
+    "end_as_supplied": "2022-01-01 00:00:00",
+    "timezone": null,
+    "cadence": "6 hours",
+    "value_semantics": "Six-hour mean discharge with interval-end timestamps, as described by provider correspondence; source files do not encode bounds/cell_methods.",
+    "discharge_unit": null,
+    "csv_netcdf_station_time_match": true,
+    "csv_values_cast_to_netcdf_float32_exact": true,
+    "netcdf_dimensions": {
+      "time": 1460,
+      "station": 3
+    },
+    "netcdf_time_units": "hours since 2021-01-01 06:00:00",
+    "netcdf_calendar": "proleptic_gregorian",
+    "netcdf_discharge_type": "float32",
+    "netcdf_discharge_attributes": [
+      "_FillValue"
+    ],
+    "netcdf_description": "CEMS Observed Discharge Time Series",
+    "netcdf_history": "Created 2026-10-07 18:10:37",
+    "netcdf_fill_value": "nan",
+    "netcdf_quality_flags": "not present",
+    "missing_csv_values_total": 0,
+    "missing_netcdf_values_total": 0,
+    "nonpositive_discharge_values_total": 0,
+    "duplicate_timestamps": 0,
+    "representation_difference_summary": [
+      {
+        "station_id": 153,
+        "maximum_absolute_difference": 0.0002382812499490683,
+        "maximum_relative_difference": 5.6056107996174896e-08,
+        "example_time_as_supplied": "2021-02-02 18:00:00"
+      },
+      {
+        "station_id": 63,
+        "maximum_absolute_difference": 7.812500030013325e-06,
+        "maximum_relative_difference": 1.4106237855117564e-08,
+        "example_time_as_supplied": "2021-01-01 06:00:00"
+      },
+      {
+        "station_id": 28,
+        "maximum_absolute_difference": 7.812500371073838e-06,
+        "maximum_relative_difference": 1.4132802265614055e-08,
+        "example_time_as_supplied": "2021-07-17 06:00:00"
+      }
+    ]
+  },
+  "stations": [
+    {
+      "station_id": 153,
+      "name": "Lobith",
+      "river": "Rhine",
+      "country": "Netherlands",
+      "longitude": 6.10833,
+      "latitude": 51.84444,
+      "provisional_area_value_unit_undeclared": 160800.0
+    },
+    {
+      "station_id": 63,
+      "name": "Speyer",
+      "river": "Rhine",
+      "country": "Germany",
+      "longitude": 8.44876,
+      "latitude": 49.32379,
+      "provisional_area_value_unit_undeclared": 53131.0
+    },
+    {
+      "station_id": 28,
+      "name": "Maxau",
+      "river": "Rhine",
+      "country": "Germany",
+      "longitude": 8.30561,
+      "latitude": 49.03896,
+      "provisional_area_value_unit_undeclared": 50196.0
+    }
+  ],
+  "station_discrepancy": "Bonn/6 is absent; supplied files contain Speyer/63. Do not treat Speyer as a Bonn substitute.",
+  "model_allocation_reference": {
+    "description": "Literal Cama1/Cama3/Cama6/Cama15 fields copied by station ID from allstations.csv. They are distinct from station coordinates and have no declared units or verified map version/grid interpretation.",
+    "records": [
+      {
+        "station_id": 153,
+        "station_name": "Lobith",
+        "groups": {
+          "Cama1": {
+            "longitude": 6.04167,
+            "latitude": 51.875,
+            "area_value_unit_undeclared": 159280.5,
+            "row": 2287,
+            "column": 11162
+          },
+          "Cama3": {
+            "longitude": 6.025,
+            "latitude": 51.875,
+            "area_value_unit_undeclared": 159286.0,
+            "row": 762,
+            "column": 3720
+          },
+          "Cama6": {
+            "longitude": 5.95,
+            "latitude": 51.85,
+            "area_value_unit_undeclared": 159327.8,
+            "row": 381,
+            "column": 1859
+          },
+          "Cama15": {
+            "longitude": 6.125,
+            "latitude": 51.875,
+            "area_value_unit_undeclared": 159285.6,
+            "row": 152,
+            "column": 744
+          }
+        }
+      },
+      {
+        "station_id": 63,
+        "station_name": "Speyer",
+        "groups": {
+          "Cama1": {
+            "longitude": 8.45833,
+            "latitude": 49.30833,
+            "area_value_unit_undeclared": 52752.934,
+            "row": 2441,
+            "column": 11307
+          },
+          "Cama3": {
+            "longitude": 8.475,
+            "latitude": 49.325,
+            "area_value_unit_undeclared": 53489.9,
+            "row": 813,
+            "column": 3769
+          },
+          "Cama6": {
+            "longitude": 8.45,
+            "latitude": 49.35,
+            "area_value_unit_undeclared": 53680.1,
+            "row": 406,
+            "column": 1884
+          },
+          "Cama15": {
+            "longitude": 8.375,
+            "latitude": 49.125,
+            "area_value_unit_undeclared": 52103.7,
+            "row": 163,
+            "column": 753
+          }
+        }
+      },
+      {
+        "station_id": 28,
+        "station_name": "Maxau",
+        "groups": {
+          "Cama1": {
+            "longitude": 8.29167,
+            "latitude": 48.99167,
+            "area_value_unit_undeclared": 50265.539,
+            "row": 2460,
+            "column": 11297
+          },
+          "Cama3": {
+            "longitude": 8.275,
+            "latitude": 48.975,
+            "area_value_unit_undeclared": 50265.5,
+            "row": 820,
+            "column": 3765
+          },
+          "Cama6": {
+            "longitude": 8.25,
+            "latitude": 48.95,
+            "area_value_unit_undeclared": 50265.7,
+            "row": 410,
+            "column": 1882
+          },
+          "Cama15": {
+            "longitude": 8.375,
+            "latitude": 48.875,
+            "area_value_unit_undeclared": 50808.3,
+            "row": 164,
+            "column": 753
+          }
+        }
+      }
+    ],
+    "historical_numerical_check": {
+      "source": "Earlier read-only inventory inspection, 2026-11-20; not rerun by the Step 4 script",
+      "result": "All 12 supplied CamaN coordinate pairs were consistent within 3.333333343e-06 degrees with the cell-centre equations longitude=-180+(column+0.5)*(N/60), latitude=90-(row+0.5)*(N/60), for N=1,3,6,15.",
+      "interpretation": "Supports but does not prove the stated global-grid spacing and zero-based indices. It is not a check against the target map, map version, datum or allocation convention."
+    }
+  },
+  "july_2021": {
+    "selection": "end labels in (2021-07-01 00:00, 2021-08-01 00:00]",
+    "record_count_per_station": 124,
+    "peaks": [
+      {
+        "station_id": 153,
+        "station_name": "Lobith",
+        "value": 6684.746,
+        "time_as_supplied": "2021-07-18 06:00:00"
+      },
+      {
+        "station_id": 63,
+        "station_name": "Speyer",
+        "value": 3957.5,
+        "time_as_supplied": "2021-07-18 06:00:00"
+      },
+      {
+        "station_id": 28,
+        "station_name": "Maxau",
+        "value": 4214.583,
+        "time_as_supplied": "2021-07-17 18:00:00"
+      }
+    ]
+  },
+  "next_step_handoff": {
+    "time_series_csv": "observation/stations_data/Qobs_06_2021_st153_63_28.csv",
+    "station_inventory": "metadata/04_discharge_inventory.csv",
+    "status": "prepared_for_later_matching; units/timezone/map allocation remain unverified"
+  }
+}

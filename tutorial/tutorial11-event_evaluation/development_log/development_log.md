@@ -68,7 +68,7 @@ assumption. Source SHA-256 values were checked before and after the work.
 
 **Files created:**
 
-- [observation_data_inventory.md](../observation_data_inventory.md)
+- [observation/README.md](../observation/README.md)
 - [observed discharge figure](../figure/observed_discharge_2021-07.png)
 
 **Main findings and decisions:**
@@ -563,3 +563,21 @@ footprints), and f03a regenerated and visually checked its one-page figure.
 The existing GFM unit-test module could not import the converter because this
 Python environment lacks `pyproj`; no dependency was installed. The actual
 s03a network search and s03b COG download were not run.
+
+## 2026-11-22 — Prepare Rhine discharge observations as Step 4
+
+Reused the three ECMWF-supplied station files without changing them. Added the
+Step 4 Prompt, observation README, reproducible inventory/consistency checks,
+machine-readable CSV/JSON metadata and a July 2021 point-only hydrograph with
+one panel per station. Migrated the former observation inventory's scientific
+findings and technical details into the README, Step 4 Survey/Work Reports and
+dataset JSON, then removed the superseded inventory and updated its active
+references. Reorganized the process stages as Step 4 discharge preparation,
+Step 5 water-level preparation, reserved Steps 6–10, and Steps 11–14 for model
+setup, simulation, matching and evaluation.
+
+**Checks:** reran both Step 4 Shells using the repository `.venv`; confirmed
+three stations × 1,460 records, six-hour timestamps, zero missing records,
+CSV-to-NetCDF equality after float32 casting, July peaks and unchanged source
+hashes. Opened Figure 4 for visual inspection and checked active Step 4 links
+and scripts. No observation download, model run or matching was done.
