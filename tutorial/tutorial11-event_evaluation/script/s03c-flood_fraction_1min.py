@@ -198,10 +198,27 @@ def write_rasters(fraction_path: Path, coverage_path: Path, fraction: np.ndarray
         coverage_tmp.unlink(missing_ok=True)
 
 
+def read_focus_areas(settings_path: Path,
+                     aoi: tuple[float, float, float, float]) -> list[dict]:
+    settings = json.loads(settings_path.read_text(encoding="utf-8"))
+    areas = settings["focus_areas"]
+    if not areas:
+        raise ValueError(f"No focus areas in {settings_path}")
+    west_aoi, south_aoi, east_aoi, north_aoi = aoi
+    for area in areas:
+        west, south, east, north = map(
+            float, area["bbox_west_south_east_north"]
+        )
+        if not (west_aoi <= west < east <= east_aoi and
+                south_aoi <= south < north <= north_aoi):
+            raise ValueError(f"Focus area {area.get('id')} is outside the satellite AOI")
+    return areas
+
+
 def create_figure(fraction: np.ndarray, transform: Affine,
                   aoi: tuple[float, float, float, float],
                   map_dir: Path, tile_cache: Path, impact_locations: Path,
-                  output_path: Path,
+                  focus_areas: list[dict], output_path: Path,
                   no_osm: bool = False) -> None:
     west, south, east, north = aoi
     margin = 0.5
@@ -228,6 +245,20 @@ def create_figure(fraction: np.ndarray, transform: Affine,
         edgecolor="#d47b00", linewidth=1.7, linestyle="--", zorder=3.4,
     ))
     river.draw_network(ax, segments, classes)
+    for area in focus_areas:
+        west, south, east, north = map(
+            float, area["bbox_west_south_east_north"]
+        )
+        ax.add_patch(Rectangle(
+            (west, south), east - west, north - south, fill=False,
+            edgecolor="#007f73", linewidth=1.8, zorder=5,
+        ))
+        ax.text(
+            west + 0.012, north - 0.012, area["id"].upper(),
+            fontsize=7, fontweight="bold", color="#005f56",
+            ha="left", va="top", zorder=7,
+            path_effects=[path_effects.withStroke(linewidth=2.5, foreground="white")],
+        )
     river.format_axes(ax, view, 1.0, 1.0)
 
     with impact_locations.open(newline="", encoding="utf-8") as stream:
@@ -267,6 +298,8 @@ def create_figure(fraction: np.ndarray, transform: Affine,
                    label="Satellite analysis domain (candidate)"),
             Line2D([0], [0], color="#285A9B", linewidth=1.5,
                    label="CaMa-Flood river network"),
+            Rectangle((0, 0), 1, 1, fill=False, edgecolor="#007f73",
+                      linewidth=1.8, label="Selected focus areas"),
             Line2D([0], [0], marker="o", linestyle="none", markersize=5,
                    markerfacecolor="#7b3294", markeredgecolor="white",
                    label="Reported flood impacts"),
@@ -284,6 +317,7 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--coverage-output", type=Path, required=True)
     parser.add_argument("--impact-locations", type=Path, required=True)
+    parser.add_argument("--focus-areas", type=Path, required=True)
     parser.add_argument("--figure-output", type=Path, required=True)
     parser.add_argument("--map-dir", type=Path, default=REPO_ROOT / "map/glb_15min")
     parser.add_argument("--tile-cache", type=Path,
@@ -295,6 +329,7 @@ def main() -> int:
     args = parser.parse_args()
 
     aoi = read_aoi(args.domain_config)
+    focus_areas = read_focus_areas(args.focus_areas, aoi)
     if args.render_only:
         with rasterio.open(args.output) as existing:
             if existing.crs is None or existing.crs.to_epsg() != 4326:
@@ -304,7 +339,7 @@ def main() -> int:
             fraction = existing.read(1)
             grid_transform = existing.transform
         create_figure(fraction, grid_transform, aoi, args.map_dir,
-                      args.tile_cache, args.impact_locations,
+                      args.tile_cache, args.impact_locations, focus_areas,
                       args.figure_output, args.no_osm)
         print(f"figure={args.figure_output} ({args.figure_output.stat().st_size} bytes)")
         return 0
@@ -315,7 +350,7 @@ def main() -> int:
     write_rasters(args.output, args.coverage_output, fraction, valid_count,
                   grid_transform, source_profile, metadata)
     create_figure(fraction, grid_transform, aoi, args.map_dir,
-                  args.tile_cache, args.impact_locations,
+                  args.tile_cache, args.impact_locations, focus_areas,
                   args.figure_output, args.no_osm)
     print(json.dumps(metadata, indent=2))
     print(f"fraction_raster={args.output} ({args.output.stat().st_size} bytes)")

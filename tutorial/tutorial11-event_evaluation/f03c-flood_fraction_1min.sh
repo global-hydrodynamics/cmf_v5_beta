@@ -25,6 +25,7 @@ fi
     --output "$TUTORIAL_DIR/observation/GFM_extent/GFM_S1A_20210715_o038784_dt049389_floodfrac_1min.tif" \
     --coverage-output "$ANALYSIS_DIR/GFM_S1A_20210715_o038784_dt049389_valid_pixel_count_1min.tif" \
     --impact-locations "$TUTORIAL_DIR/metadata/01_impact_locations.csv" \
+    --focus-areas "$TUTORIAL_DIR/metadata/f03c_focus_areas.json" \
     --figure-output "$TUTORIAL_DIR/figure/f03c-gfm_flood_fraction_1min.png" \
     --map-dir "$REPO_ROOT/map/glb_15min" \
     --tile-cache "$HOME/.cache/cmf_flood_osm_tiles" \
