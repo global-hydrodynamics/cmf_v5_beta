@@ -12,7 +12,7 @@ outside the drawing code.
   The f06b extent is 4.0–8.0°E, 49.0–52.0°N. The regional rectangles are
   candidate observation AOIs, not observed flood boundaries.
 - `f06b_plot.csv` copies report-based localities and source notes from
-  `../../../tutorial/tutorial11-event_evaluation/01_impact_locations.csv`, adding
+  `../../../tutorial/tutorial11-event_evaluation/metadata/01_impact_locations.csv`, adding
   short plot labels, symbol groups and label offsets. Coordinates identify
   approximate town centers; they are not georeferenced inundation limits.
   Halen retains its lower coordinate confidence and is marked `(?)` on the

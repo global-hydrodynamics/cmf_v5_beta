@@ -71,7 +71,7 @@ Before fixing the model or satellite domains:
 5. For GFM and other satellite products, search acquisition-level footprints and usable-pixel masks for the candidate AOIs. Treat the current 15 July target extent and 42.0038% valid support as evidence for that processed product only.
 6. Once the event period and observation support are resolved, choose separate simulation and observation domains and document their final coordinate convention.
 
-The existing detailed [event background](01_flood_event_overview.md), [discharge inventory](observation_data_inventory.md), [GFM inventory](gfm_data_inventory.md), and [GFM workflow](gfm_3sec_workflow.md) remain the evidence sources. The reusable stages are in [event_evaluation_process.md](event_evaluation_process.md). The prior plan and setup report remain unchanged as development history under development_log/.
+The existing detailed [event background](01_flood_event_overview.md), [discharge inventory](observation_data_inventory.md), [GFM inventory](gfm_data_inventory.md), and [GFM workflow](gfm_3sec_workflow.md) remain the evidence sources. The reusable stages are in [00_event_evaluation_process.md](00_event_evaluation_process.md). The prior plan and setup report remain unchanged as development history under development_log/.
 
 ### Machine-readable handoff to Step 3
 

@@ -32,81 +32,79 @@ Basin IDs, routing groups, simulation bounds or satellite-analysis
 domains during Step 1; these decisions require the map-based Step 2 assessment.
 
 **Tutorial 11 status:** The Rhine 2021 sample already contains the event
-overview, `01_impact_locations.csv`, Figure 1 and its generation Shell. These
+overview, `metadata/01_impact_locations.csv`, Figure 1 and its generation Shell. These
 are retained as the worked example; the reusable prompt is not being run to
 recreate or replace them. See [event overview](01_flood_event_overview.md),
 [candidate domains](02_analysis_domain_design.md), and
 [event setup findings](development_log/event_setup_report.md).
 
-## 2. Select separate simulation and observation domains
+## 2. Design simulation and observation domains with Human–AI review
 
-### Simulation domain
+Step 2 turns the event evidence and impact locations from Step 1 into a
+map-specific, reviewable spatial design. For a new event, use the reusable
+[Step 2 analysis-domain instructions](s02-prompt-analysis_domain.md) in that
+event's own directory. Tutorial 11's Rhine 2021 materials are a worked
+example; do not rerun the prompt there or copy its map IDs, extents or station
+set to another event.
 
-CaMa-Flood represents river-basin water dynamics. For a flood evaluation, the
-simulation must include the complete upstream contributing area and routed
-network of the target river, together with the required downstream outlet.
-Do not define the simulation domain from only the damaged locations, and do not
-make a small rectangle an objective in itself. A rectangular model window may
-enclose the whole target watershed and include surrounding cells needed for
-domain boundaries. A large full-basin domain is appropriate when required by
-the evaluation question.
+The workflow is iterative:
 
-Identify the model Basin IDs from the map data for each event; do not carry a
-Basin ID from another map or hard-code an ID as a natural watershed name. Begin
-with target rivers, impact localities and gauges from Step 1, map them to cells,
-inspect the map's `basin` and `uparea` data, and trace `nextxy` connections to
-understand upstream and downstream routing. Check the spatial extent and
-neighboring routing groups, then choose a window that contains the full
-required watershed and outlet. If basin labels alone do not establish the
-connection, use the routed network. Record map name and resolution, IDs,
-target watershed, domain bounds, boundary margin, mask and rationale. Model
-Basin IDs may combine or divide natural watersheds; state that distinction.
-Whether to include a neighboring routing group depends on map connectivity and
-the evaluation purpose.
+1. Review the Step 1 overview, `metadata/01_impact_locations.csv`, Figure 1,
+   and any researcher-specified target rivers or gauges.
+2. Inspect the selected CaMa-Flood map and version. Associate target reaches,
+   impacts and gauges with model cells; use `basin`, `uparea` and `nextxy` to
+   identify model routing groups, upstream contributing networks and the
+   necessary downstream outlet. Derive Basin IDs from the selected map rather
+   than carrying IDs across maps or events.
+3. Propose a **simulation domain**, a **satellite analysis domain**, and a
+   **map viewing extent** as separate things. The simulation domain must
+   include the target river's required upstream contributing area, routed
+   network and downstream outlet; do not choose it from damaged locations
+   alone or minimize its size as an objective. A rectangular model window may
+   include surrounding cells and neighboring groups where map connectivity
+   and the evaluation question require them. The satellite analysis domain may
+   be smaller or non-contiguous. Until actual acquisition footprints and
+   usable-observation masks are checked, label it as a candidate. The viewing
+   extent is only the Figure viewport and does not define either domain.
+4. Generate candidate Figure 2 using the selected map, event locations,
+   available observation sites and clearly differentiated candidate boxes.
+   Choose a broad enough viewport to explain the geographic context; label
+   proposed bounds as candidates and distinguish them from processed product
+   coverage.
+5. Review the map, network evidence, proposed bounds and uncertainties with
+   the researcher. Adjust target rivers, routing groups, domains or viewport
+   as needed. Repeat until the researcher approves the domain choices; there
+   is no preset number of review rounds. A viewport-only change must not be
+   recorded as a change to an analysis domain.
+6. Record the selection evidence, rationale, uncertainty and remaining
+   questions in `02_analysis_domain_design.md`. Store spatial and temporal
+   handoff values and their candidate/approved/undecided status in
+   `metadata/domain_selection.json`; keep event-specific figure settings in
+   metadata. Ensure `f02-analysis_domain.sh` regenerates the final reviewed
+   Figure 2 from the saved settings.
+7. Hand the reviewed domain design and its caveats to Step 3. Later evidence
+   about actual satellite coverage, forcing support or model boundaries may
+   justify revisiting a candidate.
 
-Confirm that map version, grid, forcing, initialization and configuration
-support the proposed extent. The satellite/observation domain may be smaller
-than the simulation domain.
-
-### Observation domain
-
-Choose one or more regions from documented impact locations, gauge coverage,
-satellite scene footprints and usable-pixel masks. Observation AOIs may be
-smaller or non-contiguous; they do not need to equal the simulation domain.
-Record each W/S/E/N bbox, time interval, target rivers/locations, data source,
-selection rationale and whether coverage is only a candidate.
-
-For a visual review, use the reported-impact localities and river systems
-summarized in Tutorial Figure 1 and its linked `01_impact_locations.csv`; carry
-those locations forward into the domain review. Use the reproducible River Map
-example [f06 — OSM Background](../../visualization/river_map/README.md):
-**f06a** shows
-basin/network context and the local extent; **f06b** shows event localities and
-candidate observation areas. Its event-specific inputs are kept in the linked
-JSON/CSV files. In the Tutorial 11 Step 2 figure, show a map extent broader
-than the candidate simulation window, the candidate simulation and observation
-boxes with distinct labels, and the relevant model routing groups, impacts and
-gauges. A processed satellite target grid is evidence about the existing
-product; it is not automatically a selected observation domain. If its bounds
-are reused as a candidate, document that relationship and show the limited
-valid-observation support. Neither a town marker nor a rendered rectangle
-proves an observed inundation extent or complete satellite coverage.
-
-Use the sequence **candidate extents → visual review against map connectivity
-and event evidence → human decision → documented final domains**. A figure used
-for this review presents candidates, not an approved model setup.
+Model Basin IDs and natural watersheds are not necessarily one-to-one. Check
+whether a routing group combines or divides natural basins, and use routed
+connections when basin labels alone cannot establish the target network. A
+successful map render is not hydrologic validation, proof of complete satellite
+coverage, or approval of model boundary conditions.
 
 **Tutorial 11 status:** Figure 1 summarizes reported impact localities for
-Step 1; Figure 2 carries them into the candidate simulation/observation-domain
-review. On the current 0.25° map, Basin ID 74 combines Rhine and Meuse/Vesdre
+Step 1; Figure 2 carries them into a provisional Rhine 2021 domain review. On
+the current 0.25° `glb_15min` map, Basin ID 74 combines Rhine and Meuse/Vesdre
 routing and is not a pure natural Rhine watershed; Basin ID 1299 includes the
 nearby Gete/Dyle localities. The map routing-group associations, candidate
 bboxes and location-to-network traces have been inspected, but
 natural-watershed interpretation, final inclusion of neighboring routing
 groups, boundary conditions and observation coverage still need confirmation.
-Values and caveats are in [02_analysis_domain_design.md](02_analysis_domain_design.md) and
-[event_setup_report.md](development_log/event_setup_report.md); the original planning proposal
-remains in [event_setup_plan.md](development_log/event_setup_plan.md).
+The candidate simulation and satellite bounds remain provisional. Values and
+caveats are in [02_analysis_domain_design.md](02_analysis_domain_design.md);
+the original planning proposal and setup findings remain in
+[development_log/event_setup_plan.md](development_log/event_setup_plan.md) and
+[development_log/event_setup_report.md](development_log/event_setup_report.md).
 
 ## 3. Acquire and preprocess observations
 

@@ -51,7 +51,7 @@ and unresolved information. Cite sources close to the claims they support; do
 not invent event details or treat a candidate dataset as acquired or validated.
 
 Task 2 — Build the impact-location inventory
-Create `01_impact_locations.csv`, using the Tutorial 11 sample CSV as a schema
+Create `metadata/01_impact_locations.csv`, using the Tutorial 11 sample CSV as a schema
 and content example. Record location name, river or river system, country or
 region, concise source-reported impact, coordinates, source/citation, and
 coordinate confidence where available. Add plotting-only labels or offsets
@@ -80,7 +80,7 @@ evidence.
 
 Expected outputs are:
 1. `01_flood_event_overview.md`
-2. `01_impact_locations.csv`
+2. `metadata/01_impact_locations.csv`
 3. `f01-reported_flood_impacts.sh`
 4. `figure/f01-reported_flood_impacts.png`
 
@@ -94,7 +94,7 @@ plot generation.
 | Output | Role |
 | --- | --- |
 | `01_flood_event_overview.md` | Event background, evidence and references |
-| `01_impact_locations.csv` | Geographic inventory of reported impacts |
+| `metadata/01_impact_locations.csv` | Geographic inventory of reported impacts |
 | `f01-reported_flood_impacts.sh` | Reproducible Figure 1 entry point |
 | `figure/f01-reported_flood_impacts.png` | Map of reported-impact localities |
 

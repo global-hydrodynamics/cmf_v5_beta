@@ -30,6 +30,6 @@ Map Explorer already reads model basin/uparea rasters and `nextxy`, renders rive
 
 - The two figures exist, have source/attribution notes, and distinguish candidates from verified observations.
 - Domain bboxes, map/version, basin IDs, rivers and selection rationale are recorded.
-- Impact points include source and location confidence in `../01_impact_locations.csv`.
+- Impact points include source and location confidence in `../metadata/01_impact_locations.csv`.
 - No town markers are presented as flood polygons; no candidate AOI is presented as confirmed satellite coverage.
 - No simulation or new GFM download is claimed unless it was actually performed.

@@ -3,7 +3,7 @@
 **Prepared:** 2026-11-21
 **Status:** Candidate setup only; no model simulation or new GFM acquisition was performed.
 
-The reusable six-stage workflow is documented in [event_evaluation_process.md](../event_evaluation_process.md).
+The reusable six-stage workflow is documented in [00_event_evaluation_process.md](../00_event_evaluation_process.md).
 
 ## Result
 
