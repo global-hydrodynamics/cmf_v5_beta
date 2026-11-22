@@ -1,5 +1,6 @@
 #!/bin/bash
-# User-facing configuration for the Japan ten-day hourly ERA5-Land runoff product.
+# User-facing configuration for the Tutorial 11 Rhine 2021 hourly ERA5-Land runoff product.
+# Requests 2021-07-01 through 2021-07-20 over the Rhine map plus a 0.5-degree margin.
 # Passes settings to s01-download.sh and s02-convert_CMF_nc.sh, in that order.
 # Normally edit only the User settings below; Python performs the data processing.
 set -eu

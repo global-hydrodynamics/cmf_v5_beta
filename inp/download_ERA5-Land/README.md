@@ -56,6 +56,7 @@ documentation update.
 | `s02-convert_CMF_nc.sh` | Argument-driven conversion stage (daily/monthly/yearly NetCDF and information) |
 | `sample-global_2day.sh` | Download, convert and summarize global January 1–2, 2000 |
 | `sample-japan_hourly.sh` | Download, convert and summarize Japan, September 1–10, 2007 |
+| `tutorial11-Rhine_2021Jul.sh` | Tutorial 11 Rhine event-specific Product Shell, July 1–20, 2021 |
 | `workflow.sh` | Shared Shell arguments, execution, jobs and logs |
 | `download_era5land.py` | Standalone CDS client and request dry-run |
 | `convert_CMF_nc.py` | Standalone accumulated-runoff conversion |
@@ -138,6 +139,12 @@ convert and display the report. Absolute-path invocation works from any working
 directory. A failed download stops the product before conversion. Neither
 stage has independent scientific/experiment defaults to edit; the Product Shell
 passes them explicitly to both stages.
+
+The Tutorial 11 Rhine Product Shell is a study-specific example, not a reusable
+registry dataset. Its local output is `inp/tutorial11-ERA5land-Rhine2021Jul/`;
+raw files, converted event data and logs remain ignored. See the [Tutorial 11
+Step 12 Prompt](../../tutorial/tutorial11-event_evaluation/p12-era5land_runoff_preparation.md)
+and its metadata for the observed grid and scientific limitations.
 
 The only supported format is `FORMAT="netcdf"` / `--format netcdf`. Binary
 conversion remains retired. To repeat conversion independently, supply its

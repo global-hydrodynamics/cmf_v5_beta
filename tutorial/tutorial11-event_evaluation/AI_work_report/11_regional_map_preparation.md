@@ -83,12 +83,12 @@ The data products under `map/Rhine_15min/` were not added to Git. Existing
 Step 2 file edits and the unrelated untracked input script were not altered by
 this Step.
 
-## Step 12 handoff
+## Step 12 runoff handoff
 
 Use `map/Rhine_15min/` as the available candidate regional map. Its source and
 outer edges, resolution and dimensions are recorded above. `test-1deg` and
 `ERA5land_global` matrix/diminfo pairs are separate available inputs. Before a
-run, Step 12 must define the experiment period, forcing and initialization,
+run, Step 12 prepares the ERA5-Land forcing; Step 13 must define the experiment period, simulation dates and initialization,
 confirm routing-group and boundary scope, and configure the model. No model
 simulation or performance evaluation was performed in this Step.
 
@@ -97,5 +97,5 @@ simulation or performance evaluation was performed in this Step.
 This was a retained-product inspection. It did not establish the full
 provenance of every output, regenerate products, compare every binary value to
 the global source, validate hydrologic completeness, or test a model run.
-The status of existing outputs as complete for any particular Step 12
+The status of existing outputs as complete for a particular Step 13
 configuration therefore remains conditional on that later setup.

@@ -18,7 +18,7 @@
 - Local `map/Rhine_15min/` regional map and map-local scripts
 - `AI_survey_report/11_regional_map_preparation.md`
 - `AI_work_report/11_regional_map_preparation.md`
-- A reproducible handoff for Step 12 model setup and simulation
+- A reproducible handoff to Step 12 runoff preparation and Step 13 model setup/simulation
 
 ## Human Instructions
 
@@ -54,7 +54,7 @@ NORTH=53.0, at 15 arc-minute resolution.
    auxiliary layers, channel/bifurcation/permanent-water/subbasin products and
    runoff mappings. File presence alone is not hydrologic validation.
 5. Create/update the Step 11 Survey and Work Reports with evidence, commands
-   actually run, retained-versus-new products, blockers and the Step 12 handoff.
+   actually run, retained-versus-new products, blockers and the Step 12 runoff handoff.
    Keep regional map data local unless separate distribution approval exists.
 6. Do not run the flood simulation or evaluate model performance in this Step.
    If inputs or tools are unavailable, report the blocker without claiming

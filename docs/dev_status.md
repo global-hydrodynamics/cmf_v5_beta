@@ -1033,3 +1033,15 @@ tests and all-cell checks PASS, communication-blocked full replay bitwise equal
 for all 13 fields. Figure rendered/reviewed; 204,586 old-tree metadata entries
 unchanged. Code/docs/small metadata/Figure only enter Git. VR-0200 records the
 scientific limits and 14 unchanged baseline research-link failures.
+
+
+DT-0155 complete: maintainer-authorized Tutorial 11 Step 12 ERA5-Land runoff
+preparation on the existing `feature/package-builder` branch. Codex inspected
+20 raw and 20 converted files plus retained logs; 480 hourly labels, source and
+output grids, variable units and map Input Matrix geometry were recorded. Added
+the p12 Prompt, Step 12 metadata and Survey/Work Reports; updated the process,
+period handoff, direct runoff workflow references, and stale Rhine Product
+Shell description. No redownload, reconversion, Input Matrix generation,
+runoff-algorithm change, model run or registry/data publication was performed.
+KG-0019 remains open. Tracked documentation/workflow-only changes were committed
+and pushed; local ERA5-Land data remain ignored.

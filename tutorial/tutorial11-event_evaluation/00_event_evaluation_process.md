@@ -218,15 +218,30 @@ available; their preparation history is not inferred from their presence. See
 the [Work Report](AI_work_report/11_regional_map_preparation.md), and
 [`map/Rhine_15min/README.md`](../../map/Rhine_15min/README.md).
 
-### Step 12 — Model Experiment Setup and Simulation
+### Step 12 — ERA5-Land Hourly Runoff Preparation
+
+Inspect or prepare event-specific runoff using the existing ERA5-Land
+Product/Download/Convert workflow. The Rhine sample has researcher-prepared
+hourly data for 2021-07-01 through 2021-07-20 and requests an area 0.5° beyond
+the Step 11 regional map. Keep the initial candidate analysis window
+(2021-07-10 through 2021-07-25), actual runoff acquisition period, and future
+simulation/evaluation period distinct. July 1 does not prove adequate spin-up;
+forcing must be extended if later evaluation dates are used. KG-0019 remains
+open. See [p12](p12-era5land_runoff_preparation.md), the
+[Survey Report](AI_survey_report/12_era5land_runoff_preparation.md), the
+[Work Report](AI_work_report/12_era5land_runoff_preparation.md), and
+[runoff metadata](metadata/12_era5land_runoff.json). The local source and
+converted files are ignored by Git.
+
+### Step 13 — Model Experiment Setup and Simulation
 
 Configure and, when ready, run an event-specific CaMa-Flood experiment using
-the prepared regional map, forcing, initialization and boundary conditions.
-Record exact inputs and settings. No Rhine 2021 event simulation has been
-completed; the regional map and parameter products are model inputs, not a
-simulation result.
+the prepared regional map, selected forcing, initialization and boundary
+conditions. Decide the model period and spin-up, and confirm forcing coverage,
+Input Matrix and unit/time settings. No Rhine 2021 event simulation has been
+completed; regional map and runoff products are inputs, not simulation results.
 
-### Step 13 — Observation–Model Matching
+### Step 14 — Observation–Model Matching
 
 Define defensible spatial, temporal and variable correspondence between
 simulation output, discharge stations, water levels and satellite
@@ -234,7 +249,7 @@ classifications. Account for units, time semantics, grid/station mapping,
 masks, permanent water, missing coverage and resolution. Matching rules and
 reusable implementation have not been established.
 
-### Step 14 — Event Evaluation
+### Step 15 — Event Evaluation
 
 Quantify and interpret model performance only after the simulation and
 matching support are defined. Select metrics for the research question, and
@@ -262,10 +277,11 @@ but preparation outputs must not be confused with evaluation results.
 | **4 — Discharge observations** | Provider-supplied source files, Step 4 inventory/metadata, Figure 4 and reports are recorded. | Three Rhine gauge series are prepared; unit, time zone, original observing agency and verified model-cell mapping remain unresolved. |
 | **5 — Water levels** | No water-level dataset or preparation workflow is recorded. | Reserved for future work. |
 | **6–10 — Reserved** | No activities are specified. | Future research stages. |
-| **11 — Regional map** | Local `map/Rhine_15min/` contains map, parameter, NetCDF/COG products and map-local workflow copies matching the requested domain; outputs were inspected, not regenerated for this Step. | Existing products are available for Step 12; upstream hydrology, parameter scientific validation and experiment configuration are not established by this inspection. |
-| **12 — Setup/simulation** | No Rhine event simulation result is recorded. | Experiment configuration and event run remain future work. |
-| **13 — Matching** | No matching method or implementation is recorded. | Spatial, temporal and variable correspondence remains to be designed. |
-| **14 — Evaluation** | No quantitative event score or performance report is recorded. | Metrics, valid-sample treatment and uncertainty analysis remain future work. |
+| **11 — Regional map** | Local `map/Rhine_15min/` contains map, parameter, NetCDF/COG products and map-local workflow copies matching the requested domain; outputs were inspected, not regenerated for this Step. | Existing products are available to Steps 12–13; upstream hydrology, parameter scientific validation and experiment configuration are not established by this inspection. |
+| **12 — Runoff preparation** | Existing local Rhine ERA5-Land source and converted data, Step 12 Prompt, metadata and reports are recorded; data were inspected, not reacquired or reconverted for this Step. | Hourly labels and grid structure are documented; KG-0019 remains open and simulation/spin-up dates remain undecided. |
+| **13 — Setup/simulation** | No Rhine event simulation result is recorded. | Model period, spin-up, forcing use and run configuration remain future work. |
+| **14 — Matching** | No matching method or implementation is recorded. | Spatial, temporal and variable correspondence remains to be designed. |
+| **15 — Evaluation** | No quantitative event score or performance report is recorded. | Metrics, valid-sample treatment and uncertainty analysis remain future work. |
 
 The Step Prompts, Survey Reports and Work Reports are linked in the Analysis
 Workflow above. They provide the detailed instructions, scientific evidence and

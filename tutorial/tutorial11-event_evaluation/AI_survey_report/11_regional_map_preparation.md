@@ -74,7 +74,7 @@ shared implementations remain under `map/tools/`.
 and COG outputs out of Git while allowing the map-local scripts and README to
 be tracked. The data remain local; this Step does not redistribute them.
 
-## Step 12 handoff and limitations
+## Step 12 runoff handoff and Step 13 simulation limitations
 
 The existing map path is `map/Rhine_15min/`; its base grid is 0.25° (40 × 32)
 with the 3–13°E, 45–53°N outer-edge window. Candidate basin IDs 74 and 1299
@@ -82,7 +82,7 @@ remain inherited from Step 2 and are not revalidated by this map-product
 inspection. Basin IDs are model routing groups, not guaranteed natural
 watershed boundaries.
 
-Before simulation, Step 12 still needs to settle the event simulation period,
+Step 12 prepares the runoff input. Before simulation, Step 13 still needs to settle the event simulation period,
 hydrologic scope and treatment of neighboring routing groups, active-cell and
 boundary behavior, initial conditions, forcing selection/availability, and
 model configuration. File presence and matching grid metadata do not prove

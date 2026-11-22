@@ -613,3 +613,18 @@ permanent-water, subbasin and GRDC-allocation products were found. The
 or model run was executed; the retained map data remain ignored by Git, while
 map-local scripts and documentation remain trackable. The Step 11 Survey and
 Work Reports describe checks, limits and the Step 12 handoff.
+
+
+## 2026-11-23 — Prepare ERA5-Land hourly runoff for Step 12
+
+Inspected the retained Tutorial 11 Rhine ERA5-Land data rather than repeating
+acquisition or conversion. The Product Shell requests 2021-07-01 to 2021-07-20,
+hourly, over 2.5–13.5°E and 44.5–53.5°N, extending 0.5° beyond the regional
+map edges. Twenty original daily files and twenty converted daily files were
+present; their dates are complete and the converted files contain a continuous
+480-record hourly label sequence on a 0.1° grid. Added Step 12 Prompt,
+metadata, Survey/Work Reports and workflow references; corrected the Product
+Shell's copied Japan description. Data and logs remain ignored. No re-download,
+reconversion, Input Matrix generation or model simulation was run. KG-0019
+remains open; Step 13 must select the simulation/spin-up period and verify
+forcing coverage.
