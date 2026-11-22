@@ -11,14 +11,13 @@
     "start_date": "2021-07-10",
     "end_date": "2021-07-25",
     "status": "candidate",
-    "meaning": "Initial candidate analysis window proposed during Step 1; distinct from the researcher-selected ERA5-Land runoff acquisition period and from the still-undecided simulation period."
+    "meaning": "Candidate window from the event overview for examining the event and surrounding response; not an approved model period."
   },
   "simulation": {
     "period": {
       "start_date": null,
       "end_date": null,
-      "status": "undecided",
-      "meaning": "Model execution and spin-up period; not yet decided by Step 12 runoff acquisition."
+      "status": "undecided"
     },
     "domain": {
       "map": "glb_15min",
@@ -73,26 +72,6 @@
   "references": [
     "01_flood_event_overview.md",
     "02_analysis_domain_design.md",
-    "03_satellite_data_survey.md",
-    "metadata/12_era5land_runoff.json"
-  ],
-  "runoff_forcing_acquisition": {
-    "dataset": "tutorial11-ERA5land-Rhine2021Jul",
-    "period": {
-      "start_date": "2021-07-01",
-      "end_date": "2021-07-20",
-      "inclusive": true,
-      "status": "selected_by_researcher",
-      "rationale": "Starts before the flood event to provide a pre-event preparation interval; this alone does not establish adequate model spin-up."
-    },
-    "requested_domain_bbox_west_south_east_north": [
-      2.5,
-      44.5,
-      13.5,
-      53.5
-    ],
-    "domain_basis": "Requested CDS area extends 0.5 degrees beyond each outer edge of the Step 11 regional map [3.0, 45.0, 13.0, 53.0]. Actual returned grid centers and cell edges are recorded in metadata/12_era5land_runoff.json.",
-    "temporal_resolution_hours": 1,
-    "status": "prepared_data_inspected"
-  }
+    "03_satellite_data_survey.md"
+  ]
 }

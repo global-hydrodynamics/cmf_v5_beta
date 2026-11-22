@@ -18,7 +18,7 @@
 - Local `map/Rhine_15min/` regional map and map-local scripts
 - `AI_survey_report/11_regional_map_preparation.md`
 - `AI_work_report/11_regional_map_preparation.md`
-- A reproducible handoff to Step 12 runoff preparation and Step 13 model setup/simulation
+- A reproducible handoff to Step 12 runoff preparation, Step 13 Input Matrix preparation, and Step 14 simulation setup
 
 ## Human Instructions
 

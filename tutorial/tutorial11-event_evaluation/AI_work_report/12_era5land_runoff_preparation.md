@@ -2,90 +2,80 @@
 
 ## Work summary
 
-Inspected the researcher-prepared Tutorial 11 ERA5-Land dataset on
-2026-11-23, without downloading, converting, overwriting, or moving data.
-Created the reusable Step 12 Prompt, machine-readable metadata, reports and
-cross-step documentation. No runoff algorithm, Input Matrix, regional map or
-model configuration was changed.
+Reviewed and reorganized Step 12 as a reproducible Tutorial workflow, reusing
+the researcher-generated data. The earlier data inspection found 20 raw and
+20 converted daily files; the present task did not download, reconvert, or
+modify them. Added a Tutorial-local dataset Registry and adjusted Step 12
+metadata to reference it. Updated the process so Step 13 owns Input Matrix
+preparation/validation and Step 14 owns simulation setup and GOSH script
+creation.
 
-## Inputs and settings
+## Inputs and retained evidence
 
 - Product Shell: `inp/download_ERA5-Land/tutorial11-Rhine_2021Jul.sh`
-- Shared downloader/converter: `s01-download.sh`, `s02-convert_CMF_nc.sh`
-- Dataset root: `inp/tutorial11-ERA5land-Rhine2021Jul/`
-- Step 2 domain metadata and Step 11 regional map/Input Matrix
-- ERA5-Land workflow README, NetCDF output conventions and KG-0019
+- Shared stages: `s01-download.sh`, `s02-convert_CMF_nc.sh`
+- Local dataset: `inp/tutorial11-ERA5land-Rhine2021Jul/`
+- Step 2 period/domain context and Step 11 Rhine regional map
+- ERA5-Land workflow README, Tutorial rules and KG-0019
 
-The shell settings are dataset `tutorial11-ERA5land-Rhine2021Jul`, dates
-2021-07-01 through 2021-07-20 inclusive, requested bounds 2.5–13.5°E and
-44.5–53.5°N, hourly timestep, daily source/output grouping, NetCDF and two
-workers. These settings were preserved. The requested bounds extend 0.5° past
-the Step 11 model-map outer edges on each side.
+The Product Shell preserves dataset `tutorial11-ERA5land-Rhine2021Jul`, July
+1–20, 2021, requested bounds 2.5–13.5°E and 44.5–53.5°N, hourly TSTEP,
+daily download/output grouping, NetCDF and NCPUS=2. The bounds intentionally
+extend 0.5° beyond the Step 11 map.
 
-## Existing data and checks
+## Registry and Metadata
 
-The local dataset contained 20 source files named
-`original/ERA5-Land_runoff_YYYYMMDD.nc` and 20 converted files named
-`runoff_YYYYMMDD.nc`; all dates from July 1 through July 20 were present.
-Retained download logs recorded completion for 20/20 dates, and conversion
-logs recorded output writes for 20/20 dates. Their run IDs and files are
-ignored local evidence.
+Created `tutorial/tutorial11-event_evaluation/runoff_dataset.csv` using the
+same header/schema as `inp/runoff_datasets.csv`. Its one event-specific row
+records the dataset path/pattern, observed NetCDF variable and grid, period,
+units, `DROFUNIT`, source and data scope, verification state, and Input Matrix
+relationship. It is the specification Registry for Steps 13 and 14. The shared
+input Registry was not changed.
 
-Using the repository Python environment and NetCDF4, inspected the source
-variable and converted NetCDF structure. Source files contain `ro` in metres
-with dimensions `(valid_time=24, latitude=91, longitude=111)`. Converted files
-contain float32 `runoff(time,lat,lon)` in millimetres, with dimensions
-`(24,91,111)`, `_FillValue=missing_value=1e20`, and a long name describing
-runoff accumulated over each input timestep. All 20 converted files share
-identical coordinate arrays. Longitude centers are 2.5 through 13.5°E at
-0.1° increasing; latitude centers are 53.5 through 44.5°N at 0.1° decreasing.
-The derived outer cell edges are 2.45–13.55°E and 44.45–53.55°N.
+Reworked `metadata/12_era5land_runoff.json` as the Step 12 execution record.
+It links to the Tutorial Registry and records selected request settings,
+processing provenance, file/log counts and checks, the present-but-unvalidated
+Step 11 matrix pair, period context, KG-0019, and the Step 13 handoff. Detailed
+dataset specification is not repeated as a second Registry.
 
-Both the raw and converted timestamps form one strictly continuous hourly
-sequence of 480 labels, 2021-07-01 00:00 through 2021-07-20 23:00. Each date has 24 records, and the raw/converted coordinate arrays match.
-The observed converted value range is 0–71.4271 mm per record; each daily file
-has 16,392 masked values. These are structural and descriptive checks, not an
-independent numerical reconstruction or hydrological validation.
+## Existing dataset checks
 
-The retained `runoff_info_CaMaFlood.txt` reports `LINPCDF=.TRUE.`,
-`CROFFREQ=DAY`, `CVNROF=runoff`, `CVNTIME=time`, `IFRQ_INP=1`, and
-`DROFUNIT=3600000`. The regional map's `diminfo_ERA5land_global.txt` and
-`inpmat_ERA5land_global.bin` are present. The downloaded coordinates match the
-0.1° global ERA5-Land center lattice and N-to-S latitude order. The matrix was
-not regenerated or read/validated cell by cell.
+Reused the earlier representative-data inspection results: 20 original and
+20 converted files cover every requested day; the source and converted files
+have 24 hourly timestamps per day and a continuous 480-label sequence. Raw and
+converted coordinates match; the observed 0.1° grid centers are longitude
+2.5–13.5°E and latitude 53.5–44.5°N. The converted field is float32
+`runoff(time,lat,lon)` in mm per timestep with fill `1e20`, shape
+(24,91,111). Retained per-day download and conversion logs recorded completion
+for all dates. These are structural checks, not independent value-by-value
+conversion validation.
+
+Step 12 does not verify the regional Input Matrix. Although
+`map/Rhine_15min/inpmat_ERA5land_global.bin` and its `diminfo` exist, their
+correctness for this downloaded runoff and map is assigned to Step 13.
 
 ## Files changed
 
-- Added `tutorial/tutorial11-event_evaluation/p12-era5land_runoff_preparation.md`.
-- Added `tutorial/tutorial11-event_evaluation/metadata/12_era5land_runoff.json`.
-- Added Step 12 Survey and Work Reports.
-- Updated `metadata/02_domain_selection.json` to retain the initial candidate
-  analysis window and separately record the researcher-selected runoff period
-  and requested area.
-- Updated the event process to identify Step 12 as runoff preparation and
-  move model setup/simulation to Step 13, matching to Step 14, and evaluation
-  to Step 15.
-- Updated Step 11 handoff text, the ERA5-Land workflow README and the Rhine
-  Product Shell's stale Japan description.
-- Recorded the work in the Tutorial development log and repository task status.
+- Added `runoff_dataset.csv`.
+- Updated `p12-era5land_runoff_preparation.md` to define Registry use and the
+  Step 13/14 boundaries.
+- Updated `metadata/12_era5land_runoff.json` to link to, rather than duplicate,
+  the Registry specification.
+- Updated the Step 12 Survey Report and `00_event_evaluation_process.md`.
+- Updated the Step 11 handoff references and development history as needed.
 
-The data directory, originals, converted NetCDF, logs and generated info file
-remain ignored and were not added to Git. The event-specific dataset was not
-added to `inp/runoff_datasets.csv`.
+No generated NetCDF, raw source, log, Product Shell setting, conversion
+algorithm, map, or shared runoff registry row was changed. The Tutorial-local
+runoff data remain ignored.
 
-## Limits and unresolved matters
+## Step 13/14 handoff and limitations
 
-KG-0019 remains open: the 00 UTC source accumulation represents the preceding
-24-hour interval, while the converter's daily first-record handling and
-period-boundary coverage have not been independently verified. The July 1
-start is not proof of sufficient spin-up. No CaMa-Flood reader, map-cell runoff
-mapping or simulation was exercised. Model simulation dates remain undecided;
-forcing must be extended for evaluation beyond July 20.
-
-## Step 13 handoff
-
-Use `inp/tutorial11-ERA5land-Rhine2021Jul/runoff_YYYYMMDD.nc` as the forcing
-candidate and pair it with `map/Rhine_15min/inpmat_ERA5land_global.bin` and
-`diminfo_ERA5land_global.txt`. Confirm Step 13 run dates, forcing coverage,
-`DROFUNIT`, timestep and NetCDF input settings from the actual configuration.
-Keep source/raw files for provenance and repeat conversion only when needed.
+Step 13 should read the dataset row from `runoff_dataset.csv`, inspect the
+actual NetCDF grid, and prepare/validate the map-specific Input Matrix. Step 14
+should decide the simulation period, spin-up, forcing coverage and model
+settings, then create a GOSH script. Step 15 performs model execution after
+setup is complete. Do not infer those conditions from the
+acquisition interval. KG-0019 remains unresolved: ERA5-Land 00 UTC represents
+the preceding 24-hour accumulation, and conversion first-record/period-boundary
+behavior is not scientifically resolved. No CaMa-Flood run or model-observation
+comparison was performed.

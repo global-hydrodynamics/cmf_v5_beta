@@ -2,83 +2,71 @@
 
 ## Summary
 
-ERA5-Land hourly runoff has been selected by the researcher as an input for a
-future CaMa-Flood event simulation. The hourly product provides time-varying
-runoff input around the July 2021 flood, while its physical accumulation and
-time attribution must be interpreted under the existing ERA5-Land workflow
-and KG-0019. This report concerns data preparation only; it is not a simulation
-or model evaluation.
+ERA5-Land hourly runoff was selected by the researcher as input for a future
+CaMa-Flood event simulation. The hourly product supplies time-varying runoff
+around the July 2021 flood. This report covers data preparation only; it does
+not report a simulation or model evaluation.
 
-The Product Shell requests **2021-07-01 through 2021-07-20**, an inclusive
-period that starts before the event to provide a preparation interval. This is
-distinct from (1) the Step 1 core event context, 2021-07-13 to 2021-07-15,
-(2) the initial candidate analysis window, 2021-07-10 to 2021-07-25, and
-(3) the still-undecided simulation and evaluation period. July 1 does not by
-itself establish sufficient model spin-up. Evaluation after July 20 will need
-additional forcing dates.
+The acquisition dates are **2021-07-01 through 2021-07-20**, selected to retain
+a pre-event interval before the initial candidate analysis window of July 10–25.
+These periods have separate roles: the core event context is July 13–15; the
+July 10–25 window remains the initial analysis candidate; July 1–20 is the
+runoff acquisition period; and the model simulation/evaluation dates remain
+undecided. A July 1 start does not prove sufficient spin-up. Later evaluation
+requires extending the forcing beyond July 20.
 
-The regional map outer bounds are 3–13°E and 45–53°N. The researcher-selected
-CDS request extends 0.5° beyond each edge: 2.5–13.5°E, 44.5–53.5°N. Inspection
-of the returned files confirms 0.1° grid centers at longitudes 2.5–13.5°E and
-latitudes 53.5–44.5°N, ordered north to south. The corresponding cell-edge
-bounds are 2.45–13.55°E, 44.45–53.55°N. The requested area, cell centers and
-cell edges are different spatial descriptions and should not be conflated.
+The Step 11 Rhine map is 3–13°E, 45–53°N. The requested CDS bounds are
+2.5–13.5°E, 44.5–53.5°N, intentionally 0.5° wider on each edge to avoid input
+grid correspondence problems at the map boundary. Inspection found actual
+coordinate centers at 2.5–13.5°E and 53.5–44.5°N, spaced by 0.1°; derived
+outer cell edges are 2.45–13.55°E, 44.45–53.55°N. Requested bounds, centers,
+and cell edges are distinct.
 
-## Existing dataset inspection
+## Existing data and registered product
 
-The local output directory already contains 20 original daily files and 20
-converted daily files for every date from July 1 through July 20. Retained
-download and conversion logs contain a success/output record for each date.
-No new download or conversion was run for this task.
+The local data directory contains 20 original daily files and 20 converted
+daily files for every date July 1–20. Retained download/conversion logs have
+completion/output records for each date. No download or conversion was repeated
+for this documentation update.
 
-Each converted file contains 24 hourly records with dimensions
-`runoff(time,lat,lon) = (24,91,111)`. The raw and converted daily files contain a continuous
-480-record sequence labeled 2021-07-01 00:00 UTC through 2021-07-20 23:00 UTC,
-with no duplicate or missing hourly labels. The variable is float32 `runoff`,
-units `mm`, with `_FillValue` and `missing_value` of `1e20`. Across the
-converted files the observed range is 0 to about 71.43 mm per hourly record;
-16,392 values per day are masked. These checks describe the stored data, not
-the hydrological correctness of the conversion.
+Each converted file has 24 hourly records with dimensions
+`runoff(time,lat,lon) = (24,91,111)`. The sequence spans 480 hourly labels from
+2021-07-01 00:00 through 2021-07-20 23:00 UTC, with no duplicate or missing
+labels. The field is float32 `runoff` in mm per input timestep, with fill and
+missing values `1e20`. The raw ERA5-Land field is `ro` in metres. Daily file
+grouping does not average the hourly data. The dataset specification, file pattern, grid, units, conversion factor and
+provenance are registered in [Tutorial 11 runoff_dataset.csv](../runoff_dataset.csv).
 
-The raw ERA5-Land files contain source variable `ro` in metres. The shared
-converter differences accumulated values and writes millimetres accumulated
-over each input timestep. Daily download/output units describe file grouping;
-they do not average the hourly records. The generated information file reports
-`IFRQ_INP=1`, `DROFUNIT=3600000`, `CROFFREQ=DAY`, `CVNTIME=time`, and
-`CVNROF=runoff`. Step 13 should check these against its actual namelist and
-forcing configuration.
+## Model input and Step 13 responsibility
 
-## Relation to the Rhine map
+The Step 11 map has an `ERA5land_global` Input Matrix and `diminfo` pair. Their
+presence is recorded as a candidate handoff; Step 12 did not establish that
+the mapping is correct for this regional runoff subset. **Step 13 owns the
+actual Input Matrix preparation and validation.** It should compare the
+registered NetCDF grid to the regional map's required geometry and recreate
+the matrix only if needed. Step 14 then decides simulation settings and writes
+the reproducible GOSH workflow using the same Tutorial Registry.
 
-Step 11's regional map includes `diminfo_ERA5land_global.txt` and
-`inpmat_ERA5land_global.bin`. The map-specific mapping is based on a 0.1°
-global ERA5-Land grid (3600 × 1801 centers, longitude increasing and latitude
-decreasing). The downloaded regional subset uses the same 0.1° center lattice
-and north-to-south latitude order. The existing matrix is therefore the
-relevant mapping candidate and was not regenerated. Coordinate compatibility
-does not prove every map cell is adequately represented by the matrix, and no
-model input or simulation check was performed.
+The Tutorial-local Registry uses the shared runoff registry's column schema
+and is authoritative for this event dataset. It is not synchronized to
+`inp/runoff_datasets.csv`; raw/converted event data remain local and ignored.
+The separate `metadata/12_era5land_runoff.json` records selected settings,
+processing state, checks and handoff and points to the Registry rather than
+duplicating the full dataset specification.
 
-Because this dataset is specific to one event and remains local/ignored, it
-was not added to the shared `inp/runoff_datasets.csv` registry. The reusable
-Product Shell and shared workflow remain the reproducible acquisition and
-conversion method.
+## Scientific limitations and next steps
 
-## Scientific limitations and next action
+KG-0019 remains open. ERA5-Land valid-time 00 UTC represents an accumulation
+for the preceding 24 hours. The converter differences accumulated source
+values within UTC dates and keeps the first record by default; the first-value
+and period-boundary treatment have not been independently established as
+physically complete. No timestamp shift or algorithm change was made.
 
-KG-0019 remains unresolved. ERA5-Land's valid-time label at 00 UTC corresponds
-to the preceding 24-hour accumulation according to the maintained scientific
-record. The converter's within-day differencing and treatment of the first
-record do not establish complete temporal attribution or correct interval
-coverage at the beginning/end of the requested dates. No timestamp shift or
-algorithm change was made.
+Step 14 must set a simulation period and verify that forcing covers the full
+run and intended evaluation window. It must also use `runoff_dataset.csv` and
+the Input Matrix result from Step 13. No model reader, simulation, gauge
+matching or flood-skill evaluation was run for Step 12.
 
-Use the converted files as Step 13 forcing candidates, not the raw source
-files. Before simulation, choose the simulation period and spin-up, ensure
-forcing covers all run/evaluation dates, and verify actual input settings and
-map matrix pairing. Any claim about event performance must wait for a completed
-model run and observation matching.
-
-See the machine-readable [Step 12 metadata](../metadata/12_era5land_runoff.json),
-the [Step 12 Prompt](../p12-era5land_runoff_preparation.md),
-and the [event process](../00_event_evaluation_process.md).
+See the [Step 12 Prompt](../p12-era5land_runoff_preparation.md),
+[Step 12 Metadata](../metadata/12_era5land_runoff.json), and the
+[event process](../00_event_evaluation_process.md).

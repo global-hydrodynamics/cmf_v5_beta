@@ -628,3 +628,17 @@ Shell's copied Japan description. Data and logs remain ignored. No re-download,
 reconversion, Input Matrix generation or model simulation was run. KG-0019
 remains open; Step 13 must select the simulation/spin-up period and verify
 forcing coverage.
+
+## 2026-11-23 — Separate Tutorial runoff registry and downstream responsibilities
+
+Added a Tutorial 11-local `runoff_dataset.csv` with the shared registry schema;
+the event-specific ERA5-Land row was not added to `inp/runoff_datasets.csv`.
+Step 12 metadata now records the selected acquisition settings and inspection
+results while linking to the registry for the dataset specification. Kept the
+Step 1 candidate analysis window and undecided simulation period in
+`metadata/02_domain_selection.json`; the July 1–20 runoff acquisition period
+is maintained in Step 12 metadata. Updated the process and handoffs so Step 13
+owns Input Matrix preparation/validation, Step 14 owns simulation setup and
+GOSH preparation, and model execution follows in Step 15. Existing local runoff
+data, Product Shell settings, conversion algorithms and map products were not
+changed.

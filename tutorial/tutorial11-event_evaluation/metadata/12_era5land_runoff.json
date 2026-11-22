@@ -1,260 +1,112 @@
 {
   "schema_version": 1,
   "step": "12",
-  "dataset_name": "tutorial11-ERA5land-Rhine2021Jul",
-  "dataset_scope": "event-specific local research input; not registered in the shared runoff_datasets.csv",
-  "provider": {
-    "name": "Copernicus Climate Data Store",
-    "dataset": "ERA5-Land hourly data from 1950 to present",
-    "doi": "https://doi.org/10.24381/cds.e2161bac",
-    "source_variable": "ro",
-    "source_units": "m",
-    "source_semantics": "ERA5-Land accumulated runoff; source time attribution caveat is tracked in KG-0019."
+  "status": "existing_data_inspected",
+  "dataset_registry": {
+    "path": "runoff_dataset.csv",
+    "dataset_id": "tutorial11-ERA5land-Rhine2021Jul",
+    "role": "Authoritative Tutorial 11 specification for dataset fields; Steps 13 and 14 should read this row.",
+    "shared_registry": "inp/runoff_datasets.csv",
+    "shared_registry_action": "No entry added; the event-specific row is maintained in the Tutorial-local registry."
   },
-  "workflow": {
+  "researcher_selected_acquisition": {
     "product_shell": "inp/download_ERA5-Land/tutorial11-Rhine_2021Jul.sh",
-    "download_stage": "inp/download_ERA5-Land/s01-download.sh",
-    "conversion_stage": "inp/download_ERA5-Land/s02-convert_CMF_nc.sh",
-    "conversion_implementation": "inp/download_ERA5-Land/convert_CMF_nc.py",
-    "workflow_documentation": "inp/download_ERA5-Land/README.md",
-    "execution_status": "Existing researcher-generated data and logs were inspected; no download or conversion was run for this task."
-  },
-  "requested_settings": {
     "period": {
       "start_date": "2021-07-01",
       "end_date": "2021-07-20",
       "inclusive": true
     },
-    "domain_bbox_west_south_east_north": [
+    "requested_domain_bbox_west_south_east_north": [
       2.5,
       44.5,
       13.5,
       53.5
     ],
-    "domain_coordinate_convention": "Requested geographic bounds; actual grid centers and cell-edge bounds are reported separately below.",
-    "step11_map_bbox_west_south_east_north": [
-      3.0,
-      45.0,
-      13.0,
-      53.0
-    ],
-    "requested_margin_degrees_each_edge": 0.5,
+    "domain_margin_degrees_beyond_step11_map_each_edge": 0.5,
     "timestep_hours": 1,
     "download_unit": "daily",
     "output_unit": "daily",
     "format": "netcdf",
     "ncpus": 2,
-    "python_command": "python3"
+    "rationale": "The researcher selected a pre-event runoff period and a 0.5-degree area margin around the Step 11 map. These are acquisition settings, not a simulation-period decision."
   },
-  "observed_local_data": {
-    "output_directory": "inp/tutorial11-ERA5land-Rhine2021Jul/",
-    "original_directory": "inp/tutorial11-ERA5land-Rhine2021Jul/original/",
-    "download_log_pattern": "inp/tutorial11-ERA5land-Rhine2021Jul/logs/download.<run-id>/YYYYMMDD.log",
-    "conversion_log_pattern": "inp/tutorial11-ERA5land-Rhine2021Jul/logs/convert.<run-id>/YYYYMMDD.log",
-    "raw_file_pattern": "original/ERA5-Land_runoff_YYYYMMDD.nc",
-    "converted_file_pattern": "runoff_YYYYMMDD.nc",
+  "processing_record": {
+    "download_stage": "inp/download_ERA5-Land/s01-download.sh",
+    "conversion_stage": "inp/download_ERA5-Land/s02-convert_CMF_nc.sh",
+    "conversion_implementation": "inp/download_ERA5-Land/convert_CMF_nc.py",
+    "execution_by": "Researcher before this documentation task",
+    "rerun_for_step12_documentation": false,
+    "result_directory": "inp/tutorial11-ERA5land-Rhine2021Jul/",
+    "raw_pattern": "original/ERA5-Land_runoff_YYYYMMDD.nc",
+    "converted_pattern": "runoff_YYYYMMDD.nc",
+    "logs": "logs/download.<run-id>/ and logs/convert.<run-id>/"
+  },
+  "inspection_results": {
     "raw_file_count": 20,
     "converted_file_count": 20,
-    "raw_total_size_bytes": 10749879,
-    "converted_total_size_bytes": 11936582,
-    "download_logs_with_success": 20,
-    "conversion_logs_with_output_record": 20,
-    "data_git_status": "Originals, converted NetCDF, and logs are ignored by inp/.gitignore; keep local and do not commit."
-  },
-  "observed_converted_netcdf": {
-    "container": "NetCDF-4",
-    "format": "NetCDF",
-    "variable": "runoff",
-    "variable_dimensions_order": [
-      "time",
-      "lat",
-      "lon"
-    ],
-    "variable_units": "mm",
-    "long_name": "runoff accumulated over each input timestep",
-    "dtype": "float32",
-    "fill_value": 1e+20,
-    "missing_value": 1e+20,
-    "daily_shape_time_lat_lon": [
+    "requested_dates_complete": true,
+    "download_logs_successful_dates": 20,
+    "conversion_logs_with_output_dates": 20,
+    "hourly_records_per_day": 24,
+    "total_hourly_time_labels": 480,
+    "raw_and_converted_time_labels_contiguous": true,
+    "raw_and_converted_coordinate_arrays_match": true,
+    "converted_daily_shape_time_lat_lon": [
       24,
       91,
       111
     ],
-    "expected_hourly_records_total": 480,
-    "observed_hourly_records_total": 480,
-    "observed_first_timestamp_utc_label": "2021-07-01 00:00:00",
-    "observed_last_timestamp_utc_label": "2021-07-20 23:00:00",
-    "observed_time_sequence": "Continuous hourly labels with no duplicate or missing records across the 20 output files.",
-    "longitude_centers": {
-      "first": 2.5,
-      "last": 13.5,
-      "count": 111,
-      "spacing_degrees": 0.1,
-      "order": "west_to_east"
-    },
-    "latitude_centers": {
-      "first": 53.5,
-      "last": 44.5,
-      "count": 91,
-      "spacing_degrees": -0.1,
-      "order": "north_to_south"
-    },
-    "derived_cell_edge_bounds_west_south_east_north": [
+    "converted_variable": "runoff",
+    "converted_units": "mm per input timestep",
+    "converted_fill_value": 1e+20,
+    "observed_longitude_centers": [
+      2.5,
+      13.5
+    ],
+    "observed_latitude_centers_north_to_south": [
+      53.5,
+      44.5
+    ],
+    "grid_spacing_degrees": 0.1,
+    "cell_edge_bounds_west_south_east_north": [
       2.45,
       44.45,
       13.55,
       53.55
     ],
-    "observed_values_across_converted_files_mm_per_hourly_record": {
-      "minimum": 0.0,
-      "maximum": 71.42709350585938
-    },
-    "masked_values_per_day": 16392
+    "interpretation": "These fields summarize file/metadata checks. They do not establish numerical correctness of the conversion or scientific time attribution."
   },
-  "step11_input_matrix": {
-    "map": "map/Rhine_15min/",
+  "input_matrix_handoff": {
+    "step11_map": "map/Rhine_15min/",
     "grid_tag": "ERA5land_global",
-    "diminfo": "map/Rhine_15min/diminfo_ERA5land_global.txt",
-    "matrix": "map/Rhine_15min/inpmat_ERA5land_global.bin",
-    "model_grid": {
-      "nx": 40,
-      "ny": 32,
-      "resolution_degrees": 0.25,
-      "bbox_west_south_east_north": [
-        3.0,
-        45.0,
-        13.0,
-        53.0
-      ]
-    },
-    "runoff_grid_definition": {
-      "nx": 3600,
-      "ny": 1801,
-      "resolution_degrees": 0.1,
-      "longitude_centers": [
-        -180.0,
-        179.9
-      ],
-      "latitude_centers": [
-        90.0,
-        -90.0
-      ],
-      "latitude_order": "north_to_south"
-    },
-    "compatibility_assessment": "The observed Rhine subset uses the same 0.1-degree regular centers and N-to-S latitude ordering as the ERA5land_global grid definition. The existing map-specific matrix/diminfo pair is available. The matrix was not regenerated or value-validated in Step 12."
-  },
-  "derived_cama_flood_input_settings_reported_by_info_file": {
-    "LINPCDF": ".TRUE.",
-    "CROFFREQ": "DAY",
-    "CROFPRE": "runoff_",
-    "CROFSUF": ".nc",
-    "CVNTIME": "time",
-    "CVNROF": "runoff",
-    "IFRQ_INP_hours": 1,
-    "DROFUNIT": 3600000,
-    "unit_interpretation": "mm accumulated per one-hour record divided by 3,600,000 to produce m/s."
+    "existing_diminfo": "map/Rhine_15min/diminfo_ERA5land_global.txt",
+    "existing_input_matrix": "map/Rhine_15min/inpmat_ERA5land_global.bin",
+    "step12_validation_status": "Not validated for this forcing in Step 12.",
+    "next_step": "13 — Input Matrix Preparation and Validation",
+    "next_step_action": "Verify the actual runoff coordinate/grid contract against the selected regional map, then prepare or regenerate the map-specific matrix if required. Do not infer validity from file presence or the global tag alone."
   },
   "period_context": {
-    "event_context_period": {
-      "start_date": "2021-07-13",
-      "end_date": "2021-07-15",
-      "meaning": "Core intense-rainfall interval documented in Step 1; not the full impact or simulation period."
-    },
-    "initial_candidate_analysis_period": {
-      "start_date": "2021-07-10",
-      "end_date": "2021-07-25",
-      "meaning": "Step 1 candidate analysis window; not the selected runoff acquisition interval."
-    },
-    "runoff_acquisition_period": {
-      "start_date": "2021-07-01",
-      "end_date": "2021-07-20",
-      "meaning": "Researcher-selected data acquisition period to provide pre-event preparation time; not proof of adequate spin-up."
-    },
+    "event_period_reference": "metadata/02_domain_selection.json#event_context_period",
+    "initial_candidate_analysis_period_reference": "metadata/02_domain_selection.json#event_analysis_window",
+    "runoff_acquisition_period": "2021-07-01 to 2021-07-20 inclusive",
     "simulation_period": {
       "start_date": null,
       "end_date": null,
       "status": "undecided"
     },
-    "evaluation_after_2021_07_20": "Extend runoff input dates before evaluating later dates."
+    "notes": "The runoff dates do not set the model simulation or evaluation dates. A July 1 start does not prove adequate spin-up; forcing must be extended before evaluation after July 20."
   },
-  "quality_checks": {
-    "checks_passed": [
-      "20 raw and 20 converted daily filenames cover every date from 2021-07-01 through 2021-07-20.",
-      "All 20 raw files contain 24 hourly source timestamps; their complete sequence is continuous, and raw coordinate arrays match the converted files.",
-      "All converted files have shape (time=24, lat=91, lon=111), and their timestamps form one continuous 480-hour label sequence.",
-      "Converted file longitude/latitude coordinate arrays are identical across all 20 days and follow the reported 0.1-degree order.",
-      "All 20 download logs report completion and all 20 conversion logs report an output write.",
-      "Observed converted variable is float32 runoff(time,lat,lon), units mm, with fill and missing value 1e20."
-    ],
-    "not_checked": [
-      "No independent numerical reconstruction of the converter output from raw accumulations was performed.",
-      "No model reader or simulation test was run.",
-      "No independent verification of ERA5-Land physical time attribution was performed."
-    ]
-  },
-  "scientific_limitations": [
-    "KG-0019 remains open: ERA5-Land 00 UTC accumulation refers to the preceding 24-hour interval; the conversion first-record handling and period-boundary coverage remain unresolved.",
-    "The 2021-07-01 start provides a pre-event interval but does not establish adequate spin-up.",
-    "The requested CDS area, returned cell centers, and outer cell edges are distinct; use the observed coordinates for spatial mapping.",
-    "NetCDF structure and matrix-grid geometry do not prove a successful or scientifically valid model input mapping."
+  "scientific_and_data_limitations": [
+    "KG-0019 remains open. ERA5-Land 00 UTC accumulation refers to the preceding 24-hour interval; the conversion first-record and period-boundary treatment has not been scientifically resolved.",
+    "No independent reconstruction of converted runoff values from the raw accumulations was performed.",
+    "No CaMa-Flood reader or simulation test was run.",
+    "Originals, converted NetCDF files and logs remain ignored local data and are not redistributed."
   ],
-  "registry_decision": "Not added to inp/runoff_datasets.csv because this is an event-specific local dataset, not a reusable distributed product.",
   "next_step_handoff": {
-    "next_step": "13 — Model Experiment Setup and Simulation",
-    "forcing_directory": "inp/tutorial11-ERA5land-Rhine2021Jul/",
-    "forcing_pattern": "runoff_YYYYMMDD.nc",
-    "map": "map/Rhine_15min/",
-    "input_matrix": "map/Rhine_15min/inpmat_ERA5land_global.bin",
-    "diminfo": "map/Rhine_15min/diminfo_ERA5land_global.txt",
-    "required_decisions": [
-      "simulation period and spin-up",
-      "model forcing dates",
-      "run configuration and boundary treatment",
-      "check actual model settings against the helper metadata"
-    ]
-  },
-  "observed_source_netcdf": {
-    "file_pattern": "original/ERA5-Land_runoff_YYYYMMDD.nc",
-    "variable": "ro",
-    "variable_dimensions_order": [
-      "valid_time",
-      "latitude",
-      "longitude"
-    ],
-    "daily_shape_valid_time_latitude_longitude": [
-      24,
-      91,
-      111
-    ],
-    "dtype": "float32",
-    "units": "m",
-    "fill_value": "NaN",
-    "time_coordinate": "valid_time",
-    "time_units": "seconds since 1970-01-01",
-    "observed_first_timestamp_utc_label": "2021-07-01 00:00:00",
-    "observed_last_timestamp_utc_label": "2021-07-20 23:00:00",
-    "observed_time_sequence": "Continuous hourly labels over 20 dates; no duplicate or missing hourly labels.",
-    "longitude_centers": {
-      "first": 2.5,
-      "last": 13.5,
-      "count": 111,
-      "spacing_degrees": 0.1,
-      "order": "west_to_east"
-    },
-    "latitude_centers": {
-      "first": 53.5,
-      "last": 44.5,
-      "count": 91,
-      "spacing_degrees": -0.1,
-      "order": "north_to_south"
-    },
-    "coordinates_match_converted_output": true
-  },
-  "conversion_method": {
-    "method": "Difference accumulated source runoff within UTC calendar-day groups, then convert metres to millimetres per input timestep.",
-    "first_record_of_each_day": "Kept by the current default converter setting.",
-    "negative_differences": "Current accumulation is substituted; negative increments are clipped by default.",
-    "source_and_output_temporal_grouping": "Daily file grouping does not perform temporal averaging.",
-    "caveat": "This describes the retained implementation; it does not resolve KG-0019 first-record or physical interval attribution."
+    "step": "13",
+    "purpose": "Prepare and validate the map-specific Input Matrix for this runoff dataset.",
+    "registry": "runoff_dataset.csv",
+    "metadata": "metadata/12_era5land_runoff.json",
+    "do_not_treat_as": "Simulation configuration or simulation-period approval."
   }
 }

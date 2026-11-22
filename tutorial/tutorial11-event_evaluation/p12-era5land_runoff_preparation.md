@@ -4,136 +4,129 @@
 
 ### Inputs
 - Step 11 regional map: `map/Rhine_15min/`
-- Step 2 domain and period context: `metadata/02_domain_selection.json`
-- Existing ERA5-Land Product/Download/Convert workflow under `inp/download_ERA5-Land/`
-- Event-specific Product Shell: `inp/download_ERA5-Land/tutorial11-Rhine_2021Jul.sh`
-- Existing original and converted data under `inp/tutorial11-ERA5land-Rhine2021Jul/`, when available
+- Step 2 event/domain context: `metadata/02_domain_selection.json`
+- Existing ERA5-Land Product/Download/Convert tools under `inp/download_ERA5-Land/`
+- Rhine Product Shell: `inp/download_ERA5-Land/tutorial11-Rhine_2021Jul.sh`
+- Existing local ERA5-Land data, if available
 
 ### Tasks
-- Check the selected runoff period and requested area against the event plan and regional map.
-- Inspect existing source and converted NetCDF files and logs before deciding whether any processing is needed.
-- Verify file sequence, time axis, grid coordinates, variable, units and missing-value metadata.
-- Record the observed dataset contract, compatibility context and unresolved time semantics.
-- Hand the forcing files and matching map-specific Input Matrix information to Step 13.
+- Confirm the researcher-selected acquisition period and requested area.
+- Inspect and reuse existing raw and converted files; download/convert only if required.
+- Verify file coverage, hourly labels, NetCDF variables, units, coordinates and missing values.
+- Register the Tutorial 11 runoff dataset in `runoff_dataset.csv`.
+- Record this Step's settings, processing state and checks in Step 12 metadata/reports.
+- Hand off the Registry and data to Step 13 for map-specific Input Matrix preparation and validation.
 
 ### Outputs
-- Local original CDS files and converted hourly CaMa-Flood NetCDF, when already available or newly prepared
-- `metadata/12_era5land_runoff.json`
+- Local original and converted ERA5-Land runoff data
+- `runoff_dataset.csv` — Tutorial-local runoff specification registry
+- `metadata/12_era5land_runoff.json` — Step 12 execution record and handoff
 - `AI_survey_report/12_era5land_runoff_preparation.md`
 - `AI_work_report/12_era5land_runoff_preparation.md`
 
 ## Human Instructions
 
-For Rhine 2021, the researcher has already run the event-specific Product Shell
-and retained the original and converted data locally. Have the AI inspect those
-outputs first. The data directory is ignored by Git; do not add the raw or
-converted data to the repository. If the matching output files exist and are
-readable, reuse them rather than downloading or converting them again.
+For Rhine 2021, the researcher has already downloaded and converted the data.
+Ask the AI agent to inspect and reuse the files in
+`inp/tutorial11-ERA5land-Rhine2021Jul/`; avoid repeating successful download or
+conversion work. Keep all downloaded data and logs local and ignored by Git.
 
-For a new event or a missing dataset, review the target dates, region and
-forcing resolution with the researcher, then copy or edit the appropriate
-Product Shell settings. For this Rhine sample, the reproducible command is
-`bash inp/download_ERA5-Land/tutorial11-Rhine_2021Jul.sh`; run it only when
-matching outputs are absent or intentionally need regeneration. Preserve the
-shared `s01-download.sh` and `s02-convert_CMF_nc.sh` processing behavior. Real
-CDS downloads require user credentials and acceptance of the dataset terms. Human review of the analysis
-is recommended but does not block later processing when required inputs are
-present; missing or invalid data remain errors.
+The researcher-selected acquisition period is July 1–20, 2021, to retain a
+pre-event preparation interval before the initial July 10–25 candidate analysis
+window. It does not establish the model simulation period or adequate spin-up.
+The selected CDS bounds (2.5–13.5°E, 44.5–53.5°N) intentionally extend 0.5°
+beyond each edge of the Step 11 Rhine map (3–13°E, 45–53°N). Record the actual
+NetCDF grid coordinates; Step 13 verifies their mapping to the model grid.
+
+For another region or period, review and edit the Product Shell's user settings
+and then run it when new files are needed:
+
+```sh
+bash inp/download_ERA5-Land/tutorial11-Rhine_2021Jul.sh
+```
+
+Use an appropriately named copy for a different event. Do not edit the shared
+s01/s02 processing algorithms as part of routine event configuration. A real
+CDS download requires credentials and acceptance of the dataset terms.
 
 ## Example AI Agent Prompt
 
 ```text
-Prepare Step 12 ERA5-Land runoff for this flood-event evaluation.
+Prepare Step 12 ERA5-Land hourly runoff for this event.
 
-Read the repository and Tutorial 11 instructions, the ERA5-Land workflow
-README, KG-0019, the Step 2 domain metadata, the Step 11 regional-map report,
-and the event-specific Product Shell. Inspect the local dataset directory,
-original NetCDFs, converted NetCDFs, and available logs before running any
-workflow. Do not overwrite or reacquire matching data unnecessarily.
+Read the repository/Tutorial instructions, `inp/download_ERA5-Land/README.md`,
+KG-0019, the Step 2 metadata, Step 11 report and map, the Product Shell, and the
+Tutorial-local `runoff_dataset.csv` schema. Inspect the local dataset and logs
+before running anything. Existing complete files must be reused; do not
+redownload or reconvert them without a concrete need.
 
-For the Rhine 2021 sample, preserve the researcher-selected Product Shell
-settings: dataset tutorial11-ERA5land-Rhine2021Jul; 2021-07-01 through
-2021-07-20 inclusive; requested area 2.5–13.5°E and 44.5–53.5°N; hourly
-TSTEP=1; daily download and output grouping; NetCDF; NCPUS=2. This area
-intentionally extends 0.5° beyond each edge of the Step 11 map at 3–13°E,
-45–53°N. Verify the actual coordinate centers and grid geometry from the
-NetCDF; do not infer them only from the request.
+For Rhine 2021, preserve these researcher settings in
+`inp/download_ERA5-Land/tutorial11-Rhine_2021Jul.sh`:
+- Dataset `tutorial11-ERA5land-Rhine2021Jul`
+- 2021-07-01 through 2021-07-20 inclusive
+- Requested area 2.5–13.5°E, 44.5–53.5°N (0.5° beyond each Step 11 map edge)
+- Timestep 1 hour, daily download grouping, daily output grouping
+- NetCDF, NCPUS=2
 
-1. Determine which source and converted files exist and whether the complete
-   requested daily sequence is represented. Check timestamps for ordering,
-   duplicates, gaps and expected hourly count.
-2. Inspect source and converted variable names, dimensions, coordinates,
-   coordinate order and spacing, units, fill/missing values, and relevant
-   conversion logs. Distinguish source accumulated runoff from converted
-   timestep runoff. Daily file grouping does not mean daily averaging.
-3. Compare the actual 0.1° runoff grid geometry with the Step 11
-   `diminfo_ERA5land_global.txt` / `inpmat_ERA5land_global.bin` pair. Do not
-   regenerate the map or Input Matrix in this Step. State what metadata
-   compatibility establishes and what it does not.
-4. If matching converted data are absent and the researcher has authorized
-   access/credentials, run the existing Product Shell; otherwise document the
-   missing input without claiming it was prepared. Never change the conversion
-   algorithm to resolve KG-0019.
-5. Create/update `metadata/12_era5land_runoff.json`, the Step 12 Survey and
-   Work Reports, and the event process references. Keep the runoff dataset
-   out of Git and decide explicitly whether its event-specific nature warrants
-   registry inclusion. Do not register it merely because files exist.
-6. Hand off the converted-file pattern, time/grid/unit settings and matching
-   Input Matrix to Step 13. Keep the event period, initial candidate analysis
-   period, runoff acquisition period and eventual simulation/evaluation period
-   distinct. July 1 start does not prove adequate spin-up; evaluation after
-   July 20 requires extending the forcing.
+1. Check the complete raw and converted daily file sequence and available logs.
+   Confirm hourly ordering/count, NetCDF readability, variables, units,
+   coordinates and missing-value metadata from the actual files.
+2. Keep the source accumulated `ro` in metres distinct from converted
+   `runoff` in millimetres per hourly record. Daily file grouping is not an
+   average. Retain KG-0019 and do not alter conversion semantics.
+3. Add or update the dataset row in `runoff_dataset.csv`, using the same column
+   schema as `inp/runoff_datasets.csv`. Distinguish observed data properties
+   from Product Shell settings. This Tutorial registry is authoritative for
+   Steps 13 and 14; do not add the event-specific row to the shared registry.
+4. Write `metadata/12_era5land_runoff.json` as an execution record, not a
+   duplicate registry. Link it to the registry row; record selected settings,
+   processing status, validation summary, limitations and the next-step handoff.
+5. Update the Step 12 Survey and Work Reports and the event process links.
+   Clearly distinguish the event period, initial candidate analysis period,
+   selected runoff acquisition period and undecided simulation period.
+6. Hand the Registry and actual NetCDF grid evidence to Step 13. Step 13 owns
+   Input Matrix creation/validation. Step 14 owns the simulation-period/forcing
+   decisions and GOSH script; do not configure or run the model here.
 
-Report the observed evidence, decisions, limitations and any checks not run.
-Do not run CaMa-Flood, match gauges, or evaluate model skill in Step 12.
+Do not redownload/reconvert a complete dataset, regenerate a map, change
+scientific algorithms, run CaMa-Flood, compare observations, or publish the
+data package. Report checks actually performed and unresolved items.
 ```
 
-## Rhine 2021 reference settings
+## Rhine 2021 settings and interpretation
 
-The Product Shell preserves these research-selected settings:
+The exact researcher-selected settings are retained in the Product Shell and
+summarized in the Tutorial Registry. Step 1's initial 2021-07-10 to 2021-07-25
+candidate analysis window remains unchanged. The July 1–20 runoff acquisition
+period was selected to provide pre-event forcing context; it is not the model
+simulation period, and it does not prove sufficient spin-up. Any evaluation
+after July 20 requires a longer runoff record.
 
-| Setting | Value |
-| --- | --- |
-| Product dataset | `tutorial11-ERA5land-Rhine2021Jul` |
-| Inclusive runoff dates | 2021-07-01 to 2021-07-20 |
-| Requested CDS bounds | 2.5–13.5°E, 44.5–53.5°N |
-| Step 11 map outer bounds | 3–13°E, 45–53°N |
-| Timestep | 1 hour |
-| Download/output grouping | daily / daily |
-| Format and concurrency | NetCDF / 2 jobs |
+ERA5-Land's source runoff is accumulated depth (`ro`, metres); the shared
+converter outputs timestep runoff (`runoff`, millimetres per input timestep).
+`DOWNLOAD_UNIT`/`OUTPUT_UNIT` only group files. The generated information file
+reports `IFRQ_INP=1`, `DROFUNIT=3600000`, `CROFFREQ="DAY"`, `CVNTIME="time"`
+and `CVNROF="runoff"`; Step 14 must compare these to the final model settings.
+The requested CDS area intentionally has a 0.5° margin around the regional
+map. The actual grid center coordinates are registered in `runoff_dataset.csv`.
+Step 13 must verify the map-specific Input Matrix; Step 12 does not claim that
+matrix is valid for this forcing.
 
-The July 1 start was selected to retain a pre-event preparation interval. It is
-not a claim that a July 1 model start provides sufficient spin-up. The initial
-candidate event-analysis window remains July 10–25; it is distinct from this
-runoff acquisition period. A model simulation period is still a Step 13
-decision. The selected runoff ends July 20, so later evaluation dates require
-more forcing data.
+KG-0019 remains open: the ERA5-Land 00 UTC accumulation covers the preceding
+24 hours, and converter first-record and period-boundary behavior has not been
+scientifically resolved. Structural completeness does not resolve this timing
+question.
 
-## Scientific and technical interpretation
+## Registry and downstream handoff
 
-The source ERA5-Land runoff variable is `ro` in metres of accumulated runoff.
-The existing converter writes `runoff` in millimetres accumulated over each
-input timestep. For hourly data, the expected converted file has 24 hourly
-records per daily file; `DOWNLOAD_UNIT` and `OUTPUT_UNIT` describe file
-organization, not temporal averaging. The helper's CaMa-Flood settings report
-`LINPCDF=.TRUE.`, `CROFFREQ="DAY"`, `CVNROF="runoff"`, `CVNTIME="time"`,
-`IFRQ_INP=1`, and `DROFUNIT=3600000` for mm per one-hour timestep. Step 13
-must check these against the actual run configuration and selected map/input
-matrix.
+`runoff_dataset.csv` is the Tutorial 11 specification registry, using the
+shared runoff registry's schema. Steps 13 and 14 should read this row for the
+input path, file pattern, grid, units and conversion settings.
+`metadata/12_era5land_runoff.json` records the selected run's state and checks
+and points to the Registry; it does not replace the data specification.
 
-KG-0019 remains open. ERA5-Land valid-time labels are retained; the 00 UTC
-accumulation is documented as covering the preceding 24 hours. The converter's
-within-day differencing and first-record treatment do not establish correct
-physical attribution or complete period-boundary coverage. Do not silently
-shift timestamps or change conversion behavior. A structurally complete file
-sequence is not proof that accumulation timing is scientifically resolved.
-
-## Expected outputs and handoff
-
-The converted files use `runoff_YYYYMMDD.nc` with `runoff(time,lat,lon)`.
-The raw files use `original/ERA5-Land_runoff_YYYYMMDD.nc`. Data and run logs
-remain local and ignored. `metadata/12_era5land_runoff.json` is the compact
-machine-readable record of observed properties and Step 13 input settings.
-The event-specific dataset is not added to the shared runoff registry because
-that registry documents reusable products and the Rhine data are local,
-experiment-specific inputs.
+Step 13 prepares or validates the map-specific `ERA5land_global` Input Matrix
+and documents its actual alignment with the observed NetCDF grid. Step 14 then
+decides simulation conditions and prepares the reproducible GOSH script.
+Neither step may infer an approved simulation period from the July 1–20
+acquisition interval.

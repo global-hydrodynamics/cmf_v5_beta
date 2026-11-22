@@ -1038,10 +1038,10 @@ scientific limits and 14 unchanged baseline research-link failures.
 DT-0155 complete: maintainer-authorized Tutorial 11 Step 12 ERA5-Land runoff
 preparation on the existing `feature/package-builder` branch. Codex inspected
 20 raw and 20 converted files plus retained logs; 480 hourly labels, source and
-output grids, variable units and map Input Matrix geometry were recorded. Added
-the p12 Prompt, Step 12 metadata and Survey/Work Reports; updated the process,
-period handoff, direct runoff workflow references, and stale Rhine Product
-Shell description. No redownload, reconversion, Input Matrix generation,
-runoff-algorithm change, model run or registry/data publication was performed.
-KG-0019 remains open. Tracked documentation/workflow-only changes were committed
-and pushed; local ERA5-Land data remain ignored.
+output grids and units were recorded. Added the p12 Prompt, Tutorial-local
+`runoff_dataset.csv` (same schema as the shared registry), Step 12 metadata and
+Survey/Work Reports. Step 13 owns Input Matrix preparation/validation; Step 14
+owns simulation setup and GOSH script creation. No redownload, reconversion,
+Input Matrix generation, runoff-algorithm change, model run or data publication
+was performed. KG-0019 remains open. Changes were committed and pushed; local
+ERA5-Land data remain ignored.
