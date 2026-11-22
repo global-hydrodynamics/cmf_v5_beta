@@ -312,14 +312,40 @@ were used for that survey, and the `s03a-satellite_availability.sh` wrapper is
 ready to repeat the metadata search when the environment is available.
 `s03b-download_gfm.sh` reads `metadata/03a_selected_passes.json`, reuses matching
 local COGs, and refreshes the handover files on each successful run.
-`f03a-satellite_footprints.sh` redraws figures from cached metadata. Discharge units/time zone
-and GFM-specific redistribution clearance remain unresolved. The
+`f03a-satellite_footprints.sh` redraws figures from cached metadata. Discharge
+units and time zone remain unresolved. The GFM Product User Manual states
+that the CEMS terms apply to GFM. The current CEMS terms allow reproduction,
+distribution and adaptation with source attribution; these focus-area crops
+and the figure carry the required modified-information notice. See the
+[GFM Product User Manual](https://extwiki.eodc.eu/gfm_assets/gfm4.0_pum_2025.pdf)
+and [CEMS terms and conditions](https://global-flood.emergency.copernicus.eu/terms-of-service/).
+The
 `S1A_o038784_dt049389` first-processing candidate is recorded as `proposed` in
 `metadata/03a_selected_passes.json`; this does not certify its coverage or
 require an approval state for later execution. See the
 [Step 3a satellite data survey](03_satellite_data_survey.md),
 [observation inventory](observation/observation_data_inventory.md), and the
 [p03c output provenance](observation/GFM_extent/GFM_S1A_20210715_o038784_dt049389_extent20m.json).
+
+### p03d — Extract native GFM focus areas
+
+Run `bash s03d-extract_gfm_focus_areas.sh` to read the proposed WGS84 boxes in
+`metadata/f03c_focus_areas.json` and extract each one from the existing native
+classification COG. The densified projected bbox is rounded outward to source
+pixel boundaries; outputs retain the source Equi7 CRS, 20 m resolution,
+pixel alignment, uint8 class codes and NoData=255 without resampling or
+reclassification. The per-area GeoTIFFs are written under
+`observation/GFM_extent/`. `metadata/03d_extracted_areas.json` is the canonical
+handover manifest: it records each source bbox, actual projected bounds, file
+path, dimensions, size and class counts, plus the shared grid and class
+definitions. `proposed` remains descriptive and does not gate extraction.
+
+Run `bash f08d-gfm_focus_areas_20m.sh` to recreate
+`figure/f08d-gfm_focus_areas_20m.png` from that manifest. It shows the native
+categorical classes with the OSM background and `glb_15min` river network.
+These local maps are inspection views of the selected observation crops; they
+do not imply that unobserved pixels are dry or that the selected areas validate
+hydrologic performance.
 
 ## 4. Configure and run CaMa-Flood
 

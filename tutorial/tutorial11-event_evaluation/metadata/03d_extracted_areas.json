@@ -1,0 +1,533 @@
+{
+  "schema": "cmf-tutorial11-gfm-focus-extractions-1",
+  "source_focus_areas": "metadata/f03c_focus_areas.json",
+  "focus_selection_status": "proposed",
+  "source_classification_raster": "observation/GFM_extent/GFM_S1A_20210715_o038784_dt049389_extent20m.tif",
+  "source_classification_sha256": "ce449f65dbeeceacb5b7f2c493b70603d74f42a7e41127ed8fcff67bc20e10de",
+  "satellite": "S1A",
+  "date": "2021-07-15",
+  "pass_id": "S1A_o038784_dt049389",
+  "orbit_direction": "DESCENDING",
+  "crs": "PROJCS[\"Azimuthal_Equidistant\",GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]],PROJECTION[\"Azimuthal_Equidistant\"],PARAMETER[\"latitude_of_center\",53],PARAMETER[\"longitude_of_center\",24],PARAMETER[\"false_easting\",5837287.81977],PARAMETER[\"false_northing\",2121415.69617],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+  "crs_authority": null,
+  "resolution_m": [
+    20,
+    20
+  ],
+  "dtype": "uint8",
+  "band_count": 1,
+  "nodata": 255,
+  "pixel_alignment": "Every output transform is an integer pixel window of the source raster; no reprojection, resampling, or class conversion is performed.",
+  "compression": "ZSTD level 9, lossless",
+  "class_codes": {
+    "0": {
+      "class": "Land",
+      "meaning": "F=0 and W=0 in selected common-valid observation",
+      "pixel_count": 91484129
+    },
+    "1": {
+      "class": "Flood",
+      "meaning": "F=1 and W=1 in selected common-valid observation",
+      "pixel_count": 182974
+    },
+    "2": {
+      "class": "Permanent water",
+      "meaning": "F=0,W=1 and reference=1",
+      "pixel_count": 3372171
+    },
+    "3": {
+      "class": "Seasonal water",
+      "meaning": "F=0,W=1 and reference=2",
+      "pixel_count": 111433
+    },
+    "4": {
+      "class": "Other water",
+      "meaning": "F=0,W=1 and reference is 0 or 255",
+      "pixel_count": 0
+    },
+    "5": {
+      "class": "Exclusion",
+      "meaning": "No common-valid observation; the selected mosaic marks exclusion",
+      "pixel_count": 157602754
+    },
+    "6": {
+      "class": "Inconsistent",
+      "meaning": "Valid F=1,W=0 or observed partial F/W classification",
+      "pixel_count": 62162
+    },
+    "255": {
+      "class": "NoData",
+      "meaning": "No flood/water observation; includes reference-only coverage",
+      "pixel_count": 100014182
+    }
+  },
+  "output_areas": [
+    {
+      "id": "F01",
+      "name": "Western lower cluster",
+      "source_wgs84_bbox_west_south_east_north": [
+        4.6,
+        49.15,
+        5.05,
+        49.6
+      ],
+      "extracted_equi7_bounds_west_south_east_north": [
+        4437400.0,
+        1872360.0,
+        4481900.0,
+        1929660.0
+      ],
+      "output_file": "observation/GFM_extent/GFM_S1A_20210715_S1A_o038784_dt049389_F01_extent20m.tif",
+      "width": 2225,
+      "height": 2865,
+      "file_size_bytes": 281926,
+      "sha256": "0b8b4302af0e0d999db4b55f6590cd426fc48df2b39a7ee2765b0fae41a987ac",
+      "class_pixel_counts": {
+        "0": 1683708,
+        "1": 25260,
+        "2": 8975,
+        "3": 39,
+        "4": 0,
+        "5": 4656643,
+        "6": 0,
+        "255": 0
+      }
+    },
+    {
+      "id": "F02",
+      "name": "South-central cluster",
+      "source_wgs84_bbox_west_south_east_north": [
+        5.25,
+        49.2,
+        5.8,
+        49.55
+      ],
+      "extracted_equi7_bounds_west_south_east_north": [
+        4484660.0,
+        1863920.0,
+        4533040.0,
+        1911980.0
+      ],
+      "output_file": "observation/GFM_extent/GFM_S1A_20210715_S1A_o038784_dt049389_F02_extent20m.tif",
+      "width": 2419,
+      "height": 2403,
+      "file_size_bytes": 249348,
+      "sha256": "680ac0864dfd7568f6e56a234fa9d494c42ce80a6642b6d428669c97a0f538af",
+      "class_pixel_counts": {
+        "0": 1584010,
+        "1": 21538,
+        "2": 15378,
+        "3": 245,
+        "4": 0,
+        "5": 4191686,
+        "6": 0,
+        "255": 0
+      }
+    },
+    {
+      "id": "F03",
+      "name": "Eastern lower cluster",
+      "source_wgs84_bbox_west_south_east_north": [
+        5.95,
+        49.45,
+        6.25,
+        49.8
+      ],
+      "extracted_equi7_bounds_west_south_east_north": [
+        4540840.0,
+        1883020.0,
+        4571300.0,
+        1926360.0
+      ],
+      "output_file": "observation/GFM_extent/GFM_S1A_20210715_S1A_o038784_dt049389_F03_extent20m.tif",
+      "width": 1523,
+      "height": 2167,
+      "file_size_bytes": 160188,
+      "sha256": "2646e5c34ecdc3a6e0302151fd8f7725715c95810de9ed6afe792d039b988f3f",
+      "class_pixel_counts": {
+        "0": 632131,
+        "1": 14028,
+        "2": 2037,
+        "3": 79,
+        "4": 0,
+        "5": 2652066,
+        "6": 0,
+        "255": 0
+      }
+    },
+    {
+      "id": "F04",
+      "name": "Central-west cluster",
+      "source_wgs84_bbox_west_south_east_north": [
+        4.95,
+        50.05,
+        5.25,
+        50.25
+      ],
+      "extracted_equi7_bounds_west_south_east_north": [
+        4487760.0,
+        1966120.0,
+        4514200.0,
+        1993360.0
+      ],
+      "output_file": "observation/GFM_extent/GFM_S1A_20210715_S1A_o038784_dt049389_F04_extent20m.tif",
+      "width": 1322,
+      "height": 1362,
+      "file_size_bytes": 63900,
+      "sha256": "3d355dfdd0aecba2384f6a570168798b29e705f8644919493835e8bf6a141ecf",
+      "class_pixel_counts": {
+        "0": 229766,
+        "1": 4464,
+        "2": 767,
+        "3": 123,
+        "4": 0,
+        "5": 1565444,
+        "6": 0,
+        "255": 0
+      }
+    },
+    {
+      "id": "F05",
+      "name": "Central-east cluster",
+      "source_wgs84_bbox_west_south_east_north": [
+        5.3,
+        50.2,
+        5.5,
+        50.4
+      ],
+      "extracted_equi7_bounds_west_south_east_north": [
+        4516220.0,
+        1977820.0,
+        4535640.0,
+        2003140.0
+      ],
+      "output_file": "observation/GFM_extent/GFM_S1A_20210715_S1A_o038784_dt049389_F05_extent20m.tif",
+      "width": 971,
+      "height": 1266,
+      "file_size_bytes": 53814,
+      "sha256": "12c548f5db531a183bdb4173a42120dfe3c57c8a1f42071fdd91f41374591920",
+      "class_pixel_counts": {
+        "0": 180792,
+        "1": 6009,
+        "2": 207,
+        "3": 0,
+        "4": 0,
+        "5": 1042278,
+        "6": 0,
+        "255": 0
+      }
+    },
+    {
+      "id": "F06",
+      "name": "North-central west cluster",
+      "source_wgs84_bbox_west_south_east_north": [
+        5.6166666667,
+        50.8,
+        5.7833333333,
+        51.0
+      ],
+      "extracted_equi7_bounds_west_south_east_north": [
+        4554760.0,
+        2037800.0,
+        4571700.0,
+        2062460.0
+      ],
+      "output_file": "observation/GFM_extent/GFM_S1A_20210715_S1A_o038784_dt049389_F06_extent20m.tif",
+      "width": 847,
+      "height": 1233,
+      "file_size_bytes": 95520,
+      "sha256": "5ce461d07c392cbb1f59cc0c93cb100511fe0a52cbf256801af8faac9934d637",
+      "class_pixel_counts": {
+        "0": 335928,
+        "1": 5783,
+        "2": 20152,
+        "3": 1838,
+        "4": 0,
+        "5": 680650,
+        "6": 0,
+        "255": 0
+      }
+    },
+    {
+      "id": "F07",
+      "name": "North-central east cluster",
+      "source_wgs84_bbox_west_south_east_north": [
+        5.7,
+        51.0,
+        5.9,
+        51.2
+      ],
+      "extracted_equi7_bounds_west_south_east_north": [
+        4566000.0,
+        2057460.0,
+        4585120.0,
+        2082680.0
+      ],
+      "output_file": "observation/GFM_extent/GFM_S1A_20210715_S1A_o038784_dt049389_F07_extent20m.tif",
+      "width": 956,
+      "height": 1261,
+      "file_size_bytes": 117814,
+      "sha256": "af4087938451537ea604140e31b77fa054682cbe33d48e8a93f3700624f1b759",
+      "class_pixel_counts": {
+        "0": 756619,
+        "1": 5948,
+        "2": 42229,
+        "3": 2088,
+        "4": 0,
+        "5": 398632,
+        "6": 0,
+        "255": 0
+      }
+    },
+    {
+      "id": "F08",
+      "name": "East-central cluster",
+      "source_wgs84_bbox_west_south_east_north": [
+        6.7,
+        50.6,
+        7.0,
+        50.85
+      ],
+      "extracted_equi7_bounds_west_south_east_north": [
+        4623620.0,
+        1995260.0,
+        4650740.0,
+        2027480.0
+      ],
+      "output_file": "observation/GFM_extent/GFM_S1A_20210715_S1A_o038784_dt049389_F08_extent20m.tif",
+      "width": 1356,
+      "height": 1611,
+      "file_size_bytes": 146048,
+      "sha256": "97031fe5f733c90656b7646c84e4a5c15313d11ccf281f483a5913a464ea0db0",
+      "class_pixel_counts": {
+        "0": 1076884,
+        "1": 8912,
+        "2": 15227,
+        "3": 971,
+        "4": 0,
+        "5": 1082522,
+        "6": 0,
+        "255": 0
+      }
+    },
+    {
+      "id": "F09",
+      "name": "Western northern corridor",
+      "source_wgs84_bbox_west_south_east_north": [
+        6.3,
+        51.4833333333,
+        6.7833333333,
+        51.8333333333
+      ],
+      "extracted_equi7_bounds_west_south_east_north": [
+        4619840.0,
+        2094940.0,
+        4661660.0,
+        2141040.0
+      ],
+      "output_file": "observation/GFM_extent/GFM_S1A_20210715_S1A_o038784_dt049389_F09_extent20m.tif",
+      "width": 2091,
+      "height": 2305,
+      "file_size_bytes": 397808,
+      "sha256": "07359766fac6aefd171863f7ff92d96288dd3f9448ad9637d396f3f50e8e6cdd",
+      "class_pixel_counts": {
+        "0": 2930889,
+        "1": 28916,
+        "2": 150823,
+        "3": 1666,
+        "4": 0,
+        "5": 1707461,
+        "6": 0,
+        "255": 0
+      }
+    },
+    {
+      "id": "F10",
+      "name": "Eastern northern corridor",
+      "source_wgs84_bbox_west_south_east_north": [
+        7.0,
+        51.35,
+        7.6,
+        51.55
+      ],
+      "extracted_equi7_bounds_west_south_east_north": [
+        4663620.0,
+        2067260.0,
+        4709340.0,
+        2098660.0
+      ],
+      "output_file": "observation/GFM_extent/GFM_S1A_20210715_S1A_o038784_dt049389_F10_extent20m.tif",
+      "width": 2286,
+      "height": 1570,
+      "file_size_bytes": 249868,
+      "sha256": "bd4c1b4c8368ae81392b7e0ccbf56842b2b4f03226355f616fb9fbc1e5864101",
+      "class_pixel_counts": {
+        "0": 609303,
+        "1": 11758,
+        "2": 20950,
+        "3": 320,
+        "4": 0,
+        "5": 2779306,
+        "6": 5,
+        "255": 167378
+      }
+    },
+    {
+      "id": "F11",
+      "name": "Lower western corridor",
+      "source_wgs84_bbox_west_south_east_north": [
+        4.05,
+        51.55,
+        4.25,
+        51.6833333333
+      ],
+      "extracted_equi7_bounds_west_south_east_north": [
+        4470860.0,
+        2146980.0,
+        4488240.0,
+        2165180.0
+      ],
+      "output_file": "observation/GFM_extent/GFM_S1A_20210715_S1A_o038784_dt049389_F11_extent20m.tif",
+      "width": 869,
+      "height": 910,
+      "file_size_bytes": 43310,
+      "sha256": "937f52aa86ef97c6496c239b5a91fd04c9e5f6c27adc70dd775260235da61620",
+      "class_pixel_counts": {
+        "0": 524174,
+        "1": 2860,
+        "2": 175214,
+        "3": 3410,
+        "4": 0,
+        "5": 85132,
+        "6": 0,
+        "255": 0
+      }
+    },
+    {
+      "id": "F12",
+      "name": "Southwestern edge cluster",
+      "source_wgs84_bbox_west_south_east_north": [
+        5.7,
+        49.05,
+        5.9,
+        49.2
+      ],
+      "extracted_equi7_bounds_west_south_east_north": [
+        4512340.0,
+        1845820.0,
+        4530580.0,
+        1865760.0
+      ],
+      "output_file": "observation/GFM_extent/GFM_S1A_20210715_S1A_o038784_dt049389_F12_extent20m.tif",
+      "width": 912,
+      "height": 997,
+      "file_size_bytes": 49978,
+      "sha256": "86cccd49a2fcfbf9b8b34cf89138fc43a5d69fe7cb5b9de5b70b3bbb853b3d7f",
+      "class_pixel_counts": {
+        "0": 480825,
+        "1": 3794,
+        "2": 1705,
+        "3": 29,
+        "4": 0,
+        "5": 422911,
+        "6": 0,
+        "255": 0
+      }
+    },
+    {
+      "id": "F13",
+      "name": "Eastern northern edge",
+      "source_wgs84_bbox_west_south_east_north": [
+        6.6,
+        51.35,
+        6.85,
+        51.4833333333
+      ],
+      "extracted_equi7_bounds_west_south_east_north": [
+        4636540.0,
+        2079340.0,
+        4656960.0,
+        2098000.0
+      ],
+      "output_file": "observation/GFM_extent/GFM_S1A_20210715_S1A_o038784_dt049389_F13_extent20m.tif",
+      "width": 1021,
+      "height": 933,
+      "file_size_bytes": 117388,
+      "sha256": "cedf9a24d036d44419e59946e25200f452e7b05b4d30dd29b07a605aec6ae325",
+      "class_pixel_counts": {
+        "0": 378380,
+        "1": 3994,
+        "2": 21048,
+        "3": 4847,
+        "4": 0,
+        "5": 544324,
+        "6": 0,
+        "255": 0
+      }
+    },
+    {
+      "id": "F14",
+      "name": "North-east tributary cluster",
+      "source_wgs84_bbox_west_south_east_north": [
+        7.1,
+        50.75,
+        7.3,
+        50.9
+      ],
+      "extracted_equi7_bounds_west_south_east_north": [
+        4655000.0,
+        2006680.0,
+        4672560.0,
+        2026300.0
+      ],
+      "output_file": "observation/GFM_extent/GFM_S1A_20210715_S1A_o038784_dt049389_F14_extent20m.tif",
+      "width": 878,
+      "height": 981,
+      "file_size_bytes": 69358,
+      "sha256": "1d6881f02ffb4436a0201a24b01b246481288aa54c79417583eda4c9b0099a0e",
+      "class_pixel_counts": {
+        "0": 210051,
+        "1": 1898,
+        "2": 11786,
+        "3": 623,
+        "4": 0,
+        "5": 636960,
+        "6": 0,
+        "255": 0
+      }
+    },
+    {
+      "id": "F15",
+      "name": "Southwest edge cluster",
+      "source_wgs84_bbox_west_south_east_north": [
+        4.9,
+        49.0,
+        5.05,
+        49.0833333333
+      ],
+      "extracted_equi7_bounds_west_south_east_north": [
+        4454280.0,
+        1856120.0,
+        4467280.0,
+        1868020.0
+      ],
+      "output_file": "observation/GFM_extent/GFM_S1A_20210715_S1A_o038784_dt049389_F15_extent20m.tif",
+      "width": 650,
+      "height": 595,
+      "file_size_bytes": 17356,
+      "sha256": "71ae7768d6ee07400c5c40d3e5ac93c5505c605a8b61c618835d1c19a14e6c88",
+      "class_pixel_counts": {
+        "0": 81953,
+        "1": 1616,
+        "2": 4483,
+        "3": 29,
+        "4": 0,
+        "5": 298669,
+        "6": 0,
+        "255": 0
+      }
+    }
+  ],
+  "total_output_file_size_bytes": 2113624,
+  "total_output_file_size_mib": 2.016
+}
