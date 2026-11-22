@@ -36,7 +36,7 @@ PY
 )
 
 echo "[STEP 2/2] Write the pass inventory, orbit directions and source acquisition footprints."
-"$PYTHON_CMD" "$TUTORIAL_DIR/script/03a-gfm_availability.py" \
+"$PYTHON_CMD" "$TUTORIAL_DIR/script/s03a-gfm_availability.py" \
     --mode metadata \
     --domain-config "$DOMAIN_CONFIG" \
     --catalogue-root "$CATALOGUE_ROOT" \
