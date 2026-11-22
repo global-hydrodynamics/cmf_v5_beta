@@ -27,11 +27,25 @@
         1299
       ],
       "bbox_west_south_east_north": [
+        3.0,
+        45.0,
+        13.0,
+        53.0
+      ],
+      "bbox_convention": "WGS84 outer cell-boundary edges in west, south, east, north order; not the centers of corner cells.",
+      "previous_candidate_cell_center_bbox_west_south_east_north": [
         3.125,
         45.875,
         12.125,
         52.375
       ],
+      "map_grid_edge_reference_west_south_east_north": [
+        3.0,
+        45.0,
+        13.0,
+        53.0
+      ],
+      "selection_note": "Integer-aligned outer bounds selected for the simulation window: 3–13°E, 45–53°N. The prior decimal values are retained separately as the earlier corner-cell-center candidate.",
       "status": "candidate"
     },
     "selection_note": "Candidate outer window covering the inspected model routing-group cell envelopes and margins. Confirm the full target watershed, group scope, active-cell mask and boundary treatment before use."

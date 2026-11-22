@@ -581,3 +581,35 @@ three stations × 1,460 records, six-hour timestamps, zero missing records,
 CSV-to-NetCDF equality after float32 casting, July peaks and unchanged source
 hashes. Opened Figure 4 for visual inspection and checked active Step 4 links
 and scripts. No observation download, model run or matching was done.
+
+## 2026-11-23 — Clarify Step 2 simulation-window bounds
+
+Changed the candidate `glb_15min` simulation window to integer-aligned outer
+edges 3–12°E, 46–53°N. The previous decimal values are retained separately in
+`metadata/02_domain_selection.json` as the earlier corner-cell-center
+candidate, and the broader 3–13°E, 45–53°N map-edge reference is documented.
+Updated the Figure 2 orange simulation box and expanded only its map viewport
+to show the north edge and label. The 4–8°E, 49–52°N satellite-analysis AOI
+was unchanged. The saved figure was visually checked; no basin/network
+analysis or model run was repeated.
+
+**Correction (2026-11-23):** The intended simulation-domain outer bounds are
+3–13°E, 45–53°N (not 3–12°E, 46–53°N). Updated the JSON and Figure settings,
+Survey/Work Reports, and redrew Figure 2 with south/east viewport margins. The
+older corner-cell-center candidate remains recorded separately; the satellite
+AOI remains unchanged.
+
+
+## 2026-11-23 — Inspect existing Rhine regional map for Step 11
+
+Recorded the Step 11 regional-map workflow and inspected the retained local
+`map/Rhine_15min/` products against the current Step 2 candidate outer bounds
+(3–13°E, 45–53°N). The map metadata and representative NetCDF/COG products
+match the 40 × 32, 0.25° regional grid; the 1-minute auxiliary grid is 600 ×
+480 over the same bounds. Existing channel, bifurcation, runoff-mapping,
+permanent-water, subbasin and GRDC-allocation products were found. The
+`test-1deg` ELSE_GPCC climatology mapping remains distinct from the
+`ERA5land_global` ERA5-Land mapping. No map generator, converter, data download
+or model run was executed; the retained map data remain ignored by Git, while
+map-local scripts and documentation remain trackable. The Step 11 Survey and
+Work Reports describe checks, limits and the Step 12 handoff.

@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The existing `glb_15min` (0.25°) CaMa-Flood map associates sampled Rhine, Ahr/Erft, Moselle and Vesdre locations and the supplied gauges with model Basin ID 74; Halen and Wavre associate with Basin ID 1299. Basin 74 is a model Rhine–Meuse/Vesdre routing group, not a pure natural Rhine watershed. A candidate simulation rectangle of 3.125–12.125°E, 45.875–52.375°N contains the inspected routing-group cell-centre envelopes and provides margin. It remains provisional pending full upstream/outlet and boundary checks. A separate candidate satellite analysis area is 4–8°E, 49–52°N.
+The existing `glb_15min` (0.25°) CaMa-Flood map associates sampled Rhine, Ahr/Erft, Moselle and Vesdre locations and the supplied gauges with model Basin ID 74; Halen and Wavre associate with Basin ID 1299. Basin 74 is a model Rhine–Meuse/Vesdre routing group, not a pure natural watershed. The proposed simulation window is now **3–13°E, 45–53°N**, expressed as outer cell-boundary edges and aligned to integer degrees. The earlier `[3.125, 45.875, 12.125, 52.375]` values described corner-cell centers and are retained separately in the JSON rather than used as rectangle edges. This is a candidate window; upstream/outlet, active-cell and boundary checks remain. The satellite analysis area remains 4–8°E, 49–52°N.
 
 ## Investigation and Results
 
@@ -10,7 +10,7 @@ The existing `glb_15min` (0.25°) CaMa-Flood map associates sampled Rhine, Ahr/E
 
 The domain review used the `glb_15min` basin, upstream-area and river-network information together with Step 1 impact localities and supplied gauge coordinates. Basin 74 contains 391 cells in this map; its approximate cell-centre envelope is 3.625–11.625°E, 46.375–51.875°N. Basin 1299 contains 19 cells, with envelope approximately 3.875–5.375°E, 50.625–51.375°N. These are map-derived routing groups and should not be equated automatically with natural catchment boundaries.
 
-The simulation candidate is a rectangular model window, not a basin mask. It covers both sampled groups, impacts and gauges with roughly two 0.25° cells of margin. The sizing principle is to include the target river's required upstream contributing area and downstream outlet; minimizing the rectangle is not the objective. Whether the evaluation should include only Rhine behavior, the complete Basin 74 routing group, or Basin 1299 as an additional/separate system remains unresolved.
+The simulation candidate is a rectangular model window, not a basin mask. Its outer edges are 3°E, 45°N, 13°E and 53°N, matching the selected integer-aligned simulation extent. The corner-cell-center candidate values are kept as a separate metadata field so they cannot be mistaken for bounds. The selected window covers the sampled groups, impacts and gauges. The sizing principle remains to include the target river's required upstream contributing area and downstream outlet; minimizing the rectangle is not the objective. Whether the evaluation should include only Rhine behavior, the complete Basin 74 routing group, or Basin 1299 as an additional/separate system remains unresolved.
 
 ### Observation domain
 

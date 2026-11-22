@@ -2,9 +2,9 @@
   "panel_a": {
     "extent": [
       2.75,
-      45.5,
-      12.5,
-      52.75
+      43.5,
+      13.5,
+      53.5
     ],
     "target_basin_id": 74,
     "zoom_region_id": "f06b_zoomup",
@@ -25,10 +25,10 @@
     "subtitle": "Model routing groups are map-defined and do not equal natural watershed boundaries",
     "domain_boxes": [
       {
-        "west": 3.125,
-        "south": 45.875,
-        "east": 12.125,
-        "north": 52.375,
+        "west": 3.0,
+        "south": 45.0,
+        "east": 13.0,
+        "north": 53.0,
         "label": "Candidate CaMa-Flood simulation domain",
         "legend_label": "Candidate CaMa-Flood simulation domain",
         "color": "#ef6c00",

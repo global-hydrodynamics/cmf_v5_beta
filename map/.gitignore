@@ -10,6 +10,24 @@
 # including map-local script copies. Shared maintained templates live in tools/.
 /TE-Japan_01min/
 
+# Rhine Tutorial 11 working map: retain map-local scripts and documentation,
+# but keep regional Binary/NetCDF/COG data and generated products local.
+/Rhine_15min/*
+!/Rhine_15min/README.md
+!/Rhine_15min/script_region/
+!/Rhine_15min/script_params/
+!/Rhine_15min/script_format_conv/
+/Rhine_15min/script_region/*
+!/Rhine_15min/script_region/*.sh
+!/Rhine_15min/script_region/README.md
+/Rhine_15min/script_params/*
+!/Rhine_15min/script_params/*.sh
+!/Rhine_15min/script_params/README.md
+/Rhine_15min/script_format_conv/*
+!/Rhine_15min/script_format_conv/*.sh
+!/Rhine_15min/script_format_conv/*.txt
+!/Rhine_15min/script_format_conv/README.md
+
 # Numeric visualization caches are normally generated locally; the complete
 # repository Mekong sample is explicitly tracked by maintainer policy below.
 **/COG/
