@@ -8,7 +8,7 @@ outside the drawing code.
   read directly; a missing or malformed file produces a clear error rather
   than silently writing a substitute.
 - `f06b_zoomup.csv` stores the f06b extent and two candidate observation
-  domains documented in `../../../tutorial/tutorial11-event_evaluation/02_analysis_domain_design.md`.
+  domains documented in `../../../tutorial/tutorial11-event_evaluation/AI_survey_report/02_analysis_domain_design.md`.
   The f06b extent is 4.0–8.0°E, 49.0–52.0°N. The regional rectangles are
   candidate observation AOIs, not observed flood boundaries.
 - `f06b_plot.csv` copies report-based localities and source notes from

@@ -27,8 +27,9 @@ after the inspection/plotting must match (Section 9).
 | Qobs_06_2021_st153_63_28.nc | NetCDF-4 | 34,807 | 1,460 time × 3 station; 3 variables |
 | allstations.csv | CSV | 755 | 3 station rows × 27 columns |
 
-The tutorial directory also contains `.gitkeep`, `01_flood_event_overview.md`
-and `development_log/development_log.md`, plus an ignored macOS `.DS_Store` file.
+The tutorial directory also contains `.gitkeep`, the current event Survey Report
+under `AI_survey_report/`, and `development_log/development_log.md`, plus an
+ignored macOS `.DS_Store` file.
 The latter is not scientific data. `stations_data.tar.gz` is not present here;
 the inspected inputs are the three extracted files listed above. The source
 files are left in their original location and are not included in this task's

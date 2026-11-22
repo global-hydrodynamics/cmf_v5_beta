@@ -1,107 +1,69 @@
-# p01 — Event Research Agent Workflow
+# p01 — Event Research
 
-## Purpose
+## Workflow Summary
 
-Step 1 establishes an evidence-based understanding of a flood event: its
-reported timing and development, major rivers, affected places and candidate
-observations. It creates a geographic impact inventory and Figure 1 to support
-Step 2. Step 1 does not select CaMa-Flood Basin IDs or finalize analysis
-domains.
+### Inputs
+- Flood event name, region and year or known dates
+- Research purpose (for example, evaluating flood extent or discharge)
 
-## Human instructions
+### Tasks
+- Review traceable sources, summarize the event and reported impacts, and prepare Figure 1.
+- Save a georeferenced impact inventory and provide an evidence-based handoff to Step 2.
 
-Provide the AI agent with:
+### Outputs
+- `AI_survey_report/01_flood_event_overview.md`
+- `AI_work_report/01_event_research.md`
+- `metadata/01_impact_locations.csv`
+- `figure/f01-reported_flood_impacts.png` and `f01-reported_flood_impacts.sh`
 
-1. The flood event name, region and year (or known event dates).
-2. The research objective, such as evaluating simulated flood extent, river
-discharge, or both.
+## Human Instructions
 
-Run this workflow in a new event-specific directory, separate from Tutorial
-11. Tutorial 11's Rhine 2021 files are a worked example; do not edit or replace
-them. Reuse their structure and suitable Visualization Gallery methods.
+Give the AI agent the event identity and research objective. Run this workflow in a new event-specific directory, not in the Tutorial 11 Rhine example. Human review is recommended; the first complete result must be usable by Step 2 without waiting for a review.
 
-## Example AI agent prompt
-
-Copy and complete the fields below, then give the prompt to the agent.
+## Example AI Agent Prompt
 
 ```text
-Prepare Step 1 of a CaMa-Flood flood-event evaluation.
+Prepare Step 1 event research for a CaMa-Flood flood-event evaluation.
 
-Flood event: [EVENT NAME, REGION, YEAR]
+Event: [EVENT NAME, REGION, YEAR / KNOWN DATES]
 Research objective: [RESEARCH OBJECTIVE]
+Event directory: [PATH]
 
-Work only in the current event-specific directory. Treat Tutorial 11's Rhine
-2021 materials as examples; do not edit them or transfer their event-specific
-facts, coordinates, rivers, styles or settings. Reuse an appropriate existing
-Visualization Gallery method and the current visualization conventions. Do not
-build an unnecessary plotting framework.
+Work only in the event directory. Treat Tutorial 11's Rhine 2021 materials as
+examples; do not copy their geographic facts, observations, coordinates, or
+settings. Confirm that cited sources exist and support the statements. Separate
+source-reported facts, interpretations, and uncertainty.
 
-Complete the following workflow:
+1. Review scientific papers, public authority reports, and reliable
+   contemporaneous reports. Summarize timing and development, major rivers and
+   watersheds, affected localities and reported impacts, hydrologic features,
+   and candidate observations. Cite sources close to claims and do not invent
+   details or make the locality list appear exhaustive without evidence.
+2. Create `metadata/01_impact_locations.csv` from confirmed reported locations.
+   Record names, river/system, country, concise reported impact, coordinates,
+   coordinate source/confidence, event date if known, and citation/URL. Distinguish
+   approximate town centres from surveyed damage locations and flood boundaries.
+3. Create and run `f01-reported_flood_impacts.sh` using a suitable existing
+   Visualization method. Produce `figure/f01-reported_flood_impacts.png` with
+   OSM where available, river context, labelled localities, and attribution.
+   Inspect the saved figure; report failures instead of claiming visual review.
+4. Create `AI_survey_report/01_flood_event_overview.md` for the researcher and
+   `AI_work_report/01_event_research.md` for reproducibility and handoff. The
+   Survey Report explains findings, sources, the figure, uncertainty and next
+   research decisions. The Work Report records actual inputs, commands,
+   generated files, checks and unresolved technical work. Do not present this
+   retrospective example-report task as a new literature search.
+5. Hand off major rivers, affected areas, timing, candidate observation periods,
+   and unresolved questions to Step 2. Do not select CaMa-Flood Basin IDs or
+   finalize simulation/satellite domains in Step 1.
 
-1. Research the event using traceable scientific papers, public authority
-   reports, and reliable news or situation reports. Confirm each source exists
-   and supports the claim. Summarize event dates and documented development,
-   major rivers/watersheds, affected places and reported impacts, hydrologic
-   characteristics, and candidate observations with known limits. Cite
-   sources close to claims. Separate sourced facts, interpretation and
-   uncertainty; do not invent or overstate evidence.
-2. Create `01_flood_event_overview.md` with the researched event summary,
-   citations and unresolved information.
-3. Create `metadata/01_impact_locations.csv`, using Tutorial 11's CSV as a
-   schema example. Include locality, river/system, country/region, concise
-   source-reported impact, coordinates, source/citation and coordinate
-   confidence where available. Distinguish approximate town/locality centres
-   from surveyed damage locations and observed inundation boundaries. Do not
-   infer precise locations or impact severity from a marker.
-4. Prepare `f01-reported_flood_impacts.sh` using an existing suitable map
-   renderer. Keep event points and display settings in event-local metadata,
-   not shared plotting code. The script must regenerate
-   `figure/f01-reported_flood_impacts.png` from the saved CSV/settings.
-   Include OSM attribution where applicable.
-5. Run the Figure script and inspect the saved image for geographic placement,
-   labels, extent, legibility and consistency with cited evidence. Fix issues
-   within scope and rerun as needed. If a required dependency or data source is
-   unavailable, report the limitation instead of claiming a successful visual
-   review.
-6. Present the overview, source basis, CSV, Figure and remaining uncertainties
-   to the researcher. Human review is recommended, but do not wait for a reply
-   or approval before completing the first run or handing complete outputs to
-   Step 2. Ask for specific scientific or location decisions where evidence is
-   insufficient, record unresolved issues, and make evidence-supported
-   recommendations without guessing.
-7. If the researcher gives feedback, update the same research outputs or
-   Figure settings and rerun affected work. If the researcher adopts the
-   recommendations, record `approved` in the relevant review metadata; without
-   review, leave them `proposed`. Preserve the current overview, CSV, Figure,
-   event-local settings and reproducible Figure Shell. Hand off major rivers,
-   impacted areas, documented timing, candidate satellite-search
-   period/observations and unresolved questions to Step 2 in either case.
-
-Do not choose or finalize CaMa-Flood Basin IDs, simulation domains or satellite
-analysis domains in Step 1. Do not present candidate observations as acquired
-or validated. Literature research itself need not be reproducible by Shell;
-the impact map must be reproducible from its saved inputs and settings. Do not
-publish to the Visualization Gallery unless separately authorized.
-
-At completion, report sources checked, files created, commands/checks run,
-researcher review status and remaining uncertainty. Do not claim scientific
-validation from successful plotting alone.
+Complete the first run without waiting for a Human response. Use `proposed` for
+unreviewed recommendations where supported; it is descriptive metadata, not an
+execution gate. If the researcher gives feedback, update the same files and
+rerun affected work; do not create `_v2` or `_final` files. Do not publish to
+the Visualization Gallery without separate authorization.
 ```
 
-## Expected outputs and human review
+## Completion and review
 
-| Output | Role |
-| --- | --- |
-| `01_flood_event_overview.md` | Event background, evidence and references |
-| `metadata/01_impact_locations.csv` | Geographic inventory of reported impacts |
-| `f01-reported_flood_impacts.sh` | Reproducible Figure 1 entry point |
-| `figure/f01-reported_flood_impacts.png` | Map of reported-impact localities |
-
-The agent performs the research, prepares and runs the mapping workflow, and
-presents the evidence for optional review. The researcher is encouraged to
-check source accuracy, impact selection, coordinate confidence and the Figure.
-If there is no review, Step 2 may still begin from complete `proposed` outputs;
-if the researcher adopts the result, record that state as `approved`. Neither
-status controls script execution. Tutorial 11 already contains a Step 1 sample
-for the July 2021 western European floods; this Prompt is for future events and
-must not be run to recreate it.
+The agent should report findings, sources, the impact inventory and Figure, plus uncertainty. Researcher review is recommended but not required for Step 2 to consume complete outputs. Literature research itself need not be reproducible by Shell; the map must be reproducible from the saved CSV/settings and `f01` entry point. For Tutorial 11, use the retained Rhine sample and its reconstructed Survey/Work Reports; do not rerun this Prompt there.
