@@ -6,135 +6,428 @@
   "source_flood_fraction": "observation/GFM_extent/GFM_S1A_20210715_o038784_dt049389_floodfrac_1min.tif",
   "source_valid_pixel_count": "Atlantis/analysis/GFM_S1A_20210715_o038784_dt049389_valid_pixel_count_1min.tif",
   "satellite_analysis_domain": {
-    "bbox_west_south_east_north": [4.0, 49.0, 8.0, 52.0],
+    "bbox_west_south_east_north": [
+      4.0,
+      49.0,
+      8.0,
+      52.0
+    ],
     "status": "candidate"
   },
   "selection_basis": {
     "method": "Manual selection from spatial clusters in 1-arc-minute Flood pixel counts, considering valid classified pixel support. Reported impact locations were not used as a selection criterion.",
     "flood_pixel_count": "Reconstructed per cell as round(Flood Fraction [%] * valid class-0-to-4 pixel count / 100); sum matches the source-derived total.",
-    "valid_class_codes": [0, 1, 2, 3, 4],
+    "valid_class_codes": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
     "flood_class_code": 1,
-    "excluded_class_codes": [5, 6, 255],
+    "excluded_class_codes": [
+      5,
+      6,
+      255
+    ],
     "aoi_pixel_center_rule": "west <= longitude < east and south <= latitude < north",
-    "area_method": "Spherical area of the union of 1-arc-minute cells inside the non-overlapping, minute-aligned rectangles; Earth radius 6371008.8 m."
+    "area_method": "Spherical area of the union of non-overlapping, 1-arc-minute-aligned WGS84 rectangles; Earth radius 6371008.8 m.",
+    "projected_cut_method": "Each WGS84 rectangle edge was densified before transforming to the native source CRS; projected bounds were rounded outward to native 20 m pixel boundaries. Projected cut windows can overlap, so both summed file pixels and unique covered source pixels are reported.",
+    "size_estimate_method": "Each projected, pixel-aligned window was encoded to an in-memory tiled GeoTIFF using ZSTD level 9, 512x512 tiles, nodata 255. No cut GeoTIFF was written. Estimate is for separate per-area files; excludes sidecar JSON and may vary with final write options."
   },
   "diagnostics": {
     "aoi_area_km2_approx": 94365.51,
-    "selected_union_area_km2_approx": 9046.86,
-    "selected_area_fraction_of_aoi_percent": 9.59,
+    "selected_union_area_km2_approx": 9232.08,
+    "selected_area_fraction_of_aoi_percent": 9.78,
     "aoi_flood_pixel_count": 160301,
-    "selected_flood_pixel_count": 125609,
-    "selected_flood_pixel_fraction_percent": 78.36,
+    "selected_flood_pixel_count": 140228,
+    "selected_flood_pixel_fraction_percent": 87.48,
+    "missed_flood_pixel_count": 20073,
+    "missed_flood_pixel_fraction_percent": 12.52,
+    "selected_valid_pixel_count": 8317268,
     "current_20m_raster_pixels": 352829805,
-    "selected_20m_pixel_equivalent_approx": 22617141,
-    "estimated_20m_pixel_reduction_percent": 93.59,
-    "pixel_equivalent_method": "Selected spherical area divided by 400 m2 per 20 m pixel; this is an area-based estimate, not a projected-grid cut or aligned-pixel count.",
-    "next_step_note": "Transform each selected WGS84 rectangle to the source Equi7 CRS and align the final cuts to the native 20 m pixel grid. No 20 m transform or cut was performed here."
+    "selected_20m_projected_window_pixels_sum": 35261546,
+    "selected_20m_projected_window_unique_pixels": 34950179,
+    "selected_20m_projected_window_reduction_percent": 90.09,
+    "estimated_separate_zstd_geotiff_bytes_sum": 2098447,
+    "estimated_separate_zstd_geotiff_mib_sum": 2.0,
+    "source_20m_geotiff_bytes": 23445565,
+    "source_20m_geotiff_mib": 22.36,
+    "estimated_compressed_size_fraction_percent": 8.95,
+    "estimated_compression_method": "Each projected, pixel-aligned window was encoded to an in-memory tiled GeoTIFF using ZSTD level 9, 512x512 tiles, nodata 255. No cut GeoTIFF was written. Estimate is for separate per-area files; excludes sidecar JSON and may vary with final write options.",
+    "pixel_window_method": "WGS84 bbox edges densified during transform to source CRS; bounds rounded outward to native pixel boundaries. Projected rectangles can overlap even where WGS84 boxes do not.",
+    "source_tiff_sha256": "ce449f65dbeeceacb5b7f2c493b70603d74f42a7e41127ed8fcff67bc20e10de"
   },
   "focus_areas": [
     {
       "id": "F01",
       "name": "Western lower cluster",
-      "bbox_west_south_east_north": [4.6, 49.2, 4.95, 49.5],
-      "reason": "Contains the strongest compact western-southwestern cluster, with high Flood pixel count and substantial valid support.",
+      "bbox_west_south_east_north": [
+        4.6,
+        49.15,
+        5.05,
+        49.6
+      ],
+      "reason": "Expanded to include the western and southwestern part of the strong compact cluster.",
       "diagnostics": {
-        "area_km2_approx": 845.73,
-        "flood_pixel_count": 20217,
-        "valid_pixel_count": 653738,
-        "flood_fraction_weighted_percent": 3.09,
-        "20m_pixel_equivalent_approx": 2114327
+        "area_km2_approx": 1630.22,
+        "flood_pixel_count": 24962,
+        "valid_pixel_count": 1046283,
+        "flood_fraction_weighted_percent": 2.386,
+        "projected_20m_window_dimensions": [
+          2225,
+          2865
+        ],
+        "projected_20m_window_pixels": 6374625,
+        "flood_pixels_in_projected_window": 25260,
+        "estimated_zstd_geotiff_bytes": 280770
       }
     },
     {
       "id": "F02",
       "name": "South-central cluster",
-      "bbox_west_south_east_north": [5.25, 49.15, 5.85, 49.55],
-      "reason": "Retains several adjacent high-count clusters in the southern-central part of the analysis domain in one compact rectangle.",
+      "bbox_west_south_east_north": [
+        5.25,
+        49.2,
+        5.8,
+        49.55
+      ],
+      "reason": "Retains several adjacent southern-central high-count clusters while trimming low-density margins.",
       "diagnostics": {
-        "area_km2_approx": 1933.1,
-        "flood_pixel_count": 22159,
-        "valid_pixel_count": 1429841,
-        "flood_fraction_weighted_percent": 1.55,
-        "20m_pixel_equivalent_approx": 4832742
+        "area_km2_approx": 1549.72,
+        "flood_pixel_count": 19931,
+        "valid_pixel_count": 1088606,
+        "flood_fraction_weighted_percent": 1.831,
+        "projected_20m_window_dimensions": [
+          2419,
+          2403
+        ],
+        "projected_20m_window_pixels": 5812857,
+        "flood_pixels_in_projected_window": 21538,
+        "estimated_zstd_geotiff_bytes": 248232
       }
     },
     {
       "id": "F03",
       "name": "Eastern lower cluster",
-      "bbox_west_south_east_north": [5.95, 49.45, 6.25, 49.8],
-      "reason": "Covers a separate eastward concentration of Flood pixels while avoiding the much larger surrounding low-density area.",
+      "bbox_west_south_east_north": [
+        5.95,
+        49.45,
+        6.25,
+        49.8
+      ],
+      "reason": "Captures a separate eastern lower cluster with high local Flood fraction.",
       "diagnostics": {
         "area_km2_approx": 840.99,
         "flood_pixel_count": 13124,
         "valid_pixel_count": 431127,
-        "flood_fraction_weighted_percent": 3.04,
-        "20m_pixel_equivalent_approx": 2102482
+        "flood_fraction_weighted_percent": 3.044,
+        "projected_20m_window_dimensions": [
+          1523,
+          2167
+        ],
+        "projected_20m_window_pixels": 3300341,
+        "flood_pixels_in_projected_window": 14028,
+        "estimated_zstd_geotiff_bytes": 159151
       }
     },
     {
       "id": "F04",
-      "name": "Central cluster group",
-      "bbox_west_south_east_north": [4.95, 50.05, 5.55, 50.4],
-      "reason": "Combines two nearby moderate-to-high count clusters to avoid separate overlapping selection boxes.",
+      "name": "Central-west cluster",
+      "bbox_west_south_east_north": [
+        4.95,
+        50.05,
+        5.25,
+        50.25
+      ],
+      "reason": "Adds a compact central-west cluster with material Flood count.",
       "diagnostics": {
-        "area_km2_approx": 1661.18,
-        "flood_pixel_count": 10711,
-        "valid_pixel_count": 599479,
-        "flood_fraction_weighted_percent": 1.79,
-        "20m_pixel_equivalent_approx": 4152949
+        "area_km2_approx": 475.37,
+        "flood_pixel_count": 4370,
+        "valid_pixel_count": 184518,
+        "flood_fraction_weighted_percent": 2.368,
+        "projected_20m_window_dimensions": [
+          1322,
+          1362
+        ],
+        "projected_20m_window_pixels": 1800564,
+        "flood_pixels_in_projected_window": 4464,
+        "estimated_zstd_geotiff_bytes": 62912
       }
     },
     {
       "id": "F05",
-      "name": "North-central cluster",
-      "bbox_west_south_east_north": [5.65, 50.8, 5.9, 51.2],
-      "reason": "Includes two adjacent northern-central clusters with consistent valid support and a combined material Flood count.",
+      "name": "Central-east cluster",
+      "bbox_west_south_east_north": [
+        5.3,
+        50.2,
+        5.5,
+        50.4
+      ],
+      "reason": "Adds a separate nearby central cluster rather than covering the intervening low-count area.",
       "diagnostics": {
-        "area_km2_approx": 778.11,
-        "flood_pixel_count": 11505,
-        "valid_pixel_count": 956070,
-        "flood_fraction_weighted_percent": 1.2,
-        "20m_pixel_equivalent_approx": 1945280
+        "area_km2_approx": 315.92,
+        "flood_pixel_count": 5138,
+        "valid_pixel_count": 121344,
+        "flood_fraction_weighted_percent": 4.234,
+        "projected_20m_window_dimensions": [
+          971,
+          1266
+        ],
+        "projected_20m_window_pixels": 1229286,
+        "flood_pixels_in_projected_window": 6009,
+        "estimated_zstd_geotiff_bytes": 52849
       }
     },
     {
       "id": "F06",
-      "name": "East-central cluster",
-      "bbox_west_south_east_north": [6.7, 50.6, 7.0, 50.85],
-      "reason": "Preserves a distinct Flood cluster with a material count and broad source-pixel support.",
+      "name": "North-central west cluster",
+      "bbox_west_south_east_north": [
+        5.6166666667,
+        50.8,
+        5.7833333333,
+        51.0
+      ],
+      "reason": "Captures the western segment of a northern-central cluster.",
       "diagnostics": {
-        "area_km2_approx": 587.04,
-        "flood_pixel_count": 8851,
-        "valid_pixel_count": 806088,
-        "flood_fraction_weighted_percent": 1.1,
-        "20m_pixel_equivalent_approx": 1467592
+        "area_km2_approx": 259.93,
+        "flood_pixel_count": 5310,
+        "valid_pixel_count": 243036,
+        "flood_fraction_weighted_percent": 2.185,
+        "projected_20m_window_dimensions": [
+          847,
+          1233
+        ],
+        "projected_20m_window_pixels": 1044351,
+        "flood_pixels_in_projected_window": 5783,
+        "estimated_zstd_geotiff_bytes": 94549
       }
     },
     {
       "id": "F07",
-      "name": "Western northern corridor",
-      "bbox_west_south_east_north": [6.3, 51.5, 6.8, 51.85],
-      "reason": "Captures the largest connected high-count cluster, with substantial valid observation support.",
+      "name": "North-central east cluster",
+      "bbox_west_south_east_north": [
+        5.7,
+        51.0,
+        5.9,
+        51.2
+      ],
+      "reason": "Captures the adjacent northern-central segment with strong Flood support.",
       "diagnostics": {
-        "area_km2_approx": 1341.79,
-        "flood_pixel_count": 28631,
-        "valid_pixel_count": 2253455,
-        "flood_fraction_weighted_percent": 1.27,
-        "20m_pixel_equivalent_approx": 3354480
+        "area_km2_approx": 310.57,
+        "flood_pixel_count": 5948,
+        "valid_pixel_count": 532668,
+        "flood_fraction_weighted_percent": 1.117,
+        "projected_20m_window_dimensions": [
+          956,
+          1261
+        ],
+        "projected_20m_window_pixels": 1205516,
+        "flood_pixels_in_projected_window": 5948,
+        "estimated_zstd_geotiff_bytes": 116843
       }
     },
     {
       "id": "F08",
-      "name": "Eastern northern corridor",
-      "bbox_west_south_east_north": [7.0, 51.35, 7.55, 51.6],
-      "reason": "Retains a separate eastern northern cluster rather than extending F07 across a broad low-density gap.",
+      "name": "East-central cluster",
+      "bbox_west_south_east_north": [
+        6.7,
+        50.6,
+        7.0,
+        50.85
+      ],
+      "reason": "Preserves a distinct east-central concentration with substantial valid support.",
       "diagnostics": {
-        "area_km2_approx": 1058.92,
-        "flood_pixel_count": 10411,
-        "valid_pixel_count": 523189,
-        "flood_fraction_weighted_percent": 1.99,
-        "20m_pixel_equivalent_approx": 2647288
+        "area_km2_approx": 587.04,
+        "flood_pixel_count": 8851,
+        "valid_pixel_count": 806088,
+        "flood_fraction_weighted_percent": 1.098,
+        "projected_20m_window_dimensions": [
+          1356,
+          1611
+        ],
+        "projected_20m_window_pixels": 2184516,
+        "flood_pixels_in_projected_window": 8912,
+        "estimated_zstd_geotiff_bytes": 145035
+      }
+    },
+    {
+      "id": "F09",
+      "name": "Western northern corridor",
+      "bbox_west_south_east_north": [
+        6.3,
+        51.4833333333,
+        6.7833333333,
+        51.8333333333
+      ],
+      "reason": "Retains the largest connected northern Flood cluster and its dense corridor.",
+      "diagnostics": {
+        "area_km2_approx": 1297.54,
+        "flood_pixel_count": 28715,
+        "valid_pixel_count": 2183347,
+        "flood_fraction_weighted_percent": 1.315,
+        "projected_20m_window_dimensions": [
+          2091,
+          2305
+        ],
+        "projected_20m_window_pixels": 4819755,
+        "flood_pixels_in_projected_window": 28916,
+        "estimated_zstd_geotiff_bytes": 396687
+      }
+    },
+    {
+      "id": "F10",
+      "name": "Eastern northern corridor",
+      "bbox_west_south_east_north": [
+        7.0,
+        51.35,
+        7.6,
+        51.55
+      ],
+      "reason": "Adds the distinct eastern northern cluster without bridging the low-density gap.",
+      "diagnostics": {
+        "area_km2_approx": 924.65,
+        "flood_pixel_count": 11657,
+        "valid_pixel_count": 398657,
+        "flood_fraction_weighted_percent": 2.924,
+        "projected_20m_window_dimensions": [
+          2286,
+          1570
+        ],
+        "projected_20m_window_pixels": 3589020,
+        "flood_pixels_in_projected_window": 11758,
+        "estimated_zstd_geotiff_bytes": 248787
+      }
+    },
+    {
+      "id": "F11",
+      "name": "Lower western corridor",
+      "bbox_west_south_east_north": [
+        4.05,
+        51.55,
+        4.25,
+        51.6833333333
+      ],
+      "reason": "Captures a separate lower-western cluster not covered by the southern areas.",
+      "diagnostics": {
+        "area_km2_approx": 204.73,
+        "flood_pixel_count": 2719,
+        "valid_pixel_count": 462067,
+        "flood_fraction_weighted_percent": 0.588,
+        "projected_20m_window_dimensions": [
+          869,
+          910
+        ],
+        "projected_20m_window_pixels": 790790,
+        "flood_pixels_in_projected_window": 2860,
+        "estimated_zstd_geotiff_bytes": 42360
+      }
+    },
+    {
+      "id": "F12",
+      "name": "Southwestern edge cluster",
+      "bbox_west_south_east_north": [
+        5.7,
+        49.05,
+        5.9,
+        49.2
+      ],
+      "reason": "Adds a compact southwestern edge cluster with relevant Flood count.",
+      "diagnostics": {
+        "area_km2_approx": 242.74,
+        "flood_pixel_count": 2638,
+        "valid_pixel_count": 344188,
+        "flood_fraction_weighted_percent": 0.766,
+        "projected_20m_window_dimensions": [
+          912,
+          997
+        ],
+        "projected_20m_window_pixels": 909264,
+        "flood_pixels_in_projected_window": 3794,
+        "estimated_zstd_geotiff_bytes": 49026
+      }
+    },
+    {
+      "id": "F13",
+      "name": "Eastern northern edge",
+      "bbox_west_south_east_north": [
+        6.6,
+        51.35,
+        6.85,
+        51.4833333333
+      ],
+      "reason": "Captures an adjacent but separate eastern part of the northern corridor.",
+      "diagnostics": {
+        "area_km2_approx": 257.04,
+        "flood_pixel_count": 3840,
+        "valid_pixel_count": 269301,
+        "flood_fraction_weighted_percent": 1.426,
+        "projected_20m_window_dimensions": [
+          1021,
+          933
+        ],
+        "projected_20m_window_pixels": 952593,
+        "flood_pixels_in_projected_window": 3994,
+        "estimated_zstd_geotiff_bytes": 116439
+      }
+    },
+    {
+      "id": "F14",
+      "name": "North-east tributary cluster",
+      "bbox_west_south_east_north": [
+        7.1,
+        50.75,
+        7.3,
+        50.9
+      ],
+      "reason": "Adds a smaller distinct cluster while keeping its rectangle compact.",
+      "diagnostics": {
+        "area_km2_approx": 234.31,
+        "flood_pixel_count": 1898,
+        "valid_pixel_count": 148031,
+        "flood_fraction_weighted_percent": 1.282,
+        "projected_20m_window_dimensions": [
+          878,
+          981
+        ],
+        "projected_20m_window_pixels": 861318,
+        "flood_pixels_in_projected_window": 1898,
+        "estimated_zstd_geotiff_bytes": 68401
+      }
+    },
+    {
+      "id": "F15",
+      "name": "Southwest edge cluster",
+      "bbox_west_south_east_north": [
+        4.9,
+        49.0,
+        5.05,
+        49.0833333333
+      ],
+      "reason": "Retains a compact southernmost cluster with measurable Flood detection.",
+      "diagnostics": {
+        "area_km2_approx": 101.31,
+        "flood_pixel_count": 1127,
+        "valid_pixel_count": 58007,
+        "flood_fraction_weighted_percent": 1.943,
+        "projected_20m_window_dimensions": [
+          650,
+          595
+        ],
+        "projected_20m_window_pixels": 386750,
+        "flood_pixels_in_projected_window": 1616,
+        "estimated_zstd_geotiff_bytes": 16406
       }
     }
-  ]
+  ],
+  "comparison_current_8_area_baseline": {
+    "focus_area_count": 8,
+    "selected_flood_pixel_count": 125609,
+    "selected_flood_pixel_fraction_percent": 78.36,
+    "missed_flood_pixel_count": 34692,
+    "projected_window_pixels_sum": 34530137,
+    "projected_window_reduction_percent": 90.21,
+    "estimated_separate_zstd_geotiff_bytes_sum": 1986391,
+    "estimated_separate_zstd_geotiff_mib_sum": 1.89
+  }
 }
