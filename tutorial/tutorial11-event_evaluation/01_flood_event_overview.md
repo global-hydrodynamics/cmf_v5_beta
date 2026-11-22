@@ -285,7 +285,7 @@ questions before a separately agreed event-evaluation workflow.
 Figure 1 locates towns and places where flooding was reported in the sources
 reviewed for this event. Markers are approximate locality coordinates, not
 measured inundation boundaries. The figure uses the existing
-[impact-location catalog](impact_locations.csv), which records the reported
+[impact-location catalog](01_impact_locations.csv), which records the reported
 impact summary, country, river, source URL, coordinate source and coordinate
 confidence for each location. The map also uses its plotting-group and label-
 placement fields; the coordinates and report fields remain the event evidence,

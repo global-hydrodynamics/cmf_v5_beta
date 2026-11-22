@@ -10,26 +10,31 @@ event-specific documents. Mark evidence as **implemented and exercised**,
 **pilot/example only**, **candidate**, or **not implemented**; do not promote a
 candidate setting to a validated choice because a map or script can display it.
 
-## 1. Select the event and hydrologic target
+## 1. Select and research the flood event
 
-1. Define the flood event, analysis question, relevant dates and rivers from
-   documented event sources. Distinguish the flood-producing rainfall period,
-   reported impacts, discharge response and satellite acquisition times.
-2. Inventory available gauges, model maps, routed network data and authoritative
-   watershed evidence. Record source, version and limits for each.
-3. Identify candidate CaMa-Flood Basin IDs and inspect their routed connections,
-   upstream area, outlets and neighboring basins. Compare the model routing group
-   with natural watershed boundaries before naming the simulated basin.
-4. Decide whether the target is one natural basin, a model routing group, or
-   several separately analyzed groups. Report any combined routing explicitly.
-   Reported damage points identify observation priorities; they do not define
-   the simulation watershed.
+For a new event, Human and AI work through a reviewed evidence-gathering
+sequence:
 
-**Tutorial 11 status:** Event background and candidate model basin groups have
-been inspected. On the current 0.25° map, Basin ID 74 combines Rhine and
-Meuse/Vesdre routing; it is not a pure natural Rhine watershed. Basin ID 1299
-also covers nearby cells. Rhine-only versus combined-group scope remains open.
-See [event overview](01_flood_event_overview.md),
+1. The Human specifies the event (name, region and year) and research objective.
+2. The AI researches scientific papers, public reports and reliable news,
+   distinguishing sourced facts, interpretation and uncertainty.
+3. The AI prepares an event overview and a geographic inventory of reported
+   impact localities, with citations and coordinate confidence.
+4. The AI adapts an existing mapping method to produce and visually inspect
+   Figure 1, showing reported locations against the major rivers.
+5. The Human reviews the evidence, location choices, coordinates and Figure 1,
+   then decides whether to proceed to Step 2.
+
+Use the reusable Step 1
+[Human–AI research instructions](s01-prompt-event_research.md) to start this
+process in a separate event-specific directory. Do not finalize CaMa-Flood
+Basin IDs, routing groups, simulation bounds or satellite-analysis
+domains during Step 1; these decisions require the map-based Step 2 assessment.
+
+**Tutorial 11 status:** The Rhine 2021 sample already contains the event
+overview, `01_impact_locations.csv`, Figure 1 and its generation Shell. These
+are retained as the worked example; the reusable prompt is not being run to
+recreate or replace them. See [event overview](01_flood_event_overview.md),
 [candidate domains](02_analysis_domain_design.md), and
 [event setup findings](development_log/event_setup_report.md).
 
@@ -72,9 +77,10 @@ Record each W/S/E/N bbox, time interval, target rivers/locations, data source,
 selection rationale and whether coverage is only a candidate.
 
 For a visual review, use the reported-impact localities and river systems
-summarized in Tutorial Figure 1 and its linked `impact_locations.csv`; carry
-those same locations forward into the domain review. Use the reproducible River Map example
-[f06 — OSM Background](../../visualization/river_map/README.md): **f06a** shows
+summarized in Tutorial Figure 1 and its linked `01_impact_locations.csv`; carry
+those locations forward into the domain review. Use the reproducible River Map
+example [f06 — OSM Background](../../visualization/river_map/README.md):
+**f06a** shows
 basin/network context and the local extent; **f06b** shows event localities and
 candidate observation areas. Its event-specific inputs are kept in the linked
 JSON/CSV files. In the Tutorial 11 Step 2 figure, show a map extent broader
@@ -92,11 +98,13 @@ for this review presents candidates, not an approved model setup.
 
 **Tutorial 11 status:** Figure 1 summarizes reported impact localities for
 Step 1; Figure 2 carries them into the candidate simulation/observation-domain
-review. Candidate bboxes and the current map's basin IDs and
-location-to-network traces have been inspected, but natural-watershed
-interpretation, final inclusion of neighboring routing groups, boundary
-conditions and observation coverage still need confirmation. Values and
-caveats are in [02_analysis_domain_design.md](02_analysis_domain_design.md) and
+review. On the current 0.25° map, Basin ID 74 combines Rhine and Meuse/Vesdre
+routing and is not a pure natural Rhine watershed; Basin ID 1299 includes the
+nearby Gete/Dyle localities. The map routing-group associations, candidate
+bboxes and location-to-network traces have been inspected, but
+natural-watershed interpretation, final inclusion of neighboring routing
+groups, boundary conditions and observation coverage still need confirmation.
+Values and caveats are in [02_analysis_domain_design.md](02_analysis_domain_design.md) and
 [event_setup_report.md](development_log/event_setup_report.md); the original planning proposal
 remains in [event_setup_plan.md](development_log/event_setup_plan.md).
 
