@@ -10,31 +10,58 @@ event-specific documents. Mark evidence as **implemented and exercised**,
 **pilot/example only**, **candidate**, or **not implemented**; do not promote a
 candidate setting to a validated choice because a map or script can display it.
 
+## Agent-driven workflow and file roles
+
+A reusable `pXX-*.md` Prompt is the entry point for an AI agent to carry out a
+research Step: investigate, prepare necessary processing or visualization
+scripts, execute them, and present evidence and uncertainties to the
+researcher. The researcher checks scientific meaning and fit to the research
+purpose, gives feedback, and asks for revision when needed. Iteration has no
+fixed count. Human approval is required for scientific choices; an agent does
+not silently finalize them. Once accepted, preserve the result and hand it to
+the next Step.
+
+- `pXX-*.md` describes and guides the complete Agent Workflow; it is not a
+  substitute for the executed research result.
+- `sXX-*.sh` reproduces applicable data acquisition, processing or calculation
+  from saved inputs and settings.
+- `fXX-*.sh` regenerates Figures from saved inputs and final display settings,
+  without requiring the agent's exploratory session.
+- `01_*.md`, `02_*.md`, etc. record research results, rationale and uncertainty.
+- CSV/JSON catalogs, handoff values and event-specific settings belong under
+  `metadata/` where appropriate.
+
+Prompts, reproducible Shell workflows and research outputs serve different
+purposes. Save the adopted processing and final reviewed Figure settings; do
+not create Shells for every exploratory attempt. A Prompt may direct an agent
+to create or update the needed `sXX` and `fXX` entry points and run them. This
+Tutorial's Rhine 2021 files are a worked sample and are not rerun when a Prompt
+is adapted for another event.
+
 ## 1. Select and research the flood event
 
-For a new event, Human and AI work through a reviewed evidence-gathering
-sequence:
+For a new event, the Human provides its name, region/year and research
+objective, then gives the AI agent the reusable [Step 1 event research
+workflow](p01-event_research.md). The agent researches traceable papers,
+public reports and reliable news; distinguishes evidence, interpretation and
+uncertainty; creates `01_flood_event_overview.md` and
+`metadata/01_impact_locations.csv`; prepares and runs
+`f01-reported_flood_impacts.sh`; and visually checks Figure 1. It presents the
+sources, outputs and remaining questions to the Human. The Human reviews the
+science, sources, location choices and map, then gives feedback. The agent
+revises and reruns applicable work as needed until the Human accepts the result.
+Keep the final Figure reproducible from its CSV, saved display settings and
+Shell. Literature research itself need not be reproducible by Shell.
 
-1. The Human specifies the event (name, region and year) and research objective.
-2. The AI researches scientific papers, public reports and reliable news,
-   distinguishing sourced facts, interpretation and uncertainty.
-3. The AI prepares an event overview and a geographic inventory of reported
-   impact localities, with citations and coordinate confidence.
-4. The AI adapts an existing mapping method to produce and visually inspect
-   Figure 1, showing reported locations against the major rivers.
-5. The Human reviews the evidence, location choices, coordinates and Figure 1,
-   then decides whether to proceed to Step 2.
+Do not finalize CaMa-Flood Basin IDs, routing groups, simulation bounds or
+satellite-analysis domains during Step 1; those decisions require the map-based
+Step 2 assessment. The accepted overview and impact inventory provide Step 2's
+river, locality, timing and uncertainty evidence.
 
-Use the reusable Step 1
-[Human–AI research instructions](s01-prompt-event_research.md) to start this
-process in a separate event-specific directory. Do not finalize CaMa-Flood
-Basin IDs, routing groups, simulation bounds or satellite-analysis
-domains during Step 1; these decisions require the map-based Step 2 assessment.
-
-**Tutorial 11 status:** The Rhine 2021 sample already contains the event
-overview, `metadata/01_impact_locations.csv`, Figure 1 and its generation Shell. These
-are retained as the worked example; the reusable prompt is not being run to
-recreate or replace them. See [event overview](01_flood_event_overview.md),
+**Tutorial 11 status:** The Rhine 2021 sample already contains the event overview,
+`metadata/01_impact_locations.csv`, Figure 1 and its generation Shell. These
+are retained as the worked example; the reusable Prompt is not run to recreate
+or replace them. See [event overview](01_flood_event_overview.md),
 [candidate domains](02_analysis_domain_design.md), and
 [event setup findings](development_log/event_setup_report.md).
 
@@ -42,10 +69,18 @@ recreate or replace them. See [event overview](01_flood_event_overview.md),
 
 Step 2 turns the event evidence and impact locations from Step 1 into a
 map-specific, reviewable spatial design. For a new event, use the reusable
-[Step 2 analysis-domain instructions](s02-prompt-analysis_domain.md) in that
+[Step 2 analysis-domain instructions](p02-analysis_domain.md) in that
 event's own directory. Tutorial 11's Rhine 2021 materials are a worked
 example; do not rerun the prompt there or copy its map IDs, extents or station
 set to another event.
+
+The agent reviews the Step 1 evidence and selected map, proposes initial
+domains, prepares and runs `f02-analysis_domain.sh`, and presents the Figure,
+routing evidence, bounds and open questions to the Human. The Human reviews
+the scientific target and candidate choices. The agent adjusts domains or
+Figure settings and reruns the Figure in response to feedback until the Human
+accepts the design. Save the final settings, rationale and reproducible Shell
+for Step 3; do not treat the first candidate as approved.
 
 The workflow is iterative:
 
