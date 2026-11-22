@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "step": "13",
+  "status": "generated_and_focused_checks_passed",
+  "runoff_dataset": {
+    "registry": "runoff_dataset.csv",
+    "dataset_id": "tutorial11-ERA5land-Rhine2021Jul",
+    "netcdf_directory": "inp/tutorial11-ERA5land-Rhine2021Jul/",
+    "coordinate_evidence_files": [
+      "inp/tutorial11-ERA5land-Rhine2021Jul/runoff_20210701.nc",
+      "inp/tutorial11-ERA5land-Rhine2021Jul/runoff_20210720.nc"
+    ]
+  },
+  "model_map": {
+    "path": "map/Rhine_15min/",
+    "base_grid": {
+      "nx": 40,
+      "ny": 32,
+      "cell_size_degrees": 0.25,
+      "bounds_west_east_south_north_degrees": [
+        3.0,
+        13.0,
+        45.0,
+        53.0
+      ]
+    },
+    "high_resolution_assignment": "map/Rhine_15min/1min/",
+    "high_resolution_tag": "1min",
+    "high_resolution_grid": {
+      "nx": 600,
+      "ny": 480,
+      "cell_size_degrees": 0.016666666666666666,
+      "bounds_west_east_south_north_degrees": [
+        3.0,
+        13.0,
+        45.0,
+        53.0
+      ]
+    }
+  },
+  "input_grid": {
+    "nx": 111,
+    "ny": 91,
+    "cell_size_degrees": 0.1,
+    "longitude_centers_west_east_degrees": [
+      2.5,
+      13.5
+    ],
+    "latitude_centers_north_south_degrees": [
+      53.5,
+      44.5
+    ],
+    "latitude_order": "NtoS",
+    "cell_edge_bounds_west_south_east_north_degrees": [
+      2.45,
+      44.45,
+      13.55,
+      53.55
+    ],
+    "coordinate_source": "Actual converted NetCDF coordinate arrays inspected in the first and last daily files; they match."
+  },
+  "generator": {
+    "wrapper": "map/Rhine_15min/script_params/s03-generate_inpmat-rhine.sh",
+    "shared_program_source": "map/tools/code/param_inpmat_generate.F90",
+    "build_command": "make -C map/tools/code param",
+    "run_command": "./map/Rhine_15min/script_params/s03-generate_inpmat-rhine.sh",
+    "settings": {
+      "ROFFTAG": "ERA5land_Rhine2021Jul",
+      "GRSIZEIN": 0.1,
+      "WESTIN": 2.45,
+      "EASTIN": 13.55,
+      "NORTHIN": 53.55,
+      "SOUTHIN": 44.45,
+      "OLAT": "NtoS",
+      "HIRES_TAG": "1min"
+    },
+    "exit_status": 0
+  },
+  "outputs": {
+    "input_matrix": "map/Rhine_15min/inpmat_ERA5land_Rhine2021Jul.bin",
+    "input_matrix_bytes": 460800,
+    "dimension_info": "map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.txt",
+    "dimension_info_bytes": 322,
+    "dimension_info_contents_copied_to": "AI_survey_report/13_runoff_input_matrix.md",
+    "input_matrix_ignored_by_git": true,
+    "dimension_info_ignored_by_git": true
+  },
+  "validation": {
+    "dimension_info": {
+      "model_nx_ny": [
+        40,
+        32
+      ],
+      "floodplain_layers": 10,
+      "input_nx_ny": [
+        111,
+        91
+      ],
+      "maximum_input_contributions_per_model_cell": 30,
+      "matrix_filename_matches": true,
+      "model_outer_edges_west_east_north_south_degrees": [
+        3.0,
+        13.0,
+        53.0,
+        45.0
+      ]
+    },
+    "binary_layout": {
+      "real_bytes": 4,
+      "record_count": 90,
+      "record_layout": "30 input-x int32 planes, 30 input-y int32 planes, 30 overlap-area float32 planes; each record is 40 x 32, x-fastest.",
+      "size_formula_bytes": "3 * 30 * 40 * 32 * 4",
+      "size_matches": true
+    },
+    "index_checks": {
+      "active_river_cells": 1245,
+      "active_river_cells_with_input_contributions": 1245,
+      "positive_area_input_cell_pairs": 16963,
+      "all_input_indices_within_1_based_111_by_91": true,
+      "all_contribution_areas_finite_and_positive": true,
+      "non_mapped_model_cells": 35
+    },
+    "representative_mainstem_cells": [
+      {
+        "reference": "Basel vicinity",
+        "model_cell_ix_iy": [
+          19,
+          23
+        ],
+        "model_outlet_lon_lat_degrees": [
+          7.589,
+          47.589
+        ],
+        "largest_area_input_cell_ix_iy": [
+          52,
+          62
+        ],
+        "input_cell_center_lon_lat_degrees": [
+          7.6,
+          47.4
+        ]
+      },
+      {
+        "reference": "Mainz vicinity",
+        "model_cell_ix_iy": [
+          22,
+          13
+        ],
+        "model_outlet_lon_lat_degrees": [
+          8.285,
+          50.0
+        ],
+        "largest_area_input_cell_ix_iy": [
+          62,
+          37
+        ],
+        "input_cell_center_lon_lat_degrees": [
+          8.6,
+          49.9
+        ]
+      },
+      {
+        "reference": "Cologne vicinity",
+        "model_cell_ix_iy": [
+          16,
+          9
+        ],
+        "model_outlet_lon_lat_degrees": [
+          6.963,
+          51.0
+        ],
+        "largest_area_input_cell_ix_iy": [
+          46,
+          27
+        ],
+        "input_cell_center_lon_lat_degrees": [
+          7.0,
+          50.9
+        ]
+      },
+      {
+        "reference": "Lobith vicinity",
+        "model_cell_ix_iy": [
+          14,
+          6
+        ],
+        "model_outlet_lon_lat_degrees": [
+          6.242,
+          51.828
+        ],
+        "largest_area_input_cell_ix_iy": [
+          41,
+          20
+        ],
+        "input_cell_center_lon_lat_degrees": [
+          6.5,
+          51.6
+        ]
+      }
+    ],
+    "interpretation": "The generator aggregates high-resolution catchment pixels by model cell and runoff cell. A model outlet and its largest-area source cell need not be at the same coordinate; this is a catchment-area correspondence, not a one-to-one nearest-center mapping."
+  },
+  "limitations": [
+    "The binary layout and indices were checked against the generator source and dimensions; the CaMa-Flood simulation reader was not exercised.",
+    "A successful matrix generation does not resolve ERA5-Land time attribution; KG-0019 remains open.",
+    "The matrix and diminfo live in the ignored local map directory and are not distributed by Git."
+  ],
+  "step14_handoff": {
+    "files": [
+      "map/Rhine_15min/inpmat_ERA5land_Rhine2021Jul.bin",
+      "map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.txt",
+      "tutorial/tutorial11-event_evaluation/runoff_dataset.csv",
+      "tutorial/tutorial11-event_evaluation/metadata/12_era5land_runoff.json"
+    ],
+    "actions": [
+      "Select experiment/simulation and spin-up periods.",
+      "Check forcing date coverage and actual runtime settings.",
+      "Create the reproducible GOSH script."
+    ],
+    "simulation_period": "undecided"
+  }
+}

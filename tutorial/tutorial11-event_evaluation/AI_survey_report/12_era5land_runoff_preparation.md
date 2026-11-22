@@ -40,12 +40,14 @@ provenance are registered in [Tutorial 11 runoff_dataset.csv](../runoff_dataset.
 ## Model input and Step 13 responsibility
 
 The Step 11 map has an `ERA5land_global` Input Matrix and `diminfo` pair. Their
-presence is recorded as a candidate handoff; Step 12 did not establish that
-the mapping is correct for this regional runoff subset. **Step 13 owns the
-actual Input Matrix preparation and validation.** It should compare the
-registered NetCDF grid to the regional map's required geometry and recreate
-the matrix only if needed. Step 14 then decides simulation settings and writes
-the reproducible GOSH workflow using the same Tutorial Registry.
+presence was only a candidate handoff at Step 12; Step 12 did not establish
+that the global mapping was correct for this regional runoff subset. **Step 13
+owns Input Matrix preparation and validation.** Step 13 compared the registered
+NetCDF grid to the regional map and created the dedicated
+`ERA5land_Rhine2021Jul` pair because the global matrix uses a different input
+shape. Step 14 then decides simulation settings and writes the reproducible
+GOSH workflow using the same Tutorial Registry. See the [Step 13 Survey
+Report](13_runoff_input_matrix.md).
 
 The Tutorial-local Registry uses the shared runoff registry's column schema
 and is authoritative for this event dataset. It is not synchronized to

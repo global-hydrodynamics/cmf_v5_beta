@@ -83,7 +83,8 @@
     "existing_input_matrix": "map/Rhine_15min/inpmat_ERA5land_global.bin",
     "step12_validation_status": "Not validated for this forcing in Step 12.",
     "next_step": "13 — Input Matrix Preparation and Validation",
-    "next_step_action": "Verify the actual runoff coordinate/grid contract against the selected regional map, then prepare or regenerate the map-specific matrix if required. Do not infer validity from file presence or the global tag alone."
+    "next_step_action": "Step 13 generated and structurally checked a separate regional pair; see the Step 13 metadata. Step 14 must decide the simulation period and runtime configuration.",
+    "step13_result_reference": "metadata/13_runoff_input_matrix.json"
   },
   "period_context": {
     "event_period_reference": "metadata/02_domain_selection.json#event_context_period",
@@ -107,6 +108,7 @@
     "purpose": "Prepare and validate the map-specific Input Matrix for this runoff dataset.",
     "registry": "runoff_dataset.csv",
     "metadata": "metadata/12_era5land_runoff.json",
-    "do_not_treat_as": "Simulation configuration or simulation-period approval."
+    "do_not_treat_as": "Simulation configuration or simulation-period approval.",
+    "result_metadata": "metadata/13_runoff_input_matrix.json"
   }
 }

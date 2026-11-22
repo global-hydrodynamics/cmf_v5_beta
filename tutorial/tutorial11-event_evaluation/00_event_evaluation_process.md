@@ -234,14 +234,14 @@ open. See [p12](p12-era5land_runoff_preparation.md), the
 [runoff metadata](metadata/12_era5land_runoff.json). The local source and
 converted files are ignored by Git.
 
-### Step 13 — Input Matrix Preparation and Validation
+### Step 13 — Runoff Input Matrix Preparation
 
-Use the Tutorial-local [runoff dataset Registry](runoff_dataset.csv) and the
-observed NetCDF coordinates to prepare or validate the map-specific Input
-Matrix for the selected regional map. The existing Step 11
-`ERA5land_global` matrix is a candidate input; its presence does not establish
-that it is correct for this event. Record the actual map/grid pairing and
-validation evidence before handing the result to Step 14.
+Use the Tutorial-local [runoff dataset Registry](runoff_dataset.csv), the
+observed NetCDF grid and the selected regional map to generate a separate
+map-specific Input Matrix and `diminfo`. The global `ERA5land_global` matrix
+uses 3600 × 1801 input cells and is not interchangeable with the 111 × 91
+regional subset. Record the actual map/grid pairing and index checks for Step
+14. See [p13](p13-runoff_input_matrix.md), the [Survey Report](AI_survey_report/13_runoff_input_matrix.md), the [Work Report](AI_work_report/13_runoff_input_matrix.md), and [`metadata/13_runoff_input_matrix.json`](metadata/13_runoff_input_matrix.json).
 
 ### Step 14 — Simulation Setup
 
@@ -296,7 +296,7 @@ but preparation outputs must not be confused with evaluation results.
 | **6–10 — Reserved** | No activities are specified. | Future research stages. |
 | **11 — Regional map** | Local `map/Rhine_15min/` contains map, parameter, NetCDF/COG products and map-local workflow copies matching the requested domain; outputs were inspected, not regenerated for this Step. | Existing products are available to Steps 12–14; upstream hydrology and parameter scientific validation are not established by this inspection. |
 | **12 — Runoff preparation** | Existing local Rhine ERA5-Land source and converted data, Step 12 Prompt, metadata and reports are recorded; data were inspected, not reacquired or reconverted for this Step. | Hourly labels and grid structure are documented; KG-0019 remains open and simulation/spin-up dates remain undecided. |
-| **13 — Input Matrix** | Step 11 provides an `ERA5land_global` matrix/diminfo pair; Step 13-specific validation is not recorded. | Confirm or prepare the regional mapping from the Tutorial Registry and actual NetCDF grid. |
+| **13 — Runoff Input Matrix** | Rhine-specific 111 × 91 matrix/diminfo were generated from the actual ERA5-Land grid using the map-local 1-minute catchment assignment; focused dimensions and index checks are recorded. | Pair the regional matrix with the Step 12 Registry and metadata in Step 14; runtime reader behavior remains untested. |
 | **14 — Simulation setup** | No Rhine event experiment setup or GOSH script is recorded. | Simulation/spin-up period and configuration remain future work. |
 | **15 — Event simulation** | No Rhine event simulation result is recorded. | Run the configured model and retain execution evidence. |
 | **16 — Matching** | No matching method or implementation is recorded. | Spatial, temporal and variable correspondence remains to be designed. |

@@ -39,7 +39,9 @@ beyond each edge of the Step 11 Rhine map (3–13°E, 45–53°N). Record the ac
 NetCDF grid coordinates; Step 13 verifies their mapping to the model grid.
 
 For another region or period, review and edit the Product Shell's user settings
-and then run it when new files are needed:
+and then run it when new files are needed. Step 13 generates and validates a
+separate regional Input Matrix for the actual 111 × 91 subset; the global
+`ERA5land_global` pair is not interchangeable:
 
 ```sh
 bash inp/download_ERA5-Land/tutorial11-Rhine_2021Jul.sh

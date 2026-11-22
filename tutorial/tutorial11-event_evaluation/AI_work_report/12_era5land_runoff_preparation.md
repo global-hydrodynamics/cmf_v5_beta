@@ -52,7 +52,9 @@ conversion validation.
 
 Step 12 does not verify the regional Input Matrix. Although
 `map/Rhine_15min/inpmat_ERA5land_global.bin` and its `diminfo` exist, their
-correctness for this downloaded runoff and map is assigned to Step 13.
+correctness for this downloaded runoff and map was assigned to Step 13. Step
+13 has since generated and structurally checked the regional
+`ERA5land_Rhine2021Jul` matrix; see its Work Report and metadata.
 
 ## Files changed
 
@@ -70,12 +72,13 @@ runoff data remain ignored.
 
 ## Step 13/14 handoff and limitations
 
-Step 13 should read the dataset row from `runoff_dataset.csv`, inspect the
-actual NetCDF grid, and prepare/validate the map-specific Input Matrix. Step 14
-should decide the simulation period, spin-up, forcing coverage and model
-settings, then create a GOSH script. Step 15 performs model execution after
-setup is complete. Do not infer those conditions from the
-acquisition interval. KG-0019 remains unresolved: ERA5-Land 00 UTC represents
+Step 13 read the dataset row from `runoff_dataset.csv`, inspected the actual
+NetCDF grid, and generated/checked the map-specific regional Input Matrix; its
+results are in `AI_work_report/13_runoff_input_matrix.md` and
+`metadata/13_runoff_input_matrix.json`. Step 14 should decide the simulation
+period, spin-up, forcing coverage and model settings, then create a GOSH script.
+Step 15 performs model execution after setup is complete. Do not infer those
+conditions from the acquisition interval. KG-0019 remains unresolved: ERA5-Land 00 UTC represents
 the preceding 24-hour accumulation, and conversion first-record/period-boundary
 behavior is not scientifically resolved. No CaMa-Flood run or model-observation
 comparison was performed.

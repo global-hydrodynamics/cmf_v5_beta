@@ -1045,3 +1045,13 @@ owns simulation setup and GOSH script creation. No redownload, reconversion,
 Input Matrix generation, runoff-algorithm change, model run or data publication
 was performed. KG-0019 remains open. Changes were committed and pushed; local
 ERA5-Land data remain ignored.
+
+
+DT-0156 complete: maintainer-authorized Tutorial 11 Step 13 runoff Input Matrix
+preparation on `feature/package-builder`. Generated the regional 111 × 91
+ERA5-Land matrix/diminfo pair for `map/Rhine_15min/` with the existing shared
+generator and a reproducible map-local wrapper. The Survey Report transcribes
+the generated diminfo verbatim and explains each line; actual NetCDF coordinates,
+map dimensions/outer edges, matrix indices and representative river cells were
+checked. No model run or scientific runtime-reader validation was performed;
+KG-0019 remains open. Generated map binaries remain ignored.

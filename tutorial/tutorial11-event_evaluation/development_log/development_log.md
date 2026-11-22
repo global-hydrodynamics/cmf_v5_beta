@@ -642,3 +642,14 @@ owns Input Matrix preparation/validation, Step 14 owns simulation setup and
 GOSH preparation, and model execution follows in Step 15. Existing local runoff
 data, Product Shell settings, conversion algorithms and map products were not
 changed.
+
+
+## 2026-11-23 — Generate Tutorial 11 regional runoff Input Matrix
+
+Created and ran a Rhine-specific map-local wrapper around the shared
+`param_inpmat_generate` program. The generated matrix uses the actual 111 × 91,
+0.1° ERA5-Land regional grid and the existing `Rhine_15min/1min` catchment
+assignment; it is separate from the 3600 × 1801 global `ERA5land_global` pair.
+Checked the actual NetCDF coordinates, generated diminfo, matrix dimensions and
+indices for all active river cells, plus representative Rhine locations. Map
+binaries remain ignored. No model run was performed, and KG-0019 remains open.
