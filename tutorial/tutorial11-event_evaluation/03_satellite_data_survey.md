@@ -32,7 +32,7 @@ change the catalogue query bbox or analysis extent.
 ## Search method and Atlantis status
 
 Run `s03a-satellite_availability.sh` to read dates and bbox from the Step 2
-JSON, then call the existing [`s01-download_gfm.py`](script/s01-download_gfm.py)
+JSON, then call the existing [`event_gfm_download.py`](script/event_gfm_download.py)
 once per date with `--catalogue-only`. It caches STAC Items and Copernicus orbit
 metadata under `Atlantis/catalogue/YYYY-MM-DD/` and logs under
 `Atlantis/runs/YYYY-MM-DD/`; no satellite COG assets are requested. The helper
@@ -50,10 +50,10 @@ acquiring images, the July 15 cache already present in the prior Atlantis data
 directory was reused, and the remaining dates were queried read-only from the
 EODC GFM STAC API. The returned STAC FeatureCollections and per-date request
 records are retained locally under the ignored Tutorial `Atlantis/` directory.
-The results were grouped with the same `gfm_common.parse_source` source-name
+The results were grouped with the same `event_gfm_common.parse_source` source-name
 contract used by the existing workflow. When the Atlantis environment is
 available again, run the tracked shell command to recreate the catalogue-only
-cache through `s01`.
+cache through `s03a-satellite_availability.sh`.
 
 STAC Items are grouped by Sentinel-1 platform, absolute orbit and datatake
 (for example, `S1A_o038784_dt049389`). Multiple tile Items from one acquisition

@@ -22,7 +22,7 @@ from urllib.parse import urlparse
 import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from gfm_common import (
+from event_gfm_common import (
     DEFAULT_BBOX,
     DEFAULT_DATE,
     LAYERS,

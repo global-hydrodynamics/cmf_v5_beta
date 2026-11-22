@@ -18,7 +18,7 @@ from rasterio.windows import Window, bounds as window_bounds, from_bounds
 from rasterio.warp import transform_bounds
 from rasterio.shutil import copy as raster_copy
 
-from gfm_common import LAYERS, merge_observation, protect_old, save_json, sha256
+from event_gfm_common import LAYERS, merge_observation, protect_old, save_json, sha256
 
 GROUP = "S1A_o038784_dt049389"
 DATE = "2021-07-15"

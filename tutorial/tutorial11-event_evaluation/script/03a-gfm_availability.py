@@ -21,7 +21,7 @@ TUTORIAL_DIR = SCRIPT_DIR.parent
 REPO_ROOT = TUTORIAL_DIR.parents[1]
 sys.path.insert(0, str(SCRIPT_DIR))
 sys.path.insert(0, str(REPO_ROOT / "visualization/river_map/script"))
-from gfm_common import parse_source
+from event_gfm_common import parse_source
 import f06_common as river
 
 

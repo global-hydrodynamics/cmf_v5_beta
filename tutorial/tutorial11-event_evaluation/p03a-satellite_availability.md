@@ -67,7 +67,7 @@ change.
 
 Task 2 — Search GFM/Sentinel-1 acquisition metadata
 Run the event's `s03a-satellite_availability.sh`. Reuse the established
-`s01-download_gfm.py --catalogue-only` path. Search daily into separate local
+`event_gfm_download.py --catalogue-only` path. Search daily into separate local
 catalogue/cache directories. Do not download GFM COG or Sentinel-1 image assets.
 For each Sentinel-1 acquisition pass, record available STAC Item IDs, source
 product IDs, UTC acquisition time, platform, absolute/relative orbit,

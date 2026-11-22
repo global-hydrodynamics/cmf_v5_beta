@@ -23,7 +23,7 @@ from rasterio.windows import Window
 from pyproj import Geod
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from gfm_common import (
+from event_gfm_common import (
     LAYERS,
     NODATA,
     merge_observation,
@@ -448,7 +448,7 @@ def convert(args):
         pass_id=args.group,
         code={
             n: sha256(Path(__file__).resolve().parent / n)
-            for n in ["gfm_common.py", Path(__file__).name]
+            for n in ["event_gfm_common.py", Path(__file__).name]
         },
     )
     fingerprint = hashlib.sha256(

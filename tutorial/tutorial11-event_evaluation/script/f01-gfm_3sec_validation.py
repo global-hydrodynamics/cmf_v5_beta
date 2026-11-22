@@ -16,7 +16,7 @@ import numpy as np
 import rasterio
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from gfm_common import protect_old, save_json
+from event_gfm_common import protect_old, save_json
 
 
 def wrapped_title(fig, ax, title):

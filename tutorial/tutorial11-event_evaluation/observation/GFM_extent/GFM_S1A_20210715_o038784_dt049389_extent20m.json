@@ -367,7 +367,7 @@
     }
   },
   "classification_precedence": [
-    "Reuse script/s04-export_gfm_20m_class.py encode_classification and gfm_common.merge_observation without changing their rules.",
+    "Reuse script/event_gfm_20m_class.py encode_classification and event_gfm_common.merge_observation without changing their rules.",
     "Per-pixel owner is the earliest Item with Flood and Water both known and Exclusion=0; ties are ordered by STAC Item ID.",
     "Reference water refines only an observed W=1 class; reference-only pixels remain NoData.",
     "NoData and Exclusion are distinct; partial Flood/Water observations use Inconsistent."

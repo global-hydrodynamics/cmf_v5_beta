@@ -25,10 +25,10 @@ from rasterio.warp import transform_bounds
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
-from gfm_common import LAYERS, merge_observation, save_json, sha256
+from event_gfm_common import LAYERS, merge_observation, save_json, sha256
 
 
-CLASSIFIER_PATH = SCRIPT_DIR / "s04-export_gfm_20m_class.py"
+CLASSIFIER_PATH = SCRIPT_DIR / "event_gfm_20m_class.py"
 CLASSIFIER_SPEC = importlib.util.spec_from_file_location(
     "gfm_20m_classification", CLASSIFIER_PATH
 )
@@ -474,7 +474,7 @@ def mosaic_pass(
             for code in CLASSIFIER.CLASS_NAMES
         },
         "classification_precedence": [
-            "Reuse script/s04-export_gfm_20m_class.py encode_classification and gfm_common.merge_observation without changing their rules.",
+            "Reuse script/event_gfm_20m_class.py encode_classification and event_gfm_common.merge_observation without changing their rules.",
             "Per-pixel owner is the earliest Item with Flood and Water both known and Exclusion=0; ties are ordered by STAC Item ID.",
             "Reference water refines only an observed W=1 class; reference-only pixels remain NoData.",
             "NoData and Exclusion are distinct; partial Flood/Water observations use Inconsistent.",

@@ -14,7 +14,7 @@ while IFS=' ' read -r SEARCH_DATE WEST SOUTH EAST NORTH; do
     RUN_DIR="$ATLANTIS_DIR/runs/$SEARCH_DATE"
     CATALOGUE_DIR="$CATALOGUE_ROOT/$SEARCH_DATE"
     echo "  Searching $SEARCH_DATE · bbox $WEST $SOUTH $EAST $NORTH"
-    "$PYTHON_CMD" "$TUTORIAL_DIR/script/s01-download_gfm.py" \
+    "$PYTHON_CMD" "$TUTORIAL_DIR/script/event_gfm_download.py" \
         --work-dir "$RUN_DIR" \
         --output "$CATALOGUE_DIR" \
         --date "$SEARCH_DATE" --bbox "$WEST" "$SOUTH" "$EAST" "$NORTH" \
@@ -36,7 +36,7 @@ PY
 )
 
 echo "[STEP 2/2] Write the pass inventory, orbit directions and source acquisition footprints."
-"$PYTHON_CMD" "$TUTORIAL_DIR/script/gfm_availability.py" \
+"$PYTHON_CMD" "$TUTORIAL_DIR/script/03a-gfm_availability.py" \
     --mode metadata \
     --domain-config "$DOMAIN_CONFIG" \
     --catalogue-root "$CATALOGUE_ROOT" \

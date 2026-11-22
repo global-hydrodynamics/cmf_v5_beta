@@ -43,6 +43,12 @@ missing inputs or other ordinary processing failures still do.
   `event_figure_settings.json` and `event_map_extents.csv`. A downstream
   handoff uses one fixed filename; revise its contents in place instead of
   adding `_v2` or `_final` variants.
+- Name Python files under `script/` for their parent workflow: use `sXX-*` when
+  one `sXX-*.sh` calls the file, `fXX-*` when one `fXX-*.sh` calls it, and
+  `XX-*` when a module serves multiple workflows within one Step. Use
+  `event_*` for modules shared across Steps. Step prefixes identify the parent
+  Step or Figure, not an internal processing order; do not retain obsolete
+  sequence numbers for that reason.
 
 Prompts, reproducible Shell workflows and research outputs serve different
 purposes. Save the current processing and Figure settings, including their
@@ -219,8 +225,8 @@ the input Manifest/Summary, source COG hashes, grid, class counts and processing
 order. A small inspection image and temporary processing files are kept only
 under ignored `Atlantis/runs/p03c/`.
 
-The script reuses the existing `script/s04-export_gfm_20m_class.py` class
-encoding and `gfm_common.merge_observation` rules. Source codes remain
+The script reuses the existing `script/event_gfm_20m_class.py` class
+encoding and `event_gfm_common.merge_observation` rules. Source codes remain
 unchanged: flood and water extent use 0/1/255, reference water uses 0/1/2/255,
 and exclusion uses 0/1/255. The derived class codes are 0 Land, 1 Flood,
 2 Permanent water, 3 Seasonal water, 4 Other water, 5 Exclusion,

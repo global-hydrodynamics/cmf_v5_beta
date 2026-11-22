@@ -16,7 +16,7 @@ from rasterio.windows import Window
 
 PYTHON_DIR = Path(__file__).resolve().parents[1] / "script"
 sys.path.insert(0, str(PYTHON_DIR))
-import gfm_common as common
+import event_gfm_common as common
 
 
 def load(name, filename):
@@ -26,8 +26,8 @@ def load(name, filename):
     return module
 
 
-download = load("gfm_download", "s01-download_gfm.py")
-convert = load("gfm_convert", "s02-convert_gfm_3sec.py")
+download = load("gfm_download", "event_gfm_download.py")
+convert = load("gfm_convert", "event_gfm_3sec_conversion.py")
 
 
 class MasksAndMosaic(unittest.TestCase):

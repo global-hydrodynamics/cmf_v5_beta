@@ -19,7 +19,7 @@ elif [[ "$#" -gt 0 ]]; then
     exit 2
 fi
 
-"$PYTHON_CMD" "$TUTORIAL_DIR/script/s03c-flood_fraction_1min.py" \
+"$PYTHON_CMD" "$TUTORIAL_DIR/script/f03c-flood_fraction_1min.py" \
     --input "$TUTORIAL_DIR/observation/GFM_extent/GFM_S1A_20210715_o038784_dt049389_extent20m.tif" \
     --domain-config "$TUTORIAL_DIR/metadata/02_domain_selection.json" \
     --output "$TUTORIAL_DIR/observation/GFM_extent/GFM_S1A_20210715_o038784_dt049389_floodfrac_1min.tif" \

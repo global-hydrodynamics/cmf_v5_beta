@@ -27,7 +27,7 @@ fi
 echo "Read selected pass(es), date(s), layers and analysis bbox from metadata JSON."
 echo "Save native GFM COGs and run logs under $ATLANTIS_DIR."
 DOWNLOAD_STATUS=0
-if "$PYTHON_CMD" "$TUTORIAL_DIR/script/s01-download_gfm.py" "${DOWNLOAD_ARGS[@]}"; then
+if "$PYTHON_CMD" "$TUTORIAL_DIR/script/event_gfm_download.py" "${DOWNLOAD_ARGS[@]}"; then
     DOWNLOAD_STATUS=0
 else
     DOWNLOAD_STATUS=$?

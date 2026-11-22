@@ -15,7 +15,7 @@ if [[ ! -s "$TUTORIAL_DIR/metadata/03a_satellite_pass_inventory.csv" || \
 fi
 
 export MPLCONFIGDIR="$ATLANTIS_DIR/logs/matplotlib"
-"$PYTHON_CMD" "$TUTORIAL_DIR/script/gfm_availability.py" \
+"$PYTHON_CMD" "$TUTORIAL_DIR/script/03a-gfm_availability.py" \
     --mode figure \
     --domain-config "$TUTORIAL_DIR/metadata/02_domain_selection.json" \
     --catalogue-root "$ATLANTIS_DIR/catalogue" \
