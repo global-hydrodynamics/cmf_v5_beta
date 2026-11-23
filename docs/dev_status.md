@@ -6,6 +6,17 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Tutorial 11 Step 21 gauge allocation (DT-0164, 2026-11-23)
+
+The maintainer authorizes the bounded Tutorial 11 Step 21 allocation check on
+the existing `feature/package-builder` branch, including the reusable Prompt,
+processing and Figure scripts, three-gauge CSV and Figure, Survey/Work Reports,
+process/development-log updates, focused real-map checks, and normal
+commit/push. Use the current `Rhine_15min` map and verify the supplied ECMWF
+candidate cells; do not modify map/source/model data, extract model flows,
+calculate performance metrics, or publish a Gallery item. Source area units
+must remain explicitly qualified where undeclared.
+
 ### Shared tools directory reorganization (DT-0162, 2026-11-23)
 
 The maintainer authorizes restructuring `tools/` on the existing

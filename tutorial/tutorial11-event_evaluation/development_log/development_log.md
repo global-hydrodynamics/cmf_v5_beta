@@ -699,3 +699,18 @@ scale factor (up to 1.68 points) and bifurcation width to 1.50 points, with
 slightly larger direction markers. The full-basin topology, signed peak
 values, background and extents are unchanged. Regenerated the Figure from
 retained outputs and visually checked line visibility and network legibility.
+
+
+## 2026-11-23 — Verify Step 21 Rhine gauge allocations
+
+Checked the three ECMWF `Cama15` candidates against the current 40 × 32
+`Rhine_15min` map. Confirmed the source global row/column convention against
+the candidate grid-center coordinates, then verified each current-map outlet
+and m² upstream area. All three selected cells agree with the local GRDC
+allocation output; following standard `nextxy` from Maxau reaches Speyer and
+then Lobith. Added a reusable Step 21 workflow, result CSV and Figure, plus
+Survey/Work Reports and process references. The Figure shows actual
+unit-catchment outlets, not cell centers. `ProvArea` source units are
+undeclared, so area-ratio comparisons are explicitly conditional on km². No
+model flow extraction, observation matching, metric calculation, map change or
+Gallery publication was performed.

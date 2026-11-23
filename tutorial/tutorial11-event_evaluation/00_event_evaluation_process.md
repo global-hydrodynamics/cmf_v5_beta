@@ -3,8 +3,9 @@
 **Current scope:** This Tutorial develops an evaluation of CaMa-Flood for the
 July 2021 western European floods, with a focus on the Rhine and related
 regional river systems. Event research, spatial planning and GFM preparation
-have produced sample outputs. A Rhine event simulation, model–observation
-matching and quantitative performance evaluation have not been completed.
+have produced sample outputs. An operational Rhine event simulation and
+spatial gauge allocation are available, but model–observation matching and
+quantitative performance evaluation have not been completed.
 
 ## 1. Research Objective
 
@@ -184,9 +185,10 @@ event-evaluation work. **Method:** retain source files unchanged, identify
 stations by ID, check time coverage/cadence/missing values and CSV–NetCDF
 consistency, and plot the supplied July values without interpolation. The
 Rhine sample uses data supplied by ECMWF, so station search and download are
-omitted. Units, source time zone, original observing agency and exact map
-allocation remain unresolved; the provided `Cama*` values are references, not
-verified matching assignments. See [p04](p04-discharge_observations.md), the
+omitted. Step 21 later checks the three `Cama15` candidates against the current
+map and verifies their spatial cells. Discharge units, source time zone,
+original observing agency and reported-area units remain unresolved. See
+[p04](p04-discharge_observations.md), the
 [Survey Report](AI_survey_report/04_discharge_observations.md), the
 [Work Report](AI_work_report/04_discharge_observations.md),
 [`observation/README.md`](observation/README.md),
@@ -279,9 +281,10 @@ and [`f15-maximum_discharge.sh`](f15-maximum_discharge.sh).
 
 Define defensible spatial, temporal and variable correspondence between
 simulation output, discharge stations, water levels and satellite
-classifications. Account for units, time semantics, grid/station mapping,
-masks, permanent water, missing coverage and resolution. Matching rules and
-reusable implementation have not been established.
+classifications. Step 21 supplies checked current-map row/column indices for
+the three discharge gauges, but temporal matching rules and reusable
+implementation remain to be established. Account for units, time semantics,
+maps, masks, permanent water, missing coverage and resolution.
 
 ### Step 17 — Event Evaluation
 
@@ -290,6 +293,22 @@ matching support are defined. Select metrics for the research question, and
 report sample coverage, uncertainty and limitations separately by observation
 type. No event performance score, calibration result or validation conclusion
 has been produced. Do not infer model skill from observation figures alone.
+
+### Step 21 — Gauge Allocation
+
+Verify the selected discharge-gauge candidates against the current
+event-specific map. Convert source indices to the regional map only after
+checking the grid convention; use the map's unit-catchment `outlon/outlat` as
+model locations, compare upstream area with explicit unit caveats, and trace
+`nextxy` to check downstream ordering. The reusable handoff is
+[`metadata/21_gauge_allocation.csv`](metadata/21_gauge_allocation.csv), with
+the procedure and Figure documented in [p21](p21-gauge_allocation.md), the
+[Survey Report](AI_survey_report/21_gauge_allocation.md), the [Work
+Report](AI_work_report/21_gauge_allocation.md), and
+[Figure 21](figure/f21-gauge_allocation.png). This spatial allocation does not
+extract model flows or define temporal/variable matching; Step 22 should use
+the CSV's zero-based row/column fields and preserve the unresolved observation
+unit and time limitations.
 
 ## 4. Expected Outcomes and Current Status
 
@@ -308,7 +327,7 @@ but preparation outputs must not be confused with evaluation results.
 | **3b — Download** | Local `Atlantis/` manifest, summary and COG assets are present; the Prompt, downloader and reports exist. | The retained summary records acquisition checks and readiness for p03c. The assets are local/ignored and are not distributed through Git. |
 | **3c — Classification** | Flood Fraction raster, focus-area metadata and Figure 3c are present; processing entry points and reports exist. The full-extent 20 m classification TIFF is absent from the current workspace; its provenance record remains. | Processing and screening are recorded, but the full source raster is unavailable here for a new pixel-level check. Focus areas remain proposals and do not represent all detected flooding. |
 | **3d — Extraction** | Extraction metadata, 15 focus-area 20 m rasters and Figure 3d are present; extraction/figure entry points and reports exist. | Focus crops are prepared; they are derived observation subsets, not model comparisons or validation results. |
-| **4 — Discharge observations** | Provider-supplied source files, Step 4 inventory/metadata, Figure 4 and reports are recorded. | Three Rhine gauge series are prepared; unit, time zone, original observing agency and verified model-cell mapping remain unresolved. |
+| **4 — Discharge observations** | Provider-supplied source files, Step 4 inventory/metadata, Figure 4 and reports are recorded. Step 21 later verifies their map cells. | Three Rhine gauge series are prepared; discharge units, time zone and original observing agency remain unresolved. |
 | **5 — Water levels** | No water-level dataset or preparation workflow is recorded. | Reserved for future work. |
 | **6–10 — Reserved** | No activities are specified. | Future research stages. |
 | **11 — Regional map** | Local `map/Rhine_15min/` contains map, parameter, NetCDF/COG products and map-local workflow copies matching the requested domain; outputs were inspected, not regenerated for this Step. | Existing products are available to Steps 12–14; upstream hydrology and parameter scientific validation are not established by this inspection. |
@@ -318,6 +337,7 @@ but preparation outputs must not be confused with evaluation results.
 | **15 — Simulation output visualization** | Signed local peak discharge was calculated from the retained `outflw`/`pthflw` outputs; regional and AOI figures and the reusable plotting workflow are recorded. | Spatial output patterns were inspected; no simultaneous snapshot, spin-up assessment or skill evaluation is implied. |
 | **16 — Matching** | No matching method or implementation is recorded. | Spatial, temporal and variable correspondence remains to be designed. |
 | **17 — Evaluation** | No quantitative event score or performance report is recorded. | Metrics, valid-sample treatment and uncertainty analysis remain future work. |
+| **21 — Gauge allocation** | Current-map allocation CSV, Figure 21, reusable Prompt and Survey/Work Reports are recorded. | All three supplied candidate cells agree with the current-map GRDC allocation; gauge-to-outlet offsets and reported-area units remain interpretation caveats. No model-flow extraction or evaluation was done. |
 
 The Step Prompts, Survey Reports and Work Reports are linked in the Analysis
 Workflow above. They provide the detailed instructions, scientific evidence and
