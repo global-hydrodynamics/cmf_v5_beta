@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "comparison_period": {
+    "start_inclusive": "2021-07-12T00:00:00",
+    "end_exclusive": "2021-07-17T00:00:00"
+  },
+  "overlay_interpretation": "provisional nominal-label overlay; no timezone conversion or temporal resampling",
+  "inputs": {
+    "model_netcdf": "experiment/Rhine2021-nextxy/o_outflwRhine2021Jul.nc",
+    "observation_csv": "observation/stations_data/Qobs_06_2021_st153_63_28.csv",
+    "step21_allocation_csv": "metadata/21_gauge_allocation.csv",
+    "step04_dataset_metadata": "metadata/04_discharge_dataset.json"
+  },
+  "model": {
+    "path": "experiment/Rhine2021-nextxy/o_outflwRhine2021Jul.nc",
+    "variable": "outflw",
+    "dimensions": [
+      "time",
+      "lat",
+      "lon"
+    ],
+    "units": "m3/s",
+    "cell_methods": "time: mean",
+    "time_units": "seconds since 2021-07-01 00:00",
+    "calendar": "standard",
+    "time_reference": "UTC interpreted under CF conventions because timezone is omitted; the file has no global Conventions attribute",
+    "time_reference_source": "https://cfconventions.org/Data/cf-conventions/cf-conventions-1.11/cf-conventions.html",
+    "records_in_comparison_window": 120,
+    "first_record_in_window": "2021-07-12T00:00:00Z",
+    "last_record_in_window": "2021-07-16T23:00:00Z"
+  },
+  "observation": {
+    "path": "observation/stations_data/Qobs_06_2021_st153_63_28.csv",
+    "cadence": "6 hours",
+    "value_semantics": "Six-hour mean discharge with interval-end timestamps, as described by provider correspondence; source files do not encode bounds/cell_methods.",
+    "timezone": null,
+    "unit": null,
+    "time_reference_status": "unresolved; original labels retained and overlaid without adjustment",
+    "interval_end_note": "provider describes each supplied value as a six-hour mean labelled at interval end; source file has no bounds or cell_methods",
+    "valid_records_per_station": 20
+  },
+  "station_series": {
+    "153": {
+      "model": {
+        "station_name": "Lobith",
+        "cell_row_0based": 4,
+        "cell_col_0based": 12,
+        "valid_records": 120,
+        "peak_discharge": 7831.59130859375,
+        "peak_datetime_utc": "2021-07-16T23:00:00Z",
+        "temporal_semantics": "time: mean"
+      },
+      "observation": {
+        "station_name": "Lobith",
+        "valid_records": 20,
+        "peak_discharge": 6068.082,
+        "peak_datetime_as_supplied": "2021-07-16T18:00",
+        "temporal_semantics": "provider-described six-hour mean with interval-end labels"
+      }
+    },
+    "63": {
+      "model": {
+        "station_name": "Speyer",
+        "cell_row_0based": 15,
+        "cell_col_0based": 21,
+        "valid_records": 120,
+        "peak_discharge": 6402.97314453125,
+        "peak_datetime_utc": "2021-07-16T23:00:00Z",
+        "temporal_semantics": "time: mean"
+      },
+      "observation": {
+        "station_name": "Speyer",
+        "valid_records": 20,
+        "peak_discharge": 3699.167,
+        "peak_datetime_as_supplied": "2021-07-16T18:00",
+        "temporal_semantics": "provider-described six-hour mean with interval-end labels"
+      }
+    },
+    "28": {
+      "model": {
+        "station_name": "Maxau",
+        "cell_row_0based": 16,
+        "cell_col_0based": 21,
+        "valid_records": 120,
+        "peak_discharge": 6420.29736328125,
+        "peak_datetime_utc": "2021-07-16T23:00:00Z",
+        "temporal_semantics": "time: mean"
+      },
+      "observation": {
+        "station_name": "Maxau",
+        "valid_records": 20,
+        "peak_discharge": 4047.083,
+        "peak_datetime_as_supplied": "2021-07-16T18:00",
+        "temporal_semantics": "provider-described six-hour mean with interval-end labels"
+      }
+    }
+  },
+  "processing": {
+    "model_cell_indexing": "Step 21 model_row_0based/model_col_0based applied to outflw(time,lat,lon)",
+    "observation_source_order": "CSV Timestamp labels and station ID columns retained",
+    "temporal_pairing_or_interpolation": "none",
+    "value_conversion": "none",
+    "timeseries_csv": "metadata/22_hydrograph_timeseries.csv"
+  },
+  "limitations": [
+    "Observation discharge unit is not declared; numerical overlay does not establish unit equivalence.",
+    "Observation timezone is unknown; apparent timing differences may include a clock-reference offset.",
+    "Observation values are provider-described six-hour means with interval-end labels; model output is hourly time mean.",
+    "This is an exploratory hydrograph comparison, not a skill assessment; no metrics were calculated."
+  ]
+}

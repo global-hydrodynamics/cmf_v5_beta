@@ -714,3 +714,30 @@ unit-catchment outlets, not cell centers. `ProvArea` source units are
 undeclared, so area-ratio comparisons are explicitly conditional on km². No
 model flow extraction, observation matching, metric calculation, map change or
 Gallery publication was performed.
+
+
+## 2026-11-23 — Step 22 exploratory hydrograph comparison
+
+**Objective:** compare hourly Step 14 model outflow with the supplied six-hour
+discharge series at the three Step 21 allocated gauge cells for July 12–16,
+2021.
+
+**Work performed:** added reproducible extraction and plotting entry points;
+read model rows/columns only from the Step 21 allocation; retained model and
+observation samples, time labels, and unit status separately; generated and
+visually inspected the three-panel hydrograph Figure; documented provisional
+time overlay and qualitative findings.
+
+**Files created or updated:** Step 22 Prompt, shell/Python scripts, timeseries
+CSV, summary JSON, Figure 22, Survey/Work Reports, this log, and the event
+evaluation process document.
+
+**Decisions and unresolved questions:** model time units omit a timezone and
+were interpreted as UTC using the CF convention; the NetCDF file has no global
+`Conventions` attribute. Observation timezone and discharge units remain
+unknown, so observation labels were not converted and magnitude/timing are not
+formally comparable. The Figure is exploratory; no metric or model skill claim
+was made.
+
+**Result:** 360 hourly model records and 60 observation records were extracted
+for the three stations, and Figure 22 was generated from the saved CSV.

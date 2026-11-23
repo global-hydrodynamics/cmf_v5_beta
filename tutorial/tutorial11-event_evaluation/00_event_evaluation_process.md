@@ -4,7 +4,8 @@
 July 2021 western European floods, with a focus on the Rhine and related
 regional river systems. Event research, spatial planning and GFM preparation
 have produced sample outputs. An operational Rhine event simulation and
-spatial gauge allocation are available, but model–observation matching and
+spatial gauge allocation are available. Step 22 now provides an exploratory,
+provisional hydrograph overlay; formal model–observation matching and
 quantitative performance evaluation have not been completed.
 
 ## 1. Research Objective
@@ -282,9 +283,11 @@ and [`f15-maximum_discharge.sh`](f15-maximum_discharge.sh).
 Define defensible spatial, temporal and variable correspondence between
 simulation output, discharge stations, water levels and satellite
 classifications. Step 21 supplies checked current-map row/column indices for
-the three discharge gauges, but temporal matching rules and reusable
-implementation remain to be established. Account for units, time semantics,
-maps, masks, permanent water, missing coverage and resolution.
+the three discharge gauges. Step 22 extracts model flows at those cells and
+makes a provisional nominal-time hydrograph overlay; observation time zone and
+units remain unresolved, so formal temporal/value matching is still open.
+Account for units, time semantics, maps, masks, permanent water, missing
+coverage and resolution.
 
 ### Step 17 — Event Evaluation
 
@@ -306,9 +309,26 @@ the procedure and Figure documented in [p21](p21-gauge_allocation.md), the
 [Survey Report](AI_survey_report/21_gauge_allocation.md), the [Work
 Report](AI_work_report/21_gauge_allocation.md), and
 [Figure 21](figure/f21-gauge_allocation.png). This spatial allocation does not
-extract model flows or define temporal/variable matching; Step 22 should use
-the CSV's zero-based row/column fields and preserve the unresolved observation
-unit and time limitations.
+extract model flows or define temporal/variable matching. Step 22 consumes the
+recorded cells without reallocation; retain the unresolved observation unit
+and time limitations.
+
+### Step 22 — Model–Observation Hydrograph Comparison
+
+Extract hourly `outflw` at the zero-based row/column cells in Step 21 and
+compare it visually with the supplied six-hour station series for
+2021-07-12 through 2021-07-16. Keep both native time samplings and values;
+do not interpolate, average or calculate skill metrics in this exploratory
+Step. The model time coordinate is `seconds since 2021-07-01 00:00` and its
+reference timezone is interpreted as UTC under the CF convention (the output
+file itself has no global `Conventions` attribute). Model `outflw` is in m³/s
+and marked `time: mean`. Observation units and timezone remain unspecified;
+provider correspondence describes six-hour mean values with interval-end
+labels. The shared-axis Figure is therefore a provisional overlay of model UTC
+and unadjusted observation labels, not a definitive timing or magnitude
+comparison. The reproducible series and interpretation metadata are
+[`metadata/22_hydrograph_timeseries.csv`](metadata/22_hydrograph_timeseries.csv)
+and [`metadata/22_hydrograph_comparison_summary.json`](metadata/22_hydrograph_comparison_summary.json). See [p22](p22-hydrograph_comparison.md), the [Survey Report](AI_survey_report/22_hydrograph_comparison.md), the [Work Report](AI_work_report/22_hydrograph_comparison.md), and [Figure 22](figure/f22-hydrograph_comparison.png). No performance metrics or event skill conclusion are produced.
 
 ## 4. Expected Outcomes and Current Status
 
@@ -338,6 +358,7 @@ but preparation outputs must not be confused with evaluation results.
 | **16 — Matching** | No matching method or implementation is recorded. | Spatial, temporal and variable correspondence remains to be designed. |
 | **17 — Evaluation** | No quantitative event score or performance report is recorded. | Metrics, valid-sample treatment and uncertainty analysis remain future work. |
 | **21 — Gauge allocation** | Current-map allocation CSV, Figure 21, reusable Prompt and Survey/Work Reports are recorded. | All three supplied candidate cells agree with the current-map GRDC allocation; gauge-to-outlet offsets and reported-area units remain interpretation caveats. No model-flow extraction or evaluation was done. |
+| **22 — Hydrograph comparison** | Model/observation time-series CSV, source/time summary JSON, three-panel Figure, reusable Prompt and Survey/Work Reports are recorded. | An exploratory overlay is available at the three Step 21 cells. Observation unit and timezone remain unknown; results are not a formal match or performance evaluation. |
 
 The Step Prompts, Survey Reports and Work Reports are linked in the Analysis
 Workflow above. They provide the detailed instructions, scientific evidence and

@@ -6,6 +6,25 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Tutorial 11 Step 22 hydrograph comparison (DT-0165, 2026-11-23)
+
+The maintainer authorizes the bounded Tutorial 11 Step 22 exploratory
+model–observation hydrograph workflow on the existing `feature/package-builder`
+branch, including the reusable Prompt, extraction/plotting scripts, handoff
+CSV/JSON, Figure, Survey/Work Reports, process/development-log updates, focused
+real-data execution and normal commit/push. Consume Step 21 gauge cells without
+reallocation; preserve native model/observation cadence and values. No model run,
+performance metrics, unit/timezone assumption for observations, or Gallery
+publication is authorized.
+
+DT-0165 complete: extracted 120 hourly model samples and 20 supplied observation
+labels per gauge for Lobith, Speyer and Maxau; generated and visually inspected
+the shared-axis Figure. Model `outflw` declares m³/s and `time: mean`; its CF-style
+time units omit timezone and are interpreted as UTC by the CF default. Observation
+units and timezone remain unspecified, so the Figure is a provisional overlay.
+No averaging, interpolation, unit conversion, model run or performance metric
+was performed. Outputs and limits are recorded in Tutorial 11 Step 22 reports.
+
 ### Tutorial 11 Step 21 gauge allocation (DT-0164, 2026-11-23)
 
 The maintainer authorizes the bounded Tutorial 11 Step 21 allocation check on
