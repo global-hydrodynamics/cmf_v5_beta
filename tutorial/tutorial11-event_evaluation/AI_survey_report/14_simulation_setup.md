@@ -37,6 +37,8 @@ period-boundary handling were not changed or scientifically validated here.
 The successful run does not settle that timing question, establish adequacy of
 the initial conditions, or support a flood-reconstruction score.
 
-The next work can inspect and visualize the output fields, then define their
-spatial and temporal correspondence with discharge and satellite observations
-before quantitative evaluation.
+Step 15 has inspected and visualized the retained `outflw` and `pthflw`
+discharge fields as signed local peaks; see the [Step 15 Survey
+Report](15_simulation_output_visualization.md). Step 16 must define spatial
+and temporal correspondence with discharge and satellite observations before
+quantitative evaluation.

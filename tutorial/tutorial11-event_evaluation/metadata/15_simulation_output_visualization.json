@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "step": "15",
+  "step_name": "Simulation Output Visualization",
+  "experiment_id": "tutorial11-rhine2021-coldstart-hourly",
+  "status": "completed_visualization",
+  "review_status": "proposed",
+  "inputs": {
+    "step14_metadata": "metadata/14_simulation_setup.json",
+    "hourly_files": [
+      {
+        "path": "experiment/Rhine2021/o_outflwRhine2021Jul.nc",
+        "variable": "outflw",
+        "dimensions": ["time", "lat", "lon"],
+        "shape": [480, 32, 40],
+        "units": "m3/s",
+        "cell_methods": "time: mean"
+      },
+      {
+        "path": "experiment/Rhine2021/o_pthflwRhine2021Jul.nc",
+        "variable": "pthflw",
+        "dimensions": ["time", "NPTHLEV", "NPTHOUT"],
+        "shape": [480, 5, 20],
+        "units": "m3/s",
+        "cell_methods": "time: mean"
+      }
+    ],
+    "map": {
+      "path": "map/Rhine_15min/",
+      "resolution": "15 arc-minutes",
+      "grid_nx_ny": [40, 32],
+      "bounds_west_south_east_north_degrees": [3.0, 45.0, 13.0, 53.0],
+      "network": "map/Rhine_15min/netcdf/nextxy_noedge.nc",
+      "bifurcation_parameters": "map/Rhine_15min/netcdf/bifprm.nc",
+      "elevation_background": "map/Rhine_15min/1min_nc/1min.elevtn.nc"
+    },
+    "aoi_metadata": "metadata/02_domain_selection.json",
+    "aoi_bounds_west_south_east_north_degrees": [4.0, 49.0, 8.0, 52.0]
+  },
+  "period": {
+    "start_inclusive": "2021-07-01T00:00:00",
+    "end_exclusive": "2021-07-21T00:00:00",
+    "record_count": 480,
+    "time_coordinate_units": "seconds since 2021-07-01 00:00:00",
+    "time_record_labels_first_last": ["2021-07-01T01:00:00", "2021-07-21T00:00:00"],
+    "interval_seconds": 3600
+  },
+  "calculation": {
+    "outflw_peak_variable": "outflw_peak_signed",
+    "outflw_peak_definition": "For each grid cell, signed outflw at argmax(abs(outflw)) over valid hourly records.",
+    "pthflw_peak_variable": "pthflw_peak_signed_sum",
+    "pthflw_aggregation": "At each record, sum signed pthflw over layers whose Rhine bifprm width is positive, then select the signed sum at argmax(abs(sum)).",
+    "missing_values": "Excluded from peak selection; cells/paths with no valid records remain missing.",
+    "zero_values": "Valid values.",
+    "peak_times": "Selected independently by grid cell or bifurcation path; results do not represent one simultaneous hour.",
+    "outflw_cell_methods": "time: maximum (abs(outflw)); outflw: mean",
+    "pthflw_cell_methods": "time: maximum (abs(sum(active-layer pthflw))); pthflw: mean"
+  },
+  "visualization": {
+    "methods": ["p02-f01a Discharge Raster", "p02-f02b Direction-Aware Discharge Vector"],
+    "regional_figure": {
+      "path": "figure/f15a-maximum_discharge-regional.png",
+      "extent_west_south_east_north_degrees": [3.0, 45.0, 13.0, 53.0],
+      "display": "Native 40 by 32 model grid; no spatial interpolation; signed diverging nonlinear color scale; missing cells white."
+    },
+    "aoi_figure": {
+      "path": "figure/f15b-maximum_discharge-aoi.png",
+      "extent_west_south_east_north_degrees": [4.0, 49.0, 8.0, 52.0],
+      "display": "Rhine main network and bifurcation paths over 1-minute elevation background; arrow direction follows local peak sign; dashed channel and dotted overland-only bifurcations."
+    },
+    "analysis_file": "experiment/Rhine2021/analysis/maximum_discharge_20210701-20210720.nc",
+    "analysis_file_git_ignored": true,
+    "figure_generation_script": "f15-maximum_discharge.sh"
+  },
+  "inspection": {
+    "input_time_axes_match": true,
+    "hourly_interval_verified": true,
+    "outflw_valid_values": 203040,
+    "outflw_all_missing_map_cells": 857,
+    "outflw_valid_peak_cells": 423,
+    "outflw_peak_range_m3_s": [-1095.3622, 11591.9121],
+    "outflw_negative_peak_cells": 8,
+    "outflw_negative_input_values": 2463,
+    "pthflw_paths_with_active_width_and_peak": 20,
+    "pthflw_channel_bifurcation_paths": 7,
+    "pthflw_overland_only_paths": 13,
+    "pthflw_peak_range_m3_s": [-202.8142, 2373.1873],
+    "pthflw_negative_peak_paths": 4,
+    "aoi_main_network_links_drawn": 415,
+    "aoi_bifurcation_paths_drawn": 20,
+    "figures_regenerated_and_visually_inspected": true,
+    "figure_review": "Both figures show the configured extents. The AOI extent was corrected to west/east/south/north for plotting; legend spacing was adjusted after visual inspection."
+  },
+  "limitations": [
+    "This is visualization and basic output inspection, not observation matching, numerical model validation or performance evaluation.",
+    "The run uses the model standard initial state without spin-up; initial-state effects may influence the displayed peaks.",
+    "KG-0019 remains open for ERA5-Land accumulation timing and converter period-boundary handling.",
+    "A local maximum map combines values selected at different hours; do not interpret it as a simultaneous flow field.",
+    "No hydraulic interpretation of individual negative values or scientific assessment of the simulated Rhine flood was performed."
+  ]
+}

@@ -88,7 +88,9 @@ For Rhine 2021, preserve these researcher settings in
    selected runoff acquisition period and undecided simulation period.
 6. Hand the Registry and actual NetCDF grid evidence to Step 13. Step 13 owns
    Input Matrix creation/validation. Step 14 owns the simulation-period/forcing
-   decisions and GOSH script; do not configure or run the model here.
+   decisions, creates the GOSH script and executes the requested simulation;
+   Step 15 visualizes the retained simulation outputs. Do not configure or run
+   the model here.
 
 Do not redownload/reconvert a complete dataset, regenerate a map, change
 scientific algorithms, run CaMa-Flood, compare observations, or publish the

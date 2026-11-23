@@ -75,10 +75,11 @@ runoff data remain ignored.
 Step 13 read the dataset row from `runoff_dataset.csv`, inspected the actual
 NetCDF grid, and generated/checked the map-specific regional Input Matrix; its
 results are in `AI_work_report/13_runoff_input_matrix.md` and
-`metadata/13_runoff_input_matrix.json`. Step 14 should decide the simulation
-period, spin-up, forcing coverage and model settings, then create a GOSH script.
-Step 15 performs model execution after setup is complete. Do not infer those
-conditions from the acquisition interval. KG-0019 remains unresolved: ERA5-Land 00 UTC represents
+`metadata/13_runoff_input_matrix.json`. Step 14 decided the simulation period,
+spin-up, forcing coverage and model settings, then executed the requested run.
+Step 15 visualizes the retained outputs; Step 16 will design observation
+matching. Do not infer simulation conditions from the acquisition interval.
+KG-0019 remains unresolved: ERA5-Land 00 UTC represents
 the preceding 24-hour accumulation, and conversion first-record/period-boundary
 behavior is not scientifically resolved. No CaMa-Flood run or model-observation
 comparison was performed.

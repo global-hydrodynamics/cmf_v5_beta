@@ -86,5 +86,9 @@ the ignored experiment products.
 
 This operational run does not test hydrologic skill. It uses no spin-up, and
 KG-0019 (ERA5-Land 00 UTC accumulation attribution and converter boundary
-handling) remains unresolved. Next, inspect/visualize outputs and design
-observation matching; do not treat this run as a validated event simulation.
+handling) remains unresolved. Step 15 now visualizes signed local peak
+discharge from the retained `outflw` and `pthflw` files; see
+[`p15-simulation_output_visualization.md`](../p15-simulation_output_visualization.md)
+and the [Step 15 Work Report](15_simulation_output_visualization.md). Step 16
+will design observation matching. Do not treat these outputs or figures as a
+validated event simulation.

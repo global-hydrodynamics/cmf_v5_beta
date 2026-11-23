@@ -664,3 +664,16 @@ files and a final NetCDF Restart at 2021-07-21 00:00. Run products remain in
 the ignored `experiment/Rhine2021/` directory. This cold-start run is an
 operational demonstration only; it does not assess model skill or resolve
 KG-0019.
+
+
+## 2026-11-23 — Visualize Tutorial 11 Step 14 simulation outputs
+
+Added the Step 15 prompt and reusable Figure workflow. From the retained 480
+hourly records, calculated each cell's signed `outflw` at its local maximum
+absolute value and each `pthflw` path's peak after summing active-width layers
+per record. Generated and visually inspected the regional map and the Step 2
+AOI direction-aware network map; corrected the AOI extent ordering and legend
+spacing. Saved derived peak values under the ignored experiment directory and
+recorded the method, input checks, figures and limitations in Step 15 metadata
+and reports. No model run, observation matching, or accuracy evaluation was
+performed. The cold-start and KG-0019 limitations remain open.

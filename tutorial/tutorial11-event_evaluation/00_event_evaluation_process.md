@@ -258,13 +258,20 @@ the [Survey Report](AI_survey_report/14_simulation_setup.md), the
 Generated experiment files are kept under the Git-ignored
 `experiment/Rhine2021/` directory.
 
-### Step 15 — Event Simulation
+### Step 15 — Simulation Output Visualization
 
-The initial cold-start execution is recorded in Step 14. Further event runs
-with scientifically justified initialization or revised forcing are not
-complete. Subsequent work should inspect/visualize the Step 14 outputs and
-establish defensible observation matching; do not interpret this one run as a
-performance result.
+Use the retained hourly `outflw` and `pthflw` files from Step 14 to map the
+signed local maximum absolute discharge over the run period. Fig. 15a shows the
+regional raster and Fig. 15b shows direction-aware main-channel and
+bifurcation peaks in the Step 2 satellite-analysis AOI. Per-cell and per-path
+peaks can occur at different hours, so neither figure is a simultaneous flow
+snapshot. Visualization is an output inspection step; it does not establish
+hydrologic skill, resolve the cold-start limitation or replace observation
+matching. See [p15](p15-simulation_output_visualization.md), the [Survey
+Report](AI_survey_report/15_simulation_output_visualization.md), the [Work
+Report](AI_work_report/15_simulation_output_visualization.md),
+[`metadata/15_simulation_output_visualization.json`](metadata/15_simulation_output_visualization.json),
+and [`f15-maximum_discharge.sh`](f15-maximum_discharge.sh).
 
 ### Step 16 — Observation–Model Matching
 
@@ -303,10 +310,10 @@ but preparation outputs must not be confused with evaluation results.
 | **5 — Water levels** | No water-level dataset or preparation workflow is recorded. | Reserved for future work. |
 | **6–10 — Reserved** | No activities are specified. | Future research stages. |
 | **11 — Regional map** | Local `map/Rhine_15min/` contains map, parameter, NetCDF/COG products and map-local workflow copies matching the requested domain; outputs were inspected, not regenerated for this Step. | Existing products are available to Steps 12–14; upstream hydrology and parameter scientific validation are not established by this inspection. |
-| **12 — Runoff preparation** | Existing local Rhine ERA5-Land source and converted data, Step 12 Prompt, metadata and reports are recorded; data were inspected, not reacquired or reconverted for this Step. | Hourly labels and grid structure are documented; KG-0019 remains open and simulation/spin-up dates remain undecided. |
+| **12 — Runoff preparation** | Existing local Rhine ERA5-Land source and converted data, Step 12 Prompt, metadata and reports are recorded; data were inspected, not reacquired or reconverted for this Step. | Hourly labels and grid structure are documented; KG-0019 remains open, and spin-up adequacy is not established by the Step 14 dates. |
 | **13 — Runoff Input Matrix** | Rhine-specific 111 × 91 matrix/diminfo were generated from the actual ERA5-Land grid using the map-local 1-minute catchment assignment; focused dimensions and index checks are recorded. | Pair the regional matrix with the Step 12 Registry and metadata in Step 14; runtime reader behavior remains untested. |
 | **14 — Simulation setup and execution** | `s14-run_simulation.sh` ran the 20-day hourly cold-start experiment; hourly NetCDF output variables and the final NetCDF Restart were inspected. | Operational completion only; cold-start sensitivity and ERA5-Land time attribution remain unresolved. |
-| **15 — Further event simulation** | No additional or spun-up Rhine run is recorded. | Future runs may be considered after output review and scientific initialization/forcing decisions. |
+| **15 — Simulation output visualization** | Signed local peak discharge was calculated from the retained `outflw`/`pthflw` outputs; regional and AOI figures and the reusable plotting workflow are recorded. | Spatial output patterns were inspected; no simultaneous snapshot, spin-up assessment or skill evaluation is implied. |
 | **16 — Matching** | No matching method or implementation is recorded. | Spatial, temporal and variable correspondence remains to be designed. |
 | **17 — Evaluation** | No quantitative event score or performance report is recorded. | Metrics, valid-sample treatment and uncertainty analysis remain future work. |
 
