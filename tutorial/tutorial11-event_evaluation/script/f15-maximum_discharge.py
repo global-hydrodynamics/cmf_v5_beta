@@ -310,7 +310,7 @@ def draw_regional(map_dir: Path, peak: np.ndarray, geometry, map_data, path_resu
     main_values = main_values[order]
     area_class = area_class[order]
     # Keep the full 40x32 network legible at the regional scale.
-    main_widths = np.asarray([0.45, 0.62, 0.82, 1.05])[area_class] * 0.38
+    main_widths = np.asarray([0.45, 0.62, 0.82, 1.05])[area_class] * 1.60
 
     endpoints = path_result["endpoints"]
     pth_values = path_result["peak"]
@@ -326,7 +326,7 @@ def draw_regional(map_dir: Path, peak: np.ndarray, geometry, map_data, path_resu
     valid_bif = np.all(np.isfinite(bif_segments), axis=(1, 2)) & np.all(bif_segments != -9999, axis=(1, 2))
     pth_eligible &= valid_bif
     channel_paths = path_result["channel"]
-    bif_width = 0.65
+    bif_width = 1.50
 
     extent = (west, east, south, north)
     background, bg_extent, bg_min, bg_max, _, _ = VECTOR.BACKGROUND.read_elevation_background(
@@ -347,7 +347,7 @@ def draw_regional(map_dir: Path, peak: np.ndarray, geometry, map_data, path_resu
         for segment, value, width in zip(main_segments[reverse], main_values[reverse], main_widths[reverse]):
             VECTOR.NETWORK.add_directional_arrow(
                 ax, segment[::-1], cmap(norm(value)), linewidth=width,
-                start_fraction=0.42, end_fraction=0.60, size=5.2, zorder=5,
+                start_fraction=0.42, end_fraction=0.60, size=6.5, zorder=5,
             )
 
     for path_mask, path_style in (
@@ -362,7 +362,7 @@ def draw_regional(map_dir: Path, peak: np.ndarray, geometry, map_data, path_resu
         flow_segment = segment if value >= 0 else segment[::-1]
         VECTOR.NETWORK.add_directional_arrow(
             ax, flow_segment, cmap(norm(abs(value))), linewidth=bif_width,
-            start_fraction=0.42, end_fraction=0.60, size=5.5, zorder=6,
+            start_fraction=0.42, end_fraction=0.60, size=6.5, zorder=6,
         )
 
     ax.set_xlim(west, east)

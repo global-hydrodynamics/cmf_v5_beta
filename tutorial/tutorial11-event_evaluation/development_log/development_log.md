@@ -690,3 +690,12 @@ network in the p02-f02b style, with thin upstream-area-scaled lines so the
 regional network remains legible. Fig. 15b now uses the same standard network.
 Regenerated and visually inspected both figures; the latest Step 14 run and
 Step 15 derived peak file are the inputs. No model code or map data changed.
+
+
+## 2026-11-23 — Increase regional Step 15 network line width
+
+Increased Fig. 15a vector main-network width scaling from 0.38 to a 1.60
+scale factor (up to 1.68 points) and bifurcation width to 1.50 points, with
+slightly larger direction markers. The full-basin topology, signed peak
+values, background and extents are unchanged. Regenerated the Figure from
+retained outputs and visually checked line visibility and network legibility.

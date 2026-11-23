@@ -58,11 +58,13 @@ was left untouched.
   `bifprm.nc` table. Positive layer widths identify 7 channel-bifurcation and
   13 overland-only paths. Signed peak range: −202.81 to 2,373.30 m³/s; 4 path
   peaks are negative.
-- Fig. 15a displays the full 3–13°E, 45–53°N network with thin
-  upstream-area-scaled line widths and the standard `nextxy.nc` topology.
+- Fig. 15a displays the full 3–13°E, 45–53°N network with increased
+  upstream-area-scaled vector line widths (up to 1.68 points) and 1.50-point
+  bifurcation paths, using standard `nextxy.nc` topology.
 - Fig. 15b displays the specified 4–8°E, 49–52°N AOI, 1,181 main-network links
   and all 20 valid bifurcation paths over the Rhine 1-minute elevation data.
-- Both PNGs were opened and inspected. The initial AOI axis argument order
+- Both PNGs were opened and inspected after the line-width increase. Fig. 15a
+  now has clearly visible main-channel and bifurcation lines. The initial AOI axis argument order
   showed an incorrect extent and was corrected. A second visual pass found
   overlap between the lower legend and longitude label; layout spacing was
   adjusted, then the figures were regenerated and inspected again.

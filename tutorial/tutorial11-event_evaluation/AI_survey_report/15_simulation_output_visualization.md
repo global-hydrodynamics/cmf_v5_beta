@@ -13,8 +13,8 @@ accuracy.
 
 The full Rhine river network is drawn using standard `nextxy.nc` links. Main
 channel links are colored by the signed `outflw` value at the hour when the
-absolute hourly mean was largest; thin upstream-area-scaled lines keep the
-network readable across the complete map. Bifurcations use dashed channel
+absolute hourly mean was largest; increased upstream-area-scaled line widths make the
+network easier to follow across the complete map. Bifurcations use dashed channel
 paths and dotted overland-only paths. The subdued elevation background
 provides geographic context. Eleven of the 1,245 valid peak cells have
 negative signed peaks; the corresponding arrows mark reverse flow.

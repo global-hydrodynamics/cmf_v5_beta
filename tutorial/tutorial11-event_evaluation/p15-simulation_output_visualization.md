@@ -16,8 +16,8 @@
 - Inspect the actual NetCDF time axes and calculate signed local maximum-
   absolute discharge values over the retained 480 hourly records.
 - Generate and visually inspect the regional direction-aware network map
-  (Fig. 15a) and its AOI view (Fig. 15b), keeping network lines thin enough to
-  distinguish the full basin at overview scale.
+  (Fig. 15a) and its AOI view (Fig. 15b), using line widths that keep the complete network distinguishable at
+  overview scale.
 - Save the derived peak values and record the inputs, method, results and
   scientific limits in metadata and reports.
 
@@ -68,8 +68,8 @@ maxima. Keep main-channel and bifurcation peak times independent.
 Generate Fig. 15a as the direction-aware signed-peak Rhine river network over
 the full map extent and Fig. 15b as the same network over the Step 2
 satellite-analysis AOI, using the map's 1-minute elevation background. Read
-the standard `nextxy.nc` topology specified in Step 14. Use thin,
-upstream-area-scaled lines so the full basin remains readable.
+the standard `nextxy.nc` topology specified in Step 14. Use upstream-area-scaled lines that remain visibly distinct across the
+full basin at overview scale.
 Reuse existing Gallery helpers without using Mekong-specific paths or data.
 Record that local peaks are not a simultaneous state and that this cold-start
 run does not establish skill. Preserve the no-spin-up and KG-0019 limitations.

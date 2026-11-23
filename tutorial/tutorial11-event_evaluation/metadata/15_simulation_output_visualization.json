@@ -100,7 +100,7 @@
         13.0,
         53.0
       ],
-      "display": "Full 40 by 32 Rhine river network in the p02-f02b direction-aware vector style; signed local outflw peaks on main-channel links, signed pthflw peaks on channel and overland bifurcations, thin upstream-area-scaled lines, and subdued 1-minute elevation background."
+      "display": "Full 40 by 32 Rhine river network in the p02-f02b direction-aware vector style; signed local outflw peaks on main-channel links, signed pthflw peaks on channel and overland bifurcations, upstream-area-scaled main lines up to 1.68 points and 1.50-point bifurcation lines, over subdued 1-minute elevation."
     },
     "aoi_figure": {
       "path": "figure/f15b-maximum_discharge-aoi.png",
@@ -139,7 +139,7 @@
     "aoi_main_network_links_drawn": 1181,
     "aoi_bifurcation_paths_drawn": 20,
     "figures_regenerated_and_visually_inspected": true,
-    "figure_review": "Both figures show the configured extents with standard nextxy topology. The regional view uses thin upstream-area-scaled vector lines to keep the full network legible. The AOI extent is 4–8 E, 49–52 N; legend spacing was adjusted after visual inspection.",
+    "figure_review": "Both figures show the configured extents with standard nextxy topology. The regional view uses increased, upstream-area-scaled line widths (up to 1.68 points) and 1.50-point bifurcation lines, while keeping the full network legible. The AOI extent is 4–8 E, 49–52 N; legend spacing was visually checked.",
     "regional_main_network_links_drawn": 1181
   },
   "limitations": [
