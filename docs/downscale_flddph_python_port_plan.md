@@ -50,3 +50,21 @@ copy must not import Python implementation from `tools/`. No model rerun is
 requested. Focused acceptance: p02-f04 render and inspect; synthetic adapter
 contract test; syntax/import/path checks; report Guide01 execution limits if
 model products are absent.
+
+## Approved scope extension — Flood Duration workflow (2026-11-23)
+
+The maintainer authorized adding the legacy Flood Duration workflow to this
+package on the same `feature/package-builder` branch. Add separate Depth and
+Duration Shell entry points and self-contained Python copies under
+`sample_mekong/`; preserve existing Flood Depth numerical behavior and use
+`aggregate_flddph.py` to prepare the sample snapshot only when absent. Port the
+legacy daily threshold-count and `catmxy`/`flddif` lookup semantics, including
+strict thresholds and a separate permanent-water mask. Keep `sample_mekong/out/`
+ignored and preserve local files while removing the previously tracked inputs
+from the Git index. Generate the Mekong 2001 Duration NetCDF and Figure, update
+package/sample/tool documentation and research evidence, and compare both
+Duration stages to the unchanged Fortran references. Do not change CaMa-Flood,
+legacy Fortran, Tutorial 11, or Gallery content. The source CF axis has 365
+daily timestamps from 2001-01-02 through 2002-01-01; the maintainer confirmed
+these are end-time samples representing the 2001 simulation year. See DT-0163
+and VR-0209.

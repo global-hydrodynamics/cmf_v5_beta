@@ -1,6 +1,6 @@
-# Python flood-depth downscaling
+# Python flood-depth and flood-duration downscaling
 
-This standalone package prepares a two-dimensional CaMa-Flood `flddph` field and maps it to the native grid of a higher-resolution CaMa-Flood map. Its scientific method is a Python port of `etc/downscale_flddph/src/downscale_flddph_trib.F90`.
+This standalone package maps CaMa-Flood flood depth and flood duration to an existing higher-resolution CaMa-Flood map grid. Flood Depth ports `etc/downscale_flddph/src/downscale_flddph_trib.F90`; Flood Duration ports the threshold-count and high-resolution lookup behavior in `calc_depth-duration.F90` and `downscale_fldprd.F90`.
 
 Copy the complete `downscale_flddph/` directory into a research project. The Shell entry points resolve package files relative to their own location; edit their settings at the top to point to the project's map, input, output, extent, and Python environment. No Python module in the repository outside this directory is imported. The map itself remains an external input. `sample_mekong/` is an independent copied example, including copies of the package scripts.
 
@@ -9,20 +9,27 @@ Copy the complete `downscale_flddph/` directory into a research project. The She
 ```text
 downscale_flddph/
 ├── README.md
-├── s01-downscale.sh
-├── s02-visualize.sh
+├── s01-downscale_flddph.sh
+├── s02-visualize_flddph.sh
+├── t01-downscale_duration.sh
+├── t02-visualize_duration.sh
 ├── script/
 │   ├── aggregate_flddph.py
 │   ├── downscale_flddph.py
-│   └── visualize_flddph.py
+│   ├── visualize_flddph.py
+│   ├── calc_duration.py
+│   ├── downscale_duration.py
+│   └── visualize_duration.py
 └── sample_mekong/
     ├── README.md
-    ├── s01-downscale.sh
-    ├── s02-visualize.sh
-    ├── script/                 # physical copies of the three Python files
-    ├── out/                    # compact 15-minute input snapshot and source namelist
-    ├── downscaled/             # generated 1-minute NetCDF sample
-    └── figure/                 # two-panel PNG sample
+    ├── s01-downscale_flddph.sh
+    ├── s02-visualize_flddph.sh
+    ├── t01-downscale_duration.sh
+    ├── t02-visualize_duration.sh
+    ├── script/                 # physical copies of package Python files
+    ├── out/                    # Git-ignored snapshot and Duration table
+    ├── downscaled/             # Git-tracked 1-minute NetCDF samples
+    └── figure/                 # Git-tracked comparison PNGs
 ```
 
 ## Requirements and inputs
@@ -54,23 +61,35 @@ The `--start` and `--end` bounds are inclusive timestamps present on the CF time
 
 ## Run the package
 
-Edit the settings near the top of `s01-downscale.sh`: `PYTHON`, `MAPDIR`, `INPUT_FORMAT`, `MAP_FORMAT`, `INPUT_FILE`, `TRIBUTARY_FILL`, `PERMANENT_WATER`, `OUTPUT_NC`, the west/east/south/north output edges, and `RES`. Both calculation options default to `1`. `TRIBUTARY_FILL=0` skips tributary and backwater adjustments and uses the basic catchment-based depth; `PERMANENT_WATER=0` independently omits only the 0.1 m river-width minimum. Then run:
+Edit the settings near the top of `s01-downscale_flddph.sh`: `PYTHON`, `MAPDIR`, `INPUT_FORMAT`, `MAP_FORMAT`, `INPUT_FILE`, `TRIBUTARY_FILL`, `PERMANENT_WATER`, `OUTPUT_NC`, the west/east/south/north output edges, and `RES`. Both calculation options default to `1`. `TRIBUTARY_FILL=0` skips tributary and backwater adjustments and uses the basic catchment-based depth; `PERMANENT_WATER=0` independently omits only the 0.1 m river-width minimum. Then run:
 
 ```sh
-bash s01-downscale.sh
+bash s01-downscale_flddph.sh
 ```
 
 The output is a compressed NetCDF4 file containing Float32 `flddph(lat,lon)` in metres, WGS84 cell-centre coordinates, and `_FillValue=-9999`. Attributes record the source input and format, map directory and actual layer files/formats (source-file paths are relative to `map_directory`), high-resolution map tag, selected options, spatial method, output extent, and temporal-selection attributes copied from a NetCDF input. Binary input does not receive an inferred timestamp. The five-coarse-cell buffer is used internally and cropped away from the output.
 
-Edit settings in `s02-visualize.sh` and run it separately to compare the native-grid input with the downscaled field over the same geographic extent. Visualization never reruns the downscaling calculation.
+Edit settings in `s02-visualize_flddph.sh` and run it separately to compare the native-grid input with the downscaled field over the same geographic extent. Visualization never reruns the downscaling calculation.
+
+## Flood Duration workflow
+
+`t01-downscale_duration.sh` accepts a daily CF-time `flddph(time,lat,lon)` NetCDF. It verifies the requested inclusive date range has one midnight timestamp per day with no missing or duplicate dates. The depth-duration table has levels `k=0...400` by default, with threshold `max(0.01, k × 0.05 m)` and strict `flddph > threshold` comparison. It stores counts in days and masks cells whose first `nextxy` plane is `-9999`. No threshold interpolation is performed.
+
+The high-resolution pass uses one-based `catmxy` map indices and the legacy threshold selection `min(int(flddif / INTDPH), nlevel-1)` after conversion to zero-based indexing. Negative `flddif` produces zero days; unmapped pixels remain NoData. Duration has no tributary fill or backwater adjustment. `PERMANENT_WATER` controls a separate `permanent_water` mask derived from `rivwth`; the legacy 999 sentinel is not written into day counts. If the option is off, all valid cells have mask value 0.
+
+The Mekong annual file has 365 daily output timestamps from 2001-01-02 through 2002-01-01. These are end-time samples for the 2001 simulation interval, so the sample settings use these actual inclusive CF dates. The output records both requested interval and CF timestamp endpoints. The visualization shows native-grid duration above the table minimum of 0.01 m beside high-resolution duration selected using each pixel's `flddif`. The panels share a day scale, but use different depth thresholds and are not a one-to-one comparison of the same threshold.
+
+The first Shell writes a low-resolution table (in the sample, to Git-ignored `out/`) and a high-resolution NetCDF. The second Shell renders a two-panel native/high-resolution Figure from those existing products; it does not rerun either calculation.
 
 ## Mekong sample
 
 See [sample_mekong/README.md](sample_mekong/README.md) for the input provenance, settings, numerical comparison, and commands. From the sample directory, after activating an environment with the dependencies above:
 
 ```sh
-bash s01-downscale.sh
-bash s02-visualize.sh
+bash s01-downscale_flddph.sh
+bash s02-visualize_flddph.sh
+bash t01-downscale_duration.sh
+bash t02-visualize_duration.sh
 ```
 
 The sample was tested against the pre-migration p02-f04 Fortran output and a fresh run of the unchanged legacy Fortran reference. Its comparison establishes port fidelity for one Mekong date/map/extent only; it does not independently validate the hydrologic method or demonstrate global-map compatibility.
@@ -79,7 +98,7 @@ The sample was tested against the pre-migration p02-f04 Fortran output and a fre
 
 The Python code preserves the Fortran operation sequence: assign each high-resolution pixel to its low-resolution catchment, subtract `flddif` from catchment flood depth, identify mainstem and tributary outlet paths using `nextxy`/`uparea`, apply tributary adjustment, propagate backwater adjustment, and apply the 0.1 m permanent-water minimum using `rivwth`. Map and output arrays use north-first rows; binary map records are read in their existing x-fast layout. Float32 arithmetic is used for the scientific fields and comparison-sensitive operations.
 
-This is a direct method port, not a replacement parameterization. Validation currently covers one 1-minute Mekong map sample. Other regions, map formats, resolutions, edge cases and compilers have not been exhaustively verified. The high-resolution Figure uses the same `flddif` percentile/square-root grayscale stretch as p02-f04. Where `flddif` is undefined but `elevtn` is valid, it draws neutral mid-gray land context; unmapped background and the sea are white. `catmxy` validity masks the flood-depth overlay, so no depth is drawn where a high-resolution cell has no coarse-grid catchment mapping. These background layers are map context, not additional scientific outputs.
+These are direct method ports, not replacement parameterizations. Validation covers one 1-minute Mekong map, period and extent. Other regions, map formats, resolutions, edge cases and compilers have not been exhaustively verified. The high-resolution Depth Figure uses the same `flddif` percentile/square-root grayscale stretch as p02-f04. Where `flddif` is undefined but `elevtn` is valid, it draws neutral mid-gray land context; unmapped background and the sea are white. `catmxy` validity masks the Depth overlay, so no depth is drawn where a high-resolution cell has no coarse-grid catchment mapping. Duration uses that same map context and displays permanent water separately from duration days. These background layers are map context, not additional scientific outputs.
 
 ### Input-format and option checks
 

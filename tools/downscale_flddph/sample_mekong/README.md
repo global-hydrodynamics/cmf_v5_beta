@@ -1,35 +1,39 @@
-# Mekong downscaling sample
+# Mekong Flood Depth and Duration sample
 
-This is a portable example copied from the standalone `downscale_flddph` package. The Python files in `script/` are physical copies of the package scripts; the sample Shell settings point to the Mekong map and this directory's input and outputs. It does not import code from the parent package.
+This directory contains a portable copy of the package scripts. The Python files in `script/` are physical copies; they do not import from the package parent. The Mekong map and annual simulation output remain external inputs.
 
-## Provenance and settings
+## Inputs and configuration
 
-- Simulation: `gosh_test/mek02-2year_netcdf.sh`, Mekong 15-minute map, annual NetCDF outputs for 2000 and 2001.
-- Source data: `gosh_test/out/mek02/o_flddph2001.nc`, run on 2026-11-23. The tracked compact input `out/flddph_2001-09-01.nc` was extracted by exact CF timestamp `2001-09-01 00:00:00`; it has 120 × 80 cells and contains the 2-D `flddph` field plus coordinates and selection metadata.
-- `out/input_cmf_2001.nam` is copied from the completed 2001 experiment as configuration provenance. It contains machine-specific paths and is not read by either package script.
-- Map: repository `map/mekong_15min/`; high-resolution map: `1min`.
-- Downscaling extent: 102–108°E, 9–15°N; output grid: 360 × 360 at 1 arc-minute.
-- The sample snapshot contains 6,566 valid low-resolution cells. The generated high-resolution result contains 95,543 valid pixels, has maximum depth 17.5255909 m, and is approximately 108 KiB.
+- Run the `gosh_test/mek02` 2001 simulation first. The default annual input is `gosh_test/out/mek02/o_flddph2001.nc`; change `SOURCE_NC` at the top of the sample Shells if it lives elsewhere.
+- Depth uses the exact CF snapshot `2001-09-01T00:00:00`. If `out/flddph_2001-09-01.nc` is absent, `s01-downscale_flddph.sh` extracts it with the copied `aggregate_flddph.py`. An existing snapshot is reused and never removed or overwritten by the preparation step.
+- Duration reads the annual NetCDF directly and does not copy it into this directory. This input has 365 timestamps from 2001-01-02 through 2002-01-01. They are daily end-time samples for the 2001 simulation interval; `t01-downscale_duration.sh` uses these exact inclusive CF dates.
+- The default map is `map/mekong_15min/`, with its 1-minute high-resolution layers. Change `MAPDIR` in the Shells when using the sample independently.
+- Both products cover 102–108°E, 9–15°N at 1 arc-minute (360 × 360).
 
-## Run
+## Run in order
 
-Activate a Python environment with NumPy, netCDF4 and Matplotlib, then from this directory run:
+Activate an environment with NumPy and netCDF4; Matplotlib is also needed for Figures. From this directory:
 
 ```sh
-bash s01-downscale.sh
-bash s02-visualize.sh
+bash s01-downscale_flddph.sh
+bash s02-visualize_flddph.sh
+bash t01-downscale_duration.sh
+bash t02-visualize_duration.sh
 ```
 
-The first command writes `downscaled/flddph_1min_2001-09-01.nc`; the second writes `figure/flood_depth_2001-09-01.png`. The settings are at the beginning of each Shell script. The Figure follows p02-f04's side-by-side native and downscaled flood-depth presentation, using a 0–20 m shared color range and the p02-f04 `flddif` grayscale stretch. Undefined `flddif` cells use neutral gray where `elevtn` identifies land; unmapped background and the sea are white. The flood-depth overlay is masked where `catmxy` has no coarse-grid mapping.
+The first command prepares/reuses the depth snapshot and generates the high-resolution depth file. The second renders its native/downscaled comparison. The third calculates the low-resolution 401-level depth-duration table and maps the `flddif` threshold lookup to a 1-minute `flood_duration` field plus a separate `permanent_water` mask. The fourth renders the native-grid and high-resolution duration panels. All settings are grouped at the top of their Shell.
 
-The downscaling Shell defaults to `INPUT_FORMAT=auto`, `MAP_FORMAT=auto`, `TRIBUTARY_FILL=1`, and `PERMANENT_WATER=1`. Auto prefers NetCDF map layers and falls back to a matching Binary layer only when that NetCDF file is absent; it does not hide read or metadata errors by switching formats. To use the legacy Binary maps, change `MAP_FORMAT` to `binary`. The input may be NetCDF or one headerless little-endian Float32 Binary record with the map's `nx × ny` cells, x-fast and north-to-south. Binary snapshots have no time metadata. Tributary Fill OFF disables tributary and backwater adjustments; Permanent Water OFF independently removes only the 0.1 m minimum. Output NetCDF attributes list the formats and actual source-file paths relative to `map_directory`.
+## Products and Git policy
 
-## Numerical comparison
+- `out/` is ignored by Git. It contains the regenerable 2001-09-01 input snapshot and intermediate depth-duration table. The legacy copied `input_cmf_2001.nam` is not needed.
+- `downscaled/flddph_1min_2001-09-01.nc` and `downscaled/flood_duration_1min_2001.nc` are compact generated examples and are tracked.
+- `figure/flood_depth_2001-09-01.png` and `figure/flood_duration_2001.png` are tracked sample Figures.
+- The annual input and map data are never copied into the sample.
 
-The Python output was compared cell-by-cell with a fresh compilation and execution of the unchanged `etc/downscale_flddph/src/downscale_flddph_trib.F90`, using the same CF-selected snapshot, map, resolution, and extent. Both arrays have 360 × 360 cells, 95,543 valid cells, and identical valid/NoData masks. Of the valid cells, one differs; the maximum absolute difference is 2.3841858 × 10⁻⁷ m (less than 10⁻⁵ m). Tributary, backwater, and permanent-water diagnostics were non-zero (413, 468, and 16,486 pixels respectively, counted over the buffered working grid), exercising these code paths. The calculated extent used a 510 × 510 buffer, corresponding to the existing five coarse-grid-cell margin.
+## Scientific method and checks
 
-The generated Python result has the same valid mask as the regenerated p02-f04 Python result; their maximum absolute difference is 3.34 × 10⁻⁶ m, within the 10⁻⁵ m comparison tolerance. Agreement against this one sample is evidence of implementation fidelity for this case, not independent scientific validation or coverage of other maps.
+Flood Depth preserves the existing tributary-aware Python port. The Duration workflow ports `calc_depth-duration.F90` and `downscale_fldprd.F90`: thresholds use strict `flddph > max(0.01, k × 0.05 m)`, high-resolution threshold selection uses `catmxy` and `flddif`, negative `flddif` yields zero days, and no tributary/backwater filling is performed. Permanent water is stored separately; the legacy `999` value is not treated as a day count.
 
-### Format and option compatibility
+The 2001 sample uses 365 daily records. The generated 401 × 120 × 80 duration table matched the compiled legacy `calc_depth-duration.F90` output exactly. In the 360 × 360 high-resolution result, all 84,184 non-permanent valid pixels matched the Fortran `downscale_fldprd` output exactly; all 11,359 permanent-water pixels corresponded to the legacy 999 marker; the NoData mask also matched. This is implementation-parity evidence for this one Mekong map, 2001 period and extent, not independent validation of the hydrologic method or proof for other grids.
 
-The default NetCDF/NetCDF run exactly matches the tracked sample (95,543 valid cells; maximum absolute difference 0 m). NetCDF `flddph` with Binary maps and Binary `flddph` with NetCDF maps both match the default output exactly, including the valid mask. The four tributary/permanent-water combinations retain the same 95,543 valid cells. Tributary Fill OFF with Permanent Water ON matches the unchanged basic Fortran routine exactly for all shared cells and the missing-value mask. In this sample, disabling the permanent-water minimum changes 3,331 pixels. Map format/source paths and both option values are recorded in output NetCDF attributes. These checks establish compatibility for this sample only.
+The Duration Figure labels the native panel as days above the 0.01 m minimum threshold. The high-resolution panel uses per-pixel `flddif` thresholds, so both use day units but not one common depth threshold. Permanent water uses a distinct teal overlay and is not part of the duration colorbar.

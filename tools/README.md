@@ -14,7 +14,7 @@ directories.
 | `igetday` | calendar | Print Gregorian days in a requested month. | [`scripts/igetday.py`](scripts/igetday.py) |
 | `output_ctl` | data_format | Generate GrADS CTLs for configured Binary model outputs. | [`scripts/generate_output_ctl.py`](scripts/generate_output_ctl.py) |
 | `restart_ctl` | data_format | Generate GrADS CTLs for Binary Restart files. | [`scripts/generate_restart_ctl.py`](scripts/generate_restart_ctl.py) |
-| `downscale_flddph` | output_analysis | Downscale a CaMa-Flood flood-depth field to an existing higher-resolution map grid. | [`downscale_flddph/`](downscale_flddph/README.md) |
+| `downscale_flddph` | output_analysis | Downscale CaMa-Flood flood depth or annual flood duration to an existing higher-resolution map grid. | [`downscale_flddph/`](downscale_flddph/README.md) |
 
 The machine-readable source of truth is [`tools_list.csv`](tools_list.csv).
 Detailed instructions are in [`scripts/README.md`](scripts/README.md) and the
