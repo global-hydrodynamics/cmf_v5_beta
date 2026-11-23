@@ -20,7 +20,7 @@ bash s01-downscale.sh
 bash s02-visualize.sh
 ```
 
-The first command writes `downscaled/flddph_1min_2001-09-01.nc`; the second writes `figure/flood_depth_2001-09-01.png`. The settings are at the beginning of each Shell script. The Figure follows p02-f04's side-by-side native and downscaled flood-depth presentation, using a 0–20 m shared color range and `flddif` as grayscale context behind the 1-minute result.
+The first command writes `downscaled/flddph_1min_2001-09-01.nc`; the second writes `figure/flood_depth_2001-09-01.png`. The settings are at the beginning of each Shell script. The Figure follows p02-f04's side-by-side native and downscaled flood-depth presentation, using a 0–20 m shared color range and the p02-f04 `flddif` grayscale stretch. Undefined `flddif` cells use neutral gray where `elevtn` identifies land; unmapped background is 50% gray. The flood-depth overlay is masked where `catmxy` has no coarse-grid mapping.
 
 ## Numerical comparison
 

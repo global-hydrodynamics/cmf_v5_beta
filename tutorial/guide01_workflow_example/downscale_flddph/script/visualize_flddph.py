@@ -67,7 +67,9 @@ def read_map_geometry(path: Path) -> tuple[int, int, float, float, float, float,
             float(lines[6].split()[0]), float(lines[7].split()[0]))
 
 
-def read_flddif(map_dir: Path, resolution: str, lon: np.ndarray, lat: np.ndarray) -> np.ndarray:
+def read_map_layer(map_dir: Path, resolution: str, layer: str, lon: np.ndarray,
+                   lat: np.ndarray, dtype: str = "<f4", records: int = 1) -> np.ndarray:
+    """Merge one tiled map layer onto the requested north-first cell centers."""
     location_path = map_dir / resolution / "location.txt"
     lines = location_path.read_text().splitlines()
     tiles = []
@@ -83,16 +85,17 @@ def read_flddif(map_dir: Path, resolution: str, lon: np.ndarray, lat: np.ndarray
     if len(resolution_values) != 1:
         raise ValueError(f"{location_path}: tiles do not share one resolution")
     pixel = resolution_values.pop()
-    output = np.full((lat.size, lon.size), np.nan, dtype=np.float32)
+    shape = (records, lat.size, lon.size) if records > 1 else (lat.size, lon.size)
+    output = np.full(shape, -9999 if dtype == "<i2" else FILL_VALUE, dtype=np.dtype(dtype))
     for name, west, east, south, north, nx, ny, tile_pixel in tiles:
         if east < lon[0] or west > lon[-1] or north < lat.min() or south > lat.max():
             continue
-        expected = nx * ny
-        path = map_dir / resolution / f"{name}.flddif.bin"
-        raw = np.fromfile(path, dtype="<f4")
+        expected = nx * ny * records
+        path = map_dir / resolution / f"{name}.{layer}.bin"
+        raw = np.fromfile(path, dtype=dtype)
         if raw.size != expected:
-            raise ValueError(f"{path}: expected {expected} float32 values, found {raw.size}")
-        data = raw.reshape((ny, nx))
+            raise ValueError(f"{path}: expected {expected} values, found {raw.size}")
+        data = raw.reshape((records, ny, nx)) if records > 1 else raw.reshape((ny, nx))
         tile_lon = west + (np.arange(nx) + 0.5) * tile_pixel
         tile_lat = north - (np.arange(ny) + 0.5) * tile_pixel
         cols = np.rint((tile_lon - lon[0]) / pixel).astype(int)
@@ -102,7 +105,10 @@ def read_flddif(map_dir: Path, resolution: str, lon: np.ndarray, lat: np.ndarray
         source_y, target_y = np.flatnonzero(good_y), rows[good_y]
         source_x, target_x = np.flatnonzero(good_x), cols[good_x]
         if source_x.size and source_y.size:
-            output[np.ix_(target_y, target_x)] = data[np.ix_(source_y, source_x)]
+            if records > 1:
+                output[:, target_y[:, None], target_x] = data[:, source_y[:, None], source_x]
+            else:
+                output[np.ix_(target_y, target_x)] = data[np.ix_(source_y, source_x)]
     return output
 
 
@@ -123,17 +129,37 @@ def main() -> None:
     pixel_x, pixel_y = float(np.median(np.diff(high_lon))), float(-np.median(np.diff(high_lat)))
     if pixel_x <= 0 or pixel_y <= 0 or not np.isclose(pixel_x, pixel_y, rtol=0, atol=1e-10):
         raise ValueError("Downscaled NetCDF coordinates must be regular, north-first, square pixels")
-    background = read_flddif(map_dir, args.resolution, high_lon, high_lat)
-    gray_mask = np.isfinite(background) & (background != FILL_VALUE)
-    if not gray_mask.any():
+    background_raw = read_map_layer(map_dir, args.resolution, "flddif", high_lon, high_lat)
+    background = np.ma.masked_where(
+        ~np.isfinite(background_raw) | (background_raw == FILL_VALUE), background_raw,
+    )
+    elevation_raw = read_map_layer(map_dir, args.resolution, "elevtn", high_lon, high_lat)
+    elevation_valid = np.isfinite(elevation_raw) & (elevation_raw != FILL_VALUE)
+    catchment = read_map_layer(map_dir, args.resolution, "catmxy", high_lon, high_lat,
+                               dtype="<i2", records=2)
+    catmxy_defined = (catchment[0] > 0) & (catchment[1] > 0)
+    high_valid = ~np.ma.getmaskarray(high)
+    if np.any(high_valid & ~catmxy_defined):
+        raise ValueError("Downscaled flood-depth values occur where catmxy is undefined")
+
+    valid_background = background.compressed()
+    if not valid_background.size:
         raise ValueError("No flddif background cells overlap the downscaled extent")
-    gray_low, gray_high = np.nanpercentile(background[gray_mask], [2, 98])
+    gray_low, gray_high = np.percentile(valid_background, [2, 98])
     if gray_high <= gray_low:
         gray_high = gray_low + 1.0
-    grayscale = np.ma.masked_where(~gray_mask, background)
-    display_high = np.ma.masked_where(np.ma.getmaskarray(high) | (high <= 0.0), high)
+    normalized = np.clip((background - gray_low) / (gray_high - gray_low), 0, 1)
+    intensity = 0.16 + 0.42 * np.ma.sqrt(normalized)
+    land_fill = np.ma.getmaskarray(background) & elevation_valid
+    display = np.asarray(intensity.filled(1.0))
+    display[land_fill] = 0.5
+    display_mask = np.ma.getmaskarray(intensity) & ~land_fill
+    grayscale = np.ma.array(display, mask=display_mask)
+    display_high = np.ma.masked_where(np.ma.getmaskarray(high) | (high <= 0.0) | ~catmxy_defined, high)
     cmap = plt.get_cmap("YlGnBu").copy()
     cmap.set_bad((1, 1, 1, 0))
+    gray_cmap = plt.get_cmap("gray").copy()
+    gray_cmap.set_bad((1, 1, 1, 0))
 
     fig, axes = plt.subplots(1, 2, figsize=(args.figure_width, args.figure_height), constrained_layout=True)
     aspect = 1.0 / np.cos(np.deg2rad((args.south + args.north) / 2.0))
@@ -143,7 +169,7 @@ def main() -> None:
     axes[1].set_facecolor("0.5")
     axes[1].imshow(grayscale, extent=(high_lon[0] - pixel_x / 2, high_lon[-1] + pixel_x / 2,
                                       high_lat[-1] - pixel_y / 2, high_lat[0] + pixel_y / 2),
-                   origin="upper", cmap="Greys_r", vmin=gray_low, vmax=gray_high,
+                   origin="upper", cmap=gray_cmap, vmin=0, vmax=1,
                    interpolation="nearest", aspect=aspect, zorder=0)
     axes[1].imshow(display_high, extent=(high_lon[0] - pixel_x / 2, high_lon[-1] + pixel_x / 2,
                                         high_lat[-1] - pixel_y / 2, high_lat[0] + pixel_y / 2),
