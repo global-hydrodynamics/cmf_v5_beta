@@ -90,7 +90,6 @@
   },
   "visualization": {
     "methods": [
-      "p02-f01a Discharge Raster",
       "p02-f02b Direction-Aware Discharge Vector"
     ],
     "regional_figure": {
@@ -101,7 +100,7 @@
         13.0,
         53.0
       ],
-      "display": "Native 40 by 32 model-grid raster of signed local outflw peaks; no spatial interpolation; missing cells white; signed diverging nonlinear scale."
+      "display": "Full 40 by 32 Rhine river network in the p02-f02b direction-aware vector style; signed local outflw peaks on main-channel links, signed pthflw peaks on channel and overland bifurcations, thin upstream-area-scaled lines, and subdued 1-minute elevation background."
     },
     "aoi_figure": {
       "path": "figure/f15b-maximum_discharge-aoi.png",
@@ -140,10 +139,8 @@
     "aoi_main_network_links_drawn": 1181,
     "aoi_bifurcation_paths_drawn": 20,
     "figures_regenerated_and_visually_inspected": true,
-    "figure_review": "Fig. 15a shows the native 40 by 32 grid over 3–13 E, 45–53 N without interpolation; 35 missing cells are white. Fig. 15b shows the standard nextxy topology in the 4–8 E, 49–52 N AOI; the vector network, arrows, bifurcation styles and legend were visually inspected.",
-    "regional_native_grid_cells": 1280,
-    "regional_valid_peak_cells_rendered": 1245,
-    "regional_missing_cells_rendered_white": 35
+    "figure_review": "Both figures show the configured extents with standard nextxy topology. The regional view uses thin upstream-area-scaled vector lines to keep the full network legible. The AOI extent is 4–8 E, 49–52 N; legend spacing was adjusted after visual inspection.",
+    "regional_main_network_links_drawn": 1181
   },
   "limitations": [
     "This is visualization and basic output inspection, not observation matching, numerical model validation or performance evaluation.",

@@ -31,10 +31,9 @@ From `tutorial/tutorial11-event_evaluation/`:
 bash f15-maximum_discharge.sh
 ```
 
-The script reuses the Gallery p02-f01a native-grid raster conventions for
-Fig. 15a and p02-f02b direction-aware vector helpers for Fig. 15b. It reads
-Rhine `uparea`, the standard `nextxy.nc`, `lonlat`, `bifprm`, and 1-minute
-elevation products; no Mekong data paths or stations are used. The Step 14 run was
+The script reuses Gallery p02 direction-aware vector helpers. It reads Rhine
+`uparea`, the standard `nextxy.nc`, `lonlat`, `bifprm`, and 1-minute elevation
+products; no Mekong data paths or stations are used. The Step 14 run was
 executed once with `nextxy.nc` in a fresh directory; the previous `noedge` run
 was left untouched.
 
@@ -59,13 +58,11 @@ was left untouched.
   `bifprm.nc` table. Positive layer widths identify 7 channel-bifurcation and
   13 overland-only paths. Signed peak range: −202.81 to 2,373.30 m³/s; 4 path
   peaks are negative.
-- Fig. 15a displays the full 3–13°E, 45–53°N native 40 × 32 raster; 1,245
-  peak cells are valid and 35 all-missing cells are white.
+- Fig. 15a displays the full 3–13°E, 45–53°N network with thin
+  upstream-area-scaled line widths and the standard `nextxy.nc` topology.
 - Fig. 15b displays the specified 4–8°E, 49–52°N AOI, 1,181 main-network links
   and all 20 valid bifurcation paths over the Rhine 1-minute elevation data.
-- Both PNGs were opened and inspected. Fig. 15a shows the configured native
-  grid without interpolation, with readable sign and magnitude variation. The
-  initial AOI axis argument order
+- Both PNGs were opened and inspected. The initial AOI axis argument order
   showed an incorrect extent and was corrected. A second visual pass found
   overlap between the lower legend and longitude label; layout spacing was
   adjusted, then the figures were regenerated and inspected again.

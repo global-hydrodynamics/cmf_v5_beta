@@ -264,10 +264,10 @@ Generated experiment files are kept under the Git-ignored
 
 Use the retained hourly `outflw` and `pthflw` files from Step 14 to map the
 signed local maximum absolute discharge over the run period. Fig. 15a shows
-the native-grid `outflw` peak raster across the full simulation domain; Fig. 15b
-shows the direction-aware river network and bifurcation peaks in the Step 2
-satellite-analysis AOI. Cell and path peaks can occur at different hours, so
-neither figure is a simultaneous flow snapshot. Visualization is an output inspection step; it does not establish
+the full regional river network in the p02-f02b direction-aware vector style;
+Fig. 15b shows the same method in the Step 2 satellite-analysis AOI. Per-link
+and per-path peaks can occur at different hours, so neither figure is a
+simultaneous flow snapshot. Visualization is an output inspection step; it does not establish
 hydrologic skill, resolve the cold-start limitation or replace observation
 matching. See [p15](p15-simulation_output_visualization.md), the [Survey
 Report](AI_survey_report/15_simulation_output_visualization.md), the [Work

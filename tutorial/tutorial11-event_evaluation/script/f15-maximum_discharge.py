@@ -273,37 +273,141 @@ def write_analysis(path: Path, lon: np.ndarray, lat: np.ndarray, time_numeric: n
         )
 
 
-def draw_regional(peak: np.ndarray, geometry, output: Path,
-                  color_levels: np.ndarray, linthresh: float,
+def draw_regional(map_dir: Path, peak: np.ndarray, geometry, map_data, path_result,
+                  output: Path, color_levels: np.ndarray, linthresh: float,
                   linear_frac: float, dpi: int):
     nx, ny, _, west, east, south, north = geometry
+    lon, lat, uparea, nextx, nexty, outlon, outlat, _ = map_data
     norm = VECTOR.RASTER.AsymmetricSignedLogNorm(
-        vmin=float(color_levels[0]), vmax=float(color_levels[-1]),
-        linthresh=linthresh, linear_color_fraction=linear_frac,
+        float(color_levels[0]), float(color_levels[-1]), linthresh, linear_frac,
     )
-    cmap = VECTOR.RASTER.zero_centered_spectral_cmap(
-        VECTOR.get_cmap("diverge_spectral"), norm.zero_position,
+    cmap = VECTOR.recenter_diverging_cmap(
+        VECTOR.get_cmap("diverge_asymmetry"), norm.zero_position,
     )
-    cmap.set_bad("white")
-    title = (
-        "Tutorial 11 Fig. 15a — Maximum River Discharge: Regional Map\n"
-        "Signed value at each cell's local max |outflw|, 1–20 Jul 2021"
+
+    links = VECTOR.NETWORK.downstream_links(lon, lat, uparea, nextx, nexty)
+    _, _, sr, sc, dr, dc, _, _, invalid = links
+    if invalid:
+        raise ValueError(f"Rhine nextxy has {invalid} out-of-map river links")
+    outlet_valid = (
+        np.isfinite(outlon) & np.isfinite(outlat) & (outlon != -9999) & (outlat != -9999)
+        & (outlon >= -180) & (outlon <= 360) & (outlat >= -90) & (outlat <= 90)
     )
-    fig, ax = VECTOR.RASTER.create_map_axes(geometry, west, east, south, north, title)
+    valid_link = outlet_valid[sr, sc] & outlet_valid[dr, dc]
+    sr, sc, dr, dc = sr[valid_link], sc[valid_link], dr[valid_link], dc[valid_link]
+    main_segments = np.stack((
+        np.column_stack((outlon[sr, sc], outlat[sr, sc])),
+        np.column_stack((outlon[dr, dc], outlat[dr, dc])),
+    ), axis=1)
+    main_values = peak[sr, sc]
+    areas = uparea[sr, sc]
+    finite = np.isfinite(main_values) & np.isfinite(areas) & (areas > 0)
+    main_segments, main_values, areas = main_segments[finite], main_values[finite], areas[finite]
+    thresholds = np.quantile(np.log10(areas), [0.25, 0.5, 0.75])
+    area_class = np.digitize(np.log10(areas), thresholds)
+    order = np.argsort(areas, kind="stable")
+    main_segments = main_segments[order]
+    main_values = main_values[order]
+    area_class = area_class[order]
+    # Keep the full 40x32 network legible at the regional scale.
+    main_widths = np.asarray([0.45, 0.62, 0.82, 1.05])[area_class] * 0.38
+
+    endpoints = path_result["endpoints"]
+    pth_values = path_result["peak"]
+    pth_eligible = path_result["eligible"] & np.isfinite(pth_values)
+    ix, iy, jx, jy = (endpoints[name].astype(int) - 1 for name in ("ix", "iy", "jx", "jy"))
+    if np.any((ix < 0) | (ix >= len(lon)) | (jx < 0) | (jx >= len(lon)) |
+              (iy < 0) | (iy >= len(lat)) | (jy < 0) | (jy >= len(lat))):
+        raise ValueError("A Rhine bifurcation path endpoint lies outside the map")
+    bif_segments = np.stack((
+        np.column_stack((outlon[iy, ix], outlat[iy, ix])),
+        np.column_stack((outlon[jy, jx], outlat[jy, jx])),
+    ), axis=1)
+    valid_bif = np.all(np.isfinite(bif_segments), axis=(1, 2)) & np.all(bif_segments != -9999, axis=(1, 2))
+    pth_eligible &= valid_bif
+    channel_paths = path_result["channel"]
+    bif_width = 0.65
+
+    extent = (west, east, south, north)
+    background, bg_extent, bg_min, bg_max, _, _ = VECTOR.BACKGROUND.read_elevation_background(
+        map_dir / "1min_nc" / "1min.elevtn.nc", extent,
+    )
+    fig, ax = plt.subplots(figsize=(9.0, 10.0))
+    fig.subplots_adjust(left=0.12, right=0.82, top=0.89, bottom=0.14)
+    ax.set_facecolor("#FAFAFA")
+    ax.imshow(background, extent=bg_extent, origin="upper", cmap="Greys",
+              vmin=bg_min, vmax=bg_max, interpolation="nearest", alpha=0.40, zorder=0)
+    for index in range(4):
+        selected = area_class == index
+        VECTOR.add_colored_links(
+            ax, main_segments[selected], main_values[selected], cmap, norm,
+            main_widths[selected], zorder=3,
+        )
+        reverse = selected & (main_values < 0)
+        for segment, value, width in zip(main_segments[reverse], main_values[reverse], main_widths[reverse]):
+            VECTOR.NETWORK.add_directional_arrow(
+                ax, segment[::-1], cmap(norm(value)), linewidth=width,
+                start_fraction=0.42, end_fraction=0.60, size=5.2, zorder=5,
+            )
+
+    for path_mask, path_style in (
+        (channel_paths & pth_eligible, (0, (2.4, 1.6))),
+        (~channel_paths & pth_eligible, (0, (0.7, 1.5))),
+    ):
+        VECTOR.add_colored_links(
+            ax, bif_segments[path_mask], np.abs(pth_values[path_mask]), cmap, norm,
+            np.full(np.count_nonzero(path_mask), bif_width), linestyle=path_style, zorder=4,
+        )
+    for segment, value in zip(bif_segments[pth_eligible], pth_values[pth_eligible]):
+        flow_segment = segment if value >= 0 else segment[::-1]
+        VECTOR.NETWORK.add_directional_arrow(
+            ax, flow_segment, cmap(norm(abs(value))), linewidth=bif_width,
+            start_fraction=0.42, end_fraction=0.60, size=5.5, zorder=6,
+        )
+
+    ax.set_xlim(west, east)
+    ax.set_ylim(south, north)
     ax.set_xlabel("Longitude")
     ax.set_ylabel("Latitude")
-    image = draw_raster(ax, np.ma.masked_invalid(peak), geometry, cmap, norm)
+    ax.set_title(
+        "Tutorial 11 Fig. 15a — Maximum River Discharge: Regional Network\n"
+        "Local signed peaks; links may peak at different hours", fontsize=13,
+    )
+    ax.tick_params(labelsize=9)
+    ax.set_aspect(1.0 / np.cos(np.deg2rad((south + north) / 2)))
+    ax._river_map_extent = extent
+    legend_handles = [
+        Line2D([0, 0.5, 1], [0, 0, 0], color="#333333", linewidth=1.0,
+               marker=">", markevery=[1], markersize=5,
+               label="Main channel (arrow shows reverse flow)"),
+        Line2D([0, 0.5, 1], [0, 0, 0], color="#333333", linewidth=1.0,
+               linestyle=(0, (2.4, 1.6)), marker=">", markevery=[1], markersize=5,
+               label="Channel bifurcation (dashed)"),
+        Line2D([0, 0.5, 1], [0, 0, 0], color="#333333", linewidth=1.0,
+               linestyle=(0, (0.7, 1.5)), marker=">", markevery=[1], markersize=5,
+               label="Overland-only pathway (dotted)"),
+    ]
+    fig.legend(handles=legend_handles, loc="lower center", ncols=1,
+               bbox_to_anchor=(0.46, 0.005), frameon=False, fontsize=8)
     colorbar = add_aligned_colorbar(
-        fig, ax, image, "Signed peak hourly mean outflw (m³/s)", extend="both",
+        fig, ax, ScalarMappable(norm=norm, cmap=cmap),
+        "Signed peak discharge scale (m³/s)\nBifurcation color uses |peak|; arrow shows sign",
+        extend="both",
     )
     colorbar.set_ticks(color_levels)
-    colorbar.ax.set_yticklabels([VECTOR.RASTER.format_color_level(value) for value in color_levels])
+    colorbar.ax.set_yticklabels([VECTOR.RASTER.format_color_level(x) for x in color_levels])
+    colorbar.ax.tick_params(labelsize=8)
     output.parent.mkdir(parents=True, exist_ok=True)
-    VECTOR.save_panel(fig, output, dpi, figure_height=8.0)
+    VECTOR.save_panel(fig, output, dpi, figure_height=10.0)
     plt.close(fig)
-    valid = int(np.isfinite(peak).sum())
-    return {"native_grid_shape_y_x": [ny, nx], "valid_peak_cells": valid,
-            "missing_cells": int(nx * ny - valid)}
+    return {
+        "main_network_links_displayed": int(len(main_segments)),
+        "bifurcation_paths_displayed": int(np.count_nonzero(pth_eligible)),
+        "channel_bifurcation_paths": int(np.count_nonzero(pth_eligible & channel_paths)),
+        "overland_only_paths": int(np.count_nonzero(pth_eligible & ~channel_paths)),
+        "network_file": "map/Rhine_15min/netcdf/nextxy.nc",
+        "elevation_background": "map/Rhine_15min/1min_nc/1min.elevtn.nc",
+    }
 
 def draw_aoi(map_dir: Path, extent, map_data, out_peak: np.ndarray, path_result,
              output: Path, color_levels: np.ndarray, linthresh: float,
@@ -490,8 +594,9 @@ def main() -> None:
         dates[0].strftime("%Y-%m-%d %H:%M:%S"), dates[-1].strftime("%Y-%m-%d %H:%M:%S"),
     )
     regional_stats = draw_regional(
-        out_peak, geometry, args.regional_figure.resolve(), levels,
-        args.linthresh, args.linear_frac, args.dpi,
+        map_dir, out_peak, geometry, map_data, pth_result,
+        args.regional_figure.resolve(), levels, args.linthresh,
+        args.linear_frac, args.dpi,
     )
     aoi_stats = draw_aoi(
         map_dir, aoi, map_data, out_peak, pth_result, args.aoi_figure.resolve(),
