@@ -251,7 +251,7 @@ has one 20-day, hourly, cold-start run from 2021-07-01 00:00 to the exclusive
 end 2021-07-21 00:00. It uses daily ERA5-Land NetCDF input and hourly NetCDF
 outputs plus an end-of-run NetCDF Restart. The execution completed, but this
 is an operational run rather than a spun-up, calibrated or scientifically
-validated event reconstruction. KG-0019 remains open. See [p14](p14-simulation_setup.md),
+validated event reconstruction. KG-0019 remains open. See [p14](p14-simulation_setup-run.md),
 the [Survey Report](AI_survey_report/14_simulation_setup.md), the
 [Work Report](AI_work_report/14_simulation_setup.md), and
 [`metadata/14_simulation_setup.json`](metadata/14_simulation_setup.json).

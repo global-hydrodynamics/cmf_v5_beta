@@ -44,7 +44,7 @@ Afterward, inspect the generated Namelist, `log_CaMa.txt`, console/runtime logs,
 ## Example AI Agent Prompt
 
 ```text
-Complete Tutorial 11 Step 14 using p14-simulation_setup.md and the existing
+Complete Tutorial 11 Step 14 using p14-simulation_setup-run.md and the existing
 Rhine 2021 sample configuration. Inspect the current branch, local rules,
 Step 11–13 artifacts, actual map/forcing/matrix files, and current model
 Namelist/output interfaces before implementation. Reuse the existing v5
