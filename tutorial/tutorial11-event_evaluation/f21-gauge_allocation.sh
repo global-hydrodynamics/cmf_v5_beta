@@ -8,10 +8,15 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 PYTHON="${PYTHON:-$REPO_ROOT/.venv/bin/python}"
 MAP_DIR="$REPO_ROOT/map/Rhine_15min"
 ALLOCATION="$SCRIPT_DIR/metadata/21_gauge_allocation.csv"
+IMPACT_ALLOCATION="$SCRIPT_DIR/metadata/21_impact_location_allocation.csv"
 OUTPUT="$SCRIPT_DIR/figure/f21-gauge_allocation.png"
 
 if [[ ! -f "$ALLOCATION" ]]; then
     printf 'Missing %s; run s21-gauge_allocation.sh first.\n' "$ALLOCATION" >&2
+    exit 2
+fi
+if [[ ! -f "$IMPACT_ALLOCATION" ]]; then
+    printf 'Missing %s; run s21-gauge_allocation.sh first.\n' "$IMPACT_ALLOCATION" >&2
     exit 2
 fi
 
@@ -19,6 +24,7 @@ fi
     --tutorial-dir "$SCRIPT_DIR" \
     --map-dir "$MAP_DIR" \
     --allocation-csv "$ALLOCATION" \
+    --impact-allocation-csv "$IMPACT_ALLOCATION" \
     --output "$OUTPUT"
 
 printf 'Gauge allocation figure: %s\n' "$OUTPUT"

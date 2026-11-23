@@ -301,21 +301,28 @@ report sample coverage, uncertainty and limitations separately by observation
 type. No event performance score, calibration result or validation conclusion
 has been produced. Do not infer model skill from observation figures alone.
 
-### Step 21 — Gauge Allocation
+### Step 21 — Gauge and Flood Impact Location Allocation
 
 Verify the selected discharge-gauge candidates against the current
-event-specific map. Convert source indices to the regional map only after
-checking the grid convention; use the map's unit-catchment `outlon/outlat` as
-model locations, compare upstream area with explicit unit caveats, and trace
-`nextxy` to check downstream ordering. The reusable handoff is
-[`metadata/21_gauge_allocation.csv`](metadata/21_gauge_allocation.csv), with
-the procedure and Figure documented in [p21](p21-gauge_allocation.md), the
-[Survey Report](AI_survey_report/21_gauge_allocation.md), the [Work
-Report](AI_work_report/21_gauge_allocation.md), and
+event-specific map, retaining the three-station handoff in
+[`metadata/21_gauge_allocation.csv`](metadata/21_gauge_allocation.csv). In
+addition, link every Step 01 impact/timing report to its `report_id` and
+`location_id`, and assign each available coordinate to its containing
+current-map cell in
+[`metadata/21_impact_location_allocation.csv`](metadata/21_impact_location_allocation.csv).
+Record cell centers separately from unit-catchment outlet coordinates,
+upstream area and outlet distance. Assess whether the named river is plausibly
+represented, uncertain at the 0.25-degree grid, or likely mapped to a major
+routing channel instead of a local tributary. Do not snap a locality to a
+nearby outlet or infer missing coordinates. The allocation figure distinguishes
+gauges, reported localities, detailed report sites and model outlets. See
+[p21](p21-gauge_allocation.md), the [Survey Report](AI_survey_report/21_gauge_allocation.md),
+the [Work Report](AI_work_report/21_gauge_allocation.md), and
 [Figure 21](figure/f21-gauge_allocation.png). This spatial allocation does not
-extract model flows or define temporal/variable matching. Step 22 consumes the
-recorded cells without reallocation; retain the unresolved observation unit
-and time limitations.
+extract model flows or establish local river identity. Step 22 continues to
+consume the unchanged gauge-only CSV; impact-location extractions can use the
+separate report-linked CSV in a later analysis. Retain unresolved observation
+unit, timing and river-representation limitations.
 
 ### Step 22 — Model–Observation Hydrograph Comparison
 

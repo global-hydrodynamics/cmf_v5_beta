@@ -1,4 +1,4 @@
-# Step 21 — Gauge Allocation Survey
+# Step 21 — Gauge and Flood Impact Location Allocation
 
 ## Finding
 
@@ -22,15 +22,64 @@ conversion. They are not an independently confirmed unit comparison. Raw
 source values and the conditional basis are retained in
 [`metadata/21_gauge_allocation.csv`](../metadata/21_gauge_allocation.csv).
 
+## Gauge allocation
+
+The three discharge-gauge allocations are unchanged and remain the handoff for
+Step 22. The gauge details and their unit caveat are retained in
+[`metadata/21_gauge_allocation.csv`](../metadata/21_gauge_allocation.csv).
+
+## Reported impact locations
+
+The Step 01 timing/location ledger contains 22 report records: 14 locality
+impact records and eight detailed hydrologic/context records. Seven detailed
+records have their own coordinates; the Eupen reservoir-outlet record has no
+verified coordinates. The 14 locality records use the existing approximate
+town coordinates, while coordinate-bearing detailed reports retain their own
+site coordinates. Records are linked to Step 01 by both `report_id` and
+`location_id`.
+
+Of 22 records, **21 were assigned to the geographic model cell containing the
+recorded coordinate**, and one Eupen report remains unallocated because no
+coordinates are present. No location was outside the map. The 21 coordinates
+fall in 11 distinct 0.25-degree cells. Each assigned cell has a valid mapped
+channel outlet, but that does not establish that it is the reported impact
+reach. The detailed assignments and source coordinates are in
+[`metadata/21_impact_location_allocation.csv`](../metadata/21_impact_location_allocation.csv).
+
+River correspondence is therefore recorded separately from cell assignment:
+
+- 7 records have a nearby outlet and a *plausible but unverified* local-network
+  correspondence.
+- 9 records are marked uncertain because the cell outlet separation and coarse
+  grid do not establish the named reach.
+- 5 Ahr / Erft-Swist records are flagged because their containing cells have
+  very large mapped upstream areas (about 140,000–145,000 km² for the mapped
+  Bad Neuenahr/Sinzig/Blessem cells). These may represent a major routing
+  channel rather than the named local tributary.
+- 1 record (Eupen reservoir outlet) lacks coordinates and was not assigned.
+
+The map's 0.25-degree grid is too coarse to guarantee local Ahr, Erft, Vesdre,
+Kyll or Geul reach identity. The `model_basin_id` is a model routing label, not
+a direct natural-watershed classification. Outlet positions are model
+unit-catchment outlets, not the impact locations themselves. The point
+coordinates for towns are approximate locality representatives; they are not
+surveyed flood boundaries. Use these allocations as spatial extraction
+candidates, not as evidence that a particular modeled reach experienced the
+reported impact. Later discharge or inundation peak comparisons must retain
+these location and river-match limitations.
+
 ## Figure and interpretation
 
-![Figure 21 — Gauge and model outlet allocation](../figure/f21-gauge_allocation.png)
+![Figure 21 — Gauge and flood impact location allocation](../figure/f21-gauge_allocation.png)
 
-*Figure 21. Orange circles are provider gauge coordinates; blue squares are
-the current CaMa-Flood unit-catchment outlets. The dotted connectors show
-straight-line separation, and the insets expose local river context. Neither a
-grid center nor the ECMWF candidate coordinate is substituted for the map's
-outlet coordinate.*
+*Figure 21. Orange circles and blue squares show the three discharge gauges
+and their allocated outlets. Colored circles show reported impact localities;
+triangles show separately georeferenced Step 01 report sites; dark squares
+show outlets of the containing impact-location cells. Dotted connectors are
+straight-line coordinate-to-outlet distances, not river paths. The two local
+views separate the western Meuse/Vesdre groups from the Ahr/Erft/Kyll/Prüm
+cluster. Detailed-site names remain traceable in the CSV to keep the dense
+local labels readable.*
 
 The checked candidates are suitable as the Step 22 spatial handoff: each has a
 current-map index, valid outlet coordinates and close correspondence to the
@@ -45,7 +94,7 @@ resolved unit validation. The discharge values' units and time-zone semantics
 also remain open from Step 4. No model-flow extraction or flow-performance
 comparison was performed here.
 
-## Allocation decision
+## Gauge allocation decision
 
 Retain the existing ECMWF candidate cells for all three stations. In
 `metadata/21_gauge_allocation.csv`, `model_row_0based` and

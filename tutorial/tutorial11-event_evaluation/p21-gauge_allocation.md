@@ -5,6 +5,9 @@
 **Inputs**
 
 - The selected gauge inventory and provider station table.
+- `metadata/01_impact_locations.csv` and
+  `metadata/01_reported_flood_timing.csv` for reported impacts and detailed
+  report locations.
 - The current event-specific CaMa-Flood map used by the simulation.
 - Existing allocation products, where available.
 
@@ -14,11 +17,14 @@
 - Resolve each candidate to a current-map cell and use its unit-catchment
   outlet coordinates, upstream area and downstream connection.
 - Compare the observation and outlet locations, areas and network order.
-- Save a machine-readable station-to-model-cell handoff and a map.
+- Assign each georeferenced impact report to its containing map cell; assess
+  named-river correspondence separately, without snapping to a nearby outlet.
+- Save separate machine-readable gauge and impact-location handoffs and a map.
 
 **Outputs**
 
 - `metadata/21_gauge_allocation.csv`
+- `metadata/21_impact_location_allocation.csv`
 - `figure/f21-gauge_allocation.png`
 - Step 21 Survey and Work Reports
 
@@ -32,19 +38,20 @@ bash s21-gauge_allocation.sh
 bash f21-gauge_allocation.sh
 ```
 
-The processing script verifies the supplied candidate against the current map
-and relevant existing allocation outputs. It must not substitute a nearest
-grid cell without evaluating outlet position, upstream area and network
-connectivity. Report area-unit uncertainty explicitly; do not present a
-conditional unit assumption as source metadata. The output row/column values
-are zero-based Python array indices, with row following the map's latitude
-array order. Keep the source index convention and current local-map indices
-separate.
+The processing script verifies the supplied gauge candidates against the
+current map and relevant existing allocation outputs. For impact reports, it
+uses the recorded geographic coordinate to identify the containing model cell;
+it does not replace that cell with the nearest outlet. It records the outlet,
+upstream area and outlet distance, then marks named-river correspondence as
+uncertain where the 0.25-degree map cannot establish a local tributary match.
+Reports without coordinates remain in the CSV without an inferred location.
+The output row/column values are zero-based Python array indices, with row
+following the map's latitude array order.
 
 ## Example AI Agent Prompt
 
 ```text
-Complete the gauge-allocation preparation for this flood-event tutorial.
+Complete the gauge and reported-impact location allocation for this flood-event tutorial.
 Inspect the repository and Tutorial instructions, the current simulation map,
 the selected gauge inventory and the original station metadata. Treat the
 current map used by the experiment as authoritative; do not assume an older
@@ -67,17 +74,30 @@ allocation comparison and evidence-based decision. If an area unit is not
 declared, preserve the source value and leave any derived comparison clearly
 conditional or unavailable. Generate a Figure with the current map's river
 network, observation gauges, selected outlets and connectors; add local views
-if the full-map view cannot show their separation. Create a researcher-facing
-Survey Report and technical Work Report, and update the Tutorial process and
-development log. Do not modify model/map/source-observation data, extract model
-flows, calculate performance metrics, or publish a Gallery item. Human review
-is recommended but is not a script execution gate.
+if the full-map view cannot show their separation. Also read every Step 01
+impact/timing report, retaining `report_id` and `location_id`, and allocate
+each georeferenced coordinate to its containing current-map cell. Keep the
+geographic cell assignment distinct from the map outlet and from whether that
+outlet represents the named river. Do not snap small-tributary locations to a
+nearby mainstem. Retain records with missing or out-of-map coordinates and
+explain their status. Write these results to a separate
+`metadata/21_impact_location_allocation.csv`; do not mix them into the
+gauge-only `metadata/21_gauge_allocation.csv`, which remains the Step 22 gauge
+handoff. Update the Figure to distinguish gauges, impact localities, detailed
+sites and model outlets, and use local views where labels would otherwise
+overlap. Create a researcher-facing Survey Report and technical Work Report,
+and update the Tutorial process and development log. Do not modify model/map/
+source-observation data, extract model flows, calculate performance metrics,
+or publish a Gallery item. Human review is recommended but is not a script
+execution gate.
 ```
 
 ## Expected Handoff and Review
 
-The CSV is the machine-readable handoff for a later flow-extraction step. A
-reviewer can compare the source and selected indices, outlet location, area
-units, map topology and Figure. Human review is recommended, but does not gate
-processing. Do not treat a checked spatial mapping as a validated discharge
-comparison; time conventions and discharge units may still be unresolved.
+The gauge CSV is the machine-readable handoff for later discharge extraction.
+The impact CSV preserves report-linked geographic cells and model outlets for
+later impact-location extraction. A reviewer can compare source coordinates,
+grid indices, outlet location, map topology and Figure. Human review is
+recommended, but does not gate processing. Do not treat a spatial assignment
+as a validated river match or discharge comparison; tributary representation,
+time conventions and discharge units may remain unresolved.

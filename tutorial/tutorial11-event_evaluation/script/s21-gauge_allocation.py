@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the three Tutorial 11 gauge allocations against the Rhine map."""
+"""Allocate Tutorial 11 gauges and reported impact locations to the Rhine map."""
 
 from __future__ import annotations
 
@@ -78,6 +78,140 @@ def parse_grdc_outputs(data_path: Path, output_path: Path) -> dict[str, dict[str
     return result
 
 
+def allocate_impact_locations(tutorial: Path, map_data, output_path: Path) -> None:
+    """Assign each Step 1 report to its containing regional map cell."""
+    impact_path = tutorial / "metadata/01_impact_locations.csv"
+    timing_path = tutorial / "metadata/01_reported_flood_timing.csv"
+    if not impact_path.is_file() or not timing_path.is_file():
+        raise FileNotFoundError("Step 1 impact inventory or report/timing file is missing")
+    impact_by_id = {row["location_id"]: row for row in read_csv(impact_path)}
+    reports = read_csv(timing_path)
+    (lon, lat, outlon, outlat, uparea, nextx, nexty, river_width, basin) = map_data
+    resolution = float(np.median(np.diff(lon)))
+    west, east = float(lon[0] - resolution / 2), float(lon[-1] + resolution / 2)
+    north, south = float(lat[0] + resolution / 2), float(lat[-1] - resolution / 2)
+    if not (np.allclose(np.diff(lon), resolution) and
+            np.allclose(np.diff(lat), -resolution)):
+        raise ValueError("Expected regular eastward longitude and north-first latitude axes")
+
+    fields = [
+        "report_id", "location_id", "location_name", "river_group",
+        "observed_lon", "observed_lat", "coordinate_type", "coordinate_confidence",
+        "model_row_0based", "model_col_0based", "model_cell_lon", "model_cell_lat",
+        "model_outlet_lon", "model_outlet_lat", "model_uparea_km2",
+        "distance_to_outlet_km", "model_basin_id", "model_cell_rivwth_m",
+        "river_match_status", "allocation_status", "allocation_note", "ai_notes",
+    ]
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
+        writer.writeheader()
+        for report in reports:
+            location_id = report["location_id"]
+            base = impact_by_id.get(location_id, {})
+            # The 14 impact rows retain the Step 1 locality inventory; extra
+            # report rows retain their own detailed coordinate/name record.
+            is_impact = report["timing_type"] == "impact_report"
+            name = base.get("place", report["location_name"]) if is_impact else report["location_name"]
+            river_group = report["river_group"] or base.get("river_group", "")
+            coordinate_type = report["coordinate_type"]
+            confidence = report["coordinate_confidence"] or report["confidence"]
+            lon_text, lat_text = report["longitude"], report["latitude"]
+            row = {key: "" for key in fields}
+            row.update({
+                "report_id": report["report_id"],
+                "location_id": location_id,
+                "location_name": name,
+                "river_group": river_group,
+                "observed_lon": lon_text,
+                "observed_lat": lat_text,
+                "coordinate_type": coordinate_type,
+                "coordinate_confidence": confidence,
+            })
+            if not lon_text or not lat_text:
+                row.update({
+                    "river_match_status": "not_assessed_missing_coordinates",
+                    "allocation_status": "missing_coordinates",
+                    "allocation_note": "Step 1 record has no verified longitude/latitude; no location was inferred.",
+                    "ai_notes": "Detailed report is retained by report_id, but its source has no coordinates. The base locality is a separate record and was not substituted for this detailed site.",
+                })
+                writer.writerow(row)
+                continue
+
+            observed_lon, observed_lat = float(lon_text), float(lat_text)
+            if not (west <= observed_lon < east and south <= observed_lat < north):
+                row.update({
+                    "river_match_status": "outside_model_map",
+                    "allocation_status": "outside_map",
+                    "allocation_note": f"Coordinate ({observed_lon:g}, {observed_lat:g}) is outside map edges {west:g}–{east:g} E, {south:g}–{north:g} N.",
+                    "ai_notes": "No nearest-cell reassignment was attempted because the observation lies outside the current model map.",
+                })
+                writer.writerow(row)
+                continue
+
+            col = int(math.floor((observed_lon - west) / resolution))
+            map_row = int(math.floor((north - observed_lat) / resolution))
+            cell_lon, cell_lat = float(lon[col]), float(lat[map_row])
+            outlet_lon, outlet_lat = float(outlon[map_row, col]), float(outlat[map_row, col])
+            uparea_m2 = float(uparea[map_row, col])
+            width_m = float(river_width[map_row, col])
+            basin_id = int(basin[map_row, col])
+            valid_outlet = (
+                math.isfinite(outlet_lon) and math.isfinite(outlet_lat) and
+                outlet_lon != -9999 and outlet_lat != -9999 and
+                math.isfinite(uparea_m2) and uparea_m2 > 0 and width_m > 0
+            )
+            row.update({
+                "model_row_0based": map_row,
+                "model_col_0based": col,
+                "model_cell_lon": f"{cell_lon:.6f}",
+                "model_cell_lat": f"{cell_lat:.6f}",
+                "model_basin_id": basin_id,
+                "model_cell_rivwth_m": f"{width_m:.3f}" if math.isfinite(width_m) else "",
+                "allocation_status": "assigned_to_containing_grid_cell",
+            })
+            if not valid_outlet:
+                row.update({
+                    "river_match_status": "no_valid_channel_outlet_in_cell",
+                    "allocation_note": "Geographic grid cell is assigned; map cell has no valid river outlet/upstream area.",
+                    "ai_notes": f"The point was assigned by containment to cell center ({cell_lon:.3f}, {cell_lat:.3f}); no alternative nearest-channel search was made. Model basin value {basin_id} is not treated as a natural basin name.",
+                })
+                writer.writerow(row)
+                continue
+
+            uparea_km2 = uparea_m2 / 1_000_000.0
+            distance_km = great_circle_km(observed_lon, observed_lat, outlet_lon, outlet_lat)
+            downx, downy = int(nextx[map_row, col]), int(nexty[map_row, col])
+            downstream_note = ""
+            if 1 <= downx <= len(lon) and 1 <= downy <= len(lat):
+                downstream_note = f"Nextxy destination cell center=({lon[downx - 1]:.3f}, {lat[downy - 1]:.3f})."
+            if river_group in {"Ahr", "Erft/Swist"} and uparea_km2 >= 100_000:
+                river_status = "possible_major_channel_not_local_tributary"
+                status_note = "Large mapped upstream area at a reported tributary locality suggests this coarse cell may correspond to a major routing channel rather than the named local tributary."
+            elif distance_km <= 10:
+                river_status = "plausible_local_network_not_verified"
+                status_note = "The assigned cell has a valid river outlet within 10 km, but the named river connection is not proven by the coarse map cell alone."
+            else:
+                river_status = "coarse_grid_river_match_uncertain"
+                status_note = "A valid channel exists in the containing cell, but outlet separation and 0.25-degree resolution do not establish correspondence to the named river reach."
+            row.update({
+                "model_outlet_lon": f"{outlet_lon:.8f}",
+                "model_outlet_lat": f"{outlet_lat:.8f}",
+                "model_uparea_km2": f"{uparea_km2:.3f}",
+                "distance_to_outlet_km": f"{distance_km:.3f}",
+                "river_match_status": river_status,
+                "allocation_note": status_note,
+                "ai_notes": (
+                    f"Cell assigned by 0.25-degree outer-edge containment, not nearest Outlet. "
+                    f"Outlet distance={distance_km:.1f} km; map uparea={uparea_km2:.1f} km2; "
+                    f"model basin ID={basin_id} is a routing label, not a guaranteed natural-basin identity. "
+                    f"{downstream_note} Named-river match requires local-network review; do not interpret this Outlet as an observed flood point."
+                ),
+            })
+            writer.writerow(row)
+    print(f"Wrote {output_path} ({len(reports)} reports; {sum(bool(r['longitude'] and r['latitude']) for r in reports)} with coordinates)")
+
+
 def trace_downstream(start: tuple[int, int], targets: dict[str, tuple[int, int]],
                      nextx: np.ndarray, nexty: np.ndarray) -> list[str]:
     rows, cols = nextx.shape
@@ -104,6 +238,7 @@ def main() -> None:
     parser.add_argument("--tutorial-dir", type=Path, required=True)
     parser.add_argument("--map-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--impact-output", type=Path, required=True)
     args = parser.parse_args()
 
     tutorial = args.tutorial_dir.resolve()
@@ -119,6 +254,12 @@ def main() -> None:
         raise ValueError(f"Expected the three selected existing gauges; found {len(selected)}")
 
     lon, lat, outlon, outlat, uparea, nextx, nexty = load_map(map_dir)
+    with Dataset(map_dir / "netcdf/rivwth_merit.nc") as data:
+        river_width = np.ma.asarray(data.variables["rivwth"][:], dtype=np.float64).filled(0)
+    with Dataset(map_dir / "netcdf/basin.nc") as data:
+        basin = np.ma.asarray(data.variables["basin"][:]).filled(0).astype(np.int32)
+    if river_width.shape != uparea.shape or basin.shape != uparea.shape:
+        raise ValueError("basin/rivwth map arrays do not match the current map grid")
     map_resolution = float(np.median(np.diff(lon)))
     if not np.allclose(np.diff(lon), map_resolution) or not np.allclose(-np.diff(lat), map_resolution):
         raise ValueError("Map grid is not a regular square degree grid")
@@ -246,6 +387,11 @@ def main() -> None:
               f"outlet=({item['model_out_lon']:.5f}, {item['model_out_lat']:.5f}) "
               f"distance={item['distance_km']:.2f} km "
               f"conditional area error={item['conditional_area_error_pct']:.2f}%")
+    allocate_impact_locations(
+        tutorial,
+        (lon, lat, outlon, outlat, uparea, nextx, nexty, river_width, basin),
+        args.impact_output.resolve(),
+    )
 
 
 if __name__ == "__main__":

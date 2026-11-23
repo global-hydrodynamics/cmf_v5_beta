@@ -7,6 +7,9 @@
 - `metadata/04_discharge_inventory.csv` and Step 4 unit/provenance notes
 - `metadata/14_simulation_setup.json`
 - `map/Rhine_15min/params.txt` and `netcdf/{lonlat,uparea,nextxy}.nc`
+- `map/Rhine_15min/netcdf/rivwth_merit.nc` and `basin.nc`
+- `metadata/01_impact_locations.csv` and
+  `metadata/01_reported_flood_timing.csv`
 - `map/data/GRDC_allocated.csv` and `map/Rhine_15min/GRDC_alloc.txt`
 
 ## Method and execution
@@ -44,19 +47,52 @@ GRDC source conventions and values but is not an explicit source declaration.
 Gauge-to-outlet distances use a spherical great-circle calculation with mean
 Earth radius 6371.0088 km.
 
+For impact locations, the script reads all 22 report/timing rows. It assigns
+coordinates to cells by containment in the map's outer-edge bounds
+(3–13°E, 45–53°N): `col=floor((lon-west)/0.25)` and
+`row=floor((north-lat)/0.25)`, consistent with the eastward longitude and
+north-first latitude arrays. It does not search for or snap to the nearest
+outlet. Cell centers, outlet coordinates, map `uparea` converted from m² to
+km², straight-line point-to-outlet distance, model `basin` label and cell
+river width are recorded. `nextxy` destination cell center is included in the
+notes when valid. The `basin` value is treated as a routing label, not as a
+natural-basin name.
+
+All 21 coordinate-bearing reports fell inside the map and their containing
+cells had valid channel outlets. These coordinates occupy 11 unique cells.
+The Eupen reservoir-outlet report has no coordinates and remains in the output
+with `missing_coordinates`; no locality coordinate was substituted for that
+different detailed report. The river-match statuses are 7
+`plausible_local_network_not_verified`, 9
+`coarse_grid_river_match_uncertain`, 5
+`possible_major_channel_not_local_tributary`, and 1
+`not_assessed_missing_coordinates`. The five Ahr/Erft-Swist flags arise where
+reported tributary locations fall in cells with roughly 140,000–145,000 km²
+mapped upstream area, so the mapped channel may be a main routing path rather
+than the named local tributary. These labels are screening notes, not a
+verified hydrologic network match.
+
 ## Outputs and checks
 
 - `metadata/21_gauge_allocation.csv` — three station records and Step 22 cell
   indices.
-- `figure/f21-gauge_allocation.png` — full-map context plus three local views.
+- `metadata/21_impact_location_allocation.csv` — 22 report-linked rows, 21
+  spatially assigned coordinates and one coordinate-missing report.
+- `figure/f21-gauge_allocation.png` — full-map context plus two impact-region
+  views; gauges, locality impacts, detailed sites and containing-cell outlets
+  are distinguished.
 - `AI_survey_report/21_gauge_allocation.md` — results and scientific limits.
 
-Focused checks passed: the three source cells are in-bounds and have valid
-outlets/upstream areas; the ECMWF candidate areas match the current map's
+Focused checks passed: the three source gauge cells are in-bounds and have
+valid outlets/upstream areas; the ECMWF candidate areas match the current map's
 uparea conversions; the GRDC allocation cells match; and the downstream chain
-is Maxau → Speyer → Lobith. The Figure was rendered and visually inspected for
-network position, markers, connectors, labels and local scale. No model output
-was read, and Step 22 extraction or performance evaluation was not run.
+is Maxau → Speyer → Lobith. The impact CSV preserves all 22 report IDs, assigns
+the 21 available coordinate records by cell containment, and marks the
+coordinate-missing Eupen record without inference. The updated Figure was
+rendered and visually inspected for network position, marker distinction,
+connectors, label legibility and regional context. No model output was read,
+and impact-flow extraction, Step 22 re-extraction or performance evaluation
+was not run.
 
 ## Handoff
 

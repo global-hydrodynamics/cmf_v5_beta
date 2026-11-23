@@ -715,6 +715,18 @@ undeclared, so area-ratio comparisons are explicitly conditional on km². No
 model flow extraction, observation matching, metric calculation, map change or
 Gallery publication was performed.
 
+## 2026-11-24 — Extend Step 21 to reported impact locations
+
+Kept the three-gauge allocation unchanged and added a separate report-linked
+allocation for the 22 Step 01 impact/timing records. Assigned the 21 records
+with coordinates to their containing `Rhine_15min` grid cells; retained the
+Eupen outlet report without inferring coordinates. Recorded cell and outlet
+coordinates, upstream area, outlet distance, routing label and river-match
+uncertainty in `metadata/21_impact_location_allocation.csv`. Updated Fig. 21
+with distinct gauge/locality/detail-site/model-outlet symbols and regional
+views, and revised the Step 21 Prompt, process, Survey/Work Reports. No model
+flow extraction, simulation or river-network change was performed.
+
 
 ## 2026-11-23 — Step 22 exploratory hydrograph comparison
 
