@@ -153,7 +153,9 @@ def main() -> None:
     land_fill = np.ma.getmaskarray(background) & elevation_valid
     display = np.asarray(intensity.filled(1.0))
     display[land_fill] = 0.5
-    display_mask = np.ma.getmaskarray(intensity) & ~land_fill
+    # Cells without valid high-resolution elevation are outside mapped land
+    # (including the sea); keep them white even if flddif has a value there.
+    display_mask = (np.ma.getmaskarray(intensity) & ~land_fill) | ~elevation_valid
     grayscale = np.ma.array(display, mask=display_mask)
     display_high = np.ma.masked_where(np.ma.getmaskarray(high) | (high <= 0.0) | ~catmxy_defined, high)
     cmap = plt.get_cmap("YlGnBu").copy()

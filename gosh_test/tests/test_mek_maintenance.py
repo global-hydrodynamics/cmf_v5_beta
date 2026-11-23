@@ -14,7 +14,7 @@ class MekMaintenance(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix='cmf mek maintenance ')
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name).resolve()
-        for folder in ('gosh_test', 'src_main', 'tools', 'inp/repo-mek_1deg'):
+        for folder in ('gosh_test', 'src_main', 'tools/scripts', 'inp/repo-mek_1deg'):
             (self.root/folder).mkdir(parents=True)
         for year in (2000, 2001):
             (self.root/f'inp/repo-mek_1deg/runoff{year}.nc').touch()
@@ -22,7 +22,7 @@ class MekMaintenance(unittest.TestCase):
         model.write_text('#!/bin/sh\ncp input_cmf.nam "captured_$(sed -n \'s/^COUTTAG *= *"\\([^"]*\\)".*/\\1/p\' input_cmf.nam).nam"\nprintf "stub model\\n" > log_CaMa.txt\n')
         model.chmod(0o755)
         for tool in ('generate_output_ctl.py', 'generate_restart_ctl.py'):
-            (self.root/'tools'/tool).write_text('# isolated no-op CTL stub\n')
+            (self.root/'tools/scripts'/tool).write_text('# isolated no-op CTL stub\n')
 
     def run_script(self, script, source, cwd):
         path = self.root/'gosh_test'/script

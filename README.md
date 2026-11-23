@@ -82,7 +82,7 @@ Existing v4 packages are separate versioned products; they are not v5 beta relea
 | --- | --- |
 | [src_main/](src_main/) | Current v5 numerical model, drivers, I/O, shared state and optional components. |
 | [config/](config/) | Fortran build templates; active `config/Mkinclude` is machine-specific and ignored. |
-| [tools/](tools/) | Shared utilities, including `igetday` and output/Restart CTL generators; former root `util/` contents are integrated here. |
+| [tools/](tools/) | Shared utilities and workflow packages; standalone utilities are in `tools/scripts/`, with the catalog in `tools/tools_list.csv`. |
 | [map/](map/) | Map tools, metadata and the Mekong test map; historical tools remain in `map/src/`. |
 | [inp/](inp/) | Runoff preparation tools, metadata and tracked small forcing samples. |
 | [gosh_test/](gosh_test/) | Current developer build/run workflows and separately labeled legacy examples. |
@@ -103,7 +103,7 @@ The root `requirements.txt` defines shared Python dependencies. New v5 model wor
 
 The [Visualization Gallery](visualization/README.md) links [river-map examples](visualization/river_map/README.md) and [model-output analysis](visualization/output_analysis/README.md), including discharge, flooded area and flood depth. These projects provide a structure for adding further examples; use their own input and execution instructions rather than assuming every entry point runs from a fresh clone.
 
-In particular, some output-visualization entry points re-extract data from annual model outputs under `out/`, even when compact samples are tracked. Guide01 and flood-depth visualization also use the Fortran downscaler in `etc/downscale_flddph/`. Additional experiments can need external data or locally generated results; incomplete path/dependency work is described in the [design's implementation status](docs/development_and_distribution_design.md#11-current-implementation-boundary-2026-11-15).
+In particular, some output-visualization entry points re-extract data from annual model outputs under `out/`, even when compact samples are tracked. Guide01 and flood-depth visualization use the portable Python package in [`tools/downscale_flddph/`](tools/downscale_flddph/); the Fortran implementation in `etc/downscale_flddph/` remains available as a legacy reference. Additional experiments can need external data or locally generated results; incomplete path/dependency work is described in the [design's implementation status](docs/development_and_distribution_design.md#11-current-implementation-boundary-2026-11-15).
 
 ## Contributing
 
@@ -120,7 +120,7 @@ The v4 manuals remain useful scientific background and records of earlier interf
 | Reservoirs and levees | [Reservoir manual](doc/Manual_ReservoirOperation_v420.docx); [legacy preparation](map/src/src_dam/ReadMe.md); [levee guide](doc/levee.md); [levee manual](doc/LeveeParameter.docx) |
 | Upstream inflow and HPC | [Upstream inflow manual](doc/Mannual_UpstreamInflowScheme.docx); [HPC notes](doc/Note_HighPerformanceComputing.docx); [legacy HPC examples](etc/options_HPC/README.md) |
 | Gauge allocation | [Allocation manual](doc/Manual_AllocateRiverGauges.docx); [attribute-error supplement](doc/Supp_GaugeAttributeError.docx) |
-| Downscaling and observations | [Downscaling workflow](etc/downscale_flddph/ReadMe.md); [method notes](doc/Note_Downscaling.docx); [legacy validation examples](etc/validation/ReadMe.md) |
+| Downscaling and observations | [Portable Python downscaling package](tools/downscale_flddph/README.md); [legacy Fortran workflow](etc/downscale_flddph/ReadMe.md); [method notes](doc/Note_Downscaling.docx); [legacy validation examples](etc/validation/ReadMe.md) |
 | Water temperature and ice | [Heatlink diagnostics](src_main/heatlink/README.md); optional v5 configurations require separate validation. |
 | Distribution and history | [Current distribution design](docs/development_and_distribution_design.md); [historical v4 package guide](doc/HowTo_Make_Package.md); [Versions.md](Versions.md); [research records](research/README.md) |
 

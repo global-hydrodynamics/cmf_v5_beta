@@ -90,7 +90,7 @@ Both Normal Restart readers now copy restored `rivout_pre` and `fldout_pre` valu
 
 Restart filenames combine `CVNREST`, the timestamp `YYYYMMDDHH`, and the selected suffix, for example `restart2001010100.bin` or `restart2001010100.nc`. `CRESTDIR` sets the output directory and `CRESTSTO` names the input file. The optional `.bin.pth` file contains `NPTHOUT × NPTHLEV` bifurcation-flow values and is not a geographic `NX × NY` raster. Binary Restart keeps no bifurcation path IDs; use matching map table and order when restarting from Binary.
 
-For visualization, [`tools/generate_restart_ctl.py`](../tools/generate_restart_ctl.py) creates a one-time GrADS CTL for each main Binary Restart and uses the timestamp in its filename. GrADS Binary CTLs read standard Float32 records. For a Float64 Binary Restart, the tool creates a separate Float32 visualization copy and leaves the original Restart intact; this copy is for viewing only. See [`tools/README.md`](../tools/README.md#generate-grads-ctls-for-binary-restart-files) for details.
+For visualization, [`tools/scripts/generate_restart_ctl.py`](../tools/scripts/generate_restart_ctl.py) creates a one-time GrADS CTL for each main Binary Restart and uses the timestamp in its filename. GrADS Binary CTLs read standard Float32 records. For a Float64 Binary Restart, the tool creates a separate Float32 visualization copy and leaves the original Restart intact; this copy is for viewing only. See [`tools/scripts/README.md`](../tools/scripts/README.md) for details.
 
 ### NetCDF Restart verification
 

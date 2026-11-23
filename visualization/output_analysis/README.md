@@ -325,7 +325,7 @@ the background. The same YlGnBu scale (0–20 m) is used in both panels, and
 colorbar extensions disclose any values outside that range.
 
 The source `out_sample/flddph_2001-09-01.nc` is reused. The Shell entry point
-runs `tools/output_analysis/downscale_flddph/script/downscale_flddph.py`
+runs `tools/downscale_flddph/script/downscale_flddph.py`
 directly on that CF-timestamped NetCDF and the existing Mekong map layers; it
 does not compile or invoke the legacy Fortran executable. It saves the result as
 `out_sample/flddph_1min_2001-09-01.nc`, including the date, coordinates, units,

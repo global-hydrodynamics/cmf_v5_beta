@@ -56,9 +56,9 @@ __pycache__/
 *.pyo
 
 # Small, reproducible flood-depth package example data and outputs.
-!/tools/output_analysis/downscale_flddph/sample_mekong/out/
-!/tools/output_analysis/downscale_flddph/sample_mekong/out/*.nc
-!/tools/output_analysis/downscale_flddph/sample_mekong/out/*.nam
+!/tools/downscale_flddph/sample_mekong/out/
+!/tools/downscale_flddph/sample_mekong/out/*.nc
+!/tools/downscale_flddph/sample_mekong/out/*.nam
 
 # Clean beta sources and invocation-local extraction staging; never Git inputs.
 /package/repo_clean_*/

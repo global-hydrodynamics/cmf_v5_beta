@@ -40,7 +40,7 @@ PANEL_A="$FIGURE_DIR/f04a-flood_depth-raster.png"
 PANEL_B="$FIGURE_DIR/f04b-flood_depth-downscale_1min.png"
 FIGURE_FILE="$FIGURE_DIR/f04-flood_depth.png"
 PLOTTER="$SCRIPT_DIR/script/f04-flood_depth.py"
-DOWNSCALER="$REPO_ROOT/tools/output_analysis/downscale_flddph/script/downscale_flddph.py"
+DOWNSCALER="$REPO_ROOT/tools/downscale_flddph/script/downscale_flddph.py"
 COMBINER="$VISUALIZATION_DIR/script/combine_panels.py"
 
 printf '\n[STEP 1/3] Run the standalone Python downscaler.\n'

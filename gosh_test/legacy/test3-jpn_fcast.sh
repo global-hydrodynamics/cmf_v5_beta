@@ -321,7 +321,7 @@ if [ $SHOUR -ge 24 ]; then
   SDAY=$(( $SDAY + 1 ))
   SHOUR=$(( $SHOUR - 24 ))
 fi
-NSDAY=`$BASE/tools/igetday $SYEAR $SMON`
+NSDAY=`$BASE/tools/scripts/igetday.py $SYEAR $SMON`
 if [ $SDAY -gt $NSDAY ]; then
   SDAY=1
   SMON=$(( $SMON + 1 ))
@@ -339,7 +339,7 @@ if [ $EHOUR -ge 24 ]; then
   EDAY=$(( $EDAY + 1 ))
   EHOUR=$(( $EHOUR - 24 ))
 fi
-NEDAY=`$BASE/tools/igetday $EYEAR $EMON`
+NEDAY=`$BASE/tools/scripts/igetday.py $EYEAR $EMON`
 if [ $EDAY -gt $NEDAY ]; then
   EDAY=1
   EMON=$(( $EMON + 1 ))

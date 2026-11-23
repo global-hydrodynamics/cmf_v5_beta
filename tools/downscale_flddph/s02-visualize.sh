@@ -5,7 +5,7 @@ PACKAGE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
 # User settings: input fields, map context, plot extent and display scale.
 PYTHON="python3"                                      # Python with NumPy, netCDF4 and Matplotlib.
-MAPDIR="${PACKAGE_DIR}/../../../map/mekong_15min"     # Matching coarse and high-resolution maps.
+MAPDIR="${PACKAGE_DIR}/../../map/mekong_15min"        # Matching coarse and high-resolution maps.
 INPUT_NC="${PACKAGE_DIR}/sample_mekong/out/flddph_2001-09-01.nc" # Native-grid flddph.
 DOWNSCALED_NC="${PACKAGE_DIR}/sample_mekong/downscaled/flddph_1min_2001-09-01.nc" # Existing result.
 FIGURE="${PACKAGE_DIR}/sample_mekong/figure/flood_depth_2001-09-01.png" # Figure output path.

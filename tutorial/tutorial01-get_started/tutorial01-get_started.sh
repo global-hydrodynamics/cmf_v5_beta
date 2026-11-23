@@ -227,7 +227,7 @@ EOF
 if [ "${LOUTCDF}" = ".FALSE." ]; then
     STEP="Generate planned GrADS CTL files"
     printf '\n==================================================\n[STEP 2/3] Generate planned binary-output CTLs\n==================================================\n\n'
-    if python3 "${CMF_BASE}/tools/generate_output_ctl.py" \
+    if python3 "${CMF_BASE}/tools/scripts/generate_output_ctl.py" \
         --run-dir "${RUNDIR}" \
         --mode planned; then
         :
@@ -276,7 +276,7 @@ STEP="Generate GrADS CTLs for Binary Restart files"
 printf '\n==================================================\n'
 printf '[STEP 3/3] Generate GrADS CTLs for Binary Restart files\n'
 printf '==================================================\n\n'
-python3 "${CMF_BASE}/tools/generate_restart_ctl.py" --run-dir "${RUNDIR}"
+python3 "${CMF_BASE}/tools/scripts/generate_restart_ctl.py" --run-dir "${RUNDIR}"
 
 printf '\n==================================================\n[SUCCESS] %s completed\n' "${SCRIPT_NAME}"
 printf 'Results: %s\n' "${RUNDIR}"

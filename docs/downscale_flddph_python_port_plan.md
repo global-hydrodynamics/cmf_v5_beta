@@ -5,7 +5,7 @@
 - Project: portable Python flood-depth downscaling package.
 - Owner: Dai Yamazaki (maintainer); Codex implements.
 - Persistent branch: `feature/package-builder` (maintainer confirmed registration on this branch on 2026-11-23).
-- Main deliverables: `tools/output_analysis/downscale_flddph/`, its copied `sample_mekong/`, concise `tools/README.md` entry, and task evidence.
+- Main deliverables: `tools/downscale_flddph/`, its copied `sample_mekong/`, concise `tools/README.md` entry, and task evidence. The package was relocated from `tools/output_analysis/` during the approved shared-tools reorganization (DT-0162).
 - Preserve `etc/downscale_flddph/`, `visualization/output_analysis/p02-f04`, model code, maps, and Tutorial 11. No Tutorial 11 adoption is included.
 - No overlapping open GitHub Issue or PR for `downscale_flddph` was found in the repository search.
 

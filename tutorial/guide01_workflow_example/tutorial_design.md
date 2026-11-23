@@ -250,7 +250,7 @@ aggregate catchment area as a pixel mask or double-counting standing water.
 
 ### Implemented Python package workflow
 
-The reusable package source is [`tools/output_analysis/downscale_flddph/`](../../tools/output_analysis/downscale_flddph/). Guide01 keeps a self-contained copy under [`downscale_flddph/`](downscale_flddph/) so its learner workflow does not import Python code from `tools/`. The package implements the tributary-aware Python port of the legacy `downscale_flddph_trib.F90` algorithm; the legacy source under `etc/` remains unchanged for reference and other users.
+The reusable package source is [`tools/downscale_flddph/`](../../tools/downscale_flddph/). Guide01 keeps a self-contained copy under [`downscale_flddph/`](downscale_flddph/) so its learner workflow does not import Python code from `tools/`. The package implements the tributary-aware Python port of the legacy `downscale_flddph_trib.F90` algorithm; the legacy source under `etc/` remains unchanged for reference and other users.
 
 `s04-downscale_event.sh` processes Control and Deep Channel in sequence. For each case, `a02-prepare_downscale_input.py` selects the event time from the matching `rivdph` output, checks coordinates, units and missing masks against that case's `rivhgt`, and writes a one-record `(time,lat,lon)` NetCDF with `flddph = max(rivdph - rivhgt, 0)`. It then invokes the Tutorial-local `downscale_flddph/script/downscale_flddph.py` with the shared Mekong map layers and the fixed 102–108°E, 9–15°N domain. The downscaler writes `flddph_1min_provisional.nc`; no Fortran compile or intermediate Binary file is used. Its existing five-model-cell buffer and high-resolution map interpretation are retained.
 
