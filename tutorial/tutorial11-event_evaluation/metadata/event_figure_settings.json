@@ -107,7 +107,7 @@
     "y_tick_interval": 1.0,
     "dpi": 180,
     "title": "Tutorial 11 Fig. 1 — Reported Flood Impacts",
-    "subtitle": "Approximate reported locality positions by affected river system",
+    "subtitle": "Approximate impact localities; timing labels are gauge/river context, not local peaks at every town",
     "show_aoi_boxes": false,
     "point_group_field": "river_group",
     "plot_group_colors": {
@@ -121,14 +121,15 @@
       "Dyle": "#00a6a6"
     },
     "plot_group_labels": {
-      "Ahr": "Reported impacts: Ahr",
-      "Erft/Swist": "Reported impacts: Erft / Swist",
-      "Kyll": "Reported impacts: Kyll",
-      "Prüm": "Reported impacts: Prüm",
-      "Vesdre/Meuse": "Reported impacts: Vesdre",
-      "Meuse": "Reported impacts: Meuse",
-      "Gete": "Reported impacts: Gete",
-      "Dyle": "Reported impacts: Dyle"
-    }
+      "Ahr": "Ahr gauges: 14 Jul ~22:00–15 Jul 04:30 CEST",
+      "Erft/Swist": "Erft: Bliesheim level max 15 Jul 10:40*",
+      "Kyll": "Kyll: Kordel level peak 15 Jul 10:30 CEST",
+      "Prüm": "Prüm: Prümzurlay level peak 15 Jul 12:30 CEST",
+      "Vesdre/Meuse": "Vesdre: Eupen outlet peak 15 Jul 01:30*",
+      "Meuse": "Meuse basin: Geul/Valkenburg peak 15 Jul 05:30*",
+      "Gete": "Gete: Halen flood timing uncertain",
+      "Dyle": "Dyle: Wavre impacts 15–16 Jul (date only)"
+    },
+    "legend_title": "Reported timing (CEST where stated; * zone unstated)"
   }
 }

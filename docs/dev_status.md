@@ -6,6 +6,26 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Tutorial 11 Step 01 flood timing update (DT-0166, 2026-11-24)
+
+Maintainer authorizes bounded enrichment of the existing Rhine 2021 Step 01
+impact-location evidence on the already registered `feature/package-builder`
+branch. Codex owns the timing/location CSV, Step 1 Figure settings/rendering,
+Step 1 Prompt, Survey/Work Reports, process document and Tutorial development
+log. Preserve the original 14 impact IDs and town-marker coordinates; do not
+perform gauge allocation, model comparison, simulation, Gallery publication or
+wide literature review. Acceptance is source-linked timing with time type and
+uncertainty, exact time conversion only where source timezone is explicit, a
+visually reviewed Figure 1 legend, and updated handoff documents.
+
+DT-0166 complete: 14 locality records plus 8 distinct gauge/outlet timing
+records are in `01_reported_flood_timing.csv`. Explicit LfU MESZ times were
+converted to UTC; sources without stated zone remain unconverted. Figure 1 was
+regenerated and visually reviewed. Original 14 map positions remain unchanged;
+most town-specific flood onset/peak times remain unverified. No model comparison
+or allocation was done; retain these limits in subsequent analysis.
+
+
 ### Tutorial 11 Step 22 hydrograph comparison (DT-0165, 2026-11-23)
 
 The maintainer authorizes the bounded Tutorial 11 Step 22 exploratory

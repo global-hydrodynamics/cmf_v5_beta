@@ -94,12 +94,16 @@ corresponding `pXX-*.md` file.
 impact localities and potential observation sources that frame the evaluation.
 **Method:** review scientific literature, public reports and other traceable
 sources; distinguish reported impacts from approximate map locations; compile
-an impact inventory and map reported localities with river context. These
-outputs give Step 2 geographic and temporal evidence without deciding model
-Basin IDs or final evaluation domains. See [p01](p01-event_research.md), the
+an impact inventory and map reported localities with river context. Record distinct
+source-supported timing evidence and detailed station coordinates in a linked
+metadata ledger, separating gauge peaks from locality impacts and preserving
+unknown time bases. These outputs give Step 2 geographic and temporal evidence
+without deciding model Basin IDs or final evaluation domains. See
+[p01](p01-event_research.md), the
 [event Survey Report](AI_survey_report/01_flood_event_overview.md), the
 [Work Report](AI_work_report/01_event_research.md),
-[`metadata/01_impact_locations.csv`](metadata/01_impact_locations.csv), and
+[`metadata/01_impact_locations.csv`](metadata/01_impact_locations.csv),
+[`metadata/01_reported_flood_timing.csv`](metadata/01_reported_flood_timing.csv), and
 [Figure 1](figure/f01-reported_flood_impacts.png).
 
 ### Step 2 — Analysis Domain Design
@@ -341,7 +345,7 @@ but preparation outputs must not be confused with evaluation results.
 
 | Stage | Existing artifacts and execution evidence | Current research status |
 | --- | --- | --- |
-| **1 — Event research** | Impact inventory, Figure 1, observation data guide, Prompt and reports exist. Reports were reconstructed from retained evidence; the original research and mapping outputs are preserved. | Event context is documented; impact locations are selected examples, and observation provenance questions remain. |
+| **1 — Event research** | The original 14-location inventory and Figure 1 remain; a source-linked timing/location ledger and qualified timing legend were added from official reports and regional studies. Survey/Work Reports, Prompt and process document were updated. | Gauge/system timing is available for selected river reaches; most town-specific onset or inundation-peak times remain unknown. Gauge timing must not be transferred to every impact locality. |
 | **2 — Domain design** | Candidate domain JSON, Figure 2, Prompt and reports exist. | Candidate bounds and mapped routing groups are documented; hydrologic scope and model boundary conditions are not final. |
 | **3a — Availability** | Pass metadata, selected-pass JSON, Figure 3a, Prompt and reports exist. | Catalogue survey is documented; pass selection is `proposed`, and footprints do not establish valid flood-pixel coverage. |
 | **3b — Download** | Local `Atlantis/` manifest, summary and COG assets are present; the Prompt, downloader and reports exist. | The retained summary records acquisition checks and readiness for p03c. The assets are local/ignored and are not distributed through Git. |

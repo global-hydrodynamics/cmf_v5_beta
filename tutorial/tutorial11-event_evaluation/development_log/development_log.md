@@ -741,3 +741,8 @@ was made.
 
 **Result:** 360 hourly model records and 60 observation records were extracted
 for the three stations, and Figure 22 was generated from the saved CSV.
+
+
+## 2026-11-24 — Step 1 flood timing and detailed locations
+
+Reviewed the 14 existing impact locations and added a source-linked timing/location ledger. Recorded official CEST gauge peaks for the Ahr, Kyll and Prüm; separately recorded Erft/Bliesheim, Vesdre/Eupen outlet and Geul/Valkenburg timing with unconverted original labels where timezone notation was not confirmed. Halen and Wavre remain date-only/uncertain at locality scale. Existing impact IDs and Fig. 1 locality coordinates were retained; detailed station coordinates are separate records. Updated the Step 1 Prompt, process document, reports, timing legend and Figure 1. No model allocation, simulation, or comparison was performed.

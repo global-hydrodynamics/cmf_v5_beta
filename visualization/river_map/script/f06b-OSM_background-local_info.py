@@ -76,7 +76,8 @@ def main():
         ax, points, point_styles, group_field=settings.get("point_group_field", "plot_group")
     )
     ax.legend(handles=point_handles + region_handles, loc="center left",
-              bbox_to_anchor=(1.01, 0.5), fontsize=8, framealpha=0.9, borderpad=0.6)
+              bbox_to_anchor=(1.01, 0.5), fontsize=8, framealpha=0.9, borderpad=0.6,
+              title=settings.get("legend_title"))
     ax.set_title(settings["title"] + "\n" + settings["subtitle"], fontsize=10)
     common.draw_attribution(ax)
     common.save_figure(fig, args.output, int(settings["dpi"]))

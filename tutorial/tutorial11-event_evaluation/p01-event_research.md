@@ -14,6 +14,7 @@
 - `AI_survey_report/01_flood_event_overview.md`
 - `AI_work_report/01_event_research.md`
 - `metadata/01_impact_locations.csv`
+- `metadata/01_reported_flood_timing.csv` (separate time/location evidence ledger)
 - `figure/f01-reported_flood_impacts.png` and `f01-reported_flood_impacts.sh`
 
 ## Human Instructions
@@ -43,11 +44,20 @@ source-reported facts, interpretations, and uncertainty.
    Record names, river/system, country, concise reported impact, coordinates,
    coordinate source/confidence, event date if known, and citation/URL. Distinguish
    approximate town centres from surveyed damage locations and flood boundaries.
-3. Create and run `f01-reported_flood_impacts.sh` using a suitable existing
+3. Create `metadata/01_reported_flood_timing.csv` with one record per
+   source-supported timing/location combination. Distinguish water-level peak,
+   discharge peak, inundation maximum, onset, impact report, and response time.
+   Preserve original time text and timezone; populate UTC only when the source
+   time basis is established. Leave unknown times blank. Keep coordinate
+   confidence separate from timing confidence. Do not assign a nearby gauge
+   peak to a town without evidence. Keep `ai_notes` as the last CSV column.
+4. Create and run `f01-reported_flood_impacts.sh` using a suitable existing
    Visualization method. Produce `figure/f01-reported_flood_impacts.png` with
    OSM where available, river context, labelled localities, and attribution.
+   If timing is added to a legend, label it as reported gauge/river context and
+   avoid implying that it is the exact impact or peak time for every locality.
    Inspect the saved figure; report failures instead of claiming visual review.
-4. Create `AI_survey_report/01_flood_event_overview.md` for the researcher and
+5. Create `AI_survey_report/01_flood_event_overview.md` for the researcher and
    `AI_work_report/01_event_research.md` for reproducibility and handoff. The
    Survey Report explains findings, sources, the figure, uncertainty and next
    research decisions. The Work Report records actual inputs, commands,
