@@ -1056,3 +1056,17 @@ the generated diminfo verbatim and explains each line; actual NetCDF coordinates
 map dimensions/outer edges, matrix indices and representative river cells were
 checked. No model run or scientific runtime-reader validation was performed;
 KG-0019 remains open. Generated map binaries remain ignored.
+
+DT-0161 complete: maintainer-authorized extension of the standalone Python
+downscaling package on `feature/package-builder`. Added single-record
+little-endian Float32 Binary snapshots, NetCDF-first map selection with
+missing-file-only Binary fallback, per-file format/source metadata, and
+independent tributary/backwater and permanent-water switches. The standard
+package and copied Mekong sample are synchronized. The six representative
+Mekong runs passed: default ON/ON exactly matches the tracked output; both
+cross-format combinations are exact; Tributary OFF/Permanent ON exactly matches
+the unchanged basic Fortran implementation; all four option combinations keep
+the same valid-cell mask. Sea/background rendering is white in the standalone
+sample. Other regions, map families, resolutions, and edge cases remain
+unvalidated. See [the package plan](downscale_flddph_python_port_plan.md),
+DT-0161, and VR-0207.

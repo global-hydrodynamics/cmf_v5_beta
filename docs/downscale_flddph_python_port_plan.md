@@ -32,6 +32,10 @@ The requested package and copied sample were implemented. The Python sample repr
 
 Knowledge-gap review: checked scientific assumptions, NetCDF/map I/O contracts, algorithm order, comments and recorded evidence; no material new gaps found. Remaining limits are scope limits, not blockers: only the Mekong 15-minute-to-1-minute sample was compared, and other map families and resolutions are not yet demonstrated. Task and validation evidence are indexed as [DT-0159](../research/development_tasks.csv), [VR-0205](../research/validation_runs.csv), and [the validation detail](../research/records/validation_runs/VR-0205.md).
 
+## Approved scope extension — input compatibility and calculation switches (2026-11-23)
+
+The maintainer authorized extending this package on the same `feature/package-builder` branch. Preserve the downscaling equations and operation order while adding single-record little-endian Float32 Binary snapshots alongside NetCDF input; NetCDF-first, missing-file-only fallback among NetCDF/Binary map layers; and independent `TRIBUTARY_FILL` and `PERMANENT_WATER` switches, both defaulting ON. Keep the implementation and copied sample self-contained, record actual source formats/files and option values in output metadata, and do not change Tutorial, Gallery, map-conversion tools, or Fortran sources. Acceptance is focused on the Mekong sample: exact default output compatibility, cross-format comparisons, all four option combinations, and comparison of Tributary OFF/Permanent ON with the unchanged basic Fortran method. See DT-0161 and VR-0207.
+
 
 ## Approved scope extension — existing workflows (2026-11-23)
 
