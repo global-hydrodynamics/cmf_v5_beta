@@ -2,6 +2,8 @@
 
 This directory contains shared standalone utilities: the `igetday` calendar helper and Python tools for describing model outputs. These tools do not rerun the model. `Makefile` and `igetday.F90` were moved here from the root `util/` directory; all utilities live directly under `tools/`.
 
+The standalone Python [flood-depth downscaling package](output_analysis/downscale_flddph/README.md) ports the tributary-aware `flddph` method and includes a reproducible Mekong sample. It is separate from the legacy Fortran tool under `etc/downscale_flddph/` and does not alter model execution.
+
 ## Count days in a month with igetday
 
 `igetday.F90` accepts two positional integer arguments, year and month (1–12), and prints the number of days in that month to standard output, with Fortran list-directed whitespace. It uses the Gregorian leap-year rule (divisible by 4, except centuries not divisible by 400), with the existing special case that February in year 0 has 28 days. No input or output data files are used. Supply both arguments and a valid month; the program does not validate the calendar input range.
