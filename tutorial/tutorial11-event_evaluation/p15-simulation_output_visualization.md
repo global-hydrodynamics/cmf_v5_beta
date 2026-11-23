@@ -14,7 +14,7 @@
 **Tasks**
 
 - Inspect the actual NetCDF time axes and calculate signed local maximum-
-  absolute discharge values over the retained 480 hourly records.
+  absolute discharge values over the retained 744 hourly records (July 1–31).
 - Generate and visually inspect the regional direction-aware network map
   (Fig. 15a) and its AOI view (Fig. 15b), using line widths that keep the complete network distinguishable at
   overview scale.
@@ -25,7 +25,7 @@
 
 - `figure/f15a-maximum_discharge-regional.png`
 - `figure/f15b-maximum_discharge-aoi.png`
-- `experiment/Rhine2021-nextxy/analysis/maximum_discharge_20210701-20210720.nc`
+- `experiment/Rhine2021/analysis/maximum_discharge_20210701-20210801.nc`
   (derived, ignored runtime output)
 - Step 15 metadata, Survey Report and Work Report.
 
@@ -74,7 +74,7 @@ Reuse existing Gallery helpers without using Mekong-specific paths or data.
 Record that local peaks are not a simultaneous state and that this cold-start
 run does not establish skill. Preserve the no-spin-up and KG-0019 limitations.
 
-Save a compact derived NetCDF under experiment/Rhine2021-nextxy/analysis/, create
+Save a compact derived NetCDF under experiment/Rhine2021/analysis/, create
 metadata/15_simulation_output_visualization.json and the Step 15 Survey/Work
 Reports, update the process and Step 14 handoff, and add a development-log
 entry. Visually inspect both figures and perform focused data/geometry checks.

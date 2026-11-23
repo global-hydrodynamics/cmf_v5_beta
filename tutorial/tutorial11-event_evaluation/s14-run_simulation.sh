@@ -7,17 +7,17 @@ SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 CMF_BASE=$(CDPATH= cd "$SCRIPT_DIR/../.." && pwd -P)
 
 # -------------------------- User settings ------------------------------
-PROJ="Rhine2021-nextxy"
+PROJ="Rhine2021"
 RUNDIR=${RUNDIR:-"${SCRIPT_DIR}/experiment/${PROJ}"} # Override to retain or create another run.
 
-# Simulation interval; the end time is exclusive (20 days, 480 hours).
+# Simulation interval; the end time is exclusive (31 days, 744 hours).
 START_YEAR=2021
 START_MONTH=7
 START_DAY=1
 START_HOUR=0
 END_YEAR=2021
-END_MONTH=7
-END_DAY=21
+END_MONTH=8
+END_DAY=1
 END_HOUR=0
 
 # Rhine regional map and its individual NetCDF files.

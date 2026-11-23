@@ -2,13 +2,12 @@
 
 ## Work summary
 
-Reviewed and reorganized Step 12 as a reproducible Tutorial workflow, reusing
-the researcher-generated data. The earlier data inspection found 20 raw and
-20 converted daily files; the present task did not download, reconvert, or
-modify them. Added a Tutorial-local dataset Registry and adjusted Step 12
-metadata to reference it. Updated the process so Step 13 owns Input Matrix
-preparation/validation and Step 14 owns simulation setup and GOSH script
-creation.
+The original Step 12 setup registered the researcher-prepared runoff data and
+its 20-day inspection. On 2026-11-24, the local dataset was reinspected after
+the researcher extended it through July 31. The 31 raw and 31 converted files
+were not downloaded or converted again during this follow-up. Step 12 metadata,
+the local registry, and Step 12 documentation now describe the extended
+coverage.
 
 ## Inputs and retained evidence
 
@@ -18,8 +17,8 @@ creation.
 - Step 2 period/domain context and Step 11 Rhine regional map
 - ERA5-Land workflow README, Tutorial rules and KG-0019
 
-The Product Shell preserves dataset `tutorial11-ERA5land-Rhine2021Jul`, July
-1–20, 2021, requested bounds 2.5–13.5°E and 44.5–53.5°N, hourly TSTEP,
+The Product Shell is configured for dataset `tutorial11-ERA5land-Rhine2021Jul`,
+July 1–31, 2021, requested bounds 2.5–13.5°E and 44.5–53.5°N, hourly TSTEP,
 daily download/output grouping, NetCDF and NCPUS=2. The bounds intentionally
 extend 0.5° beyond the Step 11 map.
 
@@ -40,21 +39,23 @@ dataset specification is not repeated as a second Registry.
 
 ## Existing dataset checks
 
-Reused the earlier representative-data inspection results: 20 original and
-20 converted files cover every requested day; the source and converted files
-have 24 hourly timestamps per day and a continuous 480-label sequence. Raw and
-converted coordinates match; the observed 0.1° grid centers are longitude
+Reinspected the local files: 31 original and 31 converted files cover every
+date July 1–31. All converted files have 24 hourly timestamps; their combined
+744 labels are contiguous. The converted NetCDF files share the previously
+recorded 0.1° grid centers: longitude
 2.5–13.5°E and latitude 53.5–44.5°N. The converted field is float32
 `runoff(time,lat,lon)` in mm per timestep with fill `1e20`, shape
-(24,91,111). Retained per-day download and conversion logs recorded completion
-for all dates. These are structural checks, not independent value-by-value
-conversion validation.
+(24,91,111). Retained per-day download and conversion logs cover July 1–20
+only; per-day logs for July 21–31 were not present. These are structural
+checks, not independent value-by-value conversion validation.
 
 Step 12 does not verify the regional Input Matrix. Although
 `map/Rhine_15min/inpmat_ERA5land_global.bin` and its `diminfo` exist, their
 correctness for this downloaded runoff and map was assigned to Step 13. Step
-13 has since generated and structurally checked the regional
-`ERA5land_Rhine2021Jul` matrix; see its Work Report and metadata.
+13 generated and structurally checked the regional
+`ERA5land_Rhine2021Jul` matrix. The July extension retains the same 111 × 91
+grid, so the spatial matrix was not regenerated. Step 14's log confirms this
+matrix was read for the extended run; see the Step 13 Work Report and metadata.
 
 ## Files changed
 
@@ -66,22 +67,22 @@ correctness for this downloaded runoff and map was assigned to Step 13. Step
 - Updated the Step 12 Survey Report and `00_event_evaluation_process.md`.
 - Updated the Step 11 handoff references and development history as needed.
 
-No generated NetCDF, raw source, log, Product Shell setting, conversion
-algorithm, map, or shared runoff registry row was changed. The Tutorial-local
-runoff data remain ignored.
+No generated NetCDF, raw source, or log was changed by this follow-up. The
+Product Shell period/target and Tutorial-local records were aligned to the
+existing local data. The Tutorial-local runoff data remain ignored.
 
 ## Step 13/14 handoff and limitations
 
-Step 13 read the dataset row from `runoff_dataset.csv`, inspected the actual
-NetCDF grid, and generated/checked the map-specific regional Input Matrix; its
-results are in `AI_work_report/13_runoff_input_matrix.md` and
-`metadata/13_runoff_input_matrix.json`. Step 14 decided the simulation period,
-spin-up, forcing coverage and model settings, then executed the requested run.
-The latest Step 14 run uses the standard Rhine `nextxy.nc` map; its earlier
-`nextxy_noedge.nc` run remains preserved. Step 15 visualizes the retained
-latest outputs; Step 16 will design observation matching. Do not infer
-simulation conditions from the acquisition interval.
+Step 13 read the dataset row and generated/checked the regional Input Matrix;
+its spatial grid remains unchanged. Step 14 ran 2021-07-01 00:00 through
+2021-08-01 00:00 exclusive, consuming all 31 daily files with the standard
+Rhine `nextxy.nc` map. The run completed 744 steps and wrote its Restart at
+the exclusive end. The earlier noedge output is no longer present in the
+reused `experiment/Rhine2021/` directory. Step 15 and Step 22 were regenerated
+from the extended outputs. Do not infer simulation conditions from the
+acquisition interval.
 KG-0019 remains unresolved: ERA5-Land 00 UTC represents
 the preceding 24-hour accumulation, and conversion first-record/period-boundary
-behavior is not scientifically resolved. No CaMa-Flood run or model-observation
-comparison was performed.
+behavior is not scientifically resolved. Step 12 made no model run; the
+separate Step 14 run and Step 22 exploratory comparison are recorded in their
+own reports.

@@ -1,6 +1,6 @@
 #!/bin/bash
 # User-facing configuration for the Tutorial 11 Rhine 2021 hourly ERA5-Land runoff product.
-# Requests 2021-07-01 through 2021-07-20 over the Rhine map plus a 0.5-degree margin.
+# Requests 2021-07-01 through 2021-07-31 over the Rhine map plus a 0.5-degree margin.
 # Passes settings to s01-download.sh and s02-convert_CMF_nc.sh, in that order.
 # Normally edit only the User settings below; Python performs the data processing.
 set -eu
@@ -13,7 +13,7 @@ DATASET="tutorial11-ERA5land-Rhine2021Jul"
 # Inclusive period and geographic edges [degrees east/north].
 # Requested CDS area is not a substitute for the downloaded grid-center metadata.
 START_DATE="2021-07-01"
-END_DATE="2021-07-20"
+END_DATE="2021-07-31"
 WEST=2.5
 EAST=13.5
 SOUTH=44.5

@@ -3,7 +3,7 @@
 ## Purpose and scope
 
 Step 15 inspects the spatial distribution of the retained Step 14 hourly river
-discharge outputs. It creates local peak maps for 1–20 July 2021. This is a
+discharge outputs. It creates local peak maps for July 1–31, 2021. This is a
 visual output review, not an observation comparison or assessment of model
 accuracy.
 
@@ -33,7 +33,7 @@ selected signed peak; color represents the discharge scale.
 
 Every cell and path selects its own peak hour. The regional and AOI maps are
 therefore not a common-time flow state, and apparent spatial patterns should
-not be read as a flood wave at a single instant. The run is a 20-day cold-start
+not be read as a flood wave at a single instant. The run is a 31-day cold-start
 execution with no spin-up, so initial conditions may affect storage and flow.
 Operational completion and readable outputs do not establish hydrologic
 plausibility or skill. KG-0019, concerning ERA5-Land accumulation timing and

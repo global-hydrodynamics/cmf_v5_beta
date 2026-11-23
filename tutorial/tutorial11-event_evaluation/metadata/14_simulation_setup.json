@@ -6,15 +6,15 @@
   "review_status": "proposed",
   "execution": {
     "requested_run_completed": true,
-    "run_directory": "experiment/Rhine2021-nextxy/",
-    "started_local": "2026-11-23T09:33:05+09:00",
-    "ended_local": "2026-11-23T09:33:08+09:00",
-    "elapsed_seconds": 2,
+    "run_directory": "experiment/Rhine2021/",
+    "started_local": "2026-11-24T06:02:44+09:00",
+    "ended_local": "2026-11-24T06:02:47+09:00",
+    "elapsed_seconds": 3,
     "exit_status": 0,
-    "model_steps": 480,
+    "model_steps": 744,
     "run_host": "macOS arm64",
     "openmp_threads": 4,
-    "repository_revision": "398864a7",
+    "repository_revision": "ab906815",
     "executable": "src_main/MAIN_cmf",
     "executable_sha256": "3a7893ffeb40f052e27d163ebc205374dc8ee7ec3f7564ef69a9ea1f293dc987",
     "executable_rebuilt_for_step14": false
@@ -22,31 +22,52 @@
   "previous_run_preserved": {
     "run_directory": "experiment/Rhine2021/",
     "river_network": "map/Rhine_15min/netcdf/nextxy_noedge.nc",
-    "note": "The earlier noedge run was retained unchanged when the standard-nextxy run was executed."
+    "note": "The earlier noedge run was recorded in this same directory. The directory now contains the standard-nextxy July 1–31 run; the earlier noedge files are no longer present at this path."
   },
   "map": {
     "path": "map/Rhine_15min/",
     "resolution": "15 arc-minutes",
     "nx": 40,
     "ny": 32,
-    "bounds_west_east_south_north_degrees": [3.0, 13.0, 45.0, 53.0],
+    "bounds_west_east_south_north_degrees": [
+      3.0,
+      13.0,
+      45.0,
+      53.0
+    ],
     "input_mode": "Individual NetCDF map files; LMAPCDF=.FALSE.",
     "river_network": "map/Rhine_15min/netcdf/nextxy.nc",
     "river_network_reason": "Use the standard Rhine map river network, including boundary-affected connections.",
     "river_width": "map/Rhine_15min/netcdf/rivwth_merit.nc",
     "bifurcation_parameters": "map/Rhine_15min/netcdf/bifprm.nc",
-    "map_files_loaded": ["ctmare.nc", "elevtn.nc", "nxtdst.nc", "rivlen.nc", "fldhgt.nc", "rivhgt.nc", "rivwth_merit.nc", "rivman.nc"]
+    "map_files_loaded": [
+      "ctmare.nc",
+      "elevtn.nc",
+      "nxtdst.nc",
+      "rivlen.nc",
+      "fldhgt.nc",
+      "rivhgt.nc",
+      "rivwth_merit.nc",
+      "rivman.nc"
+    ]
   },
   "runoff": {
     "registry": "tutorial/tutorial11-event_evaluation/runoff_dataset.csv",
     "dataset_id": "tutorial11-ERA5land-Rhine2021Jul",
     "directory": "inp/tutorial11-ERA5land-Rhine2021Jul/",
     "file_pattern": "runoff_YYYYMMDD.nc",
-    "file_count": 20,
-    "date_coverage_inclusive": ["2021-07-01", "2021-07-20"],
+    "file_count": 31,
+    "date_coverage_inclusive": [
+      "2021-07-01",
+      "2021-07-31"
+    ],
     "netcdf_variable": "runoff",
     "time_coordinate": "time",
-    "actual_daily_shape_time_lat_lon": [24, 91, 111],
+    "actual_daily_shape_time_lat_lon": [
+      24,
+      91,
+      111
+    ],
     "input_interval_hours": 1,
     "input_file_grouping": "DAY",
     "input_units": "mm per 1-hour timestep",
@@ -58,15 +79,18 @@
     "runoff_tag": "ERA5land_Rhine2021Jul",
     "matrix": "map/Rhine_15min/inpmat_ERA5land_Rhine2021Jul.bin",
     "dimension_info": "map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.txt",
-    "input_grid_nx_ny": [111, 91],
+    "input_grid_nx_ny": [
+      111,
+      91
+    ],
     "matrix_bytes": 460800,
     "model_log_confirms_matrix_loaded": true,
     "global_ERA5land_global_matrix_used": false
   },
   "simulation": {
     "period_start_inclusive": "2021-07-01T00:00:00",
-    "period_end_exclusive": "2021-07-21T00:00:00",
-    "period_hours": 480,
+    "period_end_exclusive": "2021-08-01T00:00:00",
+    "period_hours": 744,
     "spin_up": false,
     "initialization": "Model standard initial state; LRESTART=.FALSE.",
     "restart_input": null,
@@ -84,37 +108,129 @@
   "outputs": {
     "format": "NetCDF",
     "interval_hours": 1,
-    "variables": ["outflw", "pthflw", "storge", "sfcelv", "rivdph", "flddph", "fldfrc", "fldare"],
-    "output_directory": "tutorial/tutorial11-event_evaluation/experiment/Rhine2021-nextxy/",
+    "variables": [
+      "outflw",
+      "pthflw",
+      "storge",
+      "sfcelv",
+      "rivdph",
+      "flddph",
+      "fldfrc",
+      "fldare"
+    ],
+    "output_directory": "tutorial/tutorial11-event_evaluation/experiment/Rhine2021/",
     "run_directory_git_ignored": true,
     "hourly_files": [
-      {"path": "experiment/Rhine2021-nextxy/o_outflwRhine2021Jul.nc", "variable": "outflw", "time_records": 480, "dimensions_time_lat_lon": [480, 32, 40], "bytes": 2223493},
-      {"path": "experiment/Rhine2021-nextxy/o_pthflwRhine2021Jul.nc", "variable": "pthflw", "time_records": 480, "dimensions_time_npthlev_npthout": [480, 5, 20], "bytes": 157681},
-      {"path": "experiment/Rhine2021-nextxy/o_storgeRhine2021Jul.nc", "variable": "storge", "time_records": 480, "dimensions_time_lat_lon": [480, 32, 40], "bytes": 2265262},
-      {"path": "experiment/Rhine2021-nextxy/o_sfcelvRhine2021Jul.nc", "variable": "sfcelv", "time_records": 480, "dimensions_time_lat_lon": [480, 32, 40], "bytes": 2082645},
-      {"path": "experiment/Rhine2021-nextxy/o_rivdphRhine2021Jul.nc", "variable": "rivdph", "time_records": 480, "dimensions_time_lat_lon": [480, 32, 40], "bytes": 2102457},
-      {"path": "experiment/Rhine2021-nextxy/o_flddphRhine2021Jul.nc", "variable": "flddph", "time_records": 480, "dimensions_time_lat_lon": [480, 32, 40], "bytes": 1955087},
-      {"path": "experiment/Rhine2021-nextxy/o_fldfrcRhine2021Jul.nc", "variable": "fldfrc", "time_records": 480, "dimensions_time_lat_lon": [480, 32, 40], "bytes": 2002480},
-      {"path": "experiment/Rhine2021-nextxy/o_fldareRhine2021Jul.nc", "variable": "fldare", "time_records": 480, "dimensions_time_lat_lon": [480, 32, 40], "bytes": 2007233}
+      {
+        "path": "experiment/Rhine2021/o_outflwRhine2021Jul.nc",
+        "variable": "outflw",
+        "time_records": 744,
+        "dimensions_time_lat_lon": [
+          744,
+          32,
+          40
+        ],
+        "bytes": 3439736
+      },
+      {
+        "path": "experiment/Rhine2021/o_pthflwRhine2021Jul.nc",
+        "variable": "pthflw",
+        "time_records": 744,
+        "dimensions_time_npthlev_npthout": [
+          744,
+          5,
+          20
+        ],
+        "bytes": 244092
+      },
+      {
+        "path": "experiment/Rhine2021/o_storgeRhine2021Jul.nc",
+        "variable": "storge",
+        "time_records": 744,
+        "dimensions_time_lat_lon": [
+          744,
+          32,
+          40
+        ],
+        "bytes": 3508556
+      },
+      {
+        "path": "experiment/Rhine2021/o_sfcelvRhine2021Jul.nc",
+        "variable": "sfcelv",
+        "time_records": 744,
+        "dimensions_time_lat_lon": [
+          744,
+          32,
+          40
+        ],
+        "bytes": 3214061
+      },
+      {
+        "path": "experiment/Rhine2021/o_rivdphRhine2021Jul.nc",
+        "variable": "rivdph",
+        "time_records": 744,
+        "dimensions_time_lat_lon": [
+          744,
+          32,
+          40
+        ],
+        "bytes": 3255823
+      },
+      {
+        "path": "experiment/Rhine2021/o_flddphRhine2021Jul.nc",
+        "variable": "flddph",
+        "time_records": 744,
+        "dimensions_time_lat_lon": [
+          744,
+          32,
+          40
+        ],
+        "bytes": 3042441
+      },
+      {
+        "path": "experiment/Rhine2021/o_fldfrcRhine2021Jul.nc",
+        "variable": "fldfrc",
+        "time_records": 744,
+        "dimensions_time_lat_lon": [
+          744,
+          32,
+          40
+        ],
+        "bytes": 3117759
+      },
+      {
+        "path": "experiment/Rhine2021/o_fldareRhine2021Jul.nc",
+        "variable": "fldare",
+        "time_records": 744,
+        "dimensions_time_lat_lon": [
+          744,
+          32,
+          40
+        ],
+        "bytes": 3124678
+      }
     ],
     "restart": {
-      "path": "experiment/Rhine2021-nextxy/restart2021072100.nc",
+      "path": "experiment/Rhine2021/restart2021080100.nc",
       "format": "NetCDF",
       "time_records": 1,
-      "timestamp": "2021-07-21T00:00:00",
-      "dimensions_lat_lon": [32, 40],
-      "bytes": 81779
+      "timestamp": "2021-08-01T00:00:00",
+      "dimensions_lat_lon": [
+        32,
+        40
+      ],
+      "bytes": 82054
     },
-    "hourly_outputs_plus_restart_bytes": 14878117
+    "hourly_outputs_plus_restart_bytes": 23029200
   },
   "reproducibility": {
     "script": "tutorial/tutorial11-event_evaluation/s14-run_simulation.sh",
-    "namelist": "tutorial/tutorial11-event_evaluation/experiment/Rhine2021-nextxy/input_cmf.nam",
-    "console_log": "tutorial/tutorial11-event_evaluation/experiment/Rhine2021-nextxy/console.log",
-    "model_log": "tutorial/tutorial11-event_evaluation/experiment/Rhine2021-nextxy/log_CaMa.txt",
-    "runtime_log": "tutorial/tutorial11-event_evaluation/experiment/Rhine2021-nextxy/run_time.log",
-    "rerun_policy": "The script stops if RUNDIR is nonempty; choose a new RUNDIR to preserve previous results.",
-    "run_command": "RUNDIR=experiment/Rhine2021-nextxy bash s14-run_simulation.sh"
+    "namelist": "tutorial/tutorial11-event_evaluation/experiment/Rhine2021/input_cmf.nam",
+    "console_log": "tutorial/tutorial11-event_evaluation/experiment/Rhine2021/console.log",
+    "model_log": "tutorial/tutorial11-event_evaluation/experiment/Rhine2021/log_CaMa.txt",
+    "runtime_log": "tutorial/tutorial11-event_evaluation/experiment/Rhine2021/run_time.log",
+    "rerun_policy": "The script stops if RUNDIR is nonempty; use a new RUNDIR to preserve these results.",
+    "run_command": "The retained namelist/logs show the current s14 settings; the exact shell invocation was not retained."
   },
   "validation": {
     "namelist_read_successfully": true,
@@ -122,27 +238,36 @@
     "step13_input_matrix_read_successfully": true,
     "runoff_files_read_for_full_period": true,
     "model_exit_status_zero": true,
-    "completed_steps": 480,
-    "hourly_output_records_each": 480,
+    "completed_steps": 744,
+    "hourly_output_records_each": 744,
     "first_output_offset_seconds": 3600,
-    "last_output_offset_seconds": 1728000,
+    "last_output_offset_seconds": 2678400,
     "restart_written_at_exclusive_end": true,
     "error_or_warning_text_found_in_model_console_log": false,
     "error_or_warning_text_found_in_model_log": false
   },
   "scientific_scope_and_limitations": [
     "This is a single operational cold-start run; it is not a spun-up or calibrated event evaluation.",
-    "The forcing dates and experiment settings follow the researcher's Step 14 request; successful execution does not demonstrate hydrological skill.",
+    "The simulation used 31 days of forcing from July 1 through July 31; successful execution does not demonstrate hydrological skill.",
     "KG-0019 remains unresolved: ERA5-Land accumulation time attribution and converter first-record/period-boundary handling were not changed or scientifically validated.",
     "The current run uses the standard nextxy network. The earlier nextxy_noedge run is preserved separately for provenance.",
     "No model-output visualization, observation matching, performance evaluation, or numerical validation was performed in this Step."
   ],
   "step15_handoff": {
     "purpose": "Visualize signed local peak discharge from the retained outputs in Step 15, then design observation matching in Step 16; any further run requires a separate experiment design.",
-    "run_directory": "experiment/Rhine2021-nextxy/",
-    "primary_outputs": ["experiment/Rhine2021-nextxy/o_outflwRhine2021Jul.nc", "experiment/Rhine2021-nextxy/o_pthflwRhine2021Jul.nc", "experiment/Rhine2021-nextxy/o_fldfrcRhine2021Jul.nc", "experiment/Rhine2021-nextxy/o_fldareRhine2021Jul.nc", "experiment/Rhine2021-nextxy/restart2021072100.nc"],
+    "run_directory": "experiment/Rhine2021/",
+    "primary_outputs": [
+      "experiment/Rhine2021/o_outflwRhine2021Jul.nc",
+      "experiment/Rhine2021/o_pthflwRhine2021Jul.nc",
+      "experiment/Rhine2021/o_fldfrcRhine2021Jul.nc",
+      "experiment/Rhine2021/o_fldareRhine2021Jul.nc",
+      "experiment/Rhine2021/restart2021080100.nc"
+    ],
     "step15_workflow": "f15-maximum_discharge.sh",
-    "step15_analysis_output": "experiment/Rhine2021-nextxy/analysis/maximum_discharge_20210701-20210720.nc",
-    "step15_figures": ["figure/f15a-maximum_discharge-regional.png", "figure/f15b-maximum_discharge-aoi.png"]
+    "step15_analysis_output": "experiment/Rhine2021/analysis/maximum_discharge_20210701-20210801.nc",
+    "step15_figures": [
+      "figure/f15a-maximum_discharge-regional.png",
+      "figure/f15b-maximum_discharge-aoi.png"
+    ]
   }
 }

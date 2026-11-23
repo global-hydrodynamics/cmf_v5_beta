@@ -8,7 +8,7 @@
     "netcdf_directory": "inp/tutorial11-ERA5land-Rhine2021Jul/",
     "coordinate_evidence_files": [
       "inp/tutorial11-ERA5land-Rhine2021Jul/runoff_20210701.nc",
-      "inp/tutorial11-ERA5land-Rhine2021Jul/runoff_20210720.nc"
+      "inp/tutorial11-ERA5land-Rhine2021Jul/runoff_20210731.nc"
     ]
   },
   "model_map": {
@@ -202,8 +202,8 @@
   },
   "limitations": [
     "The binary layout and indices were checked against the generator source and dimensions; the CaMa-Flood simulation reader was not exercised.",
-    "A successful matrix generation does not resolve ERA5-Land time attribution; KG-0019 remains open.",
-    "The matrix and diminfo live in the ignored local map directory and are not distributed by Git."
+    "The matrix and diminfo live in the ignored local map directory and are not distributed by Git.",
+    "The regional Input Matrix is spatial and was not regenerated for the July 21–31 temporal extension. The model run log confirms the retained matrix was loaded; KG-0019 remains open for runoff time attribution."
   ],
   "step14_handoff": {
     "files": [
@@ -213,11 +213,10 @@
       "tutorial/tutorial11-event_evaluation/metadata/12_era5land_runoff.json"
     ],
     "actions": [
-      "Select experiment/simulation and spin-up periods.",
-      "Check forcing date coverage and actual runtime settings.",
-      "Create the reproducible GOSH script."
+      "Use the July 1–31 inclusive daily runoff files and matching regional Input Matrix.",
+      "Run the 2021-07-01T00:00 through 2021-08-01T00:00 exclusive simulation and record actual outputs."
     ],
-    "simulation_period": "undecided"
+    "simulation_period": "2021-07-01T00:00:00 to 2021-08-01T00:00:00 exclusive; 744 hours"
   },
   "step14_execution_reference": "metadata/14_simulation_setup.json"
 }

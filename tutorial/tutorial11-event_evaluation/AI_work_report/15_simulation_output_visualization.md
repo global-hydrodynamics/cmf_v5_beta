@@ -1,15 +1,38 @@
 # Step 15 — Simulation Output Visualization Work Report
 
-## Inputs and method
+## Current 31-day visualization (2026-11-24)
 
-Used the current Step 14 files
+Regenerated Fig. 15a and Fig. 15b from the retained Step 14 standard-
+`nextxy` outputs in `experiment/Rhine2021/`. The source `outflw` and
+`pthflw` files each contain 744 hourly records for the interval
+`[2021-07-01 00:00, 2021-08-01 00:00)`, with labels from July 1 01:00 through
+August 1 00:00 UTC. No model rerun was performed for Step 15.
+
+The derived file is
+`experiment/Rhine2021/analysis/maximum_discharge_20210701-20210801.nc`
+(file size recorded in `metadata/15_simulation_output_visualization.json`).
+The regenerated maps use the standard `nextxy.nc` network. The full-period
+checks found 926,280 valid `outflw` values, 35 all-missing cells, and 1,245
+valid cell peaks. Signed peak range is −1,095.38 to 11,592.53 m³/s; 11 cell
+peaks are negative. There are 20 `pthflw` paths with active width, including
+7 channel-bifurcation and 13 overland-only paths; their signed peak range is
+−202.81 to 2,373.30 m³/s, with 4 negative peaks.
+
+Both regenerated figures were opened and visually inspected. The regional
+network lines remain visible at full-basin scale, and the AOI layout and
+legend are readable. The peaks are local maxima at potentially different
+times and do not depict a simultaneous state.
+
+## Historical 20-day run record
+
+The original 2026-11-14 visualization used the then-current Step 14 files
 `experiment/Rhine2021-nextxy/o_outflwRhine2021Jul.nc` and
 `o_pthflwRhine2021Jul.nc`, resolved through
 `metadata/14_simulation_setup.json`. The output map is `Rhine_15min`, 40 × 32,
 with bounds 3–13°E and 45–53°N. The AOI was read from Step 2 metadata as
 4–8°E and 49–52°N.
 
-Both NetCDF files contain 480 hourly records on identical 3,600-second
+Both historical NetCDF files contain 480 hourly records on identical 3,600-second
 intervals. Output labels run from 2021-07-01 01:00 UTC through 2021-07-21
 00:00 UTC, representing the requested start-exclusive hourly means through
 the exclusive run end. `outflw` is `time,lat,lon`; `pthflw` is

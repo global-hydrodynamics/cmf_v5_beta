@@ -229,7 +229,7 @@ the [Work Report](AI_work_report/11_regional_map_preparation.md), and
 
 Inspect or prepare event-specific runoff using the existing ERA5-Land
 Product/Download/Convert workflow. The Rhine sample has researcher-prepared
-hourly data for 2021-07-01 through 2021-07-20 and requests an area 0.5° beyond
+hourly data for 2021-07-01 through 2021-07-31 and requests an area 0.5° beyond
 the Step 11 regional map. Keep the initial candidate analysis window
 (2021-07-10 through 2021-07-25), actual runoff acquisition period, and future
 simulation/evaluation period distinct. July 1 does not prove adequate spin-up;
@@ -254,18 +254,18 @@ regional subset. Record the actual map/grid pairing and index checks for Step
 
 Use the Step 11 regional map, Step 12 runoff Registry and Step 13 regional
 Input Matrix to define and run the requested experiment. The Rhine 2021 sample
-has one 20-day, hourly, cold-start run from 2021-07-01 00:00 to the exclusive
-end 2021-07-21 00:00. It uses daily ERA5-Land NetCDF input and hourly NetCDF
+has one 31-day, hourly, cold-start run from 2021-07-01 00:00 to the exclusive
+end 2021-08-01 00:00. It uses daily ERA5-Land NetCDF input and hourly NetCDF
 outputs plus an end-of-run NetCDF Restart. The current run uses the standard
-`nextxy.nc` network; the earlier `nextxy_noedge.nc` run is preserved
-separately. This is an operational run rather than a spun-up, calibrated or
-scientifically validated event reconstruction. KG-0019 remains open. See [p14](p14-simulation_setup-run.md),
+`nextxy.nc` network. The earlier noedge output is no longer present in the
+reused `experiment/Rhine2021/` directory. This is an operational run rather
+than a spun-up, calibrated or scientifically validated event reconstruction.
+KG-0019 remains open. See [p14](p14-simulation_setup-run.md),
 the [Survey Report](AI_survey_report/14_simulation_setup.md), the
 [Work Report](AI_work_report/14_simulation_setup.md), and
 [`metadata/14_simulation_setup.json`](metadata/14_simulation_setup.json).
 Generated experiment files are kept under the Git-ignored
-`experiment/Rhine2021-nextxy/` directory (the earlier run remains under
-`experiment/Rhine2021/`).
+`experiment/Rhine2021/` directory.
 
 ### Step 15 — Simulation Output Visualization
 
@@ -321,7 +321,8 @@ and time limitations.
 
 Extract hourly `outflw` at the zero-based row/column cells in Step 21 and
 compare it visually with the supplied six-hour station series for
-2021-07-12 through 2021-07-16. Keep both native time samplings and values;
+2021-07-10 through 2021-07-31 (end-exclusive 2021-08-01 00:00). Keep both
+native time samplings and values;
 do not interpolate, average or calculate skill metrics in this exploratory
 Step. The model time coordinate is `seconds since 2021-07-01 00:00` and its
 reference timezone is interpreted as UTC under the CF convention (the output
@@ -356,8 +357,8 @@ but preparation outputs must not be confused with evaluation results.
 | **6–10 — Reserved** | No activities are specified. | Future research stages. |
 | **11 — Regional map** | Local `map/Rhine_15min/` contains map, parameter, NetCDF/COG products and map-local workflow copies matching the requested domain; outputs were inspected, not regenerated for this Step. | Existing products are available to Steps 12–14; upstream hydrology and parameter scientific validation are not established by this inspection. |
 | **12 — Runoff preparation** | Existing local Rhine ERA5-Land source and converted data, Step 12 Prompt, metadata and reports are recorded; data were inspected, not reacquired or reconverted for this Step. | Hourly labels and grid structure are documented; KG-0019 remains open, and spin-up adequacy is not established by the Step 14 dates. |
-| **13 — Runoff Input Matrix** | Rhine-specific 111 × 91 matrix/diminfo were generated from the actual ERA5-Land grid using the map-local 1-minute catchment assignment; focused dimensions and index checks are recorded. | Pair the regional matrix with the Step 12 Registry and metadata in Step 14; runtime reader behavior remains untested. |
-| **14 — Simulation setup and execution** | `s14-run_simulation.sh` ran the 20-day hourly cold-start experiment; hourly NetCDF output variables and the final NetCDF Restart were inspected. | Operational completion only; cold-start sensitivity and ERA5-Land time attribution remain unresolved. |
+| **13 — Runoff Input Matrix** | Rhine-specific 111 × 91 matrix/diminfo were generated from the actual ERA5-Land grid using the map-local 1-minute catchment assignment; focused dimensions and index checks are recorded. | Step 14 loaded the retained matrix for the 31-day run; this operational check is not independent scientific validation. |
+| **14 — Simulation setup and execution** | `s14-run_simulation.sh` ran the 31-day hourly cold-start experiment; 744-record NetCDF outputs and the Restart at 2021-08-01 00:00 were inspected. | Operational completion only; cold-start sensitivity and ERA5-Land time attribution remain unresolved. |
 | **15 — Simulation output visualization** | Signed local peak discharge was calculated from the retained `outflw`/`pthflw` outputs; regional and AOI figures and the reusable plotting workflow are recorded. | Spatial output patterns were inspected; no simultaneous snapshot, spin-up assessment or skill evaluation is implied. |
 | **16 — Matching** | No matching method or implementation is recorded. | Spatial, temporal and variable correspondence remains to be designed. |
 | **17 — Evaluation** | No quantitative event score or performance report is recorded. | Metrics, valid-sample treatment and uncertainty analysis remain future work. |

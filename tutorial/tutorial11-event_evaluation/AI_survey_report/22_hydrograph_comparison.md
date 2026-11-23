@@ -2,7 +2,7 @@
 
 ## Scope and evidence
 
-The exploratory comparison uses the Step 21 allocated cells for Lobith (153), Speyer (63), and Maxau (28), the Step 14 `outflw` output, and the supplied ECMWF observation CSV. The requested window is July 12 through July 16, 2021. It contains 120 hourly model records per gauge and 20 six-hour observation labels per gauge.
+The exploratory comparison uses Step 21 allocated cells for Lobith (153), Speyer (63), and Maxau (28), the Step 14 `outflw` output, and the supplied ECMWF observation CSV. The current comparison window is July 10–31, 2021, with an exclusive end at August 1 00:00. It contains 528 hourly model records per gauge and 88 six-hour observation labels per gauge.
 
 ![Figure 22 — Provisional Rhine hydrograph overlay](../figure/f22-hydrograph_comparison.png)
 
@@ -10,15 +10,13 @@ The exploratory comparison uses the Step 21 allocated cells for Lobith (153), Sp
 
 ## Preliminary visual findings
 
-| Station | Model maximum in window | Observation maximum as supplied |
+| Station | Model maximum (UTC) | Observation maximum (source label) |
 | --- | --- | --- |
-| Lobith (153) | 7,831.6 at Jul 16 23:00 UTC | 6,068.1 at Jul 16 18:00 |
-| Speyer (63) | 6,403.0 at Jul 16 23:00 UTC | 3,699.2 at Jul 16 18:00 |
-| Maxau (28) | 6,420.3 at Jul 16 23:00 UTC | 4,047.1 at Jul 16 18:00 |
+| Lobith (153) | 8,490.1 m³/s at Jul 18 17:00 | 6,684.7 (unit unspecified) at Jul 18 06:00 |
+| Speyer (63) | 6,465.5 m³/s at Jul 18 02:00 | 3,957.5 (unit unspecified) at Jul 18 06:00 |
+| Maxau (28) | 6,473.4 m³/s at Jul 17 09:00 | 4,214.6 (unit unspecified) at Jul 17 18:00 |
 
-Within this short window, the model series rise at all three locations. At Lobith, the curves are close early in the window, then the model rises above the observations after July 15. At Speyer and Maxau, model values are already higher at the start of the window and the separation grows as the modeled hydrographs rise. The observations at Speyer and Maxau rise more gradually; Lobith observations rise more strongly late in the plotted period. These are descriptive comparisons of the plotted numbers, not confirmed discharge-unit comparisons.
-
-The model maxima occur at the last included hourly record. They are therefore window-edge maxima, not necessarily event peaks. The observed maxima likewise occur at the last supplied six-hour label in the window and represent provider-described interval means labeled at interval end, not instantaneous peaks. The apparent several-hour difference between the labels must not be interpreted as a travel-time or model timing error because the observation timezone is unknown.
+The hydrographs show a rise toward mid-July followed by a longer recession in the modeled series. The listed maxima occur around July 17–18 rather than at the end of the expanded window. The numeric magnitudes can be read from the plot, but an amplitude agreement claim is not supported because the observation unit has not been confirmed. The model is sampled hourly and the observations every six hours; no averaging, interpolation or clock shift was applied.
 
 ## Time, units and limitations
 

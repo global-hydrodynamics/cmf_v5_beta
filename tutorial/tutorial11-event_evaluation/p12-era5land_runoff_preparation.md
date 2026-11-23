@@ -31,7 +31,7 @@ Ask the AI agent to inspect and reuse the files in
 `inp/tutorial11-ERA5land-Rhine2021Jul/`; avoid repeating successful download or
 conversion work. Keep all downloaded data and logs local and ignored by Git.
 
-The researcher-selected acquisition period is July 1–20, 2021, to retain a
+The researcher-selected acquisition period is July 1–31, 2021, to retain a
 pre-event preparation interval before the initial July 10–25 candidate analysis
 window. It does not establish the model simulation period or adequate spin-up.
 The selected CDS bounds (2.5–13.5°E, 44.5–53.5°N) intentionally extend 0.5°
@@ -65,7 +65,7 @@ redownload or reconvert them without a concrete need.
 For Rhine 2021, preserve these researcher settings in
 `inp/download_ERA5-Land/tutorial11-Rhine_2021Jul.sh`:
 - Dataset `tutorial11-ERA5land-Rhine2021Jul`
-- 2021-07-01 through 2021-07-20 inclusive
+- 2021-07-01 through 2021-07-31 inclusive
 - Requested area 2.5–13.5°E, 44.5–53.5°N (0.5° beyond each Step 11 map edge)
 - Timestep 1 hour, daily download grouping, daily output grouping
 - NetCDF, NCPUS=2
@@ -101,10 +101,9 @@ data package. Report checks actually performed and unresolved items.
 
 The exact researcher-selected settings are retained in the Product Shell and
 summarized in the Tutorial Registry. Step 1's initial 2021-07-10 to 2021-07-25
-candidate analysis window remains unchanged. The July 1–20 runoff acquisition
-period was selected to provide pre-event forcing context; it is not the model
-simulation period, and it does not prove sufficient spin-up. Any evaluation
-after July 20 requires a longer runoff record.
+candidate analysis window remains unchanged. The July 1–31 runoff acquisition
+period provides pre-event and post-event forcing context; it is not the model
+simulation period and does not prove sufficient spin-up.
 
 ERA5-Land's source runoff is accumulated depth (`ro`, metres); the shared
 converter outputs timestep runoff (`runoff`, millimetres per input timestep).
@@ -132,5 +131,5 @@ and points to the Registry; it does not replace the data specification.
 Step 13 prepares or validates the map-specific `ERA5land_global` Input Matrix
 and documents its actual alignment with the observed NetCDF grid. Step 14 then
 decides simulation conditions and prepares the reproducible GOSH script.
-Neither step may infer an approved simulation period from the July 1–20
+Neither step may infer an approved simulation period from the July 1–31
 acquisition interval.

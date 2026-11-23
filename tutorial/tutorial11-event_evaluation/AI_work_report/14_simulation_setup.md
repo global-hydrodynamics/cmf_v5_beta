@@ -1,9 +1,9 @@
 # Step 14 — Simulation Setup and Execution Work Report
 
-> The original execution details below document the first run with
-> `nextxy_noedge.nc`. A second run using the requested standard `nextxy.nc` is
-> now the current Step 14 result; its output is kept separately and is
-> described in the following section. The earlier run remains untouched.
+> The first noedge and later 20-day standard-nextxy records below are retained
+> as history. The current Step 14 result is the 31-day standard-nextxy run
+> under `experiment/Rhine2021/`; that directory was reused, so the earlier
+> noedge products are no longer present there.
 
 ## Inputs and configuration
 
@@ -30,7 +30,7 @@
 - Outputs: `outflw,pthflw,storge,sfcelv,rivdph,flddph,fldfrc,fldare`, hourly
   NetCDF and NetCDF Restart at end only.
 
-## Latest execution — standard `nextxy.nc`
+## Historical 20-day execution — standard `nextxy.nc`
 
 On 2026-11-23, set `CNEXTXY` to `map/Rhine_15min/netcdf/nextxy.nc` and reran
 the same 480-hour, 20-day cold-start experiment in a new directory to preserve
@@ -48,7 +48,27 @@ error, warning, fatal, or STOP text was found. Machine-readable sizes,
 paths and configuration are in
 [`metadata/14_simulation_setup.json`](../metadata/14_simulation_setup.json).
 
-## Execution
+## Current execution — 31 days through July 31
+
+The researcher extended the converted ERA5-Land dataset through July 31 and
+ran the existing s14 workflow with the standard `nextxy.nc` map. Inspection of
+the retained data found 31 raw and 31 converted daily NetCDF files, each with
+24 records and the same 111 × 91 input grid. The combined 744 hourly labels
+are contiguous from July 1 00:00 through July 31 23:00. Retained download and
+conversion logs cover July 1–20 only; per-day logs for July 21–31 were not
+present, so evidence for the extension comes from the local files and model
+log.
+
+The current simulation covers 2021-07-01 00:00 through 2021-08-01 00:00
+exclusive (744 hourly steps), with no spin-up and `LRESTART=.FALSE.`. It
+completed with status 0 and wrote the final Restart at 2021-08-01 00:00.
+All eight hourly NetCDF outputs have 744 time records; outputs plus Restart
+total 23,029,200 bytes. The model log confirms the July 31 runoff file and the
+regional Step 13 matrix were read. The matrix was not regenerated because the
+input spatial grid remains 111 × 91. Current paths, sizes and metadata are in
+[`metadata/14_simulation_setup.json`](../metadata/14_simulation_setup.json).
+
+## Historical 20-day execution instructions
 
 The reproducible entry point is `s14-run_simulation.sh`. The initial run
 documented above used the then-default directory. The current standard-network
@@ -71,7 +91,7 @@ completed in two seconds with exit status 0. The model log has no error or
 warning text and ends at step 480 at 2021-07-21 00:00. No source, map,
 converted runoff, or Input Matrix data were changed.
 
-## Generated runtime products
+## Historical 20-day runtime products
 
 All the following are ignored by Git under `experiment/`:
 
@@ -95,7 +115,7 @@ machine-readable file inventory are in
 `metadata/14_simulation_setup.json`; the actual Namelist and logs remain with
 the ignored experiment products.
 
-## Checks and handoff
+## Historical checks and handoff
 
 - `sh -n s14-run_simulation.sh` passed.
 - The run log shows the regional map inputs and Step 13 Input Matrix loaded,

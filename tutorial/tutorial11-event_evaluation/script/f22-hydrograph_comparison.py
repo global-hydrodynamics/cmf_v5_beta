@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -23,6 +24,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tutorial-dir", type=Path, required=True)
     parser.add_argument("--timeseries-csv", type=Path, required=True)
+    parser.add_argument("--summary-json", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     with args.timeseries_csv.open(newline="", encoding="utf-8") as stream:
@@ -51,8 +53,10 @@ def main() -> None:
         ax.grid(True, color="#d1d8dc", linewidth=0.65, alpha=0.85)
         ax.spines[["top", "right"]].set_visible(False)
         ax.legend(loc="upper left", ncols=2, frameon=True, fontsize=8)
-    start = datetime(2021, 7, 12)
-    end = datetime(2021, 7, 17)
+    summary = json.loads(args.summary_json.read_text(encoding="utf-8"))
+    period = summary["comparison_period"]
+    start = datetime.fromisoformat(period["start_inclusive"])
+    end = datetime.fromisoformat(period["end_exclusive"])
     axes[-1].set_xlim(start, end)
     axes[-1].xaxis.set_major_locator(mdates.DayLocator(interval=1))
     axes[-1].xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))

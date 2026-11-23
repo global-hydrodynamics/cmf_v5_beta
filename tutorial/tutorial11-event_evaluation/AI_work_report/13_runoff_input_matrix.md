@@ -43,7 +43,8 @@ It used the existing `1min/1min.catmxy.bin` and `1min/1min.grdare.bin`.
 ## Checks completed
 
 - Inspected `params.txt`, `1min/location.txt`, the generated descriptor and
-  actual NetCDF coordinate arrays from July 1 and July 20; the two NetCDF grids
+  actual NetCDF coordinate arrays from July 1, July 20 and (during the 2026-11-24
+  extension review) July 31; the NetCDF grids
   match at 111 × 91 and 0.1° with north-to-south latitude.
 - Confirmed the descriptor records model dimensions/outer edges and input
   dimensions. Input resolution, input edges and row order are from the wrapper

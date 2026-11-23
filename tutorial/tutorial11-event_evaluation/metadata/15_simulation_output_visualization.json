@@ -9,7 +9,7 @@
     "step14_metadata": "metadata/14_simulation_setup.json",
     "hourly_files": [
       {
-        "path": "experiment/Rhine2021-nextxy/o_outflwRhine2021Jul.nc",
+        "path": "experiment/Rhine2021/o_outflwRhine2021Jul.nc",
         "variable": "outflw",
         "dimensions": [
           "time",
@@ -17,7 +17,7 @@
           "lon"
         ],
         "shape": [
-          480,
+          744,
           32,
           40
         ],
@@ -25,7 +25,7 @@
         "cell_methods": "time: mean"
       },
       {
-        "path": "experiment/Rhine2021-nextxy/o_pthflwRhine2021Jul.nc",
+        "path": "experiment/Rhine2021/o_pthflwRhine2021Jul.nc",
         "variable": "pthflw",
         "dimensions": [
           "time",
@@ -33,7 +33,7 @@
           "NPTHOUT"
         ],
         "shape": [
-          480,
+          744,
           5,
           20
         ],
@@ -68,12 +68,12 @@
   },
   "period": {
     "start_inclusive": "2021-07-01T00:00:00",
-    "end_exclusive": "2021-07-21T00:00:00",
-    "record_count": 480,
+    "end_exclusive": "2021-08-01T00:00:00",
+    "record_count": 744,
     "time_coordinate_units": "seconds since 2021-07-01 00:00:00",
     "time_record_labels_first_last": [
       "2021-07-01T01:00:00",
-      "2021-07-21T00:00:00"
+      "2021-08-01T00:00:00"
     ],
     "interval_seconds": 3600
   },
@@ -112,14 +112,14 @@
       ],
       "display": "Rhine standard-nextxy main network and bifurcation paths over 1-minute elevation background; arrow direction follows local peak sign; dashed channel and dotted overland-only bifurcations."
     },
-    "analysis_file": "experiment/Rhine2021-nextxy/analysis/maximum_discharge_20210701-20210720.nc",
+    "analysis_file": "experiment/Rhine2021/analysis/maximum_discharge_20210701-20210801.nc",
     "analysis_file_git_ignored": true,
     "figure_generation_script": "f15-maximum_discharge.sh"
   },
   "inspection": {
     "input_time_axes_match": true,
     "hourly_interval_verified": true,
-    "outflw_valid_values": 597600,
+    "outflw_valid_values": 926280,
     "outflw_all_missing_map_cells": 35,
     "outflw_valid_peak_cells": 1245,
     "outflw_peak_range_m3_s": [
@@ -127,7 +127,7 @@
       11592.5264
     ],
     "outflw_negative_peak_cells": 11,
-    "outflw_negative_input_values": 3522,
+    "outflw_negative_input_values": 4725,
     "pthflw_paths_with_active_width_and_peak": 20,
     "pthflw_channel_bifurcation_paths": 7,
     "pthflw_overland_only_paths": 13,
@@ -139,7 +139,7 @@
     "aoi_main_network_links_drawn": 1181,
     "aoi_bifurcation_paths_drawn": 20,
     "figures_regenerated_and_visually_inspected": true,
-    "figure_review": "Both figures show the configured extents with standard nextxy topology. The regional view uses increased, upstream-area-scaled line widths (up to 1.68 points) and 1.50-point bifurcation lines, while keeping the full network legible. The AOI extent is 4–8 E, 49–52 N; legend spacing was visually checked.",
+    "figure_review": "Regenerated from 744-record standard-nextxy outputs on 2026-11-24 and visually inspected: regional river lines are visible at overview scale; AOI layout and legend are readable.",
     "regional_main_network_links_drawn": 1181
   },
   "limitations": [

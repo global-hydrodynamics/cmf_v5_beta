@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "comparison_period": {
-    "start_inclusive": "2021-07-12T00:00:00",
-    "end_exclusive": "2021-07-17T00:00:00"
+    "start_inclusive": "2021-07-10T00:00:00",
+    "end_exclusive": "2021-08-01T00:00:00"
   },
   "overlay_interpretation": "provisional nominal-label overlay; no timezone conversion or temporal resampling",
   "inputs": {
-    "model_netcdf": "experiment/Rhine2021-nextxy/o_outflwRhine2021Jul.nc",
+    "model_netcdf": "experiment/Rhine2021/o_outflwRhine2021Jul.nc",
     "observation_csv": "observation/stations_data/Qobs_06_2021_st153_63_28.csv",
     "step21_allocation_csv": "metadata/21_gauge_allocation.csv",
     "step04_dataset_metadata": "metadata/04_discharge_dataset.json"
   },
   "model": {
-    "path": "experiment/Rhine2021-nextxy/o_outflwRhine2021Jul.nc",
+    "path": "experiment/Rhine2021/o_outflwRhine2021Jul.nc",
     "variable": "outflw",
     "dimensions": [
       "time",
@@ -25,9 +25,9 @@
     "calendar": "standard",
     "time_reference": "UTC interpreted under CF conventions because timezone is omitted; the file has no global Conventions attribute",
     "time_reference_source": "https://cfconventions.org/Data/cf-conventions/cf-conventions-1.11/cf-conventions.html",
-    "records_in_comparison_window": 120,
-    "first_record_in_window": "2021-07-12T00:00:00Z",
-    "last_record_in_window": "2021-07-16T23:00:00Z"
+    "records_in_comparison_window": 528,
+    "first_record_in_window": "2021-07-10T00:00:00Z",
+    "last_record_in_window": "2021-07-31T23:00:00Z"
   },
   "observation": {
     "path": "observation/stations_data/Qobs_06_2021_st153_63_28.csv",
@@ -37,7 +37,7 @@
     "unit": null,
     "time_reference_status": "unresolved; original labels retained and overlaid without adjustment",
     "interval_end_note": "provider describes each supplied value as a six-hour mean labelled at interval end; source file has no bounds or cell_methods",
-    "valid_records_per_station": 20
+    "valid_records_per_station": 88
   },
   "station_series": {
     "153": {
@@ -45,16 +45,16 @@
         "station_name": "Lobith",
         "cell_row_0based": 4,
         "cell_col_0based": 12,
-        "valid_records": 120,
-        "peak_discharge": 7831.59130859375,
-        "peak_datetime_utc": "2021-07-16T23:00:00Z",
+        "valid_records": 528,
+        "peak_discharge": 8490.1455078125,
+        "peak_datetime_utc": "2021-07-18T17:00:00Z",
         "temporal_semantics": "time: mean"
       },
       "observation": {
         "station_name": "Lobith",
-        "valid_records": 20,
-        "peak_discharge": 6068.082,
-        "peak_datetime_as_supplied": "2021-07-16T18:00",
+        "valid_records": 88,
+        "peak_discharge": 6684.746,
+        "peak_datetime_as_supplied": "2021-07-18T06:00",
         "temporal_semantics": "provider-described six-hour mean with interval-end labels"
       }
     },
@@ -63,16 +63,16 @@
         "station_name": "Speyer",
         "cell_row_0based": 15,
         "cell_col_0based": 21,
-        "valid_records": 120,
-        "peak_discharge": 6402.97314453125,
-        "peak_datetime_utc": "2021-07-16T23:00:00Z",
+        "valid_records": 528,
+        "peak_discharge": 6465.47021484375,
+        "peak_datetime_utc": "2021-07-18T02:00:00Z",
         "temporal_semantics": "time: mean"
       },
       "observation": {
         "station_name": "Speyer",
-        "valid_records": 20,
-        "peak_discharge": 3699.167,
-        "peak_datetime_as_supplied": "2021-07-16T18:00",
+        "valid_records": 88,
+        "peak_discharge": 3957.5,
+        "peak_datetime_as_supplied": "2021-07-18T06:00",
         "temporal_semantics": "provider-described six-hour mean with interval-end labels"
       }
     },
@@ -81,16 +81,16 @@
         "station_name": "Maxau",
         "cell_row_0based": 16,
         "cell_col_0based": 21,
-        "valid_records": 120,
-        "peak_discharge": 6420.29736328125,
-        "peak_datetime_utc": "2021-07-16T23:00:00Z",
+        "valid_records": 528,
+        "peak_discharge": 6473.36328125,
+        "peak_datetime_utc": "2021-07-17T09:00:00Z",
         "temporal_semantics": "time: mean"
       },
       "observation": {
         "station_name": "Maxau",
-        "valid_records": 20,
-        "peak_discharge": 4047.083,
-        "peak_datetime_as_supplied": "2021-07-16T18:00",
+        "valid_records": 88,
+        "peak_discharge": 4214.583,
+        "peak_datetime_as_supplied": "2021-07-17T18:00",
         "temporal_semantics": "provider-described six-hour mean with interval-end labels"
       }
     }

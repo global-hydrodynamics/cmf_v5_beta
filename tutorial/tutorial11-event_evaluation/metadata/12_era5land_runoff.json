@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "step": "12",
-  "status": "existing_data_inspected",
+  "status": "existing_data_reinspected_after_extension",
   "dataset_registry": {
     "path": "runoff_dataset.csv",
     "dataset_id": "tutorial11-ERA5land-Rhine2021Jul",
@@ -13,7 +13,7 @@
     "product_shell": "inp/download_ERA5-Land/tutorial11-Rhine_2021Jul.sh",
     "period": {
       "start_date": "2021-07-01",
-      "end_date": "2021-07-20",
+      "end_date": "2021-07-31",
       "inclusive": true
     },
     "requested_domain_bbox_west_south_east_north": [
@@ -34,7 +34,7 @@
     "download_stage": "inp/download_ERA5-Land/s01-download.sh",
     "conversion_stage": "inp/download_ERA5-Land/s02-convert_CMF_nc.sh",
     "conversion_implementation": "inp/download_ERA5-Land/convert_CMF_nc.py",
-    "execution_by": "Researcher before this documentation task",
+    "execution_by": "Researcher; extended files were present before this verification.",
     "rerun_for_step12_documentation": false,
     "result_directory": "inp/tutorial11-ERA5land-Rhine2021Jul/",
     "raw_pattern": "original/ERA5-Land_runoff_YYYYMMDD.nc",
@@ -42,13 +42,13 @@
     "logs": "logs/download.<run-id>/ and logs/convert.<run-id>/"
   },
   "inspection_results": {
-    "raw_file_count": 20,
-    "converted_file_count": 20,
+    "raw_file_count": 31,
+    "converted_file_count": 31,
     "requested_dates_complete": true,
     "download_logs_successful_dates": 20,
     "conversion_logs_with_output_dates": 20,
     "hourly_records_per_day": 24,
-    "total_hourly_time_labels": 480,
+    "total_hourly_time_labels": 744,
     "raw_and_converted_time_labels_contiguous": true,
     "raw_and_converted_coordinate_arrays_match": true,
     "converted_daily_shape_time_lat_lon": [
@@ -74,7 +74,9 @@
       13.55,
       53.55
     ],
-    "interpretation": "These fields summarize file/metadata checks. They do not establish numerical correctness of the conversion or scientific time attribution."
+    "interpretation": "These fields summarize file/metadata checks. They do not establish numerical correctness of the conversion or scientific time attribution.",
+    "observed_grid_spacing_degrees": 0.1,
+    "log_coverage_note": "Retained download and conversion logs cover July 1–20 only; the July 21–31 files exist but their per-day execution logs were not present during this inspection."
   },
   "input_matrix_handoff": {
     "step11_map": "map/Rhine_15min/",
@@ -89,19 +91,21 @@
   "period_context": {
     "event_period_reference": "metadata/02_domain_selection.json#event_context_period",
     "initial_candidate_analysis_period_reference": "metadata/02_domain_selection.json#event_analysis_window",
-    "runoff_acquisition_period": "2021-07-01 to 2021-07-20 inclusive",
+    "runoff_acquisition_period": "2021-07-01 to 2021-07-31 inclusive",
     "simulation_period": {
-      "start_date": null,
-      "end_date": null,
-      "status": "undecided"
+      "start_date": "2021-07-01T00:00:00",
+      "end_date": "2021-08-01T00:00:00",
+      "end_exclusive": true,
+      "status": "executed_in_step14"
     },
-    "notes": "The runoff dates do not set the model simulation or evaluation dates. A July 1 start does not prove adequate spin-up; forcing must be extended before evaluation after July 20."
+    "notes": "The runoff dates do not by themselves define evaluation dates or prove adequate spin-up. Step 14 used 2021-07-01 00:00 through 2021-08-01 00:00 exclusive; see metadata/14_simulation_setup.json."
   },
   "scientific_and_data_limitations": [
     "KG-0019 remains open. ERA5-Land 00 UTC accumulation refers to the preceding 24-hour interval; the conversion first-record and period-boundary treatment has not been scientifically resolved.",
     "No independent reconstruction of converted runoff values from the raw accumulations was performed.",
     "No CaMa-Flood reader or simulation test was run.",
-    "Originals, converted NetCDF files and logs remain ignored local data and are not redistributed."
+    "Originals, converted NetCDF files and logs remain ignored local data and are not redistributed.",
+    "Local raw and converted files were found for all 31 days, but retained per-day download/conversion logs cover only July 1–20; extension execution provenance is based on the files and simulation log, not a complete log set."
   ],
   "next_step_handoff": {
     "step": "13",
