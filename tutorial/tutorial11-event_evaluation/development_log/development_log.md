@@ -677,3 +677,25 @@ spacing. Saved derived peak values under the ignored experiment directory and
 recorded the method, input checks, figures and limitations in Step 15 metadata
 and reports. No model run, observation matching, or accuracy evaluation was
 performed. The cold-start and KG-0019 limitations remain open.
+
+
+## 2026-11-23 — Use standard nextxy and update Step 15 regional map
+
+Changed the Step 14 Rhine run to use the map's standard `nextxy.nc` rather
+than `nextxy_noedge.nc`. Reran the same 480-hour experiment in a separate
+ignored `experiment/Rhine2021-nextxy/` directory, preserving the earlier
+noedge outputs. Updated Step 14/15 metadata, reports and handoff paths.
+Reworked Fig. 15a from a raster view to a full-basin, direction-aware vector
+network in the p02-f02b style, with thin upstream-area-scaled lines so the
+regional network remains legible. Fig. 15b now uses the same standard network.
+Regenerated and visually inspected both figures; the latest Step 14 run and
+Step 15 derived peak file are the inputs. No model code or map data changed.
+
+
+## 2026-11-23 — Restore regional raster in Step 15
+
+Updated Fig. 15a to follow Gallery p02-f01a: signed local peak `outflw` on
+the native 40 × 32 Rhine grid, without interpolation and with missing cells
+white. Fig. 15b remains the p02-f02b-style standard-nextxy direction-aware
+network over the AOI. Reused the existing Step 14 standard-nextxy run and
+peak calculation; no model rerun or scientific calculation change.

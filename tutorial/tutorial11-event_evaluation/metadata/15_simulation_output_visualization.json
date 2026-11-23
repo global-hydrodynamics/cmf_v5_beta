@@ -9,18 +9,34 @@
     "step14_metadata": "metadata/14_simulation_setup.json",
     "hourly_files": [
       {
-        "path": "experiment/Rhine2021/o_outflwRhine2021Jul.nc",
+        "path": "experiment/Rhine2021-nextxy/o_outflwRhine2021Jul.nc",
         "variable": "outflw",
-        "dimensions": ["time", "lat", "lon"],
-        "shape": [480, 32, 40],
+        "dimensions": [
+          "time",
+          "lat",
+          "lon"
+        ],
+        "shape": [
+          480,
+          32,
+          40
+        ],
         "units": "m3/s",
         "cell_methods": "time: mean"
       },
       {
-        "path": "experiment/Rhine2021/o_pthflwRhine2021Jul.nc",
+        "path": "experiment/Rhine2021-nextxy/o_pthflwRhine2021Jul.nc",
         "variable": "pthflw",
-        "dimensions": ["time", "NPTHLEV", "NPTHOUT"],
-        "shape": [480, 5, 20],
+        "dimensions": [
+          "time",
+          "NPTHLEV",
+          "NPTHOUT"
+        ],
+        "shape": [
+          480,
+          5,
+          20
+        ],
         "units": "m3/s",
         "cell_methods": "time: mean"
       }
@@ -28,21 +44,37 @@
     "map": {
       "path": "map/Rhine_15min/",
       "resolution": "15 arc-minutes",
-      "grid_nx_ny": [40, 32],
-      "bounds_west_south_east_north_degrees": [3.0, 45.0, 13.0, 53.0],
-      "network": "map/Rhine_15min/netcdf/nextxy_noedge.nc",
+      "grid_nx_ny": [
+        40,
+        32
+      ],
+      "bounds_west_south_east_north_degrees": [
+        3.0,
+        45.0,
+        13.0,
+        53.0
+      ],
+      "network": "map/Rhine_15min/netcdf/nextxy.nc",
       "bifurcation_parameters": "map/Rhine_15min/netcdf/bifprm.nc",
       "elevation_background": "map/Rhine_15min/1min_nc/1min.elevtn.nc"
     },
     "aoi_metadata": "metadata/02_domain_selection.json",
-    "aoi_bounds_west_south_east_north_degrees": [4.0, 49.0, 8.0, 52.0]
+    "aoi_bounds_west_south_east_north_degrees": [
+      4.0,
+      49.0,
+      8.0,
+      52.0
+    ]
   },
   "period": {
     "start_inclusive": "2021-07-01T00:00:00",
     "end_exclusive": "2021-07-21T00:00:00",
     "record_count": 480,
     "time_coordinate_units": "seconds since 2021-07-01 00:00:00",
-    "time_record_labels_first_last": ["2021-07-01T01:00:00", "2021-07-21T00:00:00"],
+    "time_record_labels_first_last": [
+      "2021-07-01T01:00:00",
+      "2021-07-21T00:00:00"
+    ],
     "interval_seconds": 3600
   },
   "calculation": {
@@ -57,39 +89,61 @@
     "pthflw_cell_methods": "time: maximum (abs(sum(active-layer pthflw))); pthflw: mean"
   },
   "visualization": {
-    "methods": ["p02-f01a Discharge Raster", "p02-f02b Direction-Aware Discharge Vector"],
+    "methods": [
+      "p02-f01a Discharge Raster",
+      "p02-f02b Direction-Aware Discharge Vector"
+    ],
     "regional_figure": {
       "path": "figure/f15a-maximum_discharge-regional.png",
-      "extent_west_south_east_north_degrees": [3.0, 45.0, 13.0, 53.0],
-      "display": "Native 40 by 32 model grid; no spatial interpolation; signed diverging nonlinear color scale; missing cells white."
+      "extent_west_south_east_north_degrees": [
+        3.0,
+        45.0,
+        13.0,
+        53.0
+      ],
+      "display": "Native 40 by 32 model-grid raster of signed local outflw peaks; no spatial interpolation; missing cells white; signed diverging nonlinear scale."
     },
     "aoi_figure": {
       "path": "figure/f15b-maximum_discharge-aoi.png",
-      "extent_west_south_east_north_degrees": [4.0, 49.0, 8.0, 52.0],
-      "display": "Rhine main network and bifurcation paths over 1-minute elevation background; arrow direction follows local peak sign; dashed channel and dotted overland-only bifurcations."
+      "extent_west_south_east_north_degrees": [
+        4.0,
+        49.0,
+        8.0,
+        52.0
+      ],
+      "display": "Rhine standard-nextxy main network and bifurcation paths over 1-minute elevation background; arrow direction follows local peak sign; dashed channel and dotted overland-only bifurcations."
     },
-    "analysis_file": "experiment/Rhine2021/analysis/maximum_discharge_20210701-20210720.nc",
+    "analysis_file": "experiment/Rhine2021-nextxy/analysis/maximum_discharge_20210701-20210720.nc",
     "analysis_file_git_ignored": true,
     "figure_generation_script": "f15-maximum_discharge.sh"
   },
   "inspection": {
     "input_time_axes_match": true,
     "hourly_interval_verified": true,
-    "outflw_valid_values": 203040,
-    "outflw_all_missing_map_cells": 857,
-    "outflw_valid_peak_cells": 423,
-    "outflw_peak_range_m3_s": [-1095.3622, 11591.9121],
-    "outflw_negative_peak_cells": 8,
-    "outflw_negative_input_values": 2463,
+    "outflw_valid_values": 597600,
+    "outflw_all_missing_map_cells": 35,
+    "outflw_valid_peak_cells": 1245,
+    "outflw_peak_range_m3_s": [
+      -1095.3833,
+      11592.5264
+    ],
+    "outflw_negative_peak_cells": 11,
+    "outflw_negative_input_values": 3522,
     "pthflw_paths_with_active_width_and_peak": 20,
     "pthflw_channel_bifurcation_paths": 7,
     "pthflw_overland_only_paths": 13,
-    "pthflw_peak_range_m3_s": [-202.8142, 2373.1873],
+    "pthflw_peak_range_m3_s": [
+      -202.808,
+      2373.2985
+    ],
     "pthflw_negative_peak_paths": 4,
-    "aoi_main_network_links_drawn": 415,
+    "aoi_main_network_links_drawn": 1181,
     "aoi_bifurcation_paths_drawn": 20,
     "figures_regenerated_and_visually_inspected": true,
-    "figure_review": "Both figures show the configured extents. The AOI extent was corrected to west/east/south/north for plotting; legend spacing was adjusted after visual inspection."
+    "figure_review": "Fig. 15a shows the native 40 by 32 grid over 3–13 E, 45–53 N without interpolation; 35 missing cells are white. Fig. 15b shows the standard nextxy topology in the 4–8 E, 49–52 N AOI; the vector network, arrows, bifurcation styles and legend were visually inspected.",
+    "regional_native_grid_cells": 1280,
+    "regional_valid_peak_cells_rendered": 1245,
+    "regional_missing_cells_rendered_white": 35
   },
   "limitations": [
     "This is visualization and basic output inspection, not observation matching, numerical model validation or performance evaluation.",

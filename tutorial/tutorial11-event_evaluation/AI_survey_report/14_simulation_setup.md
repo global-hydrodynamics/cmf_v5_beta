@@ -9,7 +9,8 @@ experiment runs continuously from **2021-07-01 00:00 to 2021-07-21 00:00
 (exclusive)**, for 480 hourly steps. It starts from the model's standard state
 without a Restart or spin-up.
 
-The run used the `Rhine_15min` 40 × 32 map, 20 daily NetCDF runoff files
+The latest run used the `Rhine_15min` 40 × 32 map with the standard
+`netcdf/nextxy.nc` river network, 20 daily NetCDF runoff files
 (`runoff_20210701.nc`–`runoff_20210720.nc`), and the regional
 `ERA5land_Rhine2021Jul` Input Matrix. Individual NetCDF map products, hourly
 NetCDF model outputs, and an end-of-run NetCDF Restart were configured.
@@ -21,9 +22,12 @@ the selected regional river network, NetCDF map fields, bifurcation table, and
 Step 13 Input Matrix were read. Eight output files were created, each with 480
 time records and 32 × 40 map cells. The output time coordinate spans offsets
 3,600 to 1,728,000 seconds from 2021-07-01 00:00, and the Restart was written
-at 2021-07-21 00:00. The hourly outputs plus Restart total 6,665,927 bytes.
+at 2021-07-21 00:00. The latest standard-nextxy hourly outputs plus Restart
+total 14,878,117 bytes.
 
-The runtime files are in the Git-ignored `experiment/Rhine2021/` directory.
+The latest runtime files are in the Git-ignored
+`experiment/Rhine2021-nextxy/` directory. The earlier run using
+`nextxy_noedge.nc` remains preserved under `experiment/Rhine2021/`.
 Settings and per-file dimensions/sizes are catalogued in
 [`metadata/14_simulation_setup.json`](../metadata/14_simulation_setup.json).
 

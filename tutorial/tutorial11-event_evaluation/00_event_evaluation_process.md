@@ -249,23 +249,25 @@ Use the Step 11 regional map, Step 12 runoff Registry and Step 13 regional
 Input Matrix to define and run the requested experiment. The Rhine 2021 sample
 has one 20-day, hourly, cold-start run from 2021-07-01 00:00 to the exclusive
 end 2021-07-21 00:00. It uses daily ERA5-Land NetCDF input and hourly NetCDF
-outputs plus an end-of-run NetCDF Restart. The execution completed, but this
-is an operational run rather than a spun-up, calibrated or scientifically
-validated event reconstruction. KG-0019 remains open. See [p14](p14-simulation_setup-run.md),
+outputs plus an end-of-run NetCDF Restart. The current run uses the standard
+`nextxy.nc` network; the earlier `nextxy_noedge.nc` run is preserved
+separately. This is an operational run rather than a spun-up, calibrated or
+scientifically validated event reconstruction. KG-0019 remains open. See [p14](p14-simulation_setup-run.md),
 the [Survey Report](AI_survey_report/14_simulation_setup.md), the
 [Work Report](AI_work_report/14_simulation_setup.md), and
 [`metadata/14_simulation_setup.json`](metadata/14_simulation_setup.json).
 Generated experiment files are kept under the Git-ignored
-`experiment/Rhine2021/` directory.
+`experiment/Rhine2021-nextxy/` directory (the earlier run remains under
+`experiment/Rhine2021/`).
 
 ### Step 15 — Simulation Output Visualization
 
 Use the retained hourly `outflw` and `pthflw` files from Step 14 to map the
-signed local maximum absolute discharge over the run period. Fig. 15a shows the
-regional raster and Fig. 15b shows direction-aware main-channel and
-bifurcation peaks in the Step 2 satellite-analysis AOI. Per-cell and per-path
-peaks can occur at different hours, so neither figure is a simultaneous flow
-snapshot. Visualization is an output inspection step; it does not establish
+signed local maximum absolute discharge over the run period. Fig. 15a shows
+the native-grid `outflw` peak raster across the full simulation domain; Fig. 15b
+shows the direction-aware river network and bifurcation peaks in the Step 2
+satellite-analysis AOI. Cell and path peaks can occur at different hours, so
+neither figure is a simultaneous flow snapshot. Visualization is an output inspection step; it does not establish
 hydrologic skill, resolve the cold-start limitation or replace observation
 matching. See [p15](p15-simulation_output_visualization.md), the [Survey
 Report](AI_survey_report/15_simulation_output_visualization.md), the [Work

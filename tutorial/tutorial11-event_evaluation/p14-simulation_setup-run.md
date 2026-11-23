@@ -12,6 +12,8 @@
 **Tasks**
 
 - Review the actual map, forcing, matrix and model interfaces.
+- Use the standard regional river network `map/Rhine_15min/netcdf/nextxy.nc`;
+  do not use `nextxy_noedge.nc` for this Rhine run.
 - Read the runoff tag and matrix/diminfo paths from Step 13 metadata; do not substitute the global ERA5-Land matrix.
 - Configure and run the specified single 20-day, hourly cold-start experiment.
 - Inspect the run log, hourly NetCDF outputs and end-of-run NetCDF Restart.
@@ -19,8 +21,10 @@
 
 **Outputs**
 
-- `s14-run_simulation.sh` and generated `experiment/Rhine2021/input_cmf.nam`.
-- Ignored experiment outputs, logs and Restart under `experiment/Rhine2021/`.
+- `s14-run_simulation.sh` and generated
+  `experiment/Rhine2021-nextxy/input_cmf.nam`.
+- Ignored experiment outputs, logs and Restart under
+  `experiment/Rhine2021-nextxy/`.
 - `metadata/14_simulation_setup.json`, `AI_survey_report/14_simulation_setup.md`, and `AI_work_report/14_simulation_setup.md`.
 
 This is an operational cold-start run, not a calibrated or scientifically validated event reconstruction. The configured dates and settings come from the researcher; do not infer spin-up adequacy or resolve KG-0019 from a successful run.
@@ -33,7 +37,10 @@ The Rhine 2021 sample run is configured in `s14-run_simulation.sh`. Review or ed
 bash s14-run_simulation.sh
 ```
 
-The default run directory is `experiment/Rhine2021/`, excluded from Git. The script preserves existing run contents and stops if that directory is nonempty. To retain a prior run and execute another, set `RUNDIR` to a new location:
+The default run directory is `experiment/Rhine2021-nextxy/`, excluded from
+Git. The script preserves existing run contents and stops if that directory is
+nonempty. To retain a prior run and execute another, set `RUNDIR` to a new
+location:
 
 ```sh
 RUNDIR="$PWD/experiment/Rhine2021-retry" bash s14-run_simulation.sh
@@ -47,7 +54,8 @@ Afterward, inspect the generated Namelist, `log_CaMa.txt`, console/runtime logs,
 Complete Tutorial 11 Step 14 using p14-simulation_setup-run.md and the existing
 Rhine 2021 sample configuration. Inspect the current branch, local rules,
 Step 11–13 artifacts, actual map/forcing/matrix files, and current model
-Namelist/output interfaces before implementation. Reuse the existing v5
+Namelist/output interfaces before implementation. Set `CNEXTXY` to the
+standard Rhine `map/Rhine_15min/netcdf/nextxy.nc`. Reuse the existing v5
 GOSH defaults and do not change model source, map products, runoff conversion,
 or the Input Matrix.
 

@@ -82,7 +82,7 @@ def read_map_data(map_dir: Path):
         lon = np.asarray(data.variables["lon"][:], dtype=np.float64)
         lat = np.asarray(data.variables["lat"][:], dtype=np.float64)
         uparea = np.asarray(np.ma.filled(data.variables["uparea"][:], np.nan), dtype=np.float64)
-    with Dataset(netcdf_dir / "nextxy_noedge.nc") as data:
+    with Dataset(netcdf_dir / "nextxy.nc") as data:
         nextx = np.asarray(np.ma.filled(data.variables["nextx"][:], -9999), dtype=np.int32)
         nexty = np.asarray(np.ma.filled(data.variables["nexty"][:], -9999), dtype=np.int32)
     with Dataset(netcdf_dir / "lonlat.nc") as data:
@@ -273,17 +273,22 @@ def write_analysis(path: Path, lon: np.ndarray, lat: np.ndarray, time_numeric: n
         )
 
 
-def draw_regional(peak: np.ndarray, geometry, output: Path, color_levels: np.ndarray,
-                  linthresh: float, linear_frac: float, dpi: int):
+def draw_regional(peak: np.ndarray, geometry, output: Path,
+                  color_levels: np.ndarray, linthresh: float,
+                  linear_frac: float, dpi: int):
     nx, ny, _, west, east, south, north = geometry
     norm = VECTOR.RASTER.AsymmetricSignedLogNorm(
-        float(color_levels[0]), float(color_levels[-1]), linthresh, linear_frac,
+        vmin=float(color_levels[0]), vmax=float(color_levels[-1]),
+        linthresh=linthresh, linear_color_fraction=linear_frac,
     )
     cmap = VECTOR.RASTER.zero_centered_spectral_cmap(
         VECTOR.get_cmap("diverge_spectral"), norm.zero_position,
     )
     cmap.set_bad("white")
-    title = "Tutorial 11 Fig. 15a — Maximum River Discharge\nSigned value at local max |outflw|, 1–20 Jul 2021"
+    title = (
+        "Tutorial 11 Fig. 15a — Maximum River Discharge: Regional Map\n"
+        "Signed value at each cell's local max |outflw|, 1–20 Jul 2021"
+    )
     fig, ax = VECTOR.RASTER.create_map_axes(geometry, west, east, south, north, title)
     ax.set_xlabel("Longitude")
     ax.set_ylabel("Latitude")
@@ -292,11 +297,13 @@ def draw_regional(peak: np.ndarray, geometry, output: Path, color_levels: np.nda
         fig, ax, image, "Signed peak hourly mean outflw (m³/s)", extend="both",
     )
     colorbar.set_ticks(color_levels)
-    colorbar.ax.set_yticklabels([VECTOR.RASTER.format_color_level(x) for x in color_levels])
+    colorbar.ax.set_yticklabels([VECTOR.RASTER.format_color_level(value) for value in color_levels])
     output.parent.mkdir(parents=True, exist_ok=True)
     VECTOR.save_panel(fig, output, dpi, figure_height=8.0)
     plt.close(fig)
-
+    valid = int(np.isfinite(peak).sum())
+    return {"native_grid_shape_y_x": [ny, nx], "valid_peak_cells": valid,
+            "missing_cells": int(nx * ny - valid)}
 
 def draw_aoi(map_dir: Path, extent, map_data, out_peak: np.ndarray, path_result,
              output: Path, color_levels: np.ndarray, linthresh: float,
@@ -482,8 +489,10 @@ def main() -> None:
         out_time, pth_result, [str(outflw_path), str(pthflw_path)],
         dates[0].strftime("%Y-%m-%d %H:%M:%S"), dates[-1].strftime("%Y-%m-%d %H:%M:%S"),
     )
-    draw_regional(out_peak, geometry, args.regional_figure.resolve(), levels,
-                  args.linthresh, args.linear_frac, args.dpi)
+    regional_stats = draw_regional(
+        out_peak, geometry, args.regional_figure.resolve(), levels,
+        args.linthresh, args.linear_frac, args.dpi,
+    )
     aoi_stats = draw_aoi(
         map_dir, aoi, map_data, out_peak, pth_result, args.aoi_figure.resolve(),
         levels, args.linthresh, args.linear_frac, args.dpi, line_width_scale=1.1,
@@ -513,6 +522,7 @@ def main() -> None:
         "aoi_extent_wsen": [west, south, east, north],
         "analysis_file": str(analysis_path),
         "figures": [str(args.regional_figure.resolve()), str(args.aoi_figure.resolve())],
+        "regional": regional_stats,
         "aoi": aoi_stats,
     }, indent=2))
 

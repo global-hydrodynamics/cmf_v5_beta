@@ -11,11 +11,12 @@ accuracy.
 
 ![Fig. 15a — Signed local peak discharge across the Rhine regional map](../figure/f15a-maximum_discharge-regional.png)
 
-Each native Rhine map cell is colored by the signed `outflw` value at the hour
-when its absolute hourly-mean value was largest. Positive peaks dominate much
-of the displayed network cells, with a small number of negative local peaks.
-White areas include cells with no valid river output. No interpolation is
-applied.
+The figure shows signed `outflw` peaks on the native 40 × 32 model grid
+across 3–13°E, 45–53°N. Each cell contains the signed hourly value from its
+own maximum-|outflw| record; missing cells are white and the native grid is not
+interpolated. Of 1,280 cells, 1,245 have a valid peak and 35 remain missing.
+Eleven valid peaks are negative. The diverging nonlinear scale retains the
+sign and emphasizes the range of peak magnitudes.
 
 ## Fig. 15b — Area of Interest network
 
@@ -29,9 +30,9 @@ selected signed peak; color represents the discharge scale.
 
 ## Interpretation and limits
 
-Every cell and path selects its own peak hour. The regional and AOI maps are
-therefore not a common-time flow state, and apparent spatial patterns should
-not be read as a flood wave at a single instant. The run is a 20-day cold-start
+Every cell and path selects its own peak hour. The regional raster and AOI
+network map are therefore not a common-time flow state, and apparent spatial
+patterns should not be read as a flood wave at a single instant. The run is a 20-day cold-start
 execution with no spin-up, so initial conditions may affect storage and flow.
 Operational completion and readable outputs do not establish hydrologic
 plausibility or skill. KG-0019, concerning ERA5-Land accumulation timing and

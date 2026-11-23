@@ -1,5 +1,10 @@
 # Step 14 — Simulation Setup and Execution Work Report
 
+> The original execution details below document the first run with
+> `nextxy_noedge.nc`. A second run using the requested standard `nextxy.nc` is
+> now the current Step 14 result; its output is kept separately and is
+> described in the following section. The earlier run remains untouched.
+
 ## Inputs and configuration
 
 - Branch/revision: `feature/package-builder`, `e8763a23`.
@@ -25,21 +30,41 @@
 - Outputs: `outflw,pthflw,storge,sfcelv,rivdph,flddph,fldfrc,fldare`, hourly
   NetCDF and NetCDF Restart at end only.
 
+## Latest execution — standard `nextxy.nc`
+
+On 2026-11-23, set `CNEXTXY` to `map/Rhine_15min/netcdf/nextxy.nc` and reran
+the same 480-hour, 20-day cold-start experiment in a new directory to preserve
+the original results:
+
+```sh
+RUNDIR="$PWD/experiment/Rhine2021-nextxy" bash s14-run_simulation.sh
+```
+
+The model exited with status 0 after 480 steps. The run wrote eight hourly
+NetCDF files (each 480 records; gridded fields 32 × 40, `pthflw` 5 × 20) and
+the end-time Restart. Outputs plus Restart total 14,878,117 bytes. The model
+log confirms the regular `nextxy.nc` input and successful completion; no
+error, warning, fatal, or STOP text was found. Machine-readable sizes,
+paths and configuration are in
+[`metadata/14_simulation_setup.json`](../metadata/14_simulation_setup.json).
+
 ## Execution
 
-The reproducible entry point is `s14-run_simulation.sh`. From the Tutorial 11
-directory:
+The reproducible entry point is `s14-run_simulation.sh`. The initial run
+documented above used the then-default directory. The current standard-network
+run uses `experiment/Rhine2021-nextxy/`. From the Tutorial 11 directory:
 
 ```sh
 bash s14-run_simulation.sh
 ```
 
-The script resolves paths from its own location and writes to
-`experiment/Rhine2021/`. It does not clear or overwrite a nonempty run
+The script resolves paths from its own location and defaults to
+`experiment/Rhine2021-nextxy/`. It does not clear or overwrite a nonempty run
 directory; set `RUNDIR` to another path for an additional run. The first
-attempt exposed one extra `..` in the repository-root path and stopped before
-the model launched. That path was corrected, after which the script completed
-successfully. No generated result existed to overwrite.
+attempt of the original noedge run exposed one extra `..` in the repository-
+root path and stopped before the model launched. That path was corrected,
+after which the run completed successfully. No generated result existed to
+overwrite.
 
 The successful execution ran on macOS arm64 with four OpenMP threads. It
 completed in two seconds with exit status 0. The model log has no error or
@@ -84,7 +109,7 @@ the ignored experiment products.
 - `experiment/Rhine2021/` is Git-ignored; only the reusable script and compact
   settings/reports are intended for Git.
 
-This operational run does not test hydrologic skill. It uses no spin-up, and
+The current standard-nextxy operational run does not test hydrologic skill. It uses no spin-up, and
 KG-0019 (ERA5-Land 00 UTC accumulation attribution and converter boundary
 handling) remains unresolved. Step 15 now visualizes signed local peak
 discharge from the retained `outflw` and `pthflw` files; see

@@ -8,14 +8,15 @@
   `metadata/14_simulation_setup.json`.
 - The `Rhine_15min` map and its network, bifurcation, and elevation products.
 - The Step 2 satellite-analysis AOI in `metadata/02_domain_selection.json`.
-- Visualization methods from Gallery p02-f01a and p02-f02b.
+- The standard `nextxy.nc` network and visualization methods from Gallery
+  p02-f01a and p02-f02b.
 
 **Tasks**
 
 - Inspect the actual NetCDF time axes and calculate signed local maximum-
   absolute discharge values over the retained 480 hourly records.
-- Generate and visually inspect the regional raster map (Fig. 15a) and
-  direction-aware AOI network map (Fig. 15b).
+- Generate and visually inspect the native-grid regional raster (Fig. 15a)
+  and direction-aware network map in the AOI (Fig. 15b).
 - Save the derived peak values and record the inputs, method, results and
   scientific limits in metadata and reports.
 
@@ -23,15 +24,15 @@
 
 - `figure/f15a-maximum_discharge-regional.png`
 - `figure/f15b-maximum_discharge-aoi.png`
-- `experiment/Rhine2021/analysis/maximum_discharge_20210701-20210720.nc`
+- `experiment/Rhine2021-nextxy/analysis/maximum_discharge_20210701-20210720.nc`
   (derived, ignored runtime output)
 - Step 15 metadata, Survey Report and Work Report.
 
-The regional map shows each grid cell's signed `outflw` value at its own time
-of maximum absolute hourly mean. The AOI map independently selects the local
-peak for each main-channel link and bifurcation path. These peaks may occur at
-different times; neither figure is a simultaneous flow snapshot or a model
-skill assessment. The run has no spin-up, and the ERA5-Land timing issue
+Fig. 15a shows each native map cell's signed `outflw` value at its own time
+of maximum absolute hourly mean. Fig. 15b shows each main-channel link's
+corresponding cell peak and each bifurcation path's local peak. These peaks
+may occur at different times; neither figure is a simultaneous flow snapshot
+or a model skill assessment. The run has no spin-up, and the ERA5-Land timing issue
 KG-0019 remains unresolved.
 
 ## Human Instructions
@@ -54,7 +55,7 @@ workflow with an error.
 ```text
 Complete Tutorial 11 Step 15 using this prompt and the retained Step 14
 outputs. Inspect applicable repository/tutorial rules, Step 14 metadata,
-Step 2 AOI metadata, Rhine map files and Gallery p02-f01a / p02-f02b methods.
+Step 2 AOI metadata, Rhine map files and Gallery p02-f01a/p02-f02b methods.
 Do not rerun CaMa-Flood or change its inputs or outputs.
 
 Read and verify the actual hourly time axes. For each outflw cell, select the
@@ -64,14 +65,17 @@ hour, first sum signed values over map layers with positive width, then select
 the signed sum at the path's maximum absolute value. Do not sum per-layer
 maxima. Keep main-channel and bifurcation peak times independent.
 
-Generate Fig. 15a as a native-grid, non-interpolated signed peak raster over
-the full Rhine map and Fig. 15b as the direction-aware Rhine network over the
-Step 2 satellite-analysis AOI, using the map's 1-minute elevation background.
-Reuse existing Gallery helpers without using Mekong-specific paths or data.
+Generate Fig. 15a as the native 40 × 32 signed-peak `outflw` raster over the
+full map extent, following Gallery p02-f01a without interpolation and with
+missing cells white. Generate Fig. 15b as the direction-aware signed-peak
+network over the Step 2 AOI, using the map's 1-minute elevation background.
+Read the standard `nextxy.nc` topology specified in Step 14 and preserve the
+p02-f02b width, flow-direction and bifurcation-style rules. Reuse existing
+Gallery helpers without using Mekong-specific paths or data.
 Record that local peaks are not a simultaneous state and that this cold-start
 run does not establish skill. Preserve the no-spin-up and KG-0019 limitations.
 
-Save a compact derived NetCDF under experiment/Rhine2021/analysis/, create
+Save a compact derived NetCDF under experiment/Rhine2021-nextxy/analysis/, create
 metadata/15_simulation_output_visualization.json and the Step 15 Survey/Work
 Reports, update the process and Step 14 handoff, and add a development-log
 entry. Visually inspect both figures and perform focused data/geometry checks.

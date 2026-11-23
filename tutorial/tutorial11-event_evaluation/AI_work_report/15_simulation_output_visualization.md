@@ -2,8 +2,9 @@
 
 ## Inputs and method
 
-Used the existing Step 14 files `experiment/Rhine2021/o_outflwRhine2021Jul.nc`
-and `o_pthflwRhine2021Jul.nc`, resolved through
+Used the current Step 14 files
+`experiment/Rhine2021-nextxy/o_outflwRhine2021Jul.nc` and
+`o_pthflwRhine2021Jul.nc`, resolved through
 `metadata/14_simulation_setup.json`. The output map is `Rhine_15min`, 40 × 32,
 with bounds 3–13°E and 45–53°N. The AOI was read from Step 2 metadata as
 4–8°E and 49–52°N.
@@ -30,35 +31,41 @@ From `tutorial/tutorial11-event_evaluation/`:
 bash f15-maximum_discharge.sh
 ```
 
-The script reuses Gallery p02 raster and direction-aware vector helpers. It
-reads Rhine `uparea`, `nextxy_noedge`, `lonlat`, `bifprm`, and 1-minute
-elevation products; no Mekong data paths or stations are used. CaMa-Flood was
-not rerun.
+The script reuses the Gallery p02-f01a native-grid raster conventions for
+Fig. 15a and p02-f02b direction-aware vector helpers for Fig. 15b. It reads
+Rhine `uparea`, the standard `nextxy.nc`, `lonlat`, `bifprm`, and 1-minute
+elevation products; no Mekong data paths or stations are used. The Step 14 run was
+executed once with `nextxy.nc` in a fresh directory; the previous `noedge` run
+was left untouched.
 
-- `figure/f15a-maximum_discharge-regional.png` — 40 × 32 native-grid signed
-  local `outflw` peaks.
+- `figure/f15a-maximum_discharge-regional.png` — full 3–13°E, 45–53°N
+  direction-aware network with signed local peaks from all 1,181 valid
+  main-channel links.
 - `figure/f15b-maximum_discharge-aoi.png` — AOI river network with main-link
   and bifurcation signed peaks, flow arrows, and elevation background.
-- `experiment/Rhine2021/analysis/maximum_discharge_20210701-20210720.nc` —
+- `experiment/Rhine2021-nextxy/analysis/maximum_discharge_20210701-20210720.nc` —
   derived peak data under the Git-ignored experiment directory (33,864 bytes).
 
 ## Checks and visual review
 
-- Read 203,040 valid `outflw` values; 857 grid cells have no valid output and
-  remain missing. There are 423 valid peak cells. Signed peak range:
-  −1,095.36 to 11,591.91 m³/s; 8 cells have a negative signed peak. The source
-  includes 2,463 negative hourly values, none treated as missing.
+- Read 597,600 valid `outflw` values; 35 grid cells have no valid output and
+  remain missing. There are 1,245 valid peak cells. Signed peak range:
+  −1,095.38 to 11,592.53 m³/s; 11 cells have a negative signed peak. The
+  source includes 3,522 negative hourly values, none treated as missing.
 - Recomputed every valid cell's signed local peak directly from the source
-  records; all 423 values match the saved derived NetCDF within float
+  records; all 1,245 values match the saved derived NetCDF within float
   precision.
 - The 20 `pthflw` output IDs and endpoint coordinates match the Rhine
   `bifprm.nc` table. Positive layer widths identify 7 channel-bifurcation and
-  13 overland-only paths. Signed peak range: −202.81 to 2,373.19 m³/s; 4 path
+  13 overland-only paths. Signed peak range: −202.81 to 2,373.30 m³/s; 4 path
   peaks are negative.
-- Fig. 15a displays the full 3–13°E, 45–53°N map extent on the native grid.
-- Fig. 15b displays the specified 4–8°E, 49–52°N AOI, 415 main-network links
+- Fig. 15a displays the full 3–13°E, 45–53°N native 40 × 32 raster; 1,245
+  peak cells are valid and 35 all-missing cells are white.
+- Fig. 15b displays the specified 4–8°E, 49–52°N AOI, 1,181 main-network links
   and all 20 valid bifurcation paths over the Rhine 1-minute elevation data.
-- Both PNGs were opened and inspected. The initial AOI axis argument order
+- Both PNGs were opened and inspected. Fig. 15a shows the configured native
+  grid without interpolation, with readable sign and magnitude variation. The
+  initial AOI axis argument order
   showed an incorrect extent and was corrected. A second visual pass found
   overlap between the lower legend and longitude label; layout spacing was
   adjusted, then the figures were regenerated and inspected again.

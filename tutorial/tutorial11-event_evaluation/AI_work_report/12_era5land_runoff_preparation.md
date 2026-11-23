@@ -77,8 +77,10 @@ NetCDF grid, and generated/checked the map-specific regional Input Matrix; its
 results are in `AI_work_report/13_runoff_input_matrix.md` and
 `metadata/13_runoff_input_matrix.json`. Step 14 decided the simulation period,
 spin-up, forcing coverage and model settings, then executed the requested run.
-Step 15 visualizes the retained outputs; Step 16 will design observation
-matching. Do not infer simulation conditions from the acquisition interval.
+The latest Step 14 run uses the standard Rhine `nextxy.nc` map; its earlier
+`nextxy_noedge.nc` run remains preserved. Step 15 visualizes the retained
+latest outputs; Step 16 will design observation matching. Do not infer
+simulation conditions from the acquisition interval.
 KG-0019 remains unresolved: ERA5-Land 00 UTC represents
 the preceding 24-hour accumulation, and conversion first-record/period-boundary
 behavior is not scientifically resolved. No CaMa-Flood run or model-observation

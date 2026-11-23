@@ -1,13 +1,13 @@
 #!/bin/sh
 # Run the Tutorial 11 Rhine 2021 cold-start hourly experiment.
-# Outputs are kept in the Git-ignored experiment/Rhine2021/ directory.
+# Outputs are kept in the Git-ignored experiment/Rhine2021-nextxy/ directory.
 set -eu
 
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 CMF_BASE=$(CDPATH= cd "$SCRIPT_DIR/../.." && pwd -P)
 
 # -------------------------- User settings ------------------------------
-PROJ="Rhine2021"
+PROJ="Rhine2021-nextxy"
 RUNDIR=${RUNDIR:-"${SCRIPT_DIR}/experiment/${PROJ}"} # Override to retain or create another run.
 
 # Simulation interval; the end time is exclusive (20 days, 480 hours).
@@ -23,7 +23,7 @@ END_HOUR=0
 # Rhine regional map and its individual NetCDF files.
 MAPDIR="${CMF_BASE}/map/Rhine_15min"
 MAP_NETCDF_DIR="${MAPDIR}/netcdf"
-NEXTXY="${MAP_NETCDF_DIR}/nextxy_noedge.nc" # Regional map default excludes boundary-affected networks.
+NEXTXY="${MAP_NETCDF_DIR}/nextxy.nc"   # Standard Rhine network, including boundary-affected connections.
 RIVWTH="${MAP_NETCDF_DIR}/rivwth_merit.nc"   # Map workflow default MERIT-based river width.
 
 # Step 13 metadata is the source of the regional matrix tag and paired file paths.
@@ -144,7 +144,7 @@ EHOUR = ${END_HOUR}       ! Exclusive simulation end hour.
 /
 &NMAP
 LMAPCDF = .FALSE.                          ! Read individual map files by their extensions.
-CNEXTXY = "${NEXTXY}"                     ! Regional network excluding boundary-affected cells.
+CNEXTXY = "${NEXTXY}"                     ! Standard Rhine network.
 CGRAREA = "${MAP_NETCDF_DIR}/ctmare.nc"   ! Unit-catchment area [m2].
 CELEVTN = "${MAP_NETCDF_DIR}/elevtn.nc"   ! Channel-top elevation [m].
 CNXTDST = "${MAP_NETCDF_DIR}/nxtdst.nc"   ! Distance to downstream unit catchment [m].
