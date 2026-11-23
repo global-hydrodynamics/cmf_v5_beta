@@ -192,22 +192,27 @@ def plot_sensitivity(event: dict[str, str]) -> None:
 def plot_downscaling(event: dict[str, str]) -> None:
     bounds = (102.0, 108.0, 9.0, 15.0)
     shape = (360, 360)
+    expected_lon = bounds[0] + (np.arange(shape[1]) + 0.5) / 60.0
+    expected_lat = bounds[3] - (np.arange(shape[0]) + 0.5) / 60.0
     arrays = []
     for case in ("control", "deep_channel"):
-        path = OUT / "downscaling" / case / "flddph_1min_provisional.bin"
+        path = OUT / "downscaling" / case / "flddph_1min_provisional.nc"
         if not path.is_file():
             raise FileNotFoundError(f"Run s04-downscale_event.sh first: {path}")
-        raw = np.fromfile(path, dtype="<f4")
-        if raw.size != shape[0] * shape[1]:
-            raise ValueError(f"{path} contains {raw.size} Float32 values; expected {shape}")
-        arrays.append(raw.reshape(shape))
+        with xr.open_dataset(path, decode_times=True, mask_and_scale=True) as ds:
+            if ds["flddph"].dims != ("lat", "lon") or ds["flddph"].attrs.get("units") != "m":
+                raise ValueError(f"{path} must contain flddph(lat,lon) in metres")
+            if ds["flddph"].shape != shape or not np.allclose(ds.lon.values, expected_lon, rtol=0, atol=1e-5) or \
+               not np.allclose(ds.lat.values, expected_lat, rtol=0, atol=1e-5):
+                raise ValueError(f"{path} coordinates do not match the 102–108°E, 9–15°N one-minute grid")
+            arrays.append(data_values(ds["flddph"]))
     valid_vals = np.concatenate([x[np.isfinite(x) & (x != -9999.0)] for x in arrays])
     vmax = float(np.nanpercentile(valid_vals, 98))
     downscale_cmap = plt.get_cmap(FIELD_CMAP).copy()
     downscale_cmap.set_bad("#f4f4f4")
     fig, axes = plt.subplots(1, 2, figsize=(11, 5), constrained_layout=True)
     for ax, values, case in zip(axes, arrays, ("Control", "Deep Channel")):
-        masked = np.ma.masked_where(~np.isfinite(values) | (values == -9999.0), values)
+        masked = np.ma.masked_invalid(values)
         m = ax.imshow(masked, extent=bounds, origin="upper", cmap=downscale_cmap, vmin=0, vmax=vmax,
                       interpolation="nearest", aspect="auto")
         ax.set_title(case); ax.set_xlabel("Longitude (°E)"); ax.set_ylabel("Latitude (°N)")

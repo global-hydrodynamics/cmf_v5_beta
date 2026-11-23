@@ -13,7 +13,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
-from netCDF4 import Dataset, date2num, num2date
+from netCDF4 import Dataset, num2date
 import numpy as np
 from PIL import Image, PngImagePlugin
 
@@ -61,14 +61,9 @@ def add_common_arguments(parser: argparse.ArgumentParser) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    prepare = commands.add_parser("prepare", help="write one NetCDF flddph record as downscaler input")
-    prepare.add_argument("--source", type=Path, required=True)
-    prepare.add_argument("--date", required=True)
-    prepare.add_argument("--params", type=Path, required=True)
-    prepare.add_argument("--binary", type=Path, required=True)
     plot = commands.add_parser("plot", help="save the downscaled NetCDF sample and draw f04")
     add_common_arguments(plot)
-    for option in ("source", "downscaled-bin", "downscaled-netcdf", "flddif", "elevtn",
+    for option in ("source", "downscaled-netcdf", "flddif", "elevtn",
                    "location", "panel-a", "panel-b"):
         plot.add_argument(f"--{option}", type=Path, required=True)
     return parser.parse_args()
@@ -99,19 +94,30 @@ def read_snapshot(path: Path, date_text: str):
     return values, lon, lat, selected
 
 
-def prepare_input(args: argparse.Namespace) -> None:
-    geometry = read_geometry(args.params)
-    values, lon, lat, _ = read_snapshot(args.source, args.date)
-    nx, ny, resolution, west, east, south, north = geometry
-    expected_lon = west + (np.arange(nx) + 0.5) * resolution
-    expected_lat = north - (np.arange(ny) + 0.5) * resolution
-    if values.shape != (ny, nx) or not np.allclose(lon, expected_lon, rtol=0, atol=1e-5) or not np.allclose(lat, expected_lat, rtol=0, atol=1e-5):
-        raise ValueError("Source flddph does not match params.txt dimensions, coordinates, or north-first order")
-    binary = values.filled(FILL_VALUE).astype("<f4", copy=False)
-    args.binary.parent.mkdir(parents=True, exist_ok=True)
-    binary.tofile(args.binary)
-    valid = binary[np.isfinite(binary) & (binary != FILL_VALUE)]
-    print(f"Prepared {args.source}: date={args.date}; shape={values.shape}; valid={valid.size}; bytes={args.binary.stat().st_size}")
+def read_downscaled_snapshot(path: Path, extent: tuple[float, float, float, float]):
+    west, east, south, north = extent
+    with Dataset(path) as source:
+        for name in ("lat", "lon", "flddph"):
+            if name not in source.variables:
+                raise ValueError(f"{path}: missing variable {name!r}")
+        variable = source.variables["flddph"]
+        if variable.dimensions == ("lat", "lon"):
+            values = np.ma.asarray(variable[:], dtype=np.float32)
+        elif variable.dimensions == ("time", "lat", "lon") and variable.shape[0] == 1:
+            values = np.ma.asarray(variable[0], dtype=np.float32)
+        else:
+            raise ValueError(f"{path}: flddph must be (lat,lon) or one-record (time,lat,lon)")
+        if getattr(variable, "units", "") != "m":
+            raise ValueError(f"{path}: flddph units must be 'm'")
+        lon = np.asarray(source.variables["lon"][:], dtype=np.float64)
+        lat = np.asarray(source.variables["lat"][:], dtype=np.float64)
+    expected = (int(round((north - south) * 60)), int(round((east - west) * 60)))
+    expected_lon = west + (np.arange(expected[1]) + 0.5) / 60.0
+    expected_lat = north - (np.arange(expected[0]) + 0.5) / 60.0
+    if values.shape != expected or not np.allclose(lon, expected_lon, rtol=0, atol=1.0e-5) or not np.allclose(lat, expected_lat, rtol=0, atol=1.0e-5):
+        raise ValueError(f"{path}: downscaled grid does not match requested extent and 1-minute cell centers")
+    values = np.ma.masked_where(~np.isfinite(values) | (values == -9999.0) | (values == FILL_VALUE), values)
+    return values
 
 
 def parse_ticks(text: str) -> np.ndarray:
@@ -122,47 +128,6 @@ def parse_ticks(text: str) -> np.ndarray:
     if ticks.size < 2 or not np.all(np.isfinite(ticks)) or np.any(np.diff(ticks) <= 0):
         raise ValueError("DEPTH_TICKS must be finite and strictly ascending")
     return ticks
-
-
-def save_downscaled_sample(path: Path, values: np.ndarray, date_text: str,
-                           extent: tuple[float, float, float, float]) -> None:
-    west, east, south, north = extent
-    ny, nx = values.shape
-    resolution_x, resolution_y = (east - west) / nx, (north - south) / ny
-    lon = west + (np.arange(nx) + 0.5) * resolution_x
-    lat = north - (np.arange(ny) + 0.5) * resolution_y
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with Dataset(path, "w", format="NETCDF4") as output:
-        output.createDimension("time", 1)
-        output.createDimension("lat", ny)
-        output.createDimension("lon", nx)
-        time = output.createVariable("time", "f8", ("time",))
-        time.units = "days since 1970-01-01 00:00:00"
-        time.calendar = "standard"
-        time.standard_name = "time"
-        time[:] = date2num(datetime.strptime(date_text, "%Y-%m-%d"), time.units, time.calendar)
-        latitude = output.createVariable("lat", "f8", ("lat",))
-        latitude.units = "degrees_north"
-        latitude.standard_name = "latitude"
-        latitude[:] = lat
-        longitude = output.createVariable("lon", "f8", ("lon",))
-        longitude.units = "degrees_east"
-        longitude.standard_name = "longitude"
-        longitude[:] = lon
-        depth = output.createVariable(
-            "flddph", "f4", ("time", "lat", "lon"), fill_value=np.float32(-9999),
-            zlib=True, complevel=4,
-        )
-        depth.long_name = "downscaled floodplain water depth"
-        depth.units = "m"
-        depth.coordinates = "time lat lon"
-        masked = np.ma.masked_where(~np.isfinite(values) | (values == -9999.0) | (values == FILL_VALUE), values)
-        depth[0] = masked.astype(np.float32)
-        output.title = "1-minute downscaled flddph sample for p02-f04"
-        output.source = "etc/downscale_flddph/src/downscale_flddph_trib.F90"
-        output.input = "visualization/output_analysis/out_sample/flddph_2001-09-01.nc"
-        output.method = "Tutorial guide01 s04-downscale_event.sh tributary downscaling workflow"
-        output.geospatial_bounds = f"{west}, {east}, {south}, {north}"
 
 
 def figure_rect(rect, width: float, height: float):
@@ -271,22 +236,15 @@ def plot(args: argparse.Namespace) -> None:
     )
     gray_crop, highres_extent = crop_high_resolution(gray_full, grid, (args.west, args.east, args.south, args.north))
 
-    raw = np.fromfile(args.downscaled_bin, dtype="<f4")
-    expected = (int(round((args.north - args.south) * 60)), int(round((args.east - args.west) * 60)))
-    if raw.size != expected[0] * expected[1]:
-        raise ValueError(f"Downscaled file has {raw.size} Float32 cells; expected {expected}")
-    high_values = raw.reshape(expected)
-    highres = np.ma.masked_where(~np.isfinite(high_values) | (high_values == -9999) | (high_values == FILL_VALUE), high_values)
-    if np.any(highres.compressed() < 0):
+    extent = (args.west, args.east, args.south, args.north)
+    highres = read_downscaled_snapshot(args.downscaled_netcdf, extent)
+    high_valid = highres.compressed()
+    if np.any(high_valid < 0):
         raise ValueError("Downscaled flddph contains negative valid values")
+    expected = highres.shape
     # Zero depth denotes dry pixels; keep the flddif context visible beneath them.
     highres.mask = np.ma.getmaskarray(highres) | (highres.filled(0) <= 0)
-    save_downscaled_sample(args.downscaled_netcdf, high_values, args.date,
-                           (args.west, args.east, args.south, args.north))
-
     low_values = coarse.compressed()
-    high_valid = np.fromfile(args.downscaled_bin, dtype="<f4")
-    high_valid = high_valid[np.isfinite(high_valid) & (high_valid != -9999) & (high_valid != FILL_VALUE)]
     both = np.concatenate((low_values, high_valid))
     below = int(np.count_nonzero(both < args.depth_min))
     above = int(np.count_nonzero(both > args.depth_max))
@@ -304,10 +262,7 @@ def plot(args: argparse.Namespace) -> None:
 
 def main() -> None:
     args = parse_args()
-    if args.command == "prepare":
-        prepare_input(args)
-    else:
-        plot(args)
+    plot(args)
 
 
 if __name__ == "__main__":

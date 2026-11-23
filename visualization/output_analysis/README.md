@@ -316,18 +316,18 @@ Method: `flood_depth`.
 
 The Figure compares the 2001-09-01 floodplain-depth snapshot over
 102–108°E and 9–15°N. Panel (a) displays the native 15-minute cells without
-interpolation. Panel (b) applies the existing Tutorial guide01
-`downscale_flddph_trib.F90` tributary downscaling method at 1-minute
-resolution. The `flddif` map is shown beneath downscaled positive depths in a
+interpolation. Panel (b) applies the standalone Python port of the existing
+Tutorial guide01 `downscale_flddph_trib.F90` tributary downscaling method at
+1-minute resolution. The scientific method is unchanged. The `flddif` map is
+shown beneath downscaled positive depths in a
 dark gray stretch to provide high-resolution terrain context; dry pixels show
 the background. The same YlGnBu scale (0–20 m) is used in both panels, and
 colorbar extensions disclose any values outside that range.
 
 The source `out_sample/flddph_2001-09-01.nc` is reused. The Shell entry point
-converts its single CF-timestamped record to the little-endian Float32 direct
-record expected by the existing downscaler, builds that program in a temporary
-directory, links the Mekong map directory as `map/`, and runs the requested
-domain. It saves the downscaled result as
+runs `tools/output_analysis/downscale_flddph/script/downscale_flddph.py`
+directly on that CF-timestamped NetCDF and the existing Mekong map layers; it
+does not compile or invoke the legacy Fortran executable. It saves the result as
 `out_sample/flddph_1min_2001-09-01.nc`, including the date, coordinates, units,
 and method provenance. The 1-minute raster is 360 × 360 cells, north to south
 in latitude and west to east in longitude. For this sample, `flddph` ranges
@@ -335,13 +335,15 @@ from 0 to 17.878 m on the native grid and 0 to 17.526 m among assigned
 downscaled pixels; 95,543 of 129,600 1-minute pixels are assigned. No values
 are outside the shared 0–20 m display scale.
 
-The downscaler uses the existing 15-minute `nextxy.bin` and `uparea.bin`, plus
-1-minute `catmxy`, `downxy`, `flddif`, and `rivwth` map files. Its domain and
+The Python package uses the existing 15-minute `nextxy.bin` and `uparea.bin`,
+plus 1-minute `catmxy`, `downxy`, `flddif`, and `rivwth` map files. Its domain and
 resolution are read from the existing map metadata. The project script does
 not change those maps or the downscaling algorithm.
 
 Run `./visualization/output_analysis/f04-flood_depth.sh` to regenerate the two
-panels and the side-by-side, map-area-aligned Figure. Shell settings control
+panels and the side-by-side, map-area-aligned Figure. This uses the repository
+`.venv` with NumPy and NetCDF4; compiling the legacy Fortran source is not
+required for p02-f04. Shell settings control
 the date, extent, common depth range and ticks, YlGnBu palette, figure size,
 DPI, and text sizes. The project-local outputs are
 `figure/f04a-flood_depth-raster.png`,

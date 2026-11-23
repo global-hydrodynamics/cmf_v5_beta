@@ -72,7 +72,7 @@ bash s01-downscale.sh
 bash s02-visualize.sh
 ```
 
-The sample was tested against both the existing p02-f04 Fortran output and a fresh run of the legacy Fortran reference. Its comparison establishes port fidelity for one Mekong date/map/extent only; it does not independently validate the hydrologic method or demonstrate global-map compatibility.
+The sample was tested against the pre-migration p02-f04 Fortran output and a fresh run of the unchanged legacy Fortran reference. Its comparison establishes port fidelity for one Mekong date/map/extent only; it does not independently validate the hydrologic method or demonstrate global-map compatibility.
 
 ## Method and limits
 

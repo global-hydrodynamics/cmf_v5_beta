@@ -31,3 +31,18 @@ At project registration, the just-run `gosh_test/out/mek02/` outputs had not yet
 The requested package and copied sample were implemented. The Python sample reproduces the existing p02-f04 output exactly over all valid cells. A fresh comparison against the unchanged Fortran reference has identical dimensions and valid masks, with one differing valid cell and maximum absolute difference `2.3841858e-7 m` (comparison tolerance `1e-5 m`). The sample also exercised non-zero tributary adjustment, backwater adjustment and permanent-water handling. Snapshot selection, two-sample inclusive-period mean and maximum were checked against direct selections from the CF time series. See the package README and research validation record for commands, environment, and limits.
 
 Knowledge-gap review: checked scientific assumptions, NetCDF/map I/O contracts, algorithm order, comments and recorded evidence; no material new gaps found. Remaining limits are scope limits, not blockers: only the Mekong 15-minute-to-1-minute sample was compared, and other map families and resolutions are not yet demonstrated. Task and validation evidence are indexed as [DT-0159](../research/development_tasks.csv), [VR-0205](../research/validation_runs.csv), and [the validation detail](../research/records/validation_runs/VR-0205.md).
+
+
+## Approved scope extension — existing workflows (2026-11-23)
+
+The maintainer explicitly extended the existing `feature/package-builder`
+assignment to replace active p02-f04 and Guide01 runtime dependence on the
+legacy Fortran/Binary workflow with the Python package. Scope covers the
+Visualization Shell/plot adapter and catalog/README, a Tutorial-local copy of
+the package, Guide01 NetCDF preparation/downscaling/plotting, and directly
+related design/manual/test documentation. Preserve experiment settings,
+scientific equation, display style, and the legacy Fortran source. The Tutorial
+copy must not import Python implementation from `tools/`. No model rerun is
+requested. Focused acceptance: p02-f04 render and inspect; synthetic adapter
+contract test; syntax/import/path checks; report Guide01 execution limits if
+model products are absent.

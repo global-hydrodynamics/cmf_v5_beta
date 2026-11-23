@@ -140,9 +140,10 @@ def main() -> None:
     low_image = axes[0].imshow(low, extent=(map_west, map_east, map_south, map_north), origin="upper",
                                cmap=cmap, norm=Normalize(args.depth_min, args.depth_max), interpolation="nearest", aspect=aspect)
     axes[0].set_title("Native model grid")
+    axes[1].set_facecolor("0.5")
     axes[1].imshow(grayscale, extent=(high_lon[0] - pixel_x / 2, high_lon[-1] + pixel_x / 2,
                                       high_lat[-1] - pixel_y / 2, high_lat[0] + pixel_y / 2),
-                   origin="upper", cmap="Greys", vmin=gray_low, vmax=gray_high,
+                   origin="upper", cmap="Greys_r", vmin=gray_low, vmax=gray_high,
                    interpolation="nearest", aspect=aspect, zorder=0)
     axes[1].imshow(display_high, extent=(high_lon[0] - pixel_x / 2, high_lon[-1] + pixel_x / 2,
                                         high_lat[-1] - pixel_y / 2, high_lat[0] + pixel_y / 2),

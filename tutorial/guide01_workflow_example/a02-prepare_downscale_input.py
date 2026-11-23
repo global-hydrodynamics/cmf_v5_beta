@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read one NetCDF event and prepare the coarse Float32 input for the legacy downscaler."""
+"""Derive one event flddph field and save it as a package-compatible NetCDF."""
 
 from __future__ import annotations
 
@@ -65,14 +65,33 @@ def prepare_input(rivdph_path: Path, rivhgt_path: Path, event_time: str | pd.Tim
             raise ValueError("Derived field dimensions changed")
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        fd, temp_name = tempfile.mkstemp(prefix=f".{output_path.name}.", dir=output_path.parent)
+        fd, temp_name = tempfile.mkstemp(prefix=f".{output_path.name}.", suffix=".nc", dir=output_path.parent)
         os.close(fd)
         temp_path = Path(temp_name)
         try:
-            # C order for (lat,lon) writes x/longitude fastest, matching the legacy direct-access grid.
-            flddph.astype("<f4", copy=False).tofile(temp_path)
-            if temp_path.stat().st_size != q.size * 4:
-                raise ValueError("Prepared Binary byte size does not match one Float32 map record")
+            prepared = xr.Dataset(
+                {"flddph": (("time", "lat", "lon"), flddph[np.newaxis, :, :],
+                            {"long_name": "floodplain water depth", "units": "m"})},
+                coords={
+                    "time": ("time", np.asarray([target]), {"standard_name": "time"}),
+                    "lat": ("lat", output_ds.lat.values, {"standard_name": "latitude", "units": "degrees_north"}),
+                    "lon": ("lon", output_ds.lon.values, {"standard_name": "longitude", "units": "degrees_east"}),
+                },
+                attrs={"title": "Guide01 event flddph input", "selected_cf_time": str(pd.Timestamp(target)),
+                       "derivation": "max(rivdph - rivhgt, 0) on overlapping valid cells"},
+            )
+            prepared.to_netcdf(
+                temp_path, engine="netcdf4",
+                encoding={"flddph": {"dtype": "float32", "_FillValue": np.float32(1.0e20),
+                                     "zlib": True, "complevel": 4}},
+            )
+            with xr.open_dataset(temp_path, decode_times=True, mask_and_scale=True) as check:
+                if check["flddph"].dims != ("time", "lat", "lon") or check.sizes["time"] != 1:
+                    raise ValueError("Prepared NetCDF does not contain one (time,lat,lon) record")
+                if check["flddph"].attrs.get("units") != "m":
+                    raise ValueError("Prepared NetCDF flddph units are not metres")
+                if pd.Timestamp(check.time.values[0]) != pd.Timestamp(target):
+                    raise ValueError("Prepared NetCDF CF time does not match the selected event")
             os.replace(temp_path, output_path)
         finally:
             if temp_path.exists():
@@ -100,7 +119,7 @@ def main() -> None:
     print(f"[CHECK] time index={result['time_index_zero_based']}; shape={result['shape']}; "
           f"valid={result['valid_cells']}; missing={result['missing_cells']}; "
           f"range={result['minimum_flddph_m']:.6g}..{result['maximum_flddph_m']:.6g} m")
-    print(f"[SUCCESS] Wrote one Float32 map record: {result['output']}")
+    print(f"[SUCCESS] Wrote one-record NetCDF: {result['output']}")
 
 
 if __name__ == "__main__":

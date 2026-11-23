@@ -470,28 +470,32 @@ percentile; colorbar labels identify that cap.
 
 ### One-minute postprocessing
 
-The example then uses the existing Fortran tributary downscaler. Its input
-preparation script reads the selected NetCDF `rivdph` record and the matching
-static `rivhgt`, checks their grid, units, and time, and derives floodplain
-depth as
+The example uses the Tutorial-local copy of the Python `downscale_flddph`
+package. Its input adapter reads the selected NetCDF `rivdph` record and the
+matching static `rivhgt`, checks their grid, units, event time, and missing
+cells, then derives floodplain depth as
 
 ```text
 flddph = max(rivdph - rivhgt, 0)
 ```
 
-Missing cells remain unassigned. The adapter writes one little-endian
-Float32 Binary grid, which is consumed by the existing downscaler along with
-the sample's high-resolution map data. This workflow adapts NetCDF model
-output to the existing Binary downscaler; it does not change the
-downscaling algorithm or run a separate one-minute hydrodynamic simulation.
+The adapter writes one compressed NetCDF record with `(time,lat,lon)`
+coordinates. The same Python downscaler is then run for Control and Deep
+Channel with the sample's high-resolution map data, producing a one-minute
+NetCDF for each case. The tutorial-local package copy makes this workflow
+independent of Python files under `tools/`. The legacy Fortran source remains
+available in the repository but is not compiled or invoked by this step.
 
 The checked event is the same Control-selected event for both cases. Figure 6
 uses the requested crop 102–108°E and 9–15°N (360 × 360 pixels at one-minute
-spacing). The downscaler uses an additional five model-cell buffer around
-the crop to provide context. The output's 129,600 pixels include 95,543
-assigned and 34,057 unassigned pixels in each case. The large-scale patterns
-look similar in this view, but no numerical identity or general similarity
-has been established.
+spacing). The downscaler uses an additional five model-cell buffer around the
+crop to provide context. Existing recorded reference outputs contain 95,543
+assigned and 34,057 unassigned pixels per case; these were generated before
+the package workflow was switched and were not regenerated in this task. The
+Python package matches the p02-f04 Mekong reference within the documented
+Float32 tolerance, but the Guide01 cases should be rerun from their model
+outputs when those products are available. This is postprocessing based on
+high-resolution terrain, not independent validation.
 
 Run from the repository root. On a first run, omit `--force`:
 
@@ -501,10 +505,9 @@ sh tutorial/guide01_workflow_example/s04-downscale_event.sh
 ```
 
 This step needs the two model runs, generated event table, `.venv`, and
-existing Mekong one-minute map layers. It builds the existing downscaler
-locally under the example's `out/bin/` if needed, then writes each case's
-input and downscaled output under `out/downscaling/`. When outputs already
-exist and you intentionally want to replace them, use:
+existing Mekong one-minute map layers. It writes the prepared event inputs and
+downscaled NetCDF files under `out/downscaling/`. When outputs already exist
+and you intentionally want to replace them, use:
 
 ```bash
 sh tutorial/guide01_workflow_example/s04-downscale_event.sh --force
@@ -518,11 +521,9 @@ products:
 ```
 
 The plotting script reads saved results; it does not rerun the model or
-downscaler. A checked output-validation run reported 360 × 360 values per
-case, 95,543 assigned pixels, and depth ranges from 0 to 17.5362 m for
-Control and 0 to 16.0039 m for Deep Channel. The downscaling is
-postprocessing based on high-resolution terrain and its assumptions; it is
-not independent validation.
+downscaler. The downscaling adds spatial detail but is not an independent
+one-minute simulation or evidence that either experiment is observationally
+correct.
 
 ![One-minute postprocessed inundation depth](sample_figure/f06-one_minute_inundation.png)
 
@@ -534,7 +535,7 @@ correct.
 
 ### Learning Check
 
-- What does the Python adapter calculate before calling the Fortran
+- What does the Python adapter calculate before calling the Python
   downscaler?
 - What additional information does one-minute postprocessing provide, and
   what does it not validate?

@@ -28,4 +28,4 @@ The general beta Package Builder exists and retains developer references; no ded
 Executable prerequisite: as in Tutorial02, reuse NetCDF-enabled
 src_main/MAIN_cmf already compiled during Tutorial01, without a separate compile
 wrapper. Prepare repository .venv for the existing analysis/runner paths. Keep
-Binary visualization/downscaling and approved learner edits unchanged.
+Python-package NetCDF downscaling and approved learner edits unchanged.

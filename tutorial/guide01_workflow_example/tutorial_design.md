@@ -14,10 +14,11 @@ and does not claim that the experiment has been scientifically validated.
 
 Guide01 shares Tutorial02's executable prerequisite: reuse the NetCDF-enabled
 `src_main/MAIN_cmf` compiled during Tutorial01. Do not invoke a separate compiler
-wrapper or depend on an out/bin model executable. Keep the repository-local
-Python environment requirement and existing Binary downscaling/visualization
-inputs. This path alignment does not change the approved experiment settings
-or learner edits, and does not establish a new model or learner-package run.
+wrapper or depend on an out/bin model executable. Keep the repository-local Python environment requirement. Guide01 bundles a
+copy of the standalone Python `downscale_flddph/` package and uses NetCDF for
+the event input and one-minute result; it does not compile the legacy Fortran
+program. This path alignment does not change the approved experiment settings
+or learner edits.
 
 ## 1. Purpose and learning outcomes
 
@@ -247,46 +248,15 @@ aggregate catchment area as a pixel mask or double-counting standing water.
 
 ## 6. One-minute downscaling
 
-### Existing implementation and required adaptation
+### Implemented Python package workflow
 
-The repository's existing implementation is
-[`etc/downscale_flddph/`](../../etc/downscale_flddph/), especially
-`src/downscale_flddph_trib.F90` and `s01-downscale_flddph.sh`. Its active
-tributary-aware algorithm reads a daily coarse `flddphYYYY.bin` record, map
-`nextxy.bin` and `uparea.bin`, and 1-minute `catmxy`, `flddif`, `rivwth`, and
-high-resolution downstream connections (`downxy`, with a `flwdir` fallback
-implemented for supported cases). It writes a Float32 high-resolution depth
-grid, one file per selected date. It requires a five-model-cell buffer around
-the requested output crop. The wrapper does not read NetCDF or CF time; the
-Fortran program selects a direct-access record number.
+The reusable package source is [`tools/output_analysis/downscale_flddph/`](../../tools/output_analysis/downscale_flddph/). Guide01 keeps a self-contained copy under [`downscale_flddph/`](downscale_flddph/) so its learner workflow does not import Python code from `tools/`. The package implements the tributary-aware Python port of the legacy `downscale_flddph_trib.F90` algorithm; the legacy source under `etc/` remains unchanged for reference and other users.
 
-For this example, extend the existing downscaler's **input interface** to read
-the selected daily time slice directly from `o_rivdph2000.nc`, read the static
-`rivhgt` variable from the selected map NetCDF, and derive
-`flddph = max(rivdph - rivhgt, 0)` before passing the coarse field through the
-existing tributary-aware calculation. Resolve the selected timestamp from the
-NetCDF time coordinate rather than assuming a record number is the date. The
-reader must honor the NetCDF fill values and shared river mask before doing
-arithmetic; it must never subtract a missing `rivhgt` or `rivdph` value. Keep
-the existing Binary input path available for current users, retain the
-high-resolution map interpretation and numerical downscaling algorithm, and
-keep the per-day Float32 high-resolution output convention. NetCDF support
-here means direct NetCDF model-input reading, not a new output format.
+`s04-downscale_event.sh` processes Control and Deep Channel in sequence. For each case, `a02-prepare_downscale_input.py` selects the event time from the matching `rivdph` output, checks coordinates, units and missing masks against that case's `rivhgt`, and writes a one-record `(time,lat,lon)` NetCDF with `flddph = max(rivdph - rivhgt, 0)`. It then invokes the Tutorial-local `downscale_flddph/script/downscale_flddph.py` with the shared Mekong map layers and the fixed 102–108°E, 9–15°N domain. The downscaler writes `flddph_1min_provisional.nc`; no Fortran compile or intermediate Binary file is used. Its existing five-model-cell buffer and high-resolution map interpretation are retained.
 
-The available Mekong map has 1-minute binary tiles and `1min/location.txt`,
-and a `1min_nc/location.txt` metadata copy. The current downscaler reads the
-binary tile layers, so use the binary `map/mekong_15min/1min/` products for
-this workflow. The downscaling calculation needs matching map/network data;
-the high-resolution directory's presence alone does not verify full coverage
-of the eventual crop plus its buffer. The existing plotting helper also has
-integer-degree bounds; the numerical output crop should be aligned to the
-1-minute lattice and separately visualized with an explicitly chosen extent.
+`v01-plot_results.py` reads these NetCDF results and checks their coordinates, 1-minute spacing, dimensions, and metre units before drawing Figure 6. The two cases use the same Control-selected event. The output is diagnostic postprocessing, not a new hydrodynamic simulation or direct validation of inundation.
 
-Use the same Control peak-`sfcelv` date for Control and Deep Channel. Inspect
-each high-resolution result for dimensions, orientation, missing pixels,
-valid depth range, and stable assignment to the correct coarse catchments.
-The output is a diagnostic postprocessing product, not a new hydrodynamic
-simulation or direct validation of inundation.
+The previously generated sample Figure and summary statistics record the earlier reference run. The Tutorial's model-output directory is not included in this checkout, so the two Guide01 cases could not be rerun during this package migration; the Python-versus-Fortran numerical comparison is separately documented for the p02-f04 Mekong snapshot.
 
 ## 7. Proposed figures and interpretation
 
@@ -322,18 +292,15 @@ different peak.
 | Map parameter | Source unchanged; same dims/coords/dtype/metadata; +3.0 m only on valid cells; missing mask identical. |
 | Control/Deep runs | Same executable, namelist values except `CRIVHGT`, forcing, input matrix, date range, and initial state; completion logs and daily time-axis check. |
 | Output analysis | Registry units/semantics; identical coordinates/time; missing masks; `fldfrc` bounds; reproducible point/date selection and area sum. |
-| NetCDF downscaler input | Requested date maps to exactly one time record; validate `rivdph`/`rivhgt` coordinates, units and masks before deriving nonnegative `flddph`; compare the resulting coarse field with the relation defined by the staging implementation on valid cells; confirm the legacy Binary input path still works. |
+| NetCDF downscaler input | Requested date maps to exactly one time record; validate `rivdph`/`rivhgt` coordinates, units and masks before deriving nonnegative `flddph`; verify output coordinates, units, fill value and one-record time. |
 | 1-minute result | Crop geometry and buffer coverage; expected raster dimensions/orientation; assigned/unassigned pixel counts; finite nonnegative depths; verify the same event date in both experiments. |
 | Figures | Rebuild from stored analysis products; labels/units/scales reflect the variables; caption says sensitivity, not validation. |
 
-Use small synthetic NetCDF and map fixtures for the new reader before a
-regional downscaling run. Keep the existing binary entry point and its output
-behavior compatible. Do not validate the external NetCDF library itself;
-verify that CaMa-Flood passes and interprets the expected values, dimensions,
-mask, and selected time slice.
-
-No model run, downscaling run, output generation, or scientific validation was
-performed for this design task.
+Use small synthetic NetCDF fixtures for the Guide01 adapter and package input
+contract. The package migration preserves the legacy algorithm and the output
+is checked against its established reference where the corresponding sample is
+available. Do not validate the external NetCDF library itself; verify the
+expected values, dimensions, mask, and selected time slice.
 
 ## 9. Open questions for researcher review
 
