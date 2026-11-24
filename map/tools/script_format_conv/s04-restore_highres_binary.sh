@@ -14,7 +14,9 @@ HIRES=""  # Empty proposes the coarsest available *_nc directory; explicit lists
 # contain every one of them. Multi-record files (catmxy, downxy) are converted
 # with all their registered records together.
 #VARS="catmxy catmz100 catmzz downxy elevtn flddif flwdir grdare hand rivwth uparea visual"
-VARS="catmxy downxy elevtn uparea hand flddif rivwth"
+# Restore every registered variable available in the selected NetCDF map.
+# Missing optional variables are skipped.
+VARS="all"
 
 # Maximum number of parallel Python worker processes.
 JOBS=8

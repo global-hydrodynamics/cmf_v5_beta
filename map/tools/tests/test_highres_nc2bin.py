@@ -90,6 +90,27 @@ class RestorationTests(unittest.TestCase):
             self.assertEqual(sha((self.binary / name).read_bytes()), sha(original), name)
         self.assertEqual(self.source_hashes, {p.name: sha(p.read_bytes()) for p in self.nc.iterdir()})
 
+    def test_all_restores_available_products_and_preserves_existing(self):
+        # One registered product is absent in one area, another in every area.
+        (self.nc / 'b.visual.nc').unlink()
+        rows = forward.registry_rows(self.registry)
+        rows.extend(forward.rows_for_tile(forward.registry_rows(REGISTRY), '1min', 'a', 'grdare'))
+        with self.registry.open('w', newline='') as stream:
+            writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
+            writer.writeheader()
+            writer.writerows(rows)
+        existing = self.binary / 'a.visual.bin'
+        existing.write_bytes(b'user-existing')
+        self.assertEqual(reverse.restore(self.map, '1min', ['all'], self.registry), (6, 1))
+        self.assertEqual(existing.read_bytes(), b'user-existing')
+        for name, original in self.expected.items():
+            if name not in ('a.visual.bin', 'b.visual.bin'):
+                self.assertEqual((self.binary / name).read_bytes(), original, name)
+        self.assertFalse((self.binary / 'b.visual.bin').exists())
+        self.assertFalse(list(self.binary.glob('*.grdare.bin')))
+        with self.assertRaisesRegex(ValueError, 'missing input tile'):
+            reverse.restore(self.map, '1min', ['visual'], self.registry)
+
     def test_wrong_type_and_coordinates_fail_before_publication(self):
         rows = forward.registry_rows(self.registry)
         bad = [dict(r) for r in rows]

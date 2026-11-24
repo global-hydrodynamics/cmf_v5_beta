@@ -6,6 +6,20 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### All-available high-resolution Binary restoration (DT-0167, 2026-11-24)
+
+Maintainer authorizes the bounded s04 default change on `feature/package-builder`,
+including minimal converter selection support, all repository working copies,
+external Additional Data copies, README updates, L1 checks and commit/push.
+Codex owns these changes. `VARS="all"` now resolves registered high-resolution
+products and skips absent optional NetCDF inputs; explicit subsets, existing
+Binary protection, force, geometry, record layouts and workers are preserved.
+Five restoration tests and one real 1-minute six-pixel four-product case pass.
+Five repository working script copies and three external copies were updated
+without replacing environment settings. No global conversion or model run.
+Evidence and limitations: [VR-0210](../research/records/validation_runs/VR-0210.md).
+
+
 ### Tutorial 11 Step 01 flood timing update (DT-0166, 2026-11-24)
 
 Maintainer authorizes bounded enrichment of the existing Rhine 2021 Step 01
