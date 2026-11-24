@@ -854,3 +854,13 @@ peak observations. The footnote explicitly states that fill does not indicate
 model-observation agreement. Regenerated only Fig23b with `--summary-only`;
 reviewed the saved PNG and passed the existing canvas/label bounds checks.
 Analysis CSVs, Fig1 and Fig23a remain unchanged; refreshed the output hash.
+
+### 2026-11-24 — Step24 single-acquisition preliminary downscaling
+
+Maintainer narrows the attached two-acquisition outline to S1A orbit038784 only.
+Added separate processing/figure entry points reusing the maintained downscaler.
+Five exact scene timestamps define one acquisition midpoint; selected06UTC
+(+560.1035s). Produced one local1min NetCDF and diagnostic figure; checked grid,
+values and missing/catchment masks. Retain0.1m permanent-water and boundary-buffer
+caveats; no model rerun, observation comparison, metrics or finer-resolution work.
+Details: [Step24 Work Report](../AI_work_report/24_inundation_downscaling.md).

@@ -409,3 +409,17 @@ The Step Prompts, Survey Reports and Work Reports are linked in the Analysis
 Workflow above. They provide the detailed instructions, scientific evidence and
 execution record respectively; this document explains how those activities
 form one research plan.
+
+### Step 24 — Preliminary 1 arcmin inundation at one S1A acquisition
+
+Process only S1A orbit038784 (15 July2021 morning); five scenes are one pass.
+Use the midpoint of exact Step03 scene start/end timestamps and nearest existing
+CF model output, without temporal interpolation. Reuse the maintained
+tributary-aware downscaler with Rhine1min maps over the Step02 satellite domain.
+Current selection: 05:50:39.8965 UTC →06:00 UTC (+560.1035 s); one180×240
+NetCDF and one diagnostic map. Keep simulated products distinct from observations.
+This is a preliminary feasibility result, with permanent-water and regional-buffer
+limitations; no GFM comparison, metrics, other acquisition or finer resolution.
+See [Step24 prompt](p24-inundation_downscaling.md),
+[Survey](AI_survey_report/24_inundation_downscaling.md), and
+[Work Report](AI_work_report/24_inundation_downscaling.md).

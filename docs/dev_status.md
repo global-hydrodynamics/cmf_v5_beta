@@ -6,6 +6,17 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Tutorial11 Step24 preliminary one-acquisition downscaling (DT-0172, 2026-11-24)
+
+Maintainer authorizes Step24 on `feature/package-builder`: only S1A orbit038784,
+nearest model timestep and existing 1min terrain-based downscaling. Codex owns
+Step24 scripts, local generated output, diagnostic Figure and related docs/records.
+Exact five-scene midpoint05:50:39.8965UTC selects06UTC (+560.1035s). One180×240
+NetCDF and reviewed map generated; grid/depth/missing-mask checks pass. Existing
+0.1m permanent-water floor and clipped regional buffer limit interpretation.
+No GFM comparison, metrics, other acquisition, finer resolution or model rerun.
+Evidence: [VR-0215](../research/records/validation_runs/VR-0215.md).
+
 ### Tutorial11 Fig23b readability (DT-0171, 2026-11-24)
 
 Maintainer authorizes focused Fig23b improvement on `feature/package-builder`;
