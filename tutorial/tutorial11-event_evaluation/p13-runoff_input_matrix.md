@@ -1,5 +1,23 @@
 # p13 — Runoff Input Matrix Preparation
 
+### How to Use This Workflow
+
+**Rhine 2021:** Keep the current regional map, dataset and Input Matrix
+settings below; provide the entire Markdown file as an attachment or copy its
+full content. Inspect the actual inputs as the existing procedure requires.
+
+**Another event:** Review the event map/dataset paths, matrix tag and wrapper,
+input-grid dimensions/order/edges and representative sites in the current-event
+instructions below. Derive geometry from the new actual inputs rather than
+copying Rhine numbers. Verify the generator and auxiliary-map compatibility;
+scientific implementation and runoff conversion remain unchanged. Give the
+entire updated file to the agent after the required inputs and decisions are
+established. Prompt edits alone do not adapt a map-specific matrix or wrapper.
+
+The execution block requires the full document, including Interpretation and
+execution boundary; it is not a standalone Prompt. Existing Rhine availability
+is retained example context, not a new-event completion statement.
+
 ## Workflow Summary
 
 ### Inputs
@@ -39,6 +57,11 @@ by the shared generator. The settings must use the runoff **cell edges**
 they are not the requested-download bounds or the first/last cell centers.
 
 ## Example AI Agent Prompt
+
+**Current Rhine 2021 configuration:** Event names, paths, periods, geometry
+and researcher-selected settings in this block describe this application.
+For another event, review and replace them using its own inputs and decisions;
+the general methods and limits still apply. Supply the complete file.
 
 ```text
 Complete Tutorial 11 Step 13: prepare and validate the Rhine regional runoff

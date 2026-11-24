@@ -1,5 +1,26 @@
 # p23 — Flood Impact Timing Comparison
 
+### How to Use This Workflow
+
+**Rhine 2021:** Keep the current timing/allocation handoffs, search/display
+windows and settings below. Supply the entire Markdown file as an attachment
+or copy its full content, including the retained execution record and Fig. 23b
+redraw contract. Historical completion does not remove input-currency checks.
+
+**Another event:** Review the event timing ledger, final allocation, model
+output, search/plot dates and figure settings in their existing CSV/JSON/Shell
+locations. Rhine's Ahr proxies, 22 reports, selected cells and dated completion
+record are case-specific; they do not transfer or justify skipping a new
+extraction. Verify UTC evidence, peak type, river status and implementation
+dependencies, retaining the existing eligibility/lag rules. Give the entire
+updated file to the agent after inputs and scientific choices are established.
+
+The inline Agent Prompt and redraw guidance form one instruction package;
+do not copy the execution section alone. Prompt edits do not automatically
+adapt extraction or plotting to a different event.
+
+### Retained Rhine 2021 execution record
+
 > **Current execution (2026-11-24):** Step23 has been rerun using the final
 > Step21 allocations, including the reviewed upstream Ahr proxies. CSVs and
 > Figures now contain 10 selected cells × 168 hours and all 22 report rows.

@@ -1,5 +1,26 @@
 # p12 — ERA5-Land Hourly Runoff Preparation
 
+### How to Use This Workflow
+
+**Rhine 2021:** Keep the researcher settings in Human Instructions and
+Rhine 2021 settings and interpretation below. Supply the entire Markdown file
+as an attachment or copy its full content; reuse the downloaded/converted data
+rather than repeating successful processing.
+
+**Another event:** Review the event Product Shell, acquisition dates, requested
+area, dataset paths/identifier and grouping settings below. Edit the authoritative
+Shell/Registry locations identified here rather than creating a second settings
+source. Check actual grid/units/time support, access credentials and terms, and
+implementation dependencies. The Rhine grid sizes and acquisition/completion
+records are case-specific. Supply the entire updated file, including the
+interpretation and handoff sections, to the agent; execute only when needed
+inputs and scientific decisions are established. Keep KG-0019 unresolved unless
+separately investigated; changing event settings does not resolve conversion
+semantics or automatically adapt the existing implementation.
+
+The block is an execution directive within the full file, not a standalone
+Prompt. Completed Rhine downloads do not authorize skipping a new event's needs.
+
 ## Workflow Summary
 
 ### Inputs
@@ -52,6 +73,11 @@ s01/s02 processing algorithms as part of routine event configuration. A real
 CDS download requires credentials and acceptance of the dataset terms.
 
 ## Example AI Agent Prompt
+
+**Current Rhine 2021 configuration:** Event names, paths, periods, geometry
+and researcher-selected settings in this block describe this application.
+For another event, review and replace them using its own inputs and decisions;
+the general methods and limits still apply. Supply the complete file.
 
 ```text
 Prepare Step 12 ERA5-Land hourly runoff for this event.

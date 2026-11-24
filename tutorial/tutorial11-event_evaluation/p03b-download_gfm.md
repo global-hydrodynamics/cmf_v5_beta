@@ -1,5 +1,19 @@
 # p03b — Download Selected GFM Data
 
+### How to Use This Workflow
+
+**Rhine 2021:** Keep the current selection and data locations; provide the
+entire Markdown file as an attachment or copy its full content. Reuse matching
+local assets as required by the acquisition procedure.
+
+**Another event:** Set the event-directory placeholder and review the selected
+passes/layers in the Step 03a JSON, the Step 02 bounds and the Atlantis/cache paths.
+Keep those handoffs authoritative. Verify access, required inputs and the
+implementation's event-specific paths before execution; editing this Prompt
+alone does not adapt the downloader. Supply the entire updated file, including
+the Data contract, to the agent. The block below is an execution excerpt, not
+a standalone Prompt; no Rhine asset or completion state should be assumed.
+
 ## Workflow Summary
 
 ### Inputs

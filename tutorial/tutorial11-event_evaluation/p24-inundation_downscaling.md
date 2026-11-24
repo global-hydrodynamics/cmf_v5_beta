@@ -1,5 +1,24 @@
 # Step 24 — Flood Inundation Downscaling, Visualization, and Assessment
 
+### How to Use This Workflow
+
+**Rhine 2021:** Use the current selection, maps and options below; provide
+the entire Markdown file as an attachment or copy its full content. Honor the
+recorded documentation-completion scope and reuse current A–C products.
+
+**Another event:** Review the selected pass/scene times, representative-time
+rule, model experiment/time support, domain, compatible coarse/auxiliary maps,
+output resolution and downscaling options in Parts A–D and their handoffs.
+Rhine's orbit, dates, 06 UTC selection and map resolutions are current-case
+configuration, not constants for the method. Verify the implementation and
+required inputs; editing the Prompt alone does not adapt them. Supply the
+entire updated file once scientific choices and prerequisites are established.
+Rhine's recorded completion/no-regeneration note applies to its retained
+products, not to an unexecuted new event; the general scope exclusions remain.
+
+Parts A–D and the completion/scope guidance must be read together. The inline
+execution instructions are not a standalone extract.
+
 ## Workflow Summary
 
 - **Inputs:** Selected satellite acquisition and exact scene timestamps;
@@ -67,7 +86,7 @@ refinement; neither is a guaranteed solution. Finer DEMs/maps, forcing/geometry
 improvements and rigorous matching are future research opportunities, not new
 implementation requirements. Keep execution and checks in the Work Report.
 
-## Completion and current scope
+## Recorded Rhine 2021 completion and scope
 
 The time-selected 1min product execution and Fig 24 are recorded; check local
 product availability in the [preparation record](AI_work_report/00_synthesis_preparation.md).

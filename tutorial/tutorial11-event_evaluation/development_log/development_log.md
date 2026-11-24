@@ -1054,3 +1054,37 @@ registry errors remain. No science code/data/settings/figures changed, no new
 analysis or input-version reconciliation. See the
 [Step31 Work Report](../AI_work_report/31_scientific_results_synthesis.md).
 Uncommitted; no push.
+
+
+## 2026-11-24 — Reusable Agent Workflow Prompt convention
+
+Task: DT-0183; validation: VR-0227. Added the authoritative reusable/transferable
+Prompt rule under Section2 of Tutorial11 AGENTS. Each pXX is a complete instruction
+package: explain what to configure/review and supply the entire Markdown; label
+any genuinely standalone alternative. Keep event choices, implementation limits
+and historical completion distinct without imposing one section layout.
+
+Reviewed all17 pXX files. Updated16: p01,p02,p03a–d,p04,p11–15,p22–24,p31.
+Each now identifies current-event usage, new-event settings/review and full-file
+attachment/copy instructions. p01/p02 retain standalone placeholder-block
+alternatives; other blocks/inline instructions require their complete document.
+p11–15 label Rhine configuration; p23 labels retained execution evidence; p24
+labels the recorded Rhine completion. p01's retrospective-report restriction
+is retained outside the new-event block; map reproducibility is included in
+that standalone block, using the existing completion requirement. Corrected
+its duplicated list number. p21 already satisfies the convention and is unchanged.
+
+Focused checks PASS: all17 usage/summary reviews; original procedure-body recovery
+after excluding the documented presentation edits; unchanged fenced code except
+p01's explicit history/reproducibility clarification; retained code/path tokens;
+4 local Markdown links; whitespace and authorized-document-only diff. Root and
+tutorial-wide AGENTS are unchanged. Existing research validator still reports
+the same15 unrelated historical errors. No scientific execution or script/data/
+metadata/figure/report changes. Full diff reviewed before the focused commit.
+
+Transferability still needs event-specific implementation/input review. Ahr
+proxies, actual grid geometry, forcing-time attribution, observation masks, units
+and time conventions are not generalized or resolved by these edits. The
+knowledge-gap review found no additional scientific decision introduced here.
+Publication is restricted to existing feature/package-builder; no new branch,
+shared-history rewrite or main push is authorized.

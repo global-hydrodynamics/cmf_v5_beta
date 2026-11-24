@@ -1,5 +1,22 @@
 # p15 — Simulation Output Visualization
 
+### How to Use This Workflow
+
+**Rhine 2021:** Keep the current Step 14 experiment and visualization settings
+below; provide the entire Markdown file as an attachment or copy its full
+content. This workflow consumes retained output and does not rerun the model.
+
+**Another event:** Review the source experiment/output paths, record period,
+map/topology, AOI and figure settings in the Step 14/02 handoffs and plotting
+Shell. The Rhine names, 744-record period and cold-start statements below are
+current-case settings/evidence, not assumed properties of a new simulation.
+Verify actual time axes, variable definitions and map/helper compatibility;
+retain the signed-peak and layer-aggregation methods. Give the entire updated
+file to the agent after prerequisites and scientific choices are established.
+Editing this Prompt alone does not adapt the plotting implementation.
+
+The execution block depends on the full file and is not a standalone Prompt.
+
 ## Workflow Summary
 
 **Inputs**
@@ -51,6 +68,11 @@ program execution gate; missing or inconsistent input files stop the normal
 workflow with an error.
 
 ## Example AI Agent Prompt
+
+**Current Rhine 2021 configuration:** Event names, paths, periods, geometry
+and researcher-selected settings in this block describe this application.
+For another event, review and replace them using its own inputs and decisions;
+the general methods and limits still apply. Supply the complete file.
 
 ```text
 Complete Tutorial 11 Step 15 using this prompt and the retained Step 14

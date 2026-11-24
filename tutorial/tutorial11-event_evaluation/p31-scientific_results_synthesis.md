@@ -1,5 +1,23 @@
 # Step 31 — Scientific Results Synthesis
 
+### How to Use This Workflow
+
+**Rhine 2021:** Use the current research objectives, individual Step reports
+and preservation settings below. Supply the entire Markdown file as an
+attachment or copy its full content; preserve previous synthesis before any
+new writing and respect its exclusion from the source material.
+
+**Another event:** Review the event directory/objectives, available completed
+Steps, scientific metadata/figures and report destinations referenced below.
+Verify source availability, scientific uncertainties, previous-report preservation
+and document-conversion dependencies; do not import Rhine findings or assume
+that earlier completion applies to the new event. Give the entire updated file
+to the agent. Reuse only the writing workflow, with no new scientific processing
+and no claim of blinded independence when earlier context has been exposed.
+
+The numbered Agent Workflow Prompt is part of the full document, including
+its Workflow Summary and scope; do not supply a partial extract.
+
 ## Workflow Summary
 
 - **Inputs:** Current research objectives and workflow in `README.md`; individual

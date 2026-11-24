@@ -1,5 +1,24 @@
 # p14 — Simulation Setup and Execution
 
+### How to Use This Workflow
+
+**Rhine 2021:** Keep the specified experiment settings below. Supply this
+entire Markdown file as an attachment or copy its full content; preserve the
+existing run-directory protection and do not overwrite retained results.
+
+**Another event:** Review and replace event map/network, runoff Registry/matrix,
+experiment dates, initialization, output/run-directory settings and authorized
+branch references in the current-event instructions and Shell. Establish the
+new experiment's scientific choices explicitly; do not infer spin-up or dates
+from acquisition coverage. Verify prerequisites and implementation dependencies,
+then provide the entire updated file to the agent. A Prompt edit alone does not
+configure compatible model inputs, and Rhine's completed run is not a run of the
+new study. Preserve the unresolved forcing-time issue and distinguish operational
+execution from scientific validation.
+
+The execution block must be supplied with the full document, including Human
+Instructions; it is not a standalone Prompt.
+
 ## Workflow Summary
 
 **Inputs**
@@ -49,6 +68,11 @@ RUNDIR="$PWD/experiment/Rhine2021-retry" bash run_script/s14-run_simulation.sh
 Afterward, inspect the generated Namelist, `log_CaMa.txt`, console/runtime logs, hourly output NetCDF files and final Restart. Review is recommended; it is not a program gate. The input/output checks must still succeed before treating the run as operationally complete.
 
 ## Example AI Agent Prompt
+
+**Current Rhine 2021 configuration:** Event names, paths, periods, geometry
+and researcher-selected settings in this block describe this application.
+For another event, review and replace them using its own inputs and decisions;
+the general methods and limits still apply. Supply the complete file.
 
 ```text
 Complete Tutorial 11 Step 14 using p14-simulation_setup-run.md and the existing

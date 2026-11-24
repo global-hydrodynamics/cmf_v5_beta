@@ -1,5 +1,22 @@
 # p02 — Analysis Domain Design
 
+### How to Use This Workflow
+
+**Rhine 2021:** Use the current Step 01 evidence and selected map; provide this
+entire Markdown file to the agent, retaining the existing domain proposal and
+review states unless a revision is requested.
+
+**Another event:** Fill the event/objective, event-directory, map/version and
+optional reach/gauge placeholders below. Review upstream/outlet coverage,
+routing-group interpretation and the three different extent purposes. Inspect
+script/map dependencies before adapting them; changing the Prompt alone does
+not make the implementation transferable. Supply the entire updated Markdown
+as an attachment or copy its full content.
+
+**Standalone alternative:** The `Example AI Agent Prompt` block may be copied
+with all placeholders filled. It contains the execution procedure and handoff;
+the full file is the default way to include the researcher's review guidance.
+
 ## Workflow Summary
 
 ### Inputs

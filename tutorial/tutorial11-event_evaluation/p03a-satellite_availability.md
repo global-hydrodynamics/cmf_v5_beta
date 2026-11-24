@@ -1,5 +1,21 @@
 # p03a — Satellite Availability Survey
 
+### How to Use This Workflow
+
+**Rhine 2021:** Keep the existing event settings and retained survey; supply
+this entire Markdown file as an attachment or copy its full content. Honor the
+worked-example no-rerun constraint below.
+
+**Another event:** Set the event/objective and directory placeholders, and review
+the search dates and satellite-analysis bounds in the Step 02 domain handoff.
+That JSON remains the source of search settings; do not create a duplicate
+settings list here. Verify catalogue/footprint access and script dependencies,
+then give the entire updated file to the agent for execution. The Rhine pass
+IDs and completed-survey status do not apply to the new event.
+
+The execution block is part of the full file, not a standalone Prompt. Review
+pass-selection evidence without turning `proposed` into an approval gate.
+
 ## Workflow Summary
 
 ### Inputs

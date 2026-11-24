@@ -1,5 +1,22 @@
 # p01 — Event Research
 
+### How to Use This Workflow
+
+**Rhine 2021:** Keep the retained sample and its current settings; do not rerun
+its completed event research. Provide this entire Markdown file to the agent
+for the documented inspection/reporting scope.
+
+**Another event:** Fill the event identity, research objective and event-directory
+placeholders below. Use a separate event directory and review available sources,
+coordinate/timing evidence and figure dependencies. Provide the entire updated
+Markdown as an attachment or copy its full content, and ask the agent to execute
+within that event's repository context.
+
+**Standalone alternative for a new event:** The complete `Example AI Agent
+Prompt` block may also be copied after filling its placeholders. The full file
+remains the default so that completion guidance and example provenance accompany
+it. The Rhine completion statements are not instructions to skip new research.
+
 ## Workflow Summary
 
 ### Inputs
@@ -61,9 +78,9 @@ source-reported facts, interpretations, and uncertainty.
    `AI_work_report/01_event_research.md` for reproducibility and handoff. The
    Survey Report explains findings, sources, the figure, uncertainty and next
    research decisions. The Work Report records actual inputs, commands,
-   generated files, checks and unresolved technical work. Do not present this
-   retrospective example-report task as a new literature search.
-5. Hand off major rivers, affected areas, timing, candidate observation periods,
+   generated files, checks and unresolved technical work. Keep the map
+   reproducible from the saved CSV/settings and f01 entry point.
+6. Hand off major rivers, affected areas, timing, candidate observation periods,
    and unresolved questions to Step 2. Do not select CaMa-Flood Basin IDs or
    finalize simulation/satellite domains in Step 1.
 
@@ -77,3 +94,11 @@ the Visualization Gallery without separate authorization.
 ## Completion and review
 
 The agent should report findings, sources, the impact inventory and Figure, plus uncertainty. Researcher review is recommended but not required for Step 2 to consume complete outputs. Literature research itself need not be reproducible by Shell; the map must be reproducible from the saved CSV/settings and `f01` entry point. For Tutorial 11, use the retained Rhine sample and its reconstructed Survey/Work Reports; do not rerun this Prompt there.
+
+### Retained Rhine 2021 documentation context
+
+The earlier example-report task carried this constraint: “Do not present this
+retrospective example-report task as a new literature search.” It describes
+that retained Rhine documentation, not a reason to skip research for a newly
+configured event. Literature research itself need not be reproducible by Shell;
+the saved-map reproducibility requirement above remains applicable.

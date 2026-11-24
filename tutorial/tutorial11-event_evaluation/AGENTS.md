@@ -21,7 +21,8 @@ execution details belong in the relevant `pXX-*.md` and
 
 ## 2. Agent Workflow and Step Contracts
 
-Each `pXX-*.md` starts with a concise `Workflow Summary` containing:
+Each `pXX-*.md` includes a concise `Workflow Summary` near the beginning
+(a brief usage section may precede it), containing:
 
 - **Inputs:** information, data, and settings received or read from earlier work.
 - **Tasks:** research, analysis, processing, and visualization to perform.
@@ -36,6 +37,31 @@ Do not use Survey Report prose as a substitute for machine-readable metadata.
 Keep Step-specific filenames, scientific specifications, and detailed
 input/output contracts in the Prompt and process document. Do not duplicate
 those details here.
+
+### Reusable and Transferable Agent Workflow Prompts
+
+Each `pXX-*.md` MUST be usable as one complete AI Agent Workflow instruction
+package. Briefly tell researchers what to configure, which settings or scientific
+decisions need review, and exactly what to supply. Default use: edit the relevant
+event-specific settings, then attach the entire Markdown file or copy its full
+content to the agent. If a genuinely standalone Prompt block is offered, identify
+that alternative clearly and ensure it omits no essential execution constraints;
+otherwise state that the block requires the full file.
+
+Where relevant, distinguish reusable methods/decision criteria from current-event
+settings, datasets, locations, numerical choices and reviewed exceptions. Use
+sections or clear labels suited to the Step, not a mandatory identical layout.
+Label historical completion/no-rerun statements so they cannot be mistaken for
+completion or skip instructions for a new event. Preserve the Workflow Summary,
+scientific/numerical meaning, uncertainties and handoff contracts. Do not turn
+an event-specific assumption or proxy into a universal algorithm.
+
+Another event may require different data, maps, domains, periods, implementation
+settings and scientific review. Prompt edits do not guarantee script compatibility;
+state the relevant dependencies without adding a configuration framework. Keep
+instructions concise, avoid redundant complete Prompt copies, and retain one
+authoritative location for each setting. This subsection is the Tutorial11
+rule; other guidance should link here rather than duplicate it.
 
 ## 3. Files and Deliverables
 

@@ -1,5 +1,24 @@
 # p03c — GFM Classification and Focus-Area Selection
 
+### How to Use This Workflow
+
+**Rhine 2021:** Keep the current pass, domain, classification and display
+settings; supply the entire Markdown file as an attachment or copy its full
+content, reusing the established Step 03b handoff.
+
+**Another event:** Set the event-directory placeholder and review the manifest,
+selected pass, Step 02 domain and focus-area settings in their existing JSON/Shell
+locations. Verify native CRS/resolution, target-grid support and compatibility
+with the existing class definitions and precedence; do not silently change
+classification or Flood Fraction semantics. Review valid support and focus-box
+selection for the new observations, and inspect implementation dependencies.
+Then provide the entire updated file to the agent. Changing event labels alone
+does not make scripts or observations compatible.
+
+The execution block and Interpretation section must be supplied together; the
+block is not a standalone Prompt. Rhine's completed products do not establish
+availability or completion for another event.
+
 ## Workflow Summary
 
 ### Inputs

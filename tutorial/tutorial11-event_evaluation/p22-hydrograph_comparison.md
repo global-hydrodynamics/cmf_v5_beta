@@ -1,5 +1,23 @@
 # p22 — Model–Observation Hydrograph Comparison
 
+### How to Use This Workflow
+
+**Rhine 2021:** Keep the station selection, comparison interval and settings
+in the Workflow Summary and procedure below. Supply the entire Markdown file
+as an attachment or copy its full content, including the CSV/time interpretation
+after the commands.
+
+**Another event:** Review the Step 21 station allocation, Step 04 observation
+metadata, Step 14 output, comparison dates, station panels and Shell settings.
+The named Rhine stations and July window are event-specific, not general
+allocation or timing rules. Verify units, time support and implementation
+compatibility without inferring missing metadata or pairing samples. Provide
+the entire updated file to the agent once inputs and scientific choices are
+established; existing Rhine results do not prove completion for another event.
+
+The inline Agent Prompt is an execution directive within this full document,
+not a standalone extract. Changing the Prompt alone does not adapt the scripts.
+
 ## Workflow Summary
 
 - **Inputs:** Step 21 gauge allocation; Step 14 hourly `outflw`; Step 4 supplied six-hour discharge observations and metadata.

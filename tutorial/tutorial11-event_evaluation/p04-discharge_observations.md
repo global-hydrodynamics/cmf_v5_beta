@@ -1,5 +1,23 @@
 # p04 — River Discharge Observation Preparation
 
+### How to Use This Workflow
+
+**Rhine 2021:** Use the current supplied station files and July plotting
+settings. Provide the entire Markdown file as an attachment or copy its full
+content, including the Current Example and observation-data guidance.
+
+**Another event:** Fill the event/objective, event-directory and observation
+provenance placeholders. Review station inventories, the plotting period and
+existing Shell settings; preserve original files and undeclared metadata.
+Verify implementation assumptions about station IDs, formats and time support,
+and establish data-use terms. Supply the entire updated file to the agent.
+Rhine's supplied-data/no-download scope and checked results must not be mistaken
+for observations available in the new study; additional acquisition still
+requires its own authorization.
+
+The block refers to this Step Prompt and must accompany the full document; it
+is not an independent copy-and-paste Prompt.
+
 ## Workflow Summary
 
 ### Inputs

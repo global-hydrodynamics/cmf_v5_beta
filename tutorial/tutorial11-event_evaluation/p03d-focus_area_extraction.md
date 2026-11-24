@@ -1,5 +1,21 @@
 # p03d — Extract GFM Focus Areas
 
+### How to Use This Workflow
+
+**Rhine 2021:** Use the current classification, focus selection and figure
+settings. Supply the entire Markdown file as an attachment or copy its full
+content, including Scientific limits.
+
+**Another event:** Set the event-directory placeholder and review the source
+raster, selected boxes and pass identity in the Step 03c handoff. Verify the
+native CRS/grid, class values and NoData contract before applying the unchanged
+extraction method. Inspect script paths and display dependencies; do not assume
+that editing this file adapts them. Give the entire updated file to the agent
+once required inputs and scientific choices are established. A retained Rhine
+crop is not an output for the new event.
+
+The execution block is part of the full document, not a standalone Prompt.
+
 ## Workflow Summary
 
 ### Inputs

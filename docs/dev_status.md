@@ -7,6 +7,17 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 ## Current v5 work
 
 
+### Tutorial11 reusable Prompt convention (DT-0183, 2026-11-24)
+
+Maintainer authorizes documentation-only standardization and focused commit/push
+on existing `feature/package-builder`. Local AGENTS owns the full-file reuse
+rule;16 of17 pXX add configuration/delivery guidance and case/history labels.
+p21 already complies and is unchanged. Original procedure/command preservation,
+usage and scoped-document checks pass (VR-0227);15 historical registry errors
+persist. No scientific execution or implementation/data/result changes.
+See the [development record](../tutorial/tutorial11-event_evaluation/development_log/development_log.md).
+
+
 ### Tutorial11 Step31 scientific synthesis (DT-0182, 2026-11-24)
 
 Maintainer authorizes reusable p31 and one scientific-writing execution on

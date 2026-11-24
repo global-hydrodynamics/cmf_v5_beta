@@ -1,5 +1,22 @@
 # p11 — Regional Map Preparation
 
+### How to Use This Workflow
+
+**Rhine 2021:** Keep the current source map, regional bounds and map-local
+settings below. Provide the entire Markdown file as an attachment or copy its
+full content; the agent must inspect and reuse matching products before any
+necessary preparation.
+
+**Another event:** Review and replace the regional/source map paths, bounds and
+resolution in the current-event instructions below and the Step 02 handoff.
+Verify auxiliary layers, climatology/runoff mappings, tools and existing map-local
+settings. Those scientific/implementation dependencies need review; a different
+Prompt alone does not adapt map preparation. Give the entire updated file to
+the agent after the required choices and inputs are established. Existing Rhine
+products are an example, not evidence that a new map is prepared.
+
+The execution block is part of this full document, not a standalone Prompt.
+
 ## Workflow Summary
 
 ### Inputs
@@ -31,6 +48,11 @@ source is `../../glb_15min/`, with outer bounds WEST/EAST/SOUTH/NORTH of
 bounds from another event or earlier settings.
 
 ## Example AI Agent Prompt
+
+**Current Rhine 2021 configuration:** Event names, paths, periods, geometry
+and researcher-selected settings in this block describe this application.
+For another event, review and replace them using its own inputs and decisions;
+the general methods and limits still apply. Supply the complete file.
 
 ```text
 Prepare Step 11, the regional map for this event.
