@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Extract report-linked impact hydrographs and compare UTC peak windows."""
+"""Extract report-linked impact hydrographs and compare UTC peak windows.
+
+Inputs: Step01 UTC timing reports, Step21 allocation and hourly model outflw.
+Outputs: unique-cell series CSV and report-linked timing-comparison CSV.
+Workflow:
+    1. Resolve report cells and the half-open model peak-search interval.
+    2. Extract finite flows and their signed-value maxima at unique cells.
+    3. Compare eligible discharge-peak times with reported windows and export.
+Boundary maxima and unresolved/context-only cells are not validated event peaks.
+Water-level peaks remain reference context; missing/unknown times are not guessed.
+"""
 
 from __future__ import annotations
 
@@ -14,11 +24,13 @@ import numpy as np
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
+    """Read report/allocation rows without changing their recorded scientific fields."""
     with path.open(newline="", encoding="utf-8-sig") as stream:
         return list(csv.DictReader(stream))
 
 
 def parse_utc(value: str) -> datetime | None:
+    """Require an explicit offset and return naive UTC, or None for an empty field."""
     if not value:
         return None
     text = value[:-1] + "+00:00" if value.endswith("Z") else value
@@ -29,10 +41,15 @@ def parse_utc(value: str) -> datetime | None:
 
 
 def iso_utc(value: datetime) -> str:
+    """Format an already UTC-interpreted datetime with a Z suffix."""
     return value.isoformat(timespec="seconds") + "Z"
 
 
 def signed_window_lag_hours(peak: datetime, start: datetime, end: datetime) -> tuple[float, bool]:
+    """Return signed hours to the nearest window edge, or zero inside [start, end].
+
+    Negative means the model peak precedes the window; positive means it
+    follows it. A point window requires equality for an inside match."""
     if start == end:
         lag = (peak - start).total_seconds() / 3600.0
         return lag, lag == 0
@@ -44,6 +61,7 @@ def signed_window_lag_hours(peak: datetime, start: datetime, end: datetime) -> t
 
 
 def select_cell(row: dict[str, str]) -> tuple[int, int, str, str]:
+    """Use a confirmed/plausible river cell, otherwise retain geographic context or no cell."""
     status = row.get("river_allocation_status", "")
     river_row, river_col = row.get("river_model_row_0based", ""), row.get("river_model_col_0based", "")
     if status in {"confirmed", "plausible"} and river_row and river_col:
@@ -55,7 +73,11 @@ def select_cell(row: dict[str, str]) -> tuple[int, int, str, str]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+    """Extract unique-cell flows and qualify report-linked timing-window comparisons."""
+
+    #*** 1. Read the UTC search range and report/allocation contracts
+    # Preserve the established CLI description while expanding source documentation.
+    parser = argparse.ArgumentParser(description='Extract report-linked impact hydrographs and compare UTC peak windows.')
     parser.add_argument("--tutorial-dir", type=Path, required=True)
     parser.add_argument("--model-netcdf", type=Path, required=True)
     parser.add_argument("--timing-csv", type=Path, required=True)
@@ -89,6 +111,7 @@ def main() -> None:
     model_rows: list[dict[str, str]] = []
     peak_by_cell: dict[tuple[int, int], dict[str, object]] = {}
 
+    #*** 2. Extract unique-cell flows and identify finite signed-value maxima
     with Dataset(args.model_netcdf) as ds:
         if "outflw" not in ds.variables or "time" not in ds.variables:
             raise ValueError(f"Expected outflw and time variables in {args.model_netcdf}")
@@ -142,6 +165,7 @@ def main() -> None:
                         "river_allocation_status": status_text,
                     })
 
+    #*** 3. Qualify timing-window comparisons by data/river support
     comparison_rows: list[dict[str, str]] = []
     for report in timing:
         report_id = report["report_id"]
@@ -231,6 +255,7 @@ def main() -> None:
             record["ai_notes"] += (" Evaluation uses an upstream tributary proxy that omits downstream "
                                    "catchment area; it is not the exact local river reach.")
 
+    #*** 4. Write series and report-linked comparison records
     args.timeseries_output.parent.mkdir(parents=True, exist_ok=True)
     with args.timeseries_output.open("w", newline="", encoding="utf-8") as stream:
         fields = ["model_row_0based", "model_col_0based", "datetime_utc", "outflw_m3s",

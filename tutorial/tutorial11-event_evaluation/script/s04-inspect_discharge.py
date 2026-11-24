@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Inspect the supplied Rhine discharge files and write Step 4 metadata."""
+"""Inspect the supplied Rhine discharge files and write Step 4 metadata.
+
+Inputs: supplied station CSV, six-hour series CSV and matching NetCDF.
+Outputs: station/statistics inventory CSV and dataset/handoff JSON.
+Workflow:
+    1. Read station IDs, source time labels and the CSV/NetCDF structures.
+    2. Compare representations and summarize full-year/July values and gaps.
+    3. Preserve literal allocation fields and unresolved definitions in metadata.
+Six-hour interval-end meaning comes from provider correspondence. Source units,
+timezone and map-allocation interpretation are not inferred from field names.
+"""
 
 from __future__ import annotations
 
@@ -22,6 +32,7 @@ SOURCE_NAMES = {
 
 
 def sha256(path: Path) -> str:
+    """Return the file SHA-256 digest without modifying the supplied source."""
     digest = hashlib.sha256()
     with path.open("rb") as stream:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
@@ -30,6 +41,7 @@ def sha256(path: Path) -> str:
 
 
 def read_csv_timeseries(path: Path):
+    """Read station-ID series as float64/NaN and parse naive source timestamp labels."""
     with path.open(newline="", encoding="utf-8-sig") as stream:
         reader = csv.DictReader(stream)
         rows = list(reader)
@@ -41,6 +53,7 @@ def read_csv_timeseries(path: Path):
 
 
 def read_station_metadata(path: Path):
+    """Index supplied station records by unique integer ID, not row order."""
     with path.open(newline="", encoding="utf-8-sig") as stream:
         rows = list(csv.DictReader(stream))
     stations = {int(row["Id"]): row for row in rows}
@@ -50,6 +63,9 @@ def read_station_metadata(path: Path):
 
 
 def main() -> None:
+    """Inspect source representations and save statistics with unresolved units/time semantics."""
+
+    #*** 1. Read supplied sources and verify station/time correspondence
     parser = argparse.ArgumentParser()
     parser.add_argument("--tutorial-dir", type=Path, required=True)
     parser.add_argument("--source-dir", type=Path)
@@ -95,6 +111,7 @@ def main() -> None:
     if discharge.shape != (len(times), len(station_ids)):
         raise ValueError(f"Unexpected NetCDF discharge shape: {discharge.shape}")
 
+    #*** 2. Compare numeric representations and summarize July interval-end values
     full_year = (times[0], times[-1])
     july_start, july_end = datetime(2021, 7, 1), datetime(2021, 8, 1)
     july_indices = [i for i, value in enumerate(times) if july_start < value <= july_end]
@@ -158,6 +175,7 @@ def main() -> None:
             }
         allocation.append(alloc)
 
+    #*** 3. Write inventory and preserve unresolved definitions in the handoff
     metadata_root = args.metadata_dir or root / "metadata"
     metadata_root.mkdir(parents=True, exist_ok=True)
     csv_out = metadata_root / "04_discharge_inventory.csv"

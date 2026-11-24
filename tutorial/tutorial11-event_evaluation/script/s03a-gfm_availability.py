@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Summarize date-separated GFM STAC results and draw pass-footprint pages."""
+"""Summarize date-separated GFM STAC results and draw pass-footprint pages.
+
+Inputs: cached date-separated STAC/OData records and the domain JSON.
+Outputs: pass/orbit inventories and footprint metadata, or footprint-page PNGs.
+Workflow:
+    1. Group verified source-product identities within the requested dates/AOI.
+    2. Read source acquisition footprints and write or reuse their metadata.
+    3. Export inventory/coverage records or render the pass-footprint pages.
+GFM product-tile geometry is distinct from the original acquisition footprint;
+polygon overlap is a selection test, not a geodesic flood-area calculation.
+"""
 from __future__ import annotations
 
 import argparse
@@ -10,6 +20,8 @@ from pathlib import Path
 import sys
 
 import matplotlib
+
+# Select the noninteractive backend before importing pyplot.
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -26,6 +38,7 @@ import f06_common as river
 
 
 def polygon_rings(geometry):
+    """Read Polygon/MultiPolygon rings from the stored footprint geometry."""
     if geometry["type"] == "Polygon":
         return geometry["coordinates"]
     if geometry["type"] == "MultiPolygon":
@@ -65,6 +78,7 @@ def compound_path(geometries):
 
 
 def load_acquisition_footprints(path):
+    """Index source acquisition GeoJSON geometries by source-product ID."""
     data = json.loads(path.read_text(encoding="utf-8"))
     return {
         feature["properties"]["source_product_id"]: feature["geometry"]
@@ -73,6 +87,7 @@ def load_acquisition_footprints(path):
 
 
 def clip_edge(points, inside, intersection):
+    """Clip one polygon against a boundary defined by inside/intersection callbacks."""
     output = []
     if not points:
         return output
@@ -91,6 +106,7 @@ def clip_edge(points, inside, intersection):
 
 
 def clipped_area(ring, west, south, east, north):
+    """Return planar coordinate area after rectangle clipping, for overlap selection only."""
     points = [(float(x), float(y)) for x, y, *_ in ring]
     edges = [
         (lambda p: p[0] >= west, lambda a, b: (west, a[1] + (b[1] - a[1]) * (west - a[0]) / (b[0] - a[0]))),
@@ -110,12 +126,14 @@ def clipped_area(ring, west, south, east, north):
 
 
 def footprint_overlaps(geometry, extent):
+    """Test footprint/extent overlap without treating coordinate area as physical area."""
     west, south, east, north = extent
     return any(clipped_area(ring, west, south, east, north) > 1e-10
                for ring in polygon_rings(geometry))
 
 
 def load_passes(catalogue_root, extent, start_date, end_date):
+    """Group date-filtered STAC Items by verified pass identity and record AOI overlap."""
     groups = {}
     for catalogue in sorted(catalogue_root.glob("*/metadata/stac_items.json")):
         catalogue_date = catalogue.parent.parent.name
@@ -164,6 +182,7 @@ def load_passes(catalogue_root, extent, start_date, end_date):
 
 
 def read_orbit_lookup(path):
+    """Index the retained orbit-inventory CSV by pass ID."""
     if not path.exists():
         return {}
     with path.open(newline="", encoding="utf-8") as stream:
@@ -237,6 +256,7 @@ def source_metadata(catalogue_root, passes):
 
 
 def write_source_metadata(orbit_metadata, footprints_features, orbit_path, footprint_path):
+    """Write the orbit CSV and original source-acquisition footprint GeoJSON."""
     orbit_path.parent.mkdir(parents=True, exist_ok=True)
     with orbit_path.open("w", newline="", encoding="utf-8") as stream:
         writer = csv.DictWriter(
@@ -257,6 +277,7 @@ def write_source_metadata(orbit_metadata, footprints_features, orbit_path, footp
 
 
 def write_inventory(passes, path, orbit_metadata, acquisition_footprints, extent):
+    """Write pass statistics with source-footprint and product-tile coverage kept distinct."""
     path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = [
         "pass_id", "satellite", "absolute_orbit", "relative_orbit",
@@ -308,6 +329,7 @@ def write_inventory(passes, path, orbit_metadata, acquisition_footprints, extent
 
 def draw_pages(passes, acquisition_footprints, orbit_metadata, map_dir, view_extent,
                aoi_extent, tile_cache, output_dir, no_osm, fig_width=15, fig_height=10, dpi=180, period_title=None):
+    """Render source acquisition footprints in pass panels with contextual rivers/OSM."""
     _, _, segments, classes = river.read_network(map_dir, view_extent)
     output_dir.mkdir(parents=True, exist_ok=True)
     page_size = 6
@@ -386,7 +408,11 @@ def draw_pages(passes, acquisition_footprints, orbit_metadata, map_dir, view_ext
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    """Read cached survey inputs, then write metadata or render existing pass footprints."""
+
+    #*** 1. Read survey mode and the authoritative domain/search settings
+    # Preserve the established CLI description while expanding source documentation.
+    parser = argparse.ArgumentParser(description='Summarize date-separated GFM STAC results and draw pass-footprint pages.')
     parser.add_argument("--mode", choices=["metadata", "figure"], required=True,
                         help="metadata: summarize cached STAC/OData; figure: render existing metadata only")
     parser.add_argument("--domain-config", type=Path,
@@ -418,6 +444,8 @@ def main():
         aoi_extent[2] + view_margin, aoi_extent[3] + view_margin,
     )
     search_period = config["satellite_analysis"]["search_period"]
+
+    #*** 2. Group cached Items and resolve original acquisition footprints
     passes = load_passes(
         args.catalogue_root, aoi_extent,
         search_period["start_date"], search_period["end_date"],
@@ -448,6 +476,8 @@ def main():
             + f"\nUpdate {args.acquisition_footprints} from Copernicus Data Space OData metadata; "
               "GFM tile geometry is not used as a substitute."
         )
+
+    #*** 3. Write metadata or render the retained footprint survey
     if args.mode == "metadata":
         args.summary_dir.mkdir(parents=True, exist_ok=True)
         write_inventory(passes, args.inventory_output, orbit_metadata,

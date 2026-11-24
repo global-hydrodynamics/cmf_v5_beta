@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Classify and mosaic one selected GFM pass on its native 20 m grid."""
+"""Classify and mosaic one selected GFM pass on its native 20 m grid.
+
+Inputs: selected passes/domain and verified Step03b Item/layer handoffs.
+Outputs: per-pass native class COGs, provenance JSONs and inspection figures.
+Workflow:
+    1. Check handoffs, source contracts and common 20 m alignment.
+    2. Project the AOI envelope and classify blocks without resampling pixels.
+    3. Verify lossless COG encoding and save class/provenance summaries.
+The earliest joint-valid Item owns a pixel. Reference-only coverage stays
+NoData, while exclusion and inconsistent partial observations remain separate.
+"""
 
 from __future__ import annotations
 
@@ -49,6 +59,7 @@ CLASS_MEANINGS = {
 
 
 def checked_path(root: Path, relative: str) -> Path:
+    """Resolve a manifest-relative path and reject escape from the declared root."""
     path = (root / relative).resolve()
     if not path.is_relative_to(root.resolve()):
         raise ValueError(f"Manifest path resolves outside {root}: {relative}")
@@ -56,6 +67,7 @@ def checked_path(root: Path, relative: str) -> Path:
 
 
 def utc_datetime(value: str) -> datetime:
+    """Parse a timezone-bearing STAC timestamp; reject missing timezone information."""
     parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     if parsed.tzinfo is None:
         raise ValueError(f"STAC Item datetime must include a timezone: {value}")
@@ -68,6 +80,7 @@ def read_pass_inputs(
     selected: dict,
     layers: list[str],
 ) -> tuple[Path, dict, dict, list[dict], dict]:
+    """Resolve the ready Step03b summary/manifest and recover selected ordered Item assets."""
     pass_id = selected["pass_id"]
     date = selected["catalogue_date"]
     summary_path = atlantis_root / "catalogue" / date / "metadata" / f"download_summary_{pass_id}.json"
@@ -155,6 +168,7 @@ def read_pass_inputs(
 
 
 def validate_sources(assets: dict[str, dict]) -> tuple[dict, rasterio.crs.CRS]:
+    """Check native uint8/255 source integrity and build their common aligned 20 m grid."""
     grids = {}
     reference_crs = None
     for key, asset in assets.items():
@@ -257,6 +271,13 @@ def mosaic_pass(
     figure_dir: Path,
     force: bool,
 ) -> dict:
+    """Classify one pass on the outward-aligned AOI envelope without resampling.
+
+    Blocks use the existing earliest joint-valid owner and exclusive-class
+    rules. Verify decoded COG values against the working raster, then save
+    class/provenance records and a nearest-sampled inspection image."""
+
+    #*** 1. Validate native sources and align the AOI envelope
     source_grid, crs = validate_sources(assets)
     grid, projected_aoi = aligned_aoi_grid(source_grid, crs, aoi_bbox)
     width, height, transform = grid["width"], grid["height"], grid["transform"]
@@ -292,6 +313,7 @@ def mosaic_pass(
         predictor=1,
     )
 
+    #*** 2. Merge and encode native blocks, then verify lossless COG values
     with tempfile.TemporaryDirectory(prefix="cmf_gfm_p03c_") as temp_dir:
         temp_dir = Path(temp_dir)
         temporary_tif = temp_dir / "classification_work.tif"
@@ -402,6 +424,7 @@ def mosaic_pass(
 
         temporary_cog.replace(output_path)
 
+    #*** 3. Render the inspection view and save provenance/count metadata
     figure_path = figure_dir / f"{stem}_inspection.png"
     CLASSIFIER.render_figure(
         output_path,
@@ -520,7 +543,11 @@ def mosaic_pass(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+    """Read selection/domain contracts and classify each requested ready pass."""
+
+    #*** 1. Read output options and authoritative pass/domain handoffs
+    # Preserve the established CLI description while expanding source documentation.
+    parser = argparse.ArgumentParser(description='Classify and mosaic one selected GFM pass on its native 20 m grid.')
     parser.add_argument("--tutorial-root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--selection-json", type=Path)
     parser.add_argument("--domain-json", type=Path)
@@ -545,6 +572,8 @@ def main() -> None:
     output_dir = (args.output_dir or tutorial_root / "observation/GFM_extent").resolve()
     figure_dir = (args.figure_dir or atlantis_root / "runs/p03c").resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    #*** 2. Resolve ready inputs and process each selected pass
     results = []
     for selected in selection["passes"]:
         manifest_path, summary, assets, items, dataset_root = read_pass_inputs(

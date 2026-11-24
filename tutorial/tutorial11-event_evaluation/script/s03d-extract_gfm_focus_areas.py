@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Extract selected GFM focus boxes on the original Equi7 20 m pixel grid."""
+"""Extract selected GFM focus boxes on the original Equi7 20 m pixel grid.
+
+Inputs: selected focus-area JSON, native classification TIFF and provenance JSON.
+Outputs: native-grid cropped GeoTIFFs and their extraction manifest.
+Workflow:
+    1. Project each WGS84 focus rectangle and snap its envelope outward.
+    2. Copy the corresponding integral source window without resampling.
+    3. Check retained geometry/sample values and record counts/provenance.
+Classes and NoData=255 are unchanged; the projected envelope may extend beyond
+the original geographic rectangle.
+"""
 from __future__ import annotations
 
 import argparse
@@ -17,6 +27,7 @@ CLASS_CODES = (0, 1, 2, 3, 4, 5, 6, 255)
 
 
 def sha256(path: Path) -> str:
+    """Return the SHA-256 digest of the original file bytes."""
     digest = hashlib.sha256()
     with path.open("rb") as stream:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
@@ -44,6 +55,9 @@ def aligned_window(src: rasterio.io.DatasetReader, bbox: list[float]) -> Window:
 
 
 def extract(args: argparse.Namespace) -> None:
+    """Copy integral native-grid focus windows, verify retained codes and save the manifest."""
+
+    #*** 1. Read source provenance and geographic focus selections
     tutorial_dir = Path(args.tutorial_dir).resolve()
     focus_path = Path(args.focus_areas).resolve()
     source_path = Path(args.source_tiff).resolve()
@@ -62,6 +76,7 @@ def extract(args: argparse.Namespace) -> None:
     date_tag = date.replace("-", "")
     class_definitions = source_metadata["classification_codes"]
 
+    #*** 2. Copy exact native windows and check saved geometry/sample values
     with rasterio.open(source_path) as src:
         if src.count != 1 or src.dtypes[0] != "uint8" or src.nodata != 255:
             raise ValueError("Expected a one-band uint8 source with NoData=255")
@@ -148,6 +163,7 @@ def extract(args: argparse.Namespace) -> None:
             })
             print(f"{area['id']}: {filename} {window.width}x{window.height}, {file_bytes:,} bytes")
 
+    #*** 3. Save the crop inventory and source provenance
     output_record = {
         "schema": "cmf-tutorial11-gfm-focus-extractions-1",
         "source_focus_areas": str(focus_path.relative_to(tutorial_dir)),
@@ -182,7 +198,9 @@ def extract(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+    """Parse source/focus/output paths and extract native-grid crops."""
+    # Preserve the established CLI description while expanding source documentation.
+    parser = argparse.ArgumentParser(description='Extract selected GFM focus boxes on the original Equi7 20 m pixel grid.')
     parser.add_argument("--tutorial-dir", required=True)
     parser.add_argument("--focus-areas", required=True)
     parser.add_argument("--source-tiff", required=True)

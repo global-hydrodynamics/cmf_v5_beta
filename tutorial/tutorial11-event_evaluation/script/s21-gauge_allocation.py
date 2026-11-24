@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
-"""Allocate Tutorial 11 gauges and reported impact locations to the Rhine map."""
+"""Allocate Tutorial 11 gauges and reported impact locations to the Rhine map.
+
+Inputs: station/report metadata, regional map and native 1-minute catmxy.
+Outputs: gauge/impact allocation CSVs and catchment-review JSON.
+Workflow:
+    1. Crosswalk supplied gauge cells to the regional grid and stored nextxy.
+    2. Retain geographic impact cells, then add native catchment assignments.
+    3. Select evaluation cells using the explicit reviewed tributary-proxy policy.
+Arrays use zero-based (row, col); catmxy/nextxy store one-based (x, y).
+Containment, catchment assignment and adopted river cell remain distinct.
+An upstream proxy omits downstream area and does not resolve an exact local reach.
+"""
 
 from __future__ import annotations
 
@@ -16,11 +27,13 @@ import numpy as np
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
+    """Read source/metadata rows while preserving their field values."""
     with path.open(newline="", encoding="utf-8-sig") as stream:
         return list(csv.DictReader(stream))
 
 
 def load_map(map_dir: Path):
+    """Read aligned north-first maps, outlet degrees, uparea [m2] and stored nextxy."""
     netcdf = map_dir / "netcdf"
     with Dataset(netcdf / "lonlat.nc") as data:
         lon = np.asarray(data.variables["lon"][:], dtype=np.float64)
@@ -91,6 +104,7 @@ PRIOR_RIVER_ASSESSMENTS = {
 
 
 def parse_grdc_outputs(data_path: Path, output_path: Path) -> dict[str, dict[str, str]]:
+    """Join selected GRDC source metadata to stored one-based map allocations."""
     source_by_name = {row["Station Name"].strip().casefold(): row
                       for row in read_csv(data_path)}
     output_by_id: dict[str, dict[str, str]] = {}
@@ -288,6 +302,7 @@ def allocate_impact_locations(tutorial: Path, map_data, output_path: Path) -> No
 
 def trace_downstream(start: tuple[int, int], targets: dict[str, tuple[int, int]],
                      nextx: np.ndarray, nexty: np.ndarray) -> list[str]:
+    """Visit target zero-based cells using stored one-based nextxy; stop on terminal/cycle."""
     rows, cols = nextx.shape
     current = start
     seen: set[tuple[int, int]] = set()
@@ -424,6 +439,8 @@ def select_evaluation_cells(rows, map_data):
 
 def add_catchment_allocations(map_dir: Path, map_data, output_path: Path):
     """Enrich retained geographic assignments, never replacing their fields or notes."""
+
+    #*** 1. Read native assignments while retaining previous review fields
     lon, lat, outlon, outlat, uparea, nextx, nexty, width, basin = map_data
     catmx, catmy, valid, unassigned, hires, _ = load_catchments(map_dir, lon, lat, uparea)
     rows = read_csv(output_path)
@@ -450,6 +467,8 @@ def add_catchment_allocations(map_dir: Path, map_data, output_path: Path):
         "river_correction_applied", "river_correction_steps", "river_correction_reason",
     ]
     fields = [f for f in rows[0] if f != "ai_notes" and f not in extra_fields] + extra_fields + ["ai_notes"]
+
+    #*** 2. Resolve point containment and valid one-based catmxy assignments
     for row in rows:
         for f in extra_fields:
             row[f] = ""
@@ -481,33 +500,34 @@ def add_catchment_allocations(map_dir: Path, map_data, output_path: Path):
                    catmxy_uparea_km2=f"{uparea[rr, cc] / 1e6:.3f}",
                    catmxy_rivwth_m=f"{width[rr, cc]:.3f}", catmxy_basin_id=int(basin[rr, cc]),
                    catmxy_distance_to_outlet_km=f"{great_circle_km(x,y,outlon[rr,cc],outlat[rr,cc]):.3f}",
-                   catmxy_nextx_1based=int(nextx[rr,cc]), catmxy_nexty_1based=int(nexty[rr,cc]),
-                   catmxy_status="assigned", allocation_changed=str((rr,cc) != (int(row["model_row_0based"]),int(row["model_col_0based"]))).lower())
-        dx, dy = int(nextx[rr,cc])-1, int(nexty[rr,cc])-1
+                   catmxy_nextx_1based=int(nextx[rr, cc]), catmxy_nexty_1based=int(nexty[rr, cc]),
+                   catmxy_status="assigned", allocation_changed=str((rr, cc) != (int(row["model_row_0based"]), int(row["model_col_0based"]))).lower())
+        dx, dy = int(nextx[rr, cc]) - 1, int(nexty[rr, cc]) - 1
         if 0 <= dx < len(lon) and 0 <= dy < len(lat):
             row.update(catmxy_next_row_0based=dy, catmxy_next_col_0based=dx,
                        catmxy_next_outlet_lon=f"{outlon[dy,dx]:.8f}",catmxy_next_outlet_lat=f"{outlat[dy,dx]:.8f}",
                        catmxy_next_uparea_km2=f"{uparea[dy,dx]/1e6:.3f}")
     for row in rows:
         if row["catmxy_status"] == "assigned":
-            start=(int(row["catmxy_row_0based"]), int(row["catmxy_col_0based"]))
-            path, termination = downstream_path(start,nextx,nexty)
+            start = (int(row["catmxy_row_0based"]), int(row["catmxy_col_0based"]))
+            path, termination = downstream_path(start, nextx, nexty)
             row["catmxy_path_termination"] = termination
-            row["catmxy_path_area_decreases"] = sum(uparea[b] < uparea[a] for a,b in zip(path,path[1:]))
+            row["catmxy_path_area_decreases"] = sum(uparea[b] < uparea[a] for a, b in zip(path, path[1:]))
             # Include same-cell reports explicitly; co-location is not downstream resolution.
             row["catmxy_downstream_report_ids"] = ";".join(other["report_id"] for other in rows
                 if other["catmxy_status"] == "assigned" and other["report_id"] != row["report_id"] and
-                (int(other["catmxy_row_0based"]),int(other["catmxy_col_0based"])) in path)
-            group=row["river_group"]
-            if group == "Ahr" and start == (9,17):
+                (int(other["catmxy_row_0based"]), int(other["catmxy_col_0based"])) in path)
+            group = row["river_group"]
+            if group == "Ahr" and start == (9, 17):
                 reason = ("Lower Ahr reports collapse onto the same large-area model cell (9,17); "
                           "Schuld (10,15) drains directly into it. Independent lower-Ahr routing is not resolved "
                           "by these assignments; named reach identity remains unverified.")
-                status="unresolved"
+                status = "unresolved"
             elif termination == "cycle" or row["catmxy_path_area_decreases"]:
-                status="unresolved";reason="Stored downstream path needs review: cycle or decreasing upstream area."
+                status = "unresolved"
+                reason = "Stored downstream path needs review: cycle or decreasing upstream area."
             else:
-                status="plausible"
+                status = "plausible"
                 reason=("Valid one-minute unit-catchment lookup and outlet, with a terminating standard nextxy path "
                         "and nondecreasing mapped upstream area. Named-river identity is not independently confirmed; "
                         "town/site coordinate and one-minute pixel uncertainty remain.")
@@ -515,14 +535,18 @@ def add_catchment_allocations(map_dir: Path, map_data, output_path: Path):
                     reason += " Schuld/Muesch drain into the shared lower-Ahr/large-channel cell; no separate downstream Ahr reach is resolved."
                 if group == "Erft/Swist":
                     reason += " Upper Erft sites/Bliesheim at (9,15) drain to Blessem (8,14), then (7,14)."
-            row["river_allocation_status"]=status;row["river_allocation_reason"]=reason
+            row["river_allocation_status"] = status
+            row["river_allocation_reason"] = reason
         # Existing narrative is retained byte-for-byte before a stable, replaceable suffix.
         row["ai_notes"]=row["ai_notes"].split(" [Step21 catmxy review]")[0] + (
             " [Step21 catmxy review] " + row["catmxy_status"] + "; " + row["river_allocation_reason"])
+
+    #*** 3. Apply the reviewed evaluation policy and record routing/provenance
     select_evaluation_cells(rows, map_data)
-    with output_path.open("w",newline="",encoding="utf-8") as f:
-        writer=csv.DictWriter(f,fieldnames=fields,lineterminator="\n")
-        writer.writeheader();writer.writerows(rows)
+    with output_path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fields, lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(rows)
     paths = {}
     for row in rows:
         if row["catmxy_status"] != "assigned":
@@ -534,7 +558,7 @@ def add_catchment_allocations(map_dir: Path, map_data, output_path: Path):
             paths[key] = {
                 "cells_row_col_0based": path,
                 "uparea_km2": [float(uparea[cell] / 1e6) for cell in path],
-                "outlet_lon_lat": [[float(outlon[cell]),float(outlat[cell])] for cell in path],
+                "outlet_lon_lat": [[float(outlon[cell]), float(outlat[cell])] for cell in path],
                 "termination": termination,
             }
     sources = ["params.txt", "1min/location.txt", "1min/1min.catmxy.bin",
@@ -550,7 +574,7 @@ def add_catchment_allocations(map_dir: Path, map_data, output_path: Path):
         "assigned_count": sum(row["catmxy_status"] == "assigned" for row in rows),
         "changed_count": sum(row["allocation_changed"] == "true" for row in rows),
         "unresolved_report_ids": [row["report_id"] for row in rows if row["river_allocation_status"] == "unresolved"],
-        "source_sha256": {name: hashlib.sha256((map_dir/name).read_bytes()).hexdigest() for name in sources},
+        "source_sha256": {name: hashlib.sha256((map_dir / name).read_bytes()).hexdigest() for name in sources},
         "unique_downstream_paths": paths,
         "evaluation_policy": "Direct catmxy unless explicit reviewed one-step tributary predecessor is used; raw and final cells retained separately",
         "upstream_proxy_report_ids": [row["report_id"] for row in rows if row["river_correction_applied"] == "true"],
@@ -564,7 +588,11 @@ def add_catchment_allocations(map_dir: Path, map_data, output_path: Path):
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+    """Crosswalk retained gauges and enrich impact/catchment allocations without spatial snapping."""
+
+    #*** 1. Read selected stations and regional map contracts
+    # Preserve the established CLI description while expanding source documentation.
+    parser = argparse.ArgumentParser(description='Allocate Tutorial 11 gauges and reported impact locations to the Rhine map.')
     parser.add_argument("--tutorial-dir", type=Path, required=True)
     parser.add_argument("--map-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
@@ -601,6 +629,7 @@ def main() -> None:
     grdc = parse_grdc_outputs(map_dir.parent / "data/GRDC_allocated.csv",
                               map_dir / "GRDC_alloc.txt")
 
+    #*** 2. Crosswalk supplied global cells and check retained gauge correspondence
     prepared = []
     for gauge in selected:
         station_id = str(gauge["location_id"])
@@ -652,6 +681,7 @@ def main() -> None:
             "grdc_match_cell": grdc_match_cell,
         })
 
+    #*** 3. Check downstream order and write gauge allocation evidence
     cells = {item["source"]["Name"]: (item["row"], item["col"]) for item in prepared}
     chain = trace_downstream(cells["Maxau"], cells, nextx, nexty)
     if chain[:3] != ["Maxau", "Speyer", "Lobith"]:
@@ -722,6 +752,8 @@ def main() -> None:
               f"outlet=({item['model_out_lon']:.5f}, {item['model_out_lat']:.5f}) "
               f"distance={item['distance_km']:.2f} km "
               f"conditional area error={item['conditional_area_error_pct']:.2f}%")
+
+    #*** 4. Retain geographic impacts and enrich native-catchment evaluation cells
     allocate_impact_locations(
         tutorial,
         (lon, lat, outlon, outlat, uparea, nextx, nexty, river_width, basin),

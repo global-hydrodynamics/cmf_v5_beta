@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Plot the Step 22 model–observation hydrograph overlay from its CSV handoff."""
+"""Plot the Step 22 model–observation hydrograph overlay from its CSV handoff.
+
+Inputs: Step22 saved model/observation CSV and comparison-summary JSON.
+Output: a three-station hydrograph-overlay PNG.
+Workflow:
+    1. Read retained series and preserve their nominal timestamp labels.
+    2. Draw separate model and observation curves with the selected limits.
+    3. Save the provisional comparison figure.
+Model flow is in m3/s; observation units/timezone remain unresolved. No unit
+conversion, timezone correction or temporal resampling is performed here.
+"""
 
 from __future__ import annotations
 
@@ -21,7 +31,11 @@ def parse_plot_time(value: str) -> datetime:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+    """Overlay saved sources at nominal labels without converting observation values/times."""
+
+    #*** 1. Read the saved handoffs and display settings
+    # Preserve the established CLI description while expanding source documentation.
+    parser = argparse.ArgumentParser(description='Plot the Step 22 model–observation hydrograph overlay from its CSV handoff.')
     parser.add_argument("--tutorial-dir", type=Path, required=True)
     parser.add_argument("--timeseries-csv", type=Path, required=True)
     parser.add_argument("--summary-json", type=Path, required=True)
@@ -41,6 +55,7 @@ def main() -> None:
     if not rows:
         raise ValueError(f"No time-series records in {args.timeseries_csv}")
 
+    #*** 2. Draw model and unadjusted observation series
     plt.rcParams.update({"font.size": 10, "axes.titlesize": 12, "axes.labelsize": 10})
     fig, axes = plt.subplots(3, 1, figsize=(args.fig_width, args.fig_height), sharex=True, constrained_layout=True)
     colors = {"model": args.model_color, "observation": args.observation_color}
@@ -62,6 +77,8 @@ def main() -> None:
         ax.grid(True, color="#d1d8dc", linewidth=0.65, alpha=0.85)
         ax.spines[["top", "right"]].set_visible(False)
         ax.legend(loc="upper left", ncols=2, frameon=True, fontsize=8)
+
+    #*** 3. Set the nominal time view and export with limitations
     summary = json.loads(args.summary_json.read_text(encoding="utf-8"))
     period = summary["comparison_period"]
     start = datetime.fromisoformat(period["start_inclusive"])

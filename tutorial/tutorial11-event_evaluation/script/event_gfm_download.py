@@ -3,9 +3,18 @@
 
 Metadata uses the pinned Atlantis backend. No daily merge, coarsening, or native
 pixel changes occur here. Completed files and resumable .part files stay local.
+
+Inputs: date/bbox or selected-pass handoffs, cached STAC records, and source URLs.
+Outputs: complete original COGs, per-Item links, acquisition manifests and metrics.
+Workflow:
+    1. Read or query the catalogue and group verified orbit/datatake identities.
+    2. Reuse matching assets or download complete, resumable source files.
+    3. Save local Item references, checksums and acquisition metrics.
+No spatial resampling or daily compositing is performed.
 """
 
 from __future__ import annotations
+
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date
@@ -36,6 +45,7 @@ from event_gfm_common import (
 
 
 def catalogue(root, when, bbox, offline):
+    """Reuse a matching date/bbox catalogue or query Atlantis and cache its STAC Items."""
     request = dict(date=when, bbox=list(bbox), collection="GFM")
     spec, path = (
         root / "metadata/catalogue_request.json",
@@ -106,6 +116,7 @@ def orbit_metadata(root, pass_id, sources, offline, reuse_data_dir=None):
 
 
 def groups_for(data, root, offline, reuse_data_dir=None):
+    """Group by verified platform/orbit/datatake, then attach optional orbit metadata."""
     groups = {}
     for item in data["features"]:
         source = parse_source(item)
@@ -149,6 +160,7 @@ def groups_for(data, root, offline, reuse_data_dir=None):
 
 
 def inspect_head(url):
+    """Read remote size and identity headers without downloading the COG body."""
     r = requests.head(url, timeout=(20, 90), allow_redirects=True)
     r.raise_for_status()
     if "Content-Length" not in r.headers:
@@ -161,6 +173,11 @@ def inspect_head(url):
 
 
 def download_asset(asset, root, offline, reuse_data_dir=None):
+    """Reuse or transfer a complete original asset, preserving resumable .part bytes.
+
+    Existing size/checksum mismatches fail without discarding the source.
+    HTTP resume is accepted only for the requested range; return byte/hash
+    metrics and geometry where inspected. No native pixel transformation occurs."""
     path = root / asset["path"]
     if path.exists():
         actual = sha256(path)
@@ -282,6 +299,7 @@ def atlantis_commit():
 
 
 def atlantis_version():
+    """Return installed Atlantis package metadata, or None if unavailable."""
     try:
         return importlib.metadata.version("opageo-atlantis")
     except importlib.metadata.PackageNotFoundError:
@@ -332,6 +350,9 @@ def acquire_selected_passes(args):
 
 
 def acquire(args):
+    """Resolve one-pass or handoff-driven acquisition, persist assets and report metrics."""
+
+    #*** 1. Resolve the existing acquisition mode
     if args.selection_json is not None:
         if not all([args.domain_config, args.catalogue_root, args.run_root]):
             raise ValueError(
@@ -347,6 +368,8 @@ def acquire(args):
     )
     logs = protect_old(args.work_dir / "logs", args.work_dir)
     logs.mkdir(parents=True, exist_ok=True)
+
+    #*** 2. Read catalogue/pass identity and persist its inventory
     data = catalogue(root, args.date, args.bbox, args.offline)
     groups = groups_for(data, root, args.offline, reuse_data_dir)
     summary = []
@@ -398,6 +421,8 @@ def acquire(args):
         raise ValueError(
             "Choose exactly one --group from the printed verified pass IDs"
         )
+
+    #*** 3. Resolve complete source assets and their transfer budget
     group = groups[args.group]
     manifest_path = root / "metadata" / f"acquisition_{args.group}.json"
     reuse_manifest = None
@@ -501,6 +526,8 @@ def acquire(args):
             method="complete original COG; shared URLs stored once per pass",
         )
         save_json(manifest_path, manifest)
+
+    #*** 4. Transfer or reuse assets and save local Item references
     transferred, reused = 0, 0
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         futures = {
@@ -535,6 +562,8 @@ def acquire(args):
             f"ITEM {item['index']}/{len(manifest['items'])} local: {item['item_id']}",
             flush=True,
         )
+
+    #*** 5. Record actual acquisition metrics
     metrics = run_metrics(
         start,
         pass_id=args.group,
@@ -553,7 +582,16 @@ def acquire(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    """Parse the existing acquisition CLI and dispatch without changing source pixels."""
+    # Preserve the established CLI description while expanding source documentation.
+    parser = argparse.ArgumentParser(
+        description=(
+            'Acquire four original GFM COG bands, keeping orbit/datatake and Item identity.\n'
+            '\n'
+            'Metadata uses the pinned Atlantis backend. No daily merge, coarsening, or native\n'
+            'pixel changes occur here. Completed files and resumable .part files stay local.\n'
+        ),
+    )
     parser.add_argument("--work-dir", type=Path, default=Path.home() / "work/Atlantis")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--date", default=DEFAULT_DATE)

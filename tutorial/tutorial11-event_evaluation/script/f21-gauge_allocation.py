@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Map Rhine gauges and reported flood-impact locations against the current model grid."""
+"""Map Rhine gauges and reported flood-impact locations against the current model grid.
+
+Inputs: Step21 gauge/impact allocation CSVs, map products and catchment mapping.
+Outputs: regional allocation and Ahr–Erft catchment-review PNGs.
+Workflow:
+    1. Read retained allocations and build stored outlet-to-outlet river links.
+    2. Plot gauge/site coordinates separately from their adopted model outlets.
+    3. Render categorical native assignments beside computational-grid context.
+A retained allocation or upstream proxy does not establish exact reach identity.
+"""
 
 from __future__ import annotations
 
@@ -10,6 +19,8 @@ from pathlib import Path
 import sys
 
 import matplotlib
+
+# Select the noninteractive backend before importing pyplot.
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
@@ -19,6 +30,7 @@ from netCDF4 import Dataset
 
 
 def load_helper(path: Path, module_name: str):
+    """Load and register an existing shared river/catchment implementation."""
     spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Cannot load existing river-network helper: {path}")
@@ -29,6 +41,7 @@ def load_helper(path: Path, module_name: str):
 
 
 def read_allocations(path: Path) -> list[dict[str, str]]:
+    """Read the three retained gauge allocation rows from their CSV."""
     with path.open(newline="", encoding="utf-8-sig") as stream:
         rows = list(csv.DictReader(stream))
     if len(rows) != 3:
@@ -37,11 +50,13 @@ def read_allocations(path: Path) -> list[dict[str, str]]:
 
 
 def read_impact_allocations(path: Path) -> list[dict[str, str]]:
+    """Read retained report-linked allocations without revising selected cells."""
     with path.open(newline="", encoding="utf-8-sig") as stream:
         return list(csv.DictReader(stream))
 
 
 def read_map(map_dir: Path):
+    """Read north-first map fields; keep invalid outlet/area values as NaN."""
     netcdf = map_dir / "netcdf"
     with Dataset(netcdf / "lonlat.nc") as data:
         lon = np.asarray(data.variables["lon"][:], dtype=np.float64)
@@ -57,6 +72,7 @@ def read_map(map_dir: Path):
 
 
 def build_river_segments(map_dir: Path, map_data):
+    """Build valid stored outlet links and their source uparea [km2] for display."""
     root = map_dir.parents[1]
     helper_path = root / "visualization/output_analysis/script/f02-discharge_vector.py"
     vector = load_helper(helper_path, "tutorial11_gauge_vector_helper")
@@ -78,6 +94,7 @@ def build_river_segments(map_dir: Path, map_data):
 
 
 def draw_network(ax, segments: np.ndarray, area: np.ndarray, extent=None) -> None:
+    """Draw area-scaled links, optionally selecting segments intersecting a geographic view."""
     visible = np.ones(len(segments), dtype=bool)
     if extent is not None:
         west, east, south, north = extent
@@ -97,6 +114,7 @@ def draw_network(ax, segments: np.ndarray, area: np.ndarray, extent=None) -> Non
 
 
 def add_stations(ax, records: list[dict[str, str]], labels: bool = True) -> None:
+    """Distinguish observed station coordinates from adopted model outlets and connectors."""
     for row in records:
         observed = (float(row["observed_lon_deg"]), float(row["observed_lat_deg"]))
         outlet = (float(row["model_outlet_lon_deg"]), float(row["model_outlet_lat_deg"]))
@@ -191,6 +209,7 @@ def add_impact_allocations(ax, records: list[dict[str, str]], label_impacts: boo
 
 
 def impact_legend_handles():
+    """Build legend handles for the existing location/allocation display styles."""
     return [
         Line2D([0], [0], marker="o", color="none", markerfacecolor="#d62728",
                markeredgecolor="white", markersize=6.5, label="Reported impact locality"),
@@ -209,6 +228,7 @@ def impact_legend_handles():
 
 
 def style_axes(ax, extent) -> None:
+    """Apply the requested W/E/S/N view and latitude-adjusted geographic aspect."""
     west, east, south, north = extent
     ax.set_xlim(west, east)
     ax.set_ylim(south, north)
@@ -223,52 +243,68 @@ def style_axes(ax, extent) -> None:
 
 def draw_catchment_review(tutorial, map_dir, impact_records, map_data, segments, area, output, dpi, extent):
     """Add an Ahr–Erft companion figure using the unchanged p01-f04 boundaries."""
+
+    #*** 1. Read native catchment assignments and geographic pixel edges
     processing = load_helper(tutorial / "script/s21-gauge_allocation.py", "tutorial11_step21_processing")
-    lon, lat, uparea = map_data[:3]
+    lon, lat, uparea = map_data[: 3]
     catmx, catmy, valid, unassigned, hires, shared = processing.load_catchments(map_dir, lon, lat, uparea)
     west, east, south, north = extent
     resolution = hires["resolution"]
-    r0=max(0,int(np.floor((hires["north"]-north)/resolution)))
-    r1=min(hires["ny"],int(np.ceil((hires["north"]-south)/resolution)))
-    c0=max(0,int(np.floor((west-hires["west"])/resolution)))
-    c1=min(hires["nx"],int(np.ceil((east-hires["west"])/resolution)))
-    cx,cy=catmx[r0:r1,c0:c1],catmy[r0:r1,c0:c1]
-    good=valid[r0:r1,c0:c1]
-    xedges=hires["west"]+np.arange(c0,c1+1)*resolution
-    yedges=hires["north"]-np.arange(r0,r1+1)*resolution
+    r0 = max(0, int(np.floor((hires["north"] - north) / resolution)))
+    r1 = min(hires["ny"], int(np.ceil((hires["north"] - south) / resolution)))
+    c0 = max(0, int(np.floor((west - hires["west"]) / resolution)))
+    c1 = min(hires["nx"], int(np.ceil((east - hires["west"]) / resolution)))
+    cx, cy = catmx[r0: r1, c0: c1], catmy[r0: r1, c0: c1]
+    good = valid[r0: r1, c0: c1]
+    xedges = hires["west"] + np.arange(c0, c1 + 1)*resolution
+    yedges = hires["north"] - np.arange(r0, r1 + 1)*resolution
     # Discrete colors identify model unit catchments; their values are not magnitudes.
     from matplotlib.colors import ListedColormap, BoundaryNorm
     from matplotlib.patches import Patch
-    ids=np.where(good,(cy.astype(int)-1)*len(lon)+cx-1,-1)
-    unique=np.unique(ids[good]);categories=np.full(ids.shape,-1,dtype=int)
-    for index,key in enumerate(unique): categories[ids==key]=index
-    colors=plt.get_cmap("tab20")(np.arange(len(unique))%20)
-    colors[:,:3]=.35*colors[:,:3]+.65
-    cmap=ListedColormap(colors);cmap.set_bad((0,0,0,0))
+
+    #*** 2. Map catchment identities to categorical display colors
+    ids = np.where(good, (cy.astype(int) - 1)*len(lon) + cx - 1, -1)
+    unique = np.unique(ids[good])
+    categories = np.full(ids.shape, -1, dtype=int)
+    for index, key in enumerate(unique):
+        categories[ids == key] = index
+    colors = plt.get_cmap("tab20")(np.arange(len(unique))%20)
+    colors[: , : 3] = .35*colors[: , : 3] + .65
+    cmap = ListedColormap(colors)
+    cmap.set_bad((0, 0, 0, 0))
     # Fix physical map height and derive map/canvas width from geographic aspect.
-    map_height=7.0;map_width=map_height*(east-west)*np.cos(np.deg2rad((south+north)/2))/(north-south)
-    fw,fh=map_width+1.2,map_height+2.7
-    fig=plt.figure(figsize=(fw,fh))
-    ax=fig.add_axes([.8/fw,1.95/fh,map_width/fw,map_height/fh])
+    map_height = 7.0
+    map_width = map_height*(east - west)*np.cos(np.deg2rad((south + north) / 2)) / (north - south)
+    fw, fh = map_width + 1.2, map_height + 2.7
+    fig = plt.figure(figsize=(fw, fh))
+    ax = fig.add_axes([.8 / fw, 1.95 / fh, map_width / fw, map_height / fh])
     # Distinguish unassigned land (-999) from other NoData/background.
-    background = np.where(unassigned[r0:r1,c0:c1], 1, 0)
+
+    #*** 3. Draw assignment boundaries separately from coarse-grid context
+    background = np.where(unassigned[r0: r1, c0: c1], 1, 0)
     ax.pcolormesh(xedges,yedges,background,cmap=ListedColormap(["white", "#999999"]),
-                  vmin=0,vmax=1,shading="flat",zorder=-1)
+                  vmin=0, vmax=1, shading="flat", zorder=-1)
     ax.pcolormesh(xedges,yedges,np.ma.masked_where(~good,categories),cmap=cmap,
-                  norm=BoundaryNorm(np.arange(-.5,len(unique)+.5),len(unique)),shading="flat",zorder=0)
-    boundaries=shared.catchment_boundaries(cx,cy,good,xedges,yedges)
-    ax.add_collection(LineCollection(boundaries,colors="#858585",linewidths=.4,zorder=1))
+                  norm=BoundaryNorm(np.arange(-.5, len(unique) + .5), len(unique)), shading="flat", zorder=0)
+    boundaries = shared.catchment_boundaries(cx, cy, good, xedges, yedges)
+    ax.add_collection(LineCollection(boundaries, colors="#858585", linewidths=.4, zorder=1))
     # Geographic 15-minute rectangles are context, not the assignment boundaries.
-    for value in np.arange(hires["west"],hires["east"]+.125,.25):
-        if west<value<east:ax.axvline(value,color="#777777",lw=.4,ls=":",zorder=1)
-    for value in np.arange(hires["south"],hires["north"]+.125,.25):
-        if south<value<north:ax.axhline(value,color="#777777",lw=.4,ls=":",zorder=1)
-    order=np.argsort(area);draw_network(ax,segments[order],area[order],(west,east,south,north))
+    for value in np.arange(hires["west"], hires["east"] + .125, .25):
+        if west < value < east:
+            ax.axvline(value, color="#777777", lw=.4, ls=":", zorder=1)
+    for value in np.arange(hires["south"], hires["north"] + .125, .25):
+        if south < value < north:
+            ax.axhline(value, color="#777777", lw=.4, ls=":", zorder=1)
+    order = np.argsort(area)
+    draw_network(ax, segments[order], area[order], (west, east, south, north))
     for segment in segments:
-        middle=segment.mean(axis=0)
-        if west<middle[0]<east and south<middle[1]<north:
-            start=.58*segment[0]+.42*segment[1];end=.42*segment[0]+.58*segment[1]
-            ax.annotate("",end,start,arrowprops=dict(arrowstyle="->",color="#315c7b",lw=.7,mutation_scale=7),zorder=3)
+        middle = segment.mean(axis=0)
+        if west < middle[0] < east and south < middle[1] < north:
+            start = .58*segment[0] + .42*segment[1]
+            end = .42*segment[0] + .58*segment[1]
+            ax.annotate("", end, start, arrowprops=dict(arrowstyle="->", color="#315c7b", lw=.7, mutation_scale=7), zorder=3)
+
+    #*** 4. Overlay retained sites and final adopted outlets
     selected = [row for row in impact_records if row["observed_lon"] and row["observed_lat"] and
                 west <= float(row["observed_lon"]) <= east and south <= float(row["observed_lat"]) <= north]
     drawn, connectors = set(), set()
@@ -284,42 +320,51 @@ def draw_catchment_review(tutorial, map_dir, impact_records, map_data, segments,
             if outlet not in drawn:
                 ax.scatter(*outlet, s=52, marker="D", c="#007b83", edgecolors="white", lw=.7, zorder=7)
                 ax.annotate(f"({row['river_model_row_0based']},{row['river_model_col_0based']})", outlet,
-                            xytext=(4,7), textcoords="offset points", fontsize=7, color="#005b61", zorder=9,
-                            bbox=dict(facecolor="white",alpha=.85,edgecolor="none",pad=1))
+                            xytext=(4, 7), textcoords="offset points", fontsize=7, color="#005b61", zorder=9,
+                            bbox=dict(facecolor="white", alpha=.85, edgecolor="none", pad=1))
                 drawn.add(outlet)
         locality = row["report_id"].startswith("impact-")
         ax.scatter(*observed, s=38, marker="o" if locality else "^", c="#ac2446", edgecolors="white", lw=.7, zorder=8)
     focus={"ahr-schuld":("Schuld",(-30,-18)),"ahr-altenahr":("Altenahr",(-42,16)),
-           "ahr-bad-neuenahr":("Bad Neuenahr",(8,-20)),"erft-blessem":("Blessem",(-25,14)),
-           "erft-bad-muenstereifel":("Bad Muenstereifel",(-60,-17)),"erft-euskirchen":("Euskirchen",(-43,12))}
+           "ahr-bad-neuenahr":("Bad Neuenahr", (8, -20)), "erft-blessem":("Blessem", (-25, 14)),
+           "erft-bad-muenstereifel":("Bad Muenstereifel", (-60, -17)), "erft-euskirchen":("Euskirchen", (-43, 12))}
     for row in selected:
         if row["report_id"].startswith("impact-") and row["location_id"] in focus:
-            label,offset=focus[row["location_id"]]
+            label, offset = focus[row["location_id"]]
             ax.annotate(label,(float(row['observed_lon']),float(row['observed_lat'])),xytext=offset,
-                        textcoords="offset points",fontsize=8,zorder=10,
-                        bbox=dict(facecolor="white",alpha=.9,edgecolor="none",pad=1.5))
-    style_axes(ax,(west,east,south,north));ax.set_xlabel("Longitude");ax.set_ylabel("Latitude")
-    fig.text(.5,1-.24/fh,"Tutorial 11 Fig. 21b — Catchment Allocation",ha="center",va="top",fontsize=12)
-    fig.text(.5,1-.53/fh,"Ahr–Erft: 1-minute catchments and 15-minute outlet network",ha="center",va="top",fontsize=9)
+                        textcoords="offset points", fontsize=8, zorder=10,
+                        bbox=dict(facecolor="white", alpha=.9, edgecolor="none", pad=1.5))
+
+    #*** 5. Label and save the companion view
+    style_axes(ax, (west, east, south, north))
+    ax.set_xlabel("Longitude")
+    ax.set_ylabel("Latitude")
+    fig.text(.5, 1 - .24 / fh, "Tutorial 11 Fig. 21b — Catchment Allocation", ha="center", va="top", fontsize=12)
+    fig.text(.5, 1 - .53 / fh, "Ahr–Erft: 1-minute catchments and 15-minute outlet network", ha="center", va="top", fontsize=9)
     handles=[Patch(facecolor=colors[0],edgecolor="#858585",label="Unit catchment (categorical colors)"),
-      Line2D([],[],color="#4c7694",label="nextxy / downstream arrows"),
-      Line2D([],[],marker="o",ls="none",color="#ac2446",label="Reported locality"),
-      Line2D([],[],marker="^",ls="none",color="#ac2446",label="Detailed report site"),
-      Line2D([],[],marker="D",color="#007b83",label="Final allocated outlet / connector"),
-      Patch(facecolor="#999999",label="Unassigned land (catmxy=-999)"),
-      Patch(facecolor="white",edgecolor="#bbbbbb",label="Other NoData / background")]
-    fig.legend(handles=handles,loc="lower center",bbox_to_anchor=(.5,.35/fh),ncol=2,fontsize=7.5,frameon=False)
-    fig.text(.5,.15/fh,"Final cells only; zero-based (row,col). Ahr upstream proxies omit downstream area.",ha="center",fontsize=7)
+      Line2D([], [], color="#4c7694", label="nextxy / downstream arrows"),
+      Line2D([], [], marker="o", ls="none", color="#ac2446", label="Reported locality"),
+      Line2D([], [], marker="^", ls="none", color="#ac2446", label="Detailed report site"),
+      Line2D([], [], marker="D", color="#007b83", label="Final allocated outlet / connector"),
+      Patch(facecolor="#999999", label="Unassigned land (catmxy=-999)"),
+      Patch(facecolor="white", edgecolor="#bbbbbb", label="Other NoData / background")]
+    fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(.5, .35 / fh), ncol=2, fontsize=7.5, frameon=False)
+    fig.text(.5, .15 / fh, "Final cells only; zero-based (row,col). Ahr upstream proxies omit downstream area.", ha="center", fontsize=7)
     fig.canvas.draw()
     # Retain physical axes bounds and extent for reproducible layout inspection.
-    bounds=ax.get_position().bounds
+    bounds = ax.get_position().bounds
     print(f"Catchment Figure map bounds (inches): {[round(v,3) for v in (bounds[0]*fw,bounds[1]*fh,bounds[2]*fw,bounds[3]*fh)]}")
-    fig.savefig(output,dpi=dpi,facecolor="white");plt.close(fig)
+    fig.savefig(output, dpi=dpi, facecolor="white")
+    plt.close(fig)
     print(f"Wrote {output}; {len(unique)} categorical catchments; {len(boundaries)} boundary segments")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+    """Read saved allocations and draw the overview, details and native-catchment review."""
+
+    #*** 1. Read settings, saved allocations and map/network fields
+    # Preserve the established CLI description while expanding source documentation.
+    parser = argparse.ArgumentParser(description='Map Rhine gauges and reported flood-impact locations against the current model grid.')
     parser.add_argument("--tutorial-dir", type=Path, required=True)
     parser.add_argument("--map-dir", type=Path, required=True)
     parser.add_argument("--allocation-csv", type=Path, required=True)
@@ -343,17 +388,20 @@ def main() -> None:
 
     params = (map_dir / "params.txt").read_text(encoding="utf-8").splitlines()
     dims = [int(params[i].split()[0]) for i in range(3)]
-    nx, ny = dims[:2]
+    nx, ny = dims[: 2]
     resolution = float(params[3].split()[0])
-    west = float(params[4].split()[0]); east = float(params[5].split()[0])
-    south = float(params[6].split()[0]); north = float(params[7].split()[0])
+    west = float(params[4].split()[0])
+    east = float(params[5].split()[0])
+    south = float(params[6].split()[0])
+    north = float(params[7].split()[0])
     if (len(lon), len(lat)) != (nx, ny):
         raise ValueError("Map coordinate dimensions differ from params.txt")
     overview_extent = (west, east, south, north)
 
+    #*** 2. Draw the regional overview and local context panels
     fig = plt.figure(figsize=(args.fig_width, args.fig_height), constrained_layout=True)
     grid = fig.add_gridspec(2, 2, width_ratios=(1.15, 0.85), height_ratios=(1, 1))
-    overview = fig.add_subplot(grid[:, 0])
+    overview = fig.add_subplot(grid[: , 0])
     draw_network(overview, segments, area)
     add_impact_allocations(overview, impact_records)
     add_stations(overview, records, labels=False)
@@ -379,6 +427,7 @@ def main() -> None:
         style_axes(ax, extent)
         ax.set_title(title, fontsize=9, pad=4)
 
+    #*** 3. Export the overview and categorical catchment companion
     overview.legend(handles=impact_legend_handles(), loc="lower left", ncols=2,
                     fontsize=6.8, framealpha=0.94)
     fig.suptitle("Fig. 21a — Gauge and Flood Impact Location Allocation", fontsize=14)
@@ -390,7 +439,7 @@ def main() -> None:
     if len(extent) != 4 or not (extent[0] < extent[1] and extent[2] < extent[3]):
         raise ValueError("catchment extent must be west,east,south,north")
     catchment_output = args.catchment_output or args.output.with_name("f21b-catchment_allocation.png")
-    draw_catchment_review(tutorial,map_dir,impact_records,map_data,segments,area,catchment_output,args.dpi,extent)
+    draw_catchment_review(tutorial, map_dir, impact_records, map_data, segments, area, catchment_output, args.dpi, extent)
 
 
 if __name__ == "__main__":

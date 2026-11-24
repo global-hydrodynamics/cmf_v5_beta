@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Plot the original supplied July 2021 discharge observations, points only."""
+"""Plot the original supplied July 2021 discharge observations, points only.
+
+Inputs: supplied station/series CSVs and the Shell-selected display period.
+Output: three station panels containing original observation points.
+Workflow:
+    1. Join station IDs and read source timestamp labels without conversion.
+    2. Select interval-end labels in (start, end] and identify displayed maxima.
+    3. Save the point-only figure without interpolation or smoothing.
+Source discharge units and timezone remain unspecified.
+"""
 
 from __future__ import annotations
 
@@ -15,6 +24,9 @@ from matplotlib.ticker import MaxNLocator
 
 
 def main() -> None:
+    """Plot original station values in the selected (start, end] source-label interval."""
+
+    #*** 1. Read display settings and original station/series files
     parser = argparse.ArgumentParser()
     parser.add_argument("--tutorial-dir", type=Path, required=True)
     parser.add_argument("--fig-width", type=float, default=11.5, help="Canvas width [inches]")
@@ -41,6 +53,8 @@ def main() -> None:
         reader = csv.DictReader(stream)
         station_ids = [int(key) for key in reader.fieldnames[1:]]
         records = list(reader)
+
+    #*** 2. Select interval-end labels without timezone conversion
     times = [datetime.strptime(row["Timestamp"], "%Y-%m-%d %H:%M") for row in records]
     start, end = datetime.fromisoformat(args.start), datetime.fromisoformat(args.end)
     if end <= start:
@@ -53,6 +67,7 @@ def main() -> None:
     values = {sid: np.array([float(records[i][str(sid)]) for i in keep]) for sid in station_ids}
     global_top = max(float(series.max()) for series in values.values()) * 1.08
 
+    #*** 3. Plot original values and selected-period maxima
     plt.rcParams.update({"font.size": 10, "axes.titlesize": 12, "axes.labelsize": 10})
     fig, axes = plt.subplots(3, 1, figsize=(args.fig_width, args.fig_height), sharex=True, sharey=True, constrained_layout=True)
     colors = ["#2b6f9c", "#d97927", "#39845b"]
@@ -74,6 +89,8 @@ def main() -> None:
         ax.yaxis.set_major_locator(MaxNLocator(5))
         ax.grid(True, color="#cfd6da", linewidth=0.65, alpha=0.8)
         ax.spines[["top", "right"]].set_visible(False)
+
+    #*** 4. Label and export the point-only overview
     axes[-1].set_xlim(start, end)
     axes[-1].xaxis.set_major_locator(mdates.DayLocator(interval=4))
     axes[-1].xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))

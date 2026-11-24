@@ -948,3 +948,20 @@ Syntax compilation and executable AST comparison excluding docstrings pass;
 no data processing or Figure regeneration. Only argparse's module-description
 prose grows with the documented header. Existing scientific handoffs are retained.
 See the existing [Step03c Work Report](../AI_work_report/03c_gfm_classification.md).
+
+
+## 2026-11-24 — Python readability across the Tutorial implementation
+
+Task: Apply current Python Design/Style to all20 files in `script/` (DT-0178).
+Reviewed processing/analysis/plotting/shared modules;19 updated, while the already
+compliant f03c reference stays unchanged. Added workflow headers, responsibility/
+scientific-contract docstrings and meaningful stages; repaired selected compressed
+local layout without restructuring functions or changing configuration.
+
+All20 syntax/normalized executable AST/signature checks pass. Fifteen argparse
+descriptions explicitly retain their original module-description strings so19
+isolated CLI declarations/help outputs remain identical. No scientific workflows,
+plots, acquisitions or numerical tests rerun. Data, metadata, scientific reports
+and Shells are unchanged. Inherited scientific uncertainties remain unresolved.
+See the single [Work Report](../AI_work_report/00_python_readability.md) and
+VR-0221. Research validator retains15 pre-existing unrelated errors. Uncommitted.

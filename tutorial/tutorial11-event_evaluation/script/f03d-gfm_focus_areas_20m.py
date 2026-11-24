@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Render extracted GFM focus rasters with OSM context."""
+"""Render extracted GFM focus rasters with OSM context.
+
+Inputs: extracted-area manifest, native class rasters, and OSM cache/settings.
+Output: a multi-panel categorical PNG for the selected focus areas.
+Workflow:
+    1. Resolve the saved crops and contextual map views.
+    2. Reproject/downsample classes with nearest-neighbour sampling for display.
+    3. Draw categorical panels, shared legend and attribution, then save.
+Display sampling does not alter the native source files; 255 stays transparent.
+"""
 from __future__ import annotations
 
 import argparse
@@ -9,6 +18,8 @@ from pathlib import Path
 import sys
 
 import matplotlib
+
+# Select the noninteractive backend before importing pyplot.
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm, ListedColormap, to_rgba
@@ -41,6 +52,7 @@ OSM_CONTEXT_EXTENT = (3.5, 48.7, 9.8, 51.9)
 
 
 def focus_view(bbox: list[float]) -> tuple[float, float, float, float]:
+    """Pad a west/south/east/north focus bbox [degrees] for its contextual panel."""
     west, south, east, north = map(float, bbox)
     dx, dy = east - west, north - south
     padx, pady = max(dx * 0.16, 0.025), max(dy * 0.16, 0.025)
@@ -48,6 +60,10 @@ def focus_view(bbox: list[float]) -> tuple[float, float, float, float]:
 
 
 def load_display_raster(path: Path, max_size: int = 720):
+    """Read a bounded WGS84 display array using nearest-neighbour class sampling.
+
+    Return the array and west/east/south/north image extent; native crop files
+    remain unchanged and NoData=255 is retained for display masking."""
     with rasterio.open(path) as source:
         if source.crs is None or source.count != 1 or source.dtypes[0] != "uint8":
             raise ValueError(f"Unexpected extracted classification raster: {path}")
@@ -61,6 +77,7 @@ def load_display_raster(path: Path, max_size: int = 720):
 
 def crop_osm(image: np.ndarray, extent: tuple[float, float, float, float],
              output_size: tuple[int, int]) -> np.ndarray:
+    """Crop the cached context image to W/S/E/N bounds, resize and soften for display."""
     west, south, east, north = extent
     context_west, context_south, context_east, context_north = OSM_CONTEXT_EXTENT
     height, width = image.shape[:2]
@@ -77,6 +94,9 @@ def crop_osm(image: np.ndarray, extent: tuple[float, float, float, float],
 
 
 def render(args: argparse.Namespace) -> None:
+    """Render saved categorical crops and shared context without reclassifying pixels."""
+
+    #*** 1. Read the saved crop manifest and resolve inputs
     tutorial_dir = Path(args.tutorial_dir).resolve()
     manifest_path = Path(args.extracted_areas).resolve()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -90,6 +110,7 @@ def render(args: argparse.Namespace) -> None:
             raise FileNotFoundError(f"Missing or invalid extracted-area file: {area['output_file']}")
         paths.append(path)
 
+    #*** 2. Prepare contextual views and categorical colors
     views = [focus_view(area["source_wgs84_bbox_west_south_east_north"]) for area in areas]
     osm_context = river.read_osm(OSM_CONTEXT_EXTENT, Path(args.tile_cache).expanduser())
     cmap = ListedColormap([
@@ -98,6 +119,7 @@ def render(args: argparse.Namespace) -> None:
     cmap.set_bad((0, 0, 0, 0))
     norm = BoundaryNorm([-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 255.5], cmap.N)
 
+    #*** 3. Render nearest-sampled focus panels
     count = len(areas)
     columns = args.columns
     rows = math.ceil(count / columns)
@@ -135,6 +157,7 @@ def render(args: argparse.Namespace) -> None:
         if index % columns == 0:
             ax.set_ylabel("Latitude [°]", fontsize=8)
 
+    #*** 4. Add the shared legend/attribution and export
     for ax in axes_flat[count:]:
         ax.set_visible(False)
     legend = [
@@ -169,7 +192,9 @@ def render(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+    """Parse Shell-provided paths/layout settings and render the saved focus areas."""
+    # Preserve the established CLI description while expanding source documentation.
+    parser = argparse.ArgumentParser(description='Render extracted GFM focus rasters with OSM context.')
     parser.add_argument("--tutorial-dir", required=True)
     parser.add_argument("--extracted-areas", required=True)
     parser.add_argument("--figure-output", required=True)

@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Validate existing native GFM downloads and write the p03c handover files."""
+"""Validate existing native GFM downloads and write the p03c handover files.
+
+Inputs: selected passes/domain, cached STAC and local acquisition manifests/COGs.
+Outputs: per-pass download CSV manifests and readiness-summary JSONs.
+Workflow:
+    1. Match requested Item/layer references to acquisition assets.
+    2. Check local size, checksum and basic raster readability once per asset.
+    3. Record missing/failed assets and the existing Step03c readiness decision.
+This inventory does not download data or validate the scientific flood detection.
+"""
 
 from __future__ import annotations
 
@@ -34,6 +43,7 @@ FIELDS = [
 
 
 def digest(path: Path) -> str:
+    """Return the file SHA-256 digest in bounded-size byte chunks."""
     checksum = hashlib.sha256()
     with path.open("rb") as stream:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
@@ -42,6 +52,7 @@ def digest(path: Path) -> str:
 
 
 def atomic_json(path: Path, value: dict) -> None:
+    """Replace a JSON handoff through a sibling temporary file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(value, indent=2, allow_nan=False) + "\n")
@@ -49,6 +60,7 @@ def atomic_json(path: Path, value: dict) -> None:
 
 
 def atomic_csv(path: Path, rows: list[dict]) -> None:
+    """Replace the fixed-schema manifest CSV through a sibling temporary file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     with temporary.open("w", newline="") as stream:
@@ -59,6 +71,7 @@ def atomic_csv(path: Path, rows: list[dict]) -> None:
 
 
 def inspect_asset(path: Path, record: dict) -> dict:
+    """Report local size/checksum/readability failures without downloading or repairing data."""
     if not path.is_file():
         return dict(status="missing", file_size_bytes="", crs="", sha256="",
                     error="Expected asset file is missing")
@@ -104,6 +117,12 @@ def build_for_pass(
     layers: list[str],
     expected_bbox: list[float],
 ) -> dict:
+    """Match Item/layer references to unique assets and write a pass readiness handoff.
+
+    Missing/failed references remain explicit. Reused URLs are inspected once;
+    file integrity and readiness do not establish scientific detection accuracy."""
+
+    #*** 1. Read the acquisition and selected cached STAC Items
     pass_id = selected["pass_id"]
     date = selected["catalogue_date"]
     date_root = catalogue_root / date
@@ -134,6 +153,7 @@ def build_for_pass(
             selected_items.append(feature)
     selected_items.sort(key=lambda item: item.get("id", ""))
 
+    #*** 2. Match Item/layer references and inspect each distinct asset
     asset_records = acquisition.get("assets", {})
     acquired_items = {
         item.get("stac", {}).get("id", item.get("item_id", "")): item
@@ -277,6 +297,8 @@ def build_for_pass(
     unknown_missing = sum(1 for row in rows if row["status"] == "missing" and not row["asset_key"])
     unlinked_keys = sorted(set(asset_records) - expected_keys)
     asset_keys_match_selection = set(asset_records) == expected_keys
+
+    #*** 3. Record readiness using the existing completeness/failure rules
     summary = {
         "generated_utc": datetime.now(timezone.utc).isoformat(),
         "pass_id": pass_id,
@@ -339,6 +361,9 @@ def build_for_pass(
 
 
 def main() -> None:
+    """Read selected-pass/domain handoffs and inspect local downloads for each pass."""
+
+    #*** 1. Read paths and the selected-pass/domain contract
     parser = argparse.ArgumentParser(
         description="Validate existing p03b COGs and write a p03c handover manifest."
     )
@@ -360,6 +385,8 @@ def main() -> None:
         ]
     ]
     layers = selection["required_gfm_layers"]
+
+    #*** 2. Build and report the handoff for each selected pass
     summaries = [
         build_for_pass(atlantis_root, catalogue_root, selected, layers, bbox)
         for selected in selection["passes"]

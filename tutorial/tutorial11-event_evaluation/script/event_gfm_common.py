@@ -1,6 +1,14 @@
-"""Shared contracts for the Tutorial 11 native-GFM acquisition and classification."""
+"""Shared contracts for the Tutorial 11 native-GFM acquisition and classification.
+
+Inputs: native GFM layer arrays, STAC source identifiers, and local record paths.
+Outputs: validity masks, in-place mosaic updates, and provenance utilities.
+Workflow: verify source identity, distinguish valid observations, and merge
+    same-grid blocks using the first joint-valid Item as their owner.
+Reference-water coverage alone is not a flood/water observation.
+"""
 
 from __future__ import annotations
+
 import hashlib
 import json
 import os
@@ -25,6 +33,7 @@ SOURCE_PATTERN = re.compile(
 
 
 def sha256(path):
+    """Return the SHA-256 digest while reading bounded-size byte chunks."""
     h = hashlib.sha256()
     with Path(path).open("rb") as stream:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
@@ -37,6 +46,7 @@ def utc_now():
 
 
 def save_json(path, value):
+    """Replace a JSON record through a sibling temporary file; reject NaN values."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -45,6 +55,7 @@ def save_json(path, value):
 
 
 def protect_old(path, work):
+    """Resolve the output path and reject writes within the protected old/ tree."""
     path, old = Path(path).resolve(), (Path(work) / "old").resolve()
     if path == old or path.is_relative_to(old):
         raise ValueError(f"Output points inside protected old/: {path}")
@@ -88,6 +99,7 @@ def parse_source(item):
 
 
 def run_metrics(start, **extra):
+    """Report elapsed seconds and process peak RSS in bytes when available."""
     try:
         import resource
 
@@ -104,7 +116,11 @@ def run_metrics(start, **extra):
 
 
 def code_masks(flood, water, reference, exclusion):
-    """Conservative joint validity; reference-only pixels are never observations."""
+    """Return joint-valid and observed masks for equally shaped native layer arrays.
+
+    Valid requires Flood/Water both known and Exclusion=0. Observed requires
+    either Flood or Water known; reference-only pixels are not observations.
+    Code 255 is unknown and must not become valid dry land."""
     import numpy as np
 
     for name, array, allowed in [

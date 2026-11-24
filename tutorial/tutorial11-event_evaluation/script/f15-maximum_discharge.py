@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Compute and plot signed local peak discharge for Tutorial 11 Step 15."""
+"""Compute and plot signed local peak discharge for Tutorial 11 Step 15.
+
+Inputs: Step14 hourly outflw/pthflw, regional map and domain metadata.
+Outputs: signed peak/time NetCDF fields, regional/AOI PNGs and printed diagnostics.
+Workflow:
+    1. Resolve and check the saved model/map/time contracts.
+    2. Select signed local absolute maxima; sum active bifurcation layers first.
+    3. Save analysis fields, render the two views, and report diagnostics.
+Flows are in m3/s. Cell/path maxima may occur at different hours; this map is
+not a simultaneous flow snapshot or a model-skill evaluation.
+"""
 
 from __future__ import annotations
 
@@ -10,6 +20,8 @@ from pathlib import Path
 import sys
 
 import matplotlib
+
+# Select the noninteractive backend before importing pyplot.
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.cm import ScalarMappable
@@ -25,6 +37,7 @@ sys.path.insert(0, str(ROOT / "visualization" / "cmf_colormap"))
 
 
 def load_module(path: Path, name: str):
+    """Load the existing visualization implementation from its repository path."""
     spec = importlib.util.spec_from_file_location(name, path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Cannot load visualization helper: {path}")
@@ -43,7 +56,9 @@ EXPECTED_UNITS = "m3/s"
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
+    """Read analysis/figure paths and the Shell-owned display settings."""
+    # Preserve the established CLI description while expanding source documentation.
+    parser = argparse.ArgumentParser(description='Compute and plot signed local peak discharge for Tutorial 11 Step 15.')
     parser.add_argument("--step14-metadata", type=Path, required=True)
     parser.add_argument("--domain-metadata", type=Path, required=True)
     parser.add_argument("--map-dir", type=Path, required=True)
@@ -61,11 +76,13 @@ def parse_args() -> argparse.Namespace:
 
 
 def read_metadata(path: Path) -> dict:
+    """Read an existing JSON Step handoff without altering its contents."""
     with path.open(encoding="utf-8") as stream:
         return json.load(stream)
 
 
 def resolve_step14_inputs(step14: dict, tutorial_dir: Path, root: Path):
+    """Resolve required model outputs and the map path from the Step14 handoff."""
     output_rows = step14["outputs"]["hourly_files"]
     output_paths = {row["variable"]: tutorial_dir / row["path"] for row in output_rows}
     required = {"outflw", "pthflw"}
@@ -79,6 +96,7 @@ def resolve_step14_inputs(step14: dict, tutorial_dir: Path, root: Path):
 
 
 def read_map_data(map_dir: Path):
+    """Read north-first map arrays, stored outlets/connectivity and bifurcation fields."""
     netcdf_dir = map_dir / "netcdf"
     with Dataset(netcdf_dir / "uparea.nc") as data:
         lon = np.asarray(data.variables["lon"][:], dtype=np.float64)
@@ -103,6 +121,7 @@ def read_map_data(map_dir: Path):
 
 
 def parse_time_axis(variable, path: Path, expected_count: int):
+    """Decode an expected-length finite hourly CF time axis; return numeric/date values."""
     if variable.ndim != 1 or len(variable) != expected_count:
         raise ValueError(f"{path}: expected {expected_count} time records, found {len(variable)}")
     numeric = np.asarray(variable[:], dtype=np.float64)
@@ -116,7 +135,11 @@ def parse_time_axis(variable, path: Path, expected_count: int):
 
 
 def maximum_absolute_signed(values: np.ma.MaskedArray, time_values: np.ndarray):
-    """Return signed values and time coordinates at each max absolute value."""
+    """Return signed local absolute maxima and their source-record times/indices.
+
+    Time is axis 0. Invalid values are masked; entirely missing cells/paths
+    return NaN values/times and index -1. Argmax retains the first tied peak.
+    Retaining the sign distinguishes reverse flow from positive routing."""
     masked = np.ma.masked_invalid(np.ma.asarray(values, dtype=np.float64))
     all_missing = np.all(np.ma.getmaskarray(masked), axis=0)
     indices = np.asarray(np.ma.argmax(np.ma.abs(masked), axis=0), dtype=np.int32)
@@ -130,6 +153,7 @@ def maximum_absolute_signed(values: np.ma.MaskedArray, time_values: np.ndarray):
 
 
 def read_outflow(path: Path, geometry, expected_records: int):
+    """Read hourly outflw [m3/s] on (time, north-first lat, lon) and select signed peaks."""
     nx, ny, resolution, west, east, south, north = geometry
     with Dataset(path) as data:
         variable = data.variables["outflw"]
@@ -159,6 +183,13 @@ def read_outflow(path: Path, geometry, expected_records: int):
 
 def read_bifurcation_peak(path: Path, bif: dict, expected_time: np.ndarray,
                           expected_records: int):
+    """Match pth_id/endpoints, sum active signed layers, then select absolute maxima.
+
+    Input pthflw is (time, NPTHLEV, NPTHOUT) [m3/s]; positive map widths
+    select active layers. Hours without a valid active layer remain masked.
+    The returned path order follows output IDs, not an assumed map row order."""
+
+    #*** 1. Read the hourly layer/path contract and match endpoint IDs
     with Dataset(path) as data:
         variable = data.variables["pthflw"]
         if variable.dimensions != ("time", "NPTHLEV", "NPTHOUT"):
@@ -184,6 +215,7 @@ def read_bifurcation_peak(path: Path, bif: dict, expected_time: np.ndarray,
                    for pid, value in zip(path_ids, output_values)):
                 raise ValueError(f"{path}: {name} endpoints do not match Rhine bifprm by pth_id")
 
+    #*** 2. Sum signed flow over positive-width active layers
     map_ids = np.asarray(bif["pth_id"], dtype=np.int32)
     map_index = {int(pid): i for i, pid in enumerate(map_ids)}
     if set(path_ids.tolist()) != set(map_ids.tolist()):
@@ -195,6 +227,8 @@ def read_bifurcation_peak(path: Path, bif: dict, expected_time: np.ndarray,
     summed = np.ma.sum(np.ma.array(q.data, mask=~valid_layer_values), axis=1)
     no_valid_layer = ~np.any(valid_layer_values, axis=1)
     summed = np.ma.array(summed.data, mask=np.ma.getmaskarray(summed) | no_valid_layer)
+
+    #*** 3. Select signed local absolute maxima and retain path order
     peak, indices, peak_times, all_missing = maximum_absolute_signed(summed, time_numeric)
 
     map_bif = {name: np.asarray(bif[name], dtype=np.int32) for name in ("ix", "iy", "jx", "jy")}
@@ -218,6 +252,7 @@ def read_bifurcation_peak(path: Path, bif: dict, expected_time: np.ndarray,
 def write_analysis(path: Path, lon: np.ndarray, lat: np.ndarray, time_numeric: np.ndarray,
                    time_units: str, out_peak, out_index, out_time, path_result,
                    source_paths: list[str], time_start: str, time_end: str):
+    """Save signed peak/time/index fields and their existing source/time metadata."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path_ids = path_result["path_ids"]
     with Dataset(path, "w", format="NETCDF4") as data:
@@ -278,6 +313,7 @@ def write_analysis(path: Path, lon: np.ndarray, lat: np.ndarray, time_numeric: n
 def draw_regional(map_dir: Path, peak: np.ndarray, geometry, map_data, path_result,
                   output: Path, color_levels: np.ndarray, linthresh: float,
                   linear_frac: float, dpi: int, figure_height=10.0):
+    """Draw signed cell peaks and stored bifurcation pathways over the regional map."""
     nx, ny, _, west, east, south, north = geometry
     lon, lat, uparea, nextx, nexty, outlon, outlat, _ = map_data
     norm = VECTOR.RASTER.AsymmetricSignedLogNorm(
@@ -414,6 +450,7 @@ def draw_regional(map_dir: Path, peak: np.ndarray, geometry, map_data, path_resu
 def draw_aoi(map_dir: Path, extent, map_data, out_peak: np.ndarray, path_result,
              output: Path, color_levels: np.ndarray, linthresh: float,
              linear_frac: float, dpi: int, line_width_scale: float, figure_height=9.0):
+    """Draw the satellite-AOI view of the same independently timed signed peaks."""
     lon, lat, uparea, nextx, nexty, outlon, outlat, bif = map_data
     west, east, south, north = extent
     norm = VECTOR.RASTER.AsymmetricSignedLogNorm(
@@ -548,6 +585,9 @@ def draw_aoi(map_dir: Path, extent, map_data, out_peak: np.ndarray, path_result,
 
 
 def main() -> None:
+    """Resolve Step contracts, calculate/save local peaks, then draw the two map views."""
+
+    #*** 1. Resolve configured model/map/domain contracts
     args = parse_args()
     tutorial_dir = args.tutorial_dir.resolve()
     step14_path = args.step14_metadata.resolve()
@@ -572,6 +612,7 @@ def main() -> None:
         raise ValueError("Step 2 satellite analysis domain extends outside Rhine map")
     expected_records = int(step14["simulation"]["period_hours"])
 
+    #*** 2. Calculate independently timed signed local peaks
     map_data = read_map_data(map_dir)
     lon, lat = map_data[0], map_data[1]
     if (lon.size, lat.size) != (nx, ny):
@@ -587,6 +628,7 @@ def main() -> None:
         float(levels[0]), float(levels[-1]), args.linthresh, args.linear_frac,
     )
 
+    #*** 3. Save derived peak/time fields
     with Dataset(outflw_path) as source:
         time_units = source.variables["time"].units
     analysis_path = args.analysis_file.resolve()
@@ -595,6 +637,8 @@ def main() -> None:
         out_time, pth_result, [str(outflw_path), str(pthflw_path)],
         dates[0].strftime("%Y-%m-%d %H:%M:%S"), dates[-1].strftime("%Y-%m-%d %H:%M:%S"),
     )
+
+    #*** 4. Render regional/AOI views and report diagnostics
     regional_stats = draw_regional(
         map_dir, out_peak, geometry, map_data, pth_result,
         args.regional_figure.resolve(), levels, args.linthresh,

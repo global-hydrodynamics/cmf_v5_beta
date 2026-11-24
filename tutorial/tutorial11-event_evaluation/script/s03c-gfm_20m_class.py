@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Export one same-pass GFM observation as a compact native 20 m class COG."""
+"""Export one same-pass GFM observation as a compact native 20 m class COG.
+
+Inputs: one scoped S1A pass manifest, original COGs and saved native-grid metadata.
+Outputs: uint8 categorical COG, class/provenance JSON and optional inspection PNG.
+Workflow:
+    1. Verify source assets and their common native 20 m alignment.
+    2. Merge same-pass blocks and encode the existing exclusive classes.
+    3. Write lossless COG data, compare decoded values and save the inventory.
+Codes 5/6 retain exclusion/inconsistency; 255 is NoData, not dry land. Reported
+400 m2 pixel areas are planar Equi7 areas, not ellipsoidal geodesic areas.
+"""
 from __future__ import annotations
 
 import argparse
@@ -85,6 +95,7 @@ def encode_classification(mosaic):
 
 
 def count_combinations(counts, arrays):
+    """Accumulate exact four-band code combinations through lossless uint32 packing."""
     f, w, r, e = arrays
     present = (f != 255) | (w != 255) | (r != 255) | (e != 255)
     if not present.any():
@@ -103,6 +114,7 @@ def count_combinations(counts, arrays):
 
 
 def grid_from_metadata(root, group, assets):
+    """Read saved mosaic geometry and verify native source type, CRS and alignment."""
     info_path = root / "intermediate" / group / "native_mosaic.json"
     info = json.loads(info_path.read_text())
     height, width = map(int, info["shape"])
@@ -130,6 +142,7 @@ def grid_from_metadata(root, group, assets):
 
 
 def source_inventory(root, manifest):
+    """Resolve and verify the scoped original asset files against their manifest."""
     assets = {}
     records = []
     for asset_id, asset in manifest["assets"].items():
@@ -150,6 +163,7 @@ def source_inventory(root, manifest):
 
 
 def render_figure(path, figure_path, title, bounds=None, max_size=1800):
+    """Render a nearest-sampled categorical preview in projected Equi7 kilometres."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -187,6 +201,9 @@ def render_figure(path, figure_path, title, bounds=None, max_size=1800):
 
 
 def export(args):
+    """Classify the scoped pass blockwise, write/verify its lossless COG and save provenance."""
+
+    #*** 1. Resolve the scoped source manifest and native grid
     started = time.monotonic()
     root = Path(args.input_root).resolve()
     group = args.group
@@ -206,6 +223,7 @@ def export(args):
         raise FileExistsError(f"Output exists; pass --force to replace: {out_dir}")
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    #*** 2. Classify same-pass blocks using retained validity/priority rules
     counts = Counter()
     combos = Counter()
     mosaic_stats = Counter()
@@ -284,6 +302,8 @@ def export(args):
         temp_cog.replace(tif)
 
     # Flood area is compared on the selected common-valid mosaic, before class priority.
+
+    #*** 3. Summarize retained counts, projected areas and provenance
     flood_pixels = counts.get(1, 0)
     selected_flood_pixels = mosaic_stats.get("selected_flood_pixels", 0)
     planar_pixel_area_m2 = 400.0
@@ -350,7 +370,9 @@ def export(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    """Parse the scoped exporter settings and dispatch native classification."""
+    # Preserve the established CLI description while expanding source documentation.
+    parser = argparse.ArgumentParser(description='Export one same-pass GFM observation as a compact native 20 m class COG.')
     parser.add_argument("--input-root", type=Path,
                         default=Path.home() / "work/Atlantis/data/Rhine_2021_3sec")
     parser.add_argument("--group", default=GROUP)

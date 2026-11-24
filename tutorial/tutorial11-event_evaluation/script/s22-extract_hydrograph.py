@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Extract Step 21 gauge-cell model flows and supplied observations for overlay."""
+"""Extract Step 21 gauge-cell model flows and supplied observations for overlay.
+
+Inputs: Step21 gauge cells, hourly model NetCDF, observation CSV and Step04 JSON.
+Outputs: model/observation series CSV and comparison-summary JSON.
+Workflow:
+    1. Select model records in [start, end) at retained zero-based gauge cells.
+    2. Retain supplied observation labels/values in the same nominal window.
+    3. Save separate-source series, maxima and explicit comparison limitations.
+Model flow is m3/s. Observation units/timezone remain unresolved; the nominal
+overlay applies no temporal pairing, resampling or value conversion.
+"""
 
 from __future__ import annotations
 
@@ -16,16 +26,22 @@ STATION_NAMES = {153: "Lobith", 63: "Speyer", 28: "Maxau"}
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
+    """Read station/series handoff rows without transforming field values."""
     with path.open(newline="", encoding="utf-8-sig") as stream:
         return list(csv.DictReader(stream))
 
 
 def date_text(value) -> str:
+    """Format an existing datetime label without timezone conversion."""
     return value.strftime("%Y-%m-%dT%H:%M:%S")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+    """Extract retained gauge cells and save separate unresampled model/observation series."""
+
+    #*** 1. Read handoffs and the half-open nominal comparison period
+    # Preserve the established CLI description while expanding source documentation.
+    parser = argparse.ArgumentParser(description='Extract Step 21 gauge-cell model flows and supplied observations for overlay.')
     parser.add_argument("--tutorial-dir", type=Path, required=True)
     parser.add_argument("--model-netcdf", type=Path, required=True)
     parser.add_argument("--observation-csv", type=Path, required=True)
@@ -40,6 +56,7 @@ def main() -> None:
     tutorial_root = args.tutorial_dir.resolve()
 
     def relative_path(path: Path) -> str:
+        """Record a resolved input/output path relative to the Tutorial root."""
         return path.resolve().relative_to(tutorial_root).as_posix()
 
     start = datetime.fromisoformat(args.start)
@@ -51,6 +68,7 @@ def main() -> None:
     if set(STATION_NAMES) - allocation.keys():
         raise ValueError("Step 21 allocation is missing one or more requested stations")
 
+    #*** 2. Extract hourly model flow at the retained gauge cells
     model_rows: list[dict[str, str]] = []
     model_peaks: dict[str, dict[str, object]] = {}
     with Dataset(args.model_netcdf) as ds:
@@ -116,6 +134,7 @@ def main() -> None:
             "last_record_in_window": model_times[keep[-1]].isoformat() + "Z",
         }
 
+    #*** 3. Retain finite observations at their supplied time labels
     observed_rows: list[dict[str, str]] = []
     observed_peaks: dict[str, dict[str, object]] = {}
     records = read_csv(args.observation_csv)
@@ -148,6 +167,7 @@ def main() -> None:
             "temporal_semantics": "provider-described six-hour mean with interval-end labels",
         }
 
+    #*** 4. Save separate-source series and comparison limitations
     args.output_csv.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = ["station_id", "station_name", "source", "datetime_original",
                   "datetime_comparison", "discharge", "unit", "time_reference_status"]
