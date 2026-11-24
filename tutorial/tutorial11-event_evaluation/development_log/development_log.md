@@ -844,3 +844,13 @@ multi-tributary flash-flood interpretation is configurable. Verified full data/
 Fig1/Fig23a preservation, color crosswalk, row order, alternate range/neutral
 fallback and fixed-layout bounds; visually reviewed the summary. No extraction,
 peak recomputation or Gallery publication.
+
+### 2026-11-24 — Explicit hollow-diamond legend
+
+Maintainer clarification: preserve observation-availability encoding, without
+introducing a timing-agreement threshold. Added a hollow-diamond legend entry
+("no usable UTC peak observation") and a filled-diamond entry for available UTC
+peak observations. The footnote explicitly states that fill does not indicate
+model-observation agreement. Regenerated only Fig23b with `--summary-only`;
+reviewed the saved PNG and passed the existing canvas/label bounds checks.
+Analysis CSVs, Fig1 and Fig23a remain unchanged; refreshed the output hash.

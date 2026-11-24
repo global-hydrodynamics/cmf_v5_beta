@@ -269,12 +269,13 @@ def plot_timing_summary(comparisons, output: Path, settings_path: Path):
                                       fontsize=7.4, color="#555555"))
 
     types = [
-        Line2D([],[],marker="D",ls="none",mfc="#c73e3a",mec="white",label="Model search-window maximum"),
+        Line2D([],[],marker="D",ls="none",mfc="#c73e3a",mec="white",label="Model maximum: UTC peak observation available"),
+        Line2D([],[],marker="D",ls="none",mfc="none",mec="#c73e3a",label="Model maximum: no usable UTC peak observation"),
         Line2D([],[],marker="o",ls="none",mfc="#d88900",mec="white",label="UTC discharge peak"),
         Line2D([],[],marker="^",ls="none",mfc="#7b4ab5",mec="white",label="UTC water-level peak (reference)"),
     ]
     type_legend = fig.legend(handles=types, loc="center", bbox_to_anchor=(.5,1.55/height),
-                            ncol=3, frameon=False, fontsize=8)
+                            ncol=2, frameon=False, fontsize=8)
     represented = list(dict.fromkeys(aliases.get(row["river_group"],row["river_group"]) for row in records))
     basin_handles = [Line2D([],[],marker="s",ls="none",color=palette.get(group,neutral),
                            label=group if group in palette else f"{group} (unmapped)") for group in represented]
@@ -282,7 +283,7 @@ def plot_timing_summary(comparisons, output: Path, settings_path: Path):
                              ncol=4,frameon=False,fontsize=8,handletextpad=.35,columnspacing=1.4)
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
-    foot = ("Filled diamonds / bold labels: UTC peak reported; hollow diamonds: no plottable UTC peak. "
+    foot = ("Diamond fill indicates observation availability, not model-observation agreement. Bold labels: UTC peak reported. "
             "M no peak time; U timezone unknown; P upstream proxy; N no cell; C context only. "
             "Within-row offsets separate close markers. Edge arrows show actual out-of-view times, not boundary peaks.")
     foot = wrap_figure_text(foot,renderer,(width-.8)*dpi,fontsize=7.5)
