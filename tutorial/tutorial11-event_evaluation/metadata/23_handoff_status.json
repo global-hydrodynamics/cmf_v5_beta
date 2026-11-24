@@ -12,7 +12,7 @@
     "metadata/23_impact_model_timeseries.csv": "5701623bec572ca3d4f94f4e461c29fbf8dcec5b2dee1163575088694c759f22",
     "metadata/23_impact_timing_comparison.csv": "de0056a62b90129341993871eeb00c7b3749c3ccd9934eefcf4229b12ccb5381",
     "figure/f23a-impact_hydrographs.png": "dfe5dae6cc005f7344e26beed4b74bf7589a35b460a1fb09b67259c47f14bc87",
-    "figure/f23b-impact_timing_summary.png": "c12e663000497088e2c5d4b3ea248193492563878d968709f6ad62dda28d3681"
+    "figure/f23b-impact_timing_summary.png": "df8303a9f9e5d7c10b76ad4e926a30f924a2bc4bed0bc52dcdedf0d58c3271c3"
   },
   "search_window_utc": {
     "start_inclusive": "2021-07-12T00:00:00Z",
@@ -34,5 +34,19 @@
     "one_step_upstream_tributary_proxy": 5,
     "no_model_cell": 1
   },
-  "note": "Re-executed Step23 using the final Step21 evaluation cells. Model/map/Step01/Step21 inputs unchanged. Ahr upstream proxies remain provisional; no model simulation rerun."
+  "note": "Re-executed Step23 using the final Step21 evaluation cells. Model/map/Step01/Step21 inputs unchanged. Ahr upstream proxies remain provisional; no model simulation rerun.",
+  "figure23b_display": {
+    "updated_date": "2026-11-24",
+    "analysis_recomputed": false,
+    "settings": "metadata/23_timing_figure_settings.json",
+    "review_metadata": "metadata/23_timing_figure_review.json",
+    "display_start_utc": "2021-07-14T00:00:00Z",
+    "display_end_utc": "2021-07-16T00:00:00Z",
+    "render_input_sha256": {
+      "metadata/23_timing_figure_settings.json": "8ae12ebb442037a8a50313a91c8c84b9124b199bdba0caf3125b6155b32deb6c",
+      "metadata/23_impact_timing_comparison.csv": "de0056a62b90129341993871eeb00c7b3749c3ccd9934eefcf4229b12ccb5381",
+      "metadata/event_figure_settings.json": "92c4d2a6766a2c67fe2c962707dcc59752f03a302accbedbcf9eaa5eed996771"
+    },
+    "note": "Fig23b-only visual update; search interval/peak CSVs, Fig1 and Fig23a unchanged."
+  }
 }

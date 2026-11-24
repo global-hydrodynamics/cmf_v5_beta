@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 import re
@@ -145,84 +146,172 @@ def plot_hydrographs(series: list[dict[str, str]], comparisons: list[dict[str, s
     plt.close(fig)
 
 
-def plot_timing_summary(comparisons: list[dict[str, str]], output: Path) -> None:
-    records = sorted(comparisons, key=lambda row: (row["river_group"], row["location_name"], row["report_id"]))
-    fig, ax = plt.subplots(figsize=(15, max(8.0, len(records) * .39)))
-    start, end = datetime(2021, 7, 13), datetime(2021, 7, 17)
-    fig.subplots_adjust(left=.34, right=.72, bottom=.11, top=.94)
-    y_positions = np.arange(len(records))
-    for y, row in zip(y_positions, records):
-        notes = []
-        if row.get("model_cell_basis") == "one_step_upstream_tributary_proxy":
-            notes.append("Upstream tributary proxy")
-        if row.get("comparison_status") in {
-            "river_not_represented_context_only",
-            "river_match_unresolved_context_only",
-        }:
-            notes.append("Model context only")
-        model_time = parse_time(row["model_peak_time_utc"])
-        if model_time is not None:
-            if start <= model_time < end:
-                ax.scatter(model_time, y, marker="D", s=31, color="#c73e3a", edgecolor="white",
-                           linewidth=.45, zorder=4)
-            else:
-                boundary = start if model_time < start else end
-                direction = -1 if model_time < start else 1
-                ax.scatter(boundary, y, marker="<" if direction < 0 else ">", s=38,
-                           color="#c73e3a", clip_on=False, zorder=4)
-                notes.append(f"Model max {model_time:%d Jul %H:%M} UTC (outside view)")
+def wrap_figure_text(text, renderer, max_width, fontsize=8):
+    """Wrap decorations using rendered text width at the final output DPI."""
+    from matplotlib.font_manager import FontProperties
+    font = FontProperties(size=fontsize)
+    lines, current = [], ""
+    for word in text.split():
+        candidate = f"{current} {word}".strip()
+        if current and renderer.get_text_width_height_descent(candidate, font, False)[0] > max_width:
+            lines.append(current)
+            current = word
+        else:
+            current = candidate
+    if current:
+        lines.append(current)
+    return "\n".join(lines)
 
+
+def plot_timing_summary(comparisons, output: Path, settings_path: Path):
+    """Render saved peak times; display settings never change search-window values."""
+    settings = json.loads(settings_path.read_text())
+    palette_path = (settings_path.parent / settings["basin_colors_file"]).resolve()
+    palette = json.loads(palette_path.read_text())[settings["basin_colors_section"]]["plot_group_colors"]
+    aliases = settings.get("basin_aliases", {})
+    neutral = settings.get("neutral_color", "#888888")
+    start, end = parse_time(settings["display_start_utc"]), parse_time(settings["display_end_utc"])
+    if start is None or end is None or end <= start:
+        raise ValueError("Summary display bounds must be an increasing UTC period")
+    records = sorted(comparisons, key=lambda row: (row["river_group"], row["location_name"], row["report_id"]))
+    # Fixed physical plot area; text columns and legends occupy their own margins.
+    left, bottom, plot_width = 3.35, 2.35, 6.75
+    plot_height = max(5.6, len(records) * .255)
+    width, height, dpi = 11.65, bottom + plot_height + .65, 200
+    fig = plt.figure(figsize=(width, height), dpi=dpi)
+    ax = fig.add_axes([left / width, bottom / height, plot_width / width, plot_height / height])
+    ax.set_xlim(start, end)
+    ax.set_ylim(len(records) - .5, -.5)
+    ax.set_yticks([])
+    ax.tick_params(axis="x", labelsize=8, length=3)
+    ax.xaxis.set_major_locator(mdates.HourLocator(interval=int(settings.get("tick_hours", 6))))
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b\n%H:%M"))
+    ax.set_xlabel("Time (UTC)", fontsize=9, labelpad=7)
+    ax.grid(axis="x", color="#d9dee3", linewidth=.55)
+    ax.spines[["top", "right", "left"]].set_visible(False)
+    fig.text(.5, 1 - .25 / height, settings.get("title", "Flood Peak Timing Summary"),
+             ha="center", va="top", fontsize=13)
+    transform = ax.get_yaxis_transform()
+    label_x, color_x = (.66-left)/plot_width, (.47-left)/plot_width
+    note_x = 1 + .14 / plot_width
+    ax.text(label_x, -.95, "Location / station", transform=transform, fontsize=9, weight="bold")
+    ax.text(note_x, -.95, "Notes", transform=transform, fontsize=8, weight="bold")
+    measured_labels, note_texts = [], []
+    unresolved, outside, basin_rows, label_rows = [], [], [], []
+    previous_group = None
+
+    def draw_time(value, y, color, marker, size, filled=True):
+        """Outside arrows are display indicators, with actual times retained in row notes."""
+        if start <= value < end:
+            ax.scatter(value, y, marker=marker, s=size,
+                       facecolors=color if filled else "none", edgecolors=color if not filled else "white",
+                       linewidths=.75 if not filled else .5, zorder=5)
+            return None
+        side = "<" if value < start else ">"
+        # Put the arrow just outside the plotting area, not at a data timestamp.
+        edge_x = -.008 if side == "<" else 1.008
+        ax.scatter(edge_x, y, transform=transform, marker=side, s=40,
+                   color=color, clip_on=False, zorder=5)
+        return f"{side}{value:%d %b %H:%M}"
+
+    for y, row in enumerate(records):
+        group = row["river_group"]
+        canonical = aliases.get(group, group)
+        basin_color = palette.get(canonical, neutral)
+        if canonical not in palette:
+            unresolved.append(group)
+        basin_rows.append({"report_id": row["report_id"], "group": group,
+                           "palette_group": canonical, "color": basin_color})
+        if previous_group is not None and group != previous_group:
+            ax.axhline(y-.5, color="#c9cdd1", linewidth=.6, zorder=1)
+        previous_group = group
         observed_start = parse_time(row["observed_start_time_utc"])
         observed_end = parse_time(row["observed_end_time_utc"])
         marker = TYPE_MARKERS.get(row["timing_type"])
-        if observed_start is not None and observed_end is not None and marker:
-            obs_color = "#d88900" if row["timing_type"] == "discharge_peak" else "#7b4ab5"
-            if observed_start == observed_end:
-                ax.scatter(observed_start, y, marker=marker, s=33, color=obs_color,
-                           edgecolor="white", linewidth=.45, zorder=5)
-            else:
-                ax.hlines(y, observed_start, observed_end, color=obs_color, linewidth=5, alpha=.35, zorder=2)
-                ax.scatter([observed_start, observed_end], [y, y], marker=marker, s=22,
-                           color=obs_color, zorder=3)
-        elif row.get("time_original"):
-            timezone_note = row.get("timezone_original", "").casefold()
-            has_clock = re.search(r"\b\d{1,2}:\d{2}\b", row["time_original"]) is not None
-            notes.append("Timezone not confirmed" if has_clock and (
-                "not stated" in timezone_note or "unknown" in timezone_note
-            ) else "Timing unavailable")
+        has_utc_peak = observed_start is not None and observed_end is not None and marker is not None
+        label = settings.get("short_labels", {}).get(row["report_id"], row["location_name"])
+        measured_labels.append(ax.text(label_x, y, label, transform=transform, ha="left", va="center",
+                                       fontsize=8.6, color="#222222" if has_utc_peak else "#666666",
+                                       weight="bold" if has_utc_peak else "normal"))
+        ax.scatter(color_x, y, transform=transform, marker="s", s=23,
+                   c=basin_color, edgecolors="none", clip_on=False, zorder=6)
+        label_rows.append({"report_id": row["report_id"], "label": label, "utc_peak_emphasized": has_utc_peak})
+        codes = []
+        if row.get("model_cell_basis") == "one_step_upstream_tributary_proxy":
+            codes.append("P")
+        if row.get("comparison_status") in {"river_not_represented_context_only", "river_match_unresolved_context_only"}:
+            codes.append("C")
+        model_time = parse_time(row["model_peak_time_utc"])
+        if model_time is not None:
+            indicator = draw_time(model_time, y+.1 if has_utc_peak else y, "#c73e3a", "D", 32 if has_utc_peak else 25, filled=has_utc_peak)
+            if indicator:
+                codes.append(indicator)
+                outside.append({"report_id": row["report_id"], "kind": "model", "actual_time_utc": row["model_peak_time_utc"]})
         else:
-            notes.append("Timing unavailable")
-        if notes:
-            ax.text(1.04, y, "; ".join(notes), transform=ax.get_yaxis_transform(),
-                    ha="left", va="center", fontsize=6.4, color="#777777")
+            codes.append("N")
+        if has_utc_peak:
+            obs_color = "#d88900" if marker == "o" else "#7b4ab5"
+            if observed_start != observed_end and observed_end >= start and observed_start < end:
+                ax.hlines(y-.1, max(start,observed_start), min(end,observed_end), color=obs_color,
+                          linewidth=5, alpha=.35, zorder=2)
+            for value in dict.fromkeys([observed_start,observed_end]):
+                indicator = draw_time(value, y-.1, obs_color, marker, 45)
+                if indicator:
+                    codes.append("Obs" + indicator)
+                    outside.append({"report_id": row["report_id"], "kind": "observation", "actual_time_utc": value.isoformat()+"Z"})
+        else:
+            raw_time = row.get("time_original", "")
+            timezone_note = row.get("timezone_original", "").casefold()
+            has_clock = re.search(r"\b\d{1,2}:\d{2}\b", raw_time) is not None
+            codes.append("U" if has_clock and ("not stated" in timezone_note or "unknown" in timezone_note) else "M")
+        if codes:
+            note_texts.append(ax.text(note_x, y, " ".join(codes), transform=transform, ha="left", va="center",
+                                      fontsize=7.4, color="#555555"))
 
-    labels = [f"{row['river_group']} — {row['location_name']} [{row['timing_type']}]" for row in records]
-    ax.set_yticks(y_positions)
-    ax.set_yticklabels(labels, fontsize=7)
-    ax.invert_yaxis()
-    ax.set_xlim(start, end)
-    ax.xaxis.set_major_locator(mdates.DayLocator())
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%d Jul"))
-    ax.set_xlabel("UTC date (July 13–16; end exclusive July 17)")
-    ax.set_title("Fig. 23b — Flood Peak Timing Summary", fontsize=14, pad=12)
-    ax.grid(axis="x", color="#d9dee3", linewidth=.6)
-    ax.spines[["top", "right"]].set_visible(False)
-    legend = [
-        Line2D([0], [0], marker="D", color="none", markerfacecolor="#c73e3a",
-               markeredgecolor="white", label="Model search-window maximum"),
-        Line2D([0], [0], marker="o", color="none", markerfacecolor="#d88900",
-               label="Reported discharge peak (UTC)"),
-        Line2D([0], [0], marker="^", color="none", markerfacecolor="#7b4ab5",
-               label="Reported water-level peak (UTC; reference only)"),
+    types = [
+        Line2D([],[],marker="D",ls="none",mfc="#c73e3a",mec="white",label="Model search-window maximum"),
+        Line2D([],[],marker="o",ls="none",mfc="#d88900",mec="white",label="UTC discharge peak"),
+        Line2D([],[],marker="^",ls="none",mfc="#7b4ab5",mec="white",label="UTC water-level peak (reference)"),
     ]
-    ax.legend(handles=legend, loc="lower center", bbox_to_anchor=(.5, -0.10), ncols=3,
-              frameon=False, fontsize=8)
-    fig.text(.5, .025, "Timezone-unknown source labels remain in the metadata and are not plotted on this UTC axis. Red boundary arrows denote model maxima outside the display period.",
-             ha="center", fontsize=8, color="#555555")
-    fig.tight_layout(rect=(0, .045, 1, 1))
-    output.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output, dpi=200, bbox_inches="tight", facecolor="white")
+    type_legend = fig.legend(handles=types, loc="center", bbox_to_anchor=(.5,1.55/height),
+                            ncol=3, frameon=False, fontsize=8)
+    represented = list(dict.fromkeys(aliases.get(row["river_group"],row["river_group"]) for row in records))
+    basin_handles = [Line2D([],[],marker="s",ls="none",color=palette.get(group,neutral),
+                           label=group if group in palette else f"{group} (unmapped)") for group in represented]
+    basin_legend = fig.legend(handles=basin_handles,loc="center",bbox_to_anchor=(.5,1.02/height),
+                             ncol=4,frameon=False,fontsize=8,handletextpad=.35,columnspacing=1.4)
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    foot = ("Filled diamonds / bold labels: UTC peak reported; hollow diamonds: no plottable UTC peak. "
+            "M no peak time; U timezone unknown; P upstream proxy; N no cell; C context only. "
+            "Within-row offsets separate close markers. Edge arrows show actual out-of-view times, not boundary peaks.")
+    foot = wrap_figure_text(foot,renderer,(width-.8)*dpi,fontsize=7.5)
+    foot_artist=fig.text(.4/width,.65/height,foot,ha="left",va="top",fontsize=7.5,color="#555555")
+    event_note=settings.get("event_note", "")
+    event_artist=fig.text(.4/width,.22/height,wrap_figure_text(event_note,renderer,(width-.8)*dpi,fontsize=8),
+                          ha="left",va="bottom",fontsize=8,color="#333333")
+    fig.canvas.draw()
+    renderer=fig.canvas.get_renderer()
+    # Verify the physical text columns rather than relying on tight bounding-box cropping.
+    bounds=fig.bbox
+    for artist in [*measured_labels,*note_texts,type_legend,basin_legend,foot_artist,event_artist]:
+        box=artist.get_window_extent(renderer)
+        if box.x0 < bounds.x0 or box.x1 > bounds.x1 or box.y0 < bounds.y0 or box.y1 > bounds.y1:
+            raise ValueError(f"Summary decoration outside fixed canvas: {artist}")
+    if max(artist.get_window_extent(renderer).x1 for artist in measured_labels) > ax.bbox.x0-8:
+        raise ValueError("Location labels overlap the time axis; shorten labels in summary settings")
+    if foot_artist.get_window_extent(renderer).y0 <= event_artist.get_window_extent(renderer).y1:
+        raise ValueError("Summary footnote overlaps the event note")
+    output.parent.mkdir(parents=True,exist_ok=True)
+    fig.savefig(output,dpi=dpi,facecolor="white")
     plt.close(fig)
+    print(f"Fig23b: {len(records)} rows; palette={palette_path.name}; unresolved colors={sorted(set(unresolved))}; "
+          f"outside-view markers={len(outside)}; display=[{start}, {end}) UTC")
+    return {"display_start_utc":settings["display_start_utc"],"display_end_utc":settings["display_end_utc"],
+            "rows":len(records),"basin_indicators":basin_rows,"labels":label_rows,
+            "unresolved_basin_groups":sorted(set(unresolved)),"outside_view_markers":outside,
+            "canvas_inches":[width,height],"time_axis_inches":[left,bottom,plot_width,plot_height],
+            "decoration_bounds_checked":True,"marker_row_offsets":{"model_with_observation":.1,"observation":-.1}}
 
 
 def main() -> None:
@@ -231,12 +320,18 @@ def main() -> None:
     parser.add_argument("--comparison-csv", type=Path, required=True)
     parser.add_argument("--hydrographs-output", type=Path, required=True)
     parser.add_argument("--summary-output", type=Path, required=True)
+    parser.add_argument("--summary-settings", type=Path,
+                        default=Path(__file__).resolve().parents[1]/"metadata/23_timing_figure_settings.json")
+    parser.add_argument("--summary-only", action="store_true", help="redraw only Fig23b; preserve Fig23a")
     args = parser.parse_args()
     series = read_csv(args.timeseries_csv)
     comparisons = read_csv(args.comparison_csv)
-    plot_hydrographs(series, comparisons, args.hydrographs_output)
-    plot_timing_summary(comparisons, args.summary_output)
-    print(f"Wrote {args.hydrographs_output}")
+    if not args.summary_only:
+        plot_hydrographs(series, comparisons, args.hydrographs_output)
+        print(f"Wrote {args.hydrographs_output}")
+    review = plot_timing_summary(comparisons, args.summary_output, args.summary_settings)
+    # Display metadata is separate from peak-analysis CSVs.
+    (args.summary_settings.parent/"23_timing_figure_review.json").write_text(json.dumps(review,ensure_ascii=False,indent=2)+"\n")
     print(f"Wrote {args.summary_output}")
 
 

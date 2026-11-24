@@ -53,3 +53,38 @@ are water-level references, not discharge-peak scores. The half-hour Ahr offset
 does not imply sub-hourly model accuracy. Figures and CSVs are reusable only
 with the recorded allocation/timing/model fingerprints. Research validator
 retains the 22 pre-existing unrelated errors, with no new errors from this task.
+
+## Fig23b-only visualization revision — 2026-11-24
+
+Applied the maintainer's focused visualization request after the Step23 rerun.
+Changed only the summary plotting function, its directly necessary CLI/Shell
+settings and related documentation/metadata. The hydrograph function's AST is
+unchanged. Fig1 uses `f01-reported_flood_impacts.sh` → existing f06b renderer →
+`metadata/event_figure_settings.json`, section panel_step1; the summary now reads
+that exact plot_group_colors palette. Meuse basin / Geul explicitly aliases its
+Fig1 Meuse category based on the existing Fig1 legend; no categories are
+unresolved in the real data. A neutral unknown-category check also passed.
+
+Executed `MPLCONFIGDIR=/tmp/cmf-mpl-cache bash f23-impact_timing_comparison.sh
+--summary-only`. No s23 or model run. New display settings are in
+metadata/23_timing_figure_settings.json, and rendered row/color/layout evidence
+in metadata/23_timing_figure_review.json. Updated the Fig23b output fingerprint
+and render-input hashes in 23_handoff_status.json; its analysis-input provenance
+is unchanged.
+
+Verification: all 22 report rows retain their prior basin/group order, all color
+indicators match Fig1 values, and five plottable UTC peak rows are emphasized.
+Halen's 16 July04:00 maximum is the only outside-view model marker; it has an
+arrow outside the data axes plus the actual timestamp. All source-supported UTC
+observations remain visible. The fixed 11.65-inch canvas and its physical plot
+area, text columns, legends and footnotes pass rendered bounding-box checks;
+labels do not intrude into the time axis. Both default and an alternate display
+window render; an added unmapped category uses neutral gray rather than an
+inferred basin color. All source peak records remain unmodified.
+
+Protected SHA256 checks pass for both Step23 CSVs, Step01/21 inputs, Fig1 settings,
+Fig1 PNG and Fig23a PNG. No peak values, search interval, grouping/order, timezone
+conversion or analysis method changed. The final PNG was opened and visually
+reviewed for colors, ticks, groups, marker separation, codes and margins.
+The event-specific flash-flood interpretation is in settings, not hardcoded in
+the reusable summary method. No Gallery or other figure refactoring.

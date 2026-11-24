@@ -6,6 +6,19 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Tutorial11 Fig23b readability (DT-0171, 2026-11-24)
+
+Maintainer authorizes focused Fig23b improvement on `feature/package-builder`;
+Codex owns summary drawing/settings/Shell and directly related docs/provenance.
+Configurable July14–16 UTC display, shared Fig1 basin-color indicators, short
+labels/UTC-peak emphasis and compact M/U/P/N/C notes preserve all 22 rows.
+Halen's outside peak keeps its actual time. Event interpretation is settings
+based. Default/alternate/neutral-fallback, source/color/order/bounds/visual checks
+pass; Fig1, Fig23a and peak CSV hashes are unchanged. No extraction, peak
+recalculation or Gallery change. Evidence:
+[VR-0214](../research/records/validation_runs/VR-0214.md).
+
+
 ### Tutorial11 Step23 final-allocation rerun (DT-0170, 2026-11-24)
 
 Maintainer authorizes rerunning Step23 on `feature/package-builder` after impact

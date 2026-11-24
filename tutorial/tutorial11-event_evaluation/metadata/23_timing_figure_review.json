@@ -1,0 +1,274 @@
+{
+  "display_start_utc": "2021-07-14T00:00:00Z",
+  "display_end_utc": "2021-07-16T00:00:00Z",
+  "rows": 22,
+  "basin_indicators": [
+    {
+      "report_id": "impact-ahr-altenahr",
+      "group": "Ahr",
+      "palette_group": "Ahr",
+      "color": "#c62828"
+    },
+    {
+      "report_id": "impact-ahr-bad-neuenahr",
+      "group": "Ahr",
+      "palette_group": "Ahr",
+      "color": "#c62828"
+    },
+    {
+      "report_id": "peak-ahr-altenahr",
+      "group": "Ahr",
+      "palette_group": "Ahr",
+      "color": "#c62828"
+    },
+    {
+      "report_id": "peak-ahr-bad-bodendorf",
+      "group": "Ahr",
+      "palette_group": "Ahr",
+      "color": "#c62828"
+    },
+    {
+      "report_id": "peak-ahr-muesch",
+      "group": "Ahr",
+      "palette_group": "Ahr",
+      "color": "#c62828"
+    },
+    {
+      "report_id": "impact-ahr-schuld",
+      "group": "Ahr",
+      "palette_group": "Ahr",
+      "color": "#c62828"
+    },
+    {
+      "report_id": "impact-ahr-sinzig",
+      "group": "Ahr",
+      "palette_group": "Ahr",
+      "color": "#c62828"
+    },
+    {
+      "report_id": "impact-dyle-wavre",
+      "group": "Dyle",
+      "palette_group": "Dyle",
+      "color": "#00a6a6"
+    },
+    {
+      "report_id": "impact-erft-bad-muenstereifel",
+      "group": "Erft/Swist",
+      "palette_group": "Erft/Swist",
+      "color": "#e67e22"
+    },
+    {
+      "report_id": "impact-erft-blessem",
+      "group": "Erft/Swist",
+      "palette_group": "Erft/Swist",
+      "color": "#e67e22"
+    },
+    {
+      "report_id": "impact-erft-euskirchen",
+      "group": "Erft/Swist",
+      "palette_group": "Erft/Swist",
+      "color": "#e67e22"
+    },
+    {
+      "report_id": "peak-erft-bliesheim",
+      "group": "Erft/Swist",
+      "palette_group": "Erft/Swist",
+      "color": "#e67e22"
+    },
+    {
+      "report_id": "impact-gete-halen",
+      "group": "Gete",
+      "palette_group": "Gete",
+      "color": "#984ea3"
+    },
+    {
+      "report_id": "impact-kyll-kordel",
+      "group": "Kyll",
+      "palette_group": "Kyll",
+      "color": "#e6ab02"
+    },
+    {
+      "report_id": "peak-kyll-kordel",
+      "group": "Kyll",
+      "palette_group": "Kyll",
+      "color": "#e6ab02"
+    },
+    {
+      "report_id": "impact-meuse-valkenburg",
+      "group": "Meuse",
+      "palette_group": "Meuse",
+      "color": "#377eb8"
+    },
+    {
+      "report_id": "peak-geul-valkenburg",
+      "group": "Meuse basin / Geul",
+      "palette_group": "Meuse",
+      "color": "#377eb8"
+    },
+    {
+      "report_id": "peak-pruem-pruemzurlay",
+      "group": "Prüm",
+      "palette_group": "Prüm",
+      "color": "#8c510a"
+    },
+    {
+      "report_id": "impact-pruem-pruemzurlay",
+      "group": "Prüm",
+      "palette_group": "Prüm",
+      "color": "#8c510a"
+    },
+    {
+      "report_id": "peak-vesdre-eupen-outlet",
+      "group": "Vesdre/Meuse",
+      "palette_group": "Vesdre/Meuse",
+      "color": "#1b9e77"
+    },
+    {
+      "report_id": "impact-vesdre-pepinster",
+      "group": "Vesdre/Meuse",
+      "palette_group": "Vesdre/Meuse",
+      "color": "#1b9e77"
+    },
+    {
+      "report_id": "impact-vesdre-verviers",
+      "group": "Vesdre/Meuse",
+      "palette_group": "Vesdre/Meuse",
+      "color": "#1b9e77"
+    }
+  ],
+  "labels": [
+    {
+      "report_id": "impact-ahr-altenahr",
+      "label": "Altenahr (town)",
+      "utc_peak_emphasized": false
+    },
+    {
+      "report_id": "impact-ahr-bad-neuenahr",
+      "label": "Bad Neuenahr-Ahrweiler",
+      "utc_peak_emphasized": false
+    },
+    {
+      "report_id": "peak-ahr-altenahr",
+      "label": "Altenahr gauge",
+      "utc_peak_emphasized": true
+    },
+    {
+      "report_id": "peak-ahr-bad-bodendorf",
+      "label": "Bad Bodendorf gauge",
+      "utc_peak_emphasized": true
+    },
+    {
+      "report_id": "peak-ahr-muesch",
+      "label": "Müsch gauge",
+      "utc_peak_emphasized": true
+    },
+    {
+      "report_id": "impact-ahr-schuld",
+      "label": "Schuld (town)",
+      "utc_peak_emphasized": false
+    },
+    {
+      "report_id": "impact-ahr-sinzig",
+      "label": "Sinzig",
+      "utc_peak_emphasized": false
+    },
+    {
+      "report_id": "impact-dyle-wavre",
+      "label": "Wavre",
+      "utc_peak_emphasized": false
+    },
+    {
+      "report_id": "impact-erft-bad-muenstereifel",
+      "label": "Bad Münstereifel",
+      "utc_peak_emphasized": false
+    },
+    {
+      "report_id": "impact-erft-blessem",
+      "label": "Blessem / Erftstadt",
+      "utc_peak_emphasized": false
+    },
+    {
+      "report_id": "impact-erft-euskirchen",
+      "label": "Euskirchen",
+      "utc_peak_emphasized": false
+    },
+    {
+      "report_id": "peak-erft-bliesheim",
+      "label": "Bliesheim gauge",
+      "utc_peak_emphasized": false
+    },
+    {
+      "report_id": "impact-gete-halen",
+      "label": "Halen",
+      "utc_peak_emphasized": false
+    },
+    {
+      "report_id": "impact-kyll-kordel",
+      "label": "Kordel (town)",
+      "utc_peak_emphasized": false
+    },
+    {
+      "report_id": "peak-kyll-kordel",
+      "label": "Kordel gauge",
+      "utc_peak_emphasized": true
+    },
+    {
+      "report_id": "impact-meuse-valkenburg",
+      "label": "Valkenburg (town)",
+      "utc_peak_emphasized": false
+    },
+    {
+      "report_id": "peak-geul-valkenburg",
+      "label": "Geul at Valkenburg",
+      "utc_peak_emphasized": false
+    },
+    {
+      "report_id": "peak-pruem-pruemzurlay",
+      "label": "Prümzurlay gauge",
+      "utc_peak_emphasized": true
+    },
+    {
+      "report_id": "impact-pruem-pruemzurlay",
+      "label": "Prümzurlay (town)",
+      "utc_peak_emphasized": false
+    },
+    {
+      "report_id": "peak-vesdre-eupen-outlet",
+      "label": "Eupen reservoir outlet",
+      "utc_peak_emphasized": false
+    },
+    {
+      "report_id": "impact-vesdre-pepinster",
+      "label": "Pepinster",
+      "utc_peak_emphasized": false
+    },
+    {
+      "report_id": "impact-vesdre-verviers",
+      "label": "Verviers",
+      "utc_peak_emphasized": false
+    }
+  ],
+  "unresolved_basin_groups": [],
+  "outside_view_markers": [
+    {
+      "report_id": "impact-gete-halen",
+      "kind": "model",
+      "actual_time_utc": "2021-07-16T04:00:00Z"
+    }
+  ],
+  "canvas_inches": [
+    11.65,
+    8.610000000000001
+  ],
+  "time_axis_inches": [
+    3.35,
+    2.35,
+    6.75,
+    5.61
+  ],
+  "decoration_bounds_checked": true,
+  "marker_row_offsets": {
+    "model_with_observation": 0.1,
+    "observation": -0.1
+  }
+}

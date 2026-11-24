@@ -24,3 +24,25 @@ Use this workflow for the Rhine 2021 sample after checking the current Tutorial 
 7. Run `bash s23-impact_timing_comparison.sh`, then `bash f23-impact_timing_comparison.sh`. Inspect both figures for time range, labels, marker meaning, unknown-time handling, and river-allocation caveats. Update the Survey Report, Work Report, this process document and the development log.
 
 No interpolation, temporal aggregation, model rerun, gauge reallocation or skill metrics are part of this exploratory Step.
+
+## Redraw only Fig. 23b
+
+```sh
+bash f23-impact_timing_comparison.sh --summary-only
+```
+
+Edit `metadata/23_timing_figure_settings.json` for the UTC display interval,
+tick spacing, short labels, Fig1 palette reference/category aliases, neutral
+fallback and optional event-specific note. The default interval is
+2021-07-14 00:00 to 2021-07-16 00:00 UTC; it does not change the July12–18
+peak-search interval or require re-extraction. The Shell forwards additional
+plot arguments, including `--summary-settings PATH`; a normal call still makes
+both Figures. Fig1 colors are read from its existing JSON, not copied into
+another palette. Unknown categories stay neutral and are reported.
+
+Keep all rows/basin order, source UTC uncertainty, discharge versus water-level
+marker meanings and out-of-view peak timestamps. Small within-row vertical
+marker offsets improve separation but must never shift time values. Use the
+compact M/U/P/N/C key and put event interpretation in settings. The saved
+`metadata/23_timing_figure_review.json` records display bounds, row order/color
+crosswalk, unknown mappings and outside-window markers for focused review.

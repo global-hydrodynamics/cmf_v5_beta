@@ -346,6 +346,14 @@ and [`metadata/22_hydrograph_comparison_summary.json`](metadata/22_hydrograph_co
 
 ### Step 23 — Flood Impact Timing Comparison
 
+For Fig23b, use `f23-impact_timing_comparison.sh --summary-only` to redraw only
+the timing summary. Its separate settings default to July14 00:00–July16 00:00
+UTC and six-hour ticks; saved peaks/search bounds remain unchanged. Read basin
+colors from the Fig1 settings, keep all report rows, use compact uncertainty
+codes and show actual timestamps for outside-view arrows. The event note warns
+against reading independent tributary peaks as one propagating flood wave.
+Fig23a's display and underlying extraction are unchanged.
+
 Use Step 01's report-linked timing ledger and Step 21's reviewed impact
 allocation to compare event timing with hourly model outflow. Extract one
 series per selected model cell, retaining every report as a separate record.

@@ -1,0 +1,37 @@
+{
+  "display_start_utc": "2021-07-14T00:00:00Z",
+  "display_end_utc": "2021-07-16T00:00:00Z",
+  "tick_hours": 6,
+  "basin_colors_file": "event_figure_settings.json",
+  "basin_colors_section": "panel_step1",
+  "basin_aliases": {
+    "Meuse basin / Geul": "Meuse"
+  },
+  "neutral_color": "#888888",
+  "title": "Tutorial 11 Fig. 23b — Flood Peak Timing Summary",
+  "event_note": "Rhine 2021: multiple tributary flash floods; timing across independent catchments is not a single downstream-propagating flood wave.",
+  "short_labels": {
+    "impact-ahr-schuld": "Schuld (town)",
+    "impact-ahr-altenahr": "Altenahr (town)",
+    "impact-ahr-bad-neuenahr": "Bad Neuenahr-Ahrweiler",
+    "impact-ahr-sinzig": "Sinzig",
+    "impact-erft-bad-muenstereifel": "Bad Münstereifel",
+    "impact-erft-euskirchen": "Euskirchen",
+    "impact-erft-blessem": "Blessem / Erftstadt",
+    "impact-kyll-kordel": "Kordel (town)",
+    "impact-pruem-pruemzurlay": "Prümzurlay (town)",
+    "impact-vesdre-verviers": "Verviers",
+    "impact-vesdre-pepinster": "Pepinster",
+    "impact-meuse-valkenburg": "Valkenburg (town)",
+    "impact-gete-halen": "Halen",
+    "impact-dyle-wavre": "Wavre",
+    "peak-ahr-muesch": "Müsch gauge",
+    "peak-ahr-altenahr": "Altenahr gauge",
+    "peak-ahr-bad-bodendorf": "Bad Bodendorf gauge",
+    "peak-erft-bliesheim": "Bliesheim gauge",
+    "peak-kyll-kordel": "Kordel gauge",
+    "peak-pruem-pruemzurlay": "Prümzurlay gauge",
+    "peak-vesdre-eupen-outlet": "Eupen reservoir outlet",
+    "peak-geul-valkenburg": "Geul at Valkenburg"
+  }
+}

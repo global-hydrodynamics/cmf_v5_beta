@@ -831,3 +831,16 @@ preserved in CSV/Figures. Ahr provisional offsets are +6/+2/−0.5 h, sharing
 one model series; water-level and unknown-timezone records remain unscored.
 Direct model-value/peak/ID/time checks and visual review passed. Model, Step01
 and Step21 inputs remain unchanged; no simulation or allocation rerun.
+
+## 2026-11-24 — Improve Fig23b timing-summary readability
+
+Tightened the configurable display to July14–16 UTC while retaining the July12–18
+saved peak search. Reused Fig1's color settings for small label-side basin
+squares; shortened display labels, emphasized five UTC peak rows and replaced
+repeated notes with M/U/P/N/C codes. Halen's outside-view maximum retains its
+actual timestamp; close markers receive small within-row vertical offsets.
+Added settings/review metadata and a summary-only render option. Event-specific
+multi-tributary flash-flood interpretation is configurable. Verified full data/
+Fig1/Fig23a preservation, color crosswalk, row order, alternate range/neutral
+fallback and fixed-layout bounds; visually reviewed the summary. No extraction,
+peak recomputation or Gallery publication.
