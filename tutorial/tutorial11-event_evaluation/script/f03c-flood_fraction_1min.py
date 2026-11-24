@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
-"""Aggregate native 20 m GFM classes to a WGS84 1 arc-minute flood fraction."""
+"""Aggregate native GFM classes and plot WGS84 1 arc-minute flood fractions.
+
+Inputs: native 20 m classification, domain/focus JSON, and contextual map/CSV data.
+Outputs: flood fraction [%], valid source-pixel counts, and an overview PNG.
+Workflow:
+    1. Read the domain, focus areas, and Shell-supplied settings.
+    2. Aggregate classified source-pixel centres, or read an existing fraction.
+    3. Save the derived rasters when aggregating, then render the overview.
+
+The denominator counts classes 0–4, not the area of the whole geographic cell.
+Classes 5, 6, and 255 are excluded; cells without valid support remain NoData.
+Rendering hides valid zero fractions without changing the saved raster values.
+"""
 from __future__ import annotations
 
 import argparse
@@ -10,6 +22,8 @@ from pathlib import Path
 import sys
 
 import matplotlib
+
+# Select a noninteractive backend before pyplot; this workflow saves PNGs.
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import PowerNorm
@@ -27,10 +41,11 @@ REPO_ROOT = TUTORIAL_DIR.parents[1]
 sys.path.insert(0, str(REPO_ROOT / "visualization/river_map/script"))
 import f06_common as river
 
-FRACTION_NODATA = -9999.0
+FRACTION_NODATA = -9999.0  # No valid source support; distinct from valid 0% flood.
 
 
 def read_aoi(config_path: Path) -> tuple[float, float, float, float]:
+    """Read validated WGS84 bounds in west, south, east, north order [degrees]."""
     config = json.loads(config_path.read_text(encoding="utf-8"))
     bbox = config["satellite_analysis"]["domain"]["bbox_west_south_east_north"]
     if len(bbox) != 4:
@@ -42,7 +57,15 @@ def read_aoi(config_path: Path) -> tuple[float, float, float, float]:
 
 
 def aggregate_fraction(source_path: Path, aoi: tuple[float, float, float, float]):
-    """Count class 1 over classes 0-4 by source pixel centre in half-open AOI."""
+    """Compute 100 × class-1 count / class-0–4 count on a global 1-minute grid.
+
+    Select source centres with west <= lon < east and south <= lat < north.
+    Return float32 fractions [%], uint32 valid-pixel counts, the WGS84 grid
+    transform, count/provenance metadata, and the source raster profile.
+    Arrays are (north-to-south row, west-to-east column); uncovered cells use
+    FRACTION_NODATA. Counts are pixel-weighted support, not physical cell area.
+    """
+    #*** 1. Allocate the global-minute-aligned output grid
     west, south, east, north = aoi
     west_minute = math.floor(west * 60)
     east_minute = math.ceil(east * 60)
@@ -54,6 +77,7 @@ def aggregate_fraction(source_path: Path, aoi: tuple[float, float, float, float]
     source_flood_in_aoi = 0
     source_valid_in_aoi = 0
 
+    #*** 2. Bin valid source centres without loading the full native raster
     with rasterio.open(source_path) as source:
         if source.count != 1 or source.dtypes[0] != "uint8":
             raise ValueError(f"Expected single-band uint8 classification raster: {source_path}")
@@ -69,6 +93,7 @@ def aggregate_fraction(source_path: Path, aoi: tuple[float, float, float, float]
             if np.any(unexpected):
                 codes = np.unique(classes[unexpected]).tolist()
                 raise ValueError(f"Unexpected source classification codes: {codes}")
+            # Exclusion/NoData pixels must not enter the fraction denominator.
             valid = (classes >= 0) & (classes <= 4)
             if not np.any(valid):
                 continue
@@ -82,8 +107,10 @@ def aggregate_fraction(source_path: Path, aoi: tuple[float, float, float, float]
             )
             lon = np.asarray(lon)
             lat = np.asarray(lat)
-            in_aoi = ((lon >= west) & (lon < east) &
-                      (lat >= south) & (lat < north))
+            in_aoi = (
+                (lon >= west) & (lon < east) &
+                (lat >= south) & (lat < north)
+            )
             if not np.any(in_aoi):
                 continue
 
@@ -93,8 +120,10 @@ def aggregate_fraction(source_path: Path, aoi: tuple[float, float, float, float]
             source_flood_in_aoi += int(np.count_nonzero(chosen_classes == 1))
             minute_x = np.floor(lon[in_aoi] * 60).astype(np.int64) - west_minute
             minute_y = north_minute - 1 - np.floor(lat[in_aoi] * 60).astype(np.int64)
-            if (np.any(minute_x < 0) or np.any(minute_x >= width) or
-                    np.any(minute_y < 0) or np.any(minute_y >= height)):
+            if (
+                np.any(minute_x < 0) or np.any(minute_x >= width) or
+                np.any(minute_y < 0) or np.any(minute_y >= height)
+            ):
                 raise ValueError("A pixel centre inside the AOI mapped outside the output grid")
             flat = minute_y * width + minute_x
             valid_count += np.bincount(flat, minlength=height * width).reshape(height, width).astype(np.uint32)
@@ -107,6 +136,7 @@ def aggregate_fraction(source_path: Path, aoi: tuple[float, float, float, float]
         source_crs = source.crs.to_string()
         source_transform = tuple(source.transform)
 
+    #*** 3. Verify count conservation and derive percentages on valid support
     if int(valid_count.sum()) != source_valid_in_aoi:
         raise AssertionError("Aggregated valid-pixel count does not match AOI source pixels")
     if int(flood_count.sum()) != source_flood_in_aoi:
@@ -123,8 +153,11 @@ def aggregate_fraction(source_path: Path, aoi: tuple[float, float, float, float]
     if np.any((fraction[covered] < 0) | (fraction[covered] > 100)):
         raise AssertionError("Flood fraction lies outside 0–100 percent")
 
-    grid_transform = Affine(1 / 60, 0, west_minute / 60,
-                            0, -1 / 60, north_minute / 60)
+    #*** 4. Describe the pixel-edge geometry and aggregation provenance
+    grid_transform = Affine(
+        1 / 60, 0, west_minute / 60,
+        0, -1 / 60, north_minute / 60,
+    )
     metadata = {
         "aoi_bbox_wgs84_wsen": list(aoi),
         "aoi_pixel_center_rule": "west <= lon < east and south <= lat < north",
@@ -148,9 +181,17 @@ def aggregate_fraction(source_path: Path, aoi: tuple[float, float, float, float]
     return fraction, valid_count, grid_transform, metadata, source_profile
 
 
-def write_rasters(fraction_path: Path, coverage_path: Path, fraction: np.ndarray,
-                  valid_count: np.ndarray, transform: Affine, source_profile: dict,
-                  metadata: dict) -> None:
+def write_rasters(
+    fraction_path: Path, coverage_path: Path, fraction: np.ndarray,
+    valid_count: np.ndarray, transform: Affine, source_profile: dict,
+    metadata: dict,
+) -> None:
+    """Write fraction [%] and valid-count GeoTIFFs with the aggregation metadata.
+
+    Fraction NoData is -9999; valid zero percentages are preserved. Coverage
+    zero means no valid source pixels. Temporary rasters replace destinations
+    only after both writes finish; remaining temporary files are cleaned up.
+    """
     fraction_path.parent.mkdir(parents=True, exist_ok=True)
     coverage_path.parent.mkdir(parents=True, exist_ok=True)
     height, width = fraction.shape
@@ -162,8 +203,10 @@ def write_rasters(fraction_path: Path, coverage_path: Path, fraction: np.ndarray
     fraction_tmp = fraction_path.with_name(fraction_path.stem + ".tmp.tif")
     coverage_tmp = coverage_path.with_name(coverage_path.stem + ".tmp.tif")
     try:
-        with rasterio.open(fraction_tmp, "w", **common, count=1,
-                           dtype="float32", nodata=FRACTION_NODATA, predictor=3) as dst:
+        with rasterio.open(
+            fraction_tmp, "w", **common, count=1,
+            dtype="float32", nodata=FRACTION_NODATA, predictor=3,
+        ) as dst:
             dst.write(fraction, 1)
             dst.set_band_description(1, "Flood fraction among valid classified 20 m pixels [%]")
             dst.update_tags(
@@ -180,8 +223,9 @@ def write_rasters(fraction_path: Path, coverage_path: Path, fraction: np.ndarray
                 covered_1min_cells=str(metadata["covered_1min_cells"]),
                 uncovered_1min_cells=str(metadata["uncovered_1min_cells"]),
             )
-        with rasterio.open(coverage_tmp, "w", **common, count=1,
-                           dtype="uint32", predictor=2) as dst:
+        with rasterio.open(
+            coverage_tmp, "w", **common, count=1, dtype="uint32", predictor=2,
+        ) as dst:
             dst.write(valid_count, 1)
             dst.set_band_description(1, "Valid classified source pixels (classes 0-4)")
             dst.update_tags(
@@ -198,8 +242,10 @@ def write_rasters(fraction_path: Path, coverage_path: Path, fraction: np.ndarray
         coverage_tmp.unlink(missing_ok=True)
 
 
-def read_focus_areas(settings_path: Path,
-                     aoi: tuple[float, float, float, float]) -> list[dict]:
+def read_focus_areas(
+    settings_path: Path, aoi: tuple[float, float, float, float],
+) -> list[dict]:
+    """Read focus-area definitions and check their bounds lie within the AOI."""
     settings = json.loads(settings_path.read_text(encoding="utf-8"))
     areas = settings["focus_areas"]
     if not areas:
@@ -209,18 +255,29 @@ def read_focus_areas(settings_path: Path,
         west, south, east, north = map(
             float, area["bbox_west_south_east_north"]
         )
-        if not (west_aoi <= west < east <= east_aoi and
-                south_aoi <= south < north <= north_aoi):
+        if not (
+            west_aoi <= west < east <= east_aoi and
+            south_aoi <= south < north <= north_aoi
+        ):
             raise ValueError(f"Focus area {area.get('id')} is outside the satellite AOI")
     return areas
 
 
-def create_figure(fraction: np.ndarray, transform: Affine,
-                  aoi: tuple[float, float, float, float],
-                  map_dir: Path, tile_cache: Path, impact_locations: Path,
-                  focus_areas: list[dict], output_path: Path,
-                  no_osm: bool = False, *, fig_width=12.5, fig_height=8.2, dpi=180,
-                  cmap_name="Reds", vmin=0, vmax=100, gamma=.55) -> None:
+def create_figure(
+    fraction: np.ndarray, transform: Affine,
+    aoi: tuple[float, float, float, float],
+    map_dir: Path, tile_cache: Path, impact_locations: Path,
+    focus_areas: list[dict], output_path: Path,
+    no_osm: bool = False, *, fig_width=12.5, fig_height=8.2, dpi=180,
+    cmap_name="Reds", vmin=0, vmax=100, gamma=0.55,
+) -> None:
+    """Plot positive fractions with contextual rivers, focus boxes and localities.
+
+    The input fraction is a north-up percentage raster; transform describes
+    pixel edges. NoData and valid zero fractions are transparent only in this
+    display. Shell-supplied limits and gamma control PowerNorm, not the data.
+    """
+    #*** 1. Prepare the geographic view and optional OSM context
     west, south, east, north = aoi
     margin = 0.5
     view = (west - margin, south - margin, east + margin, north + margin)
@@ -228,6 +285,7 @@ def create_figure(fraction: np.ndarray, transform: Affine,
     figure, ax = plt.subplots(figsize=(fig_width, fig_height))
     river.draw_osm(ax, view, tile_cache, alpha=0.68, white_mix=0.42) if not no_osm else None
 
+    #*** 2. Draw positive fractions and analysis/focus-area boundaries
     visible_fraction = np.ma.masked_where(
         (fraction == FRACTION_NODATA) | (fraction <= 0), fraction
     )
@@ -262,6 +320,7 @@ def create_figure(fraction: np.ndarray, transform: Affine,
         )
     river.format_axes(ax, view, 1.0, 1.0)
 
+    #*** 3. Add reported-impact localities as contextual information
     with impact_locations.open(newline="", encoding="utf-8") as stream:
         points = list(csv.DictReader(stream))
     if not points:
@@ -286,6 +345,8 @@ def create_figure(fraction: np.ndarray, transform: Affine,
             arrowprops=dict(arrowstyle="-", color="#7b3294", linewidth=0.45, alpha=0.8),
             zorder=6,
         )
+
+    #*** 4. Label the maintained acquisition view and save the Figure
     ax.set_title(
         "GFM Flood Fraction · 1 arc-minute\n"
         "Sentinel-1A · 2021-07-15 · S1A_o038784_dt049389",
@@ -312,32 +373,44 @@ def create_figure(fraction: np.ndarray, transform: Affine,
 
 
 def main() -> int:
+    """Read settings, aggregate or reuse fraction data, and save the overview."""
+    #*** 1. Read the Shell-facing input, output and display options
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--domain-config", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--coverage-output", type=Path, required=True)
+
     parser.add_argument("--impact-locations", type=Path, required=True)
     parser.add_argument("--focus-areas", type=Path, required=True)
     parser.add_argument("--figure-output", type=Path, required=True)
     parser.add_argument("--map-dir", type=Path, default=REPO_ROOT / "map/glb_15min")
-    parser.add_argument("--tile-cache", type=Path,
-                        default=Path.home() / ".cache/cmf_flood_osm_tiles")
-    parser.add_argument("--render-only", action="store_true",
-                        help="Regenerate the Figure from the existing fraction raster")
-    parser.add_argument("--no-osm", action="store_true",
-                        help="Render rivers and data without requesting OSM tiles")
+    parser.add_argument(
+        "--tile-cache", type=Path, default=Path.home() / ".cache/cmf_flood_osm_tiles",
+    )
+    parser.add_argument(
+        "--render-only", action="store_true",
+        help="Regenerate the Figure from the existing fraction raster",
+    )
+    parser.add_argument(
+        "--no-osm", action="store_true",
+        help="Render rivers and data without requesting OSM tiles",
+    )
+
     parser.add_argument("--fig-width", type=float, default=12.5, help="Canvas width [inches]")
     parser.add_argument("--fig-height", type=float, default=8.2, help="Canvas height [inches]")
     parser.add_argument("--dpi", type=int, default=180, help="PNG resolution [pixels/inch]")
     parser.add_argument("--cmap", default="Reds")
     parser.add_argument("--vmin", type=float, default=0)
     parser.add_argument("--vmax", type=float, default=100)
-    parser.add_argument("--gamma", type=float, default=.55)
+    parser.add_argument("--gamma", type=float, default=0.55)
     args = parser.parse_args()
 
+    #*** 2. Read the authoritative domain and focus-area definitions
     aoi = read_aoi(args.domain_config)
     focus_areas = read_focus_areas(args.focus_areas, aoi)
+
+    #*** 3. Reuse the saved fraction for a render-only invocation
     if args.render_only:
         with rasterio.open(args.output) as existing:
             if existing.crs is None or existing.crs.to_epsg() != 4326:
@@ -346,24 +419,33 @@ def main() -> int:
                 raise ValueError(f"Existing fraction raster must be single-band float32: {args.output}")
             fraction = existing.read(1)
             grid_transform = existing.transform
-        create_figure(fraction, grid_transform, aoi, args.map_dir,
-                      args.tile_cache, args.impact_locations, focus_areas,
-                      args.figure_output, args.no_osm, fig_width=args.fig_width,
-                      fig_height=args.fig_height, dpi=args.dpi, cmap_name=args.cmap,
-                      vmin=args.vmin, vmax=args.vmax, gamma=args.gamma)
+        create_figure(
+            fraction, grid_transform, aoi, args.map_dir,
+            args.tile_cache, args.impact_locations, focus_areas,
+            args.figure_output, args.no_osm, fig_width=args.fig_width,
+            fig_height=args.fig_height, dpi=args.dpi, cmap_name=args.cmap,
+            vmin=args.vmin, vmax=args.vmax, gamma=args.gamma,
+        )
         print(f"figure={args.figure_output} ({args.figure_output.stat().st_size} bytes)")
         return 0
 
+    #*** 4. Aggregate native classes and save fraction/count rasters
     fraction, valid_count, grid_transform, metadata, source_profile = aggregate_fraction(
         args.input, aoi
     )
-    write_rasters(args.output, args.coverage_output, fraction, valid_count,
-                  grid_transform, source_profile, metadata)
-    create_figure(fraction, grid_transform, aoi, args.map_dir,
-                  args.tile_cache, args.impact_locations, focus_areas,
-                  args.figure_output, args.no_osm, fig_width=args.fig_width,
-                      fig_height=args.fig_height, dpi=args.dpi, cmap_name=args.cmap,
-                      vmin=args.vmin, vmax=args.vmax, gamma=args.gamma)
+    write_rasters(
+        args.output, args.coverage_output, fraction, valid_count,
+        grid_transform, source_profile, metadata,
+    )
+
+    #*** 5. Render the overview and report generated products
+    create_figure(
+        fraction, grid_transform, aoi, args.map_dir,
+        args.tile_cache, args.impact_locations, focus_areas,
+        args.figure_output, args.no_osm, fig_width=args.fig_width,
+        fig_height=args.fig_height, dpi=args.dpi, cmap_name=args.cmap,
+        vmin=args.vmin, vmax=args.vmax, gamma=args.gamma,
+    )
     print(json.dumps(metadata, indent=2))
     print(f"fraction_raster={args.output} ({args.output.stat().st_size} bytes)")
     print(f"valid_count_raster={args.coverage_output} ({args.coverage_output.stat().st_size} bytes)")

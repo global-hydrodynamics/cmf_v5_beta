@@ -936,3 +936,15 @@ permitting their localhost server. No model, new acquisition, full peak run or
 production Figure regeneration. Missing-catalogue/OSM/derived-data limits remain
 explicit. Earlier worktree/mode edits are preserved. No commit/push requested.
 See [Work Report](../AI_work_report/00_shell_configurability.md) and VR-0218.
+
+
+## 2026-11-24 — Fig03c Python source readability
+
+Task: Apply Python Style to `script/f03c-flood_fraction_1min.py` (DT-0177).
+Added a workflow header, responsibility/data-contract docstrings and major-stage
+headings; aligned multiline signatures, conditions and calls. Preserved existing
+processing, mask/NoData handling, settings and outputs without extracting helpers.
+Syntax compilation and executable AST comparison excluding docstrings pass;
+no data processing or Figure regeneration. Only argparse's module-description
+prose grows with the documented header. Existing scientific handoffs are retained.
+See the existing [Step03c Work Report](../AI_work_report/03c_gfm_classification.md).

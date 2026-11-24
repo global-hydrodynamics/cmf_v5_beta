@@ -40,3 +40,25 @@ Reconstructed from retained processing metadata, focus-area JSON, current 1-minu
 
 - For a pixel-level verification against the full source, restore it from the recorded source/provenance location only through a separate authorized data task; this report task did not alter user data.
 - Valid support, exclusion and classification uncertainty must be retained in any later model comparison.
+
+
+## 2026-11-24 — Focused Python readability pass (DT-0177)
+
+Applied the new Python Style guidance to `script/f03c-flood_fraction_1min.py`
+(the maintained path uses singular `script/`). Expanded the purpose/inputs/
+outputs/workflow header and function docstrings; documented valid-support
+percentages, north-up arrays, pixel-centre selection versus pixel-edge geometry,
+and NoData versus valid zeros. Added meaningful numbered stages and repaired
+continuation/call indentation. Kept main at the end; no function extraction,
+new abstraction, import reordering, type changes or new configuration controls.
+
+Verification: in-memory syntax compilation and exact AST equality against the
+pre-task source after removing module/function docstrings; CLI argument/default
+expressions also remain identical. The expanded module docstring is shown in
+argparse's description; no option/help-option text or error condition changed.
+`git diff --check` passes. No classification, aggregation, rendering, acquisition,
+model or broad test-suite execution. Existing rasters/figures and scientific
+handoff/fingerprint records are untouched; comments explain existing source
+behavior rather than new scientific validation. Research validator retains15
+pre-existing unrelated errors. No new scientific/architectural knowledge gap.
+Changes remain uncommitted for review. Validation index: VR-0220.

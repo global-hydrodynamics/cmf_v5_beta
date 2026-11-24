@@ -1288,3 +1288,14 @@ open Issue/PR found; origin/main registry inspected without branch switching.
 Documentation checks and limits are recorded in
 [VR-0219](../research/records/validation_runs/VR-0219.md);15 existing unrelated
 research errors remain. Changes are uncommitted for review; no publication.
+
+
+### Tutorial11 Fig03c source readability (DT-0177, branch-local proposal)
+
+Maintainer requests the new Python conventions for the existing Fig03c Python
+file on feature/package-builder. Codex edits only that implementation plus required
+work/log/research records; no overlapping work claim was present. Workflow
+header/docstrings, stage headings and continuation indentation are improved.
+Compilation and executable AST equality excluding docstrings pass; no scientific
+processing/rendering. See the [Step03c Work Report](../tutorial/tutorial11-event_evaluation/AI_work_report/03c_gfm_classification.md)
+and VR-0220. Source defaults/data/figures are preserved; uncommitted for review.
