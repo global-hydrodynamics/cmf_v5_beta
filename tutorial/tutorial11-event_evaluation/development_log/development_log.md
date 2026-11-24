@@ -820,3 +820,14 @@ Removed historical geographic and uncorrected alternative allocation markers,
 connectors and legend entries. Catchment background and network remain; original
 CSV/provenance and proxy limitations are unchanged. Re-rendered both Figures
 and reviewed the saved output.
+
+## 2026-11-24 — Rerun Step23 after final impact allocation
+
+Re-extracted existing hourly model outflow at final Step21 evaluation cells,
+including five Ahr upstream proxies and the direct Prüm candidate. Updated
+1,680 timeseries rows (10 cells × 168 hours), 22 comparisons, Fig23a/b and reports;
+resolved stale-output notices with input/output fingerprints. Proxy notes are
+preserved in CSV/Figures. Ahr provisional offsets are +6/+2/−0.5 h, sharing
+one model series; water-level and unknown-timezone records remain unscored.
+Direct model-value/peak/ID/time checks and visual review passed. Model, Step01
+and Step21 inputs remain unchanged; no simulation or allocation rerun.

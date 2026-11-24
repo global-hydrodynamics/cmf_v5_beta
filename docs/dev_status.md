@@ -6,6 +6,19 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Tutorial11 Step23 final-allocation rerun (DT-0170, 2026-11-24)
+
+Maintainer authorizes rerunning Step23 on `feature/package-builder` after impact
+allocation changes. Codex owns the extraction/Figure outputs, minimal proxy-note
+presentation changes, current reports/status and supporting records. Final cells
+produce 10 × 168 = 1,680 samples and all 22 comparison rows; saved values and
+peaks agree with source NetCDF. Inputs/allocations are unchanged. Fig23a/b were
+regenerated and reviewed; fingerprint metadata resolves the stale-output notice.
+Three shared-cell Ahr lags (+6/+2/−0.5 h) remain provisional; water-level/unknown
+times are not scored. No model or allocation rerun. Evidence and remaining
+limits: [VR-0213](../research/records/validation_runs/VR-0213.md).
+
+
 ### Catchment-first / upstream-proxy integration (DT-0169, 2026-11-24)
 
 Maintainer authorizes integrating local `8871bcfa` with remote `d3016eac` on

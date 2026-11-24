@@ -1,87 +1,55 @@
-# Step 23 — Impact Timing Comparison Work Report
+# Step 23 — Final-Allocation Rerun Work Report
 
-> **Allocation integration notice (2026-11-24):** Existing Step23 CSVs/Figures
-> below are retained from `72aee06c` and use the earlier allocation. Five report
-> selections changed after catmxy/upstream-proxy integration; these outputs
-> require re-extraction and must not be interpreted as current results. See
-> `metadata/23_handoff_status.json` (relative to the Tutorial root). No Step23
-> calculation was rerun during integration.
+## Execution and scope
 
-
-## Inputs and cell selection
-
-- Step 01 timing ledger: `metadata/01_reported_flood_timing.csv`
-- Step 21 review: `metadata/21_impact_location_allocation.csv`
-- Model output: `experiment/Rhine2021/o_outflwRhine2021Jul.nc`
-- Model variable: `outflw(time, lat, lon)`, `m3/s`, `time: mean`
-- Model time: `seconds since 2021-07-01 00:00`; inherited Step 22 CF interpretation uses UTC.
-
-The extraction preserves `report_id`/`location_id`. It chooses Step 21's
-`river_model_row_0based` and `river_model_col_0based` for `confirmed` or
-`plausible` assessments. For `unresolved` and `not_represented`, it extracts
-the geographic containing cell only as context and flags it accordingly. The
-Eupen report without a coordinate has no model cell. Distinct selected cells
-are deduplicated before extraction; every report remains a separate comparison
-row.
-
-## Execution and outputs
-
-Ran from `tutorial/tutorial11-event_evaluation/`:
+On 2026-11-24, reran the existing Step23 workflow at starting revision
+`ef487584` after the maintainer requested updated impact allocations. Used
+`metadata/21_impact_location_allocation.csv` final river_model cells; did not
+rerun Step21 or the model. No input data, event times, allocation choice,
+peak-search rule, interpolation or aggregation was changed.
 
 ```sh
-bash s21-gauge_allocation.sh
-bash f21-gauge_allocation.sh
 bash s23-impact_timing_comparison.sh
-bash f23-impact_timing_comparison.sh
+MPLCONFIGDIR=/tmp/cmf-mpl-cache bash f23-impact_timing_comparison.sh
 ```
 
-The first two commands reran the requested Step 21 allocation with separate
-river-candidate columns and regenerated Fig. 21. The latter commands used the
-actual Step 14 model NetCDF and saved Step 01 timing ledger. The extraction
-window is `[2021-07-12T00:00:00Z, 2021-07-19T00:00:00Z)` (168 hourly samples
-per cell). The Figure window is July 13 through July 16 UTC.
+Inputs: Step01 timing ledger, final Step21 impact CSV, and
+`experiment/Rhine2021/o_outflwRhine2021Jul.nc`. Before/after SHA-256 equality
+was checked for all three. The model is float32 outflw(time,lat,lon),
+744 × 32 × 40, m³/s; search interval July12 inclusive to July19 exclusive
+contains 168 consecutive hourly labels. Time is interpreted as UTC under the
+retained CF convention. Step23 now propagates direct/proxy basis and appends
+the missing-downstream-area caveat to proxy rows; plot notes identify proxies.
+These are presentation/provenance changes, not changes to peak calculations.
 
-Outputs:
+## Outputs and focused validation
 
-- `metadata/21_impact_location_allocation.csv` — original geographic fields
-  retained; separate river-candidate row/column, outlet, area, width, status
-  and reason appended; `ai_notes` remains the final column.
-- `metadata/23_impact_model_timeseries.csv` — 2,016 rows from 12 selected
-  cells, with cell basis and river status.
-- `metadata/23_impact_timing_comparison.csv` — 22 report-linked rows including
-  original and UTC timing, model maxima, lag status, and caveats.
-- `figure/f21a-gauge_allocation.png` — containing-cell outlets (dark squares)
-  and river-assessment candidates (magenta diamonds) are visually distinct.
-- `figure/f23a-impact_hydrographs.png` and
-  `figure/f23b-impact_timing_summary.png`.
-- `p23-impact_timing_comparison.md`, process document, Survey Report, this Work
-  Report and the Tutorial development log.
+- Timeseries CSV: 1,680 rows, 10 distinct final model cells × 168 hours.
+- Comparison CSV: 22 report rows with all report/location IDs and source UTC
+  timing fields retained; Eupen has no cell/series.
+- Fig23a and Fig23b regenerated and visually inspected; proxy, water-level,
+  unknown-timezone and missing-time distinctions remain visible.
+- 23_handoff_status.json now marks outputs current for recorded input hashes;
+  includes search bounds, method/status counts and output hashes.
+- All saved timeseries values round-trip exactly to the original float32
+  model values at the selected cells/times. Every saved peak timestamp/value
+  agrees with an independent maximum from the extracted samples; all maxima
+  lie inside the search window. Each selected cell equals the final Step21
+  selector result.
+- No lag is populated for water-level peaks or unknown/unavailable times.
+  The three provisional Ahr offsets are +6 h (Müsch), +2 h (Altenahr) and
+  −0.5 h (Bad Bodendorf), all at the same model cell. Source labels and
+  model-cell support limit interpretation; the proxy is not the exact reach.
 
-## Results and focused checks
+Step21 summary/prose now points to fingerprint-based Step23 currency rather
+than a fixed stale message. Old research/development records remain historical;
+current reports supersede the earlier 12-cell/2,016-sample results.
 
-No model rerun or observation search was performed. The model search maxima
-for the 12 selected cells were finite and occurred away from both search
-boundaries. The only calculated discharge-peak time offsets are the provisional
-Ahr results: Müsch +6 hours and Altenahr +2 hours relative to their Step 01
-UTC times. The Kyll and Prüm records are water-level peaks; Bliesheim,
-Valkenburg and Eupen have unconverted source timing; unrepresented Ahr/Prüm
-cells are context only. No lag or performance metric was calculated for those
-records.
+## Remaining limitations
 
-Both Figures were regenerated and visually inspected. Figure 23a shows one
-hydrograph per unique selected cell, the model search maximum, UTC peak
-markers, and the river-assessment status. Figure 23b retains one row per report
-and distinguishes timing types; date-only and timezone-unknown data are not
-placed on the UTC axis. Representative field and row checks confirmed the
-Step 21 identifiers were retained, model sample count is 12 × 168, and the
-comparison table retains all 22 report IDs.
-
-## Handoff and limitations
-
-The extracted CSV and comparison CSV are the Step 23 handoff for later review.
-Most reported impacts have no source-supported local peak time. The two
-calculated Ahr offsets remain provisional because the model cells have only
-`plausible` river correspondence and the source discharge peaks are estimates.
-Do not treat the close times as validation. Observation time-zone ambiguity,
-water-level versus discharge timing, coarse channel representation and cell
-support must be resolved or retained before any formal timing score.
+No independent river/timing revalidation, model run, broader performance score
+or solution of forcing-time/cold-start questions. Kordel/Prüm peak observations
+are water-level references, not discharge-peak scores. The half-hour Ahr offset
+does not imply sub-hourly model accuracy. Figures and CSVs are reusable only
+with the recorded allocation/timing/model fingerprints. Research validator
+retains the 22 pre-existing unrelated errors, with no new errors from this task.

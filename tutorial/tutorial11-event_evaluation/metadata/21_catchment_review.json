@@ -1606,6 +1606,6 @@
     "peak-ahr-altenahr",
     "peak-ahr-bad-bodendorf"
   ],
-  "downstream_step23_artifacts_status": "Retained remote pre-integration outputs; stale for changed selections; not regenerated in this task",
+  "downstream_step23_artifacts_status": "Check metadata/23_handoff_status.json; Step23 currency requires its allocation fingerprint to match this CSV",
   "interpretation_limit": "Raw lower Ahr points share a large-channel cell; upstream correction is a tributary proxy with missing downstream area, not exact reach or flood-wave validation"
 }

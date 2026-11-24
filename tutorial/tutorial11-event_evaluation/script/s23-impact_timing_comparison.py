@@ -226,6 +226,11 @@ def main() -> None:
             record["ai_notes"] = "UTC discharge-peak time comparison at the Step 21 river-assessment cell."
         comparison_rows.append(record)
 
+    for record in comparison_rows:
+        if record["model_cell_basis"] == "one_step_upstream_tributary_proxy":
+            record["ai_notes"] += (" Evaluation uses an upstream tributary proxy that omits downstream "
+                                   "catchment area; it is not the exact local river reach.")
+
     args.timeseries_output.parent.mkdir(parents=True, exist_ok=True)
     with args.timeseries_output.open("w", newline="", encoding="utf-8") as stream:
         fields = ["model_row_0based", "model_col_0based", "datetime_utc", "outflw_m3s",

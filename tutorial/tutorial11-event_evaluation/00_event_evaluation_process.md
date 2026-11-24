@@ -320,10 +320,11 @@ paths/source fingerprints in `metadata/21_catchment_review.json`. Final counts:
 and [Work Report](AI_work_report/21_gauge_allocation.md). Local river support is
 not established by lookup/area/topology alone.
 
-Existing remote Step23 outputs are retained but predate this integrated
-allocation. `metadata/23_handoff_status.json` marks five changed report-cell
-selections and the need for explicit re-extraction. No Step23 execution or peak
-comparison is part of the integration.
+Step23 was rerun on 2026-11-24 using the final integrated allocation. Its current
+CSV/Figures contain 10 cells × 168 hours and 22 report rows. Fingerprints in
+`metadata/23_handoff_status.json` establish input/output currency; the previous
+five-selection stale-output notice is resolved. This rerun did not modify the
+allocation or rerun the model.
 
 ### Step 22 — Model–Observation Hydrograph Comparison
 

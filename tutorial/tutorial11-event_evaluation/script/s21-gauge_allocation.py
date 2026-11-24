@@ -554,7 +554,7 @@ def add_catchment_allocations(map_dir: Path, map_data, output_path: Path):
         "unique_downstream_paths": paths,
         "evaluation_policy": "Direct catmxy unless explicit reviewed one-step tributary predecessor is used; raw and final cells retained separately",
         "upstream_proxy_report_ids": [row["report_id"] for row in rows if row["river_correction_applied"] == "true"],
-        "downstream_step23_artifacts_status": "Retained remote pre-integration outputs; stale for changed selections; not regenerated in this task",
+        "downstream_step23_artifacts_status": "Check metadata/23_handoff_status.json; Step23 currency requires its allocation fingerprint to match this CSV",
         "interpretation_limit": "Raw lower Ahr points share a large-channel cell; upstream correction is a tributary proxy with missing downstream area, not exact reach or flood-wave validation",
     }
     summary_path = output_path.with_name("21_catchment_review.json")

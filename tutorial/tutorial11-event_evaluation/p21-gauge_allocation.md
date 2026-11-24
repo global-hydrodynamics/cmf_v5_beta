@@ -92,12 +92,10 @@ and point connectors. Do not draw geographic or uncorrected alternatives;
 retain those fields in the CSV for provenance. Edit its extent in the Shell.
 Do not modify reference Tutorial 02/Visualization code or map/simulation inputs.
 
-Existing Step23 code and prior outputs are retained from the remote branch.
-It reads final `river_model_*` for plausible/confirmed status and now propagates
-the allocation method. Do not reinterpret retained old Step23 outputs as current:
-`metadata/23_handoff_status.json` identifies the five report selections that
-changed and marks those outputs as requiring explicit re-extraction. Step23
-extraction/peak comparison is not run as part of this integration.
+Step23 uses final river_model indices and propagates the allocation method.
+It has been rerun on 2026-11-24 with these cells; current output fingerprints
+are in `metadata/23_handoff_status.json`. Any later allocation change requires
+checking that fingerprint and re-extracting Step23 as appropriate.
 
 ## Example AI Agent Prompt
 

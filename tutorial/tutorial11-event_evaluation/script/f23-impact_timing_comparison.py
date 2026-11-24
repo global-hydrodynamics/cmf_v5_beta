@@ -114,7 +114,7 @@ def plot_hydrographs(series: list[dict[str, str]], comparisons: list[dict[str, s
         ax.set_title(f"Grid {cell[0]},{cell[1]} — {river_groups or groups_by_cell.get(cell, '')}", fontsize=9)
         ax.text(.02, .96, textwrap.fill(names, width=39), transform=ax.transAxes, va="top", fontsize=6.3,
                 bbox=dict(facecolor="white", alpha=.8, edgecolor="none", pad=1.4))
-        ax.text(.98, .04, f"River status: {statuses or 'not assessed'}", transform=ax.transAxes,
+        ax.text(.98, .04, f"River status: {statuses or 'not assessed'}" + ("; upstream proxy" if any(r.get("model_cell_basis") == "one_step_upstream_tributary_proxy" for r in records) else ""), transform=ax.transAxes,
                 ha="right", va="bottom", fontsize=6.3, color="#555555")
         ax.set_xlim(start, end)
         ax.set_ylabel("Discharge (m³/s)", fontsize=8)
@@ -137,7 +137,7 @@ def plot_hydrographs(series: list[dict[str, str]], comparisons: list[dict[str, s
     fig.legend(handles=legend, loc="lower center", ncols=4, frameon=False, fontsize=8,
                bbox_to_anchor=(.5, .005))
     fig.suptitle("Fig. 23a — Impact-location Hydrograph Comparison", fontsize=14, y=.998)
-    fig.text(.5, .025, "River candidates use Step 21 review where available; unresolved or unrepresented cells are context only.",
+    fig.text(.5, .025, "Final Step 21 cells; Ahr upstream proxies omit downstream area. Water-level peaks are reference only.",
              ha="center", fontsize=8, color="#555555")
     fig.tight_layout(rect=(0, .045, 1, .978))
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -153,6 +153,8 @@ def plot_timing_summary(comparisons: list[dict[str, str]], output: Path) -> None
     y_positions = np.arange(len(records))
     for y, row in zip(y_positions, records):
         notes = []
+        if row.get("model_cell_basis") == "one_step_upstream_tributary_proxy":
+            notes.append("Upstream tributary proxy")
         if row.get("comparison_status") in {
             "river_not_represented_context_only",
             "river_match_unresolved_context_only",

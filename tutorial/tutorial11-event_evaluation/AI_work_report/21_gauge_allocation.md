@@ -59,3 +59,11 @@ and visually reviewed Figures. The prior research validator has 22 unrelated
 errors, which remain outside scope. Exact lower-Ahr reach support remains open
 (KG-0039); upstream proxies omit downstream area. Existing observation timezone/
 units and forcing-time limitations remain. No model-skill conclusion follows.
+
+## Subsequent Step23 rerun — 2026-11-24
+
+The maintainer subsequently authorized Step23 re-execution. It now contains
+10 cells × 168 hours and all 22 reports using the final evaluation cells.
+The earlier integration-only stale-output statement above is historical;
+23_handoff_status.json records current input/output fingerprints. The Step23
+Work Report describes the execution; Step21 allocations were unchanged.

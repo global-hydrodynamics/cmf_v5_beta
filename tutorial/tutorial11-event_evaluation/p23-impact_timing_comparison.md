@@ -1,12 +1,9 @@
 # p23 — Flood Impact Timing Comparison
 
-> **Allocation integration notice (2026-11-24):** Existing Step23 CSVs/Figures
-> below are retained from `72aee06c` and use the earlier allocation. Five report
-> selections changed after catmxy/upstream-proxy integration; these outputs
-> require re-extraction and must not be interpreted as current results. See
-> `metadata/23_handoff_status.json` (relative to the Tutorial root). No Step23
-> calculation was rerun during integration.
-
+> **Current execution (2026-11-24):** Step23 has been rerun using the final
+> Step21 allocations, including the reviewed upstream Ahr proxies. CSVs and
+> Figures now contain 10 selected cells × 168 hours and all 22 report rows.
+> Input/output fingerprints are in `metadata/23_handoff_status.json`.
 
 ## Workflow Summary
 

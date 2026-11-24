@@ -85,10 +85,9 @@ uncertainty for later extraction; never fill an invalid lookup by a nearby
 channel. Original notes and all IDs are retained, with ai_notes rightmost.
 The unchanged three-gauge CSV remains the Step22 handoff.
 
-Remote Step23 code and outputs are retained, but **five report selections have
-changed relative to those outputs**. Their CSVs/figures are not regenerated in
-this task and must not be treated as results for the integrated allocation.
-See `metadata/23_handoff_status.json`. No new peak-time comparison, model run,
-map regeneration or Gallery publication was performed. Existing time/units and
-forcing-attribution limitations, town-coordinate precision, and lower-Ahr exact
-reach representation remain open.
+Step23 has now been rerun with these final allocations (2026-11-24): 10 cells,
+1,680 hourly samples and 22 report-linked rows. Its fingerprint metadata resolves
+the previous stale-output notice. See the current Step23 reports for results
+and timing caveats. No model run, map regeneration or Gallery publication was
+performed. Existing time/units and forcing-attribution limitations, town-coordinate
+precision, and lower-Ahr exact reach representation remain open.

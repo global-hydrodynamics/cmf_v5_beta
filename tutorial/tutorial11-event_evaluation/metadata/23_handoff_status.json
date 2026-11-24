@@ -1,19 +1,38 @@
 {
-  "status": "requires_reextraction_after_step21_integration",
-  "retained_outputs_source_commit": "72aee06c",
-  "changed_selected_report_ids": [
-    "impact-ahr-bad-neuenahr",
-    "impact-ahr-sinzig",
-    "impact-pruem-pruemzurlay",
-    "peak-ahr-bad-bodendorf",
-    "peak-pruem-pruemzurlay"
-  ],
+  "status": "current_for_recorded_inputs",
+  "execution_date": "2026-11-24",
+  "starting_revision": "ef487584",
   "current_allocation_sha256": "db32ce3685aa9816ce8f04e7be41f0600ef91bd32bf5fc9866ca7d59b03fd0a8",
-  "note": "Existing Step23 CSV/figures retained from remote unchanged. They do not describe the new allocation. No extraction or peak comparison was rerun.",
-  "retained_output_sha256": {
-    "metadata/23_impact_model_timeseries.csv": "3730229e0bcd71d74f1744d8f4139d5c2161a9e527bd8b0df8810d455a53526c",
-    "metadata/23_impact_timing_comparison.csv": "abed89fde0c7ff526b50762834a4b7cdcf539c94327544c9e8902f568bc19eae",
-    "figure/f23a-impact_hydrographs.png": "815187080c0feccc01f4b25a64a72340a5183700483dbffead66690f533045d8",
-    "figure/f23b-impact_timing_summary.png": "1dcb0909c850cfe84b6584637740b6b9b27642a27bcd6ff27193d45d0d2782a5"
-  }
+  "input_sha256": {
+    "metadata/01_reported_flood_timing.csv": "26d78db60e7229800c73403e1fd2f39824d40aa7a344e98f36f6a291561cf2cf",
+    "metadata/21_impact_location_allocation.csv": "db32ce3685aa9816ce8f04e7be41f0600ef91bd32bf5fc9866ca7d59b03fd0a8",
+    "experiment/Rhine2021/o_outflwRhine2021Jul.nc": "0ea067eac4251bb1d5b05374f005297bf3247b2c9113fae1db96576a74ce8fe8"
+  },
+  "output_sha256": {
+    "metadata/23_impact_model_timeseries.csv": "5701623bec572ca3d4f94f4e461c29fbf8dcec5b2dee1163575088694c759f22",
+    "metadata/23_impact_timing_comparison.csv": "de0056a62b90129341993871eeb00c7b3749c3ccd9934eefcf4229b12ccb5381",
+    "figure/f23a-impact_hydrographs.png": "dfe5dae6cc005f7344e26beed4b74bf7589a35b460a1fb09b67259c47f14bc87",
+    "figure/f23b-impact_timing_summary.png": "c12e663000497088e2c5d4b3ea248193492563878d968709f6ad62dda28d3681"
+  },
+  "search_window_utc": {
+    "start_inclusive": "2021-07-12T00:00:00Z",
+    "end_exclusive": "2021-07-19T00:00:00Z"
+  },
+  "model_cell_count": 10,
+  "records_per_cell": 168,
+  "timeseries_rows": 1680,
+  "report_rows": 22,
+  "comparison_status_counts": {
+    "time_unavailable": 14,
+    "provisional_river_match": 3,
+    "timezone_unknown": 2,
+    "water_level_peak_reference_only": 2,
+    "no_model_cell": 1
+  },
+  "model_cell_basis_counts": {
+    "direct_catmxy": 16,
+    "one_step_upstream_tributary_proxy": 5,
+    "no_model_cell": 1
+  },
+  "note": "Re-executed Step23 using the final Step21 evaluation cells. Model/map/Step01/Step21 inputs unchanged. Ahr upstream proxies remain provisional; no model simulation rerun."
 }
