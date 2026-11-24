@@ -137,6 +137,7 @@ def add_impact_allocations(ax, records: list[dict[str, str]], label_impacts: boo
     # Repeated reports can refer to one town or one grid cell. Draw each
     # coordinate-to-outlet connector only once to avoid artificial emphasis.
     connectors = set()
+    river_candidates = set()
     for row in records:
         if row["allocation_status"] != "assigned_to_containing_grid_cell":
             continue
@@ -148,6 +149,15 @@ def add_impact_allocations(ax, records: list[dict[str, str]], label_impacts: boo
                     color="#3d3d3d", linewidth=0.55, linestyle=(0, (1.5, 2)),
                     alpha=0.42, zorder=3)
             connectors.add(key)
+        if (row.get("river_allocation_status") in {"confirmed", "plausible"}
+                and row.get("river_model_outlet_lon") and row.get("river_model_outlet_lat")):
+            candidate = (float(row["river_model_outlet_lon"]),
+                         float(row["river_model_outlet_lat"]))
+            candidate_key = tuple(round(value, 6) for value in candidate)
+            if candidate_key not in river_candidates:
+                ax.scatter(*candidate, s=58, marker="D", facecolor="#df3f93",
+                           edgecolor="white", linewidth=0.75, zorder=10)
+                river_candidates.add(candidate_key)
 
     for row in records:
         if not row["observed_lon"] or not row["observed_lat"]:
@@ -191,6 +201,8 @@ def impact_legend_handles():
                markeredgecolor="white", markersize=6.5, label="Step 01 detailed site"),
         Line2D([0], [0], marker="s", color="none", markerfacecolor="#152c3d",
                markeredgecolor="white", markersize=6, label="Outlet of containing model cell"),
+        Line2D([0], [0], marker="D", color="none", markerfacecolor="#df3f93",
+               markeredgecolor="white", markersize=6, label="Reviewed river-assessment candidate"),
         Line2D([0], [0], color="#3d3d3d", linestyle=(0, (1.5, 2)), linewidth=.7,
                label="Reported point to model outlet"),
         Line2D([0], [0], marker="o", color="none", markerfacecolor="#f28e2b",

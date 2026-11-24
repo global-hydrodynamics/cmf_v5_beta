@@ -58,19 +58,21 @@ river width are recorded. `nextxy` destination cell center is included in the
 notes when valid. The `basin` value is treated as a routing label, not as a
 natural-basin name.
 
-All 21 coordinate-bearing reports fell inside the map and their containing
-cells had valid channel outlets. These coordinates occupy 11 unique cells.
-The Eupen reservoir-outlet report has no coordinates and remains in the output
-with `missing_coordinates`; no locality coordinate was substituted for that
-different detailed report. The river-match statuses are 7
-`plausible_local_network_not_verified`, 9
-`coarse_grid_river_match_uncertain`, 5
-`possible_major_channel_not_local_tributary`, and 1
-`not_assessed_missing_coordinates`. The five Ahr/Erft-Swist flags arise where
-reported tributary locations fall in cells with roughly 140,000–145,000 km²
-mapped upstream area, so the mapped channel may be a main routing path rather
-than the named local tributary. These labels are screening notes, not a
-verified hydrologic network match.
+The scientific review then compared the regional 1-minute `catmxy` assignment
+at each coordinate with outlet positions, `uparea`, `rivwth` and `nextxy`.
+External gauge basin information was used where available. This is evidence
+from the map product, not independent verification of named-river geometry.
+The CSV retains the geographic containing-cell fields and adds distinct
+`river_model_*` candidates plus `river_allocation_status` and
+`river_allocation_reason`. Reviewed status counts are 2 `confirmed`, 14
+`plausible`, 1 `unresolved`, 4 `not_represented`, and 1 coordinate-missing
+record. For example, Kordel's river candidate is (11,14), with 819.9 km²
+uparea versus the official 819 km² basin; the geographic cell (12,14) is a
+large downstream routing cell. The Erft Bliesheim candidate has 630.3 km²,
+close to the Erftverband's 604.17 km² station catchment. Ahr sites at Bad
+Neuenahr and Bad Bodendorf map to a mixed confluence/mainstem cell rather than
+a distinct Ahr cell; Prümzurlay likewise has no separate local candidate.
+Details and rationale are recorded per report row.
 
 ## Outputs and checks
 
@@ -79,8 +81,8 @@ verified hydrologic network match.
 - `metadata/21_impact_location_allocation.csv` — 22 report-linked rows, 21
   spatially assigned coordinates and one coordinate-missing report.
 - `figure/f21-gauge_allocation.png` — full-map context plus two impact-region
-  views; gauges, locality impacts, detailed sites and containing-cell outlets
-  are distinguished.
+  views; containing-cell outlets and reviewed river-assessment candidates have
+  distinct symbols.
 - `AI_survey_report/21_gauge_allocation.md` — results and scientific limits.
 
 Focused checks passed: the three source gauge cells are in-bounds and have
@@ -88,14 +90,21 @@ valid outlets/upstream areas; the ECMWF candidate areas match the current map's
 uparea conversions; the GRDC allocation cells match; and the downstream chain
 is Maxau → Speyer → Lobith. The impact CSV preserves all 22 report IDs, assigns
 the 21 available coordinate records by cell containment, and marks the
-coordinate-missing Eupen record without inference. The updated Figure was
+coordinate-missing Eupen record without inference. All candidate cells were
+checked against current map dimensions and valid outlet/uparea/channel-width
+values. The updated Figure was
 rendered and visually inspected for network position, marker distinction,
 connectors, label legibility and regional context. No model output was read,
 and impact-flow extraction, Step 22 re-extraction or performance evaluation
-was not run.
+was not run. The Figure visibly distinguishes geographic cell outlets (dark
+squares) from river-assessment candidates (magenta diamonds).
 
 ## Handoff
 
-Use `model_row_0based` and `model_col_0based` from the CSV to index the current
-Step 14 `outflw(time, lat, lon)` field. Keep the unresolved discharge units,
-time zone and conditional `ProvArea` unit visible in any subsequent comparison.
+For local-river timing comparisons, use the separate `river_model_row_0based`
+and `river_model_col_0based` where the status is `confirmed` or `plausible`,
+and preserve the containing-cell indices as geographic context. Do not treat
+`unresolved` or `not_represented` as local-tributary discharge. The three
+gauge-only rows in `21_gauge_allocation.csv` remain the Step 22 handoff. Keep
+discharge units, time zone and conditional `ProvArea` units visible in later
+comparisons.

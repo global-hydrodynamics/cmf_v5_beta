@@ -758,3 +758,24 @@ for the three stations, and Figure 22 was generated from the saved CSV.
 ## 2026-11-24 — Step 1 flood timing and detailed locations
 
 Reviewed the 14 existing impact locations and added a source-linked timing/location ledger. Recorded official CEST gauge peaks for the Ahr, Kyll and Prüm; separately recorded Erft/Bliesheim, Vesdre/Eupen outlet and Geul/Valkenburg timing with unconverted original labels where timezone notation was not confirmed. Halen and Wavre remain date-only/uncertain at locality scale. Existing impact IDs and Fig. 1 locality coordinates were retained; detailed station coordinates are separate records. Updated the Step 1 Prompt, process document, reports, timing legend and Figure 1. No model allocation, simulation, or comparison was performed.
+
+
+## 2026-11-24 — Step 21 river-allocation review and Step 23 timing comparison
+
+Reviewed report-location containing cells against regional one-minute
+`catmxy`, `uparea`, river width, outlet locations and `nextxy`, with official
+gauge/catchment evidence where available. Preserved all geographic assignments
+and added separate river-assessment candidate fields and statuses. The review
+found plausible coarse Ahr/Erft/Vesdre/Geul/Gete/Dyle candidates, a Kordel/Kyll
+candidate whose mapped area matches the official gauge basin, and no isolated
+local cells for Bad Neuenahr/Bad Bodendorf Ahr or Prümzurlay Prüm. Regenerated
+Fig. 21 to distinguish geographic cell outlets from candidate river outlets.
+
+Then implemented Step 23 using the reviewed Step 21 candidate cells where
+status is `confirmed`/`plausible`, retaining geographic cells as context for
+unresolved or unrepresented reaches. Extracted 2,016 hourly values from 12
+distinct cells, compared 22 separate reports, generated and visually reviewed
+Figures 23a/23b, and recorded two provisional Ahr discharge-peak offsets (+6 h
+Müsch, +2 h Altenahr). Unknown-timezone records and water-level peaks were
+kept separate from discharge-peak lag calculations. No model rerun, observation
+search, gauge reallocation or formal skill metric was performed.

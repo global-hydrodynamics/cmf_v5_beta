@@ -19,6 +19,9 @@
 - Compare the observation and outlet locations, areas and network order.
 - Assign each georeferenced impact report to its containing map cell; assess
   named-river correspondence separately, without snapping to a nearby outlet.
+- For tributary assessments, inspect the regional 1-minute `catmxy` assignment,
+  coarse-map outlet, `uparea`, `rivwth` and `nextxy`; keep a river assessment
+  candidate separate from the geographic containing cell.
 - Save separate machine-readable gauge and impact-location handoffs and a map.
 
 **Outputs**
@@ -42,11 +45,23 @@ The processing script verifies the supplied gauge candidates against the
 current map and relevant existing allocation outputs. For impact reports, it
 uses the recorded geographic coordinate to identify the containing model cell;
 it does not replace that cell with the nearest outlet. It records the outlet,
-upstream area and outlet distance, then marks named-river correspondence as
-uncertain where the 0.25-degree map cannot establish a local tributary match.
-Reports without coordinates remain in the CSV without an inferred location.
-The output row/column values are zero-based Python array indices, with row
-following the map's latitude array order.
+upstream area and outlet distance. A separate `river_model_*` candidate is
+written only where the reviewed regional `catmxy` association, outlet
+position, upstream area, channel width, topology and external river/gauge
+evidence support a candidate. `river_allocation_status` is `confirmed`,
+`plausible`, `unresolved`, or `not_represented`. The 1-minute `catmxy`
+association is regional map evidence, not independent ground truth for the
+named river. Reports without coordinates remain in the CSV without an
+inferred location. All row/column fields are zero-based Python array indices,
+with row following the map's north-first latitude array.
+
+Where a river-assessment cell is supported, retain it in separate
+`river_model_row_0based` / `river_model_col_0based` and `river_model_*` outlet
+fields, with a `river_allocation_status` (`confirmed`, `plausible`,
+`unresolved`, or `not_represented`) and a reason. `catmxy` association is
+model-map evidence rather than independent proof of river identity. Use a
+containing-cell series only as regional context when no local channel is
+represented; never label it local tributary flow.
 
 ## Example AI Agent Prompt
 
@@ -79,8 +94,14 @@ impact/timing report, retaining `report_id` and `location_id`, and allocate
 each georeferenced coordinate to its containing current-map cell. Keep the
 geographic cell assignment distinct from the map outlet and from whether that
 outlet represents the named river. Do not snap small-tributary locations to a
-nearby mainstem. Retain records with missing or out-of-map coordinates and
-explain their status. Write these results to a separate
+nearby mainstem. For priority tributaries, inspect regional 1-minute `catmxy`
+assignments and the candidate coarse cell's outlet, upstream area, river width
+and `nextxy` continuity alongside independent source-backed gauge or river
+evidence. `catmxy` is not ground truth. Add separate `river_model_*` fields
+only for supported candidate cells and record `river_allocation_status` and a
+reason. Keep unsupported locations as `not_represented` or `unresolved`.
+Retain records with missing or out-of-map coordinates and explain their status.
+Write these results to a separate
 `metadata/21_impact_location_allocation.csv`; do not mix them into the
 gauge-only `metadata/21_gauge_allocation.csv`, which remains the Step 22 gauge
 handoff. Update the Figure to distinguish gauges, impact localities, detailed
