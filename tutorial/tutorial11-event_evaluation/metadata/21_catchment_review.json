@@ -18,11 +18,6 @@
   "assigned_count": 21,
   "changed_count": 11,
   "unresolved_report_ids": [
-    "impact-ahr-altenahr",
-    "impact-ahr-bad-neuenahr",
-    "impact-ahr-sinzig",
-    "peak-ahr-altenahr",
-    "peak-ahr-bad-bodendorf",
     "peak-vesdre-eupen-outlet"
   ],
   "source_sha256": {
@@ -1603,5 +1598,14 @@
       "termination": "terminal_nextxy_-9_-9"
     }
   },
-  "interpretation_limit": "Lookup, topology and area consistency do not confirm named-river identity or flood-wave skill; lower Ahr reports share one large-channel cell"
+  "evaluation_policy": "Direct catmxy unless explicit reviewed one-step tributary predecessor is used; raw and final cells retained separately",
+  "upstream_proxy_report_ids": [
+    "impact-ahr-altenahr",
+    "impact-ahr-bad-neuenahr",
+    "impact-ahr-sinzig",
+    "peak-ahr-altenahr",
+    "peak-ahr-bad-bodendorf"
+  ],
+  "downstream_step23_artifacts_status": "Retained remote pre-integration outputs; stale for changed selections; not regenerated in this task",
+  "interpretation_limit": "Raw lower Ahr points share a large-channel cell; upstream correction is a tributary proxy with missing downstream area, not exact reach or flood-wave validation"
 }

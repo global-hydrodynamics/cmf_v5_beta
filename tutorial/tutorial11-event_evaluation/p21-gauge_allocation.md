@@ -54,39 +54,49 @@ following the map's latitude array order.
 
 ## Catchment-based review contract
 
-Use `--catchment-only` when reviewing an existing impact table: it enriches that
-table without rewriting the gauge CSV or any geographic-assignment column.
-Without that flag the original gauge/geographic workflow is followed by the
-same catchment enrichment; use it only when establishing the initial tables.
+Keep three distinct layers in the impact CSV:
 
-Reuse the p01-f04 reader and boundary method, as illustrated by Tutorial 02
-Fig. 1d. Read actual `params.txt`/`location.txt` geometry and verify alignment
-with the current model NetCDF axes. Locate the containing high-resolution
-pixel using west/north-inclusive and east/south-exclusive edges, north-first
-rows and west-first columns. Read the two little-endian int16 catmx/catmy
-planes; their values are **one-based regional model x/y indices**, not the
-pixel's geographic coarse-grid indices. Convert to row=y−1, col=x−1.
-Never snap invalid, unassigned or coordinate-missing points to nearby channels.
+1. `model_*`: original geographic containing-cell assignment, unchanged.
+2. `catmxy_*`: direct one-minute unit-catchment assignment, unchanged by correction.
+3. `river_model_*`: final evaluation cell, normally the direct catmxy cell;
+   use a reviewed one-step upstream tributary proxy only for explicitly named
+   mainstem-catchment cases. `river_allocation_method`, `river_correction_applied`,
+   `river_correction_steps` and `river_correction_reason` explain the selection.
 
-Keep `model_row_0based`/`model_col_0based` and all other old columns unchanged.
-Add `catmxy_*` fields for the selected model cell, center, outlet, area, width,
-basin label and nextxy connection, plus `allocation_changed` and
-`river_allocation_status/reason`. Preserve all report/location IDs, repeated
-cells and old `ai_notes`; append new evidence with `ai_notes` still rightmost.
-Save actual downstream paths and source fingerprints in
-`metadata/21_catchment_review.json`. Review Ahr, Erft, Kyll and Prüm topology;
-nondecreasing area alone does not establish named-river identity. Use
-`confirmed`, `plausible`, `unresolved` or `not_represented` only as justified
-by evidence; a valid lookup alone never means confirmed.
+Use `--catchment-only` to enrich an existing table without rewriting geographic
+columns or the three-gauge CSV. For initial table creation, omit that flag.
+Read actual params/location geometry; reuse the unchanged p01-f04 Binary reader
+and pixel-edge boundary method. One-minute pixels use west/north-inclusive and
+east/south-exclusive edges, north-first rows and west-first columns. Stored
+int16 catmx/catmy are one-based regional model x/y, so row=y−1 and col=x−1.
+NoData or missing-coordinate cases remain unassigned; do not snap to a channel.
 
-Keep the regional Figure and add a companion Ahr–Erft catchment view with
-pixel-edge boundaries, standard outlet-based river links and downstream arrows,
-reported locations, old geographic outlets and new catmxy outlets. The four
-priority locations and their old/new outlets must remain visible. Edit the
-companion extent in `f21-gauge_allocation.sh`. Do not modify the reference
-Tutorial 02 or Visualization files, regenerate maps, simulate or implement
-Step 23. If map data are absent, report the missing inputs rather than inventing
-assignments. Update the Survey/Work Reports and retain scientific uncertainties.
+For this event, the five lower-Ahr reports listed in `UPSTREAM_AHR_REPORTS`
+use the directly mapped Schuld catchment as their reviewed tributary anchor.
+The candidate must flow **directly into the raw catmxy cell** in standard
+nextxy, have valid outlet/channel data and a smaller positive upstream area.
+If that cannot be verified, leave the evaluation cell unresolved. Never choose
+an arbitrary incoming branch, largest area, or nearest outlet. The corrected
+cell is an upstream proxy, omitting downstream tributary area; this does not
+establish the exact local reach or flood-wave timing. Keep the status plausible.
+All other valid points retain direct catmxy. Existing Kordel basin/cell-scale
+confirmation is inherited from the remote scientific review, not newly validated
+by this integration. The previous review is retained in `prior_*` fields;
+`catmxy_river_allocation_status/reason` retain the direct-lookup assessment.
+
+Save full paths/source hashes in `metadata/21_catchment_review.json`. Preserve
+all 22 report/location IDs, original notes with appended new evidence, repeated
+cells, and ai_notes as the last column. Keep the regional Figure plus the
+Ahr–Erft companion with old geographic outlets, direct catmxy outlets, and
+corrected upstream proxies clearly distinguished. Edit its extent in the Shell.
+Do not modify reference Tutorial 02/Visualization code or map/simulation inputs.
+
+Existing Step23 code and prior outputs are retained from the remote branch.
+It reads final `river_model_*` for plausible/confirmed status and now propagates
+the allocation method. Do not reinterpret retained old Step23 outputs as current:
+`metadata/23_handoff_status.json` identifies the five report selections that
+changed and marks those outputs as requiring explicit re-extraction. Step23
+extraction/peak comparison is not run as part of this integration.
 
 ## Example AI Agent Prompt
 
@@ -138,8 +148,8 @@ execution gate.
 
 The gauge CSV is the machine-readable handoff for later discharge extraction.
 The impact CSV preserves geographic cells and adds catchment-based candidates.
-For later Step 23 work, prefer assigned `catmxy_row_0based` and
-`catmxy_col_0based`, carrying river-status and coordinate uncertainty; do not
+For later Step 23 work, use final `river_model_row_0based` and
+`river_model_col_0based`, carrying correction/river-status uncertainty; do not
 silently fall back to geographic cells for missing assignments. This Step does
 not implement that extraction. The three-gauge CSV remains the Step 22 handoff. A reviewer can compare source coordinates,
 grid indices, outlet location, map topology and Figure. Human review is

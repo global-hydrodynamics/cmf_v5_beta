@@ -759,6 +759,27 @@ for the three stations, and Figure 22 was generated from the saved CSV.
 
 Reviewed the 14 existing impact locations and added a source-linked timing/location ledger. Recorded official CEST gauge peaks for the Ahr, Kyll and Prüm; separately recorded Erft/Bliesheim, Vesdre/Eupen outlet and Geul/Valkenburg timing with unconverted original labels where timezone notation was not confirmed. Halen and Wavre remain date-only/uncertain at locality scale. Existing impact IDs and Fig. 1 locality coordinates were retained; detailed station coordinates are separate records. Updated the Step 1 Prompt, process document, reports, timing legend and Figure 1. No model allocation, simulation, or comparison was performed.
 
+
+## 2026-11-24 — Step 21 river-allocation review and Step 23 timing comparison
+
+Reviewed report-location containing cells against regional one-minute
+`catmxy`, `uparea`, river width, outlet locations and `nextxy`, with official
+gauge/catchment evidence where available. Preserved all geographic assignments
+and added separate river-assessment candidate fields and statuses. The review
+found plausible coarse Ahr/Erft/Vesdre/Geul/Gete/Dyle candidates, a Kordel/Kyll
+candidate whose mapped area matches the official gauge basin, and no isolated
+local cells for Bad Neuenahr/Bad Bodendorf Ahr or Prümzurlay Prüm. Regenerated
+Fig. 21 to distinguish geographic cell outlets from candidate river outlets.
+
+Then implemented Step 23 using the reviewed Step 21 candidate cells where
+status is `confirmed`/`plausible`, retaining geographic cells as context for
+unresolved or unrepresented reaches. Extracted 2,016 hourly values from 12
+distinct cells, compared 22 separate reports, generated and visually reviewed
+Figures 23a/23b, and recorded two provisional Ahr discharge-peak offsets (+6 h
+Müsch, +2 h Altenahr). Unknown-timezone records and water-level peaks were
+kept separate from discharge-peak lag calculations. No model rerun, observation
+search, gauge reallocation or formal skill metric was performed.
+
 ## 2026-11-24 — Step 21 unit-catchment allocation review
 
 After the maintainer restored map/simulation data, added the existing p01-f04
@@ -771,3 +792,15 @@ unresolved. Gauge CSV is unchanged. L1 raw-index, format, topology, field/ID
 preservation and visual checks passed; no Step 23, simulation or map generation.
 The earlier stop for missing local data involved no file changes; work resumed
 only after restoration. See the Step 21 Survey/Work Reports for evidence/limits.
+
+## 2026-11-24 — Integrate remote review with direct catchments and upstream proxies
+
+Maintainer selects direct catmxy with a reviewed one-step upstream correction
+for tributary points mapped into the mainstem catchment. Integrated remote
+72aee06c/d3016eac and local 8871bcfa without rewriting either history. Retain
+geographic/raw/final cells and prior review evidence. Five Ahr reports use the
+Schuld anchor after actual nextxy predecessor verification; Prümzurlay uses its
+verified direct 580.627 km² cell. Remote Step23 implementation/outputs remain,
+but a machine-readable status marks five changed selections as requiring
+re-extraction; no peak comparison or model simulation was rerun. See Step21
+reports for the current contract and proxy limitations.

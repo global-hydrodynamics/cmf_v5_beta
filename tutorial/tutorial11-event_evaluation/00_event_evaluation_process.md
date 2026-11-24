@@ -303,39 +303,27 @@ has been produced. Do not infer model skill from observation figures alone.
 
 ### Step 21 — Gauge and Flood Impact Location Allocation
 
-Verify the selected discharge-gauge candidates against the current
-event-specific map, retaining the three-station handoff in
-[`metadata/21_gauge_allocation.csv`](metadata/21_gauge_allocation.csv). In
-addition, link every Step 01 impact/timing report to its `report_id` and
-`location_id`, and assign each available coordinate to its containing
-current-map cell in
-[`metadata/21_impact_location_allocation.csv`](metadata/21_impact_location_allocation.csv).
-Record cell centers separately from unit-catchment outlet coordinates,
-upstream area and outlet distance. Assess whether the named river is plausibly
-represented, uncertain at the 0.25-degree grid, or likely mapped to a major
-routing channel instead of a local tributary. Do not snap a locality to a
-nearby outlet or infer missing coordinates. The allocation figure distinguishes
-gauges, reported localities, detailed report sites and model outlets. See
-[p21](p21-gauge_allocation.md), the [Survey Report](AI_survey_report/21_gauge_allocation.md),
-the [Work Report](AI_work_report/21_gauge_allocation.md), and
-[Figure 21](figure/f21-gauge_allocation.png). This spatial allocation does not
-extract model flows or establish local river identity. Step 22 continues to
-consume the unchanged gauge-only CSV; impact-location extractions can use the
-separate report-linked CSV in a later analysis. Retain unresolved observation
-unit, timing and river-representation limitations.
+Keep the unchanged three-gauge CSV for Step22. Impact allocation retains three
+levels in `metadata/21_impact_location_allocation.csv`: geographic `model_*`,
+direct one-minute `catmxy_*`, and final `river_model_*`. Direct catchment lookup
+is the default. For five lower-Ahr reports landing in a mixed mainstem catchment,
+use the reviewed Schuld catmxy anchor only after verifying it is exactly one
+nextxy edge upstream; record the correction and omitted downstream-area caveat.
+Do not choose an arbitrary upstream branch or snap missing assignments.
 
-The Step 21 catchment review additionally reads the one-minute `catmxy` pixel
-assignment and preserves its one-based regional x/y values alongside zero-based
-`catmxy_row_0based`/`catmxy_col_0based`. Geographic `model_*` fields remain
-unchanged. Run `s21-gauge_allocation.sh --catchment-only` to enrich the retained
-impact table without rewriting the gauge CSV. Full paths, source fingerprints
-and geometry are in `metadata/21_catchment_review.json`; the companion
-[catchment Figure](figure/f21-catchment_allocation.png) distinguishes old/new
-outlets and pixel-edge unit-catchment boundaries. Twenty-one of 22 reports are
-assigned and 11 change cell. Lower-Ahr reports share a large-channel cell, so
-local reach identity remains unresolved. A future Step 23 should prefer assigned
-catmxy candidates with their uncertainty, retain repeated report rows and leave
-missing assignments unfilled. That extraction is not implemented by Step 21.
+Run `s21-gauge_allocation.sh --catchment-only` to retain old geographic/gauge
+fields; `f21-gauge_allocation.sh` renders the regional and catchment/proxy maps.
+The prior remote scientific review is preserved in `prior_*` fields, and full
+paths/source fingerprints in `metadata/21_catchment_review.json`. Final counts:
+16 direct points, 5 upstream proxies, 1 coordinate-missing report. Refer to
+[p21](p21-gauge_allocation.md), [Survey](AI_survey_report/21_gauge_allocation.md)
+and [Work Report](AI_work_report/21_gauge_allocation.md). Local river support is
+not established by lookup/area/topology alone.
+
+Existing remote Step23 outputs are retained but predate this integrated
+allocation. `metadata/23_handoff_status.json` marks five changed report-cell
+selections and the need for explicit re-extraction. No Step23 execution or peak
+comparison is part of the integration.
 
 ### Step 22 — Model–Observation Hydrograph Comparison
 
@@ -354,6 +342,28 @@ and unadjusted observation labels, not a definitive timing or magnitude
 comparison. The reproducible series and interpretation metadata are
 [`metadata/22_hydrograph_timeseries.csv`](metadata/22_hydrograph_timeseries.csv)
 and [`metadata/22_hydrograph_comparison_summary.json`](metadata/22_hydrograph_comparison_summary.json). See [p22](p22-hydrograph_comparison.md), the [Survey Report](AI_survey_report/22_hydrograph_comparison.md), the [Work Report](AI_work_report/22_hydrograph_comparison.md), and [Figure 22](figure/f22-hydrograph_comparison.png). No performance metrics or event skill conclusion are produced.
+
+### Step 23 — Flood Impact Timing Comparison
+
+Use Step 01's report-linked timing ledger and Step 21's reviewed impact
+allocation to compare event timing with hourly model outflow. Extract one
+series per selected model cell, retaining every report as a separate record.
+Use a `confirmed` or `plausible` Step 21 river-assessment cell for local-river
+context; preserve geographic containing-cell indices separately. For
+`unresolved` or `not_represented` reaches, a containing-cell series is regional
+context only and must not be interpreted as local tributary discharge. Search
+the model maximum over July 12–18 and plot July 13–16 UTC. Keep unknown or
+unconfirmed source timezones off the UTC axis. Compare only source-supported
+UTC discharge peaks with lag values; water-level peaks are reference context,
+and date-only impacts have no peak-time marker. Mark search-boundary maxima as
+inconclusive. See [p23](p23-impact_timing_comparison.md), the [Survey
+Report](AI_survey_report/23_impact_timing_comparison.md), the [Work
+Report](AI_work_report/23_impact_timing_comparison.md),
+[`metadata/23_impact_model_timeseries.csv`](metadata/23_impact_model_timeseries.csv),
+[`metadata/23_impact_timing_comparison.csv`](metadata/23_impact_timing_comparison.csv),
+[Figure 23a](figure/f23a-impact_hydrographs.png), and [Figure
+23b](figure/f23b-impact_timing_summary.png). This remains exploratory timing
+comparison, not formal validation or a performance score.
 
 ## 4. Expected Outcomes and Current Status
 
@@ -382,8 +392,9 @@ but preparation outputs must not be confused with evaluation results.
 | **15 — Simulation output visualization** | Signed local peak discharge was calculated from the retained `outflw`/`pthflw` outputs; regional and AOI figures and the reusable plotting workflow are recorded. | Spatial output patterns were inspected; no simultaneous snapshot, spin-up assessment or skill evaluation is implied. |
 | **16 — Matching** | No matching method or implementation is recorded. | Spatial, temporal and variable correspondence remains to be designed. |
 | **17 — Evaluation** | No quantitative event score or performance report is recorded. | Metrics, valid-sample treatment and uncertainty analysis remain future work. |
-| **21 — Gauge allocation** | Current-map allocation CSV, Figure 21, reusable Prompt and Survey/Work Reports are recorded. | All three supplied candidate cells agree with the current-map GRDC allocation; gauge-to-outlet offsets and reported-area units remain interpretation caveats. No model-flow extraction or evaluation was done. |
+| **21 — Gauge and impact-location allocation** | The gauge-only CSV remains intact. A separate report-linked impact allocation CSV records geographic cells and reviewed river-assessment candidates; Figure 21, Prompt and Survey/Work Reports were updated. | The geographic cell and river candidate are distinct. Ahr/Erft and several other tributary candidates are plausible at this coarse map scale; some Ahr/Prüm reaches are not separately represented and Sinzig remains unresolved. |
 | **22 — Hydrograph comparison** | Model/observation time-series CSV, source/time summary JSON, three-panel Figure, reusable Prompt and Survey/Work Reports are recorded. | An exploratory overlay is available at the three Step 21 cells. Observation unit and timezone remain unknown; results are not a formal match or performance evaluation. |
+| **23 — Impact timing comparison** | Report-linked hourly model series, source-timing comparison CSV, two Figures, reusable Prompt and Survey/Work Reports are recorded. | Two Ahr discharge-peak offsets are provisional (+6 h at Müsch and +2 h at Altenahr). Uncertain timing and unsupported river matches remain context-only; no formal score is produced. |
 
 The Step Prompts, Survey Reports and Work Reports are linked in the Analysis
 Workflow above. They provide the detailed instructions, scientific evidence and

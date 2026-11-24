@@ -1,0 +1,19 @@
+{
+  "status": "requires_reextraction_after_step21_integration",
+  "retained_outputs_source_commit": "72aee06c",
+  "changed_selected_report_ids": [
+    "impact-ahr-bad-neuenahr",
+    "impact-ahr-sinzig",
+    "impact-pruem-pruemzurlay",
+    "peak-ahr-bad-bodendorf",
+    "peak-pruem-pruemzurlay"
+  ],
+  "current_allocation_sha256": "db32ce3685aa9816ce8f04e7be41f0600ef91bd32bf5fc9866ca7d59b03fd0a8",
+  "note": "Existing Step23 CSV/figures retained from remote unchanged. They do not describe the new allocation. No extraction or peak comparison was rerun.",
+  "retained_output_sha256": {
+    "metadata/23_impact_model_timeseries.csv": "3730229e0bcd71d74f1744d8f4139d5c2161a9e527bd8b0df8810d455a53526c",
+    "metadata/23_impact_timing_comparison.csv": "abed89fde0c7ff526b50762834a4b7cdcf539c94327544c9e8902f568bc19eae",
+    "figure/f23a-impact_hydrographs.png": "815187080c0feccc01f4b25a64a72340a5183700483dbffead66690f533045d8",
+    "figure/f23b-impact_timing_summary.png": "1dcb0909c850cfe84b6584637740b6b9b27642a27bcd6ff27193d45d0d2782a5"
+  }
+}

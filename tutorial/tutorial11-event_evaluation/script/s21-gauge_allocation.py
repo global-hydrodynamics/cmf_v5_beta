@@ -63,6 +63,33 @@ def great_circle_km(lon1: float, lat1: float, lon2: float, lat2: float) -> float
     return 2 * 6371.0088 * math.asin(math.sqrt(hav))
 
 
+# Retained pre-integration remote review (72aee06c). Used as evidence/history,
+# not as the final selection: current catmxy and explicit upstream checks decide it.
+PRIOR_RIVER_ASSESSMENTS = {
+    "impact-ahr-schuld": (10, 15, "plausible", "The Ahr candidate cell is the local small-channel outlet (6.9804, 50.4996), about 9 km from the approximate Schuld town point, and its nextxy link enters the Sinzig confluence cell. Its 680 km2 uparea is larger than the 353 km2 Müsch gauge catchment; treat it as a coarse downstream Ahr-path candidate, not a point match at Schuld."),
+    "peak-ahr-muesch": (10, 15, "plausible", "The local Ahr-path candidate outlet is about 16.5 km downstream of the Müsch gauge coordinate and has 680 km2 uparea versus the reported 353 km2 gauge basin. It may support a broad Ahr timing context but is not a gauge-cell match."),
+    "impact-ahr-altenahr": (10, 15, "plausible", "The candidate outlet is about 2.3 km from the town point, and the detailed Altenahr gauge coordinate is about 2 km away. Model uparea 680 km2 is reasonably close to the official 747 km2 gauge basin; nextxy connects to the Sinzig confluence cell. Keep the 0.25-degree support limitation."),
+    "peak-ahr-altenahr": (10, 15, "plausible", "The candidate outlet is about 2 km from the detailed gauge coordinate and its 680 km2 uparea is close to the official 747 km2 gauge basin; nextxy connects to the Sinzig confluence cell. This is the strongest Ahr-cell candidate, though still a coarse-grid match."),
+    "impact-ahr-bad-neuenahr": (None, None, "not_represented", "The 1-minute catmxy lookup assigns this location to the Sinzig/Rhine mainstem cell (row 9, col 17; about 140,561 km2), not to an Ahr-only cell. The mapped Ahr path jumps from the Altenahr-area candidate to the confluence, so no direct Bad Neuenahr Ahr cell is identified."),
+    "impact-ahr-sinzig": (None, None, "unresolved", "The 1-minute catmxy lookup maps this location to the confluence/mainstem cell (row 9, col 17; about 140,561 km2). This may be useful for downstream mixed Rhine-plus-Ahr context, but it cannot isolate Ahr discharge at Sinzig."),
+    "peak-ahr-bad-bodendorf": (None, None, "not_represented", "The 1-minute catmxy lookup maps this Ahr gauge location to the confluence/mainstem cell (row 9, col 17; about 140,561 km2), far larger than the official 861 km2 gauge catchment. No direct Bad Bodendorf Ahr channel cell is represented separately."),
+    "impact-erft-bad-muenstereifel": (9, 15, "plausible", "The 1-minute catmxy assignment identifies this Erft catchment cell (630 km2); its outlet is downstream near the Erft corridor and nextxy leads northwest. This is a basin-scale candidate, not an exact locality cell."),
+    "impact-erft-euskirchen": (9, 15, "plausible", "The 1-minute catmxy assignment identifies this Erft catchment cell (630 km2), with downstream routing northwest along the Erft corridor. The coarse outlet is not an exact point match."),
+    "impact-erft-blessem": (8, 14, "plausible", "The 1-minute catmxy assignment selects row 8, col 14 rather than the containing cell's Rhine mainstem channel. It is downstream of the row 9, col 15 Erft candidate and routes northwest; use as a coarse downstream Erft candidate, not a precise Blessem reach."),
+    "peak-erft-bliesheim": (9, 15, "plausible", "The candidate cell uparea is 630 km2, close to the Erftverband Bliesheim gauge catchment of 604.17 km2. Its outlet is about 5 km from the detailed gauge coordinate and nextxy links downstream to the Blessem-area candidate."),
+    "impact-kyll-kordel": (11, 14, "confirmed", "The high-resolution catmxy assignment selects this cell; its outlet is about 1.5 km from Kordel and model uparea 819.9 km2 matches the official 819 km2 gauge catchment. nextxy then reaches the larger downstream Moselle routing cell."),
+    "peak-kyll-kordel": (11, 14, "confirmed", "The high-resolution catmxy assignment selects this cell; its outlet is about 1.5 km from the detailed Kordel gauge coordinate and model uparea 819.9 km2 matches the official 819 km2 catchment. The nextxy link proceeds downstream to a much larger routing cell."),
+    "impact-pruem-pruemzurlay": (None, None, "not_represented", "The mapped outlet associated with the location has about 4,222 km2 uparea, compared with the official 574 km2 Prümzurlay gauge catchment; the cell is near the Prüm–Sauer confluence and likely represents combined downstream routing. No separate Prüm evaluation cell is identified."),
+    "peak-pruem-pruemzurlay": (None, None, "not_represented", "The mapped outlet associated with the location has about 4,222 km2 uparea, compared with the official 574 km2 Prümzurlay gauge catchment; the cell is near the Prüm–Sauer confluence and likely represents combined downstream routing. No separate Prüm evaluation cell is identified."),
+    "impact-vesdre-verviers": (9, 12, "plausible", "The local 1-minute catmxy lookup assigns the location to this 351 km2 upstream Vesdre candidate; its outlet is about 3.5 km away and nextxy links west/downstream to the Pepinster-area cell."),
+    "impact-vesdre-pepinster": (9, 11, "plausible", "The 1-minute catmxy lookup assigns the location to this 698 km2 Vesdre candidate; the mapped outlet is downstream toward the Meuse. The 0.25-degree grid does not establish the exact impact reach."),
+    "impact-meuse-valkenburg": (8, 11, "plausible", "The 1-minute catmxy lookup assigns the Geul/Valkenburg location to this 340 km2 candidate, with a mapped outlet near the Geul–Meuse lowland and a valid downstream link. The exact river reach remains coarse-grid."),
+    "peak-geul-valkenburg": (8, 11, "plausible", "The 1-minute catmxy lookup assigns the detailed Geul site to this 340 km2 candidate. Treat it as a coarse Geul basin/outlet match, not an exact site-level cell."),
+    "impact-gete-halen": (8, 8, "plausible", "The 1-minute catmxy assignment agrees with this containing cell; the mapped outlet is about 9 km from Halen and the downstream link continues toward the Demer/Meuse routing system. The named local reach is not independently verified."),
+    "impact-dyle-wavre": (9, 6, "plausible", "The 1-minute catmxy assignment agrees with this containing cell; the outlet is about 8 km from Wavre and the network links northward. This supports a coarse Dyle-basin candidate, not an exact reach match."),
+}
+
+
 def parse_grdc_outputs(data_path: Path, output_path: Path) -> dict[str, dict[str, str]]:
     source_by_name = {row["Station Name"].strip().casefold(): row
                       for row in read_csv(data_path)}
@@ -103,7 +130,12 @@ def allocate_impact_locations(tutorial: Path, map_data, output_path: Path) -> No
         "model_row_0based", "model_col_0based", "model_cell_lon", "model_cell_lat",
         "model_outlet_lon", "model_outlet_lat", "model_uparea_km2",
         "distance_to_outlet_km", "model_basin_id", "model_cell_rivwth_m",
-        "river_match_status", "allocation_status", "allocation_note", "ai_notes",
+        "river_match_status", "allocation_status", "allocation_note",
+        "river_model_row_0based", "river_model_col_0based",
+        "river_model_cell_lon", "river_model_cell_lat",
+        "river_model_outlet_lon", "river_model_outlet_lat",
+        "river_model_uparea_km2", "river_model_rivwth_m",
+        "river_allocation_status", "river_allocation_reason", "ai_notes",
     ]
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", newline="", encoding="utf-8") as stream:
@@ -131,6 +163,42 @@ def allocate_impact_locations(tutorial: Path, map_data, output_path: Path) -> No
                 "coordinate_type": coordinate_type,
                 "coordinate_confidence": confidence,
             })
+            river_assignment = PRIOR_RIVER_ASSESSMENTS.get(report["report_id"])
+            if river_assignment:
+                river_row, river_col, river_status, river_reason = river_assignment
+                row["river_allocation_status"] = river_status
+                row["river_allocation_reason"] = river_reason
+                if river_row is not None and river_col is not None:
+                    if not (0 <= river_row < len(lat) and 0 <= river_col < len(lon)):
+                        raise ValueError(
+                            f"{report['report_id']}: reviewed river cell {(river_row, river_col)} "
+                            "is outside the current map"
+                        )
+                    river_outlet_lon = float(outlon[river_row, river_col])
+                    river_outlet_lat = float(outlat[river_row, river_col])
+                    river_uparea = float(uparea[river_row, river_col])
+                    river_width_value = float(river_width[river_row, river_col])
+                    if not (math.isfinite(river_outlet_lon) and math.isfinite(river_outlet_lat)
+                            and river_outlet_lon != -9999 and river_outlet_lat != -9999
+                            and math.isfinite(river_uparea) and river_uparea > 0
+                            and river_width_value > 0):
+                        raise ValueError(
+                            f"{report['report_id']}: reviewed river cell {(river_row, river_col)} "
+                            "does not contain a valid river outlet"
+                        )
+                    row.update({
+                        "river_model_row_0based": river_row,
+                        "river_model_col_0based": river_col,
+                        "river_model_cell_lon": f"{lon[river_col]:.6f}",
+                        "river_model_cell_lat": f"{lat[river_row]:.6f}",
+                        "river_model_outlet_lon": f"{river_outlet_lon:.8f}",
+                        "river_model_outlet_lat": f"{river_outlet_lat:.8f}",
+                        "river_model_uparea_km2": f"{river_uparea / 1_000_000.0:.3f}",
+                        "river_model_rivwth_m": f"{river_width_value:.3f}",
+                    })
+            elif report["longitude"] and report["latitude"]:
+                row["river_allocation_status"] = "unresolved"
+                row["river_allocation_reason"] = "No river-cell assessment was recorded for this report; use only the geographic containing-cell allocation until reviewed."
             if not lon_text or not lat_text:
                 row.update({
                     "river_match_status": "not_assessed_missing_coordinates",
@@ -138,6 +206,9 @@ def allocate_impact_locations(tutorial: Path, map_data, output_path: Path) -> No
                     "allocation_note": "Step 1 record has no verified longitude/latitude; no location was inferred.",
                     "ai_notes": "Detailed report is retained by report_id, but its source has no coordinates. The base locality is a separate record and was not substituted for this detailed site.",
                 })
+                if not row["river_allocation_status"]:
+                    row["river_allocation_status"] = "not_assessed_missing_coordinates"
+                    row["river_allocation_reason"] = "No source coordinate is available; no river cell was inferred."
                 writer.writerow(row)
                 continue
 
@@ -208,7 +279,7 @@ def allocate_impact_locations(tutorial: Path, map_data, output_path: Path) -> No
                     f"Cell assigned by 0.25-degree outer-edge containment, not nearest Outlet. "
                     f"Outlet distance={distance_km:.1f} km; map uparea={uparea_km2:.1f} km2; "
                     f"model basin ID={basin_id} is a routing label, not a guaranteed natural-basin identity. "
-                    f"{downstream_note} Named-river match requires local-network review; do not interpret this Outlet as an observed flood point."
+                    f"{downstream_note} Geographic containing-cell allocation is separate from the river-assessment cell fields."
                 ),
             })
             writer.writerow(row)
@@ -273,11 +344,97 @@ def downstream_path(start, nextx, nexty):
     return path, "cycle"
 
 
+# Event-specific reviewed Ahr branch, not a nearest-cell or largest-area search.
+# Each selected candidate must be exactly one nextxy step upstream of the raw catchment.
+UPSTREAM_AHR_REPORTS = {
+    "impact-ahr-altenahr", "peak-ahr-altenahr", "impact-ahr-bad-neuenahr",
+    "impact-ahr-sinzig", "peak-ahr-bad-bodendorf",
+}
+
+
+def select_evaluation_cells(rows, map_data):
+    """Use direct catmxy by default, with an explicit reviewed one-step tributary proxy."""
+    lon, lat, outlon, outlat, area, nextx, nexty, width, _ = map_data
+    final_fields = ["row_0based", "col_0based", "cell_lon", "cell_lat", "outlet_lon",
+                    "outlet_lat", "uparea_km2", "rivwth_m"]
+    anchors = {row["report_id"]: (int(row["catmxy_row_0based"]), int(row["catmxy_col_0based"]))
+               for row in rows if row["catmxy_status"] == "assigned"}
+    for row in rows:
+        row["catmxy_river_allocation_status"] = row["river_allocation_status"]
+        row["catmxy_river_allocation_reason"] = row["river_allocation_reason"]
+        row["river_allocation_method"] = "no_valid_catmxy"
+        row["river_correction_applied"] = "false"
+        row["river_correction_steps"] = ""
+        row["river_correction_reason"] = ""
+        for name in final_fields:
+            row["river_model_" + name] = ""
+        if row["catmxy_status"] != "assigned":
+            continue
+        raw = (int(row["catmxy_row_0based"]), int(row["catmxy_col_0based"]))
+        selected = raw
+        method, status = "direct_catmxy", "plausible"
+        reason = row["catmxy_river_allocation_reason"]
+        if row["report_id"] in UPSTREAM_AHR_REPORTS:
+            # Retain the remote Ahr review as branch evidence, then verify the actual map edge.
+            candidate = anchors.get("impact-ahr-schuld")
+            if candidate is None:
+                row["river_allocation_status"] = "unresolved"
+                row["river_allocation_reason"] = "The reviewed Ahr anchor has no valid direct catmxy assignment."
+                row["river_allocation_method"] = "upstream_proxy_unverified"
+                continue
+            rr, cc = candidate
+            if ((int(nexty[candidate])-1, int(nextx[candidate])-1) != raw or
+                    not (0 < area[candidate] < area[raw]) or width[candidate] <= 0 or
+                    not np.isfinite(outlon[candidate]) or not np.isfinite(outlat[candidate])):
+                row["river_allocation_status"] = "unresolved"
+                row["river_allocation_reason"] = "Reviewed Ahr candidate is not a valid immediate tributary predecessor of this direct catchment."
+                row["river_allocation_method"] = "upstream_proxy_unverified"
+                continue
+            selected = candidate
+            method = "one_step_upstream_tributary_proxy"
+            row["river_correction_applied"] = "true"
+            row["river_correction_steps"] = "1"
+            reason = ("Maintainer-approved proxy: direct catmxy selects mixed mainstem cell "
+                      f"{raw}; reviewed Ahr cell {candidate} drains directly to it in nextxy. "
+                      "Use this immediate upstream tributary catchment to isolate Ahr context. "
+                      "It is a 680 km2 upstream proxy, not a representation of the exact local reach; "
+                      "some downstream tributary area is omitted. No nearest-channel snapping was used.")
+            row["river_correction_reason"] = reason
+        elif row["catmxy_river_allocation_status"] == "unresolved":
+            status = "unresolved"
+        else:
+            prior = PRIOR_RIVER_ASSESSMENTS.get(row["report_id"])
+            if prior and prior[:2] == raw and prior[2] in {"confirmed", "plausible"}:
+                status = prior[2]
+                reason += " Prior remote review retained: " + prior[3]
+            if row["river_group"] == "Prüm":
+                reason += (" Direct catmxy resolves the separate 580.627 km2 cell (11,13); "
+                           "the prior 4221.565 km2 no-candidate interpretation used a different, downstream cell and is superseded.")
+        rr, cc = selected
+        row.update({
+            "river_model_row_0based": rr, "river_model_col_0based": cc,
+            "river_model_cell_lon": f"{lon[cc]:.6f}", "river_model_cell_lat": f"{lat[rr]:.6f}",
+            "river_model_outlet_lon": f"{outlon[selected]:.8f}", "river_model_outlet_lat": f"{outlat[selected]:.8f}",
+            "river_model_uparea_km2": f"{area[selected]/1e6:.3f}", "river_model_rivwth_m": f"{width[selected]:.3f}",
+            "river_allocation_status": status, "river_allocation_reason": reason,
+            "river_allocation_method": method,
+        })
+        row["ai_notes"] += " [Evaluation cell] " + method + "; " + reason
+
+
 def add_catchment_allocations(map_dir: Path, map_data, output_path: Path):
     """Enrich retained geographic assignments, never replacing their fields or notes."""
     lon, lat, outlon, outlat, uparea, nextx, nexty, width, basin = map_data
     catmx, catmy, valid, unassigned, hires, _ = load_catchments(map_dir, lon, lat, uparea)
     rows = read_csv(output_path)
+    # Keep the previously published scientific review available after selection changes.
+    prior_fields = ["river_model_row_0based", "river_model_col_0based", "river_model_cell_lon",
+                    "river_model_cell_lat", "river_model_outlet_lon", "river_model_outlet_lat",
+                    "river_model_uparea_km2", "river_model_rivwth_m", "river_allocation_status", "river_allocation_reason"]
+    for row in rows:
+        for key in prior_fields:
+            row.setdefault("prior_" + key, row.get(key, ""))
+        row.setdefault("prior_review_ai_notes", row["ai_notes"].split(" [Step21 catmxy review]")[0])
     extra_fields = [
         "hires_pixel_row_0based", "hires_pixel_col_0based", "catmxy_x_1based", "catmxy_y_1based",
         "catmxy_row_0based", "catmxy_col_0based", "catmxy_cell_lon", "catmxy_cell_lat",
@@ -287,6 +444,10 @@ def add_catchment_allocations(map_dir: Path, map_data, output_path: Path):
         "catmxy_next_outlet_lat", "catmxy_next_uparea_km2", "catmxy_downstream_report_ids",
         "catmxy_path_area_decreases", "catmxy_path_termination", "catmxy_status", "allocation_changed",
         "river_allocation_status", "river_allocation_reason",
+        "river_model_row_0based", "river_model_col_0based", "river_model_cell_lon", "river_model_cell_lat",
+        "river_model_outlet_lon", "river_model_outlet_lat", "river_model_uparea_km2", "river_model_rivwth_m",
+        "catmxy_river_allocation_status", "catmxy_river_allocation_reason", "river_allocation_method",
+        "river_correction_applied", "river_correction_steps", "river_correction_reason",
     ]
     fields = [f for f in rows[0] if f != "ai_notes" and f not in extra_fields] + extra_fields + ["ai_notes"]
     for row in rows:
@@ -358,6 +519,7 @@ def add_catchment_allocations(map_dir: Path, map_data, output_path: Path):
         # Existing narrative is retained byte-for-byte before a stable, replaceable suffix.
         row["ai_notes"]=row["ai_notes"].split(" [Step21 catmxy review]")[0] + (
             " [Step21 catmxy review] " + row["catmxy_status"] + "; " + row["river_allocation_reason"])
+    select_evaluation_cells(rows, map_data)
     with output_path.open("w",newline="",encoding="utf-8") as f:
         writer=csv.DictWriter(f,fieldnames=fields,lineterminator="\n")
         writer.writeheader();writer.writerows(rows)
@@ -390,7 +552,10 @@ def add_catchment_allocations(map_dir: Path, map_data, output_path: Path):
         "unresolved_report_ids": [row["report_id"] for row in rows if row["river_allocation_status"] == "unresolved"],
         "source_sha256": {name: hashlib.sha256((map_dir/name).read_bytes()).hexdigest() for name in sources},
         "unique_downstream_paths": paths,
-        "interpretation_limit": "Lookup, topology and area consistency do not confirm named-river identity or flood-wave skill; lower Ahr reports share one large-channel cell",
+        "evaluation_policy": "Direct catmxy unless explicit reviewed one-step tributary predecessor is used; raw and final cells retained separately",
+        "upstream_proxy_report_ids": [row["report_id"] for row in rows if row["river_correction_applied"] == "true"],
+        "downstream_step23_artifacts_status": "Retained remote pre-integration outputs; stale for changed selections; not regenerated in this task",
+        "interpretation_limit": "Raw lower Ahr points share a large-channel cell; upstream correction is a tributary proxy with missing downstream area, not exact reach or flood-wave validation",
     }
     summary_path = output_path.with_name("21_catchment_review.json")
     summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

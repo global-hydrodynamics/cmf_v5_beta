@@ -6,6 +6,23 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Catchment-first / upstream-proxy integration (DT-0169, 2026-11-24)
+
+Maintainer authorizes integrating local `8871bcfa` with remote `d3016eac` on
+`feature/package-builder`, choosing direct catmxy by default with reviewed
+one-step tributary correction for mainstem-catchment cases. Codex owns Step21
+selection/metadata/Figures/docs, minimal Step23 selector compatibility and merge
+resolution; preserve prior history, maps/simulation inputs and unrelated edits.
+Final selection: 16 direct points, 5 verified immediate-upstream Ahr proxies,
+1 missing-coordinate record. Geographic/raw/final/prior records remain separate.
+Prüm uses its verified direct 580.627 km² candidate. Step23 implementation and
+old outputs are retained; five changed selections require re-extraction, marked
+in 23_handoff_status.json. No peak comparison/model run was performed. Three
+focused tests and real-data/preservation/visual checks pass; see
+[VR-0212](../research/records/validation_runs/VR-0212.md). Exact lower-Ahr reach
+support remains open in KG-0039 despite the approved proxy selection procedure.
+
+
 ### Tutorial 11 Step 21 catchment review (DT-0168, 2026-11-24)
 
 Maintainer authorizes the resumed bounded review on `feature/package-builder`

@@ -137,6 +137,7 @@ def add_impact_allocations(ax, records: list[dict[str, str]], label_impacts: boo
     # Repeated reports can refer to one town or one grid cell. Draw each
     # coordinate-to-outlet connector only once to avoid artificial emphasis.
     connectors = set()
+    river_candidates = set()
     for row in records:
         if row["allocation_status"] != "assigned_to_containing_grid_cell":
             continue
@@ -148,6 +149,15 @@ def add_impact_allocations(ax, records: list[dict[str, str]], label_impacts: boo
                     color="#3d3d3d", linewidth=0.55, linestyle=(0, (1.5, 2)),
                     alpha=0.42, zorder=3)
             connectors.add(key)
+        if (row.get("river_allocation_status") in {"confirmed", "plausible"}
+                and row.get("river_model_outlet_lon") and row.get("river_model_outlet_lat")):
+            candidate = (float(row["river_model_outlet_lon"]),
+                         float(row["river_model_outlet_lat"]))
+            candidate_key = tuple(round(value, 6) for value in candidate)
+            if candidate_key not in river_candidates:
+                ax.scatter(*candidate, s=58, marker="D", facecolor="#df3f93",
+                           edgecolor="white", linewidth=0.75, zorder=10)
+                river_candidates.add(candidate_key)
 
     for row in records:
         if not row["observed_lon"] or not row["observed_lat"]:
@@ -191,6 +201,8 @@ def impact_legend_handles():
                markeredgecolor="white", markersize=6.5, label="Step 01 detailed site"),
         Line2D([0], [0], marker="s", color="none", markerfacecolor="#152c3d",
                markeredgecolor="white", markersize=6, label="Outlet of containing model cell"),
+        Line2D([0], [0], marker="D", color="none", markerfacecolor="#df3f93",
+               markeredgecolor="white", markersize=6, label="Reviewed river-assessment candidate"),
         Line2D([0], [0], color="#3d3d3d", linestyle=(0, (1.5, 2)), linewidth=.7,
                label="Reported point to model outlet"),
         Line2D([0], [0], marker="o", color="none", markerfacecolor="#f28e2b",
@@ -240,9 +252,9 @@ def draw_catchment_review(tutorial, map_dir, impact_records, map_data, segments,
     cmap=ListedColormap(colors);cmap.set_bad((0,0,0,0))
     # Fix physical map height and derive map/canvas width from geographic aspect.
     map_height=7.0;map_width=map_height*(east-west)*np.cos(np.deg2rad((south+north)/2))/(north-south)
-    fw,fh=map_width+1.2,map_height+2.3
+    fw,fh=map_width+1.2,map_height+2.7
     fig=plt.figure(figsize=(fw,fh))
-    ax=fig.add_axes([.8/fw,1.55/fh,map_width/fw,map_height/fh])
+    ax=fig.add_axes([.8/fw,1.95/fh,map_width/fw,map_height/fh])
     # Distinguish unassigned land (-999) from other NoData/background.
     background = np.where(unassigned[r0:r1,c0:c1], 1, 0)
     ax.pcolormesh(xedges,yedges,background,cmap=ListedColormap(["white", "#999999"]),
@@ -264,7 +276,7 @@ def draw_catchment_review(tutorial, map_dir, impact_records, map_data, segments,
             ax.annotate("",end,start,arrowprops=dict(arrowstyle="->",color="#315c7b",lw=.7,mutation_scale=7),zorder=3)
     selected=[r for r in impact_records if r["catmxy_status"]=="assigned" and
               west<=float(r["observed_lon"])<=east and south<=float(r["observed_lat"])<=north]
-    old_drawn,new_drawn=set(),set()
+    old_drawn,new_drawn,proxy_drawn=set(),set(),set()
     for row in selected:
         observed=(float(row["observed_lon"]),float(row["observed_lat"]))
         old=(float(row["model_outlet_lon"]),float(row["model_outlet_lat"]))
@@ -278,6 +290,12 @@ def draw_catchment_review(tutorial, map_dir, impact_records, map_data, segments,
             ax.annotate(f"({row['catmxy_row_0based']},{row['catmxy_col_0based']})",new,
                         xytext=(4,7),textcoords="offset points",fontsize=7,color="#005b61",zorder=9,
                         bbox=dict(facecolor="white",alpha=.85,edgecolor="none",pad=1))
+        if row.get("river_correction_applied") == "true":
+            proxy = (float(row["river_model_outlet_lon"]), float(row["river_model_outlet_lat"]))
+            ax.plot([observed[0],proxy[0]],[observed[1],proxy[1]],color="#a124a5",lw=.9,ls="--",alpha=.8,zorder=5)
+            if proxy not in proxy_drawn:
+                ax.scatter(*proxy,s=120,marker="*",c="#a124a5",edgecolors="white",lw=.6,zorder=11)
+                proxy_drawn.add(proxy)
         locality=row["report_id"].startswith("impact-")
         ax.scatter(*observed,s=38,marker="o" if locality else "^",c="#ac2446",edgecolors="white",lw=.7,zorder=8)
     focus={"ahr-schuld":("Schuld",(-30,-18)),"ahr-altenahr":("Altenahr",(-42,16)),
@@ -297,11 +315,12 @@ def draw_catchment_review(tutorial, map_dir, impact_records, map_data, segments,
       Line2D([],[],marker="o",ls="none",color="#ac2446",label="Reported locality"),
       Line2D([],[],marker="^",ls="none",color="#ac2446",label="Detailed report site"),
       Line2D([],[],marker="s",ls=":",color="#d27b17",mfc="none",label="Old geographic-cell outlet"),
-      Line2D([],[],marker="D",color="#007b83",label="New catmxy outlet / point connector"),
+      Line2D([],[],marker="D",color="#007b83",label="Direct catmxy outlet / connector"),
       Patch(facecolor="#999999",label="Unassigned land (catmxy=-999)"),
-      Patch(facecolor="white",edgecolor="#bbbbbb",label="Other NoData / background")]
+      Patch(facecolor="white",edgecolor="#bbbbbb",label="Other NoData / background"),
+      Line2D([],[],marker="*",ls="--",color="#a124a5",label="Upstream tributary proxy / connector")]
     fig.legend(handles=handles,loc="lower center",bbox_to_anchor=(.5,.35/fh),ncol=2,fontsize=7.5,frameon=False)
-    fig.text(.5,.15/fh,"Labels (row,col) are zero-based. A valid catchment lookup does not confirm local river identity.",ha="center",fontsize=7)
+    fig.text(.5,.15/fh,"Zero-based (row,col). Purple proxies omit downstream area; they do not resolve exact local reaches.",ha="center",fontsize=7)
     fig.canvas.draw()
     # Retain physical axes bounds and extent for reproducible layout inspection.
     bounds=ax.get_position().bounds
