@@ -7,6 +7,26 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 ## Current v5 work
 
 
+### Parallel Python map tools (DT-0184, 2026-11-25; branch-local proposal)
+
+Maintainer authorizes independent Python equivalents and systematic Fortran
+comparisons on existing `feature/package-builder`, with calculation-order rounding
+allowed and concise/efficient code preferred. Codex owns new map/tools Python
+sources, focused tests, migration/performance docs and supporting records. No open
+overlapping current-repository Issue/PR found; no new branch or production switch.
+Original Fortran, Makefile/configuration, Shell workflows and scientific data stay
+unchanged. Scope/usage: [migration status](../map/tools/python_migration_status.md).
+
+23 standalone ports and3 shared equivalents plus an I/O helper are implemented.
+All23 pairs/32 final benchmark cases and13 focused tests PASS;21A/2B at measured
+workloads. Larger native synthetic crops save memory; whole-tile copies and coarse
+edge tracing retain performance limits. No actual3sec/global30sec production claim.
+See [benchmark](../map/tools/python_migration_benchmark.md) and
+[VR-0228](../research/records/validation_runs/VR-0228.md).15 historical research
+validation errors are preserved. This status proposal does not alter the main
+registry's other project assignments or authorize a production migration.
+
+
 ### Tutorial11 reusable Prompt convention (DT-0183, 2026-11-24)
 
 Maintainer authorizes documentation-only standardization and focused commit/push

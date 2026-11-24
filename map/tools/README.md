@@ -155,3 +155,20 @@ documents s05 and convert_netcdf_to_cog.py. This optional NumPy/netCDF4/Rasterio
 workflow streams registered native rasters into numeric EPSG:4326 COG caches,
 with full pixel-byte verification and internal display overviews. It does not
 change scientific inputs, Binary/NetCDF conversion algorithms or Explorer readers.
+
+
+## Experimental parallel Python implementations
+
+Python counterparts for all 23 standalone Fortran tools are available beside the
+reference sources in `code/`. They are independent experimental implementations;
+existing Shell workflows, Fortran executables and production defaults remain
+unchanged. Use explicit `--map-dir` and a new `--output-dir` for comparisons.
+NumPy is required; only optional channel-tools NetCDF interfaces need NetCDF4.
+No mandatory Numba dependency is added. Existing outputs are not overwritten.
+
+See [migration status and CLI examples](python_migration_status.md),
+[measured correctness/performance and limits](python_migration_benchmark.md), and
+[all benchmark cases (CSV)](python_migration_benchmark.csv). The comparisons identify
+candidates for a later maintainer decision; Python is not the default or a general
+production recommendation. Focused checks can be run with
+`python3 map/tools/tests/test_python_parallel.py` from the repository root.
