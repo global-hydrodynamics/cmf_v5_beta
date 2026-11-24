@@ -87,8 +87,9 @@ by this integration. The previous review is retained in `prior_*` fields;
 Save full paths/source hashes in `metadata/21_catchment_review.json`. Preserve
 all 22 report/location IDs, original notes with appended new evidence, repeated
 cells, and ai_notes as the last column. Keep the regional Figure plus the
-Ahr–Erft companion with old geographic outlets, direct catmxy outlets, and
-corrected upstream proxies clearly distinguished. Edit its extent in the Shell.
+Ahr–Erft companion showing only the final adopted `river_model_*` outlets
+and point connectors. Do not draw geographic or uncorrected alternatives;
+retain those fields in the CSV for provenance. Edit its extent in the Shell.
 Do not modify reference Tutorial 02/Visualization code or map/simulation inputs.
 
 Existing Step23 code and prior outputs are retained from the remote branch.

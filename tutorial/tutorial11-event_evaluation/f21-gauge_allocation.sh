@@ -10,7 +10,7 @@ MAP_DIR="$REPO_ROOT/map/Rhine_15min"
 ALLOCATION="$SCRIPT_DIR/metadata/21_gauge_allocation.csv"
 IMPACT_ALLOCATION="$SCRIPT_DIR/metadata/21_impact_location_allocation.csv"
 OUTPUT="$SCRIPT_DIR/figure/f21a-gauge_allocation.png"
-# Include both old and catchment-based outlets for the four priority localities.
+# Show the priority localities and their final adopted evaluation outlets.
 CATCHMENT_EXTENT="6.4,7.5,50.25,51.10"  # west,east,south,north
 
 if [[ ! -f "$ALLOCATION" ]]; then

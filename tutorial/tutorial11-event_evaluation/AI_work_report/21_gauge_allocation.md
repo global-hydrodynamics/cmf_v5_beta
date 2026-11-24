@@ -36,8 +36,9 @@ MPLCONFIGDIR=/tmp/cmf-mpl-cache bash f21-gauge_allocation.sh
 ```
 
 Writes the impact CSV, full-path/source-hash JSON and two Step21 Figures. The
-regional Figure retains the remote review symbols; the catchment companion adds
-purple corrected proxies while keeping raw catmxy and geographic outlets.
+regional Figure and catchment companion show only adopted `river_model_*`
+outlets and connectors. Historical/geographic/raw alternatives remain in the CSV
+but are excluded from both Figures; labels and legends identify final cells.
 Prompt, Survey Report, this report, process/log/dashboard and research evidence
 are aligned to the final contract.
 

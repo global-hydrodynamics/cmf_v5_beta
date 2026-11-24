@@ -62,17 +62,20 @@ and [Erftverband Bliesheim record](https://www.erftverband.de/mapserver/arcshp/f
 
 ![Fig. 21a — Regional allocations](../figure/f21a-gauge_allocation.png)
 
-The retained regional layout now shows final reviewed evaluation candidates
-as magenta diamonds, separate from geographic-cell outlets.
+Fig. 21a shows reported locations and only their final adopted evaluation
+outlets (teal diamonds), with point-to-final-outlet connectors. The original
+geographic outlets and uncorrected allocation alternatives are omitted.
 
-![Fig. 21b — Direct catchments and upstream proxy](../figure/f21b-catchment_allocation.png)
+![Fig. 21b — Final allocations on unit catchments](../figure/f21b-catchment_allocation.png)
 
 Discrete pastel regions and exact pixel-edge boundaries show one-minute unit
-catchments, with geographic grid lines only as context. Blue nextxy arrows are
-downstream. Orange open squares/dotted lines show geographic outlets; teal
-diamonds/solid lines show direct catmxy outlets. Purple stars/dashed point
-connectors identify corrected upstream proxies. The connectors are assignment
-guides, not actual river courses. Unassigned land is gray; other NoData is white.
+catchments; blue nextxy arrows show downstream connectivity. Teal diamonds and
+solid connectors show only final `river_model_*` allocations, including the
+adopted Ahr upstream proxies. Their labels use final zero-based row/column.
+Historical and uncorrected alternatives remain in the CSV for provenance but
+are not displayed. Point connectors are assignment guides, not river courses.
+Unassigned land is gray; other NoData/background is white. The upstream-proxy
+limitations still apply even though alternatives are no longer drawn.
 
 ## Handoff and limits
 
