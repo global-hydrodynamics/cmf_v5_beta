@@ -195,14 +195,19 @@ the preprocessing guide identifies which principles transfer to other tools.
 
 ### Python Source Readability
 
-- Follow familiar PEP 8 formatting for new or substantially changed Python code, while preserving the established local style in older utilities.
-- Do not impose a mechanical 128-character limit on Python. A line up to about 160 characters may remain unwrapped when it is easier to read as one expression or call. For longer expressions, Python supports implicit continuation inside parentheses, brackets, and braces; no Fortran-style continuation marker is needed.
-- Start standalone scripts with a short module docstring describing their purpose. Use clear function and class boundaries for cohesive responsibilities; do not split trivial operations into abstractions that obscure the workflow.
-- Group related configuration, constants, and data structures. Use names and types that make units, dimensions, and data roles apparent when they are known. Dataclasses or other structured types are useful when they make related data easier to understand, not as a required pattern.
-- Add docstrings for public or nontrivial functions when they clarify inputs, outputs, assumptions, or errors. Use comments for scientific rationale and non-obvious algorithms, not to repeat Python syntax.
-- Prefer explicit errors that identify the relevant input or metadata. Keep validation close to the code that consumes the input and preserve existing CLI and file contracts.
+For new or substantially modified Python across tutorials, visualization, map/input
+preprocessing and analysis tools, read [Python Design](docs/python_design.md) for
+workflow architecture, scientific meaning, configuration ownership and data contracts.
+Use [Python Style](docs/python_style.md) for file-local layout, docstrings, comments
+and readability. These documents retain the existing Python conventions; apply
+component-specific contracts and established local style without retroactively
+reformatting unrelated code.
 
-Do not impose Fortran declaration alignment, Fortran section separators, or model-specific Fortran naming conventions on Python code.
+For a dedicated formatting pass, use Python Style and the target file; consult
+Design only for a concrete semantic question and report that question separately.
+Root approval and risk-proportionate validation policy remain authoritative.
+Do not impose Fortran declaration alignment, model-specific naming or procedure
+ordering on Python.
 
 ## Cross-project research logging for the v5 case study
 

@@ -89,9 +89,10 @@ code, preprocessor guards or fixed-form source mechanically.
 
 ### Python
 
-Use the [root Python guidance](../AGENTS.md#python-source-readability), rather
-than Fortran layout rules. Follow PEP 8 locally without imposing a 128-character
-Fortran line limit on Python.
+Use [Python Design](python_design.md) for scientific/workflow decisions and
+[Python Style](python_style.md) for local presentation, under the
+[root policy](../AGENTS.md#python-source-readability). The preprocessing contracts
+below remain applicable; do not transfer Fortran layout or line limits to Python.
 
 Give standalone modules a short purpose docstring. Use cohesive functions and
 necessary type hints/docstrings to expose units, array dimension order, dtype,

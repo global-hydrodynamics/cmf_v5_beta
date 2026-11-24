@@ -5,6 +5,11 @@ develop, review, and share reusable CaMa-Flood visualizations. Contributors
 can participate at different levels: an idea or sample image is a useful
 starting point even when no code is available.
 
+For Python development, apply [Python Design](../docs/python_design.md) and
+[Python Style](../docs/python_style.md). This guide and the figure-making
+guideline retain their more specific figure, data and publication conventions;
+the Python guides do not require reformatting existing projects.
+
 ## How the visualization resources fit together
 
 | Resource | Role |

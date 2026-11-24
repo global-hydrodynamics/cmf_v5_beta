@@ -14,6 +14,8 @@ These evolving instructions implement the framework principles in the [tutorial 
 
 ## Implement the tutorial
 
+- For Python work, use [Python Design](../docs/python_design.md) for workflow/configuration/data contracts and [Python Style](../docs/python_style.md) for file-local readability. Preserve tutorial-specific specifications and local instructions; these guides do not request a retroactive cleanup.
+
 - In beginner-tutorial designs and manuals, use `make all` from `src_main/` as the standard model build/update command. Do not assume the executable is absent, and do not change the Makefile's default target to make the tutorial command work.
 - For multiple experiments, keep generated files in project-specific subdirectories such as `out/${PROJ}/`. A rerun may replace that project's documented products but must preserve sibling projects and their outputs.
 - Preserve scientific settings, model behavior, file formats, and established interfaces unless an approved design explicitly requires a change.

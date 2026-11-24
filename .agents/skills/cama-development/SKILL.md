@@ -34,6 +34,7 @@ component rather than expanding into a repository-wide audit.
 
 | Work | Read and apply |
 | --- | --- |
+| Python development across components | `docs/python_design.md` and relevant `docs/python_style.md` sections, plus the owning component guidance below. For a dedicated formatting pass, use Style and the target file; consult Design only for a concrete semantic issue. |
 | Model Fortran in `src_main/` | `src_main/AGENTS.md`, `FORTRAN_DESIGN.md`, and the relevant `FORTRAN_STYLE.md` sections. Preserve scientific and runtime contracts. |
 | Map or runoff preprocessing | `map/AGENTS.md` or `inp/AGENTS.md`, shared preprocessing conventions, relevant metadata/NetCDF contracts and component README. |
 | GOSH sample workflow | `gosh_test/AGENTS.md` and README. Treat its style notes as working recommendations; retain experiment settings and behavior. |

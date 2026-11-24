@@ -10,6 +10,7 @@ Use this workflow only for visualization-related work. The formal requirements r
 ## Before implementation
 
 1. Read `visualization/repository_development_guide.md`, `visualization/figure_making_guideline.md`, and the applicable `AGENTS.md` instructions.
+   For Python development, also read `docs/python_design.md` and the relevant `docs/python_style.md` sections; use their narrower Style procedure for a dedicated formatting pass. Component figure/data contracts remain applicable.
 2. Inspect `visualization/visualization_catalog.csv` and the closest relevant implementation and project README. Search by scientific purpose as well as by ID or filename.
 3. Classify the task: new Figure, Figure modification, visual adjustment, data/settings update, documentation-only, or Gallery publication.
 4. Identify the Figure/Panel IDs, method and option names, Shell/Python files, inputs and their provenance, output paths, documentation, and the checks needed for this task. Make a focused plan before editing.

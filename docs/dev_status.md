@@ -1273,3 +1273,18 @@ configuration invocations,13 focused GFM tests and8 default-image comparisons
 pass. No model/acquisition/full peak run; unavailable-data/OSM limits remain.
 See [configuration Work Report](../tutorial/tutorial11-event_evaluation/AI_work_report/00_shell_configurability.md)
 and VR-0218. Prior edits preserved; no commit/push in this follow-up.
+
+
+### Python guidance from maintainer drafts (DT-0176, branch-local proposal)
+
+Maintainer authorizes this bounded documentation task on existing
+feature/package-builder. Codex owns docs/python_design.md and python_style.md,
+root/index and directly relevant guide/Skill links plus research records.
+Preserve supplied draft structure, scientific/default behavior and component
+contracts; no Python/Shell/Fortran edits or retroactive formatting. Design owns
+workflow/scientific/configuration contracts; Style owns local presentation.
+Existing root line-length/approval/validation rules remain intact. No overlapping
+open Issue/PR found; origin/main registry inspected without branch switching.
+Documentation checks and limits are recorded in
+[VR-0219](../research/records/validation_runs/VR-0219.md);15 existing unrelated
+research errors remain. Changes are uncommitted for review; no publication.
