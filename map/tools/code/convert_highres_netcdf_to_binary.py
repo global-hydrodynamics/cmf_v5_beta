@@ -236,12 +236,18 @@ def restore(map_dir, hires, variables, registry, jobs=1, force=False, areas_filt
         if len(selected_areas) != len(wanted):
             raise ConversionError('one or more --areas names are absent from location.txt')
     rows = forward.registry_rows(registry)
+    all_variables = variables == ['all']
+    if all_variables:
+        variables = forward.registered_variables(rows)
     tasks, skipped = [], 0
     lib = read_api()
     for area in selected_areas:
         for variable in variables:
             source = source_dir / f"{area['carea']}.{variable}.nc"
             if not source.is_file():
+                if all_variables:
+                    print(f'[SKIP missing optional input] {source}', flush=True)
+                    continue
                 raise ConversionError(f'missing input tile: {source}')
             selected = tile_rows(rows, hires, area, variable)
             # Preflight every selected input, including skipped outputs, before restoring metadata.
@@ -294,7 +300,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--map-dir', type=Path, required=True)
     parser.add_argument('--hires', required=True, help='1min, 15sec, 3sec, or another registered tag')
-    parser.add_argument('--variables', required=True, help='space-separated registered Binary file stems')
+    parser.add_argument('--variables', required=True, help='all available registered products, or space-separated registered Binary file stems')
     parser.add_argument('--areas', help='optional space-separated carea names; default all location.txt areas')
     parser.add_argument('--registry', type=Path, default=Path(__file__).resolve().parents[3] / 'variable_table/map_variables.csv')
     parser.add_argument('--jobs', type=int, default=1)

@@ -139,3 +139,11 @@ references that definition and writes `netcdf/mpireg-N.nc`, variable `mpireg`.
 Run the usual list/review/convert sequence above; overwrite prompts and --force
 remain unchanged. No MPI entry is added to s90. See the [standard MPI-region
 contract and provenance](../../tools/script_format_conv/README.md#standard-numbered-mpi-region-maps).
+
+## Default high-resolution Binary restoration
+
+By default, `s04-restore_highres_binary.sh` restores all registered high-resolution
+variables available in the selected NetCDF map (`VARS="all"`). Missing optional
+NetCDF products are skipped. Existing Binary files are skipped unless `--force`
+is specified. Set `VARS` to explicit registered stems to restore a subset; an
+explicitly requested missing input remains an error.

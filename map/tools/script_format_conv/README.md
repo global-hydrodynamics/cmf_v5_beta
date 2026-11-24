@@ -653,3 +653,11 @@ Input matrices are intentionally outside this raster converter. A future
 variable definitions but handle `NX,NY,INPN`, mixed `inpx`/`inpy`/`inpa` block
 types, INPN layers and the input-grid metadata in `diminfo_*.txt` separately.
 No input-matrix Python converter or Shell wrapper is implemented by this task.
+
+## Default high-resolution Binary restoration
+
+By default, `s04-restore_highres_binary.sh` restores all registered high-resolution
+variables available in the selected NetCDF map (`VARS="all"`). Missing optional
+NetCDF products are skipped. Existing Binary files are skipped unless `--force`
+is specified. Set `VARS` to explicit registered stems to restore a subset; an
+explicitly requested missing input remains an error.
