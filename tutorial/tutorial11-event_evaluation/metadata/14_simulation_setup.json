@@ -224,7 +224,7 @@
     "hourly_outputs_plus_restart_bytes": 23029200
   },
   "reproducibility": {
-    "script": "tutorial/tutorial11-event_evaluation/s14-run_simulation.sh",
+    "script": "tutorial/tutorial11-event_evaluation/run_script/s14-run_simulation.sh",
     "namelist": "tutorial/tutorial11-event_evaluation/experiment/Rhine2021/input_cmf.nam",
     "console_log": "tutorial/tutorial11-event_evaluation/experiment/Rhine2021/console.log",
     "model_log": "tutorial/tutorial11-event_evaluation/experiment/Rhine2021/log_CaMa.txt",
@@ -263,7 +263,7 @@
       "experiment/Rhine2021/o_fldareRhine2021Jul.nc",
       "experiment/Rhine2021/restart2021080100.nc"
     ],
-    "step15_workflow": "f15-maximum_discharge.sh",
+    "step15_workflow": "plot_script/f15-maximum_discharge.sh",
     "step15_analysis_output": "experiment/Rhine2021/analysis/maximum_discharge_20210701-20210801.nc",
     "step15_figures": [
       "figure/f15a-maximum_discharge-regional.png",

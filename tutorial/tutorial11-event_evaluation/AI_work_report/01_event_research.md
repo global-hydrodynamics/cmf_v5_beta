@@ -8,7 +8,7 @@ Reconstructed from retained Tutorial 11 documents, impact inventory, station inv
 
 - Historical source: former root `01_flood_event_overview.md` (now migrated to the Survey Report)
 - `metadata/01_impact_locations.csv`; `observation/README.md` and `metadata/04_discharge_dataset.json`
-- `figure/f01-reported_flood_impacts.png`; `f01-reported_flood_impacts.sh`
+- `figure/f01-reported_flood_impacts.png`; `plot_script/f01-reported_flood_impacts.sh`
 
 ## Actions Performed
 
@@ -51,7 +51,7 @@ Reviewed all 14 rows in `metadata/01_impact_locations.csv` and retained their id
 - Locality impact coordinates remain approximate map points. Station coordinates use separate timing records and do not move or relabel the 14 impact markers. Unknown local times remain blank in UTC fields.
 - LfU table times are explicitly MESZ/CEST and were converted to UTC (UTC−2), retaining original labels. Erftverband, Waterschap Limburg and the Eupen outlet thesis did not explicitly establish timezone notation in the examined passages; their UTC fields remain blank.
 - Updated `metadata/event_figure_settings.json` with concise, qualified river/gauge timing labels. Added optional legend-title support to `visualization/river_map/script/f06b-OSM_background-local_info.py`; configurations without `legend_title` keep the existing default behavior.
-- Regenerated `figure/f01-reported_flood_impacts.png` with `bash tutorial/tutorial11-event_evaluation/f01-reported_flood_impacts.sh`.
+- Regenerated `figure/f01-reported_flood_impacts.png` with `bash tutorial/tutorial11-event_evaluation/plot_script/f01-reported_flood_impacts.sh`.
 - Updated the Step 1 Prompt, process document, Survey Report, and development/status records.
 
 ### Checks and limits

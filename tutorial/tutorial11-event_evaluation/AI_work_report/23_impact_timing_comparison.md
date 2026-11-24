@@ -9,8 +9,8 @@ rerun Step21 or the model. No input data, event times, allocation choice,
 peak-search rule, interpolation or aggregation was changed.
 
 ```sh
-bash s23-impact_timing_comparison.sh
-MPLCONFIGDIR=/tmp/cmf-mpl-cache bash f23-impact_timing_comparison.sh
+bash run_script/s23-impact_timing_comparison.sh
+MPLCONFIGDIR=/tmp/cmf-mpl-cache bash plot_script/f23-impact_timing_comparison.sh
 ```
 
 Inputs: Step01 timing ledger, final Step21 impact CSV, and
@@ -59,13 +59,13 @@ retains the 22 pre-existing unrelated errors, with no new errors from this task.
 Applied the maintainer's focused visualization request after the Step23 rerun.
 Changed only the summary plotting function, its directly necessary CLI/Shell
 settings and related documentation/metadata. The hydrograph function's AST is
-unchanged. Fig1 uses `f01-reported_flood_impacts.sh` → existing f06b renderer →
+unchanged. Fig1 uses `plot_script/f01-reported_flood_impacts.sh` → existing f06b renderer →
 `metadata/event_figure_settings.json`, section panel_step1; the summary now reads
 that exact plot_group_colors palette. Meuse basin / Geul explicitly aliases its
 Fig1 Meuse category based on the existing Fig1 legend; no categories are
 unresolved in the real data. A neutral unknown-category check also passed.
 
-Executed `MPLCONFIGDIR=/tmp/cmf-mpl-cache bash f23-impact_timing_comparison.sh
+Executed `MPLCONFIGDIR=/tmp/cmf-mpl-cache bash plot_script/f23-impact_timing_comparison.sh
 --summary-only`. No s23 or model run. New display settings are in
 metadata/23_timing_figure_settings.json, and rendered row/color/layout evidence
 in metadata/23_timing_figure_review.json. Updated the Fig23b output fingerprint

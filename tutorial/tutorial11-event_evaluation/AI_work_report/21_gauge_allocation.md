@@ -31,8 +31,8 @@ the verified direct 580.627 km² cell. Old review evidence remains visible.
 ## Execution and affected outputs
 
 ```sh
-MPLCONFIGDIR=/tmp/cmf-mpl-cache bash s21-gauge_allocation.sh --catchment-only
-MPLCONFIGDIR=/tmp/cmf-mpl-cache bash f21-gauge_allocation.sh
+MPLCONFIGDIR=/tmp/cmf-mpl-cache bash run_script/s21-gauge_allocation.sh --catchment-only
+MPLCONFIGDIR=/tmp/cmf-mpl-cache bash plot_script/f21-gauge_allocation.sh
 ```
 
 Writes the impact CSV, full-path/source-hash JSON and two Step21 Figures. The

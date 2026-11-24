@@ -114,7 +114,7 @@
     },
     "analysis_file": "experiment/Rhine2021/analysis/maximum_discharge_20210701-20210801.nc",
     "analysis_file_git_ignored": true,
-    "figure_generation_script": "f15-maximum_discharge.sh"
+    "figure_generation_script": "plot_script/f15-maximum_discharge.sh"
   },
   "inspection": {
     "input_time_axes_match": true,

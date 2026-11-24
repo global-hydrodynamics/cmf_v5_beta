@@ -14,7 +14,7 @@
 - `AI_survey_report/02_analysis_domain_design.md`
 - `AI_work_report/02_domain_design.md`
 - `metadata/02_domain_selection.json` and figure settings
-- `figure/f02-analysis_domain_design.png` and `f02-analysis_domain.sh`
+- `figure/f02-analysis_domain_design.png` and `plot_script/f02-analysis_domain.sh`
 
 ## Human Instructions
 
@@ -50,7 +50,7 @@ interpretation, proposed settings and open questions.
      evidence may change them.
    - Map viewing extent: the Figure viewport only; it does not define either
      analysis domain.
-3. Create and run `f02-analysis_domain.sh`; use a suitable existing map
+3. Create and run `plot_script/f02-analysis_domain.sh`; use a suitable existing map
    renderer. Show river network, relevant routing groups, Figure 1 impacts,
    confirmed observation sites and distinctly labelled proposed domain boxes.
    Use a viewport broad enough to explain the geographic setting and inspect

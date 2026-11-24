@@ -3,8 +3,8 @@ set -euo pipefail
 
 # Internal path anchors; user paths below are independent of the caller's directory.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-TUTORIAL_DIR="$SCRIPT_DIR"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd -P)"
+TUTORIAL_DIR="$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)"
+REPO_ROOT="$(cd "$TUTORIAL_DIR/../.." && pwd -P)"
 
 # User settings
 # ----------------------------------------------------------------------
@@ -26,7 +26,7 @@ SHOW_OSM=1                                                            # 1: OSM c
 if [[ ! -s "$TUTORIAL_DIR/metadata/03a_satellite_pass_inventory.csv" || \
       ! -s "$TUTORIAL_DIR/metadata/03a_satellite_orbit_metadata.csv" || \
       ! -s "$TUTORIAL_DIR/metadata/03a_sentinel1_acquisition_footprints.geojson" ]]; then
-    printf 'Step 3a metadata is missing. Run bash s03a-satellite_availability.sh first.\n' >&2
+    printf 'Step 3a metadata is missing. Run bash run_script/s03a-satellite_availability.sh first.\n' >&2
     exit 1
 fi
 

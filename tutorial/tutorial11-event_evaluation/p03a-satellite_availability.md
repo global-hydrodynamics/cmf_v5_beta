@@ -33,11 +33,11 @@ its satellite period and bbox as the initial catalogue search. On the first run,
 complete metadata search, pass grouping, source-footprint comparison, initial
 recommendation, figure, Survey Report and Work Report. Do not wait for review.
 
-1. Run `s03a-satellite_availability.sh` for catalogue/orbit metadata only.
+1. Run `run_script/s03a-satellite_availability.sh` for catalogue/orbit metadata only.
    Group GFM Items by verified Sentinel-1 platform, absolute orbit and
    datatake. Distinguish Item, source-product slice, Equi7 tile and acquisition
    pass counts.
-2. Run `f03a-satellite_footprints.sh`. Use the existing OSM/CaMa vector method,
+2. Run `plot_script/f03a-satellite_footprints.sh`. Use the existing OSM/CaMa vector method,
    one panel per pass, common extent/scale, candidate AOI, source-product
    GeoFootprint, UTC times, satellite, orbit direction and pass ID.
 3. Keep geometry meanings separate: GFM STAC geometry is product-tile

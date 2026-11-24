@@ -9,7 +9,7 @@ Initially reconstructed from the retained former Step 2 report, domain handoff J
 - Historical source: former root `02_analysis_domain_design.md`
 - `metadata/02_domain_selection.json`, `metadata/event_figure_settings.json`, `metadata/event_map_extents.csv`
 - `metadata/01_impact_locations.csv`, supplied station data and `figure/f02-analysis_domain_design.png`
-- Existing `f02-analysis_domain.sh` and Tutorial-local f02 scripts/settings
+- Existing `plot_script/f02-analysis_domain.sh` and Tutorial-local f02 scripts/settings
 
 ## Actions Performed
 

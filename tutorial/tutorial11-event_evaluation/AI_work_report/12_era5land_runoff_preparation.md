@@ -64,7 +64,7 @@ matrix was read for the extended run; see the Step 13 Work Report and metadata.
   Step 13/14 boundaries.
 - Updated `metadata/12_era5land_runoff.json` to link to, rather than duplicate,
   the Registry specification.
-- Updated the Step 12 Survey Report and `00_event_evaluation_process.md`.
+- Updated the Step 12 Survey Report and `README.md`.
 - Updated the Step 11 handoff references and development history as needed.
 
 No generated NetCDF, raw source, or log was changed by this follow-up. The

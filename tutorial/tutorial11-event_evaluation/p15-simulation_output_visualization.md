@@ -41,7 +41,7 @@ After Step 14 has produced the hourly outputs, run the visualization workflow
 from this directory:
 
 ```sh
-bash f15-maximum_discharge.sh
+bash plot_script/f15-maximum_discharge.sh
 ```
 
 The script reads input paths and the AOI from Step metadata, saves derived peak

@@ -111,3 +111,119 @@ A–D, including scientific interpretation; **Step25 is canceled**.
   KG-0039 and boundary/observation-support limits remain. No new scientific
   resolution or unsupported Human approval is inferred. Data availability and
   the explicit exclusion of input-version checks are documented limitations.
+
+
+## 2026-11-24 — Comprehensive Japanese case-study reconstruction (DT-0179)
+
+Maintainer requests a complete restructuring of the existing scientific-results
+synthesis as an outcome/figure-led case study accompanying an ECMWF Event-based
+Benchmark prototype development report. No separate main deliverable report,
+new analysis, acquisition, simulation, data verification or SHA comparison.
+Applied large-model-refactoring at bounded prototype-documentation scope.
+
+Read all16 executed-Step Survey Reports and corresponding Work Reports, the
+process/general-workflow/collaboration syntheses, and relevant saved metadata.
+Scientific explanation follows Survey Reports; actual execution/reuse follows
+Work Reports. Retained the current31-day standard-nextxy experiment and final
+Step21/23 assignments rather than historical20-day or superseded allocations.
+Existing Fig03d/23b/24 images were opened for caption/meaning inspection; none
+was regenerated. Other captions follow their existing Step explanations.
+
+Rewrote `AI_survey_report/00_scientific_results.md` in Japanese as six chapters:
+introduction; event/design; observations; experiment; comparison/assessment;
+outcomes. It contains all14 unique existing embedded Survey figures,17 numbered
+tables, all8 source Survey tables' content, and all16 completed Step sections.
+Each Step links its Survey and Work Report. No images copied, new scientific
+conclusions invented, or unrecorded Human–AI roles/productivity metrics inferred.
+Known Prümzurlay source-time discrepancy is retained with its Work Report link.
+Local environment/status/hash concerns are excluded from the scientific narrative.
+
+Documentation checks:14/14 figure-reference coverage, captions,17 sequential table
+captions, all8 source-table coverage and exact preservation of the15-row crop
+table; six chapters and16 Step/pair references; all70 relative paths/anchors;
+CSV structure and diff/scope checks. Read-through separates observed/modelled
+quantities, conditional fractions, non-independent proxy comparisons and formal
+skill from exploratory results. No source/data/metadata/PNG/test changes.
+Existing research validator errors remain15 and are unrelated to this task.
+No new scientific/architectural gap: existing timing/units, coarse-reach, forcing,
+cold-start/boundary and inundation-comparability questions remain explicit.
+
+The report can be reviewed without reacquiring or regenerating products. Step24
+remains final; no new numbered assessment Step. Changes are uncommitted; no
+commit/push or external report submission was requested. Validation: VR-0222.
+
+
+## 2026-11-24 — Maintainer-reviewed case-study finishing (DT-0179)
+
+Maintainer approved the six-chapter coverage and requested four bounded edits:
+Executive Summary, fewer duplicated defensive caveats, readable result precision,
+and stronger scientific synthesis. Applied large-model-refactoring for existing
+prototype documentation only. Added a quantitative overview of16 Steps,6 passes,
+3 discharge stations and the31-day/744-step experiment. Rounded display results
+and coordinates while preserving integer inventories and reproducible settings.
+Chapter6 now treats five themes: flood space/time, satellite availability, model
+resolution, hydrograph/timing and inundation. Each separates retained findings,
+explicit hypotheses and proposed future tests. Important units/time-support,
+proxy-cell, observation-mask and inundation-definition limits remain in context.
+
+Validation (VR-0223): six numbered chapters and16 Step headings unchanged;
+14 image references,17 table numbers and all70 link destinations preserved
+against the start-of-follow-up text. All relative paths/anchors resolve, source
+Survey-table coverage retained and the15-row crop table remains exact. Five
+scientific themes have explicit result/hypothesis/future-test labels; requested
+precision examples are rounded. Read-through and diff checks pass. No new
+analysis, input verification, image generation or scientific product changes.
+Knowledge-gap review: no new gap; existing scientific questions are expressed
+as future tests, without claiming their resolution. Research validator retains
+15 unrelated errors. Existing working-tree edits preserved; no commit/push.
+
+
+## 2026-11-24 — English case-study report and external-facing references (DT-0180)
+
+Maintainer requested final editorial changes and an English Markdown edition,
+retaining the Japanese report and all scientific products. Applied the existing
+large-model-refactoring documentation-only scope. Created
+`AI_survey_report/00_scientific_results_en.md` with the requested title, six
+chapters,16 Step sections,14 original image references,17 translated tables,
+quantitative Executive Summary and the five-theme scientific synthesis.
+Removed editing-session statements, numbering instructions, the Bonn provenance
+detour and superseded-experiment narration. Used Flood Event Evaluation Tutorial
+in prose. Kept scientific time/mask/units/proxy/forcing uncertainties and the
+separation of results, hypotheses and proposed tests.
+
+Traced event/timing provenance through Step01 Survey/Work, impact/timing CSVs and
+Step23/24 reports. Added nine reference entries and direct citations at Fig1,
+Table1 and Step23. Checked publisher/official records for bibliographic details;
+no missing author/date/publication facts were invented. Thewissen2022 thesis
+identity/title/year were confirmed through the TU Delft catalogue, whose reuse
+notice requires attention before redistributing the thesis itself. Source facts
+in the report were retained; no new flood analysis was conducted.
+
+Link maintenance was confined to this English edition. Two synthesis documents
+are Git-tracked and available at HEAD but absent from the current local tree:
+`00_human_ai_collaborative_research.md` and
+`00_flood_event_evaluation_workflow.md`. Used their immutable GitHub HEAD links
+rather than recreating or modifying missing files. All other original local
+reference destinations are retained. The old Waterschap PDF and TU Delft file
+URLs returned404; the English references use the reachable NIPV institutional
+listing and TU Delft bibliographic record. The old URLs remain in original
+provenance ledgers, which were not edited. NIPV is a discovery route, not a new
+verification of the Geul timing passage. LFU web-tool429 and GEER size limits
+were distinguished from actual reachability: direct HEAD checks returned200.
+
+Validation VR-0224: six chapters16 Step sections;14 unchanged image paths with
+English captions;17 tables; complete numeric equality for classification,
+15-crop,station,index,outlet/area inventories (Tables5/6/7/9/11/12); manual review
+of all remaining time/settings/result tables; all82 local/internal link
+occurrences resolve; all13 unique retained external URLs return HTTP200 to HEAD.
+HTTP reachability does not establish full content or future access permissions.
+English prose/terminology and internal-history exclusions checked. Five themes
+retain explicit findings/hypotheses/future tests. Original Japanese text, PNGs,
+metadata, model/data/source and existing uncommitted edits are preserved.
+No Word/PDF conversion, scientific execution, input/output revalidation or SHA
+comparison. Research validator retains15 unrelated pre-existing errors.
+Knowledge-gap review: no new scientific gap; existing uncertainties remain.
+Human review before external provision: scientific interpretation and unresolved
+units/time/forcing/source discrepancies; reference access and original-source
+reuse terms; supplied-data sharing scope and repository/metadata accessibility.
+No commit/push requested; changes remain uncommitted for review.

@@ -29,10 +29,10 @@ Event directory: [PATH]
    Preserve original native CRS, 20 m grid/pixel alignment and categorical
    meanings. Keep NoData, Exclusion and Inconsistent distinct; do not infer dry
    pixels from missing observations. Follow existing classification precedence.
-2. Run the existing `s03c-classify_gfm_extent.sh` workflow to produce the
+2. Run the existing `run_script/s03c-classify_gfm_extent.sh` workflow to produce the
    native-grid uint8 classification and provenance JSON. Do not change class
    codes or silently mix independent passes.
-3. Run `f03c-flood_fraction_1min.sh` to aggregate by source-pixel centres into
+3. Run `plot_script/f03c-flood_fraction_1min.sh` to aggregate by source-pixel centres into
    WGS84 1-arc-minute cells. Flood Fraction is Code 1 divided by valid classes
    0–4, in percent. Codes 5, 6 and 255 are not denominator pixels; no valid
    support is NoData, while a supported zero fraction is 0. Do not describe
@@ -44,7 +44,7 @@ Event directory: [PATH]
    area/pixel reduction and size estimate. Avoid overclaiming that the boxes
    are optimized or fully capture the event.
 5. Render Figure 3c from the saved fraction, locations and focus JSON using
-   `f03c-flood_fraction_1min.sh`. Preserve existing figure conventions and
+   `plot_script/f03c-flood_fraction_1min.sh`. Preserve existing figure conventions and
    inspect the image.
 6. Create/update `AI_survey_report/03c_gfm_classification.md` and
    `AI_work_report/03c_gfm_classification.md`. The Survey Report explains the

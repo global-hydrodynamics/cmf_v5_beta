@@ -40,11 +40,11 @@ geometry, required terrain/connectivity layers and calculation options. Do not
 substitute interpolation or a different algorithm. Current implementation uses
 15 arcmin flddph and 1 arcmin Rhine maps; retain method/map/time provenance and
 correct missing masks. Record permanent-water and regional-buffer limitations.
-`s24-downscale_inundation.sh` is the processing entry point.
+`run_script/s24-downscale_inundation.sh` is the processing entry point.
 
 ### Part C — Visualization
 
-Use `f24-inundation_1min.sh` to render the saved output without recomputing it.
+Use `plot_script/f24-inundation_1min.sh` to render the saved output without recomputing it.
 Keep Fig 24's variable definition and established workflow. Distinguish dry,
 missing and positive-depth cells; show time, extent, scale, units and preliminary
 status. Positive depth must not automatically be labelled overbank flood extent.

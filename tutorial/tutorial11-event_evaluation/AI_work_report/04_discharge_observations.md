@@ -14,14 +14,14 @@ was identified. The three raw inputs were not modified.
 
 ## Actions and outputs
 
-Ran `s04-prepare_discharge.sh` using the repository `.venv` to inspect both
+Ran `run_script/s04-prepare_discharge.sh` using the repository `.venv` to inspect both
 time-series formats, join station metadata by ID, calculate the inventory and
 write:
 
 - `metadata/04_discharge_inventory.csv`
 - `metadata/04_discharge_dataset.json`
 
-Ran `f04-observed_discharge.sh` to generate
+Ran `plot_script/f04-observed_discharge.sh` to generate
 `figure/f04-observed_discharge.png`. The July selection uses end labels in
 `(2021-07-01 00:00, 2021-08-01 00:00]`, 124 values per station. Figure 4 was
 opened for visual inspection: the three panels align on the supplied date

@@ -26,14 +26,14 @@ Complete Step 3d extraction for the selected GFM focus areas.
 Event directory: [PATH]
 
 1. Read the source raster and boxes from `metadata/03c_focus_areas.json`.
-   Use `s03d-extract_gfm_focus_areas.sh`. Project and outward-align each box
+   Use `run_script/s03d-extract_gfm_focus_areas.sh`. Project and outward-align each box
    to the source grid. Do not reproject, resample or reclassify. Preserve source
    CRS, 20 m resolution/alignment, uint8 class values and NoData=255.
 2. Write the per-area GeoTIFFs under `observation/GFM_extent/` and the canonical
    `metadata/03d_extracted_areas.json`. Record WGS84 and projected bounds,
    source/selection identity, dimensions, relative output paths, class counts,
    checksums and file sizes. Do not create versioned metadata copies.
-3. Run `f03d-gfm_focus_areas_20m.sh` to regenerate Figure 3d from the extraction
+3. Run `plot_script/f03d-gfm_focus_areas_20m.sh` to regenerate Figure 3d from the extraction
    metadata. Use the existing categorical display and OSM background; do not
    add the CaMa river network unless the established figure specification
    changes. Inspect readability and marker/class alignment.

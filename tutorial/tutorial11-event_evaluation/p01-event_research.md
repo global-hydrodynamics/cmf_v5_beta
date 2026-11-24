@@ -15,7 +15,7 @@
 - `AI_work_report/01_event_research.md`
 - `metadata/01_impact_locations.csv`
 - `metadata/01_reported_flood_timing.csv` (separate time/location evidence ledger)
-- `figure/f01-reported_flood_impacts.png` and `f01-reported_flood_impacts.sh`
+- `figure/f01-reported_flood_impacts.png` and `plot_script/f01-reported_flood_impacts.sh`
 
 ## Human Instructions
 
@@ -51,7 +51,7 @@ source-reported facts, interpretations, and uncertainty.
    time basis is established. Leave unknown times blank. Keep coordinate
    confidence separate from timing confidence. Do not assign a nearby gauge
    peak to a town without evidence. Keep `ai_notes` as the last CSV column.
-4. Create and run `f01-reported_flood_impacts.sh` using a suitable existing
+4. Create and run `plot_script/f01-reported_flood_impacts.sh` using a suitable existing
    Visualization method. Produce `figure/f01-reported_flood_impacts.png` with
    OSM where available, river context, labelled localities, and attribution.
    If timing is added to a legend, label it as reported gauge/river context and

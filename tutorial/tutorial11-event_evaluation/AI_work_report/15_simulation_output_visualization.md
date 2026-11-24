@@ -51,7 +51,7 @@ and source record indices, plus path/layer and endpoint metadata.
 From `tutorial/tutorial11-event_evaluation/`:
 
 ```sh
-bash f15-maximum_discharge.sh
+bash plot_script/f15-maximum_discharge.sh
 ```
 
 The script reuses Gallery p02 direction-aware vector helpers. It reads Rhine

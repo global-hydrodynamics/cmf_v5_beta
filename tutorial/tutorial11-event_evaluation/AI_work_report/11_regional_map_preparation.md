@@ -74,7 +74,7 @@ counterparts. No script configuration was regenerated or replaced.
 - `tutorial/tutorial11-event_evaluation/p11-regional_map_preparation.md`
 - `tutorial/tutorial11-event_evaluation/AI_survey_report/11_regional_map_preparation.md`
 - `tutorial/tutorial11-event_evaluation/AI_work_report/11_regional_map_preparation.md`
-- `tutorial/tutorial11-event_evaluation/00_event_evaluation_process.md`
+- `tutorial/tutorial11-event_evaluation/README.md`
 - `map/Rhine_15min/README.md`
 - `map/.gitignore`
 - `tutorial/tutorial11-event_evaluation/development_log/development_log.md`

@@ -29,7 +29,7 @@ Event directory: [PATH]
 1. Read pass IDs, catalogue dates and requested layers from
    `metadata/03a_selected_passes.json`, and the satellite-analysis bbox from
    `metadata/02_domain_selection.json`. Do not require an `approved` status.
-2. Reuse the existing Atlantis installation and `s03b-download_gfm.sh`. Download
+2. Reuse the existing Atlantis installation and `run_script/s03b-download_gfm.sh`. Download
    only selected pass assets; reuse matching local files on rerun. Save caches,
    COGs and logs under the ignored event-local `Atlantis/` directory. Do not
    reproject, resample, mosaic or classify the native assets.

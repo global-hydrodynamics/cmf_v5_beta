@@ -4,7 +4,7 @@ These instructions apply only to `tutorial/tutorial11-event_evaluation/`.
 Follow the repository and `tutorial/` instructions above this directory. This
 file adds Tutorial 11 analysis conventions; it does not replace higher-level
 policy or the research workflow in
-[`00_event_evaluation_process.md`](00_event_evaluation_process.md).
+[`README.md`](README.md).
 
 ## 1. Purpose and Scope
 
@@ -17,7 +17,7 @@ reviews scientific judgments as appropriate, and may redirect the work.
 These rules are specific to Tutorial 11. They do not define a general research
 policy or rules for other tutorials. Step-specific science, data contracts, and
 execution details belong in the relevant `pXX-*.md` and
-`00_event_evaluation_process.md`.
+`README.md`.
 
 ## 2. Agent Workflow and Step Contracts
 
@@ -44,8 +44,8 @@ Keep each artifact in its designated role:
 | Location or pattern | Role |
 | --- | --- |
 | `pXX-*.md` | Reusable Agent Workflow Prompt |
-| `sXX-*.sh` | Reproducible data acquisition, analysis, or processing entry point |
-| `fXX-*.sh` | Reproducible Figure-generation entry point |
+| `run_script/sXX-*.sh` | Reproducible data acquisition, analysis, or processing entry point |
+| `plot_script/fXX-*.sh` | Reproducible Figure-generation entry point |
 | `script/sXX-*` | Step-specific Python code used by processing; use this prefix if both `sXX` and `fXX` call it |
 | `script/fXX-*` | Python code used only by the corresponding Figure workflow |
 | `script/event_*` | Python code shared across different Steps |
@@ -149,7 +149,7 @@ report what is established and what remains open.
 ## 8. Reproducibility and Validation
 
 Prefer to make processing and figures reproducible from saved inputs and
-settings. Maintain the role split: `sXX-*.sh` for processing, `fXX-*.sh` for
+settings. Maintain the role split: `run_script/sXX-*.sh` for processing, `plot_script/fXX-*.sh` for
 figures, `metadata/` for machine-readable handoffs, `AI_survey_report/` for
 research findings, and `AI_work_report/` for execution and continuity records.
 

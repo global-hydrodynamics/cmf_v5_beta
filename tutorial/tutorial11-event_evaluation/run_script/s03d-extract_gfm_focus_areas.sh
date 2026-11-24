@@ -3,8 +3,8 @@ set -euo pipefail
 
 # Internal path anchors; user paths below are independent of the caller's directory.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-TUTORIAL_DIR="$SCRIPT_DIR"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd -P)"
+TUTORIAL_DIR="$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)"
+REPO_ROOT="$(cd "$TUTORIAL_DIR/../.." && pwd -P)"
 
 # User settings
 # ----------------------------------------------------------------------

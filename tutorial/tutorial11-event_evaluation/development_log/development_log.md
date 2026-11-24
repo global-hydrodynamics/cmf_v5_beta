@@ -965,3 +965,92 @@ plots, acquisitions or numerical tests rerun. Data, metadata, scientific reports
 and Shells are unchanged. Inherited scientific uncertainties remain unresolved.
 See the single [Work Report](../AI_work_report/00_python_readability.md) and
 VR-0221. Research validator retains15 pre-existing unrelated errors. Uncommitted.
+
+
+## 2026-11-24 — Japanese flood-event case-study report
+
+Task: Reconstruct `AI_survey_report/00_scientific_results.md` as an independent,
+results-led Rhine2021 case study for the Event-based Benchmark prototype
+(DT-0179). Read16 Step Survey/Work pairs and retained metadata; organized six
+chapters covering event/design, observations, experiment, comparison and outcomes.
+Included14 existing figures and17 tables, preserving all8 source Survey tables;
+linked detailed evidence for every completed Step. Added no unrecorded AI-role
+or productivity claim. Known scientific uncertainties are retained in context.
+
+Document/figure paths, captions, Step/figure/table coverage, crop-table contents,
+links/anchors and diff scope checked. No data acquisition, model/analysis run,
+image generation, input validation or SHA reconciliation. All source and
+scientific products remain unchanged; Step24 is final. Consolidated technical
+record: [synthesis Work Report](../AI_work_report/00_synthesis_preparation.md).
+Research validator retains15 unrelated errors. Uncommitted for review.
+
+
+## 2026-11-24 — Case-study finishing after maintainer review
+
+Task: Refine the existing Japanese scientific-results synthesis (DT-0179).
+Added a quantitative Executive Summary, reduced duplicated defensive wording,
+rounded display values and expanded Chapter6 into five scientific themes with
+separate findings, hypotheses and proposed tests. Preserved six chapters,
+all16 Steps,14 figures,17 tables and70 reference destinations. Exact data counts
+and experiment settings remain; detailed evidence retains original precision.
+Document paths/anchors, source-table coverage, crop-table transcription,
+structure and diff scope checked (VR-0223). No data/model/analysis rerun or figure
+regeneration. Existing uncertainties remain;15 unrelated registry errors persist.
+See the synthesis Work Report. Uncommitted for review.
+
+
+## 2026-11-24 — English edition of the flood-event case study
+
+Task: Final editorial refinement and English Markdown report (DT-0180).
+Created `AI_survey_report/00_scientific_results_en.md`, preserving the Japanese
+edition, six chapters,16 Steps,14 original figures and17 tables. Removed
+external-facing editorial history and the Bonn detour; standardised the tutorial
+name; retained the Executive Summary and five scientific themes. Added nine
+provenance-backed references with direct event/timing citations. Missing local
+syntheses use verified immutable Git links; obsolete source URLs use official
+catalogue/discovery pages. No original provenance records or images altered.
+
+Focused document checks pass (VR-0224): structure/captions/numeric inventories,
+all82 local/internal link occurrences and13 HTTP200 external URLs. No data,
+model,analysis,image or Word/PDF execution.15 existing registry errors remain.
+External review should cover scientific uncertainties, attribution/access and
+source/data redistribution terms. Synthesis Work Report records the details.
+Uncommitted for review.
+
+
+## 2026-11-24 — Shell entry-point directories and landing README
+
+Task: DT-0181. Moved10 processing scripts to run_script/ and11 plotting scripts
+to plot_script/, preserving names/modes and settings. Renamed the process
+specification to README.md and added navigation and current Step status.
+Updated tutorial-root anchors, Prompt/AGENTS/technical references and three
+executable-path metadata values. Python implementations/scientific reports and
+all existing deletions remain unchanged. Older commands in this log retain
+their historical spelling; use the same basename in the new script directory.
+
+Validation VR-0225:21 bash syntax checks, s14 POSIX syntax,126 isolated settings/
+path probes,3 real-launcher/no-op-Python captures,114 local guidance links,
+canonical Shell comparison and protected-source/report equality pass. f24's
+configured environment is absent; full workflows and scientific tests were
+not run.15 unrelated research errors persist. See
+[consolidated work record](../AI_work_report/00_directory_organization.md)
+for frozen-report link limitations and existing non-executable modes.
+Uncommitted for review.
+
+
+## 2026-11-24 — Step31 scientific synthesis and Word report
+
+Task: DT-0182. Created the reusable p31 Prompt and executed it from the current
+research objectives,16 individual Survey Reports and relevant metadata. New
+English scientific report uses nine chapters,14 original figures and7 tables;
+Word is generated from that Markdown. Earlier English synthesis is preserved
+exactly for later researcher comparison. Prior chat context limits strict
+independence; no earlier synthesis was used as a writing source this execution.
+
+VR-0226: major scientific statements checked against individual evidence; local
+links,274 Word/Markdown text/cell blocks,14 original embedded images and7 editable
+tables pass. All21 rendered Word pages visually inspected.15 existing research
+registry errors remain. No science code/data/settings/figures changed, no new
+analysis or input-version reconciliation. See the
+[Step31 Work Report](../AI_work_report/31_scientific_results_synthesis.md).
+Uncommitted; no push.

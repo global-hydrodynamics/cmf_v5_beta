@@ -26,7 +26,7 @@ Reconstructed from the current ignored local manifest/summary and downloader doc
 
 - No download or processing command was run in this report reconstruction.
 - The artifact record states that all 37 paths exist and that size, checksums and GeoTIFF readability were verified by the p03b summary process. Those checks are reported from the retained summary, not repeated here.
-- The exact command line and runtime environment are not reconstructed beyond the tracked Shell entry point `s03b-download_gfm.sh`; no unrecorded invocation details are asserted.
+- The exact command line and runtime environment are not reconstructed beyond the tracked Shell entry point `run_script/s03b-download_gfm.sh`; no unrecorded invocation details are asserted.
 
 ## Issues and Resolutions
 

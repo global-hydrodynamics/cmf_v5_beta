@@ -37,7 +37,7 @@ the same 480-hour, 20-day cold-start experiment in a new directory to preserve
 the original results:
 
 ```sh
-RUNDIR="$PWD/experiment/Rhine2021-nextxy" bash s14-run_simulation.sh
+RUNDIR="$PWD/experiment/Rhine2021-nextxy" bash run_script/s14-run_simulation.sh
 ```
 
 The model exited with status 0 after 480 steps. The run wrote eight hourly
@@ -70,13 +70,13 @@ input spatial grid remains 111 × 91. Current paths, sizes and metadata are in
 
 ## Historical 20-day execution instructions
 
-The reproducible entry point is `s14-run_simulation.sh`. The initial run
+The reproducible entry point is `run_script/s14-run_simulation.sh`. The initial run
 documented above used the then-default directory. The historical 20-day standard-network
 run used `experiment/Rhine2021-nextxy/`. The current31-day default is
 `experiment/Rhine2021/`; the example below is its entry point:
 
 ```sh
-bash s14-run_simulation.sh
+bash run_script/s14-run_simulation.sh
 ```
 
 The current script resolves paths from its own location and defaults to
@@ -118,7 +118,7 @@ the ignored experiment products.
 
 ## Historical checks and handoff
 
-- `sh -n s14-run_simulation.sh` passed.
+- `sh -n run_script/s14-run_simulation.sh` passed.
 - The run log shows the regional map inputs and Step 13 Input Matrix loaded,
   480 model steps completed, and NetCDF Restart written at the exclusive end.
 - `ncdump -h` opened all eight outputs and the Restart. Each gridded output

@@ -21,7 +21,7 @@
 
 **Outputs**
 
-- `s14-run_simulation.sh` and generated
+- `run_script/s14-run_simulation.sh` and generated
   `experiment/Rhine2021/input_cmf.nam`.
 - Ignored experiment outputs, logs and Restart under
   `experiment/Rhine2021/`.
@@ -31,10 +31,10 @@ This is an operational cold-start run, not a calibrated or scientifically valida
 
 ## Human Instructions
 
-The Rhine 2021 sample run is configured in `s14-run_simulation.sh`. Review or edit the grouped user settings only when a different experiment is intended. From the Tutorial 11 directory, run:
+The Rhine 2021 sample run is configured in `run_script/s14-run_simulation.sh`. Review or edit the grouped user settings only when a different experiment is intended. From the Tutorial 11 directory, run:
 
 ```sh
-bash s14-run_simulation.sh
+bash run_script/s14-run_simulation.sh
 ```
 
 The default run directory is `experiment/Rhine2021/`, excluded from
@@ -43,7 +43,7 @@ nonempty. To retain a prior run and execute another, set `RUNDIR` to a new
 location:
 
 ```sh
-RUNDIR="$PWD/experiment/Rhine2021-retry" bash s14-run_simulation.sh
+RUNDIR="$PWD/experiment/Rhine2021-retry" bash run_script/s14-run_simulation.sh
 ```
 
 Afterward, inspect the generated Namelist, `log_CaMa.txt`, console/runtime logs, hourly output NetCDF files and final Restart. Review is recommended; it is not a program gate. The input/output checks must still succeed before treating the run as operationally complete.
@@ -59,7 +59,7 @@ standard Rhine `map/Rhine_15min/netcdf/nextxy.nc`. Reuse the existing v5
 GOSH defaults and do not change model source, map products, runoff conversion,
 or the Input Matrix.
 
-Create or update s14-run_simulation.sh to perform the specified one-time
+Create or update run_script/s14-run_simulation.sh to perform the specified one-time
 31-day hourly cold-start run from 2021-07-01 00:00 to the exclusive end
 2021-08-01 00:00. Use daily NetCDF runoff, the regional Step 13 matrix,
 individual NetCDF map products, hourly NetCDF model output, and one NetCDF

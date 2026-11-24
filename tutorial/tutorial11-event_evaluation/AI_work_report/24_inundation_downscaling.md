@@ -46,8 +46,8 @@ this preliminary regional result has not established boundary independence.
 From repository root, with `.venv` containing NumPy, netCDF4 and Matplotlib:
 
 ```sh
-bash tutorial/tutorial11-event_evaluation/s24-downscale_inundation.sh
-bash tutorial/tutorial11-event_evaluation/f24-inundation_1min.sh
+bash tutorial/tutorial11-event_evaluation/run_script/s24-downscale_inundation.sh
+bash tutorial/tutorial11-event_evaluation/plot_script/f24-inundation_1min.sh
 ```
 
 The first command selects a snapshot in a temporary directory (removed after

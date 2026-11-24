@@ -4,14 +4,15 @@
 set -eu
 
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
-CMF_BASE=$(CDPATH= cd "$SCRIPT_DIR/../.." && pwd -P)
+TUTORIAL_DIR="$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)"
+CMF_BASE=$(CDPATH= cd "$TUTORIAL_DIR/../.." && pwd -P)
 
 # -------------------------- User settings ------------------------------
 PYTHON="python3" # Python for reading Step13 metadata; no model computation.
 EXEC_CMF="${CMF_BASE}/src_main/MAIN_cmf" # Existing executable; not rebuilt here.
 RESTART_INPUT="NONE" # Restart file path, or NONE for the default cold start.
 PROJ="Rhine2021"                                                     # Experiment directory name (not the independent output COUTTAG).
-RUNDIR=${RUNDIR:-"${SCRIPT_DIR}/experiment/${PROJ}"}                 # Run directory; existing RUNDIR override supported; nonempty directories are preserved.
+RUNDIR=${RUNDIR:-"${TUTORIAL_DIR}/experiment/${PROJ}"}                 # Run directory; existing RUNDIR override supported; nonempty directories are preserved.
 
 # Simulation interval; the end time is exclusive (31 days, 744 hours).
 START_YEAR=2021                                                      # Inclusive start year [UTC Gregorian calendar].
@@ -28,7 +29,7 @@ NEXTXY="${MAP_NETCDF_DIR}/nextxy.nc"                                 # Stored do
 RIVWTH="${MAP_NETCDF_DIR}/rivwth_merit.nc"                           # River-channel width map [m].
 
 # Step 13 metadata is the source of the regional matrix tag and paired file paths.
-STEP13_METADATA="${SCRIPT_DIR}/metadata/13_runoff_input_matrix.json" # Authoritative regional Input Matrix/diminfo handoff; do not duplicate its values.
+STEP13_METADATA="${TUTORIAL_DIR}/metadata/13_runoff_input_matrix.json" # Authoritative regional Input Matrix/diminfo handoff; do not duplicate its values.
 RUNOFF_DIR="${CMF_BASE}/inp/tutorial11-ERA5land-Rhine2021Jul"        # Runoff input directory matching the matrix grid.
 IFRQ_INP=1                                                           # Runoff update interval [hours].
 DROFUNIT=3600000                                                     # Divide input values by this factor to obtain depth rate [m/s]; current mm/hour.

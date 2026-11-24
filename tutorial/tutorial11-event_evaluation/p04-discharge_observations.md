@@ -46,10 +46,10 @@ correspondence.
    to station records by the explicit station ID, not row position. Check
    timestamps, cadence, duplicate/missing records, valid-value masks, basic
    statistics, and CSV-NetCDF consistency where both formats are supplied.
-2. Run `s04-prepare_discharge.sh` to write `metadata/04_discharge_inventory.csv`
+2. Run `run_script/s04-prepare_discharge.sh` to write `metadata/04_discharge_inventory.csv`
    and `metadata/04_discharge_dataset.json`. Preserve provenance, file hashes,
    declared and undeclared fields, and any provider-supplied interpretation.
-3. Run `f04-observed_discharge.sh` to plot the original event-period values.
+3. Run `plot_script/f04-observed_discharge.sh` to plot the original event-period values.
    Do not interpolate, smooth, resample or silently convert units or times.
 4. Write the scientific findings and limitations to
    `AI_survey_report/04_discharge_observations.md`; record actual commands,

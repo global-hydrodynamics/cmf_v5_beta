@@ -1,4 +1,61 @@
-# Rhine 2021 Flood Event Evaluation: Research Plan and Analysis Workflow
+# Flood Event Evaluation Tutorial — July 2021 Rhine Case Study
+
+This tutorial is a CaMa-Flood v5 prototype for flood-event research and evaluation,
+developed through collaboration between researchers and AI agents. It connects
+literature-based event investigation, satellite and discharge observations,
+regional model preparation and simulation, and exploratory comparison for the
+July 2021 Rhine flood and neighbouring affected river systems.
+
+## Start here
+
+- Follow the root-level `pXX-*.md` Agent Workflow Prompts for scientific objectives,
+  required inputs, outputs and Step dependencies. Start with
+  [Step01](p01-event_research.md) and the workflow below.
+- Use [`run_script/`](run_script/) for processing and simulation and
+  [`plot_script/`](plot_script/) for figures. From this tutorial directory,
+  invoke, for example, `bash run_script/s21-gauge_allocation.sh --catchment-only`
+  or `bash plot_script/f21-gauge_allocation.sh`. These commands perform their
+  documented work; review settings and prerequisites before running them.
+  Entry points resolve tutorial paths independently of the caller's directory;
+  repository-root invocation is also supported, for example
+  `bash tutorial/tutorial11-event_evaluation/plot_script/f24-inundation_1min.sh`.
+- Edit commonly adjusted experiment or display values in each entry point's
+  **User settings** section. Where a setting identifies authoritative JSON/CSV,
+  edit that structured configuration rather than duplicating its values in
+  Python. See the [configuration rule](AGENTS.md#10-human-configurable-ai-executable-workflow).
+- Read scientific findings in `AI_survey_report/`, execution and reproducibility
+  evidence in `AI_work_report/`, and the current implementation/availability
+  table in Section 4 below. Prepared inputs and successful runs are distinguished
+  from formal model-performance evaluation.
+
+### Case-study synthesis reports
+
+[Step31](p31-scientific_results_synthesis.md) is the reusable scientific-writing
+workflow. Its first execution produced the new English
+[Scientific Results report](AI_survey_report/00_scientific_results.md) and
+[Word edition](AI_survey_report/00_scientific_results.docx), using individual
+Step reports. The [previous English synthesis](AI_survey_report/00_scientific_results_en.md)
+is preserved unchanged for a later researcher comparison. The other original
+syntheses remain linked to their retained Git versions below.
+
+- [Flood Event Evaluation Workflow](https://github.com/global-hydrodynamics/cmf_v5_beta/blob/d424a4ad2d69745acb7d72e1465c401a52e64d18/tutorial/tutorial11-event_evaluation/AI_survey_report/00_flood_event_evaluation_workflow.md).
+- [Human–AI Collaborative Research Workflow](https://github.com/global-hydrodynamics/cmf_v5_beta/blob/d424a4ad2d69745acb7d72e1465c401a52e64d18/tutorial/tutorial11-event_evaluation/AI_survey_report/00_human_ai_collaborative_research.md).
+
+Implemented Step groups are01,02,03a–03d,04,11–15 and21–24. Step05
+water-level preparation is reserved for future work; Steps06–10 are reserved; conceptual Steps16–17 are partly exercised by21–24, while formal
+observation matching and quantitative scoring remain incomplete. Steps18–20
+are unassigned. **Step24 is the final analysis Step; Step25 is canceled.** Step31 synthesizes
+existing scientific results without adding an analysis Step. Detailed scientific
+scope and retained execution evidence are preserved below.
+
+The processing and plotting entry points now live one directory below this
+README; older execution records and scientific reports may show their former
+root-level names. Use the same basename under `run_script/` or `plot_script/`.
+References in unchanged scientific reports to `00_event_evaluation_process.md`
+now refer to this README. Historical commands in the development log also
+retain their original paths. No root-level compatibility wrappers or symlinks
+are supplied. Launch with
+`bash` when using entry points without executable mode.
 
 **Current scope:** This Tutorial develops an evaluation of CaMa-Flood for the
 July 2021 western European floods, with a focus on the Rhine and related
@@ -42,7 +99,7 @@ background and evidence are summarized in the [event Survey Report](AI_survey_re
 
 This document owns the scientific sequence and current research scope.
 [Tutorial AGENTS](AGENTS.md) owns agent responsibilities, review/revision rules
-and handoff maintenance. The [collaboration synthesis](AI_survey_report/00_human_ai_collaborative_research.md)
+and handoff maintenance. The [collaboration synthesis](https://github.com/global-hydrodynamics/cmf_v5_beta/blob/d424a4ad2d69745acb7d72e1465c401a52e64d18/tutorial/tutorial11-event_evaluation/AI_survey_report/00_human_ai_collaborative_research.md)
 describes observed Human–AI work rather than defining another policy.
 The normative [Human-Configurable, AI-Executable rule](AGENTS.md#10-human-configurable-ai-executable-workflow)
 requires researcher-editable Shell settings; the [configuration review](AI_work_report/00_shell_configurability.md)
@@ -53,11 +110,11 @@ records its current implementation and verification.
 | Directory or file | Role |
 | --- | --- |
 | [`AGENTS.md`](AGENTS.md) | Common AI-supported analysis rules for Tutorial 11 |
-| [`00_event_evaluation_process.md`](00_event_evaluation_process.md) | Research objective, methods, stage relationships and current status |
+| [`README.md`](README.md) | Research objective, methods, stage relationships and current status |
 | [`pXX-*.md`](p01-event_research.md) | Human-facing entry point and Agent Workflow for each Step |
-| `sXX-*.sh` | Reproducible data acquisition, processing or calculation |
-| `fXX-*.sh` | Reproducible Figure generation |
-| [`script/`](script/) | Python programs used by the processing and Figure workflows |
+| [`run_script/sXX-*.sh`](run_script/) | Data preparation, processing and simulation entry points |
+| [`plot_script/fXX-*.sh`](plot_script/) | Figure and visualization entry points |
+| [`script/`](script/) | Python implementations used by processing and Figure workflows |
 | [`metadata/`](metadata/) | Machine-readable configuration, results and Step handoffs |
 | [`observation/`](observation/) | Observation data and their inventories; some data are local/ignored |
 | `Atlantis/` | Ignored local catalogue caches, downloaded assets and run records |
@@ -145,7 +202,7 @@ integrity and readability in a manifest and summary under the ignored local
 catalogue search or download. The local download record is not a Git-tracked
 data package. See [p03b](p03b-download_gfm.md), the [download Survey Report](AI_survey_report/03b_gfm_download.md),
 the [Work Report](AI_work_report/03b_gfm_download.md), and
-[`s03b-download_gfm.sh`](s03b-download_gfm.sh).
+[`run_script/s03b-download_gfm.sh`](run_script/s03b-download_gfm.sh).
 
 #### Step 3c — GFM Classification and Focus-Area Selection
 
@@ -275,7 +332,7 @@ matching. See [p15](p15-simulation_output_visualization.md), the [Survey
 Report](AI_survey_report/15_simulation_output_visualization.md), the [Work
 Report](AI_work_report/15_simulation_output_visualization.md),
 [`metadata/15_simulation_output_visualization.json`](metadata/15_simulation_output_visualization.json),
-and [`f15-maximum_discharge.sh`](f15-maximum_discharge.sh).
+and [`plot_script/f15-maximum_discharge.sh`](plot_script/f15-maximum_discharge.sh).
 
 ### Step 16 — Observation–Model Matching
 
@@ -306,8 +363,8 @@ use the reviewed Schuld catmxy anchor only after verifying it is exactly one
 nextxy edge upstream; record the correction and omitted downstream-area caveat.
 Do not choose an arbitrary upstream branch or snap missing assignments.
 
-Run `s21-gauge_allocation.sh --catchment-only` to retain old geographic/gauge
-fields; `f21-gauge_allocation.sh` renders Fig. 21a (regional allocation) and Fig. 21b (catchments/proxies).
+Run `run_script/s21-gauge_allocation.sh --catchment-only` to retain old geographic/gauge
+fields; `plot_script/f21-gauge_allocation.sh` renders Fig. 21a (regional allocation) and Fig. 21b (catchments/proxies).
 The prior remote scientific review is preserved in `prior_*` fields, and full
 paths/source fingerprints in `metadata/21_catchment_review.json`. Final counts:
 16 direct points, 5 upstream proxies, 1 coordinate-missing report. Refer to
@@ -341,7 +398,7 @@ and [`metadata/22_hydrograph_comparison_summary.json`](metadata/22_hydrograph_co
 
 ### Step 23 — Flood Impact Timing Comparison
 
-For Fig23b, use `f23-impact_timing_comparison.sh --summary-only` to redraw only
+For Fig23b, use `plot_script/f23-impact_timing_comparison.sh --summary-only` to redraw only
 the timing summary. Its separate settings default to July14 00:00–July16 00:00
 UTC and six-hour ticks; saved peaks/search bounds remain unchanged. Read basin
 colors from the Fig1 settings, keep all report rows, use compact uncertainty
@@ -416,7 +473,7 @@ but preparation outputs must not be confused with evaluation results.
 | **11 — Regional map** | Local `map/Rhine_15min/` contains map, parameter, NetCDF/COG products and map-local workflow copies matching the requested domain; outputs were inspected, not regenerated for this Step. | Existing products are available to Steps 12–14; upstream hydrology and parameter scientific validation are not established by this inspection. |
 | **12 — Runoff preparation** | Existing local Rhine ERA5-Land source and converted data, Step 12 Prompt, metadata and reports are recorded; data were inspected, not reacquired or reconverted for this Step. | Hourly labels and grid structure are documented; KG-0019 remains open, and spin-up adequacy is not established by the Step 14 dates. |
 | **13 — Runoff Input Matrix** | Rhine-specific 111 × 91 matrix/diminfo were generated from the actual ERA5-Land grid using the map-local 1-minute catchment assignment; focused dimensions and index checks are recorded. | Step 14 loaded the retained matrix for the 31-day run; this operational check is not independent scientific validation. |
-| **14 — Simulation setup and execution** | `s14-run_simulation.sh` ran the 31-day hourly cold-start experiment; 744-record NetCDF outputs and the Restart at 2021-08-01 00:00 were inspected. | Operational completion only; cold-start sensitivity and ERA5-Land time attribution remain unresolved. |
+| **14 — Simulation setup and execution** | `run_script/s14-run_simulation.sh` ran the 31-day hourly cold-start experiment; 744-record NetCDF outputs and the Restart at 2021-08-01 00:00 were inspected. | Operational completion only; cold-start sensitivity and ERA5-Land time attribution remain unresolved. |
 | **15 — Simulation output visualization** | Signed local peak discharge was calculated from the retained `outflw`/`pthflw` outputs; regional and AOI figures and the reusable plotting workflow are recorded. | Spatial output patterns were inspected; no simultaneous snapshot, spin-up assessment or skill evaluation is implied. |
 | **16 — Matching** | No matching method or implementation is recorded. | Spatial, temporal and variable correspondence remains to be designed. |
 | **17 — Evaluation** | No quantitative event score or performance report is recorded. | Metrics, valid-sample treatment and uncertainty analysis remain future work. |
@@ -434,11 +491,11 @@ form one research plan.
 
 The three retrospective syntheses are:
 
-- [Scientific Results](AI_survey_report/00_scientific_results.md): retained
+- [Scientific Results](https://github.com/global-hydrodynamics/cmf_v5_beta/blob/d424a4ad2d69745acb7d72e1465c401a52e64d18/tutorial/tutorial11-event_evaluation/AI_survey_report/00_scientific_results.md): retained
   findings, scientific interpretation and limits; no new skill validation.
-- [Flood Event Evaluation Workflow](AI_survey_report/00_flood_event_evaluation_workflow.md):
+- [Flood Event Evaluation Workflow](https://github.com/global-hydrodynamics/cmf_v5_beta/blob/d424a4ad2d69745acb7d72e1465c401a52e64d18/tutorial/tutorial11-event_evaluation/AI_survey_report/00_flood_event_evaluation_workflow.md):
   reusable research contracts versus the Rhine-specific implementation.
-- [Human–AI Collaborative Research Workflow](AI_survey_report/00_human_ai_collaborative_research.md):
+- [Human–AI Collaborative Research Workflow](https://github.com/global-hydrodynamics/cmf_v5_beta/blob/d424a4ad2d69745acb7d72e1465c401a52e64d18/tutorial/tutorial11-event_evaluation/AI_survey_report/00_human_ai_collaborative_research.md):
   documented roles, revision episodes and limits of the qualitative case study.
 
 These are summaries, not new numbered scientific Steps. **Step24 is final;

@@ -3,15 +3,15 @@ set -euo pipefail
 
 # Internal path anchors; user paths below are independent of the caller's directory.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-TUTORIAL_DIR="$SCRIPT_DIR"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd -P)"
+TUTORIAL_DIR="$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)"
+REPO_ROOT="$(cd "$TUTORIAL_DIR/../.." && pwd -P)"
 
 # User settings
 # ----------------------------------------------------------------------
 PYTHON="${PYTHON:-$REPO_ROOT/.venv/bin/python}"                       # Python with required libraries; existing PYTHON override is supported.
-TIMESERIES_CSV="$SCRIPT_DIR/metadata/22_hydrograph_timeseries.csv"    # Saved model/observation records; no extraction here.
-SUMMARY_JSON="$SCRIPT_DIR/metadata/22_hydrograph_comparison_summary.json" # Authoritative analysis interval/provenance.
-OUTPUT="$SCRIPT_DIR/figure/f22-hydrograph_comparison.png"             # Output PNG path.
+TIMESERIES_CSV="$TUTORIAL_DIR/metadata/22_hydrograph_timeseries.csv"    # Saved model/observation records; no extraction here.
+SUMMARY_JSON="$TUTORIAL_DIR/metadata/22_hydrograph_comparison_summary.json" # Authoritative analysis interval/provenance.
+OUTPUT="$TUTORIAL_DIR/figure/f22-hydrograph_comparison.png"             # Output PNG path.
 DISPLAY_START=""                                                      # Blank: summary interval; otherwise ISO nominal display start only.
 DISPLAY_END=""                                                        # Blank: summary interval; otherwise ISO nominal display end only.
 YMIN=0                                                                # Display lower limit [model m3/s; observation unit unspecified].
@@ -27,7 +27,7 @@ DPI=180                                                               # PNG reso
 # ----------------------------------------------------------------------
 
 if [[ ! -f "$TIMESERIES_CSV" ]]; then
-  printf 'Missing %s; run s22-extract_hydrograph.sh first.\n' "$TIMESERIES_CSV" >&2
+  printf 'Missing %s; run run_script/s22-extract_hydrograph.sh first.\n' "$TIMESERIES_CSV" >&2
   exit 2
 fi
 
@@ -37,8 +37,8 @@ EXTRA_ARGS=()
 if [[ -n "$DISPLAY_START" ]]; then EXTRA_ARGS+=(--display-start "$DISPLAY_START"); fi
 if [[ -n "$DISPLAY_END" ]]; then EXTRA_ARGS+=(--display-end "$DISPLAY_END"); fi
 if [[ -n "$YMAX" ]]; then EXTRA_ARGS+=(--ymax "$YMAX"); fi
-"$PYTHON" "$SCRIPT_DIR/script/f22-hydrograph_comparison.py"  \
-    --tutorial-dir "$SCRIPT_DIR" \
+"$PYTHON" "$TUTORIAL_DIR/script/f22-hydrograph_comparison.py"  \
+    --tutorial-dir "$TUTORIAL_DIR" \
     --timeseries-csv "$TIMESERIES_CSV" \
     --summary-json "$SUMMARY_JSON" \
     --output "$OUTPUT"  \

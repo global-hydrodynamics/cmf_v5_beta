@@ -24,27 +24,27 @@ interfaces are preserved; no new installation or environment selection framework
 
 | Shell reviewed | Exposed or clarified settings; authoritative structured sources |
 | --- | --- |
-| f01-reported_flood_impacts.sh | Map/cache/output, settings section, OSM switch; existing display JSON, extents/locality CSV paths own detailed settings. |
-| f02-analysis_domain.sh | Map/cache/output and OSM switch; existing settings JSON and extents/locality/station CSV paths remain authoritative. |
-| s03a-satellite_availability.sh | Python, Atlantis/catalogue roots and domain JSON; acquisition dates and bbox remain in domain JSON. |
-| f03a-satellite_footprints.sh | Domain/catalogue/map/cache/output paths, OSM switch, canvas dimensions and DPI. |
-| s03b-download_gfm.sh | Domain/selection handoffs, Atlantis/reuse roots, workers and offline mode. |
-| s03c-classify_gfm_extent.sh | Domain/selection and native manifest paths, output root and overwrite flag; class semantics unchanged. |
-| f03c-flood_fraction_1min.sh | Source/domain/focus/locality/map/cache/output paths, canvas/DPI, colormap, limits in percent, PowerNorm gamma and OSM switch; retained --figure-only. |
-| s03d-extract_gfm_focus_areas.sh | Source raster, structured focus definition/provenance, output root. |
-| f03d-gfm_focus_areas_20m.sh | Crop manifest, output/cache, width/height (0 automatic), columns and DPI; categorical meanings/colors retained. |
-| s04-prepare_discharge.sh | Source station directory and metadata output directory; existing Python fallback retained. |
-| f04-observed_discharge.sh | Station/series paths, exclusive start/inclusive end in source time labels, y-limits, canvas/DPI/output; no assumed UTC or invented units. |
-| s14-run_simulation.sh | Existing period/map/runoff/physics/output/thread/run-directory settings explained; executable/Python/Restart input accessible; Step13 JSON still owns matrix/diminfo paths. |
-| f15-maximum_discharge.sh | Existing data/color/normalization/panel/OSM/DPI controls clarified; regional/AOI canvas heights forwarded with existing aspect ratios. |
-| s21-gauge_allocation.sh | Map and output paths annotated; actual spatial allocation logic remains Python. |
-| f21-gauge_allocation.sh | Allocation/map/output paths, catchment extent with explicit ordering, overview width/height and DPI. |
-| s22-extract_hydrograph.sh | Model/observation/allocation/dataset paths, period and output paths annotated. |
-| f22-hydrograph_comparison.sh | Saved series/summary/output, optional display period (blank inherits summary), y-limits, model/observation colors and canvas/DPI. |
-| s23-impact_timing_comparison.sh | Model/timing/allocation paths, exclusive search end and output paths annotated. |
-| f23-impact_timing_comparison.sh | Saved inputs/outputs, Fig23a width/row height/DPI; existing Fig23b settings JSON owns its timing/colors/layout/DPI. |
-| s24-downscale_inundation.sh | Model/map/downscaler/domain/selection/output/metadata paths; the supported single S1A pass and maintained method are not turned into unsupported options. |
-| f24-inundation_1min.sh | Existing downscaling metadata/output, color limits [m], colormap, canvas/DPI. |
+| plot_script/f01-reported_flood_impacts.sh | Map/cache/output, settings section, OSM switch; existing display JSON, extents/locality CSV paths own detailed settings. |
+| plot_script/f02-analysis_domain.sh | Map/cache/output and OSM switch; existing settings JSON and extents/locality/station CSV paths remain authoritative. |
+| run_script/s03a-satellite_availability.sh | Python, Atlantis/catalogue roots and domain JSON; acquisition dates and bbox remain in domain JSON. |
+| plot_script/f03a-satellite_footprints.sh | Domain/catalogue/map/cache/output paths, OSM switch, canvas dimensions and DPI. |
+| run_script/s03b-download_gfm.sh | Domain/selection handoffs, Atlantis/reuse roots, workers and offline mode. |
+| run_script/s03c-classify_gfm_extent.sh | Domain/selection and native manifest paths, output root and overwrite flag; class semantics unchanged. |
+| plot_script/f03c-flood_fraction_1min.sh | Source/domain/focus/locality/map/cache/output paths, canvas/DPI, colormap, limits in percent, PowerNorm gamma and OSM switch; retained --figure-only. |
+| run_script/s03d-extract_gfm_focus_areas.sh | Source raster, structured focus definition/provenance, output root. |
+| plot_script/f03d-gfm_focus_areas_20m.sh | Crop manifest, output/cache, width/height (0 automatic), columns and DPI; categorical meanings/colors retained. |
+| run_script/s04-prepare_discharge.sh | Source station directory and metadata output directory; existing Python fallback retained. |
+| plot_script/f04-observed_discharge.sh | Station/series paths, exclusive start/inclusive end in source time labels, y-limits, canvas/DPI/output; no assumed UTC or invented units. |
+| run_script/s14-run_simulation.sh | Existing period/map/runoff/physics/output/thread/run-directory settings explained; executable/Python/Restart input accessible; Step13 JSON still owns matrix/diminfo paths. |
+| plot_script/f15-maximum_discharge.sh | Existing data/color/normalization/panel/OSM/DPI controls clarified; regional/AOI canvas heights forwarded with existing aspect ratios. |
+| run_script/s21-gauge_allocation.sh | Map and output paths annotated; actual spatial allocation logic remains Python. |
+| plot_script/f21-gauge_allocation.sh | Allocation/map/output paths, catchment extent with explicit ordering, overview width/height and DPI. |
+| run_script/s22-extract_hydrograph.sh | Model/observation/allocation/dataset paths, period and output paths annotated. |
+| plot_script/f22-hydrograph_comparison.sh | Saved series/summary/output, optional display period (blank inherits summary), y-limits, model/observation colors and canvas/DPI. |
+| run_script/s23-impact_timing_comparison.sh | Model/timing/allocation paths, exclusive search end and output paths annotated. |
+| plot_script/f23-impact_timing_comparison.sh | Saved inputs/outputs, Fig23a width/row height/DPI; existing Fig23b settings JSON owns its timing/colors/layout/DPI. |
+| run_script/s24-downscale_inundation.sh | Model/map/downscaler/domain/selection/output/metadata paths; the supported single S1A pass and maintained method are not turned into unsupported options. |
+| plot_script/f24-inundation_1min.sh | Existing downscaling metadata/output, color limits [m], colormap, canvas/DPI. |
 | f01-gfm_3sec_validation.sh | Retired notice only; intentionally exempt. |
 
 Added only necessary optional CLI adapters in Tutorial Python. Defaults for legacy
@@ -129,7 +129,7 @@ repository-wide validation pass.
 Representative commands (run from repository root):
 
 ```bash
-bash -n tutorial/tutorial11-event_evaluation/f04-observed_discharge.sh
+bash -n tutorial/tutorial11-event_evaluation/plot_script/f04-observed_discharge.sh
 PYTHONDONTWRITEBYTECODE=1 GDAL_PAM_ENABLED=NO PROJ_NETWORK=OFF \
   MPLCONFIGDIR=/tmp/cmf-t11-mpl \
   /Users/yamadai/miniforge3/envs/dy/bin/python -B \

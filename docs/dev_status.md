@@ -6,6 +6,18 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+
+### Tutorial11 Step31 scientific synthesis (DT-0182, 2026-11-24)
+
+Maintainer authorizes reusable p31 and one scientific-writing execution on
+existing `feature/package-builder`. New English Markdown and21-page Word report
+combine16 individual Step reports into nine chapters,14 figures and7 tables.
+Previous English synthesis is unchanged; prior chat context limits a blinded
+independence claim. Focused evidence/links, Word content and all-page visual
+checks pass;15 unrelated research errors persist. No scientific execution,
+source/data/figure changes or comparison with older synthesis; uncommitted.
+See [Step31 work and limitations](../tutorial/tutorial11-event_evaluation/AI_work_report/31_scientific_results_synthesis.md).
+
 ### Tutorial11 Step24 scientific assessment completion (DT-0173, 2026-11-24)
 
 Maintainer corrects the scope to complete interpretation within Step24 on
@@ -1312,3 +1324,46 @@ change or analysis run. All20 syntax/normalized AST/signature checks and19
 isolated CLI help comparisons pass. Existing15 research errors remain.
 See the single [Work Report](../tutorial/tutorial11-event_evaluation/AI_work_report/00_python_readability.md)
 and VR-0221. Changes remain uncommitted for review.
+
+
+### Japanese flood-event case study (DT-0179, branch-local proposal)
+
+Maintainer authorizes the existing scientific-results report reconstruction on
+feature/package-builder. Codex owns that report and directly required work/log/
+research records; no overlapping open Issue/PR found. Six chapters present all16
+completed Step outcomes with14 existing figures and17 tables, retaining all8
+Survey tables. Each Step links scientific and execution evidence. No source,
+data, metadata, figures, computation or input/SHA revalidation changed.
+[Case study](../tutorial/tutorial11-event_evaluation/AI_survey_report/00_scientific_results.md)
+and [execution account](../tutorial/tutorial11-event_evaluation/AI_work_report/00_synthesis_preparation.md)
+record document checks and limits (VR-0222). Existing15 research errors remain;
+changes are uncommitted for review. No separate main report or external submission.
+
+
+DT-0179 maintainer-reviewed finishing (2026-11-24): quantitative Executive Summary,
+readable result precision and five scientific synthesis themes added; each
+separates findings, hypotheses and proposed tests. Six chapters,16 Steps,
+14 figures,17 tables and70 reference destinations retained. Documentation-only
+checks PASS; no scientific rerun. VR-0223;15 unrelated registry errors persist.
+Existing changes remain uncommitted for review on feature/package-builder.
+
+
+DT-0180 (2026-11-24), approved bounded documentation follow-up on existing
+feature/package-builder: [English case study](../tutorial/tutorial11-event_evaluation/AI_survey_report/00_scientific_results_en.md)
+created with6 chapters16 Steps14 original figures17 tables and9 references.
+Scientific uncertainties and five findings/hypotheses/test themes preserved;
+82 local/internal links and13 external URL checks PASS (VR-0224). Japanese
+edition and scientific products unchanged. No new analysis or Word/PDF export;
+15 unrelated registry errors persist. Uncommitted for maintainer review.
+
+
+DT-0181 (2026-11-24), approved Tutorial11 directory/path maintenance on existing
+feature/package-builder:10 processing and11 plotting Shell entry points moved
+to run_script/ and plot_script/; process document migrated to
+[Tutorial11 README](../tutorial/tutorial11-event_evaluation/README.md).
+Root anchors and active references repaired; settings/implementations/scientific
+reports/modes and pre-existing deletions preserved.21 syntax checks,126 isolated
+path/settings probes,3 no-op argument captures and114 guidance links PASS
+(VR-0225). Existing environment and frozen-report link limitations are in the
+[consolidated work record](../tutorial/tutorial11-event_evaluation/AI_work_report/00_directory_organization.md).
+No scientific rerun or compatibility wrappers. Uncommitted;15 prior registry errors.

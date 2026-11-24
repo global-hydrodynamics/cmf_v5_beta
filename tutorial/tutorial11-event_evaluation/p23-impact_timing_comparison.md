@@ -21,14 +21,14 @@ Use this workflow for the Rhine 2021 sample after checking the current Tutorial 
 4. Preserve `timing_type`, UTC start/end, original time string, original timezone note, and confidence. Do not convert a raw time unless Step 01 already records a source-supported UTC value. Plot unknown-time locations without an observation marker and identify their timing as unavailable; keep unconverted source times in the CSV/report.
 5. Plot Figure 23a as one hourly hydrograph per unique selected cell for July 13–16 UTC. Plot Figure 23b as one row per report. Mark reported discharge peaks separately from water-level peaks; water-level peaks are reference information and must not be included in discharge-peak lag metrics.
 6. Calculate `inside_window_flag` and signed `lag_to_window_hours` only for a confirmed UTC `discharge_peak` and a model peak not on the search boundary. Keep a computed lag provisional when river-cell correspondence is only plausible. Do not calculate lags for impact reports, unknown timezones, water-level peaks, unresolved/not-represented rivers, or missing model cells.
-7. Run `bash s23-impact_timing_comparison.sh`, then `bash f23-impact_timing_comparison.sh`. Inspect both figures for time range, labels, marker meaning, unknown-time handling, and river-allocation caveats. Update the Survey Report, Work Report, this process document and the development log.
+7. Run `bash run_script/s23-impact_timing_comparison.sh`, then `bash plot_script/f23-impact_timing_comparison.sh`. Inspect both figures for time range, labels, marker meaning, unknown-time handling, and river-allocation caveats. Update the Survey Report, Work Report, this process document and the development log.
 
 No interpolation, temporal aggregation, model rerun, gauge reallocation or skill metrics are part of this exploratory Step.
 
 ## Redraw only Fig. 23b
 
 ```sh
-bash f23-impact_timing_comparison.sh --summary-only
+bash plot_script/f23-impact_timing_comparison.sh --summary-only
 ```
 
 Edit `metadata/23_timing_figure_settings.json` for the UTC display interval,
