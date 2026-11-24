@@ -213,6 +213,103 @@ def style_axes(ax, extent) -> None:
     ax.grid(color="#d8dfe3", linewidth=0.45, alpha=0.7, zorder=1)
 
 
+
+def draw_catchment_review(tutorial, map_dir, impact_records, map_data, segments, area, output, dpi, extent):
+    """Add an Ahr–Erft companion figure using the unchanged p01-f04 boundaries."""
+    processing = load_helper(tutorial / "script/s21-gauge_allocation.py", "tutorial11_step21_processing")
+    lon, lat, uparea = map_data[:3]
+    catmx, catmy, valid, unassigned, hires, shared = processing.load_catchments(map_dir, lon, lat, uparea)
+    west, east, south, north = extent
+    resolution = hires["resolution"]
+    r0=max(0,int(np.floor((hires["north"]-north)/resolution)))
+    r1=min(hires["ny"],int(np.ceil((hires["north"]-south)/resolution)))
+    c0=max(0,int(np.floor((west-hires["west"])/resolution)))
+    c1=min(hires["nx"],int(np.ceil((east-hires["west"])/resolution)))
+    cx,cy=catmx[r0:r1,c0:c1],catmy[r0:r1,c0:c1]
+    good=valid[r0:r1,c0:c1]
+    xedges=hires["west"]+np.arange(c0,c1+1)*resolution
+    yedges=hires["north"]-np.arange(r0,r1+1)*resolution
+    # Discrete colors identify model unit catchments; their values are not magnitudes.
+    from matplotlib.colors import ListedColormap, BoundaryNorm
+    from matplotlib.patches import Patch
+    ids=np.where(good,(cy.astype(int)-1)*len(lon)+cx-1,-1)
+    unique=np.unique(ids[good]);categories=np.full(ids.shape,-1,dtype=int)
+    for index,key in enumerate(unique): categories[ids==key]=index
+    colors=plt.get_cmap("tab20")(np.arange(len(unique))%20)
+    colors[:,:3]=.35*colors[:,:3]+.65
+    cmap=ListedColormap(colors);cmap.set_bad((0,0,0,0))
+    # Fix physical map height and derive map/canvas width from geographic aspect.
+    map_height=7.0;map_width=map_height*(east-west)*np.cos(np.deg2rad((south+north)/2))/(north-south)
+    fw,fh=map_width+1.2,map_height+2.3
+    fig=plt.figure(figsize=(fw,fh))
+    ax=fig.add_axes([.8/fw,1.55/fh,map_width/fw,map_height/fh])
+    # Distinguish unassigned land (-999) from other NoData/background.
+    background = np.where(unassigned[r0:r1,c0:c1], 1, 0)
+    ax.pcolormesh(xedges,yedges,background,cmap=ListedColormap(["white", "#999999"]),
+                  vmin=0,vmax=1,shading="flat",zorder=-1)
+    ax.pcolormesh(xedges,yedges,np.ma.masked_where(~good,categories),cmap=cmap,
+                  norm=BoundaryNorm(np.arange(-.5,len(unique)+.5),len(unique)),shading="flat",zorder=0)
+    boundaries=shared.catchment_boundaries(cx,cy,good,xedges,yedges)
+    ax.add_collection(LineCollection(boundaries,colors="#858585",linewidths=.4,zorder=1))
+    # Geographic 15-minute rectangles are context, not the assignment boundaries.
+    for value in np.arange(hires["west"],hires["east"]+.125,.25):
+        if west<value<east:ax.axvline(value,color="#777777",lw=.4,ls=":",zorder=1)
+    for value in np.arange(hires["south"],hires["north"]+.125,.25):
+        if south<value<north:ax.axhline(value,color="#777777",lw=.4,ls=":",zorder=1)
+    order=np.argsort(area);draw_network(ax,segments[order],area[order],(west,east,south,north))
+    for segment in segments:
+        middle=segment.mean(axis=0)
+        if west<middle[0]<east and south<middle[1]<north:
+            start=.58*segment[0]+.42*segment[1];end=.42*segment[0]+.58*segment[1]
+            ax.annotate("",end,start,arrowprops=dict(arrowstyle="->",color="#315c7b",lw=.7,mutation_scale=7),zorder=3)
+    selected=[r for r in impact_records if r["catmxy_status"]=="assigned" and
+              west<=float(r["observed_lon"])<=east and south<=float(r["observed_lat"])<=north]
+    old_drawn,new_drawn=set(),set()
+    for row in selected:
+        observed=(float(row["observed_lon"]),float(row["observed_lat"]))
+        old=(float(row["model_outlet_lon"]),float(row["model_outlet_lat"]))
+        new=(float(row["catmxy_outlet_lon"]),float(row["catmxy_outlet_lat"]))
+        ax.plot([observed[0],old[0]],[observed[1],old[1]],color="#d27b17",lw=.65,ls=":",alpha=.7,zorder=4)
+        ax.plot([observed[0],new[0]],[observed[1],new[1]],color="#007b83",lw=.85,alpha=.8,zorder=4)
+        if old not in old_drawn:
+            ax.scatter(*old,s=85,marker="s",facecolors="none",edgecolors="#d27b17",lw=1.4,zorder=6);old_drawn.add(old)
+        if new not in new_drawn:
+            ax.scatter(*new,s=42,marker="D",c="#007b83",edgecolors="white",lw=.7,zorder=7);new_drawn.add(new)
+            ax.annotate(f"({row['catmxy_row_0based']},{row['catmxy_col_0based']})",new,
+                        xytext=(4,7),textcoords="offset points",fontsize=7,color="#005b61",zorder=9,
+                        bbox=dict(facecolor="white",alpha=.85,edgecolor="none",pad=1))
+        locality=row["report_id"].startswith("impact-")
+        ax.scatter(*observed,s=38,marker="o" if locality else "^",c="#ac2446",edgecolors="white",lw=.7,zorder=8)
+    focus={"ahr-schuld":("Schuld",(-30,-18)),"ahr-altenahr":("Altenahr",(-42,16)),
+           "ahr-bad-neuenahr":("Bad Neuenahr",(8,-20)),"erft-blessem":("Blessem",(-25,14)),
+           "erft-bad-muenstereifel":("Bad Muenstereifel",(-60,-17)),"erft-euskirchen":("Euskirchen",(-43,12))}
+    for row in selected:
+        if row["report_id"].startswith("impact-") and row["location_id"] in focus:
+            label,offset=focus[row["location_id"]]
+            ax.annotate(label,(float(row['observed_lon']),float(row['observed_lat'])),xytext=offset,
+                        textcoords="offset points",fontsize=8,zorder=10,
+                        bbox=dict(facecolor="white",alpha=.9,edgecolor="none",pad=1.5))
+    style_axes(ax,(west,east,south,north));ax.set_xlabel("Longitude");ax.set_ylabel("Latitude")
+    fig.text(.5,1-.24/fh,"Tutorial 11 Fig. 21 — Catchment Allocation",ha="center",va="top",fontsize=12)
+    fig.text(.5,1-.53/fh,"Ahr–Erft: 1-minute catchments and 15-minute outlet network",ha="center",va="top",fontsize=9)
+    handles=[Patch(facecolor=colors[0],edgecolor="#858585",label="Unit catchment (categorical colors)"),
+      Line2D([],[],color="#4c7694",label="nextxy / downstream arrows"),
+      Line2D([],[],marker="o",ls="none",color="#ac2446",label="Reported locality"),
+      Line2D([],[],marker="^",ls="none",color="#ac2446",label="Detailed report site"),
+      Line2D([],[],marker="s",ls=":",color="#d27b17",mfc="none",label="Old geographic-cell outlet"),
+      Line2D([],[],marker="D",color="#007b83",label="New catmxy outlet / point connector"),
+      Patch(facecolor="#999999",label="Unassigned land (catmxy=-999)"),
+      Patch(facecolor="white",edgecolor="#bbbbbb",label="Other NoData / background")]
+    fig.legend(handles=handles,loc="lower center",bbox_to_anchor=(.5,.35/fh),ncol=2,fontsize=7.5,frameon=False)
+    fig.text(.5,.15/fh,"Labels (row,col) are zero-based. A valid catchment lookup does not confirm local river identity.",ha="center",fontsize=7)
+    fig.canvas.draw()
+    # Retain physical axes bounds and extent for reproducible layout inspection.
+    bounds=ax.get_position().bounds
+    print(f"Catchment Figure map bounds (inches): {[round(v,3) for v in (bounds[0]*fw,bounds[1]*fh,bounds[2]*fw,bounds[3]*fh)]}")
+    fig.savefig(output,dpi=dpi,facecolor="white");plt.close(fig)
+    print(f"Wrote {output}; {len(unique)} categorical catchments; {len(boundaries)} boundary segments")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tutorial-dir", type=Path, required=True)
@@ -221,6 +318,8 @@ def main() -> None:
     parser.add_argument("--impact-allocation-csv", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--dpi", type=int, default=200)
+    parser.add_argument("--catchment-output", type=Path)
+    parser.add_argument("--catchment-extent", default="6.4,7.5,50.25,51.10")
     args = parser.parse_args()
 
     tutorial = args.tutorial_dir.resolve()
@@ -277,6 +376,11 @@ def main() -> None:
     fig.savefig(args.output, dpi=args.dpi, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     print(f"Wrote {args.output}; map={map_dir}; grid={nx}x{ny} at {resolution:g}°")
+    extent = tuple(float(value) for value in args.catchment_extent.split(","))
+    if len(extent) != 4 or not (extent[0] < extent[1] and extent[2] < extent[3]):
+        raise ValueError("catchment extent must be west,east,south,north")
+    catchment_output = args.catchment_output or args.output.with_name("f21-catchment_allocation.png")
+    draw_catchment_review(tutorial,map_dir,impact_records,map_data,segments,area,catchment_output,args.dpi,extent)
 
 
 if __name__ == "__main__":

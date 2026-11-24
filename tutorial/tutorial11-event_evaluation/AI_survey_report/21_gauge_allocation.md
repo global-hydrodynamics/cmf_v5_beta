@@ -1,5 +1,92 @@
 # Step 21 — Gauge and Flood Impact Location Allocation
 
+## Catchment-based scientific review — 2026-11-24
+
+The restored Rhine map was inspected and the high-resolution allocation was
+executed on this workstation. All **22 report records** remain: **21 have valid
+catmxy assignments, 11 change model cell**, and the coordinate-missing Eupen
+outlet report remains unassigned. The 14 locality records and eight detailed
+reports retain their IDs and individual rows. Old geographic columns and notes
+are retained; the three-gauge CSV is byte-identical to its pre-review version.
+
+The 600 × 480 one-minute grid covers 3–13°E, 45–53°N. A location selects its
+containing one-minute pixel; the pixel's two int16 values identify the
+one-based x/y of its **unit-catchment model cell**. They do not identify the
+15-minute rectangle containing the location. No nearest-channel snapping or
+coordinate substitution was used.
+
+| Locality | Old (row,col), area km² | catmxy (row,col), area km² | Interpretation |
+|---|---|---|---|
+| Schuld | (10,15), 680.265 | (10,15), 680.265 | Unchanged candidate; downstream goes directly to (9,17). |
+| Altenahr | (9,15), 630.277 | (9,17), 140,560.780 | Old cell belongs to the same model path as upper Erft sites. New assignment shares the large-channel cell with lower-Ahr reports; independent local Ahr routing remains unresolved. |
+| Bad Neuenahr-Ahrweiler | (9,16), 140,777.669 | (9,17), 140,560.780 | Changes to an upstream cell on the same large-area path, not a separately resolved small tributary. |
+| Blessem | (8,15), 144,251.306 | (8,14), 1,450.238 | Moves from the large-area path to the Erft-side candidate draining upper Erft sites. Plausible, not independently confirmed. |
+
+### River connection evidence
+
+All 21 assigned point paths terminate at stored nextxy=(-9,-9), have no cycle,
+and have no decrease in mapped upstream area. This establishes selected map
+connectivity consistency, not independent river-name or flood-wave validation.
+The retained JSON contains full paths and outlet coordinates.
+
+- **Ahr:** Schuld/Müsch (10,15; 680 km²) → (9,17; 140,561 km²) →
+  (9,16; 140,778 km²). Altenahr, Bad Neuenahr, Sinzig, Pegel Altenahr and
+  Bad Bodendorf all map to (9,17). Their upstream/downstream local ordering
+  cannot be resolved inside one model cell. The increase in area does not
+  establish correct Ahr reach representation. The lower-Ahr channel is not
+  independently resolved by these assignments; named-reach status remains
+  `unresolved`, rather than asserting the physical tributary is absent globally.
+- **Erft:** Bad Münstereifel, Euskirchen and detailed Bliesheim map to
+  (9,15; 630 km²) → Blessem (8,14; 1,450 km²) →
+  (7,14; 147,646 km²). This supports a tributary-side Blessem candidate and
+  explains why the old (8,15) large-channel assignment was misleading.
+- **Kyll:** Kordel changes from (12,14; large receiving channel) to
+  (11,14; 819.941 km²), then drains to (12,14; 25,093 km²).
+- **Prüm:** Prümzurlay changes to (11,13; 580.627 km²), then
+  (12,13; 4,222 km²) → (13,14; 23,811 km²) → (12,14).
+  The Kyll/Prüm candidates are separate tributary branches before their shared
+  receiving path. No intervening named-river identity is inferred from area.
+- **Vesdre:** Verviers (9,12; 351 km²) → Pepinster (9,11; 699 km²)
+  → (9,10; 20,644 km²), consistent with the retained point order.
+
+There are **16 plausible** and **6 unresolved** records (five lower-Ahr reports
+and the coordinate-missing Eupen report); none are promoted to confirmed.
+Plausible means map-consistent candidate with coordinate/river uncertainty,
+not an independently established river identity. Town-center coordinates and
+one-minute resolution can select a nearby hillslope unit catchment, which
+remains a limitation even when indices and topology are consistent.
+
+### Catchment Figure
+
+![Ahr–Erft catchments and old/new outlets](../figure/f21-catchment_allocation.png)
+
+Discrete pastel regions and fine boundaries show one-minute unit-catchment
+assignments, not 15-minute rectangles. Dotted geographic grid lines are only
+context. Gray pixels are unassigned land; other NoData/background is white.
+Blue outlet-to-outlet links and arrows use standard nextxy. Orange
+open squares/dotted connectors show old geographic outlets; teal diamonds/solid
+connectors show catmxy outlets. Coincident symbols indicate unchanged outlets.
+Blessem moves to a separate western outlet; the lower-Ahr reports converge on
+one large-area outlet. Straight point connectors are assignment guides, not
+mapped river courses. The original regional Figure remains below.
+
+### Step 23 handoff and remaining questions
+
+Prefer the assigned `catmxy_row_0based`/`catmxy_col_0based` candidates for future
+impact-location extraction. Retain each report separately even when model cells
+coincide; duplicated model series must not be interpreted as independent local
+river signals. Carry `river_allocation_status/reason`, coordinate confidence,
+and old/new differences into that work. Keep Eupen unassigned. The lower-Ahr
+river representation and approximate town-coordinate meaning remain unresolved;
+matching a reported flood wave requires later evidence. No Step 23 extraction,
+peak-time comparison, simulation, map modification or Gallery publication was
+performed. Existing observation-unit/timezone and forcing-time caveats remain.
+
+## Retained geographic and gauge review
+
+The following findings describe the earlier geographic assignment, preserved
+for comparison; they are not the new catmxy results.
+
 ## Finding
 
 The ECMWF `Cama15row/col` candidates resolve to valid cells in the current

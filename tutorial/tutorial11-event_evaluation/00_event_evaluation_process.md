@@ -324,6 +324,19 @@ consume the unchanged gauge-only CSV; impact-location extractions can use the
 separate report-linked CSV in a later analysis. Retain unresolved observation
 unit, timing and river-representation limitations.
 
+The Step 21 catchment review additionally reads the one-minute `catmxy` pixel
+assignment and preserves its one-based regional x/y values alongside zero-based
+`catmxy_row_0based`/`catmxy_col_0based`. Geographic `model_*` fields remain
+unchanged. Run `s21-gauge_allocation.sh --catchment-only` to enrich the retained
+impact table without rewriting the gauge CSV. Full paths, source fingerprints
+and geometry are in `metadata/21_catchment_review.json`; the companion
+[catchment Figure](figure/f21-catchment_allocation.png) distinguishes old/new
+outlets and pixel-edge unit-catchment boundaries. Twenty-one of 22 reports are
+assigned and 11 change cell. Lower-Ahr reports share a large-channel cell, so
+local reach identity remains unresolved. A future Step 23 should prefer assigned
+catmxy candidates with their uncertainty, retain repeated report rows and leave
+missing assignments unfilled. That extraction is not implemented by Step 21.
+
 ### Step 22 — Model–Observation Hydrograph Comparison
 
 Extract hourly `outflw` at the zero-based row/column cells in Step 21 and

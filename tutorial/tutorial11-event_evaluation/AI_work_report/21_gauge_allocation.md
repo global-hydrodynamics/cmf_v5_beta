@@ -1,5 +1,66 @@
 # Step 21 — Gauge Allocation Work Report
 
+## Catchment review execution — 2026-11-24
+
+Executed on the restored local map at starting revision `eb42483b` on
+`feature/package-builder`; retained geographic/gauge text below describes the
+previous work. The pre-existing `bin2nc_list.txt` edit is outside this task.
+
+Inputs were `params.txt`, `1min/location.txt`, `1min/1min.catmxy.bin` and
+`netcdf/{lonlat,uparea,nextxy,rivwth_merit,basin}.nc`, together with the retained
+Step 01 inventories and Step 21 impact table. The Binary contains 576,000
+little-endian int16 values (two 480 × 600 planes). All raw values agree with
+`1min_nc/1min.catmxy.nc` variables `catmxx` and `catmyy`.
+
+Reused unchanged `f04_rivmap_catchment.read_catchment_mapping` and
+`catchment_boundaries` via the Tutorial processing/plotting code. Params and
+NetCDF centers align on a 40 × 32 0.25° model grid. High-resolution containment
+uses floor((north−lat)/res), floor((lon−west)/res), with west/north inclusive,
+east/south exclusive boundaries. Convert stored indices to row=y−1, col=x−1.
+NoData/unassigned points are retained without nearest-channel fallback.
+
+Commands actually run:
+
+```sh
+MPLCONFIGDIR=/tmp/cmf-mpl-cache bash s21-gauge_allocation.sh --catchment-only
+MPLCONFIGDIR=/tmp/cmf-mpl-cache bash f21-gauge_allocation.sh
+```
+
+`--catchment-only` enriches the old CSV; the full initial workflow remains
+available without that flag. A stable Step21 note suffix is replaced on rerun,
+preserving the original notes and keeping `ai_notes` rightmost. The companion
+Figure's extent is configured in the Shell. It includes all four priority
+localities and both their old and new outlets, while the original regional
+Figure is retained. Scientific interpretation is in the Survey Report.
+
+L1 checks actually performed: all 22 report/location IDs and old fields retained;
+old notes retained as prefixes; gauge CSV byte-identical; all 576,000 Binary
+index values equal NetCDF; direct raw-pixel x/y−1 checks for all 21 assigned
+reports; all assigned standard downstream paths terminate with (-9,-9), have
+no cycles and no area decrease; recorded input SHA-256 values unchanged during
+rerun. Processing reports 21 assigned, 11 changed, 16 plausible and 6 unresolved.
+The Figure workflow draws 1,181 regional links with zero invalid helper links.
+The companion Figure was inspected and its extent enlarged so Blessem's old/new
+outlets both fit; its fixed map area is derived from geographic aspect, with
+titles/legend outside the map. No map/input/simulation data were written.
+
+Changed deliverables: processing and Figure Python/Shell files, impact CSV,
+`metadata/21_catchment_review.json`, companion PNG, Prompt, Survey/Work Reports,
+process document, development log, dashboard and supporting research records.
+No reference Tutorial 02/Visualization code, gauge CSV or Step 23 was changed.
+Shell syntax, Python AST, changed-document local links, input/path validity,
+repeat-output stability and diff checks passed. The research validator retains
+22 pre-existing errors unrelated to this task, with no additional errors.
+
+Handoff: use assigned catmxy indices with river/coordinate uncertainty; never
+silently substitute geographic cells for missing assignments. The JSON stores
+source fingerprints, geometry and full unique downstream paths. The lower-Ahr
+shared large-channel representation and unverified named-river identities remain
+scientific limits. No peak-time comparison or accuracy metric is supported by
+this spatial review.
+
+## Previous geographic-allocation execution record
+
 ## Inputs
 
 - `observation/stations_data/allstations.csv`
@@ -96,6 +157,6 @@ was not run.
 
 ## Handoff
 
-Use `model_row_0based` and `model_col_0based` from the CSV to index the current
+For the unchanged gauge CSV, use `model_row_0based` and `model_col_0based` to index the current
 Step 14 `outflw(time, lat, lon)` field. Keep the unresolved discharge units,
 time zone and conditional `ProvArea` unit visible in any subsequent comparison.

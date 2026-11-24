@@ -6,6 +6,20 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Tutorial 11 Step 21 catchment review (DT-0168, 2026-11-24)
+
+Maintainer authorizes the resumed bounded review on `feature/package-builder`
+after restoring local map/simulation data. Codex owns Step21 processing/figures,
+impact metadata, Prompt/reports/process/log and supporting records; preserve
+old geographic fields, the gauge CSV, reference methods and unrelated edits.
+The completed L1 review assigns 21/22 reports using one-minute catmxy (11 changed),
+adds complete nextxy/source-fingerprint metadata and an Ahr–Erft companion Figure.
+Blessem moves to a 1,450 km² tributary candidate; five lower-Ahr reports share
+a 140,561 km² model cell and remain unresolved (KG-0039). Gauge CSV and regional
+Figure remain byte-identical. No Step23, simulation or map regeneration.
+Evidence: [VR-0211](../research/records/validation_runs/VR-0211.md) and Step21 reports.
+
+
 ### All-available high-resolution Binary restoration (DT-0167, 2026-11-24)
 
 Maintainer authorizes the bounded s04 default change on `feature/package-builder`,

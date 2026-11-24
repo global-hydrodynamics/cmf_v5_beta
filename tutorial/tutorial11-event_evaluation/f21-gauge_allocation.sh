@@ -10,6 +10,8 @@ MAP_DIR="$REPO_ROOT/map/Rhine_15min"
 ALLOCATION="$SCRIPT_DIR/metadata/21_gauge_allocation.csv"
 IMPACT_ALLOCATION="$SCRIPT_DIR/metadata/21_impact_location_allocation.csv"
 OUTPUT="$SCRIPT_DIR/figure/f21-gauge_allocation.png"
+# Include both old and catchment-based outlets for the four priority localities.
+CATCHMENT_EXTENT="6.4,7.5,50.25,51.10"  # west,east,south,north
 
 if [[ ! -f "$ALLOCATION" ]]; then
     printf 'Missing %s; run s21-gauge_allocation.sh first.\n' "$ALLOCATION" >&2
@@ -25,6 +27,8 @@ fi
     --map-dir "$MAP_DIR" \
     --allocation-csv "$ALLOCATION" \
     --impact-allocation-csv "$IMPACT_ALLOCATION" \
-    --output "$OUTPUT"
+    --output "$OUTPUT" \
+    --catchment-output "$SCRIPT_DIR/figure/f21-catchment_allocation.png" \
+    --catchment-extent "$CATCHMENT_EXTENT"
 
 printf 'Gauge allocation figure: %s\n' "$OUTPUT"

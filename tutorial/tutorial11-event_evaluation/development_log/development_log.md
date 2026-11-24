@@ -758,3 +758,16 @@ for the three stations, and Figure 22 was generated from the saved CSV.
 ## 2026-11-24 — Step 1 flood timing and detailed locations
 
 Reviewed the 14 existing impact locations and added a source-linked timing/location ledger. Recorded official CEST gauge peaks for the Ahr, Kyll and Prüm; separately recorded Erft/Bliesheim, Vesdre/Eupen outlet and Geul/Valkenburg timing with unconverted original labels where timezone notation was not confirmed. Halen and Wavre remain date-only/uncertain at locality scale. Existing impact IDs and Fig. 1 locality coordinates were retained; detailed station coordinates are separate records. Updated the Step 1 Prompt, process document, reports, timing legend and Figure 1. No model allocation, simulation, or comparison was performed.
+
+## 2026-11-24 — Step 21 unit-catchment allocation review
+
+After the maintainer restored map/simulation data, added the existing p01-f04
+catmxy reader and boundary method to Step 21 without modifying the references.
+Retained all old geographic fields, notes and 22 report rows; added 21 valid
+catchment candidates (11 changed), full stored nextxy path metadata and the
+Ahr–Erft companion Figure. Blessem moves to the 1,450 km² tributary candidate;
+lower Ahr reports share a 140,561 km² cell, so their local routing remains
+unresolved. Gauge CSV is unchanged. L1 raw-index, format, topology, field/ID
+preservation and visual checks passed; no Step 23, simulation or map generation.
+The earlier stop for missing local data involved no file changes; work resumed
+only after restoration. See the Step 21 Survey/Work Reports for evidence/limits.

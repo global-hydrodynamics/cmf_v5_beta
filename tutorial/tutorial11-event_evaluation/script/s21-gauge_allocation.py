@@ -6,6 +6,9 @@ from __future__ import annotations
 import argparse
 import csv
 import math
+import json
+import hashlib
+import sys
 from pathlib import Path
 
 from netCDF4 import Dataset
@@ -233,12 +236,175 @@ def trace_downstream(start: tuple[int, int], targets: dict[str, tuple[int, int]]
     return visited
 
 
+
+def load_catchments(map_dir: Path, lon, lat, uparea):
+    """Reuse p01-f04's Binary geometry, sentinels and one-based assignment reader."""
+    helper_dir = map_dir.parents[1] / "visualization/river_map/script"
+    sys.path.insert(0, str(helper_dir))
+    try:
+        import f04_rivmap_catchment as catchment
+    finally:
+        sys.path.pop(0)
+    values = [line.split()[0] for line in (map_dir / "params.txt").read_text().splitlines()]
+    geometry = (int(values[0]), int(values[1]), float(values[3]), *map(float, values[4:8]))
+    nx, ny, res, west, east, south, north = geometry
+    if ((nx, ny) != (len(lon), len(lat)) or
+            not np.allclose(lon, west + (np.arange(nx) + .5) * res) or
+            not np.allclose(lat, north - (np.arange(ny) + .5) * res)):
+        raise ValueError("params.txt and model NetCDF cell centers disagree")
+    result = catchment.read_catchment_mapping(
+        map_dir / "1min/1min.catmxy.bin", map_dir / "1min/location.txt",
+        geometry, np.isfinite(uparea) & (uparea > 0))
+    return (*result, catchment)
+
+
+def downstream_path(start, nextx, nexty):
+    """Follow the stored standard network without guessing terminal destinations."""
+    ny, nx = nextx.shape
+    path, seen = [], set()
+    cell = start
+    while cell not in seen:
+        seen.add(cell)
+        path.append(cell)
+        x, y = int(nextx[cell]), int(nexty[cell])
+        if not (1 <= x <= nx and 1 <= y <= ny):
+            return path, f"terminal_nextxy_{x}_{y}"
+        cell = (y - 1, x - 1)
+    return path, "cycle"
+
+
+def add_catchment_allocations(map_dir: Path, map_data, output_path: Path):
+    """Enrich retained geographic assignments, never replacing their fields or notes."""
+    lon, lat, outlon, outlat, uparea, nextx, nexty, width, basin = map_data
+    catmx, catmy, valid, unassigned, hires, _ = load_catchments(map_dir, lon, lat, uparea)
+    rows = read_csv(output_path)
+    extra_fields = [
+        "hires_pixel_row_0based", "hires_pixel_col_0based", "catmxy_x_1based", "catmxy_y_1based",
+        "catmxy_row_0based", "catmxy_col_0based", "catmxy_cell_lon", "catmxy_cell_lat",
+        "catmxy_outlet_lon", "catmxy_outlet_lat", "catmxy_uparea_km2", "catmxy_rivwth_m",
+        "catmxy_basin_id", "catmxy_distance_to_outlet_km", "catmxy_nextx_1based", "catmxy_nexty_1based",
+        "catmxy_next_row_0based", "catmxy_next_col_0based", "catmxy_next_outlet_lon",
+        "catmxy_next_outlet_lat", "catmxy_next_uparea_km2", "catmxy_downstream_report_ids",
+        "catmxy_path_area_decreases", "catmxy_path_termination", "catmxy_status", "allocation_changed",
+        "river_allocation_status", "river_allocation_reason",
+    ]
+    fields = [f for f in rows[0] if f != "ai_notes" and f not in extra_fields] + extra_fields + ["ai_notes"]
+    for row in rows:
+        for f in extra_fields:
+            row[f] = ""
+        row["river_allocation_status"] = "unresolved"
+        row["river_allocation_reason"] = "No valid catchment assignment; no nearest-channel fallback."
+        if not row["observed_lon"] or not row["observed_lat"]:
+            row["catmxy_status"] = "missing_coordinates"
+            continue
+        x, y = float(row["observed_lon"]), float(row["observed_lat"])
+        # West/north inclusive, east/south exclusive; north-first pixel rows.
+        if not (hires["west"] <= x < hires["east"] and hires["south"] < y <= hires["north"]):
+            row["catmxy_status"] = "outside_highres_grid"
+            continue
+        pr = int(math.floor((hires["north"] - y) / hires["resolution"]))
+        pc = int(math.floor((x - hires["west"]) / hires["resolution"]))
+        row.update(hires_pixel_row_0based=pr, hires_pixel_col_0based=pc,
+                   catmxy_x_1based=int(catmx[pr, pc]), catmxy_y_1based=int(catmy[pr, pc]))
+        if not valid[pr, pc]:
+            row["catmxy_status"] = "unassigned_land" if unassigned[pr, pc] else "nodata_or_invalid_assignment"
+            continue
+        rr, cc = int(catmy[pr, pc]) - 1, int(catmx[pr, pc]) - 1
+        if not (np.isfinite(outlon[rr, cc]) and np.isfinite(outlat[rr, cc]) and
+                outlon[rr, cc] != -9999 and outlat[rr, cc] != -9999 and width[rr, cc] > 0):
+            row["catmxy_status"] = "invalid_model_outlet"
+            continue
+        row.update(catmxy_row_0based=rr, catmxy_col_0based=cc,
+                   catmxy_cell_lon=f"{lon[cc]:.6f}", catmxy_cell_lat=f"{lat[rr]:.6f}",
+                   catmxy_outlet_lon=f"{outlon[rr, cc]:.8f}", catmxy_outlet_lat=f"{outlat[rr, cc]:.8f}",
+                   catmxy_uparea_km2=f"{uparea[rr, cc] / 1e6:.3f}",
+                   catmxy_rivwth_m=f"{width[rr, cc]:.3f}", catmxy_basin_id=int(basin[rr, cc]),
+                   catmxy_distance_to_outlet_km=f"{great_circle_km(x,y,outlon[rr,cc],outlat[rr,cc]):.3f}",
+                   catmxy_nextx_1based=int(nextx[rr,cc]), catmxy_nexty_1based=int(nexty[rr,cc]),
+                   catmxy_status="assigned", allocation_changed=str((rr,cc) != (int(row["model_row_0based"]),int(row["model_col_0based"]))).lower())
+        dx, dy = int(nextx[rr,cc])-1, int(nexty[rr,cc])-1
+        if 0 <= dx < len(lon) and 0 <= dy < len(lat):
+            row.update(catmxy_next_row_0based=dy, catmxy_next_col_0based=dx,
+                       catmxy_next_outlet_lon=f"{outlon[dy,dx]:.8f}",catmxy_next_outlet_lat=f"{outlat[dy,dx]:.8f}",
+                       catmxy_next_uparea_km2=f"{uparea[dy,dx]/1e6:.3f}")
+    for row in rows:
+        if row["catmxy_status"] == "assigned":
+            start=(int(row["catmxy_row_0based"]), int(row["catmxy_col_0based"]))
+            path, termination = downstream_path(start,nextx,nexty)
+            row["catmxy_path_termination"] = termination
+            row["catmxy_path_area_decreases"] = sum(uparea[b] < uparea[a] for a,b in zip(path,path[1:]))
+            # Include same-cell reports explicitly; co-location is not downstream resolution.
+            row["catmxy_downstream_report_ids"] = ";".join(other["report_id"] for other in rows
+                if other["catmxy_status"] == "assigned" and other["report_id"] != row["report_id"] and
+                (int(other["catmxy_row_0based"]),int(other["catmxy_col_0based"])) in path)
+            group=row["river_group"]
+            if group == "Ahr" and start == (9,17):
+                reason = ("Lower Ahr reports collapse onto the same large-area model cell (9,17); "
+                          "Schuld (10,15) drains directly into it. Independent lower-Ahr routing is not resolved "
+                          "by these assignments; named reach identity remains unverified.")
+                status="unresolved"
+            elif termination == "cycle" or row["catmxy_path_area_decreases"]:
+                status="unresolved";reason="Stored downstream path needs review: cycle or decreasing upstream area."
+            else:
+                status="plausible"
+                reason=("Valid one-minute unit-catchment lookup and outlet, with a terminating standard nextxy path "
+                        "and nondecreasing mapped upstream area. Named-river identity is not independently confirmed; "
+                        "town/site coordinate and one-minute pixel uncertainty remain.")
+                if group == "Ahr":
+                    reason += " Schuld/Muesch drain into the shared lower-Ahr/large-channel cell; no separate downstream Ahr reach is resolved."
+                if group == "Erft/Swist":
+                    reason += " Upper Erft sites/Bliesheim at (9,15) drain to Blessem (8,14), then (7,14)."
+            row["river_allocation_status"]=status;row["river_allocation_reason"]=reason
+        # Existing narrative is retained byte-for-byte before a stable, replaceable suffix.
+        row["ai_notes"]=row["ai_notes"].split(" [Step21 catmxy review]")[0] + (
+            " [Step21 catmxy review] " + row["catmxy_status"] + "; " + row["river_allocation_reason"])
+    with output_path.open("w",newline="",encoding="utf-8") as f:
+        writer=csv.DictWriter(f,fieldnames=fields,lineterminator="\n")
+        writer.writeheader();writer.writerows(rows)
+    paths = {}
+    for row in rows:
+        if row["catmxy_status"] != "assigned":
+            continue
+        start = (int(row["catmxy_row_0based"]), int(row["catmxy_col_0based"]))
+        key = f"{start[0]},{start[1]}"
+        if key not in paths:
+            path, termination = downstream_path(start, nextx, nexty)
+            paths[key] = {
+                "cells_row_col_0based": path,
+                "uparea_km2": [float(uparea[cell] / 1e6) for cell in path],
+                "outlet_lon_lat": [[float(outlon[cell]),float(outlat[cell])] for cell in path],
+                "termination": termination,
+            }
+    sources = ["params.txt", "1min/location.txt", "1min/1min.catmxy.bin",
+               "netcdf/nextxy.nc", "netcdf/lonlat.nc", "netcdf/uparea.nc",
+               "netcdf/rivwth_merit.nc", "netcdf/basin.nc"]
+    summary = {
+        "review_status": "proposed",
+        "method": "Existing p01-f04 Binary catchment reader; point containment in 1-minute pixels; no snapping",
+        "map": "map/Rhine_15min", "highres_grid": hires,
+        "binary_layout": "little-endian int16: complete catmx plane then catmy plane; one-based regional model x/y",
+        "pixel_edges": "west/north inclusive; east/south exclusive; north-first rows, west-first columns",
+        "report_count": len(rows),
+        "assigned_count": sum(row["catmxy_status"] == "assigned" for row in rows),
+        "changed_count": sum(row["allocation_changed"] == "true" for row in rows),
+        "unresolved_report_ids": [row["report_id"] for row in rows if row["river_allocation_status"] == "unresolved"],
+        "source_sha256": {name: hashlib.sha256((map_dir/name).read_bytes()).hexdigest() for name in sources},
+        "unique_downstream_paths": paths,
+        "interpretation_limit": "Lookup, topology and area consistency do not confirm named-river identity or flood-wave skill; lower Ahr reports share one large-channel cell",
+    }
+    summary_path = output_path.with_name("21_catchment_review.json")
+    summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(f"Catchment review: {sum(r['catmxy_status']=='assigned' for r in rows)} assigned; "
+          f"{sum(r['allocation_changed']=='true' for r in rows)} changed; {len(rows)} reports retained")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tutorial-dir", type=Path, required=True)
     parser.add_argument("--map-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--impact-output", type=Path, required=True)
+    parser.add_argument("--catchment-only", action="store_true", help="enrich the retained impact CSV without rewriting gauge/geographic allocations")
     args = parser.parse_args()
 
     tutorial = args.tutorial_dir.resolve()
@@ -260,6 +426,10 @@ def main() -> None:
         basin = np.ma.asarray(data.variables["basin"][:]).filled(0).astype(np.int32)
     if river_width.shape != uparea.shape or basin.shape != uparea.shape:
         raise ValueError("basin/rivwth map arrays do not match the current map grid")
+    map_data = (lon, lat, outlon, outlat, uparea, nextx, nexty, river_width, basin)
+    if args.catchment_only:
+        add_catchment_allocations(map_dir, map_data, args.impact_output.resolve())
+        return
     map_resolution = float(np.median(np.diff(lon)))
     if not np.allclose(np.diff(lon), map_resolution) or not np.allclose(-np.diff(lat), map_resolution):
         raise ValueError("Map grid is not a regular square degree grid")
@@ -392,6 +562,7 @@ def main() -> None:
         (lon, lat, outlon, outlat, uparea, nextx, nexty, river_width, basin),
         args.impact_output.resolve(),
     )
+    add_catchment_allocations(map_dir, map_data, args.impact_output.resolve())
 
 
 if __name__ == "__main__":
