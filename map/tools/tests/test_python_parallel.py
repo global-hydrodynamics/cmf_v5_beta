@@ -15,6 +15,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[3]
 CODE = ROOT/'map/tools/code'
+LEGACY_FORTRAN = CODE/'legacy_fortran'
 sys.path.insert(0, str(CODE))
 
 from analysis_upbasin import upstream_mask
@@ -62,14 +63,16 @@ class ScientificContractTests(unittest.TestCase):
         np.testing.assert_allclose(local,[[1,0,0]],rtol=2*np.finfo('f4').eps)
         np.testing.assert_allclose(route(xy,local),[[1,0,1]],rtol=2*np.finfo('f4').eps)
 
-    def test_binary_records_orientation_and_no_overwrite(self):
+    def test_binary_records_orientation_and_default_overwrite(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary)/'pair.bin'
             values = np.arange(12,dtype='i4').reshape(2,2,3)
             write_raster(path,values,'<i4')
             grid = Grid(3,2,1,*[np.float32(0)]*5)
             np.testing.assert_array_equal(grid.raster(path,'<i4',2),values)
-            with self.assertRaises(FileExistsError):write_raster(path,values,'<i4')
+            replacement = values + 1
+            write_raster(path,replacement,'<i4')
+            np.testing.assert_array_equal(grid.raster(path,'<i4',2),replacement)
 
     def test_colors_keep_singletons_missing_and_longitude_wrap(self):
         basin=np.array([[1,2,1,-9999]],dtype='i4')
@@ -92,16 +95,16 @@ class FallbackParityTests(unittest.TestCase):
         cls.executables = {}
         for name in ('param_water_calc_prmwat','param_inpmat_generate','region_default_inpmat','region_combine_hires'):
             destination = cls.root/name
-            subprocess.run(['gfortran','-O3','-cpp','-ffree-line-length-none',str(CODE/(name+'.F90')),'-o',str(destination)],check=True,capture_output=True)
+            subprocess.run(['gfortran','-O3','-cpp','-ffree-line-length-none',str(LEGACY_FORTRAN/(name+'.F90')),'-o',str(destination)],check=True,capture_output=True)
             cls.executables[name]=destination
 
         objects = []
         for module in ('mod_map_color', 'mod_bifprm_csv'):
             obj = cls.root/(module+'.o')
-            subprocess.run(['gfortran','-O3','-ffree-line-length-none','-J',str(cls.root),'-c',str(CODE/(module+'.F90')),'-o',str(obj)],cwd=cls.root,check=True,capture_output=True)
+            subprocess.run(['gfortran','-O3','-ffree-line-length-none','-J',str(cls.root),'-c',str(LEGACY_FORTRAN/(module+'.F90')),'-o',str(obj)],cwd=cls.root,check=True,capture_output=True)
             objects.append(str(obj))
         destination = cls.root/'param_mpi_set_basin'
-        subprocess.run(['gfortran','-O3','-ffree-line-length-none','-I',str(cls.root),str(CODE/'param_mpi_set_basin.F90'),*objects,'-o',str(destination)],cwd=cls.root,check=True,capture_output=True)
+        subprocess.run(['gfortran','-O3','-ffree-line-length-none','-I',str(cls.root),str(LEGACY_FORTRAN/'param_mpi_set_basin.F90'),*objects,'-o',str(destination)],cwd=cls.root,check=True,capture_output=True)
         cls.executables['param_mpi_set_basin'] = destination
 
     @classmethod

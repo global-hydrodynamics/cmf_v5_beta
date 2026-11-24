@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Binary map I/O for experimental parallel Python tools.
+"""Binary map I/O for maintained Python map tools.
 
 Arrays are (record, north-to-south row, west-to-east column), x fastest.
 Direct-access records have no markers; map integers/reals are little-endian
 int32/float32 unless the caller explicitly requests int16 high-resolution data.
-The Fortran/Shell production workflows are not changed by this module.
+Shell workflows invoke these Python tools directly; output products are replaced on rerun.
 """
 from __future__ import annotations
 
@@ -42,10 +42,10 @@ class Grid:
 
 
 def write_raster(path, values, dtype):
-    """Create an isolated output; refuse to replace an existing map product."""
+    """Write a map product, replacing only this tool-owned output file."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open('xb') as stream:
+    with path.open('wb') as stream:
         np.asarray(values, dtype=dtype).tofile(stream)
 
 
@@ -53,7 +53,7 @@ def parser(description, map_default='..'):
     """Keep positional Fortran arguments, with explicit parallel-tool I/O roots."""
     result = argparse.ArgumentParser(description=description)
     result.add_argument('--map-dir', type=Path, default=Path(map_default), help='Read-only input map root; default follows Fortran CWD contract')
-    result.add_argument('--output-dir', type=Path, help='Explicit output destination; default follows the Fortran CWD convention; existing files are never replaced')
+    result.add_argument('--output-dir', type=Path, help='Explicit output destination; default follows the Fortran CWD convention; existing outputs are replaced')
     return result
 
 

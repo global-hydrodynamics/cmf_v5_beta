@@ -5,6 +5,16 @@ set -eu
 
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+PYTHON_CMD="${PYTHON_CMD:-python3}"
+if [ -n "${CMF5_ROOT:-}" ]; then
+    CODE_DIR="$CMF5_ROOT/map/tools/code"
+else
+    CODE_DIR="$SCRIPT_DIR/../../tools/code"
+fi
+if [ ! -d "$CODE_DIR" ]; then
+    printf '[ERROR] Shared Python tools not found: %s (set CMF5_ROOT to the repository root)\n' "$CODE_DIR" >&2
+    exit 1
+fi
 MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
 
 # Analysis output directory, relative to script_analysis/.
@@ -75,19 +85,19 @@ printf '[STEP 1/1] Check bifurcation connectivity\n'
 printf '==================================================\n\n'
 
 if [ "$#" -ge 3 ]; then
-    printf './script_analysis/code/analysis_check_mpi_bifurcation '
+    printf '"$PYTHON_CMD" "$CODE_DIR/analysis_check_mpi_bifurcation.py" '
     quote_shell_arg "$REGION_MAP"
     printf ' '
     quote_shell_arg "$CSV_OPTION"
     printf ' '
     quote_shell_arg "$CSV_FILE"
     printf '\n'
-    ./script_analysis/code/analysis_check_mpi_bifurcation "$REGION_MAP" "$CSV_OPTION" "$CSV_FILE"
+    "$PYTHON_CMD" "$CODE_DIR/analysis_check_mpi_bifurcation.py" --map-dir "$MAP_DIR" "$REGION_MAP" --csv "$CSV_FILE"
 else
-    printf './script_analysis/code/analysis_check_mpi_bifurcation '
+    printf '"$PYTHON_CMD" "$CODE_DIR/analysis_check_mpi_bifurcation.py" '
     quote_shell_arg "$REGION_MAP"
     printf '\n'
-    ./script_analysis/code/analysis_check_mpi_bifurcation "$REGION_MAP"
+    "$PYTHON_CMD" "$CODE_DIR/analysis_check_mpi_bifurcation.py" --map-dir "$MAP_DIR" "$REGION_MAP"
 fi
 
 printf '\n==================================================\n'

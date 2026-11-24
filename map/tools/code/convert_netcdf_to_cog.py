@@ -351,7 +351,7 @@ def verify(ds, path, bands, dtype, fill, transform, axes, nx, ny, edge, levels):
                     raise ValueError(f'{band.name}: NoData mask differs at {window}')
 
 
-def convert(task, blocksize=512, compression='DEFLATE', overviews=(2, 4, 8, 16, 32), force=False):
+def convert(task, blocksize=512, compression='DEFLATE', overviews=(2, 4, 8, 16, 32), force=True):
     """Stage tiled TIFF/overviews then COG, verify every native block, atomically publish."""
     if task.skip_reason:
         return f'SKIP excluded input: {task.source} ({task.skip_reason})'
@@ -418,7 +418,9 @@ def main(argv=None):
     parser.add_argument('--compression', choices=['DEFLATE', 'LZW', 'ZSTD', 'NONE'], default='DEFLATE')
     parser.add_argument('--overviews', default='2 4 8 16 32')
     parser.add_argument('--jobs', type=int, default=4)
-    parser.add_argument('--force', action='store_true')
+    parser.add_argument('--force', action='store_true', default=True, help=argparse.SUPPRESS)
+    parser.add_argument('--no-overwrite', dest='force', action='store_false',
+                        help='keep existing COG outputs')
     args = parser.parse_args(argv)
     try:
         levels = [int(n) for n in args.overviews.split()]

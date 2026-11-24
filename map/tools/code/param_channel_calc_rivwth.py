@@ -41,8 +41,6 @@ def main():
         write_raster(out/(name+'.bin'), values, '<f4')
     if args.type == 'cdf':
         destination = out/'rivpar.nc'
-        if destination.exists():
-            raise FileExistsError(destination)
         with Dataset(destination, 'w', format='NETCDF3_64BIT_OFFSET') as dataset:
             dataset.createDimension('lon', nx)
             dataset.createDimension('lat', ny)

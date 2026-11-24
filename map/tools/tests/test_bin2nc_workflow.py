@@ -80,11 +80,12 @@ parser.add_argument('--registry')
 parser.add_argument('--input')
 parser.add_argument('--output')
 parser.add_argument('--force', action='store_true')
+parser.add_argument('--no-overwrite', action='store_true')
 args = parser.parse_args()
 if not Path(args.input).is_file():
     raise SystemExit('input missing')
-if Path(args.output).exists() and not args.force:
-    raise SystemExit('output exists; pass --force to replace it')
+if Path(args.output).exists() and args.no_overwrite:
+    raise SystemExit('output exists; refusing because --no-overwrite was set')
 Path(args.output).parent.mkdir(parents=True, exist_ok=True)
 Path(args.output).write_text('force' if args.force else 'converted')
 print('Converted fixture:', Path(args.input).name)
@@ -155,10 +156,6 @@ class BinaryToNetCDFWorkflowTests(unittest.TestCase):
         for name in ("s01-list_binary.sh", "s02-convert_netcdf.sh"):
             template = (SCRIPT_TEMPLATE / name).read_text(encoding="utf-8")
             sample = (SCRIPT_SOURCE / name).read_text(encoding="utf-8")
-            template = template.replace(
-                'MAP_DIR="$SCRIPT_DIR/../../mekong_15min"  # Change this to select another map directory.',
-                'MAP_DIR="$SCRIPT_DIR/.."  # Map root containing params.txt and map Binary files.',
-            )
             self.assertEqual(sample, template)
 
     def test_candidate_list_deduplicates_and_sorts_by_category_then_registry_order(self):
@@ -223,7 +220,7 @@ class BinaryToNetCDFWorkflowTests(unittest.TestCase):
             self.assertIn("elevtn.bin", list_file.read_text())
             self.assertFalse((map_dir / "netcdf/bin2nc_list.txt").exists())
 
-    def test_s02_ignores_comments_skips_noninteractive_overwrite_and_accepts_force(self):
+    def test_s02_overwrites_existing_selected_outputs_by_default_without_prompt(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             script_dir, map_dir = make_workflow_tree(root, use_converter_stub=True)
@@ -236,80 +233,40 @@ class BinaryToNetCDFWorkflowTests(unittest.TestCase):
             )
             script = script_dir / "s02-convert_netcdf.sh"
             output = netcdf_dir / "first.nc"
+            output.write_text("old")
 
             result = subprocess.run(
                 ["sh", str(script)], cwd=script_dir, text=True, input="", capture_output=True, check=True
             )
             self.assertIn("Converted fixture: first.bin", result.stdout)
             self.assertTrue(output.is_file())
-            self.assertFalse((netcdf_dir / "second.nc").exists())
-
-            output.write_text("keep")
-            result = subprocess.run(
-                ["sh", str(script)], cwd=script_dir, text=True, input="", capture_output=True, check=True
-            )
-            self.assertIn("non-interactive mode", result.stdout)
-            self.assertEqual(output.read_text(), "keep")
-
-            subprocess.run(["sh", str(script), "--force"], cwd=script_dir, check=True, capture_output=True)
             self.assertEqual(output.read_text(), "force")
+            self.assertFalse((netcdf_dir / "second.nc").exists())
+            self.assertNotIn("Overwrite?", result.stdout)
 
-    def test_s02_interactive_overwrite_is_authorized_per_file(self):
+    def test_s02_no_overwrite_preserves_existing_selected_outputs(self):
         for source in (SCRIPT_SOURCE, SCRIPT_TEMPLATE):
             with self.subTest(source=source), tempfile.TemporaryDirectory() as temp:
                 root = Path(temp)
                 script_dir, map_dir = make_workflow_tree(
                     root, use_converter_stub=True, script_source=source
                 )
-                for name in ("first", "second", "third"):
-                    (map_dir / f"{name}.bin").write_text(name)
+                (map_dir / "first.bin").write_text("first")
+                (map_dir / "second.bin").write_text("second")
                 netcdf_dir = map_dir / "netcdf"
                 netcdf_dir.mkdir()
-                (script_dir / "bin2nc_list.txt").write_text(
-                    "first.bin\nsecond.bin\nthird.bin\n", encoding="ascii"
-                )
-                first, second = netcdf_dir / "first.nc", netcdf_dir / "second.nc"
-                first.write_text("old")
-                second.write_text("keep")
-                transcript = run_tty(
-                    script_dir / "s02-convert_netcdf.sh", script_dir,
-                    b"n\nmaybe\nY\nn\n", b"Overwrite all 2 existing selected outputs? [y/N]:",
-                )
-                self.assertIn("Please answer y or N", transcript)
-                self.assertEqual(first.read_text(), "force")
-                self.assertEqual(second.read_text(), "keep")
-                # Approval must not leak to later files or become global --force.
-                self.assertEqual((netcdf_dir / "third.nc").read_text(), "converted")
-                self.assertIn("Converted: 2; skipped: 1", transcript)
+                output = netcdf_dir / "first.nc"
+                output.write_text("keep")
+                (script_dir / "bin2nc_list.txt").write_text("first.bin\nsecond.bin\n", encoding="ascii")
+                script = script_dir / "s02-convert_netcdf.sh"
 
-    def test_s02_summary_and_one_confirmation_overwrite_all(self):
-        for source in (SCRIPT_SOURCE, SCRIPT_TEMPLATE):
-            with self.subTest(source=source), tempfile.TemporaryDirectory() as temp:
-                root = Path(temp)
-                script_dir, map_dir = make_workflow_tree(
-                    root, use_converter_stub=True, script_source=source
+                result = subprocess.run(
+                    ["sh", str(script), "--no-overwrite"], cwd=script_dir,
+                    text=True, input="", capture_output=True, check=True
                 )
-                outputs = map_dir / "netcdf"
-                outputs.mkdir()
-                files = [f"field{i}.bin" for i in range(27)]
-                for i, name in enumerate(files):
-                    (map_dir / name).write_text("input")
-                    if i < 26:
-                        (outputs / f"field{i}.nc").write_text("old")
-                # A file not selected in the conversion list must be preserved.
-                untouched = outputs / "unselected.nc"
-                untouched.write_text("keep")
-                (script_dir / "bin2nc_list.txt").write_text("\n".join(files) + "\n")
-                transcript = run_tty(
-                    script_dir / "s02-convert_netcdf.sh", script_dir,
-                    b"invalid\ny\n", b"Overwrite all 26 existing selected outputs? [y/N]:",
-                )
-                self.assertIn("Selected inputs: 27; existing outputs: 26; new outputs: 1", transcript)
-                self.assertIn("Please answer y or N", transcript)
-                self.assertNotIn("Overwrite? [y/N]:", transcript)
-                self.assertIn("Converted: 27; skipped: 0", transcript)
-                self.assertTrue(all((outputs / f"field{i}.nc").read_text() == "force" for i in range(27)))
-                self.assertEqual(untouched.read_text(), "keep")
+                self.assertIn("Existing output preserved", result.stdout)
+                self.assertEqual(output.read_text(), "keep")
+                self.assertEqual((netcdf_dir / "second.nc").read_text(), "converted")
 
     def test_s02_rejects_missing_and_invalid_list_entries(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -368,12 +325,15 @@ class BinaryToNetCDFWorkflowTests(unittest.TestCase):
             (map_dir / "nextxy.bin").write_bytes(
                 struct.pack("<8i", 1, 0, 2, -9999, 1, 2, 0, -9999)
             )
-            transcript = run_tty(
-                script_dir / "s02-convert_netcdf.sh", script_dir,
-                b"\ny\n\n", b"Overwrite all 2 existing selected outputs? [y/N]:",
+            result = subprocess.run(
+                ["sh", str(script_dir / "s02-convert_netcdf.sh")],
+                cwd=script_dir,
+                text=True,
+                capture_output=True,
+                check=True,
             )
-            self.assertIn("Converted and verified nextx, nexty", transcript)
-            self.assertIn("Converted: 1; skipped: 1", transcript)
+            self.assertIn("Converted and verified nextx, nexty", result.stdout)
+            self.assertIn("Converted: 2; skipped: 0", result.stdout)
             self.assertNotEqual((netcdf_dir / "nextxy.nc").read_bytes(), previous)
 
 

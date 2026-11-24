@@ -13,7 +13,7 @@ VARIANTS=(
     "subcol-sample.bin:subcol.bin"
 )
 
-FORCE=0
+NO_OVERWRITE=0
 
 # ============================================================
 # User settings end here
@@ -57,9 +57,10 @@ while [ "$#" -gt 0 ]; do
             MAP_DIR=$2
             shift 2
             ;;
-        --force) FORCE=1; shift ;;
+        --force) NO_OVERWRITE=0; shift ;;
+        --no-overwrite) NO_OVERWRITE=1; shift ;;
         --help|-h)
-            printf 'Usage: %s [--map-dir PATH] [--force]\n' "$SCRIPT_NAME"
+            printf 'Usage: %s [--map-dir PATH] [--no-overwrite]\n' "$SCRIPT_NAME"
             exit 0
             ;;
         *) printf 'ERROR: unknown argument: %s\n' "$1" >&2; exit 2 ;;
@@ -83,7 +84,7 @@ INPUTS=()
 REFERENCES=()
 EXISTING_COUNT=0
 
-# Inspect the full selection before asking about existing outputs.
+# Inspect the complete selection before conversion.
 for VARIANT in "${VARIANTS[@]}"; do
     # Only literal base filenames are settings here; metadata lives in the CSV.
     case "$VARIANT" in
@@ -108,20 +109,6 @@ printf '\nConversion summary\n'
 printf 'Map: %s\nOutput directory: %s\n' "$MAP_DIR" "$MAP_DIR/netcdf"
 printf 'Selected inputs: %s; existing outputs: %s; new outputs: %s\n' \
     "${#INPUTS[@]}" "$EXISTING_COUNT" "$((${#INPUTS[@]} - EXISTING_COUNT))"
-if [ "$EXISTING_COUNT" -gt 0 ] && [ "$FORCE" -eq 0 ] && [ -t 0 ]; then
-    while :; do
-        printf 'Overwrite all %s existing selected outputs? [y/N]: ' "$EXISTING_COUNT"
-        if ! IFS= read -r ANSWER; then
-            ANSWER=""
-        fi
-        case "$ANSWER" in
-            y|Y) FORCE=1; break ;;
-            ""|n|N) printf 'Existing outputs will be confirmed individually.\n'; break ;;
-            *) printf 'Please answer y or N.\n' >&2 ;;
-        esac
-    done
-fi
-
 NUMBER=0
 CONVERTED=0
 SKIPPED=0
@@ -132,34 +119,15 @@ for INPUT in "${INPUTS[@]}"; do
     printf '\n==================================================\n[STEP %s/%s] %s\n==================================================\n\n' "$NUMBER" "${#VARIANTS[@]}" "$STEP"
 
     OUTPUT_FILE="$MAP_DIR/netcdf/${INPUT%.bin}.nc"
-    OVERWRITE=$FORCE
-    if [ -f "$OUTPUT_FILE" ] && [ "$FORCE" -eq 0 ]; then
-        if [ ! -t 0 ]; then
-            printf 'Existing output preserved in non-interactive mode: %s\n' "$OUTPUT_FILE"
-            SKIPPED=$((SKIPPED + 1))
-            continue
-        fi
-        while :; do
-            printf '%s already exists.\nOverwrite? [y/N]: ' "$OUTPUT_FILE"
-            if ! IFS= read -r ANSWER; then
-                ANSWER=""
-            fi
-            case "$ANSWER" in
-                y|Y) OVERWRITE=1; break ;;
-                ""|n|N)
-                    printf 'Skipping %s.\n' "$INPUT"
-                    SKIPPED=$((SKIPPED + 1))
-                    continue 2
-                    ;;
-                *) printf 'Please answer y or N.\n' >&2 ;;
-            esac
-        done
+    if [ -f "$OUTPUT_FILE" ] && [ "$NO_OVERWRITE" -eq 1 ]; then
+        printf 'Existing output preserved: %s\n' "$OUTPUT_FILE"
+        SKIPPED=$((SKIPPED + 1))
+        continue
     fi
 
-    # Per-file approval must not grant overwrite permission to later files.
     set --
-    if [ "$OVERWRITE" -eq 1 ]; then
-        set -- --force
+    if [ "$NO_OVERWRITE" -eq 1 ]; then
+        set -- --no-overwrite
     fi
 
     python3 "$CONVERTER" \

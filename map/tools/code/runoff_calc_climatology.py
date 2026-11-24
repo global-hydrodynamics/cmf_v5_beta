@@ -275,11 +275,11 @@ def annual_mean(daily):
 
 
 @contextmanager
-def atomic_output(path, overwrite=False):
+def atomic_output(path, overwrite=True):
     """Stage one output next to its destination; never replace without explicit permission."""
     path = Path(path)
     if path.exists() and not overwrite:
-        raise FileExistsError(f'{path} exists; use --overwrite explicitly')
+        raise FileExistsError(f'{path} exists; select --no-overwrite to preserve existing products')
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, temporary = tempfile.mkstemp(prefix='.'+path.name+'.', dir=path.parent)
     os.close(fd)
@@ -302,7 +302,7 @@ def metadata(args):
             'scientific_limit': 'No independent validation of minimum-neighbor physical optimality; no actual coastline identified'}
 
 
-def save_netcdf(path, grid, data, units, attrs, counts=None, overwrite=False):
+def save_netcdf(path, grid, data, units, attrs, counts=None, overwrite=True):
     """Lossless NetCDF-4 float32 field(s), original coordinate values/order, fill=-999."""
     with atomic_output(path, overwrite) as tmp, Dataset(tmp, 'w', format='NETCDF4') as ds:
         ds.setncatts(attrs)
@@ -353,7 +353,7 @@ def product_paths(args):
 def require_new(paths, overwrite):
     for path in paths:
         if path.exists() and not overwrite:
-            raise FileExistsError(f'{path} exists; select another prefix or use --overwrite')
+            raise FileExistsError(f'{path} exists; select another prefix or select --no-overwrite')
 
 
 def export(args):
@@ -448,7 +448,8 @@ def parser(include_stage=True):
     p.add_argument('--output-prefix', default='ELSE_GPCC')
     p.add_argument('--coast-modification', choices=['yes','no'], default='yes')
     p.add_argument('--compare-reference', type=Path)
-    p.add_argument('--overwrite', action='store_true')
+    p.add_argument('--overwrite', action='store_true', default=True, help=argparse.SUPPRESS)
+    p.add_argument('--no-overwrite', dest='overwrite', action='store_false', default=True, help='keep existing generated products')
     return p
 
 

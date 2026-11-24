@@ -48,7 +48,7 @@ trap 'exit 143' TERM
 # End of error handling.
 # ----------------------------------------------------------------------
 
-FORCE=""
+FORCE="--force"
 if [ "$#" -gt 1 ] || { [ "$#" -eq 1 ] && [ "$1" != "--force" ]; }; then
     printf 'Usage: %s [--force]\n' "$SCRIPT_NAME" >&2
     exit 2

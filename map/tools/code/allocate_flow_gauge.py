@@ -23,7 +23,7 @@ def main():
     maps = AllocationMap(args.map_dir, args.hires_tag)
     out = args.output_dir or Path('.')
     out.mkdir(parents=True, exist_ok=True)
-    with (out/'gauge_alloc.txt').open('x') as stream:
+    with (out/'gauge_alloc.txt').open('w') as stream:
         stream.write('        ID       lat       lon  area_Input   area_CaMa       error        diff    Type     ix1   iy1     ix2   iy2       area1       area2\n')
         for f in station_rows(args.gauge_list):
             if not f:

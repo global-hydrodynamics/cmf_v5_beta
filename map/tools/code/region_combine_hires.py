@@ -47,7 +47,7 @@ def copy_native_tile(source, out, tag, region, offsets, coarse_shape):
             continue  # The reference tiled branch never writes this layer.
         values = source_array(source/(name+'.'+layer+'.bin'), dtype, records, ny, nx)
         destination = out/(tag+'.'+layer+'.bin')
-        with destination.open('xb') as stream:
+        with destination.open('wb') as stream:
             stream.truncate(records*ny*nx*np.dtype(dtype).itemsize)
         target = np.memmap(destination, mode='r+', dtype=dtype, shape=(records, ny, nx))
         for start in range(0, ny, 64):
@@ -85,7 +85,7 @@ def copy_region(source, out, tag, regions, bounds, shape, offsets, coarse_shape,
         if layer in ('downxy', 'flwdir') and not accepted:
             continue
         destination = out/(tag+'.'+layer+'.bin')
-        with destination.open('xb') as stream:
+        with destination.open('wb') as stream:
             stream.truncate(records*ny*nx*np.dtype(dtype).itemsize)
         target = np.memmap(destination, mode='r+', dtype=dtype, shape=(records, ny, nx))
         for row in range(0, ny, 64):
@@ -180,7 +180,7 @@ def main():
                     product.rename(out/(name+product.name[len(tag):]))
                 temporary.rmdir()
                 locations.append(region)
-    with (out/'location.txt').open('x') as stream:
+    with (out/'location.txt').open('w') as stream:
         stream.write(f'{len(locations):6d}  narea\n')
         stream.write(f'{"iarea":>6}{"carea":>10}{"west":>10}{"east":>10}{"south":>10}{"north":>10}{"nx":>8}{"ny":>8}{"csize":>20}\n')
         for i, (name, w, e, s, n, sx, sy) in enumerate(locations, 1):

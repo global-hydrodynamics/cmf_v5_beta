@@ -1,6 +1,6 @@
 #!/bin/sh
 # Example: generate exploratory subbasin maps without replacing standard products.
-# Run from script_analysis/ after a00-link_codes.sh creates the shared-code link.
+# Run from script_analysis/; shared Python sources are resolved by this wrapper.
 # Inputs: params.txt, nextxy.bin, and uparea.bin.
 # Outputs: threshold-named subbsn/subcol maps in OUT_DIR; existing same-name files are overwritten.
 set -eu
@@ -8,6 +8,16 @@ set -eu
 # Paths
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+PYTHON_CMD="${PYTHON_CMD:-python3}"
+if [ -n "${CMF5_ROOT:-}" ]; then
+    CODE_DIR="$CMF5_ROOT/map/tools/code"
+else
+    CODE_DIR="$SCRIPT_DIR/../../tools/code"
+fi
+if [ ! -d "$CODE_DIR" ]; then
+    printf '[ERROR] Shared Python tools not found: %s (set CMF5_ROOT to the repository root)\n' "$CODE_DIR" >&2
+    exit 1
+fi
 
 # Analysis output directory, relative to script_analysis/.
 OUT_DIR="out_analysis"  # Change to ../out_analysis to use the map-root output folder.
@@ -60,12 +70,12 @@ printf '\nWorking directory: %s\n' "$PWD"
 
 STEP="Generate exploratory subbasins at ${AREA_THRESHOLD_KM2} km2"
 printf '\n==================================================\n[STEP 1/1] Generate exploratory subbasin maps (%s km2)\n==================================================\n\n' "$AREA_THRESHOLD_KM2"
-printf './code/analysis_subbasin %s ' "$AREA_THRESHOLD_KM2"
+printf '"$PYTHON_CMD" "$CODE_DIR/analysis_subbasin.py" %s ' "$AREA_THRESHOLD_KM2"
 quote_shell_arg "$SUBBSN_OUTPUT"
 printf ' '
 quote_shell_arg "$SUBCOL_OUTPUT"
 printf '\n'
-./code/analysis_subbasin "$AREA_THRESHOLD_KM2" "$SUBBSN_OUTPUT" "$SUBCOL_OUTPUT"
+"$PYTHON_CMD" "$CODE_DIR/analysis_subbasin.py" "$AREA_THRESHOLD_KM2" "$SUBBSN_OUTPUT" "$SUBCOL_OUTPUT"
 printf 'Subbasin IDs: %s\nDisplay colors: %s\n' "$SUBBSN_OUTPUT" "$SUBCOL_OUTPUT"
 
 printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"

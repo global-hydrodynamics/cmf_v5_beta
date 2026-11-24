@@ -37,7 +37,7 @@ def main():
     fields=['pth_id','ix','iy','jx','jy','length','elevtn','depth']+[f'width_{k}' for k in range(1,nlayer+1)]+['start_lat','start_lon','end_lat','end_lon','ibsn','jbsn']
     output=args.output_dir/args.output.name if args.output_dir is not None else args.output
     output.parent.mkdir(parents=True,exist_ok=True)
-    with output.open('x',newline='') as stream:
+    with output.open('w',newline='') as stream:
         writer=csv.writer(stream,lineterminator='\n');writer.writerow(fields)
         number=0
         for line in lines[1:npath+1]:

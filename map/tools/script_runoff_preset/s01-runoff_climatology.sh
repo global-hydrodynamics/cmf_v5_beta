@@ -15,7 +15,7 @@ COAST_MODIFICATION="yes"     # yes: correct source days then recompute climatolo
 COAST_METHOD="minimum"       # Legacy daily minimum; not minimum of the mean field.
 LONGITUDE_BOUNDARY="auto"    # Full 360-degree grids wrap; regional grids do not.
 OUTPUT_PREFIX="ELSE_GPCC"
-PYTHON_CMD="python3"
+PYTHON_CMD="${PYTHON_CMD:-python3}"
 
 # Command substitution resolves the workflow's location independently of the caller.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)

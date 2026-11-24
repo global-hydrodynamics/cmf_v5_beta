@@ -11,8 +11,17 @@ set -eu
 # Paths
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+PYTHON_CMD="${PYTHON_CMD:-python3}"
+if [ -n "${CMF5_ROOT:-}" ]; then
+    CODE_DIR="$CMF5_ROOT/map/tools/code"
+else
+    CODE_DIR="$SCRIPT_DIR/../../tools/code"
+fi
+if [ ! -d "$CODE_DIR" ]; then
+    printf '[ERROR] Shared Python tools not found: %s (set CMF5_ROOT to the repository root)\n' "$CODE_DIR" >&2
+    exit 1
+fi
 MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
-CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 
 # Bifurcation inputs and runoff-grid matrix selection.
 BIFLAYER=5                      # Number of bifori.txt layers to process (1-10).
@@ -52,9 +61,9 @@ trap 'exit 143' TERM
 # End of error handling.
 # ----------------------------------------------------------------------
 
-# Shared executables (build beforehand with map/tools/code/Makefile).
-EXEC_SETPARAM="$CODE_DIR/param_bif_set_params"
-EXEC_SETBASIN="$CODE_DIR/param_bif_set_basin"
+# Shared Python programs used by this workflow.
+EXEC_SETPARAM="$CODE_DIR/param_bif_set_params.py"
+EXEC_SETBASIN="$CODE_DIR/param_bif_set_basin.py"
 EXEC_CONVERT="$CODE_DIR/convert_bifprm_csv_to_netcdf.py"
 
 # Keep the optional diagnostic switch explicit.
@@ -76,9 +85,9 @@ cd "$MAP_DIR"
 STEP="Filter bifurcation paths and estimate bifurcation-channel depth"
 printf '\n==================================================\n[STEP 1/3] Generate finalized bifurcation CSV\n==================================================\n\n'
 if [ "$CHECK_MAP" = check_map ]; then
-    "$EXEC_SETPARAM" "$RIVHGT" "$BIFPRM_CSV" "$BIFLAYER" "$DIMINFO" check_map
+    "$PYTHON_CMD" "$EXEC_SETPARAM" "$RIVHGT" "$BIFPRM_CSV" "$BIFLAYER" "$DIMINFO" check_map
 else
-    "$EXEC_SETPARAM" "$RIVHGT" "$BIFPRM_CSV" "$BIFLAYER" "$DIMINFO"
+    "$PYTHON_CMD" "$EXEC_SETPARAM" "$RIVHGT" "$BIFPRM_CSV" "$BIFLAYER" "$DIMINFO"
 fi
 printf '[SUCCESS] Generated %s\n' "$BIFPRM_CSV"
 
@@ -86,7 +95,7 @@ printf '[SUCCESS] Generated %s\n' "$BIFPRM_CSV"
 STEP="Convert finalized bifurcation CSV to NetCDF"
 printf '\n==================================================\n[STEP 2/3] Convert CSV to NetCDF\n==================================================\n\n'
 mkdir -p "$(dirname "$BIFPRM_NC")"
-python3 "$EXEC_CONVERT" "$BIFPRM_CSV" "$BIFPRM_NC"
+"$PYTHON_CMD" "$EXEC_CONVERT" "$BIFPRM_CSV" "$BIFPRM_NC"
 printf '[SUCCESS] Generated %s from %s\n' "$BIFPRM_NC" "$BIFPRM_CSV"
 
 # 3. Merge basins connected by the retained bifurcation pathways.
@@ -95,9 +104,9 @@ cd "$SCRIPT_DIR"
 STEP="Merge basins connected by bifurcation pathways"
 printf '\n==================================================\n[STEP 3/3] Merge connected basins\n==================================================\n\n'
 if [ "$CHECK_MAP" = check_map ]; then
-    "$EXEC_SETBASIN" check_map
+    "$PYTHON_CMD" "$EXEC_SETBASIN" check_map
 else
-    "$EXEC_SETBASIN"
+    "$PYTHON_CMD" "$EXEC_SETBASIN"
 fi
 printf '[SUCCESS] Generated basin-connectivity products\n'
 

@@ -7,8 +7,17 @@ set -eu
 # Paths
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+PYTHON_CMD="${PYTHON_CMD:-python3}"
+if [ -n "${CMF5_ROOT:-}" ]; then
+    CODE_DIR="$CMF5_ROOT/map/tools/code"
+else
+    CODE_DIR="$SCRIPT_DIR/../../tools/code"
+fi
+if [ ! -d "$CODE_DIR" ]; then
+    printf '[ERROR] Shared Python tools not found: %s (set CMF5_ROOT to the repository root)\n' "$CODE_DIR" >&2
+    exit 1
+fi
 MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
-CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 
 # Flow-gauge allocation inputs and outputs; input path is relative to script_params/.
 GAUGE_IN="../../data/GRDC_allocated.csv"  # MERIT Hydro-preallocated GRDC station table.
@@ -58,13 +67,13 @@ if [ -z "$HIRES_TAG" ]; then
 fi
 printf 'Allocation high-resolution map: %s/%s\n' "$MAP_DIR" "$HIRES_TAG"
 
-EXEC_ALLOCATE="$CODE_DIR/allocate_flow_gauge"
+EXEC_ALLOCATE="$CODE_DIR/allocate_flow_gauge.py"
 
 cd "$SCRIPT_DIR"
 
 STEP="Allocate gauges to the CaMa-Flood river network"
 printf '\n==================================================\n[STEP 1/2] Allocate flow gauges (%s, %s)\n==================================================\n\n' "$GAUGE_MODE" "$HIRES_TAG"
-"$EXEC_ALLOCATE" "$GAUGE_IN" "$GAUGE_MODE" "$HIRES_TAG"
+"$PYTHON_CMD" "$EXEC_ALLOCATE" "$GAUGE_IN" "$GAUGE_MODE" "$HIRES_TAG"
 
 STEP="Move allocated flow-gauge table into the map root"
 printf '\n==================================================\n[STEP 2/2] Save GRDC_alloc.txt\n==================================================\n\n'

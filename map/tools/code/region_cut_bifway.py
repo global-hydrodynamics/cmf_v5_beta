@@ -38,7 +38,7 @@ def main():
                         + ''.join(f'{v:10.3f}' for v in values[2+nlev:4+nlev]))
     out = output_root(args)
     out.mkdir(parents=True, exist_ok=True)
-    with (out/'bifori.txt').open('x') as stream:
+    with (out/'bifori.txt').open('w') as stream:
         stream.write(f'{len(selected):8d}{nlev:8d}   npath, nlev, (ix,iy), (jx,jy), length, elevtn, (width1, width2, ... wodth_nlev), (lon,lat)\n')
         for row in selected:
             stream.write(row+'\n')

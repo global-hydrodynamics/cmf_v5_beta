@@ -12,7 +12,7 @@ HIRES="15sec 3sec"
 VARS="catmxy"
 COMPRESSION_LEVEL=3
 JOBS=16
-FORCE=0
+FORCE=1
 
 # Resolve the converter and metadata registry from this script's v5 repository.
 REPO_ROOT=$(CDPATH= cd "$SCRIPT_DIR/../../.." && pwd -P)

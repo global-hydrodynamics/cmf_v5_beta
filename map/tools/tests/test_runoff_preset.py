@@ -127,6 +127,7 @@ class ClimatologyTests(unittest.TestCase):
             np.testing.assert_array_equal(np.fromfile(paths['binary'],dtype='<f4').reshape(2,3),ds['runoff'][:])
             np.testing.assert_array_equal(ds['longitude'][:],grid.longitude)
             self.assertEqual(ds['runoff'].filters()['complevel'],3)
+        args.overwrite=False
         with self.assertRaises(FileExistsError):calc.export(args)
         args.overwrite=True;calc.export(args)
 
@@ -170,7 +171,7 @@ class CoastalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             p=Path(tmp);exe=p/'legacy'
             subprocess.run(['gfortran','-O0','-fcheck=all','-ffree-line-length-none',
-                str(root/'etc/runoff_preset/src/mod_runoff.F90'),'-o',str(exe)],check=True)
+                str(root/'etc/legacy_migrated/runoff_preset/src/mod_runoff.F90'),'-o',str(exe)],check=True)
             mean=np.zeros((3,3),dtype='f4');mean[0,0]=2;mean[0,2]=4
             day=np.array([[1,0,7],[0,0,0],[0,0,0]],dtype='f4')
             day.astype('<f4').tofile(p/'day');mean.astype('<f4').tofile(p/'mean')

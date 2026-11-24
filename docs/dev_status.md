@@ -6,6 +6,19 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Python map-tool Shell migration and rerun behavior (DT-0185, 2026-11-25; branch-local proposal)
+
+On the maintainer-selected `feature/package-builder` branch, maintained
+`script_analysis/`, `script_params/`, and `script_region/` Shell workflows now
+call their Python programs directly; original Fortran references remain under
+`map/tools/code/legacy_fortran/`. Python programs replace their owned outputs by
+default on rerun; optional no-overwrite behavior is preserved where useful.
+Inputs and unrelated outputs are not deleted. Scientific calculations and data
+formats were not intentionally changed. 93 focused tests, Shell syntax checks,
+60-file Python compilation, and diff checks passed. No global map processing or
+simulation was run. See [VR-0229](../research/records/validation_runs/VR-0229.md)
+and [migration status](../map/tools/python_migration_status.md).
+
 
 ### Parallel Python map tools (DT-0184, 2026-11-25; branch-local proposal)
 
@@ -46,7 +59,10 @@ combine16 individual Step reports into nine chapters,14 figures and7 tables.
 Previous English synthesis is unchanged; prior chat context limits a blinded
 independence claim. Focused evidence/links, Word content and all-page visual
 checks pass;15 unrelated research errors persist. No scientific execution,
-source/data/figure changes or comparison with older synthesis; uncommitted.
+source/data/figure changes or comparison with older synthesis. The Step 31
+deliverables are committed in `f4eb97ce` on `feature/package-builder`. This
+branch-local ledger is not the published record: `origin/main:docs/dev_status.md`
+remains the publication source of truth until separately updated.
 See [Step31 work and limitations](../tutorial/tutorial11-event_evaluation/AI_work_report/31_scientific_results_synthesis.md).
 
 ### Tutorial11 Step24 scientific assessment completion (DT-0173, 2026-11-24)

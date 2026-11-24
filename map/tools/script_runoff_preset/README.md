@@ -39,11 +39,11 @@ sh map/tools/script_runoff_preset/s01-runoff_climatology.sh modify
 sh map/tools/script_runoff_preset/s01-runoff_climatology.sh export
 ```
 
-Existing outputs cause an error rather than silent replacement. Add
-`--overwrite` only when intentional. Completed earlier stages can be retained
-while rerunning later stages. Each file is staged temporarily then renamed;
-a multi-file stage is not an all-or-nothing transaction. Partial stage completion
-requires explicit overwrite or a new output prefix on restart.
+Existing workflow outputs are overwritten by default when their stage is rerun. Use
+`--no-overwrite` to preserve existing outputs. Completed earlier stages can be
+retained while rerunning later stages. Each file is staged temporarily then
+renamed; a multi-file stage is not an all-or-nothing transaction. On a failed
+partial stage, rerun the stage to replace its owned products or use a new prefix.
 
 One Shell is sufficient: it only configures and sequences the independently
 callable Python programs. `runoff_calc_climatology.py calculate` owns Step 1,
@@ -188,7 +188,7 @@ python3 -B -m unittest map.tools.tests.test_runoff_preset -v
 Twelve small tests cover calendar averaging/leap exclusion, year counts and missing
 values, annual normalization, rate/depth units, subdaily time weighting and gaps,
 minimum-before-average, global/regional boundaries, no iterative propagation,
-zero/no-candidate behavior, encoding identity, overwrite refusal, noleap dates
+zero/no-candidate behavior, encoding identity, overwrite-by-default and no-overwrite, noleap dates
 and the three-stage source/output contract. A tiny
 Fortran comparison is byte-identical when both algorithms have the same mapped
 mask; a deliberately restricted mask demonstrates the approved selection change.

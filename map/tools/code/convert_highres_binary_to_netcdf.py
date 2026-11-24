@@ -496,7 +496,9 @@ def main() -> int:
     selection.add_argument("--variables", default="all", help="space-separated registered Binary stems; all (default) uses the CSV")
     parser.add_argument("--jobs", type=int, default=1, help="maximum parallel worker processes (default: 1)")
     parser.add_argument("--registry", type=Path, default=repo_root / "variable_table/map_variables.csv", help="map variable registry")
-    parser.add_argument("--force", action="store_true", help="replace existing NetCDF files")
+    parser.add_argument("--force", action="store_true", default=True, help=argparse.SUPPRESS)
+    parser.add_argument("--no-overwrite", dest="force", action="store_false",
+                        help="keep existing NetCDF files")
     parser.add_argument("--interactive-overwrite", action="store_true", help="ask once for all existing outputs, then individually if declined")
     parser.add_argument(
         "--compression-level", type=int, choices=range(10), default=3,

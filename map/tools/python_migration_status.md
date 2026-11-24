@@ -2,6 +2,22 @@
 
 Date: 2026-11-25 · Task DT-0184 · branch `feature/package-builder`.
 
+## Workflow follow-up on `feature/package-builder`
+
+The Python implementations are now the maintained execution path for the
+`script_analysis/`, `script_params/`, and `script_region/` Shell workflows.
+Shell wrappers resolve shared code from `CMF5_ROOT` or the repository-relative
+`map/tools/code/` path and use `PYTHON_CMD` (default `python3`). Fortran sources
+remain preserved under `code/legacy_fortran/` for reference comparisons; this
+does not alter model equations or map data formats. The status below records
+the original implementation-comparison stage and is retained as historical
+evidence; its statement that Shell workflows remain unchanged predates this
+follow-up.
+
+Maintained Python programs and their wrappers overwrite only their own existing
+outputs by default. Explicit `--no-overwrite` is available on selected tools;
+ordinary reruns do not require `--force`, prompts, or manual output cleanup.
+
 ## Scope and current decision
 
 All **23 standalone programs** and **3 Fortran shared modules** in `code/` have
@@ -65,7 +81,7 @@ The reference programs' positional arguments are retained, with explicit
 `--map-dir` and `--output-dir` options for isolated comparisons. Relative explicit
 file arguments still resolve from the invocation directory. Without an explicit
 output directory, the existing program's Fortran CWD convention applies (allocation
-lists are written in CWD). Existing output files are refused rather than replaced;
+lists are written in CWD). At the initial comparison stage, existing output files were refused rather than replaced;
 choose a new destination when rerunning. Console banners/spacing can differ.
 
 ```bash

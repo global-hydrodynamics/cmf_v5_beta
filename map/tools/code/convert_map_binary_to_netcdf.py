@@ -273,8 +273,9 @@ def convert(args: argparse.Namespace) -> None:
         raise ValueError(f"{args.input} has {actual_bytes} bytes; registry and params.txt require {expected_bytes}")
     if args.output.resolve() == args.input.resolve():
         raise ValueError("output path must not be the input Binary file")
-    if args.output.exists() and not args.force:
-        raise FileExistsError(f"{args.output} exists; pass --force to replace it")
+    no_overwrite = getattr(args, "no_overwrite", False)
+    if args.output.exists() and no_overwrite:
+        raise FileExistsError(f"{args.output} exists; remove it or rerun without --no-overwrite")
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
     # Publish only a closed, fully read-back-verified file. Forced failures retain
@@ -285,10 +286,10 @@ def convert(args: argparse.Namespace) -> None:
     try:
         write_netcdf(args, rows, params, staged)
         staged.chmod(0o644)
-        if args.force:
-            os.replace(staged, args.output)
-        else:
+        if no_overwrite:
             os.link(staged, args.output)
+        else:
+            os.replace(staged, args.output)
     finally:
         staged.unlink(missing_ok=True)
     print(f"Converted and verified {', '.join(row['_individual_name'] for row in rows)}: {args.output}")
@@ -481,12 +482,13 @@ def main() -> int:
         default="little",
         help="Binary byte order (standard distributed maps are little-endian)",
     )
-    parser.add_argument("--force", action="store_true", help="replace an existing NetCDF output file")
+    parser.add_argument("--force", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--no-overwrite", action="store_true", help="keep an existing NetCDF output file")
     args = parser.parse_args()
     args.map_dir = args.map_dir.resolve()
 
     if args.generate_list:
-        if args.input or args.output or args.variables or args.force or args.reference_binary:
+        if args.input or args.output or args.variables or args.no_overwrite or args.reference_binary:
             parser.error("--generate-list cannot be combined with conversion options")
         args.registry = args.registry.resolve()
         args.list_file = (args.list_file or args.map_dir / "netcdf/bin2nc_list.txt").resolve()

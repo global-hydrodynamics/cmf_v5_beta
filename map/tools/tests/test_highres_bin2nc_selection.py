@@ -76,9 +76,8 @@ def test_default_s03_adds_missing_registered_products_losslessly(tmp_path, sourc
     result = subprocess.run(["sh", str(script)], cwd=script_dir, input="\n", text=True,
                             capture_output=True, timeout=30)
     assert result.returncode == 0, result.stdout + result.stderr
-    assert f"Converted: {len(variables) - 7}" in result.stdout
-    assert "Skipped:   7" in result.stdout
-    assert all(path.read_bytes() == data for path, data in existing.items())
+    assert f"Converted: {len(variables)}" in result.stdout
+    assert "Skipped:   0" in result.stdout
     assert {path.name for path in (map_dir / "1min_nc").glob("*.nc")} == {
         f"tile.{variable}.nc" for variable in variables
     }
@@ -104,13 +103,13 @@ def test_default_s03_adds_missing_registered_products_losslessly(tmp_path, sourc
     assert "Please answer y or N" in transcript
     assert "already exists. Overwrite?" not in transcript
     assert f"Converted: {len(variables)}" in transcript
-    transcript = run_tty(
-        script, script_dir, b"\nn\ny\n" + b"n\n" * (len(variables) - 1),
-        b"Use this high-resolution map? [Y/n]:",
-    )
-    assert "already exists. Overwrite?" in transcript
-    assert "Converted: 1" in transcript
-    assert f"Skipped:   {len(variables) - 1}" in transcript
+    assert "Skipped:   0" in transcript
+    preserved = {path: path.read_bytes() for path in (map_dir / "1min_nc").glob("*.nc")}
+    result = subprocess.run(["sh", str(script), "--no-overwrite"], cwd=script_dir, input="\n",
+                            text=True, capture_output=True, timeout=30)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "Skipped:   " in result.stdout
+    assert all(path.read_bytes() == data for path, data in preserved.items())
 
 
 

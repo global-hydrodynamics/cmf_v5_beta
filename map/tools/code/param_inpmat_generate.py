@@ -107,11 +107,11 @@ def generate(grid, source, out, size, west, east, north, south, order,
     if maximum == 0:
         raise ValueError('No valid input-grid overlap; reference has zero-length records')
     out.mkdir(parents=True, exist_ok=True)
-    with (out/inpmat).open('xb') as stream:
+    with (out/inpmat).open('wb') as stream:
         for field in (xslots, yslots, areas):
             field[:, :maximum].T.reshape(maximum, grid.ny, grid.nx).tofile(stream)
     descriptor = out/diminfo
-    with descriptor.open('x') as stream:
+    with descriptor.open('w') as stream:
         for value, label in zip([grid.nx, grid.ny, grid.nlfp, nxin, nyin, maximum],
                                 ['nXX', 'nYY', 'floodplain layer', 'input nXX ', 'input nYY ', 'input num']):
             stream.write(f'{value:10d}     !! {label}\n')

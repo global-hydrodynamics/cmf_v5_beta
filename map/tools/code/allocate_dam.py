@@ -25,7 +25,7 @@ def main():
     out = args.output_dir or Path('.')
     out.mkdir(parents=True, exist_ok=True)
     with ExitStack() as stack:
-        streams = {kind: stack.enter_context((out/f'dam_alloc_{kind}.txt').open('x')) for kind in ('river', 'small', 'error')}
+        streams = {kind: stack.enter_context((out/f'dam_alloc_{kind}.txt').open('w')) for kind in ('river', 'small', 'error')}
         for stream in streams.values():
             stream.write('        ID       lat       lon   area_CaMa  area_Input       error        diff      ix      iy     cap_mcm  year  damname                         rivname\n')
         for f in station_rows(args.dam_list):

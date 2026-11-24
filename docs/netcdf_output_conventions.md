@@ -1,6 +1,6 @@
 # NetCDF output conventions in CaMa-Flood v5
 
-New CaMa-Flood-generated NetCDF data use NetCDF-4 with lossless zlib/deflate level 3 and the shuffle filter where the writer supports those filters. Compression does not reduce numerical precision or alter dimensions, variable order, metadata, or scientific meaning. Existing files are not recompressed automatically. NetCDF files supplied as external inputs do not need to follow this output setting. A format exception is retained where an established compatibility contract requires it.
+New CaMa-Flood-generated NetCDF data use NetCDF-4 with lossless zlib/deflate level 3 and the shuffle filter where the writer supports those filters. Compression does not reduce numerical precision or alter dimensions, variable order, metadata, or scientific meaning. On rerun, maintained map-tool writers replace their own output files by default; source inputs and unrelated files remain untouched. Existing external input files are not recompressed automatically. NetCDF files supplied as external inputs do not need to follow this output setting. A format exception is retained where an established compatibility contract requires it.
 
 ## Active v5 writers
 
@@ -9,9 +9,9 @@ New CaMa-Flood-generated NetCDF data use NetCDF-4 with lossless zlib/deflate lev
 | `src_main/cmf_ctrl_output_mod.F90` | NetCDF-4; deflate from `NDLEVEL` (default 3), shuffle enabled | `NDLEVEL=0` disables deflate; coordinate variables remain uncompressed. `pthflw` stores path-by-layer interval means and includes static bifurcation-table metadata. |
 | `src_main/cmf_ctrl_restart_mod.F90` | NetCDF-4; deflate level 3, shuffle enabled | Restart state variables remain Float64; bifurcation Restarts include path ID and endpoint-index metadata for compatibility checks. |
 | `src_main/sediment/cmf_ctrl_sedout_mod.F90` | NetCDF-4; shared `NDLEVEL` (default 3), shuffle enabled | Uses the main output setting. |
-| `map/tools/code/convert_map_binary_to_netcdf.py` | NetCDF-4; deflate level 3, shuffle enabled | Applies to converted raster variables; source values and types are preserved. |
-| `map/tools/code/convert_highres_binary_to_netcdf.py` | NetCDF-4; configurable level, default 3; shuffle enabled | Existing tile files are skipped; use `--force` to regenerate. |
-| `map/tools/code/create_legacy_netcdf_map.py` | NetCDF-4; deflate level 3, shuffle enabled | Writes consolidated legacy-layout map containers. |
+| `map/tools/code/convert_map_binary_to_netcdf.py` | NetCDF-4; deflate level 3, shuffle enabled | Applies to converted raster variables; source values and types are preserved. Existing conversion outputs are replaced by default. |
+| `map/tools/code/convert_highres_binary_to_netcdf.py` | NetCDF-4; configurable level, default 3; shuffle enabled | Existing tile files are overwritten by default; use `--no-overwrite` to keep them. |
+| `map/tools/code/create_legacy_netcdf_map.py` | NetCDF-4; deflate level 3, shuffle enabled | Writes consolidated legacy-layout map containers; existing outputs are replaced by default unless `--no-overwrite` is requested. |
 | `inp/tools/extract_ELSE_GPCC.py` | NetCDF-4 via netCDF4; deflate level 3, shuffle enabled | Extracts regional daily Float32 runoff from annual global NetCDF; invoked by `inp/repo-mek_1deg/s00-extract_ELSE_GPCC.sh`. Preserves source values/units and writes CF daily time/bounds. |
 | `inp/download_ERA5-Land/convert_CMF_nc.py` | NetCDF-4 via xarray/NetCDF4; deflate level 3, shuffle enabled | Optional ERA5-Land conversion workflow. |
 

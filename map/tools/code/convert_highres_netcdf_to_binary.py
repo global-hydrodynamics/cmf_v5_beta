@@ -213,7 +213,7 @@ def restore_location(source, target, areas):
         temporary.unlink(missing_ok=True)
 
 
-def restore(map_dir, hires, variables, registry, jobs=1, force=False, areas_filter=None):
+def restore(map_dir, hires, variables, registry, jobs=1, force=True, areas_filter=None):
     if jobs < 1 or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*', hires) or hires in ('.', '..'):
         raise ConversionError('jobs must be positive and hires must be a single directory tag')
     source_dir, output_dir = map_dir / f'{hires}_nc', map_dir / hires
@@ -304,7 +304,9 @@ def main():
     parser.add_argument('--areas', help='optional space-separated carea names; default all location.txt areas')
     parser.add_argument('--registry', type=Path, default=Path(__file__).resolve().parents[3] / 'variable_table/map_variables.csv')
     parser.add_argument('--jobs', type=int, default=1)
-    parser.add_argument('--force', action='store_true')
+    parser.add_argument('--force', action='store_true', default=True, help=argparse.SUPPRESS)
+    parser.add_argument('--no-overwrite', dest='force', action='store_false', default=True,
+                        help='keep existing Binary outputs')
     args = parser.parse_args()
     variables = list(dict.fromkeys(args.variables.split()))
     if args.jobs < 1 or not variables:

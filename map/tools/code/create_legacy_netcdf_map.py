@@ -221,17 +221,8 @@ def confirm_overwrite(outputs: list[Path], force: bool) -> bool:
     existing = [path for path in outputs if path.exists()]
     if not existing or force:
         return True
-    print("Existing consolidated map file(s): " + ", ".join(str(path) for path in existing))
-    if not sys.stdin.isatty():
-        print("Non-interactive mode: preserving existing files; skipped.")
-        return False
-    try:
-        answer = input("Replace existing output file(s)? [y/N]: ").strip()
-    except EOFError:
-        answer = ""
-    if answer.lower() == "y":
-        return True
-    print("Existing files preserved; skipped.")
+    print("Existing consolidated map file(s) preserved by --no-overwrite: "
+          + ", ".join(str(path) for path in existing))
     return False
 
 
@@ -322,7 +313,9 @@ def main() -> int:
     parser.add_argument("--map-dir", type=Path, required=True, help="map root containing params.txt and netcdf/ individual maps")
     parser.add_argument("--nextxy", default="nextxy_noedge.nc", help="network file: nextxy.nc or nextxy_noedge.nc")
     parser.add_argument("--rivwth", default="rivwth_merit.nc", help="width file: rivwth.nc or rivwth_merit.nc")
-    parser.add_argument("--force", action="store_true", help="overwrite existing rivclim.nc and rivpar.nc without prompting")
+    parser.add_argument("--force", action="store_true", default=True, help=argparse.SUPPRESS)
+    parser.add_argument("--no-overwrite", dest="force", action="store_false",
+                        help="keep existing rivclim.nc and rivpar.nc")
     args = parser.parse_args()
     try:
         created = assemble(args)

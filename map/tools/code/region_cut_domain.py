@@ -84,13 +84,13 @@ def main():
         raise ValueError('Regional crop outside source dimensions')
     out = output_root(args)
     out.mkdir(parents=True, exist_ok=True)
-    with (out/'params.txt').open('x') as stream:
+    with (out/'params.txt').open('w') as stream:
         for value, label in zip((mx, my, nlfp), ('grid number (east-west)', 'grid number (north-south)', 'floodplain layers')):
             stream.write(f'{value:12d}{label:>35}\n')
         stream.write(f'{size:12.8f}{"grid size  [deg]":>35}\n')
         for value, label in zip((west, east, south, north), ('west  edge [deg]', 'east  edge [deg]', 'south  edge [deg]', 'north edge [deg]')):
             stream.write(f'{value:12.3f}{label:>35}\n')
-    with args.change_info.open('x') as stream:
+    with args.change_info.open('w') as stream:
         stream.write(str(source.resolve())+'/\n')
         for value in (nx, ny, size, sw, se, ss, sn):
             stream.write(str(value)+'\n')

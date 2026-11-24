@@ -39,7 +39,7 @@ trap 'exit 143' TERM
 # ----------------------------------------------------------------------
 
 # --map-dir is explicit; otherwise require a map-local script_format_conv/ current directory.
-FORCE=0
+NO_OVERWRITE=0
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --map-dir)
@@ -50,13 +50,14 @@ while [ "$#" -gt 0 ]; do
             MAP_DIR=$2
             shift 2
             ;;
-        --force) FORCE=1; shift ;;
+        --force) NO_OVERWRITE=0; shift ;;
+        --no-overwrite) NO_OVERWRITE=1; shift ;;
         --help|-h)
-            printf 'Usage: %s [--map-dir PATH] [--force]\n' "$SCRIPT_NAME"
+            printf 'Usage: %s [--map-dir PATH] [--no-overwrite]\n' "$SCRIPT_NAME"
             exit 0
             ;;
         *)
-            printf 'Usage: %s [--map-dir PATH] [--force]\n' "$SCRIPT_NAME" >&2
+            printf 'Usage: %s [--map-dir PATH] [--no-overwrite]\n' "$SCRIPT_NAME" >&2
             exit 2
             ;;
     esac
@@ -141,40 +142,18 @@ if [ "$FILE_COUNT" -eq 0 ]; then
     exit 1
 fi
 
-# Summarize the complete validated selection before requesting overwrite approval.
+# Summarize the complete validated selection before conversion.
 printf '\nConversion summary\n'
 printf 'Map: %s\nOutput directory: %s\n' "$MAP_DIR" "$NETCDF_DIR"
 printf 'Selected inputs: %s; existing outputs: %s; new outputs: %s\n' \
     "$FILE_COUNT" "$EXISTING_COUNT" "$((FILE_COUNT - EXISTING_COUNT))"
-if [ "$EXISTING_COUNT" -gt 0 ] && [ "$FORCE" -eq 0 ] && [ -t 0 ]; then
-    while :; do
-        printf 'Overwrite all %s existing selected outputs? [y/N]: ' "$EXISTING_COUNT"
-        if ! IFS= read -r ANSWER; then
-            ANSWER=""
-        fi
-        case "$ANSWER" in
-            y|Y)
-                FORCE=1
-                break
-                ;;
-            ""|n|N)
-                printf 'Existing outputs will be confirmed individually.\n'
-                break
-                ;;
-            *)
-                printf 'Please answer y or N.\n' >&2
-                ;;
-        esac
-    done
-fi
-
 mkdir -p "$NETCDF_DIR"
 CONVERTED=0
 SKIPPED=0
 FILE_NUMBER=0
 STEP="Convert selected Binary map files"
 
-# Keep the list on file descriptor 3 so overwrite prompts still read stdin.
+# Keep the list on file descriptor 3 while processing selected inputs.
 while IFS= read -r FILE <&3 || [ -n "$FILE" ]; do
     case "$FILE" in
         ""|\#*)
@@ -188,35 +167,10 @@ while IFS= read -r FILE <&3 || [ -n "$FILE" ]; do
     printf '[STEP %s/%s] Convert %s\n' "$FILE_NUMBER" "$FILE_COUNT" "$FILE"
     printf '==================================================\n\n'
 
-    # Interactive approval applies only to this file, not the remaining list.
-    OVERWRITE=$FORCE
-    if [ -f "$OUTPUT_FILE" ] && [ "$FORCE" -eq 0 ]; then
-        if [ ! -t 0 ]; then
-            printf 'Existing output preserved in non-interactive mode: %s\n' "$OUTPUT_FILE"
-            SKIPPED=$((SKIPPED + 1))
-            continue
-        fi
-
-        while :; do
-            printf '%s already exists.\nOverwrite? [y/N]: ' "$OUTPUT_FILE"
-            if ! IFS= read -r ANSWER; then
-                ANSWER=""
-            fi
-            case "$ANSWER" in
-                y|Y)
-                    OVERWRITE=1
-                    break
-                    ;;
-                ""|n|N)
-                    printf 'Skipping %s.\n' "$FILE"
-                    SKIPPED=$((SKIPPED + 1))
-                    continue 2
-                    ;;
-                *)
-                    printf 'Please answer y or N.\n' >&2
-                    ;;
-            esac
-        done
+    if [ -f "$OUTPUT_FILE" ] && [ "$NO_OVERWRITE" -eq 1 ]; then
+        printf 'Existing output preserved: %s\n' "$OUTPUT_FILE"
+        SKIPPED=$((SKIPPED + 1))
+        continue
     fi
 
     # Only numbered MPI-region maps have a standard filename convention.
@@ -237,7 +191,7 @@ while IFS= read -r FILE <&3 || [ -n "$FILE" ]; do
             ;;
     esac
 
-    if [ "$OVERWRITE" -eq 1 ]; then
+    if [ "$NO_OVERWRITE" -eq 0 ]; then
         python3 "$CONVERTER" \
             --map-dir "$MAP_DIR" \
             --registry "$REGISTRY" \

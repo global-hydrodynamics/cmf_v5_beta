@@ -21,8 +21,8 @@ VARS="all"
 # Maximum number of parallel Python worker processes.
 JOBS=8
 
-# Existing Binary outputs are skipped by default. Pass --force to replace them.
-FORCE=0
+# Existing Binary outputs are replaced by default; --force remains accepted for compatibility.
+NO_OVERWRITE=0
 
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
@@ -64,13 +64,14 @@ while [ "$#" -gt 0 ]; do
             MAP_DIR=$2
             shift 2
             ;;
-        --force) FORCE=1; shift ;;
+        --force) NO_OVERWRITE=0; shift ;;
+        --no-overwrite) NO_OVERWRITE=1; shift ;;
         --help|-h)
-            printf 'Usage: %s [--map-dir PATH] [--force]\n' "$SCRIPT_NAME"
+            printf 'Usage: %s [--map-dir PATH] [--no-overwrite]\n' "$SCRIPT_NAME"
             exit 0
             ;;
         *)
-            printf 'Usage: %s [--map-dir PATH] [--force]\n' "$SCRIPT_NAME" >&2
+            printf 'Usage: %s [--map-dir PATH] [--no-overwrite]\n' "$SCRIPT_NAME" >&2
             exit 2
             ;;
     esac
@@ -148,13 +149,12 @@ printf 'Map: %s\nHigh-resolution directories: %s\nVariables: %s\nWorkers: %s\n' 
 
 # Python validates coordinates, restores location.txt safely and writes each Binary atomically.
 for re in $HIRES; do
-    if [ "$FORCE" -eq 1 ]; then
-        python3 "$CONVERTER" --map-dir "$MAP_DIR" --hires "$re" --variables "$VARS" \
-            --registry "$REGISTRY" --jobs "$JOBS" --force
-    else
-        python3 "$CONVERTER" --map-dir "$MAP_DIR" --hires "$re" --variables "$VARS" \
-            --registry "$REGISTRY" --jobs "$JOBS"
+    set --
+    if [ "$NO_OVERWRITE" -eq 1 ]; then
+        set -- --no-overwrite
     fi
+        python3 "$CONVERTER" --map-dir "$MAP_DIR" --hires "$re" --variables "$VARS" \
+            --registry "$REGISTRY" --jobs "$JOBS" "$@"
 done
 
 printf '\n[SUCCESS] High-resolution Binary working files restored.\n'

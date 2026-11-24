@@ -11,8 +11,17 @@ set -eu
 # Paths
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+PYTHON_CMD="${PYTHON_CMD:-python3}"
+if [ -n "${CMF5_ROOT:-}" ]; then
+    CODE_DIR="$CMF5_ROOT/map/tools/code"
+else
+    CODE_DIR="$SCRIPT_DIR/../../tools/code"
+fi
+if [ ! -d "$CODE_DIR" ]; then
+    printf '[ERROR] Shared Python tools not found: %s (set CMF5_ROOT to the repository root)\n' "$CODE_DIR" >&2
+    exit 1
+fi
 MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
-CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 
 # Resolution is selected interactively from installed Binary directories below.
 
@@ -44,7 +53,7 @@ trap 'exit 143' TERM
 # End of error handling.
 # ----------------------------------------------------------------------
 
-EXEC_PRMWAT="$CODE_DIR/param_water_calc_prmwat"
+EXEC_PRMWAT="$CODE_DIR/param_water_calc_prmwat.py"
 
 # Offer the finest installed Binary resolution; Fortran validates its contents.
 STEP="Select high-resolution map"
@@ -92,6 +101,6 @@ cd "$MAP_DIR"
 STEP="Aggregate permanent-water pixels from $HIRES_TAG into unit catchments"
 printf '\n==================================================\n[STEP 1/1] Estimate permanent-water area (%s)\n==================================================\n\n' "$HIRES_TAG"
 # Fortran owns the tag/geometry/file validation as well as the aggregation.
-"$EXEC_PRMWAT" "$HIRES_TAG"
+"$PYTHON_CMD" "$EXEC_PRMWAT" "$HIRES_TAG"
 
 printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"

@@ -83,14 +83,14 @@ class RestorationTests(unittest.TestCase):
         self.assertEqual((self.binary / 'location.txt').read_bytes(), (self.nc / 'location.txt').read_bytes())
         modified = self.binary / 'a.visual.bin'
         modified.write_bytes(b'user-existing')
-        self.assertEqual(reverse.restore(self.map, '1min', self.variables, self.registry, jobs=2), (0, 8))
+        self.assertEqual(reverse.restore(self.map, '1min', self.variables, self.registry, jobs=2, force=False), (0, 8))
         self.assertEqual(modified.read_bytes(), b'user-existing')
-        self.assertEqual(reverse.restore(self.map, '1min', self.variables, self.registry, jobs=2, force=True), (8, 0))
+        self.assertEqual(reverse.restore(self.map, '1min', self.variables, self.registry, jobs=2), (8, 0))
         for name, original in self.expected.items():
             self.assertEqual(sha((self.binary / name).read_bytes()), sha(original), name)
         self.assertEqual(self.source_hashes, {p.name: sha(p.read_bytes()) for p in self.nc.iterdir()})
 
-    def test_all_restores_available_products_and_preserves_existing(self):
+    def test_all_overwrites_existing_outputs_and_skips_missing_products(self):
         # One registered product is absent in one area, another in every area.
         (self.nc / 'b.visual.nc').unlink()
         rows = forward.registry_rows(self.registry)
@@ -101,8 +101,11 @@ class RestorationTests(unittest.TestCase):
             writer.writerows(rows)
         existing = self.binary / 'a.visual.bin'
         existing.write_bytes(b'user-existing')
-        self.assertEqual(reverse.restore(self.map, '1min', ['all'], self.registry), (6, 1))
-        self.assertEqual(existing.read_bytes(), b'user-existing')
+        self.assertEqual(reverse.restore(self.map, '1min', ['all'], self.registry), (7, 0))
+        self.assertEqual(existing.read_bytes(), self.expected['a.visual.bin'])
+        existing.write_bytes(b'keep')
+        self.assertEqual(reverse.restore(self.map, '1min', ['all'], self.registry, force=False), (0, 7))
+        self.assertEqual(existing.read_bytes(), b'keep')
         for name, original in self.expected.items():
             if name not in ('a.visual.bin', 'b.visual.bin'):
                 self.assertEqual((self.binary / name).read_bytes(), original, name)

@@ -9,8 +9,17 @@ set -eu
 # Paths
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+PYTHON_CMD="${PYTHON_CMD:-python3}"
+if [ -n "${CMF5_ROOT:-}" ]; then
+    CODE_DIR="$CMF5_ROOT/map/tools/code"
+else
+    CODE_DIR="$SCRIPT_DIR/../../tools/code"
+fi
+if [ ! -d "$CODE_DIR" ]; then
+    printf '[ERROR] Shared Python tools not found: %s (set CMF5_ROOT to the repository root)\n' "$CODE_DIR" >&2
+    exit 1
+fi
 MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
-CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 
 # Runoff input grid: ERA5-Land global 0.1-degree grid, independent of the model map.
 # ERA5land_global labels the spatial grid, not the repo-ERA5land-glb_2day period.
@@ -96,14 +105,14 @@ printf 'Using high-resolution map: %s/%s\n' "$MAP_DIR" "$HIRES_TAG"
 DIMINFO="diminfo_${ROFFTAG}.txt"
 INPMAT="inpmat_${ROFFTAG}.bin"
 
-EXEC_INPMAT="$CODE_DIR/param_inpmat_generate"
+EXEC_INPMAT="$CODE_DIR/param_inpmat_generate.py"
 
 # For each river cell, find its runoff-grid source cell and write the matrix and descriptor.
 cd "$MAP_DIR"
 
 STEP="Map river cells to the configured runoff grid"
 printf '\n==================================================\n[STEP 1/1] Generate runoff input matrix\n==================================================\n\n'
-"$EXEC_INPMAT" "$HIRES_TAG" "$GRSIZEIN" "$WESTIN" "$EASTIN" \
+"$PYTHON_CMD" "$EXEC_INPMAT" "$HIRES_TAG" "$GRSIZEIN" "$WESTIN" "$EASTIN" \
     "$NORTHIN" "$SOUTHIN" "$OLAT" "$DIMINFO" "$INPMAT"
 
 printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"

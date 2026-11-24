@@ -18,7 +18,7 @@ from map.tools.code.generate_ctl import generate_directory
 
 ROOT = Path(__file__).resolve().parents[3]
 SAMPLE = ROOT / "map" / "mekong_15min"
-CODE = ROOT / "map" / "tools" / "code"
+CODE = ROOT / "map" / "tools" / "code" / "legacy_fortran"
 LEGACY = ROOT / "map" / "src" / "src_param"
 PARAM_SCRIPTS = ROOT / "map" / "tools" / "script_params"
 ANALYSIS_SCRIPTS = ROOT / "map" / "tools" / "script_analysis"

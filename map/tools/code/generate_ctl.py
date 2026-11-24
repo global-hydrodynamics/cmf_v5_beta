@@ -516,7 +516,7 @@ class Summary:
 
 
 def generate_directory(map_dir: Path, registry_path: Path, *, dry_run: bool = False,
-                       overwrite: bool = False, input_file: Path | None = None,
+                       overwrite: bool = True, input_file: Path | None = None,
                        variables: list[str] | None = None, reference_binary: str | None = None) -> Summary:
     target = map_dir.resolve()
     summary = Summary()
@@ -662,7 +662,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--variables", help="comma-separated registry variable names identifying a complete file definition")
     parser.add_argument("--reference-binary", help="exact registered base Binary filename describing --input")
     parser.add_argument("--dry-run", action="store_true", help="validate and list planned CTLs without writing")
-    parser.add_argument("--overwrite", action="store_true", help="replace existing .ctl files")
+    parser.add_argument("--overwrite", action="store_true", default=True, help=argparse.SUPPRESS)
+    parser.add_argument("--no-overwrite", dest="overwrite", action="store_false", default=True, help="keep existing .ctl files")
     args = parser.parse_args(argv)
     requested = [name.strip() for name in args.variables.split(',') if name.strip()] if args.variables is not None else None
     if requested == []:

@@ -2,7 +2,9 @@
 
 These shared templates convert registered base-resolution and high-resolution map rasters between Binary and NetCDF, and generate optional numeric COG visualization caches. Copy the scripts into a map-local `script_format_conv/` directory and run there. No map name or `MAP_DIR` setting needs editing. The Mekong sample contains a ready-to-use copy at [`map/mekong_15min/script_format_conv/`](../../mekong_15min/script_format_conv/).
 
-The scripts reuse [`convert_map_binary_to_netcdf.py`](../code/convert_map_binary_to_netcdf.py), [`convert_highres_binary_to_netcdf.py`](../code/convert_highres_binary_to_netcdf.py), and the authoritative [`variable_table/map_variables.csv`](../../../variable_table/map_variables.csv) registry. `s01`/`s02` handle binaries directly in the map root; `s03` handles registered high-resolution tile binaries.
+The scripts reuse [`convert_map_binary_to_netcdf.py`](../code/convert_map_binary_to_netcdf.py), [`convert_highres_binary_to_netcdf.py`](../code/convert_highres_binary_to_netcdf.py), and the authoritative [`variable_table/map_variables.csv`](../../../variable_table/map_variables.csv) registry. `s01`/`s02` handle binaries directly in the map root; `s03` handles registered high-resolution tile binaries. Existing products owned by the converter are overwritten by default; `--no-overwrite` preserves them where supported. Inputs and unrelated files are never removed. The user-editable `bin2nc_list.txt` remains an interactive selection-list output.
+
+**Rerun policy:** maintained Python converters and their Shell wrappers replace their own output products by default. Use `--no-overwrite` where available to preserve existing files. Inputs, unselected products, and unrelated files are not removed. The editable `bin2nc_list.txt` remains a user-reviewed selection list and its creation may ask before replacing an existing list.
 
 ## Select files and convert
 
@@ -34,14 +36,10 @@ The scripts reuse [`convert_map_binary_to_netcdf.py`](../code/convert_map_binary
 
    Files are written to `<map>/netcdf/<binary-stem>.nc`. For example, `nextxy.bin` becomes `nextxy.nc` with `nextx` and `nexty`; `fldhgt.bin` retains all registered floodplain layers. The converter checks registry metadata, map dimensions, record sizes, and reads each written variable/layer back for exact value comparison.
 
-5. Review the conversion log and the NetCDF files in `<map>/netcdf/`. Existing outputs are skipped by default in non-interactive use. In a terminal, a preflight summary shows selected, existing and new output counts.
-   `Overwrite all … existing selected outputs? [y/N]` offers one approval for the
-   selected list. Answer `y`/`Y` to overwrite all selected existing outputs without
-   further prompts. Answer `n`/Enter to confirm each existing file individually;
-   Enter at an individual prompt skips that file. Pass `--force` to overwrite selected outputs without prompts:
+5. Review the conversion log and the NetCDF files in `<map>/netcdf/`. Selected output files are replaced by default. Use `--no-overwrite` to preserve an existing output:
 
    ```sh
-   ./s02-convert_netcdf.sh --force
+   ./s02-convert_netcdf.sh --no-overwrite
    ```
 
 Run both scripts from the same map-local `script_format_conv/` current directory so `s02` reads the list created by `s01`. The target map comes from the current directory; only the shared converters and registry are resolved from `SCRIPT_DIR` in the development repository. They only inspect `.bin` files directly under `MAP_DIR`; high-resolution subdirectories are never searched.
@@ -100,7 +98,7 @@ cd map/mekong_15min/script_format_conv
 ./t01-legacy_netcdf_map.sh
 ```
 
-Existing consolidated outputs are kept in non-interactive use. In a terminal, answer `y` to replace them; Enter or `N` keeps them. Pass `--force` for explicit overwrite. The Python program stages both outputs, reads them back, checks variable values, then replaces the targets.
+Existing consolidated outputs are replaced by default. Pass `--no-overwrite` to preserve them. The Python program stages both outputs, reads them back, checks variable values, then replaces the targets.
 
 The current legacy reader additionally uses `gdwdly` from `rivpar.nc` when `LGDWDLY` is enabled (the reader sets it to zero if absent), `elevslope` for `LSLOPEMOUTH`, and `mask_slope` for `LSLPMIX`; the latter two must exist in `rivpar.nc` when their options are enabled. `LMEANSL` reads `meansl` from the separately configured `CMEANSLNC`, and MPI legacy mode reads `mpireg` from `CMPIREGNC`. This generator does not synthesize these optional variables. The basic Mekong containers omit them; do not enable the corresponding option unless its required input is supplied.
 
@@ -135,19 +133,14 @@ files are not converted. A subset can be selected by replacing `all` with stems;
 missing registered inputs also skip in subset mode, while unregistered names fail.
 Leave `HIRES` empty to propose the coarsest available Binary resolution (Japan: `15sec`, Mekong: `1min`) and confirm it at the prompt; set `HIRES` explicitly when a particular resolution or list is required.
 
-Python preflights **all selected resolutions** before creating any output. It
-lists present/missing inputs and existing/new outputs, then asks once in a
-terminal: `Overwrite all N existing selected outputs? [y/N]`. `y` overwrites all
-selected existing outputs; `n`/Enter asks for each output individually. Missing
-Binary inputs never cause unrelated existing NetCDFs to be overwritten. `--force`
-skips confirmation; noninteractive runs without it preserve existing outputs.
-No bulk prompt appears when all outputs are new. The standard CLI also defaults
-to all CSV products and accepts whitespace-separated resolution tags via `--hires`;
-`--interactive-overwrite` enables the prompt policy used by s03.
+Python preflights **all selected resolutions** before creating outputs. It
+lists present/missing inputs and existing/new outputs. Existing outputs are
+replaced by default; pass `--no-overwrite` to preserve existing files. Missing
+Binary inputs never cause unrelated existing NetCDFs to be modified. The standard
+CLI defaults to all CSV products and accepts whitespace-separated resolution tags
+via `--hires`.
 
-This replaces the older seven/eleven-product defaults. To add missing outputs
-while preserving existing ones, run noninteractively without `--force`, or answer
-No to Overwrite all and No at the individual prompts. Signed int8 codes, float32
+This replaces the older seven/eleven-product defaults. Signed int8 codes, float32
 values, record planes and registered missing values/units are unchanged.
 
 For the bundled Mekong example:
@@ -159,7 +152,7 @@ cd map/mekong_15min/script_format_conv
 
 For each selected variable, `s03` calls the shared high-resolution converter. It reads each tile's geometry from `<MAP_DIR>/<HIRES>/location.txt`, and registered variable names, signed type, record index/count, missing value, and dimensions from `variable_table/map_variables.csv`. Unregistered files are ignored; absent registered Binary tiles skip. Present tiles with inconsistent metadata or a Binary size that does not match `location.txt` fail explicitly before conversion. A multi-record file such as `catmxy` or `downxy` is written as one NetCDF containing all registered variables in record order.
 
-Outputs are individual tiles at `<MAP_DIR>/<HIRES>_nc/<AREA>.<VAR>.nc`; the wrapper also copies `<MAP_DIR>/<HIRES>/location.txt` to `<MAP_DIR>/<HIRES>_nc/location.txt` as geometry metadata. NetCDF variables use `(lat,lon)` dimensions, cell-center coordinates, and the binary's row/record order; data are copied in bounded chunks and checked by reading each chunk back byte-for-byte. NetCDF4 uses lossless zlib/deflate compression with shuffle and a 256-by-256 maximum chunk shape. `COMPRESSION_LEVEL` defaults to 3; set it to 0–9, where 0 disables deflate. No scaling, offset, precision reduction, or quantization is used. `JOBS` defaults to 8 and controls the maximum number of Python worker processes; use `JOBS=1` for sequential conversion. Python schedules each registered variable/tile pair once, and the shell wrappers do not start background jobs. Existing NetCDF outputs are preserved in noninteractive mode; terminal s03 runs use the bulk/individual confirmation above. Changing compression alone does not authorize replacement; approve overwrite or run with `--force` to rebuild. Forced conversion stages a complete replacement before atomically replacing the previous output, preserving it if conversion fails. The input Binary and source `location.txt` are read-only. A successful conversion verifies stored values and file layout, not scientific correctness or model-reader compatibility.
+Outputs are individual tiles at `<MAP_DIR>/<HIRES>_nc/<AREA>.<VAR>.nc`; the wrapper also copies `<MAP_DIR>/<HIRES>/location.txt` to `<MAP_DIR>/<HIRES>_nc/location.txt` as geometry metadata. NetCDF variables use `(lat,lon)` dimensions, cell-center coordinates, and the binary's row/record order; data are copied in bounded chunks and checked by reading each chunk back byte-for-byte. NetCDF4 uses lossless zlib/deflate compression with shuffle and a 256-by-256 maximum chunk shape. `COMPRESSION_LEVEL` defaults to 3; set it to 0–9, where 0 disables deflate. No scaling, offset, precision reduction, or quantization is used. `JOBS` defaults to 8 and controls the maximum number of Python worker processes; use `JOBS=1` for sequential conversion. Python schedules each registered variable/tile pair once, and the shell wrappers do not start background jobs. Existing outputs are replaced by default, after the converters stage and validate replacements. Use `--no-overwrite` to preserve outputs. The input Binary and source `location.txt` are read-only. A successful conversion verifies stored values and file layout, not scientific correctness or model-reader compatibility.
 
 Focused tests target CaMa-Flood's Binary-to-NetCDF contract: types, records, coordinates, chunk/task assignment, parallel error reporting, and the requested compression settings. They do not re-test the internal lossless algorithms provided by zlib, HDF5, or NetCDF. Broader map-package and model-reader integration is a separate pre-merge check when required by the change and available data.
 
@@ -167,7 +160,7 @@ The NetCDF C library must be installed and discoverable (typically through `nc-c
 
 ## Convert high-resolution tiles in an external package (`t03`)
 
-Use `t03-convert_external_highres.sh` when the source maps live outside this v5 repository. Set `MAP_ROOT`, `MAPS`, `HIRES`, `VARS`, `COMPRESSION_LEVEL`, and `JOBS` at the top of the script. It resolves the shared converter and `variable_table/map_variables.csv` relative to its own location, warns and skips missing map/resolution directories, and stops on conversion errors. It copies each selected `location.txt` to `<MAP_DIR>/<HIRES>_nc/`; existing NetCDF outputs are skipped unless the script is run with `--force`. As with `s03`, changing the compression level does not alter existing files; use `--force` to rebuild them, with the old output preserved if conversion fails. `--force` is the only shell command-line option; configure parallelism with `JOBS`, not a shell argument.
+Use `t03-convert_external_highres.sh` when the source maps live outside this v5 repository. Set `MAP_ROOT`, `MAPS`, `HIRES`, `VARS`, `COMPRESSION_LEVEL`, and `JOBS` at the top of the script. It resolves the shared converter and `variable_table/map_variables.csv` relative to its own location, warns and skips missing map/resolution directories, and stops on conversion errors. It copies each selected `location.txt` to `<MAP_DIR>/<HIRES>_nc/`; existing NetCDF outputs are replaced by default after validation. Use `--no-overwrite` to preserve them. Configure parallelism with `JOBS`, not a shell argument.
 
 ```sh
 map/tools/script_format_conv/t03-convert_external_highres.sh
@@ -207,8 +200,8 @@ cd map/glb_15min/script_format_conv
 ```
 
 Adjust `VARS` and `JOBS` near the top as needed; leave `HIRES` empty for automatic selection. The same current-directory
-and `--map-dir PATH` rules as s01–s03 apply. Existing Binary files are skipped;
-use `--force` to replace selected files. The wrapper invokes
+and `--map-dir PATH` rules as s01–s03 apply. Existing Binary files are replaced by default;
+use `--no-overwrite` to preserve selected files. The wrapper invokes
 [`convert_highres_netcdf_to_binary.py`](../code/convert_highres_netcdf_to_binary.py),
 which reuses the forward converter's location/registry parsers and NetCDF C
 library. No additional Python library is required. Its standalone CLI supports
@@ -286,14 +279,10 @@ from its catmxy/elevtn files in a temporary map; all four restored window files
 matched the corresponding original Binary bytes. No full global file or complete
 map was restored, and original global data were not changed.
 
-Before `s02` converts anything, it validates every selected input and reports
-selected-input, existing-output and new-output counts. If existing outputs are
-present in a terminal, `Overwrite all … existing selected outputs? [y/N]` asks
-once: `y`/`Y` overwrites all selected outputs without further prompts; `n`/Enter
-uses individual overwrite prompts. At an individual prompt, `y`/`Y` overwrites
-only that file and `n`/Enter preserves it. Unselected outputs are untouched.
-Explicit `--force` skips prompts. Noninteractive use without `--force` still
-preserves existing outputs. No bulk prompt appears when all outputs are new.
+Before `s02` converts anything, it validates each selected input and reports
+selected-input, existing-output and new-output counts. Existing selected outputs
+are replaced by default without prompts. Unselected outputs are untouched. The
+Python converter stages and validates replacements before publishing them.
 
 
 ## Numeric NetCDF-to-COG caches (`s05`)
@@ -373,7 +362,7 @@ map/tools/script_format_conv/s05-convert_netcdf_to_cog.sh \
 map/tools/script_format_conv/s05-convert_netcdf_to_cog.sh --map-dir /path/to/map --force
 ```
 
-No overwrite prompt is needed: existing files always skip without `--force`,
+Existing files are overwritten by default;
 including noninteractive runs. Skipping does not validate an existing cache.
 A forced replacement is written privately, verified fully and atomically replaced.
 Failure preserves the previous cache and removes temporary files. Independent
@@ -514,9 +503,8 @@ installed Binary directory in `1min`, `30sec`, `15sec`, `5sec`, `3sec`, `1sec`
 order. The selected path is shown before `[Y/n]` confirmation (Enter = Yes).
 No lists the available resolution tags and asks which one to use. Explicit
 nonempty `HIRES` lists remain supported as the initial proposal. EOF stops
-execution; `--force` controls output overwriting and does not bypass resolution
-confirmation. The subsequent overwrite confirmation and conversion algorithms
-are unchanged.
+execution. Existing selected outputs are replaced by default without overwrite
+prompts; the resolution-selection question is separate from output handling.
 
 
 ## Standard numbered MPI-region maps
@@ -548,7 +536,8 @@ nonnumeric suffixes are excluded. Nested files and nonexistent counts are not
 invented. This naming rule applies only to mpireg; `rivwth-4.bin` gains no automatic
 interpretation. Existing literal registered files keep their normal handling.
 
-Use the standard flow, preserving list editing and overwrite confirmation:
+Use the standard flow, preserving list editing. `s02` replaces selected outputs
+by default; pass `--no-overwrite` to keep existing outputs:
 
 ```sh
 cd map/mekong_15min/script_format_conv
@@ -558,8 +547,8 @@ cd map/mekong_15min/script_format_conv
 ```
 
 `s02` passes `--reference-binary mpireg.bin` explicitly for positive numbered MPI
-files, keeping each numbered output stem. Its existing bulk/per-file prompts,
-noninteractive skip and `--force` rules are unchanged. The Python converter also
+files, keeping each numbered output stem. Existing selected outputs are replaced by default; explicit reference selection
+continues to preserve the complete registered file definition. The Python converter also
 recognizes these standard filenames directly. `--reference-binary` selects the
 exact complete file definition; `--variables mpireg` selects output variables and
 retains the legacy name fallback for custom input names. Both work here, but the
@@ -583,26 +572,23 @@ sample/derived registry entries are unchanged.
 Copy `s90-sample_netCDF_conversion.sh` into `<map>/script_format_conv/` and run
 it there with Bash (or execute its Bash shebang). Its `VARIANTS` array contains
 `"input.bin:reference.bin"` pairs; the defaults convert the two Mekong samples.
+Existing selected outputs are replaced by default, without an overwrite prompt.
 For example, add `"rivwth_experiment.bin:rivwth.bin"` or
 `"nextxy-experiment.bin:nextxy.bin"` only when those Binary inputs exist.
 
 ```sh
 cd map/mekong_15min/script_format_conv
 ./s90-sample_netCDF_conversion.sh
-# Skip interactive confirmation and explicitly replace existing outputs:
-./s90-sample_netCDF_conversion.sh --force
+# The default run also replaces existing selected outputs.
+./s90-sample_netCDF_conversion.sh
 ```
 
 The target is the parent of the current map-local `script_format_conv/`, matching
 s01–s03. From another working directory, or the shared template directory, supply
 `--map-dir /path/to/map`; a shared template is never implicitly treated as a map.
-Before conversion, s90 prints selected/existing/new output counts. If outputs
-exist, an interactive `Overwrite all ...? [y/N]` prompt applies to the entire
-selection: `y` replaces all; `n` or Enter asks about each existing file. Per-file
-approval does not carry to later files. Invalid answers retry; EOF declines.
-Without a terminal, existing outputs are preserved/skipped and new outputs are
-converted. `--force` (or FORCE=1) explicitly replaces existing outputs without
-prompts. Converted/skipped totals appear at completion, matching s02 behavior.
+Before conversion, s90 prints selected/existing/new output counts. Existing
+selected outputs are replaced by default without prompts; unselected outputs are
+untouched. Converted/skipped totals appear at completion.
 
 Outputs retain each input stem: `<map>/netcdf/subbsn-sample.nc` contains `subbsn`,
 and `<map>/netcdf/subcol-sample.nc` contains `subcol`. Only these two generated
@@ -633,8 +619,7 @@ Without the option, existing filename inference and `--variables` fallback remai
 `--generate-list` cannot be combined with `--reference-binary`. Coordinate centers,
 missing/special values, layer order, raw integers and zlib/shuffle level 3 are
 unchanged. Missing inputs, unregistered references, inconsistent records and size
-mismatches fail explicitly. Existing outputs are never overwritten without
-`--force` (or the editable `FORCE=1` setting). Each file is privately written and
+mismatches fail explicitly. Existing outputs are overwritten by default; use `--no-overwrite` where supported to retain them. Each file is privately written and
 read-back verified, closed, then published; a failed write preserves any previous
 output and removes its temporary file. Earlier successful variants remain if a
 later conversion fails. Binary inputs are never modified.
@@ -658,6 +643,6 @@ No input-matrix Python converter or Shell wrapper is implemented by this task.
 
 By default, `s04-restore_highres_binary.sh` restores all registered high-resolution
 variables available in the selected NetCDF map (`VARS="all"`). Missing optional
-NetCDF products are skipped. Existing Binary files are skipped unless `--force`
+NetCDF products are skipped. Existing Binary files are replaced by default unless `--no-overwrite`
 is specified. Set `VARS` to explicit registered stems to restore a subset; an
 explicitly requested missing input remains an error.

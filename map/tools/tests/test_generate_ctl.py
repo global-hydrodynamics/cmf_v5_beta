@@ -46,7 +46,7 @@ class GenerateCtlTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def run_generator(self, *, dry_run: bool = False, overwrite: bool = False):
+    def run_generator(self, *, dry_run: bool = False, overwrite: bool = True):
         return generate_directory(self.map_dir, self.registry, dry_run=dry_run, overwrite=overwrite)
 
     def test_numbered_mpi_standard_definition_and_invalid_names(self):
@@ -76,12 +76,17 @@ class GenerateCtlTests(unittest.TestCase):
             self.assertLess(text.index('nextx 1'), text.index('nexty 1'))
         before = binary.with_suffix('.ctl').read_bytes()
         result = generate_directory(self.map_dir, self.registry, input_file=binary, reference_binary='nextxy.bin')
-        self.assertEqual(result.skipped, 1)
+        self.assertEqual(result.generated, 1)
         self.assertEqual(binary.with_suffix('.ctl').read_bytes(), before)
+        binary.with_suffix('.ctl').write_bytes(b'keep')
+        result = generate_directory(self.map_dir, self.registry, input_file=binary,
+                                    reference_binary='nextxy.bin', overwrite=False)
+        self.assertEqual(result.skipped, 1)
+        self.assertEqual(binary.with_suffix('.ctl').read_bytes(), b'keep')
         binary.write_bytes(b'bad')
         result = generate_directory(self.map_dir, self.registry, input_file=binary, reference_binary='nextxy.bin', overwrite=True)
         self.assertEqual(result.failed, 1)
-        self.assertEqual(binary.with_suffix('.ctl').read_bytes(), before)
+        self.assertEqual(binary.with_suffix('.ctl').read_bytes(), b'keep')
 
     def test_explicit_reference_errors_and_canonical_variable_choice(self):
         write_registry(self.registry, [row('upbasin.bin', 'upbasin', 'int32'),
@@ -106,7 +111,7 @@ class GenerateCtlTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[3]
         work = self.root/'workflow'
         code = work/'map/tools/code'
-        scripts = work/'map/region/script_params'
+        scripts = work/'map/testmap/script_params'
         code.mkdir(parents=True)
         scripts.mkdir(parents=True)
         (work/'variable_table').mkdir()
@@ -134,7 +139,7 @@ class GenerateCtlTests(unittest.TestCase):
         self.assertEqual(output.read_text(),'preserve existing')
         result = subprocess.run(['sh',str(script),'--input','subcol-sample.bin','--reference-binary','subcol.bin'],capture_output=True,text=True)
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
-        self.assertIn('subcol 1',output.read_text())
+        self.assertIn('subcol 1',output.read_text(),result.stdout+result.stderr)
         result = subprocess.run(['sh',str(script),'--variables','subcol'],capture_output=True,text=True)
         self.assertNotEqual(result.returncode,0)
 
@@ -297,9 +302,13 @@ class GenerateCtlTests(unittest.TestCase):
         (self.map_dir / "elevtn.ctl").unlink()
         self.assertEqual(self.run_generator(dry_run=True).generated, 1)
         self.assertFalse((self.map_dir / "elevtn.ctl").exists())
+        ctl = self.map_dir / "elevtn.ctl"
+        ctl.write_text("stale")
         self.assertEqual(self.run_generator().generated, 1)
-        self.assertEqual(self.run_generator().skipped, 1)
-        self.assertEqual(self.run_generator(overwrite=True).generated, 1)
+        self.assertNotEqual(ctl.read_text(), "stale")
+        ctl.write_text("keep")
+        self.assertEqual(self.run_generator(overwrite=False).skipped, 1)
+        self.assertEqual(ctl.read_text(), "keep")
 
     def test_missing_grid_metadata_skips_files(self):
         (self.map_dir / "elevtn.bin").write_bytes(b"\0" * 24)

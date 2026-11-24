@@ -66,7 +66,7 @@ def main():
         print(label+' retained/dropped/invalid:',*(np.count_nonzero(mask&(classes==k)) for k in (1,2,3)))
     print('The dropped fraction measures connectivity exclusion, not simulation error.')
     if args.csv:
-        with args.csv.open('x') as out:
+        with args.csv.open('w') as out:
             out.write('ix,iy,jx,jy,region_up,region_down,elevation,latitude,longitude,type,width1\n')
             for row,kind,regions_pair in zip(paths,classes,ids):
                 if kind!=2:continue

@@ -15,11 +15,14 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import numpy as np
+
 from map.tools.code.generate_ctl import generate_directory
 
 ROOT = Path(__file__).resolve().parents[3]
 SAMPLE = ROOT / "map" / "mekong_15min"
 CODE_SOURCE = ROOT / "map" / "tools" / "code"
+LEGACY_FORTRAN = CODE_SOURCE / "legacy_fortran"
 LEGACY_SOURCE = ROOT / "map" / "src" / "src_param"
 S02_TEMPLATE = ROOT / "map" / "tools" / "script_params" / "s02-bifurcation.sh"
 S01_TEMPLATE = ROOT / "map" / "tools" / "script_params" / "s01-channel_params.sh"
@@ -54,14 +57,14 @@ class S02InputGuardTests(unittest.TestCase):
             for name in MAP_INPUTS:
                 shutil.copy2(SAMPLE / name, map_root / name)
             for name in ("param_bif_set_params", "param_bif_set_basin"):
-                executable = code_dir / name
-                executable.write_text("#!/bin/sh\necho parameter program invoked\nexit 99\n", encoding="ascii")
-                executable.chmod(0o755)
+                executable = code_dir / f"{name}.py"
+                executable.write_text("print('parameter program invoked')\nraise SystemExit(99)\n", encoding="ascii")
             script = script_dir / "s02-bifurcation.sh"
             shutil.copy2(S02_TEMPLATE, script)
             script.chmod(0o755)
 
-            result = run([str(script)], cwd=outside)
+            env = dict(os.environ, CMF5_ROOT=str(root))
+            result = subprocess.run([str(script)], cwd=outside, env=env, text=True, capture_output=True)
 
             self.assertNotEqual(result.returncode, 0, result.stdout)
             self.assertIn("parameter program invoked", result.stdout)
@@ -99,11 +102,11 @@ class BifurcationMigrationTests(unittest.TestCase):
         cls.code_dir.mkdir(parents=True)
         (cls.build_root / "config").mkdir()
         shutil.copy2(ROOT / "config" / "Mkinclude_gfortran", cls.build_root / "config" / "Mkinclude")
-        shutil.copy2(CODE_SOURCE / "Makefile", cls.code_dir / "Makefile")
-        shutil.copy2(CODE_SOURCE / "mod_map_color.F90", cls.code_dir / "mod_map_color.F90")
-        shutil.copy2(CODE_SOURCE / "mod_bifprm_csv.F90", cls.code_dir / "mod_bifprm_csv.F90")
+        shutil.copy2(LEGACY_FORTRAN / "Makefile", cls.code_dir / "Makefile")
+        shutil.copy2(LEGACY_FORTRAN / "mod_map_color.F90", cls.code_dir / "mod_map_color.F90")
+        shutil.copy2(LEGACY_FORTRAN / "mod_bifprm_csv.F90", cls.code_dir / "mod_bifprm_csv.F90")
         shutil.copy2(CODE_SOURCE / "convert_bifprm_csv_to_netcdf.py", cls.code_dir / "convert_bifprm_csv_to_netcdf.py")
-        for source in CODE_SOURCE.glob("param_*.F90"):
+        for source in LEGACY_FORTRAN.glob("param_*.F90"):
             shutil.copy2(source, cls.code_dir / source.name)
 
         result = run(["make", "-C", str(cls.code_dir), "param"], cwd=ROOT)
@@ -208,8 +211,11 @@ class BifurcationMigrationTests(unittest.TestCase):
         self.assert_netcdf_matches_csv(v5 / "bifprm.csv", v5 / "netcdf" / "bifprm.nc")
         for name in ("bifbsn.bin", "bifcol.bin"):
             self.assertEqual((v5 / name).stat().st_size, 80 * 120 * 4, name)
-        self.assertEqual((v5 / "check_bif_dphwth.bin").read_bytes(),
-                         (legacy / "bifdph.bin").read_bytes())
+        np.testing.assert_allclose(
+            np.fromfile(v5 / "check_bif_dphwth.bin", dtype="<f4"),
+            np.fromfile(legacy / "bifdph.bin", dtype="<f4"),
+            rtol=8 * np.finfo(np.float32).eps, atol=0,
+        )
         self.assertEqual((v5 / "check_bif_dphwth.bin").stat().st_size, 2 * 80 * 120 * 4)
         self.assertEqual((legacy / "bifdph.bin").stat().st_size, 2 * 80 * 120 * 4)
         record_size = 80 * 120 * 4
