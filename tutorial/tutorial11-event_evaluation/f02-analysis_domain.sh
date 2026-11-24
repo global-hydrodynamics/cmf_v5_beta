@@ -1,25 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Internal path anchors; user paths below are independent of the caller's directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+TUTORIAL_DIR="$SCRIPT_DIR"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd -P)"
+
 # User settings
-PYTHON_CMD="python3"
-MAP_DIR="map/glb_15min"
-TILE_CACHE="$HOME/.cache/cmf_flood_osm_tiles"
+# ----------------------------------------------------------------------
+PYTHON_CMD="python3"                                                  # Python with NumPy, Matplotlib, rasterio and netCDF4.
+MAP_DIR="map/glb_15min"                                               # Map path relative to repository root, or absolute.
+TILE_CACHE="$HOME/.cache/cmf_flood_osm_tiles"                         # Existing OSM cache directory.
+SETTINGS="$SCRIPT_DIR/metadata/event_figure_settings.json"            # Authoritative panel_a display settings: extent, colors, dimensions/DPI, labels.
+ZOOMUP_FILE="$SCRIPT_DIR/metadata/event_map_extents.csv"              # Authoritative named viewing extents [degrees, CSV schema].
+IMPACT_FILE="$SCRIPT_DIR/metadata/01_impact_locations.csv"            # Reported locality metadata; not observed flood polygons.
+OUTPUT="$SCRIPT_DIR/figure/f02-analysis_domain_design.png"            # Output PNG path.
+SHOW_OSM=1                                                            # 1: use OSM backdrop; 0: omit tile requests.
+GAUGE_FILE="$SCRIPT_DIR/metadata/02_gauges.csv"                       # Gauge metadata CSV for this Figure.
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-SETTINGS="$SCRIPT_DIR/metadata/event_figure_settings.json"
-ZOOMUP_FILE="$SCRIPT_DIR/metadata/event_map_extents.csv"
-IMPACT_FILE="$SCRIPT_DIR/metadata/01_impact_locations.csv"
-GAUGE_FILE="$SCRIPT_DIR/metadata/02_gauges.csv"
-FIGURE_DIR="$SCRIPT_DIR/figure"
+# ----------------------------------------------------------------------
+# User settings end here.
+# ----------------------------------------------------------------------
+
+# The guarded array expansion below also supports an empty list under Bash 3.2 with set -u.
+EXTRA_ARGS=()
+if [[ "$SHOW_OSM" == "0" ]]; then EXTRA_ARGS+=(--no-osm); fi
 cd "$REPO_ROOT"
-
 "$PYTHON_CMD" visualization/river_map/script/f06a-OSM_background-default.py \
-    --map-dir "$MAP_DIR" --settings "$SETTINGS" --zoomup-file "$ZOOMUP_FILE" \
-    --plot-file "$IMPACT_FILE" --station-file "$GAUGE_FILE" \
-    --tile-cache "$TILE_CACHE" \
-    --output "$FIGURE_DIR/f02-analysis_domain_design.png"
-
-printf '\n[ SUCCESS ] Tutorial 11 Figure 2 written to %s\n' \
-    "$FIGURE_DIR/f02-analysis_domain_design.png"
+    --map-dir "$MAP_DIR" --settings "$SETTINGS" \
+    --zoomup-file "$ZOOMUP_FILE" --plot-file "$IMPACT_FILE" \
+    --station-file "$GAUGE_FILE" \
+    --tile-cache "$TILE_CACHE" --output "$OUTPUT" ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"}

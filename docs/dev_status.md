@@ -1205,7 +1205,7 @@ metadata/inspection Figure and linked research records. Acquire 2021-07-15,
 raw rasters/environments outside Git. Acceptance: actual acquisition, native
 mask/overlap/20×20 alignment checks, offline full replay, visual inspection,
 documentation and normal commit/push. No model evaluation or Gallery publication.
-See [the workflow/results note](../tutorial/tutorial11-event_evaluation/gfm_3sec_workflow.md).
+See [the workflow/results note](https://github.com/global-hydrodynamics/cmf_v5_beta/blob/97ad15c591eb17fe33f3a9e9fce9032b0cb8ba2d/tutorial/tutorial11-event_evaluation/gfm_3sec_workflow.md).
 
 DT-0154 complete: actual 37-COG acquisition and 4800×3600 conversion; 13 focused
 tests and all-cell checks PASS, communication-blocked full replay bitwise equal
@@ -1248,3 +1248,28 @@ the same valid-cell mask. Sea/background rendering is white in the standalone
 sample. Other regions, map families, resolutions, and edge cases remain
 unvalidated. See [the package plan](downscale_flddph_python_port_plan.md),
 DT-0161, and VR-0207.
+
+### Tutorial11 synthesis preparation (DT-0174, branch-local proposal)
+
+Maintainer authorizes bounded documentation/retired-reference cleanup and three
+retrospective syntheses on existing feature/package-builder; explicitly excludes
+input-version/SHA reconciliation. Codex owns Tutorial11 contracts, reports,
+availability metadata and necessary retired-test/entry references plus research
+records. No data retrieval/recalculation, new model/analysis/figure execution,
+fingerprint rewrite or environment installation. Existing dy environment supports
+13 passing synthetic GFM contracts. Step24 remains final; Step25 canceled.
+See the [preparation record](../tutorial/tutorial11-event_evaluation/AI_work_report/00_synthesis_preparation.md).
+Changes remain uncommitted for review; four pre-existing Shell mode edits kept.
+
+
+### Tutorial11 Shell configurability (DT-0175, branch-local proposal)
+
+Reviewed22 Shell entry points;21 active workflows now have annotated researcher
+settings with actual CLI/Namelist forwarding. Existing JSON/CSV ownership and
+default scientific choices are retained. Tutorial AGENTS section10 makes the
+Human-Configurable, AI-Executable convention normative for future local work;
+shared tutorial adoption is proposed only. All22 Shell syntax checks,21 stubbed
+configuration invocations,13 focused GFM tests and8 default-image comparisons
+pass. No model/acquisition/full peak run; unavailable-data/OSM limits remain.
+See [configuration Work Report](../tutorial/tutorial11-event_evaluation/AI_work_report/00_shell_configurability.md)
+and VR-0218. Prior edits preserved; no commit/push in this follow-up.

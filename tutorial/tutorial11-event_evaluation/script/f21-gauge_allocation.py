@@ -328,6 +328,8 @@ def main() -> None:
     parser.add_argument("--dpi", type=int, default=200)
     parser.add_argument("--catchment-output", type=Path)
     parser.add_argument("--catchment-extent", default="6.4,7.5,50.25,51.10")
+    parser.add_argument("--fig-width", type=float, default=13.0)
+    parser.add_argument("--fig-height", type=float, default=9.2)
     args = parser.parse_args()
 
     tutorial = args.tutorial_dir.resolve()
@@ -349,7 +351,7 @@ def main() -> None:
         raise ValueError("Map coordinate dimensions differ from params.txt")
     overview_extent = (west, east, south, north)
 
-    fig = plt.figure(figsize=(13.0, 9.2), constrained_layout=True)
+    fig = plt.figure(figsize=(args.fig_width, args.fig_height), constrained_layout=True)
     grid = fig.add_gridspec(2, 2, width_ratios=(1.15, 0.85), height_ratios=(1, 1))
     overview = fig.add_subplot(grid[:, 0])
     draw_network(overview, segments, area)

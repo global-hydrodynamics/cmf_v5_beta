@@ -307,7 +307,7 @@ def write_inventory(passes, path, orbit_metadata, acquisition_footprints, extent
 
 
 def draw_pages(passes, acquisition_footprints, orbit_metadata, map_dir, view_extent,
-               aoi_extent, tile_cache, output_dir, no_osm):
+               aoi_extent, tile_cache, output_dir, no_osm, fig_width=15, fig_height=10, dpi=180, period_title=None):
     _, _, segments, classes = river.read_network(map_dir, view_extent)
     output_dir.mkdir(parents=True, exist_ok=True)
     page_size = 6
@@ -318,11 +318,10 @@ def draw_pages(passes, acquisition_footprints, orbit_metadata, map_dir, view_ext
     }
     for page_index in range(page_count):
         page = passes[page_index * page_size:(page_index + 1) * page_size]
-        fig, axes = plt.subplots(2, 3, figsize=(15, 10), squeeze=False)
+        fig, axes = plt.subplots(2, 3, figsize=(fig_width, fig_height), squeeze=False)
         fig.suptitle(
-            "Original Sentinel-1 acquisition footprints by pass · 14–16 July 2021\n"
-            f"Centered on 15 July disaster date · candidate domain: "
-            f"{aoi_extent[0]}–{aoi_extent[2]}°E, {aoi_extent[1]}–{aoi_extent[3]}°N · "
+            (period_title or "Original Sentinel-1 acquisition footprints by pass · 14–16 July 2021\nCentered on 15 July disaster date · candidate domain: ")
+            + f"{aoi_extent[0]}–{aoi_extent[2]}°E, {aoi_extent[1]}–{aoi_extent[3]}°N · "
             f"page {page_index + 1}/{page_count}",
             fontsize=14, y=0.985,
         )
@@ -380,7 +379,7 @@ def draw_pages(passes, acquisition_footprints, orbit_metadata, map_dir, view_ext
         fig.subplots_adjust(left=0.07, right=0.98, top=0.90, bottom=0.12,
                             wspace=0.25, hspace=0.32)
         output = output_dir / f"f03a-gfm-pass-footprints-{page_index + 1:02d}.png"
-        river.save_figure(fig, output, 180)
+        river.save_figure(fig, output, dpi)
     for stale in output_dir.glob("f03a-gfm-pass-footprints-*.png"):
         if stale.name not in expected_outputs:
             stale.unlink()
@@ -407,6 +406,9 @@ def main():
                         default=Path.home() / ".cache/cmf_flood_osm_tiles")
     parser.add_argument("--figure-dir", type=Path, default=TUTORIAL_DIR / "figure")
     parser.add_argument("--no-osm", action="store_true")
+    parser.add_argument("--fig-width", type=float, default=15)
+    parser.add_argument("--fig-height", type=float, default=10)
+    parser.add_argument("--dpi", type=int, default=180)
     args = parser.parse_args()
     config = json.loads(args.domain_config.read_text(encoding="utf-8"))
     aoi_extent = tuple(config["satellite_analysis"]["domain"]["bbox_west_south_east_north"])
@@ -472,7 +474,9 @@ def main():
         )
     else:
         draw_pages(passes, acquisition_footprints, orbit_metadata, args.map_dir, view_extent,
-                   aoi_extent, args.tile_cache, args.figure_dir, args.no_osm)
+                   aoi_extent, args.tile_cache, args.figure_dir, args.no_osm, args.fig_width, args.fig_height, args.dpi,
+                   None if (search_period["start_date"], search_period["end_date"]) == ("2021-07-14", "2021-07-16") else
+                   f"Original Sentinel-1 acquisition footprints by pass · {search_period['start_date']}–{search_period['end_date']}\nCandidate domain: ")
     source_count = sum(group["source_product_count"] for group in passes)
     print(f"Summarized {sum(p['item_count'] for p in passes)} STAC Items into "
           f"{len(passes)} acquisition passes and {source_count} source product slices")

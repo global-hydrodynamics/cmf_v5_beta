@@ -219,20 +219,21 @@ def create_figure(fraction: np.ndarray, transform: Affine,
                   aoi: tuple[float, float, float, float],
                   map_dir: Path, tile_cache: Path, impact_locations: Path,
                   focus_areas: list[dict], output_path: Path,
-                  no_osm: bool = False) -> None:
+                  no_osm: bool = False, *, fig_width=12.5, fig_height=8.2, dpi=180,
+                  cmap_name="Reds", vmin=0, vmax=100, gamma=.55) -> None:
     west, south, east, north = aoi
     margin = 0.5
     view = (west - margin, south - margin, east + margin, north + margin)
     _, _, segments, classes = river.read_network(map_dir, view)
-    figure, ax = plt.subplots(figsize=(12.5, 8.2))
+    figure, ax = plt.subplots(figsize=(fig_width, fig_height))
     river.draw_osm(ax, view, tile_cache, alpha=0.68, white_mix=0.42) if not no_osm else None
 
     visible_fraction = np.ma.masked_where(
         (fraction == FRACTION_NODATA) | (fraction <= 0), fraction
     )
-    cmap = plt.get_cmap("Reds").copy()
+    cmap = plt.get_cmap(cmap_name).copy()
     cmap.set_bad((1, 1, 1, 0))
-    norm = PowerNorm(gamma=0.55, vmin=0, vmax=100)
+    norm = PowerNorm(gamma=gamma, vmin=vmin, vmax=vmax)
     west_edge, east_edge = transform.c, transform.c + fraction.shape[1] * transform.a
     north_edge, south_edge = transform.f, transform.f + fraction.shape[0] * transform.e
     image = ax.imshow(
@@ -307,7 +308,7 @@ def create_figure(fraction: np.ndarray, transform: Affine,
         loc="upper left", framealpha=0.9, fontsize=8,
     )
     river.draw_attribution(ax)
-    river.save_figure(figure, output_path, 180)
+    river.save_figure(figure, output_path, dpi)
 
 
 def main() -> int:
@@ -326,6 +327,13 @@ def main() -> int:
                         help="Regenerate the Figure from the existing fraction raster")
     parser.add_argument("--no-osm", action="store_true",
                         help="Render rivers and data without requesting OSM tiles")
+    parser.add_argument("--fig-width", type=float, default=12.5, help="Canvas width [inches]")
+    parser.add_argument("--fig-height", type=float, default=8.2, help="Canvas height [inches]")
+    parser.add_argument("--dpi", type=int, default=180, help="PNG resolution [pixels/inch]")
+    parser.add_argument("--cmap", default="Reds")
+    parser.add_argument("--vmin", type=float, default=0)
+    parser.add_argument("--vmax", type=float, default=100)
+    parser.add_argument("--gamma", type=float, default=.55)
     args = parser.parse_args()
 
     aoi = read_aoi(args.domain_config)
@@ -340,7 +348,9 @@ def main() -> int:
             grid_transform = existing.transform
         create_figure(fraction, grid_transform, aoi, args.map_dir,
                       args.tile_cache, args.impact_locations, focus_areas,
-                      args.figure_output, args.no_osm)
+                      args.figure_output, args.no_osm, fig_width=args.fig_width,
+                      fig_height=args.fig_height, dpi=args.dpi, cmap_name=args.cmap,
+                      vmin=args.vmin, vmax=args.vmax, gamma=args.gamma)
         print(f"figure={args.figure_output} ({args.figure_output.stat().st_size} bytes)")
         return 0
 
@@ -351,7 +361,9 @@ def main() -> int:
                   grid_transform, source_profile, metadata)
     create_figure(fraction, grid_transform, aoi, args.map_dir,
                   args.tile_cache, args.impact_locations, focus_areas,
-                  args.figure_output, args.no_osm)
+                  args.figure_output, args.no_osm, fig_width=args.fig_width,
+                      fig_height=args.fig_height, dpi=args.dpi, cmap_name=args.cmap,
+                      vmin=args.vmin, vmax=args.vmax, gamma=args.gamma)
     print(json.dumps(metadata, indent=2))
     print(f"fraction_raster={args.output} ({args.output.stat().st_size} bytes)")
     print(f"valid_count_raster={args.coverage_output} ({args.coverage_output.stat().st_size} bytes)")

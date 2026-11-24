@@ -101,7 +101,8 @@ Step 14 should use this regional pair with the Tutorial-local dataset row and
 Step 12 execution metadata. It must select the simulation and spin-up dates,
 confirm forcing covers the experiment and intended evaluation window, compare
 the forcing information to runtime settings, and create the GOSH script. The
-July 1–20 acquisition period is not a simulation-period decision. KG-0019,
+July 1–31 forcing acquisition period is not, by itself, a simulation-period
+decision; Step 14 separately records the 31-day executed experiment. KG-0019,
 including the ERA5-Land 00 UTC accumulation and converter boundary treatment,
 remains unresolved.
 

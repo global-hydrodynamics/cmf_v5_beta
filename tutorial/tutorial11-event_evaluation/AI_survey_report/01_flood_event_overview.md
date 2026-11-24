@@ -10,7 +10,7 @@ The event overview identifies candidate observations and uncertainties; it does 
 
 ### Event and hydrologic context
 
-The core rainfall/event context used here is 13–15 July 2021. A broader 10–25 July window was proposed for later event analysis, but the simulation period and endpoint convention remain undecided. The Ahr and Erft are Rhine tributaries; Kyll and Prüm belong to the Moselle system; the Meuse is a separate basin. This distinction matters when relating impact reports and observations to a model routing network.
+The core rainfall/event context used here is 13–15 July 2021. A broader 10–25 July window was proposed for later event analysis, while Step 14 separately records the July 1–August 1-exclusive simulation. The Ahr and Erft are Rhine tributaries; Kyll and Prüm belong to the Moselle system; the Meuse is a separate basin. This distinction matters when relating impact reports and observations to a model routing network.
 
 Public sources retained with the event review include Mohr et al. (2023), the Copernicus Emergency Management Service event account, and the Rhineland-Palatinate environmental authority report on the July 2021 flood. Product and event references are listed below and in the retained research record.
 
@@ -41,7 +41,7 @@ The Ahr gauges were destroyed or lost observations during the event, and peak di
 
 ### Candidate observations
 
-Three supplied discharge series are Lobith (153), Speyer (63) and Maxau (28), at six-hour intervals. The source files describe the values as six-hour means and timestamps as interval ends. Bonn/6, named in an initial correspondence summary, is absent from the inspected files. Units, source timezone and original observing agency remain unresolved. Candidate satellite/event products include GFM, NASA MODIS MCDWD, Kuro Siwo event samples 518/520, and Copernicus EMSR517; availability and suitability for this event must be verified product by product.
+Three supplied discharge series are Lobith (153), Speyer (63) and Maxau (28), at six-hour intervals. Provider correspondence describes the values as six-hour means and timestamps as interval ends; these semantics are not encoded explicitly in the files. Bonn/6, named in an initial correspondence summary, is absent from the inspected files. Units, source timezone and original observing agency remain unresolved. Candidate satellite/event products include GFM, NASA MODIS MCDWD, Kuro Siwo event samples 518/520, and Copernicus EMSR517; availability and suitability for this event must be verified product by product.
 
 A collaboration summary also identifies ECMWF experiments `j1ee` and `j1w9` as possible model sources. This information was supplied second-hand and was not verified against MARS fields or experiment metadata. It must not be treated as confirmed availability.
 

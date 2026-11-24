@@ -99,9 +99,9 @@ def render(args: argparse.Namespace) -> None:
     norm = BoundaryNorm([-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 255.5], cmap.N)
 
     count = len(areas)
-    columns = 3
+    columns = args.columns
     rows = math.ceil(count / columns)
-    figure, axes = plt.subplots(rows, columns, figsize=(14, rows * 3.35), squeeze=False)
+    figure, axes = plt.subplots(rows, columns, figsize=(args.fig_width, args.fig_height or rows * 3.35), squeeze=False)
     axes_flat = axes.ravel()
     for index, (area, path, view_extent) in enumerate(zip(areas, paths, views)):
         ax = axes_flat[index]
@@ -163,7 +163,7 @@ def render(args: argparse.Namespace) -> None:
     figure.tight_layout(rect=(0.015, 0.075, 0.985, 0.94))
     output = Path(args.figure_output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
-    figure.savefig(output, dpi=150)
+    figure.savefig(output, dpi=args.dpi)
     plt.close(figure)
     print(f"Wrote {output} ({output.stat().st_size:,} bytes)")
 
@@ -174,6 +174,10 @@ def main() -> None:
     parser.add_argument("--extracted-areas", required=True)
     parser.add_argument("--figure-output", required=True)
     parser.add_argument("--tile-cache", required=True)
+    parser.add_argument("--fig-width", type=float, default=14, help="Canvas width [inches]")
+    parser.add_argument("--fig-height", type=float, default=0, help="Canvas height [inches]")
+    parser.add_argument("--dpi", type=int, default=150, help="PNG resolution [pixels/inch]")
+    parser.add_argument("--columns", type=int, choices=range(1,7), default=3)
     render(parser.parse_args())
 
 

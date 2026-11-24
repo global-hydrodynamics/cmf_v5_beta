@@ -38,23 +38,15 @@ background and evidence are summarized in the [event Survey Report](AI_survey_re
 
 ## 2. Human–AI Collaborative Analysis
 
-### 2.1 Human–AI Workflow
+### 2.1 Responsibility and documentation
 
-The researcher defines the study objective and gives the AI agent the relevant
-Step Prompt, data access and event-specific constraints. The agent inspects
-existing inputs, conducts the requested research or analysis, and prepares the
-reproducible processing, metadata, figures and reports needed for the next
-Step. It explains evidence, interpretation and unresolved questions so the
-researcher can assess the result.
-
-Research proceeds through feedback when useful: the researcher reviews the
-scientific interpretation and may request a correction, alternative analysis
-or additional evidence; the agent updates affected outputs and reports. Review
-is recommended, but its absence does not stop later processing. The details for
-review states, errors and agent conduct are defined in the Tutorial's
-[AI-supported analysis rules](AGENTS.md). The staged scientific workflow
-below is the research plan; per-Step execution instructions are in the
-corresponding Prompts.
+This document owns the scientific sequence and current research scope.
+[Tutorial AGENTS](AGENTS.md) owns agent responsibilities, review/revision rules
+and handoff maintenance. The [collaboration synthesis](AI_survey_report/00_human_ai_collaborative_research.md)
+describes observed Human–AI work rather than defining another policy.
+The normative [Human-Configurable, AI-Executable rule](AGENTS.md#10-human-configurable-ai-executable-workflow)
+requires researcher-editable Shell settings; the [configuration review](AI_work_report/00_shell_configurability.md)
+records its current implementation and verification.
 
 ### 2.2 Directory and File Structure
 
@@ -415,7 +407,7 @@ but preparation outputs must not be confused with evaluation results.
 | **1 — Event research** | The original 14-location inventory and Figure 1 remain; a source-linked timing/location ledger and qualified timing legend were added from official reports and regional studies. Survey/Work Reports, Prompt and process document were updated. | Gauge/system timing is available for selected river reaches; most town-specific onset or inundation-peak times remain unknown. Gauge timing must not be transferred to every impact locality. |
 | **2 — Domain design** | Candidate domain JSON, Figure 2, Prompt and reports exist. | Candidate bounds and mapped routing groups are documented; hydrologic scope and model boundary conditions are not final. |
 | **3a — Availability** | Pass metadata, selected-pass JSON, Figure 3a, Prompt and reports exist. | Catalogue survey is documented; pass selection is `proposed`, and footprints do not establish valid flood-pixel coverage. |
-| **3b — Download** | Local `Atlantis/` manifest, summary and COG assets are present; the Prompt, downloader and reports exist. | The retained summary records acquisition checks and readiness for p03c. The assets are local/ignored and are not distributed through Git. |
+| **3b — Download** | Retained reports record local `Atlantis/` manifest, summary and COG assets; those ignored files are currently unavailable at the checked paths. The Prompt and downloader exist. | The retained summary records acquisition checks and readiness for p03c. The assets are local/ignored and are not distributed through Git. |
 | **3c — Classification** | Flood Fraction raster, focus-area metadata and Figure 3c are present; processing entry points and reports exist. The full-extent 20 m classification TIFF is absent from the current workspace; its provenance record remains. | Processing and screening are recorded, but the full source raster is unavailable here for a new pixel-level check. Focus areas remain proposals and do not represent all detected flooding. |
 | **3d — Extraction** | Extraction metadata, 15 focus-area 20 m rasters and Figure 3d are present; extraction/figure entry points and reports exist. | Focus crops are prepared; they are derived observation subsets, not model comparisons or validation results. |
 | **4 — Discharge observations** | Provider-supplied source files, Step 4 inventory/metadata, Figure 4 and reports are recorded. Step 21 later verifies their map cells. | Three Rhine gauge series are prepared; discharge units, time zone and original observing agency remain unresolved. |
@@ -431,9 +423,36 @@ but preparation outputs must not be confused with evaluation results.
 | **21 — Gauge and impact-location allocation** | The gauge-only CSV remains intact. A separate report-linked impact allocation CSV records geographic cells and reviewed river-assessment candidates; Figure 21, Prompt and Survey/Work Reports were updated. | The geographic cell and river candidate are distinct. Ahr/Erft and several other tributary candidates are plausible at this coarse map scale; five Ahr reports use reviewed upstream proxies and exact local reach support remains uncertain; Prümzurlay uses its direct catchment. |
 | **22 — Hydrograph comparison** | Model/observation time-series CSV, source/time summary JSON, three-panel Figure, reusable Prompt and Survey/Work Reports are recorded. | An exploratory overlay is available at the three Step 21 cells. Observation unit and timezone remain unknown; results are not a formal match or performance evaluation. |
 | **23 — Impact timing comparison** | Report-linked hourly model series, source-timing comparison CSV, two Figures, reusable Prompt and Survey/Work Reports are recorded. | Three Ahr offsets are provisional (+6 h at Müsch, +2 h at Altenahr and −0.5 h at Bad Bodendorf), all sharing one model cell. Uncertain timing and unsupported river matches remain context-only; no formal score is produced. |
-| **24 — Flood Inundation Downscaling, Visualization, and Assessment** | One S1A-time-selected 1min NetCDF, Fig24, provenance and four-part Prompt with scientific Survey/technical Work Report. | Workflow feasibility and limitations are assessed; no quantitative inundation skill claim or separate subsequent assessment Step. |
+| **24 — Flood Inundation Downscaling, Visualization, and Assessment** | One S1A-time-selected 1min NetCDF execution record, Fig24, provenance and four-part Prompt with scientific Survey/technical Work Report; the derived NetCDF is currently unavailable locally. | Workflow feasibility and limitations are assessed; no quantitative inundation skill claim or separate subsequent assessment Step. |
 
 The Step Prompts, Survey Reports and Work Reports are linked in the Analysis
 Workflow above. They provide the detailed instructions, scientific evidence and
 execution record respectively; this document explains how those activities
 form one research plan.
+
+## 5. Synthesis reports and local availability
+
+The three retrospective syntheses are:
+
+- [Scientific Results](AI_survey_report/00_scientific_results.md): retained
+  findings, scientific interpretation and limits; no new skill validation.
+- [Flood Event Evaluation Workflow](AI_survey_report/00_flood_event_evaluation_workflow.md):
+  reusable research contracts versus the Rhine-specific implementation.
+- [Human–AI Collaborative Research Workflow](AI_survey_report/00_human_ai_collaborative_research.md):
+  documented roles, revision episodes and limits of the qualitative case study.
+
+These are summaries, not new numbered scientific Steps. **Step24 is final;
+Step25 is canceled.** Conceptual Steps16–17 are partly exercised by21–24;
+formal matching/quantitative scoring remain unfinished. Steps18–20 are unassigned.
+
+Availability was inspected on2026-11-24 without input-version/SHA reconciliation,
+as explicitly directed by the maintainer. The current local workspace lacks
+Tutorial-local Atlantis raw/manifest storage, the full20m classification,
+Step15/24derived NetCDFs and the expected analysis environment. Existing maps,
+model files, station data, crops, metadata and Figures remain; availability is
+not an assertion of data identity or scientific validity. The status table
+above describes retained execution evidence, not a guarantee that every ignored
+artifact is present on this machine. See the
+[availability CSV](metadata/event_artifact_availability.csv) and
+[preparation Work Report](AI_work_report/00_synthesis_preparation.md) before
+requesting a rerun. No retrieval/recalculation is needed to read these reports.

@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# User settings
-PYTHON_CMD="python3"
+# Internal path anchors; user paths below are independent of the caller's directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+TUTORIAL_DIR="$SCRIPT_DIR"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd -P)"
 
-TUTORIAL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOMAIN_CONFIG="$TUTORIAL_DIR/metadata/02_domain_selection.json"
-ATLANTIS_DIR="$TUTORIAL_DIR/Atlantis"
-CATALOGUE_ROOT="$ATLANTIS_DIR/catalogue"
+# User settings
+# ----------------------------------------------------------------------
+PYTHON_CMD="python3"                                                  # Python with Atlantis and its catalogue dependencies.
+DOMAIN_CONFIG="$TUTORIAL_DIR/metadata/02_domain_selection.json"       # Authoritative dates [inclusive] and bbox [west,south,east,north degrees].
+ATLANTIS_DIR="$TUTORIAL_DIR/Atlantis"                                 # Acquisition/cache/log root; no scientific outputs outside this root.
+CATALOGUE_ROOT="$ATLANTIS_DIR/catalogue"                              # Saved STAC/orbit catalogue root.
+
+# ----------------------------------------------------------------------
+# User settings end here.
+# ----------------------------------------------------------------------
 
 echo "[STEP 1/2] Search daily GFM STAC catalogues and retrieve source orbit metadata."
 while IFS=' ' read -r SEARCH_DATE WEST SOUTH EAST NORTH; do

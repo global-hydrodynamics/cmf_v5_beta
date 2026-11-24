@@ -69,7 +69,9 @@ implementation requirements. Keep execution and checks in the Work Report.
 
 ## Completion and current scope
 
-The time-selected 1min product and Fig 24 exist; Prompt, Survey/Work Reports and
+The time-selected 1min product execution and Fig 24 are recorded; check local
+product availability in the [preparation record](AI_work_report/00_synthesis_preparation.md).
+Prompt, Survey/Work Reports and
 workflow overview consistently cover A–D; technical facts/links are checked;
 interpretation remains within the evidence. No separate subsequent assessment
 Step is required. No other acquisition, GFM comparison, accuracy metric, new

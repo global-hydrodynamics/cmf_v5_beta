@@ -52,7 +52,7 @@ def river_color(groups: str) -> str:
     return RIVER_COLORS.get(first, "#4e79a7")
 
 
-def plot_hydrographs(series: list[dict[str, str]], comparisons: list[dict[str, str]], output: Path) -> None:
+def plot_hydrographs(series: list[dict[str, str]], comparisons: list[dict[str, str]], output: Path, width=15, row_height=3, dpi=200) -> None:
     cells = sorted({cell_id(row) for row in series if cell_id(row) is not None})
     records_by_cell: dict[tuple[int, int], list[dict[str, str]]] = {cell: [] for cell in cells}
     for row in comparisons:
@@ -67,7 +67,7 @@ def plot_hydrographs(series: list[dict[str, str]], comparisons: list[dict[str, s
 
     ncols = 3
     nrows = int(np.ceil(len(cells) / ncols))
-    fig, axes = plt.subplots(nrows, ncols, figsize=(15, 3.0 * nrows), sharex=True, squeeze=False)
+    fig, axes = plt.subplots(nrows, ncols, figsize=(width, row_height * nrows), sharex=True, squeeze=False)
     start, end = datetime(2021, 7, 13), datetime(2021, 7, 17)
     grouped_series: dict[tuple[int, int], list[dict[str, str]]] = {cell: [] for cell in cells}
     for row in series:
@@ -142,7 +142,7 @@ def plot_hydrographs(series: list[dict[str, str]], comparisons: list[dict[str, s
              ha="center", fontsize=8, color="#555555")
     fig.tight_layout(rect=(0, .045, 1, .978))
     output.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output, dpi=200, bbox_inches="tight", facecolor="white")
+    fig.savefig(output, dpi=dpi, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
 
@@ -177,7 +177,7 @@ def plot_timing_summary(comparisons, output: Path, settings_path: Path):
     # Fixed physical plot area; text columns and legends occupy their own margins.
     left, bottom, plot_width = 3.35, 2.35, 6.75
     plot_height = max(5.6, len(records) * .255)
-    width, height, dpi = 11.65, bottom + plot_height + .65, 200
+    width, height, dpi = settings.get("fig_width", 11.65), (settings.get("fig_height") or bottom + plot_height + .65), settings.get("dpi", 200)
     fig = plt.figure(figsize=(width, height), dpi=dpi)
     ax = fig.add_axes([left / width, bottom / height, plot_width / width, plot_height / height])
     ax.set_xlim(start, end)
@@ -324,11 +324,14 @@ def main() -> None:
     parser.add_argument("--summary-settings", type=Path,
                         default=Path(__file__).resolve().parents[1]/"metadata/23_timing_figure_settings.json")
     parser.add_argument("--summary-only", action="store_true", help="redraw only Fig23b; preserve Fig23a")
+    parser.add_argument("--hydrograph-width", type=float, default=15)
+    parser.add_argument("--hydrograph-row-height", type=float, default=3)
+    parser.add_argument("--dpi", type=int, default=200)
     args = parser.parse_args()
     series = read_csv(args.timeseries_csv)
     comparisons = read_csv(args.comparison_csv)
     if not args.summary_only:
-        plot_hydrographs(series, comparisons, args.hydrographs_output)
+        plot_hydrographs(series, comparisons, args.hydrographs_output, args.hydrograph_width, args.hydrograph_row_height, args.dpi)
         print(f"Wrote {args.hydrographs_output}")
     review = plot_timing_summary(comparisons, args.summary_output, args.summary_settings)
     # Display metadata is separate from peak-analysis CSVs.

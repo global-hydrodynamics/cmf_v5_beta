@@ -1,4 +1,4 @@
-"""Focused scientific/data-contract tests for the native-GFM workflow."""
+"""Focused scientific/data-contract tests for the current native-GFM and 1-minute classification workflow."""
 
 import importlib.util
 from pathlib import Path
@@ -11,7 +11,6 @@ from unittest.mock import patch
 import numpy as np
 import rasterio
 from rasterio.transform import from_origin
-from rasterio.warp import Resampling
 from rasterio.windows import Window
 
 PYTHON_DIR = Path(__file__).resolve().parents[1] / "script"
@@ -27,7 +26,8 @@ def load(name, filename):
 
 
 download = load("gfm_download", "event_gfm_download.py")
-convert = load("gfm_convert", "event_gfm_3sec_conversion.py")
+classification = load("gfm_classify", "s03c-gfm_20m_class.py")
+fraction = load("gfm_fraction", "f03c-flood_fraction_1min.py")
 
 
 class MasksAndMosaic(unittest.TestCase):
@@ -141,74 +141,29 @@ class FileContracts(unittest.TestCase):
             dst.write(data)
         return p
 
-    def test_area_support_not_raw_code_average(self):
-        step = convert.STEP
-        data = np.zeros((8, 4, 4), dtype="uint16")
-        data[0, 0, 0] = 1
-        data[1, 0, :2] = 1
-        data[2, 0, :2] = 1
-        source = self.write("binary.tif", data, from_origin(4, 52, step / 2, step / 2))
-        result = []
-        for band in [1, 2, 3]:
-            p = self.root / f"warp{band}.tif"
-            convert.warp_band(
-                source,
-                band,
-                p,
-                from_origin(4, 52, step, step),
-                2,
-                2,
-                Resampling.average,
-            )
-            with rasterio.open(p) as src:
-                result.append(src.read(1))
-        self.assertAlmostEqual(result[0][0, 0], 0.25)
-        self.assertAlmostEqual(result[2][0, 0], 0.5)
-        self.assertAlmostEqual(result[0][0, 0] / result[2][0, 0], 0.5)
-        self.assertAlmostEqual(result[1][0, 0] / result[2][0, 0], 1)
-        self.assertEqual(
-            result[2][0, 1], 0
-        )  # unknown observation, not a valid dry fraction
-        fractions = np.divide(
-            result[0],
-            result[2],
-            out=np.full((2, 2), common.NODATA),
-            where=result[2] > 0,
+    def test_fraction_excludes_exclusion_and_nodata(self):
+        # Current Step3c counts classified pixel centres, not raw class codes.
+        step = 1 / 60
+        source = self.write(
+            "classes.tif", np.array([[[1, 0], [5, 255]]], dtype="uint8"),
+            from_origin(4, 50, step / 2, step / 2), nodata=255,
         )
-        self.assertEqual(fractions[0, 1], common.NODATA)
+        values, counts, _, _, _ = fraction.aggregate_fraction(source, (4, 50-step, 4+step, 50))
+        self.assertEqual(values.shape, (1, 1))
+        self.assertEqual(counts[0, 0], 2)
+        self.assertAlmostEqual(values[0, 0], 50.0)
 
-    def test_source_ids_follow_fractional_support_at_edges(self):
-        # Each target pixel has four fine cells: a tiny sliver is still traceable.
-        step = convert.STEP
-        data = np.zeros((8, 4, 4), dtype="uint16")
-        data[2, 0, :2] = 1
-        data[7, 0, 0] = 1
-        data[7, 0, 1] = 2
-        native = self.write(
-            "native_owner.tif", data, from_origin(4, 52, step / 2, step / 2)
+    def test_current_classification_keeps_water_quality_and_missing_distinct(self):
+        state = np.zeros((8, 1, 8), dtype="uint16")
+        state[0, 0] = [0, 1, 0, 0, 0, 0, 1, 0]
+        state[1, 0] = [0, 1, 1, 1, 1, 0, 0, 0]
+        state[2, 0] = [1, 1, 1, 1, 1, 0, 1, 0]
+        state[3, 0, :7] = 1
+        state[4, 0, 5] = 1
+        state[5, 0] = [255, 255, 1, 2, 255, 255, 255, 255]
+        np.testing.assert_array_equal(
+            classification.encode_classification(state), [[0, 1, 2, 3, 4, 5, 6, 255]]
         )
-        out = self.root / "output"
-        out.mkdir()
-        scratch = self.root / "scratch"
-        scratch.mkdir()
-        grid = from_origin(4, 52, step, step)
-        convert.warp_band(
-            native,
-            3,
-            out / "rhine3sec.valid_fraction.tif",
-            grid,
-            2,
-            2,
-            Resampling.average,
-        )
-        info = convert.source_owners(
-            native, [{"index": 1}, {"index": 2}], scratch, out, grid, 2, 2
-        )
-        with rasterio.open(out / "rhine3sec.source_item_min.tif") as src:
-            np.testing.assert_array_equal(src.read(1), [[1, 0], [0, 0]])
-        with rasterio.open(out / "rhine3sec.source_item_max.tif") as src:
-            np.testing.assert_array_equal(src.read(1), [[2, 0], [0, 0]])
-        self.assertLessEqual(info["support_sum_max_abs_error"], 1e-6)
 
     def test_adjacent_native_tiles_have_no_gap_or_overlap(self):
         left = self.write(
@@ -228,7 +183,7 @@ class FileContracts(unittest.TestCase):
         x[5:7] = 255
         for index, p in enumerate([left, right], 1):
             with rasterio.open(p) as src:
-                a = convert.native_window(src, Window(0, 0, 4, 2), t)
+                a = classification.native_window(src, Window(0, 0, 4, 2), t)
             common.merge_observation(
                 x,
                 a,
@@ -241,8 +196,8 @@ class FileContracts(unittest.TestCase):
         self.assertTrue((x[2] == 1).all())
         np.testing.assert_array_equal(x[7], [[1, 1, 2, 2], [1, 1, 2, 2]])
         with rasterio.open(left) as src:
-            with self.assertRaisesRegex(ValueError, "half-pixel"):
-                convert.native_window(
+            with self.assertRaisesRegex(ValueError, "pixel alignment"):
+                classification.native_window(
                     src, Window(0, 0, 2, 2), from_origin(110, 200, 20, 20)
                 )
 
@@ -324,18 +279,18 @@ class FileContracts(unittest.TestCase):
             server.server_close()
             thread.join()
 
-    def test_actual_cama_one_minute_centres_subdivide_twenty(self):
-        m = SCRIPTS.parents[2] / "map/glb_15min"
-        if not (m / "1min_nc/location.txt").exists():
-            self.skipTest("actual global one-minute map not installed")
-        t, w, h, meta = convert.cama_grid(m, common.DEFAULT_BBOX)
-        self.assertEqual((w, h), (4800, 3600))
-        self.assertTrue(meta["netcdf_centres_verified"])
-        self.assertEqual(meta["coarse_window"], [11040, 11280, 2280, 2460])
-        self.assertAlmostEqual(t.c, 4)
-        self.assertAlmostEqual(t.f, 52)
-        self.assertAlmostEqual(t.c + w * t.a, 8)
-        self.assertAlmostEqual(t.f + h * t.e, 49)
+    def test_fraction_grid_uses_one_minute_edges(self):
+        step = 1 / 60
+        source = self.write("aligned.tif", np.zeros((1, 1, 1), dtype="uint8"),
+                            from_origin(4, 50, step, step), nodata=255)
+        values, counts, grid, _, _ = fraction.aggregate_fraction(source, (4, 50-step, 4+step, 50))
+        self.assertEqual(values.shape, (1, 1))
+        self.assertEqual(counts[0, 0], 1)
+        self.assertAlmostEqual(grid.c, 4)
+        self.assertAlmostEqual(grid.f, 50)
+        self.assertAlmostEqual(grid.a, step)
+        self.assertAlmostEqual(grid.e, -step)
+        self.assertEqual(values[0, 0], 0)
 
 
 if __name__ == "__main__":

@@ -55,6 +55,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--linthresh", type=float, required=True)
     parser.add_argument("--linear-frac", type=float, required=True)
     parser.add_argument("--dpi", type=int, default=200)
+    parser.add_argument("--regional-height", type=float, default=10.0)
+    parser.add_argument("--aoi-height", type=float, default=9.0)
     return parser.parse_args()
 
 
@@ -275,7 +277,7 @@ def write_analysis(path: Path, lon: np.ndarray, lat: np.ndarray, time_numeric: n
 
 def draw_regional(map_dir: Path, peak: np.ndarray, geometry, map_data, path_result,
                   output: Path, color_levels: np.ndarray, linthresh: float,
-                  linear_frac: float, dpi: int):
+                  linear_frac: float, dpi: int, figure_height=10.0):
     nx, ny, _, west, east, south, north = geometry
     lon, lat, uparea, nextx, nexty, outlon, outlat, _ = map_data
     norm = VECTOR.RASTER.AsymmetricSignedLogNorm(
@@ -332,7 +334,7 @@ def draw_regional(map_dir: Path, peak: np.ndarray, geometry, map_data, path_resu
     background, bg_extent, bg_min, bg_max, _, _ = VECTOR.BACKGROUND.read_elevation_background(
         map_dir / "1min_nc" / "1min.elevtn.nc", extent,
     )
-    fig, ax = plt.subplots(figsize=(9.0, 10.0))
+    fig, ax = plt.subplots(figsize=(9.0 * figure_height / 10.0, figure_height))
     fig.subplots_adjust(left=0.12, right=0.82, top=0.89, bottom=0.14)
     ax.set_facecolor("#FAFAFA")
     ax.imshow(background, extent=bg_extent, origin="upper", cmap="Greys",
@@ -398,7 +400,7 @@ def draw_regional(map_dir: Path, peak: np.ndarray, geometry, map_data, path_resu
     colorbar.ax.set_yticklabels([VECTOR.RASTER.format_color_level(x) for x in color_levels])
     colorbar.ax.tick_params(labelsize=8)
     output.parent.mkdir(parents=True, exist_ok=True)
-    VECTOR.save_panel(fig, output, dpi, figure_height=10.0)
+    VECTOR.save_panel(fig, output, dpi, figure_height=figure_height)
     plt.close(fig)
     return {
         "main_network_links_displayed": int(len(main_segments)),
@@ -411,7 +413,7 @@ def draw_regional(map_dir: Path, peak: np.ndarray, geometry, map_data, path_resu
 
 def draw_aoi(map_dir: Path, extent, map_data, out_peak: np.ndarray, path_result,
              output: Path, color_levels: np.ndarray, linthresh: float,
-             linear_frac: float, dpi: int, line_width_scale: float):
+             linear_frac: float, dpi: int, line_width_scale: float, figure_height=9.0):
     lon, lat, uparea, nextx, nexty, outlon, outlat, bif = map_data
     west, east, south, north = extent
     norm = VECTOR.RASTER.AsymmetricSignedLogNorm(
@@ -465,7 +467,7 @@ def draw_aoi(map_dir: Path, extent, map_data, out_peak: np.ndarray, path_result,
         background_path, extent,
     )
 
-    fig, ax = plt.subplots(figsize=(9.5, 9.0))
+    fig, ax = plt.subplots(figsize=(9.5 * figure_height / 9.0, figure_height))
     fig.subplots_adjust(left=0.13, right=0.79, top=0.88, bottom=0.23)
     ax.set_facecolor("#FAFAFA")
     ax.imshow(background, extent=bg_extent, origin="upper", cmap="Greys",
@@ -534,7 +536,7 @@ def draw_aoi(map_dir: Path, extent, map_data, out_peak: np.ndarray, path_result,
     colorbar.ax.set_yticklabels([VECTOR.RASTER.format_color_level(x) for x in color_levels])
     colorbar.ax.tick_params(labelsize=8)
     output.parent.mkdir(parents=True, exist_ok=True)
-    VECTOR.save_panel(fig, output, dpi, figure_height=9.0)
+    VECTOR.save_panel(fig, output, dpi, figure_height=figure_height)
     plt.close(fig)
     return {
         "main_network_links_displayed": int(len(main_segments)),
@@ -596,11 +598,11 @@ def main() -> None:
     regional_stats = draw_regional(
         map_dir, out_peak, geometry, map_data, pth_result,
         args.regional_figure.resolve(), levels, args.linthresh,
-        args.linear_frac, args.dpi,
+        args.linear_frac, args.dpi, args.regional_height,
     )
     aoi_stats = draw_aoi(
         map_dir, aoi, map_data, out_peak, pth_result, args.aoi_figure.resolve(),
-        levels, args.linthresh, args.linear_frac, args.dpi, line_width_scale=1.1,
+        levels, args.linthresh, args.linear_frac, args.dpi, line_width_scale=1.1, figure_height=args.aoi_height,
     )
     qfinite = out_values.compressed()
     valid_peaks = out_peak[np.isfinite(out_peak)]

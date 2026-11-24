@@ -1,4 +1,4 @@
-"""Shared contracts for the Tutorial 11 native-GFM acquisition and 3-second tile."""
+"""Shared contracts for the Tutorial 11 native-GFM acquisition and classification."""
 
 from __future__ import annotations
 import hashlib

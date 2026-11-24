@@ -1,16 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# User settings
-PYTHON_CMD="${PYTHON_CMD:-python3}"
-WORKERS=2
-DOWNLOAD_OFFLINE="${DOWNLOAD_OFFLINE:-0}"
-REUSE_DATA_DIR="${REUSE_DATA_DIR:-$HOME/work/Atlantis/data/Rhine_2021_3sec}"
+# Internal path anchors; user paths below are independent of the caller's directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+TUTORIAL_DIR="$SCRIPT_DIR"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd -P)"
 
-TUTORIAL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ATLANTIS_DIR="$TUTORIAL_DIR/Atlantis"
-SELECTION_JSON="$TUTORIAL_DIR/metadata/03a_selected_passes.json"
-DOMAIN_CONFIG="$TUTORIAL_DIR/metadata/02_domain_selection.json"
+# User settings
+# ----------------------------------------------------------------------
+PYTHON_CMD="${PYTHON_CMD:-python3}"                                   # Python executable; existing PYTHON_CMD override is supported.
+WORKERS=2                                                             # Simultaneous COG transfers; supported values: 1 or 2.
+DOWNLOAD_OFFLINE="${DOWNLOAD_OFFLINE:-0}"                             # 0: allow download; 1: require local files; existing env override supported.
+REUSE_DATA_DIR="${REUSE_DATA_DIR:-$HOME/work/Atlantis/data/Rhine_2021_3sec}" # Existing native-data root; matching files are reused without retransfer.
+ATLANTIS_DIR="$TUTORIAL_DIR/Atlantis"                                 # Destination acquisition/cache/log root.
+SELECTION_JSON="$TUTORIAL_DIR/metadata/03a_selected_passes.json"      # Authoritative selected passes and four-layer request.
+DOMAIN_CONFIG="$TUTORIAL_DIR/metadata/02_domain_selection.json"       # Authoritative dates and geographic bounds [degrees].
+
+# ----------------------------------------------------------------------
+# User settings end here.
+# ----------------------------------------------------------------------
+
 DOWNLOAD_ARGS=(
     --selection-json "$SELECTION_JSON"
     --domain-config "$DOMAIN_CONFIG"

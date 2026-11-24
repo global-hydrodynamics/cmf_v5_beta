@@ -17,11 +17,21 @@ from matplotlib.ticker import MaxNLocator
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--tutorial-dir", type=Path, required=True)
+    parser.add_argument("--fig-width", type=float, default=11.5, help="Canvas width [inches]")
+    parser.add_argument("--fig-height", type=float, default=8, help="Canvas height [inches]")
+    parser.add_argument("--dpi", type=int, default=180, help="PNG resolution [pixels/inch]")
+    parser.add_argument("--station-file", type=Path)
+    parser.add_argument("--series-file", type=Path)
+    parser.add_argument("--output", type=Path)
+    parser.add_argument("--start", default="2021-07-01T00:00:00")
+    parser.add_argument("--end", default="2021-08-01T00:00:00")
+    parser.add_argument("--ymin", type=float, default=0)
+    parser.add_argument("--ymax", type=float)
     args = parser.parse_args()
     root = args.tutorial_dir.resolve()
     data = root / "observation" / "stations_data"
-    metadata_path = data / "allstations.csv"
-    series_path = data / "Qobs_06_2021_st153_63_28.csv"
+    metadata_path = args.station_file or data / "allstations.csv"
+    series_path = args.series_file or data / "Qobs_06_2021_st153_63_28.csv"
     for path in (metadata_path, series_path):
         if not path.is_file():
             raise FileNotFoundError(path)
@@ -32,15 +42,19 @@ def main() -> None:
         station_ids = [int(key) for key in reader.fieldnames[1:]]
         records = list(reader)
     times = [datetime.strptime(row["Timestamp"], "%Y-%m-%d %H:%M") for row in records]
-    start, end = datetime(2021, 7, 1), datetime(2021, 8, 1)
+    start, end = datetime.fromisoformat(args.start), datetime.fromisoformat(args.end)
+    if end <= start:
+        raise ValueError("Display end must follow start")
     keep = [i for i, timestamp in enumerate(times) if start < timestamp <= end]
-    if len(keep) != 124:
+    if (start, end) == (datetime(2021,7,1), datetime(2021,8,1)) and len(keep) != 124:
         raise ValueError(f"Expected 124 July interval-end records per station, got {len(keep)}")
+    if not keep:
+        raise ValueError("No interval-end records in the selected display period")
     values = {sid: np.array([float(records[i][str(sid)]) for i in keep]) for sid in station_ids}
     global_top = max(float(series.max()) for series in values.values()) * 1.08
 
     plt.rcParams.update({"font.size": 10, "axes.titlesize": 12, "axes.labelsize": 10})
-    fig, axes = plt.subplots(3, 1, figsize=(11.5, 8), sharex=True, sharey=True, constrained_layout=True)
+    fig, axes = plt.subplots(3, 1, figsize=(args.fig_width, args.fig_height), sharex=True, sharey=True, constrained_layout=True)
     colors = ["#2b6f9c", "#d97927", "#39845b"]
     for ax, station_id, color in zip(axes, station_ids, colors):
         station = station_rows[station_id]
@@ -50,13 +64,13 @@ def main() -> None:
                    label="Supplied 6-hour values", zorder=3)
         peak_idx = int(np.argmax(series))
         ax.scatter([station_times[peak_idx]], [series[peak_idx]], marker="*", s=115, color="#8e3d76",
-                   edgecolors="white", linewidths=0.6, zorder=4, label="July maximum")
+                   edgecolors="white", linewidths=0.6, zorder=4, label="July maximum" if (start, end) == (datetime(2021,7,1), datetime(2021,8,1)) else "Selected-period maximum")
         ax.annotate(f"max {series[peak_idx]:,.3f}\n{station_times[peak_idx]:%b %d %H:%M}",
                     (station_times[peak_idx], series[peak_idx]), xytext=(8, -30), textcoords="offset points",
                     fontsize=8, color="#552642", bbox={"boxstyle": "round,pad=0.25", "fc": "white", "ec": "#c7b6c0", "alpha": .9})
         ax.set_title(f"{station['Name']} ({station_id}) · {station['River']}, {station['Country']}", loc="left", fontweight="bold")
         ax.set_ylabel("Discharge\n(unit not declared)")
-        ax.set_ylim(0, global_top)
+        ax.set_ylim(args.ymin, args.ymax if args.ymax is not None else global_top)
         ax.yaxis.set_major_locator(MaxNLocator(5))
         ax.grid(True, color="#cfd6da", linewidth=0.65, alpha=0.8)
         ax.spines[["top", "right"]].set_visible(False)
@@ -65,14 +79,15 @@ def main() -> None:
     axes[-1].xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
     axes[-1].set_xlabel("Timestamp as supplied (timezone unspecified; interval-end convention per provider correspondence)")
     axes[0].legend(loc="upper left", ncols=2, frameon=True, fontsize=8)
-    fig.suptitle("Observed Rhine Discharge · July 2021", fontsize=15, fontweight="bold")
-    fig.text(0.5, -0.005, "124 original CSV values per station; points only, with no interpolation, connecting lines, smoothing or resampling.",
+    title = "Observed Rhine Discharge · July 2021" if (start, end) == (datetime(2021,7,1), datetime(2021,8,1)) else f"Observed Rhine Discharge · {start:%Y-%m-%d}–{end:%Y-%m-%d}"
+    fig.suptitle(title, fontsize=15, fontweight="bold")
+    fig.text(0.5, -0.005, f"{len(keep)} original CSV values per station; points only, with no interpolation, connecting lines, smoothing or resampling.",
              ha="center", fontsize=9, color="#444444")
-    out = root / "figure" / "f04-observed_discharge.png"
-    out.parent.mkdir(exist_ok=True)
-    fig.savefig(out, dpi=180, bbox_inches="tight", facecolor="white")
+    out = args.output or root / "figure" / "f04-observed_discharge.png"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out, dpi=args.dpi, bbox_inches="tight", facecolor="white")
     plt.close(fig)
-    print(f"Saved {out.relative_to(root)}")
+    print(f"Saved {out}")
 
 
 if __name__ == "__main__":

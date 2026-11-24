@@ -26,10 +26,15 @@ def main():
     parser.add_argument("--tutorial-dir", type=Path, required=True)
     parser.add_argument("--map-dir", type=Path, required=True)
     parser.add_argument("--downscaler", type=Path, required=True)
+    parser.add_argument("--model-netcdf", type=Path)
+    parser.add_argument("--domain-config", type=Path)
+    parser.add_argument("--selection-json", type=Path)
+    parser.add_argument("--output-dir", type=Path)
+    parser.add_argument("--metadata-output", type=Path)
     args = parser.parse_args()
     t = args.tutorial_dir.resolve()
     pass_id = "S1A_o038784_dt049389"
-    selected = json.loads((t/"metadata/03a_selected_passes.json").read_text())
+    selected = json.loads((args.selection_json or t/"metadata/03a_selected_passes.json").read_text())
     matches = [p for p in selected["passes"] if p["pass_id"] == pass_id]
     if len(matches) != 1 or matches[0]["satellite"] != "S1A" or matches[0]["absolute_orbit"] != 38784:
         raise ValueError("The requested single S1A acquisition is missing or ambiguous")
@@ -46,8 +51,8 @@ def main():
     start = min(utc(p["acquisition_start_utc"]) for p in scenes)
     end = max(utc(p["acquisition_end_utc"]) for p in scenes)
     representative = start + (end-start)/2
-    source = t/"experiment/Rhine2021/o_flddphRhine2021Jul.nc"
-    domain = json.loads((t/"metadata/02_domain_selection.json").read_text())
+    source = (args.model_netcdf or t/"experiment/Rhine2021/o_flddphRhine2021Jul.nc").resolve()
+    domain = json.loads((args.domain_config or t/"metadata/02_domain_selection.json").read_text())
     west,south,east,north = domain["satellite_analysis"]["domain"]["bbox_west_south_east_north"]
     with Dataset(source) as ds:
         vtime=ds["time"]
@@ -60,7 +65,7 @@ def main():
             raise ValueError("Model time axis is not strictly increasing")
         index=min(range(len(times)),key=lambda i:abs((times[i]-representative).total_seconds()))
         model_time=times[index]
-        output = t/f"out/24_flddph_1min_{pass_id}_{model_time:%Y%m%dT%H%M%SZ}.nc"
+        output = (args.output_dir or t/"out")/f"24_flddph_1min_{pass_id}_{model_time:%Y%m%dT%H%M%SZ}.nc"
         output.parent.mkdir(parents=True,exist_ok=True)
         field=ds["flddph"][index]
         if ds["flddph"].units != "m" or ds["flddph"].dimensions != ("time","lat","lon"):
@@ -84,8 +89,8 @@ def main():
     delta=(model_time-representative).total_seconds()
     time_basis="CF default zero time-zone offset; Step14 ERA5-Land UTC forcing and no local-time shift; time: point at model output endpoints"
     with Dataset(output,"a") as d:
-        d.source_input=str(source.relative_to(t))
-        d.source=str(source.relative_to(t))
+        d.source_input=str(source.relative_to(t) if source.is_relative_to(t) else source)
+        d.source=str(source.relative_to(t) if source.is_relative_to(t) else source)
         d.satellite="Sentinel-1A";d.absolute_orbit=38784;d.acquisition_id=pass_id
         d.observation_start_utc=stamp(start);d.observation_end_utc=stamp(end)
         d.observation_representative_time_utc=stamp(representative)
@@ -99,7 +104,7 @@ def main():
         d.permanent_water_caveat="Existing rivwth-based permanent-water minimum of 0.1 m is enabled; positive depth is not a satellite flood classification"
         d.history="Step24 one S1A acquisition; maintained tools/downscale_flddph tributary-aware Python port; no interpolation of coarse depth"
         # The extraction snapshot is temporary; preserve its actual origin above.
-        d.input_file=str(source.relative_to(t))
+        d.input_file=str(source.relative_to(t) if source.is_relative_to(t) else source)
         values=np.ma.asarray(d["flddph"][:]);valid=values.compressed()
         lon=np.asarray(d["lon"][:]);lat=np.asarray(d["lat"][:])
         assert values.shape==(round((north-south)*60),round((east-west)*60))
@@ -109,7 +114,7 @@ def main():
         assert np.allclose([lon[0]-1/120,lat[-1]-1/120,lon[-1]+1/120,lat[0]+1/120],[west,south,east,north],atol=1e-6)
         method=d.downscaling_method
         map_sources=json.loads(d.map_source_files) if "map_source_files" in d.ncattrs() else {k:str(d.getncattr(k)) for k in d.ncattrs() if "map" in k}
-    inputs=[args.map_dir/"params.txt",args.map_dir/"1min/location.txt",*[args.map_dir/p for p in map_sources.values()],source,t/"metadata/03a_selected_passes.json",t/"metadata/03a_sentinel1_acquisition_footprints.geojson",t/"metadata/03a_satellite_pass_inventory.csv",t/"metadata/02_domain_selection.json",args.downscaler]
+    inputs=[args.map_dir/"params.txt",args.map_dir/"1min/location.txt",*[args.map_dir/p for p in map_sources.values()],source,(args.selection_json or t/"metadata/03a_selected_passes.json"),t/"metadata/03a_sentinel1_acquisition_footprints.geojson",t/"metadata/03a_satellite_pass_inventory.csv",(args.domain_config or t/"metadata/02_domain_selection.json"),args.downscaler]
     report={"status":"preliminary_executed","acquisition_count":1,"satellite":"Sentinel-1A","absolute_orbit":38784,
         "acquisition_id":pass_id,"scene_count":len(scenes),"scenes":scenes,"observation_start_utc":stamp(start),
         "observation_end_utc":stamp(end),"representative_time_utc":stamp(representative),
@@ -117,13 +122,13 @@ def main():
         "model_time_utc":stamp(model_time),"model_time_index":index,"model_minus_observation_seconds":delta,
         "absolute_time_difference_seconds":abs(delta),"model_time_convention":time_basis,
         "input_sha256":{str(p.relative_to(t) if p.is_relative_to(t) else p):hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs},
-        "output":str(output.relative_to(t)),"output_sha256":hashlib.sha256(output.read_bytes()).hexdigest(),
+        "output":str(output.relative_to(t) if output.is_relative_to(t) else output),"output_sha256":hashlib.sha256(output.read_bytes()).hexdigest(),
         "method":method,"map_sources":map_sources,"extent_west_south_east_north":[west,south,east,north],
         "resolution_degrees":1/60,"shape_lat_lon":list(values.shape),"units":"m","valid_pixels":int(valid.size),
         "missing_pixels":int(values.size-valid.size),"dry_pixels":int((valid==0).sum()),"positive_pixels":int((valid>0).sum()),
         "minimum_m":float(valid.min()),"maximum_m":float(valid.max()),"tributary_fill":True,"permanent_water":True,
         "limitations":["Preliminary feasibility check, not independent scientific validation", "Permanent-water pixels may have an imposed 0.1 m minimum", "Five-coarse-cell buffer may be clipped by regional map coverage", "No GFM comparison, metrics, other acquisition, or finer-resolution downscaling", "Inherited Step14 KG-0019 forcing accumulation attribution remains unresolved"]}
-    (t/"metadata/24_downscaling_verification.json").write_text(json.dumps(report,indent=2)+"\n")
+    (args.metadata_output or t/"metadata/24_downscaling_verification.json").write_text(json.dumps(report,indent=2)+"\n")
     print(json.dumps({k:report[k] for k in ["representative_time_utc","model_time_utc","absolute_time_difference_seconds","shape_lat_lon","valid_pixels","missing_pixels","minimum_m","maximum_m"]},indent=2))
 
 

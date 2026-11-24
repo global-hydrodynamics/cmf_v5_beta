@@ -15,16 +15,16 @@
 - Use the standard regional river network `map/Rhine_15min/netcdf/nextxy.nc`;
   do not use `nextxy_noedge.nc` for this Rhine run.
 - Read the runoff tag and matrix/diminfo paths from Step 13 metadata; do not substitute the global ERA5-Land matrix.
-- Configure and run the specified single 20-day, hourly cold-start experiment.
+- Configure and run the specified single 31-day, hourly cold-start experiment.
 - Inspect the run log, hourly NetCDF outputs and end-of-run NetCDF Restart.
 - Record exact settings, observed execution results, and limitations.
 
 **Outputs**
 
 - `s14-run_simulation.sh` and generated
-  `experiment/Rhine2021-nextxy/input_cmf.nam`.
+  `experiment/Rhine2021/input_cmf.nam`.
 - Ignored experiment outputs, logs and Restart under
-  `experiment/Rhine2021-nextxy/`.
+  `experiment/Rhine2021/`.
 - `metadata/14_simulation_setup.json`, `AI_survey_report/14_simulation_setup.md`, and `AI_work_report/14_simulation_setup.md`.
 
 This is an operational cold-start run, not a calibrated or scientifically validated event reconstruction. The configured dates and settings come from the researcher; do not infer spin-up adequacy or resolve KG-0019 from a successful run.
@@ -37,7 +37,7 @@ The Rhine 2021 sample run is configured in `s14-run_simulation.sh`. Review or ed
 bash s14-run_simulation.sh
 ```
 
-The default run directory is `experiment/Rhine2021-nextxy/`, excluded from
+The default run directory is `experiment/Rhine2021/`, excluded from
 Git. The script preserves existing run contents and stops if that directory is
 nonempty. To retain a prior run and execute another, set `RUNDIR` to a new
 location:
@@ -60,8 +60,8 @@ GOSH defaults and do not change model source, map products, runoff conversion,
 or the Input Matrix.
 
 Create or update s14-run_simulation.sh to perform the specified one-time
-20-day hourly cold-start run from 2021-07-01 00:00 to the exclusive end
-2021-07-21 00:00. Use daily NetCDF runoff, the regional Step 13 matrix,
+31-day hourly cold-start run from 2021-07-01 00:00 to the exclusive end
+2021-08-01 00:00. Use daily NetCDF runoff, the regional Step 13 matrix,
 individual NetCDF map products, hourly NetCDF model output, and one NetCDF
 Restart at the end. Protect existing experiment results.
 

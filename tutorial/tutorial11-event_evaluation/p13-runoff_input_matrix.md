@@ -26,7 +26,7 @@
 
 ## Human Instructions
 
-For this Rhine sample, the researcher has selected the July 1–20, 2021 hourly
+For this Rhine sample, the researcher has selected the July 1–31, 2021 hourly
 ERA5-Land dataset. The regional map and runoff NetCDF are already available
 locally. Ask the agent to inspect those actual inputs and use the Tutorial-local
 `runoff_dataset.csv` as the dataset specification. The existing global

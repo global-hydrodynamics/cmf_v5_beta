@@ -20,7 +20,8 @@ NetCDF model outputs, and an end-of-run NetCDF Restart were configured.
 CaMa-Flood completed all 744 steps with exit status 0. The log confirms that
 the selected regional river network, NetCDF map fields, bifurcation table, and
 Step 13 Input Matrix were read, including the July 31 runoff file. Eight output
-files were created, each with 744 time records and 32 × 40 map cells. The
+files were created with 744 time records: gridded variables have 32 × 40 map
+cells, while `pthflw` has 5 path layers × 20 paths. The
 output time coordinate spans offsets 3,600 to 2,678,400 seconds from
 2021-07-01 00:00, and the Restart was written at 2021-08-01 00:00. The
 standard-nextxy hourly outputs plus Restart total 23,029,200 bytes.

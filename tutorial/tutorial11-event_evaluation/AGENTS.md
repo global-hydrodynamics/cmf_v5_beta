@@ -163,3 +163,50 @@ For unavailable data or tools, complete independent work and report what could
 not be checked. A skipped check is not a passed check. Stop when the requested
 outputs and proportionate checks are complete; record non-blocking future work
 without expanding into unrelated changes.
+
+## 9. Handoff maintenance responsibilities
+
+The agent performing a processing revision owns the corresponding machine-readable
+handoff and its Work Report. Record whether outputs were newly executed,
+retained, unavailable locally, or not rechecked. After a Step21 allocation
+revision, explicitly mark the Step23 extraction as pending until it is rerun;
+a figure-only change does not constitute a new extraction. Update existing
+handoff/render records as applicable, without describing old execution as new.
+The current s23 entry point writes CSVs but does not automatically refresh
+`23_handoff_status.json`; that bookkeeping is an explicit agent responsibility.
+The researcher reviews scientific choices and authorizes changes of scope.
+This does not introduce a Human-review execution gate.
+
+For the 2026-11-24 synthesis task, the maintainer explicitly excludes input-version
+and SHA reconciliation. Preserve all recorded fingerprints; do not use that
+exclusion to assert current input equivalence or to rewrite historical execution
+status. Data/environment availability and the absence of a new execution must
+remain visible. See the synthesis preparation Work Report.
+
+## 10. Human-Configurable, AI-Executable Workflow
+
+This principle is normative for Tutorial11: researchers must be able to adjust
+routine experiment, processing and display settings without editing Python or
+Fortran, or asking an AI agent to make the adjustment. All new or modified
+active user-facing Shell entry points MUST follow the repository's
+[Shell setting conventions](../../AGENTS.md#shell-script-design-principles) and,
+for figures, the [configuration ownership guidance](../../visualization/figure_making_guideline.md#reproducibility-and-file-ownership).
+
+Expose commonly adjusted supported settings in a clearly marked `User settings`
+section near the top. Each setting needs an inline comment (or directly
+preceding explanation) stating meaning, units, supported options and any
+non-obvious behavior. Shell selects/forwards settings; scientific processing
+stays in Python/Fortran. Keep one authoritative value: existing structured
+JSON/CSV handoffs retain their contents and the Shell exposes their path and
+identifies which settings they own, rather than copying their values into
+another registry. Do not expose an unsupported knob or make it appear effective.
+Python CLI fallbacks retained for direct-call compatibility are not a second
+user configuration interface; routine settings belong to the Shell or its
+explicitly identified structured configuration.
+
+Before completion, verify that settings reach the implementation, that supported
+changes take effect, and that defaults preserve calculations and figure meaning.
+Keep scripts readable and executable by humans independently of the agent.
+Do not move processing into Shell, silently change defaults, or introduce a
+configuration framework to satisfy this rule. A retired entry point may remain
+an explanatory failure notice and needs no artificial settings section.

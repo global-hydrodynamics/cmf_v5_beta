@@ -85,7 +85,7 @@ For Rhine 2021, preserve these researcher settings in
    processing status, validation summary, limitations and the next-step handoff.
 5. Update the Step 12 Survey and Work Reports and the event process links.
    Clearly distinguish the event period, initial candidate analysis period,
-   selected runoff acquisition period and undecided simulation period.
+   selected runoff acquisition period and the Step 14 simulation period.
 6. Hand the Registry and actual NetCDF grid evidence to Step 13. Step 13 owns
    Input Matrix creation/validation. Step 14 owns the simulation-period/forcing
    decisions, creates the GOSH script and executes the requested simulation;
@@ -102,8 +102,9 @@ data package. Report checks actually performed and unresolved items.
 The exact researcher-selected settings are retained in the Product Shell and
 summarized in the Tutorial Registry. Step 1's initial 2021-07-10 to 2021-07-25
 candidate analysis window remains unchanged. The July 1–31 runoff acquisition
-period provides pre-event and post-event forcing context; it is not the model
-simulation period and does not prove sufficient spin-up.
+period provides pre-event and post-event forcing context; it is a forcing-data specification, not independent proof of simulation
+conditions or sufficient spin-up. Step 14 separately records the executed
+July 1–August 1-exclusive, 744-hour cold-start run.
 
 ERA5-Land's source runoff is accumulated depth (`ro`, metres); the shared
 converter outputs timestep runoff (`runoff`, millimetres per input timestep).
@@ -128,7 +129,7 @@ input path, file pattern, grid, units and conversion settings.
 `metadata/12_era5land_runoff.json` records the selected run's state and checks
 and points to the Registry; it does not replace the data specification.
 
-Step 13 prepares or validates the map-specific `ERA5land_global` Input Matrix
+Step 13 prepares or validates the map-specific `ERA5land_Rhine2021Jul` Input Matrix
 and documents its actual alignment with the observed NetCDF grid. Step 14 then
 decides simulation conditions and prepares the reproducible GOSH script.
 Neither step may infer an approved simulation period from the July 1–31

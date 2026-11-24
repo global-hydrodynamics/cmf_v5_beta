@@ -1,76 +1,69 @@
 #!/bin/sh
 # Run the Tutorial 11 Rhine 2021 cold-start hourly experiment.
-# Outputs are kept in the Git-ignored experiment/Rhine2021-nextxy/ directory.
+# Outputs are kept in the Git-ignored experiment/Rhine2021/ directory.
 set -eu
 
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 CMF_BASE=$(CDPATH= cd "$SCRIPT_DIR/../.." && pwd -P)
 
 # -------------------------- User settings ------------------------------
-PROJ="Rhine2021"
-RUNDIR=${RUNDIR:-"${SCRIPT_DIR}/experiment/${PROJ}"} # Override to retain or create another run.
+PYTHON="python3" # Python for reading Step13 metadata; no model computation.
+EXEC_CMF="${CMF_BASE}/src_main/MAIN_cmf" # Existing executable; not rebuilt here.
+RESTART_INPUT="NONE" # Restart file path, or NONE for the default cold start.
+PROJ="Rhine2021"                                                     # Experiment directory name (not the independent output COUTTAG).
+RUNDIR=${RUNDIR:-"${SCRIPT_DIR}/experiment/${PROJ}"}                 # Run directory; existing RUNDIR override supported; nonempty directories are preserved.
 
 # Simulation interval; the end time is exclusive (31 days, 744 hours).
-START_YEAR=2021
-START_MONTH=7
-START_DAY=1
-START_HOUR=0
-END_YEAR=2021
-END_MONTH=8
-END_DAY=1
-END_HOUR=0
-
-# Rhine regional map and its individual NetCDF files.
-MAPDIR="${CMF_BASE}/map/Rhine_15min"
-MAP_NETCDF_DIR="${MAPDIR}/netcdf"
-NEXTXY="${MAP_NETCDF_DIR}/nextxy.nc"   # Standard Rhine network, including boundary-affected connections.
-RIVWTH="${MAP_NETCDF_DIR}/rivwth_merit.nc"   # Map workflow default MERIT-based river width.
+START_YEAR=2021                                                      # Inclusive start year [UTC Gregorian calendar].
+START_MONTH=7                                                        # Inclusive start month [1–12 UTC].
+START_DAY=1                                                          # Inclusive start day [calendar day UTC].
+START_HOUR=0                                                         # Inclusive start hour [0–23 UTC].
+END_YEAR=2021                                                        # Exclusive end year [UTC].
+END_MONTH=8                                                          # Exclusive end month [1–12 UTC].
+END_DAY=1                                                            # Exclusive end day [calendar day UTC].
+END_HOUR=0                                                           # Exclusive end hour [0–23 UTC].
+MAPDIR="${CMF_BASE}/map/Rhine_15min"                                 # Matching regional map root.
+MAP_NETCDF_DIR="${MAPDIR}/netcdf"                                    # Individual NetCDF map directory.
+NEXTXY="${MAP_NETCDF_DIR}/nextxy.nc"                                 # Stored downstream connectivity; select an existing map product.
+RIVWTH="${MAP_NETCDF_DIR}/rivwth_merit.nc"                           # River-channel width map [m].
 
 # Step 13 metadata is the source of the regional matrix tag and paired file paths.
-STEP13_METADATA="${SCRIPT_DIR}/metadata/13_runoff_input_matrix.json"
-
-# Regional ERA5-Land hourly runoff and its matching Step 13 matrix.
-RUNOFF_DIR="${CMF_BASE}/inp/tutorial11-ERA5land-Rhine2021Jul"
-IFRQ_INP=1
-DROFUNIT=3600000                # mm per 1-hour record divided to obtain m/s.
-CVNROF="runoff"
-CVNTIME="time"
-CROFPRE="runoff_"
-CROFSUF=".nc"
-LINPCDF=".TRUE."
-CROFFREQ="DAY"
-LINTERP=".TRUE."
-
-# Cold-start run with the standard maintained Mekong sample physics/settings.
-OMP_NUM_THREADS=${OMP_NUM_THREADS:-4}
-DT=3600                         # Base timestep [s]; adaptive stepping is enabled.
-LADPSTP=".TRUE."
-LPTHOUT=".TRUE."
-LDAMOUT=".FALSE."
-LRESTART=".FALSE."
-PMANRIV="0.03D0"
-PMANFLD="0.10D0"
-PDSTMTH="10000.D0"
-PCADP="0.7D0"
-
-# Hourly NetCDF output and one NetCDF Restart at the exclusive end time.
-LOUTCDF=".TRUE."
-IFRQ_OUT=1
-CVARSOUT="outflw,pthflw,storge,sfcelv,rivdph,flddph,fldfrc,fldare"
-COUTTAG="Rhine2021Jul"
-LRESTCDF=".TRUE."
-IFRQ_RST=0
-CVNREST="restart"
-# ----------------------------------------------------------------------
+STEP13_METADATA="${SCRIPT_DIR}/metadata/13_runoff_input_matrix.json" # Authoritative regional Input Matrix/diminfo handoff; do not duplicate its values.
+RUNOFF_DIR="${CMF_BASE}/inp/tutorial11-ERA5land-Rhine2021Jul"        # Runoff input directory matching the matrix grid.
+IFRQ_INP=1                                                           # Runoff update interval [hours].
+DROFUNIT=3600000                                                     # Divide input values by this factor to obtain depth rate [m/s]; current mm/hour.
+CVNROF="runoff"                                                      # Input NetCDF runoff variable name.
+CVNTIME="time"                                                       # Input NetCDF time-coordinate variable name.
+CROFPRE="runoff_"                                                    # Filename prefix before date.
+CROFSUF=".nc"                                                        # Filename suffix after date.
+LINPCDF=".TRUE."                                                     # Fortran logical .TRUE./.FALSE.; input NetCDF enabled by default.
+CROFFREQ="DAY"                                                       # Input grouping DAY/MON/YEAR/SEQ; must match prepared files.
+LINTERP=".TRUE."                                                     # Fortran logical; .TRUE. uses the Step13 runoff mapping.
+OMP_NUM_THREADS=${OMP_NUM_THREADS:-4}                                # OpenMP threads [positive integer]; existing env override supported.
+DT=3600                                                              # Base timestep [s]; adaptive stepping may shorten it.
+LADPSTP=".TRUE."                                                     # Fortran logical; enable adaptive timestep.
+LPTHOUT=".TRUE."                                                     # Fortran logical; enable stored bifurcation routing.
+LDAMOUT=".FALSE."                                                    # Fortran logical; reservoir operation requires matching data.
+LRESTART=".FALSE."                                                   # Fortran logical; .TRUE. requires RESTART_INPUT instead of NONE.
+PMANRIV="0.03D0"                                                     # River Manning roughness [s m^-1/3], Fortran real literal.
+PMANFLD="0.10D0"                                                     # Floodplain Manning roughness [s m^-1/3], Fortran real literal.
+PDSTMTH="10000.D0"                                                   # Mouth downstream distance [m], Fortran real literal.
+PCADP="0.7D0"                                                        # Adaptive timestep CFL coefficient [-], Fortran real literal.
+LOUTCDF=".TRUE."                                                     # Fortran logical; output NetCDF instead of Binary.
+IFRQ_OUT=1                                                           # Model output interval [hours].
+CVARSOUT="outflw,pthflw,storge,sfcelv,rivdph,flddph,fldfrc,fldare"   # Comma-separated output Registry variable IDs.
+COUTTAG="Rhine2021Jul"                                               # Output filename experiment tag.
+LRESTCDF=".TRUE."                                                    # Fortran logical; Restart output NetCDF instead of Binary.
+IFRQ_RST=0                                                           # Restart interval [hours]; 0: end only.
+CVNREST="restart"                                                    # Restart filename prefix.
 # User settings end here. Paths and the one continuous model run follow.
 # ----------------------------------------------------------------------
 
-ROFFTAG=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["generator"]["settings"]["ROFFTAG"])' "$STEP13_METADATA")
-INPMAT_REL=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["outputs"]["input_matrix"])' "$STEP13_METADATA")
-DIMINFO_REL=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["outputs"]["dimension_info"])' "$STEP13_METADATA")
+ROFFTAG=$("$PYTHON" -c 'import json,sys; print(json.load(open(sys.argv[1]))["generator"]["settings"]["ROFFTAG"])' "$STEP13_METADATA")
+INPMAT_REL=$("$PYTHON" -c 'import json,sys; print(json.load(open(sys.argv[1]))["outputs"]["input_matrix"])' "$STEP13_METADATA")
+DIMINFO_REL=$("$PYTHON" -c 'import json,sys; print(json.load(open(sys.argv[1]))["outputs"]["dimension_info"])' "$STEP13_METADATA")
 INPMAT="${CMF_BASE}/${INPMAT_REL}"
 DIMINFO="${CMF_BASE}/${DIMINFO_REL}"
-EXEC_CMF="${CMF_BASE}/src_main/MAIN_cmf"
 NAMELIST="${RUNDIR}/input_cmf.nam"
 CONSOLE_LOG="${RUNDIR}/console.log"
 RUNTIME_LOG="${RUNDIR}/run_time.log"
@@ -156,7 +149,7 @@ CRIVMAN = "${MAP_NETCDF_DIR}/rivman.nc"   ! River Manning roughness map.
 CPTHOUT = "${MAP_NETCDF_DIR}/bifprm.nc"   ! Bifurcation channel parameters.
 /
 &NRESTART
-CRESTSTO = "NONE"        ! No Restart input; this is a cold-start run.
+CRESTSTO = "${RESTART_INPUT}"        ! No Restart input; this is a cold-start run.
 CRESTDIR = "./"           ! Write Restart in the run directory.
 CVNREST  = "${CVNREST}"  ! Prefix for the final Restart file.
 LRESTCDF = ${LRESTCDF}    ! Write NetCDF Restart output.
@@ -187,7 +180,8 @@ IFRQ_OUT = ${IFRQ_OUT}     ! Output interval [hours].
 EOF
 
 printf '\n==================================================\n'
-printf '[STEP 2/3] Run CaMa-Flood from 2021-07-01 00:00 to 2021-07-21 00:00 UTC\n'
+printf '[STEP 2/3] Run CaMa-Flood: %04d-%02d-%02d %02d:00 to %04d-%02d-%02d %02d:00 UTC (end exclusive)\n' \
+    "$START_YEAR" "$START_MONTH" "$START_DAY" "$START_HOUR" "$END_YEAR" "$END_MONTH" "$END_DAY" "$END_HOUR"
 printf '==================================================\n\n'
 cd "$RUNDIR"
 START_DATETIME=$(date)

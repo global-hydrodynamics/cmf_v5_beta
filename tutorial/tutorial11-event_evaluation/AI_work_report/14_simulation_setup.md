@@ -71,15 +71,16 @@ input spatial grid remains 111 × 91. Current paths, sizes and metadata are in
 ## Historical 20-day execution instructions
 
 The reproducible entry point is `s14-run_simulation.sh`. The initial run
-documented above used the then-default directory. The current standard-network
-run uses `experiment/Rhine2021-nextxy/`. From the Tutorial 11 directory:
+documented above used the then-default directory. The historical 20-day standard-network
+run used `experiment/Rhine2021-nextxy/`. The current31-day default is
+`experiment/Rhine2021/`; the example below is its entry point:
 
 ```sh
 bash s14-run_simulation.sh
 ```
 
-The script resolves paths from its own location and defaults to
-`experiment/Rhine2021-nextxy/`. It does not clear or overwrite a nonempty run
+The current script resolves paths from its own location and defaults to
+`experiment/Rhine2021/`. It does not clear or overwrite a nonempty run
 directory; set `RUNDIR` to another path for an additional run. The first
 attempt of the original noedge run exposed one extra `..` in the repository-
 root path and stopped before the model launched. That path was corrected,

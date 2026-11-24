@@ -52,9 +52,11 @@ def read_station_metadata(path: Path):
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--tutorial-dir", type=Path, required=True)
+    parser.add_argument("--source-dir", type=Path)
+    parser.add_argument("--metadata-dir", type=Path)
     args = parser.parse_args()
     root = args.tutorial_dir.resolve()
-    source_dir = root / "observation" / "stations_data"
+    source_dir = args.source_dir or root / "observation" / "stations_data"
     station_file = source_dir / "allstations.csv"
     csv_file = source_dir / "Qobs_06_2021_st153_63_28.csv"
     nc_file = source_dir / "Qobs_06_2021_st153_63_28.nc"
@@ -156,8 +158,8 @@ def main() -> None:
             }
         allocation.append(alloc)
 
-    metadata_root = root / "metadata"
-    metadata_root.mkdir(exist_ok=True)
+    metadata_root = args.metadata_dir or root / "metadata"
+    metadata_root.mkdir(parents=True, exist_ok=True)
     csv_out = metadata_root / "04_discharge_inventory.csv"
     fields = list(inventory_rows[0])
     with csv_out.open("w", newline="", encoding="utf-8") as stream:
@@ -168,7 +170,7 @@ def main() -> None:
     file_records = []
     for filename, role in SOURCE_NAMES.items():
         path = source_dir / filename
-        file_records.append({"path": path.relative_to(root).as_posix(), "role": role,
+        file_records.append({"path": (path.relative_to(root).as_posix() if path.is_relative_to(root) else str(path.resolve())), "role": role,
                              "size_bytes": path.stat().st_size, "sha256": sha256(path)})
     dataset_json = {
         "schema_version": 1,
@@ -236,12 +238,12 @@ def main() -> None:
                        "peaks": [{"station_id": row["station_id"], "station_name": row["station_name"],
                                   "value": float(row["july_peak_value"]), "time_as_supplied": row["july_peak_time_as_supplied"]}
                                  for row in inventory_rows]},
-        "next_step_handoff": {"time_series_csv": "observation/stations_data/Qobs_06_2021_st153_63_28.csv",
-                              "station_inventory": "metadata/04_discharge_inventory.csv", "status": "prepared_for_later_matching; units/timezone/map allocation remain unverified"},
+        "next_step_handoff": {"time_series_csv": csv_file.relative_to(root).as_posix() if csv_file.is_relative_to(root) else str(csv_file.resolve()),
+                              "station_inventory": csv_out.relative_to(root).as_posix() if csv_out.is_relative_to(root) else str(csv_out.resolve()), "status": "prepared_for_later_matching; units/timezone/map allocation remain unverified"},
     }
     json_out = metadata_root / "04_discharge_dataset.json"
     json_out.write_text(json.dumps(dataset_json, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"Wrote {csv_out.relative_to(root)} and {json_out.relative_to(root)}")
+    print(f"Wrote {csv_out} and {json_out}")
     print(f"Validated {len(station_ids)} stations × {len(times)} records; float32 CSV/NetCDF equality: {dataset_json['time_series']['csv_values_cast_to_netcdf_float32_exact']}")
     for row in inventory_rows:
         print(f"{row['station_id']} {row['station_name']}: July max {row['july_peak_value']} at {row['july_peak_time_as_supplied']}")

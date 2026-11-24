@@ -875,3 +875,64 @@ to the Work Report and aligned process/current status. Existing calculation,
 NetCDF and Fig24 are retained. Separate facts from untested explanations; narrow
 river patterns do not establish underestimation. No new simulation, processing,
 figure or metric. [Work Report](../AI_work_report/24_inundation_downscaling.md).
+
+## 2026-11-24 — Synthesis preparation after structure audit
+
+Maintainer excludes input-version/SHA reconciliation and requests the remaining
+bounded follow-up: locate missing products/environments, correct old contracts
+and retired references, clarify handoff ownership, and write three syntheses.
+No recorded scientific fingerprint or execution flag was changed.
+
+Inspected documented repository/external paths without reading scientific raster
+values. Existing observations, crops, model/map and31-day runoff files remain;
+external native COG storage is empty and default environments/derived Step15/24
+products are absent. Found a suitable existing Miniforge dy environment; no
+installation, acquisition, file copying, environment repair, scientific analysis,
+model execution or Figure regeneration was done. Recovery actions are conditional
+on a future rerun; no recovery is required for these retrospective syntheses.
+
+Corrected p12–14 period/matrix/path contracts and limited Survey provenance/
+dimension wording. Replaced the broken historical3sec Figure entry with a
+retirement notice; retained13 test methods and redirected obsolete3sec contracts
+to current native-classification/1min aggregation tests. All13 tests passed on
+Python3.11.11 with temporary fixtures/font cache; shared environments unchanged.
+Historical3sec research links now identify the original immutable Git revision.
+
+Created `AI_survey_report/00_scientific_results.md`,
+`00_flood_event_evaluation_workflow.md` and
+`00_human_ai_collaborative_research.md`; added availability metadata and
+`AI_work_report/00_synthesis_preparation.md`. The process document links the
+three reports; Tutorial AGENTS owns review/handoff responsibility. Reports
+separate inherited findings, scientific limits and qualitative collaboration
+observations; they claim neither formal inundation skill nor measured AI gains.
+Step24 remains the final scientific Step and Step25 is canceled. Pre-existing
+f21/s21/s23/s24 execution-mode edits are preserved. No commit/push requested.
+
+
+## 2026-11-24 — Human-configurable Shell workflow interfaces
+
+Task: Review all Tutorial11 user-facing Shell settings and establish a lasting
+Human-Configurable, AI-Executable Workflow rule (DT-0175).
+
+Reviewed22 entries:21 active wrappers now expose supported settings in annotated
+User settings sections; the retired3sec notice remains exempt. Added necessary
+Python CLI forwarding for source/output paths, periods and display controls;
+existing structured JSON/CSV files remain authoritative. Fig23b display JSON owns
+its layout/DPI. Scientific algorithms, default model settings and data are kept.
+A Bash3.2 empty optional-array failure was found and fixed with documented syntax.
+
+Tutorial AGENTS section10 is the normative rule for future agents; it references
+existing root/visualization rules, with a process-document link instead of a
+second rule copy. Researchers must retain routine control without editing Python
+or Fortran or depending on an agent. Shared tutorial-guideline adoption is
+proposed in the Work Report, not applied to unrelated Tutorials.
+
+Checks: all22 Shell syntax,20 implementation ASTs and11 changed CLI help imports
+pass;21 wrapper configuration invocations pass with capture/model stubs; default
+Namelist parameter text is unchanged. Eight temporary default image comparisons
+are pixel-identical (Fig24 synthetic depth; Fig03c no OSM); representative changed
+period/color/size settings render. Existing13 focused GFM tests pass after
+permitting their localhost server. No model, new acquisition, full peak run or
+production Figure regeneration. Missing-catalogue/OSM/derived-data limits remain
+explicit. Earlier worktree/mode edits are preserved. No commit/push requested.
+See [Work Report](../AI_work_report/00_shell_configurability.md) and VR-0218.
