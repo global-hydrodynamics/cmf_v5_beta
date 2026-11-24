@@ -4,9 +4,11 @@
 July 2021 western European floods, with a focus on the Rhine and related
 regional river systems. Event research, spatial planning and GFM preparation
 have produced sample outputs. An operational Rhine event simulation and
-spatial gauge allocation are available. Step 22 now provides an exploratory,
-provisional hydrograph overlay; formal model–observation matching and
-quantitative performance evaluation have not been completed.
+spatial gauge allocation are available. Steps 22–23 provide exploratory
+discharge/timing comparisons. Step24 completes
+one time-selected inundation downscaling, visualization and scientific assessment;
+formal model–observation inundation matching and quantitative performance
+evaluation have not been completed.
 
 ## 1. Research Objective
 
@@ -28,9 +30,10 @@ must be matched to each observation type and evaluated with metrics that account
 for valid observation support and uncertainty.
 
 The expected scientific outcome is a documented assessment of discharge and
-flood-extent reproduction, including its limits and uncertainty. The present
-Tutorial is still a preparation and data-processing sample: no event-specific
-CaMa-Flood simulation or quantitative skill result is available yet. Step 1
+flood-extent reproduction, including its limits and uncertainty. An event-specific
+CaMa-Flood run and a preliminary time-selected inundation product are available.
+Step24 is the final scientific assessment of this sample workflow; quantitative
+skill has not been established. Step 1
 background and evidence are summarized in the [event Survey Report](AI_survey_report/01_flood_event_overview.md).
 
 ## 2. Human–AI Collaborative Analysis
@@ -374,6 +377,30 @@ Report](AI_work_report/23_impact_timing_comparison.md),
 23b](figure/f23b-impact_timing_summary.png). This remains exploratory timing
 comparison, not formal validation or a performance score.
 
+### Step 24 — Flood Inundation Downscaling, Visualization, and Assessment
+
+This is the final assessment Step of the current Tutorial sample. Part A matches
+one S1A orbit 038784 acquisition (15 July 2021 morning) to the nearest existing
+CF model output: exact five-scene midpoint 05:50:39.8965 UTC →06 UTC (+560.1035 s).
+Part B uses the maintained tributary-aware method with Rhine maps to downscale
+15 arcmin flddph to 1 arcmin over 4–8°E,49–52°N. Part C visualizes the saved 180×240
+product as Fig 24; dry and missing cells are distinct. These outputs already
+exist and are retained without rerunning them for documentation completion.
+
+Part D interprets the river-aligned depth distribution in the event's tributary
+flood context. Separate model/hydrodynamic, forcing, downscaling and satellite
+comparability limitations; distinguish river water from overbank flooding and
+valid-support Flood Fraction from full-cell inundation. The appearance alone
+does not establish underestimation or the dominant cause. Finer modeling and
+terrain/downscaling address different uncertainties and are research options.
+Permanent-water and regional-buffer caveats remain. No other acquisition,
+quantitative GFM matching, accuracy metric or finer-resolution run is included.
+See the [four-part Prompt](p24-inundation_downscaling.md),
+[scientific Survey](AI_survey_report/24_inundation_downscaling.md),
+[execution Work Report](AI_work_report/24_inundation_downscaling.md),
+[Fig 24](figure/f24-inundation_1min.png) and
+[technical handoff](metadata/24_downscaling_verification.json).
+
 ## 4. Expected Outcomes and Current Status
 
 The intended outcome is a reproducible, evidence-based assessment of CaMa-Flood
@@ -401,25 +428,12 @@ but preparation outputs must not be confused with evaluation results.
 | **15 — Simulation output visualization** | Signed local peak discharge was calculated from the retained `outflw`/`pthflw` outputs; regional and AOI figures and the reusable plotting workflow are recorded. | Spatial output patterns were inspected; no simultaneous snapshot, spin-up assessment or skill evaluation is implied. |
 | **16 — Matching** | No matching method or implementation is recorded. | Spatial, temporal and variable correspondence remains to be designed. |
 | **17 — Evaluation** | No quantitative event score or performance report is recorded. | Metrics, valid-sample treatment and uncertainty analysis remain future work. |
-| **21 — Gauge and impact-location allocation** | The gauge-only CSV remains intact. A separate report-linked impact allocation CSV records geographic cells and reviewed river-assessment candidates; Figure 21, Prompt and Survey/Work Reports were updated. | The geographic cell and river candidate are distinct. Ahr/Erft and several other tributary candidates are plausible at this coarse map scale; some Ahr/Prüm reaches are not separately represented and Sinzig remains unresolved. |
+| **21 — Gauge and impact-location allocation** | The gauge-only CSV remains intact. A separate report-linked impact allocation CSV records geographic cells and reviewed river-assessment candidates; Figure 21, Prompt and Survey/Work Reports were updated. | The geographic cell and river candidate are distinct. Ahr/Erft and several other tributary candidates are plausible at this coarse map scale; five Ahr reports use reviewed upstream proxies and exact local reach support remains uncertain; Prümzurlay uses its direct catchment. |
 | **22 — Hydrograph comparison** | Model/observation time-series CSV, source/time summary JSON, three-panel Figure, reusable Prompt and Survey/Work Reports are recorded. | An exploratory overlay is available at the three Step 21 cells. Observation unit and timezone remain unknown; results are not a formal match or performance evaluation. |
-| **23 — Impact timing comparison** | Report-linked hourly model series, source-timing comparison CSV, two Figures, reusable Prompt and Survey/Work Reports are recorded. | Two Ahr discharge-peak offsets are provisional (+6 h at Müsch and +2 h at Altenahr). Uncertain timing and unsupported river matches remain context-only; no formal score is produced. |
+| **23 — Impact timing comparison** | Report-linked hourly model series, source-timing comparison CSV, two Figures, reusable Prompt and Survey/Work Reports are recorded. | Three Ahr offsets are provisional (+6 h at Müsch, +2 h at Altenahr and −0.5 h at Bad Bodendorf), all sharing one model cell. Uncertain timing and unsupported river matches remain context-only; no formal score is produced. |
+| **24 — Flood Inundation Downscaling, Visualization, and Assessment** | One S1A-time-selected 1min NetCDF, Fig24, provenance and four-part Prompt with scientific Survey/technical Work Report. | Workflow feasibility and limitations are assessed; no quantitative inundation skill claim or separate subsequent assessment Step. |
 
 The Step Prompts, Survey Reports and Work Reports are linked in the Analysis
 Workflow above. They provide the detailed instructions, scientific evidence and
 execution record respectively; this document explains how those activities
 form one research plan.
-
-### Step 24 — Preliminary 1 arcmin inundation at one S1A acquisition
-
-Process only S1A orbit038784 (15 July2021 morning); five scenes are one pass.
-Use the midpoint of exact Step03 scene start/end timestamps and nearest existing
-CF model output, without temporal interpolation. Reuse the maintained
-tributary-aware downscaler with Rhine1min maps over the Step02 satellite domain.
-Current selection: 05:50:39.8965 UTC →06:00 UTC (+560.1035 s); one180×240
-NetCDF and one diagnostic map. Keep simulated products distinct from observations.
-This is a preliminary feasibility result, with permanent-water and regional-buffer
-limitations; no GFM comparison, metrics, other acquisition or finer resolution.
-See [Step24 prompt](p24-inundation_downscaling.md),
-[Survey](AI_survey_report/24_inundation_downscaling.md), and
-[Work Report](AI_work_report/24_inundation_downscaling.md).

@@ -864,3 +864,14 @@ Five exact scene timestamps define one acquisition midpoint; selected06UTC
 values and missing/catchment masks. Retain0.1m permanent-water and boundary-buffer
 caveats; no model rerun, observation comparison, metrics or finer-resolution work.
 Details: [Step24 Work Report](../AI_work_report/24_inundation_downscaling.md).
+
+### 2026-11-24 — Complete Step24 scientific assessment
+
+Maintainer corrects the standalone-assessment instruction: interpretation belongs
+to Step24. The interrupted write had not created separate files or commits;
+no deletion/revert was needed. Integrated useful evidence into the established
+Step24 Survey, expanded p24 to PartsA–D, appended technical checks/uncertainties
+to the Work Report and aligned process/current status. Existing calculation,
+NetCDF and Fig24 are retained. Separate facts from untested explanations; narrow
+river patterns do not establish underestimation. No new simulation, processing,
+figure or metric. [Work Report](../AI_work_report/24_inundation_downscaling.md).

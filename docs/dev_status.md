@@ -6,6 +6,18 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Tutorial11 Step24 scientific assessment completion (DT-0173, 2026-11-24)
+
+Maintainer corrects the scope to complete interpretation within Step24 on
+`feature/package-builder`; Codex owns existing Step24 Prompt/Survey/Work Report,
+workflow overview and supporting records. Four parts cover time matching,
+downscaling, visualization and assessment. No separate assessment-step files
+had been created; useful reviewed findings are integrated without deletion.
+River-aligned depth is not evidence of underestimation or quantitative skill;
+model/forcing/downscaling/observation limits and future options remain distinct.
+Calculations, NetCDF and Fig24 are retained; no rerun or new metric. Evidence:
+[VR-0216](../research/records/validation_runs/VR-0216.md).
+
 ### Tutorial11 Step24 preliminary one-acquisition downscaling (DT-0172, 2026-11-24)
 
 Maintainer authorizes Step24 on `feature/package-builder`: only S1A orbit038784,

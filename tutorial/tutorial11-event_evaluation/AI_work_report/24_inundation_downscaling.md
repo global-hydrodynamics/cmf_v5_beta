@@ -1,4 +1,4 @@
-# Step24 — Preliminary 1 arcmin inundation downscaling
+# Step24 — Flood Inundation Downscaling, Visualization, and Assessment
 
 Only **Sentinel-1A, orbit 038784, S1A_o038784_dt049389** is processed.
 The five source GRD scenes form one acquisition, not five target acquisitions.
@@ -78,3 +78,76 @@ Generated NetCDF data remain local and are not added to Git.
   permanent river water and is not a flood-event classification. No GFM overlap,
   accuracy metrics, 20m/finer result, other acquisition, or independent scientific
   validation. Steps01–23, source observations, model/map data and Gallery unchanged.
+
+## Scientific-assessment documentation completion — 2026-11-24
+
+The revised instruction makes scientific interpretation part of Step 24. The
+superseded standalone-assessment request was interrupted before its write
+command executed: no separate assessment-step files, references or commits
+existed when checked. Nothing was deleted or reverted. Useful evidence reviewed
+for that request is consolidated into the existing Step 24 Survey Report and
+four-part Prompt. No separate later assessment Step is introduced.
+
+### Sources reviewed and facts confirmed
+
+Reviewed root/tutorial/local AGENTS, tutorial development guidance and current
+process/Step prompts; applied cama-development, cama-visualization and
+large-model-refactoring guidance at documentation-focused L0–L1 scope. Main
+scientific evidence is the Steps 01–04,11–15,21–24 Survey/Work Reports, Step 03
+classification provenance and acquisition footprint/inventory, Step 14 setup,
+Step 21 allocation, Step 23 comparison/handoff and Step 24 verification metadata.
+Existing Fig 1, Fig 23 and Fig 24 provide illustration, not quantitative proof.
+
+Read actual existing NetCDF headers: flddph and outflw are 744×32×40; units m
+and m 3/s respectively; cell methods time: point and time: mean. Step 14 records
+15 arcmin, hourly ERA5-Land input, no spin-up and the July 1–August 1-exclusive
+run. Step 24 records the exact five-scene acquisition midpoint,06 UTC selection,
++560.1035 s,1 arcmin 180×240 output and retained count/range checks above. No new
+pixel statistics or hydrological analysis were computed for this update.
+Step 03 source metadata confirm classes 0–4 form valid support; source code
+`f03c-flood_fraction_1min.py` confirms that denominator. The full 20 m classified
+TIFF remains absent; reported full-source statistics are inherited provenance.
+
+Mohr et al.(2023), NHESS23,525–551, doi 10.5194/nhess-23-525-2023 was checked
+on the publisher page for title/authorship, event context and hydrological
+limitations. Official EODC GFM Recommendations were checked through indexed
+service documentation (direct page exposed no readable body), supporting only
+general SAR detection caveats, not a claim about the local processing version.
+Links and full bibliographic references are in the Survey Report.
+
+### Documentation changes and checks
+
+Updated the established p 24 filename with PartsA–D and reusable instructions;
+replaced the short Survey with objective/method, distribution, event context,
+four limitation categories, interpretation, future directions and conclusions.
+The Work Report retains actual A–C execution evidence and adds this D completion
+record. Updated the workflow overview/status to identify Step 24 as the final
+assessment and remove stale statements that no event simulation exists.
+
+Focused checks: technical claims against retained JSON/CSV and actual output
+headers; new/changed local links and figure paths; separation of demonstrated
+facts, hypotheses and unresolved questions; review that no unperformed matching,
+metric or skill validation is described as completed. Preserved prior metadata,
+figures, analysis data and calculation/plotting source. No model/downscaling
+run, figure regeneration, new script, observation download or accuracy analysis.
+
+### Unresolved evidence and knowledge-gap review
+
+The Survey does not rank insufficient simulated water, unresolved spatial
+width and quantity/class mismatch as causes. River-water versus overbank
+inundation, local reach support/upstream proxies, initial-state and edge-buffer
+sensitivity, KG-0019 forcing-time attribution, observation support and SAR
+uncertainty remain unresolved. Existing Step 22 observation units/timezone
+are still unspecified. Higher-resolution maps and finer terrain address
+different questions and are proposed opportunities, not guaranteed fixes.
+
+A source discrepancy was noticed during literature review: Mohr et al.section 3.2.2
+lists Prümzurlay peak level at 05:30 UTC, whereas the retained Step 01 ledger and
+Step 23 reference use 10:30 UTC from their cited LfU report. These references may
+reflect different estimates/definitions; that explanation is unverified. No
+source was silently substituted and no discharge lag was computed for that
+water-level reference. Reconciliation belongs to future observation review.
+The Survey flags source-time discrepancies without treating either as resolved.
+
+This completion is scientific synthesis and source checking, not independent
+scientific validation of the existing simulation or inundation product.
