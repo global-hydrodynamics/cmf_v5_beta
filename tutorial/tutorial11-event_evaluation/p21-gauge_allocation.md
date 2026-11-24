@@ -29,7 +29,7 @@
 - `metadata/21_gauge_allocation.csv`
 - `metadata/21_impact_location_allocation.csv`
 - `metadata/21_catchment_review.json`
-- `figure/f21-gauge_allocation.png` and `figure/f21-catchment_allocation.png`
+- `figure/f21a-gauge_allocation.png` and `figure/f21b-catchment_allocation.png`
 - Step 21 Survey and Work Reports
 
 ## Human Instructions

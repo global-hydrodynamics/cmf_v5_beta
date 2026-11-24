@@ -312,7 +312,7 @@ nextxy edge upstream; record the correction and omitted downstream-area caveat.
 Do not choose an arbitrary upstream branch or snap missing assignments.
 
 Run `s21-gauge_allocation.sh --catchment-only` to retain old geographic/gauge
-fields; `f21-gauge_allocation.sh` renders the regional and catchment/proxy maps.
+fields; `f21-gauge_allocation.sh` renders Fig. 21a (regional allocation) and Fig. 21b (catchments/proxies).
 The prior remote scientific review is preserved in `prior_*` fields, and full
 paths/source fingerprints in `metadata/21_catchment_review.json`. Final counts:
 16 direct points, 5 upstream proxies, 1 coordinate-missing report. Refer to

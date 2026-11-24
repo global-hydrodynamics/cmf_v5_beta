@@ -60,12 +60,12 @@ and [Erftverband Bliesheim record](https://www.erftverband.de/mapserver/arcshp/f
 
 ## Figures and interpretation
 
-![Regional allocations](../figure/f21-gauge_allocation.png)
+![Fig. 21a — Regional allocations](../figure/f21a-gauge_allocation.png)
 
 The retained regional layout now shows final reviewed evaluation candidates
 as magenta diamonds, separate from geographic-cell outlets.
 
-![Direct catchments and upstream proxy](../figure/f21-catchment_allocation.png)
+![Fig. 21b — Direct catchments and upstream proxy](../figure/f21b-catchment_allocation.png)
 
 Discrete pastel regions and exact pixel-edge boundaries show one-minute unit
 catchments, with geographic grid lines only as context. Blue nextxy arrows are

@@ -308,7 +308,7 @@ def draw_catchment_review(tutorial, map_dir, impact_records, map_data, segments,
                         textcoords="offset points",fontsize=8,zorder=10,
                         bbox=dict(facecolor="white",alpha=.9,edgecolor="none",pad=1.5))
     style_axes(ax,(west,east,south,north));ax.set_xlabel("Longitude");ax.set_ylabel("Latitude")
-    fig.text(.5,1-.24/fh,"Tutorial 11 Fig. 21 — Catchment Allocation",ha="center",va="top",fontsize=12)
+    fig.text(.5,1-.24/fh,"Tutorial 11 Fig. 21b — Catchment Allocation",ha="center",va="top",fontsize=12)
     fig.text(.5,1-.53/fh,"Ahr–Erft: 1-minute catchments and 15-minute outlet network",ha="center",va="top",fontsize=9)
     handles=[Patch(facecolor=colors[0],edgecolor="#858585",label="Unit catchment (categorical colors)"),
       Line2D([],[],color="#4c7694",label="nextxy / downstream arrows"),
@@ -390,7 +390,7 @@ def main() -> None:
 
     overview.legend(handles=impact_legend_handles(), loc="lower left", ncols=2,
                     fontsize=6.8, framealpha=0.94)
-    fig.suptitle("Fig. 21 — Gauge and Flood Impact Location Allocation", fontsize=14)
+    fig.suptitle("Fig. 21a — Gauge and Flood Impact Location Allocation", fontsize=14)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(args.output, dpi=args.dpi, bbox_inches="tight", facecolor="white")
     plt.close(fig)
@@ -398,7 +398,7 @@ def main() -> None:
     extent = tuple(float(value) for value in args.catchment_extent.split(","))
     if len(extent) != 4 or not (extent[0] < extent[1] and extent[2] < extent[3]):
         raise ValueError("catchment extent must be west,east,south,north")
-    catchment_output = args.catchment_output or args.output.with_name("f21-catchment_allocation.png")
+    catchment_output = args.catchment_output or args.output.with_name("f21b-catchment_allocation.png")
     draw_catchment_review(tutorial,map_dir,impact_records,map_data,segments,area,catchment_output,args.dpi,extent)
 
 

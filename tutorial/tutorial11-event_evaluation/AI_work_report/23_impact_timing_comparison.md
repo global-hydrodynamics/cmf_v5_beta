@@ -50,7 +50,7 @@ Outputs:
   cells, with cell basis and river status.
 - `metadata/23_impact_timing_comparison.csv` — 22 report-linked rows including
   original and UTC timing, model maxima, lag status, and caveats.
-- `figure/f21-gauge_allocation.png` — containing-cell outlets (dark squares)
+- `figure/f21a-gauge_allocation.png` — containing-cell outlets (dark squares)
   and river-assessment candidates (magenta diamonds) are visually distinct.
 - `figure/f23a-impact_hydrographs.png` and
   `figure/f23b-impact_timing_summary.png`.
