@@ -4,7 +4,7 @@ set -eu
 # CaMa-Flood general setting (check CMF root, import shell error checker)
 PYTHON_CMD="python3"
 : "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
-. "$CMF_V50_ROOT/tools/code/cmf_check_shell_error.sh"
+. "$CMF_V50_ROOT/tools/cmf_shell_functions.sh"
 
 # ----------------------------------------------------------------------
 # User settings
@@ -26,6 +26,7 @@ fi
 cmf_check_step 1 1 "Allocate GRDC gauges using the $HIRES_TAG map"
 "$PYTHON_CMD" "$CODE_DIR/allocate_flow_gauge.py" "$GAUGE_IN" "$GAUGE_MODE" \
     "$HIRES_TAG" --map-dir .. --output-dir ..
+
 cmf_check_success
 
 # Optional Python CLI flag: add --map-format binary for a legacy Binary map.

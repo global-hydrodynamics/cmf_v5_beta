@@ -286,9 +286,11 @@ class VariantConversionTests(unittest.TestCase):
         local_script_dir.mkdir(parents=True)
         script = local_script_dir/SCRIPT.name
         shutil.copy2(SCRIPT, script)
-        (fixture/'tools/code').mkdir(parents=True)
-        shutil.copy2(ROOT/'tools/code/cmf_check_shell_error.sh',
-                     fixture/'tools/code/cmf_check_shell_error.sh')
+        shell_functions = fixture/'tools/shell_functions'
+        shell_functions.mkdir(parents=True)
+        shutil.copy2(ROOT/'tools/cmf_shell_functions.sh', fixture/'tools/cmf_shell_functions.sh')
+        for name in ('cmf_check_shell_error.sh', 'cmf_select_hires_tag.sh'):
+            shutil.copy2(ROOT/'tools/shell_functions'/name, shell_functions/name)
         fake = fixture/'map/tools/code/convert_map_binary_to_netcdf.py'
         fake.parent.mkdir(parents=True)
         fake.write_text("""import argparse

@@ -38,11 +38,16 @@ class InputMatrixNamingTests(unittest.TestCase):
             program.chmod(0o755)
             program_path = code_dir / "param_inpmat_generate.py"
             program.rename(program_path)
-            shell_library = root / "tools" / "code"
-            shell_library.mkdir(parents=True)
-            (shell_library / "cmf_check_shell_error.sh").write_bytes(
-                (ROOT / "tools" / "code" / "cmf_check_shell_error.sh").read_bytes()
+            tools_dir = root / "tools"
+            shell_functions = tools_dir / "shell_functions"
+            shell_functions.mkdir(parents=True)
+            (tools_dir / "cmf_shell_functions.sh").write_bytes(
+                (ROOT / "tools" / "cmf_shell_functions.sh").read_bytes()
             )
+            for name in ("cmf_check_shell_error.sh", "cmf_select_hires_tag.sh"):
+                (shell_functions / name).write_bytes(
+                    (ROOT / "tools" / "shell_functions" / name).read_bytes()
+                )
             bin_dir = root / "bin"
             bin_dir.mkdir()
             python_cmd = bin_dir / "python3"

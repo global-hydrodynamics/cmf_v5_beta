@@ -6,6 +6,18 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Shared Shell functions and interactive high-resolution map selection (DT-0192, 2026-11-26; branch-local proposal)
+
+The common Shell functions now have a public import entry point at
+`tools/cmf_shell_functions.sh`, with sourceable implementations under
+`tools/shell_functions/`. Maintained map workflows that imported the old
+error-check path now use the public entry point. The s03/s05 matrix and
+permanent-water wrappers share `cmf_select_hires_tag`, which proposes an
+available map tag, allows interactive selection, and returns only the chosen
+tag on stdout. Focused tests (43), POSIX Shell syntax checks across map Shell
+files, Bash syntax checks, and diff checks pass. No map processing or scientific
+calculations were run. See [VR-0236](../research/records/validation_runs/VR-0236.md).
+
 ### Shared Shell error reporting (DT-0189, 2026-11-25; pushed branch-local update)
 
 Maintainer authorized the small POSIX library and adoption only by the Mekong

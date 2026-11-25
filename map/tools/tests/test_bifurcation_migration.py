@@ -44,10 +44,12 @@ def run(command: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
 
 
 def install_shell_library(root: Path) -> None:
-    library_dir = root / "tools" / "code"
-    library_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(ROOT / "tools" / "code" / "cmf_check_shell_error.sh",
-                 library_dir / "cmf_check_shell_error.sh")
+    tools_dir = root / "tools"
+    functions_dir = tools_dir / "shell_functions"
+    functions_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(ROOT / "tools" / "cmf_shell_functions.sh", tools_dir / "cmf_shell_functions.sh")
+    for name in ("cmf_check_shell_error.sh", "cmf_select_hires_tag.sh"):
+        shutil.copy2(ROOT / "tools" / "shell_functions" / name, functions_dir / name)
 
 
 class S02InputGuardTests(unittest.TestCase):

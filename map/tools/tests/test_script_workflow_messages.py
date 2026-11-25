@@ -21,12 +21,11 @@ class WorkflowMessageTests(unittest.TestCase):
         self.code_dir = self.root / "map" / "tools" / "code"
         self.script_dir.mkdir(parents=True)
         self.code_dir.mkdir(parents=True)
-        shell_library_dir = self.root / "tools" / "code"
-        shell_library_dir.mkdir(parents=True)
-        shutil.copy2(
-            ROOT / "tools" / "code" / "cmf_check_shell_error.sh",
-            shell_library_dir / "cmf_check_shell_error.sh",
-        )
+        shell_functions_dir = self.root / "tools" / "shell_functions"
+        shell_functions_dir.mkdir(parents=True)
+        shutil.copy2(ROOT / "tools" / "cmf_shell_functions.sh", self.root / "tools" / "cmf_shell_functions.sh")
+        for name in ("cmf_check_shell_error.sh", "cmf_select_hires_tag.sh"):
+            shutil.copy2(ROOT / "tools" / "shell_functions" / name, shell_functions_dir / name)
         (self.map_root / "1min").mkdir()
         (self.map_root / "1min" / "location.txt").write_text("fixture\n", encoding="ascii")
         self.log = self.root / "calls.txt"

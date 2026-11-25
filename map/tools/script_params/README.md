@@ -215,11 +215,14 @@ updating their source defaults; external package data are updated separately.
 
 ### Coarsest high-resolution input selection
 
-`s03-generate_inpmat.sh` proposes the first installed NetCDF directory in
-`1min`, `30sec`, `15sec`, `5sec`, `3sec`, `1sec` order, shows the selected
-map and asks `[Y/n]` (Enter = Yes). No opens a list of available tags; type
-one to use instead. An explicit nonempty `HIRES_TAG` remains the initial
-proposal. End-of-input stops before execution.
+`s03-generate_inpmat.sh` and `s05-permanent_water.sh` call the shared
+`cmf_select_hires_tag` function loaded by `tools/cmf_shell_functions.sh`.
+It checks `../<tag>` directories in `1min`, `30sec`, `15sec`, `5sec`, `3sec`,
+`1sec` order. An explicit valid `HIRES_TAG` is proposed for confirmation;
+when unset, the coarsest available tag is proposed. Enter accepts a proposal;
+No displays the available tags and prompts for an alternative. Invalid input
+and EOF fail without starting processing. The selected value is returned to
+the wrapper, which passes it to the existing Python program.
 
 `t01-alloc_flow_gauge.sh`, `t02-alloc_dams.sh` and `t03-alloc_level_gauge.sh`
 automatically use the same coarsest-first order, displaying the chosen path.

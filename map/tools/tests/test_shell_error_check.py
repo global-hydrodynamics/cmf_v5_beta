@@ -6,12 +6,12 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-LIBRARY = ROOT / "tools" / "code" / "cmf_check_shell_error.sh"
+LIBRARY = ROOT / "tools" / "cmf_shell_functions.sh"
 
 
 def run_shell(body: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["/bin/sh", "-c", f'. "{LIBRARY}"\n{body}'],
+        ["/bin/sh", "-c", f'CMF_V50_ROOT="{ROOT}"; export CMF_V50_ROOT; . "{LIBRARY}"\n{body}'],
         text=True, capture_output=True, check=False, timeout=5,
     )
 
@@ -20,11 +20,13 @@ class SharedShellErrorTests(unittest.TestCase):
     def test_sourcing_defines_functions_without_changing_traps_or_options(self) -> None:
         result = subprocess.run(
             ["/bin/sh", "-c",
+             f'CMF_V50_ROOT="{ROOT}"; export CMF_V50_ROOT; '
              f'before_options=$-; before_traps=$(trap); . "{LIBRARY}"; '
              'after_options=$-; after_traps=$(trap); '
              '[ "$before_options" = "$after_options" ] && '
              '[ "$before_traps" = "$after_traps" ] && '
-             'command -v cmf_check_init >/dev/null && printf unchanged'],
+             'command -v cmf_check_init >/dev/null && '
+             'command -v cmf_select_hires_tag >/dev/null && printf unchanged'],
             text=True, capture_output=True, check=False, timeout=5,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
