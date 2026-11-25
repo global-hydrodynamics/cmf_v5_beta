@@ -6,6 +6,16 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Shared Shell error reporting (DT-0189, 2026-11-25; branch-local proposal)
+
+Maintainer authorized the small POSIX library and adoption only by the Mekong
+channel-parameter workflow and its maintained template. The direct
+`CMF_V50_ROOT` unset check stays in each caller before sourcing. Eight focused
+tests passed; the original and refactored workflows produced exact matching
+values in six NetCDF outputs on isolated Mekong copies. Other workflows were
+not migrated. See [VR-0233](../research/records/validation_runs/VR-0233.md).
+
+
 ### CMF v5-series root configuration (DT-0188, 2026-11-25; pushed branch-local update)
 
 Maintainer authorizes this bounded configuration utility on the existing

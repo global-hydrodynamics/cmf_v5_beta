@@ -8,29 +8,17 @@
 #          and rivwth_merit.nc in the map root.
 set -eu
 
-# Paths
-# Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
-SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+# User settings
 PYTHON_CMD="${PYTHON_CMD:-python3}"
 MAP_FORMAT="${MAP_FORMAT:-netcdf}"  # Set binary only for legacy Binary maps.
-if [ -n "${CMF5_ROOT:-}" ]; then
-    CODE_DIR="$CMF5_ROOT/map/tools/code"
-else
-    CODE_DIR="$SCRIPT_DIR/../../tools/code"
-fi
-if [ ! -d "$CODE_DIR" ]; then
-    printf '[ERROR] Shared Python tools not found: %s (set CMF5_ROOT to the repository root)\n' "$CODE_DIR" >&2
-    exit 1
-fi
-MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
 
 # Runoff format, interpolation, and paired runoff-grid matrix files.
 TYPE="bin"                                     # Runoff format: bin for binary or cdf for NetCDF.
 INTERP="mat"                                   # Python CLI: mat for input matrix or near for nearest-grid.
 # test-1deg: global ELSE_GPCC 360 x 180 grid; matrix is specific to this model map.
 # Shared grid: inp/ELSE_GPCC/runoffYYYY.nc [mm/day] and map/data/ELSE_GPCC_clm-1981-2010.one [mm/s].
-ROFFTAG="test-1deg"                        # Runoff dataset ID used in both matrix filenames.
-DIMINFO="diminfo_${ROFFTAG}.txt"                 # Simulation dimension information (model and input grids).
+ROFFTAG="test-1deg"                             # Runoff dataset ID used in both matrix filenames.
+DIMINFO="diminfo_${ROFFTAG}.txt"               # Simulation dimension information (model and input grids).
 INPMAT="inpmat_${ROFFTAG}.nc"                  # Runoff input matrix file derived from ROFFTAG.
 CROFBIN="../data/ELSE_GPCC_clm-1981-2010.one"  # Annual-mean runoff input [mm/s], relative to the map root.
 # Source: Kim et al. (2009), https://doi.org/10.1029/2009GL039006
@@ -49,50 +37,38 @@ WMIN=5.0  # Minimum channel width [m].
 # User settings end here. Program paths and processing steps follow.
 # ----------------------------------------------------------------------
 
-# ${0##*/} removes the directory portion of the script path for readable messages.
-SCRIPT_NAME=${0##*/}
-STEP="Prepare channel-parameter workflow"
-# The exit trap reports failures and preserves status; signal traps use standard nonzero statuses.
-trap '
-    EXIT_STATUS=$?
-    trap - 0
-    if [ "$EXIT_STATUS" -ne 0 ]; then
-        printf "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" >&2
-        printf "!!! ERROR: %s FAILED !!!\n" "$SCRIPT_NAME" >&2
-        printf "!!! Step: %s\n" "$STEP" >&2
-        printf "!!! Exit status: %s\n" "$EXIT_STATUS" >&2
-        printf "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" >&2
-    fi
-    exit "$EXIT_STATUS"
-' 0
-trap 'exit 129' HUP
-trap 'exit 130' INT
-trap 'exit 143' TERM
+SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
 
-# ----------------------------------------------------------------------
-# End of error handling.
-# ----------------------------------------------------------------------
+: "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
+. "$CMF_V50_ROOT/tools/code/cmf_check_shell_error.sh"
+
+cmf_check_init "Channel parameter calculation"
 
 # Shared Python programs used by this workflow.
+CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 EXEC_OUTCLM="$CODE_DIR/param_channel_calc_outclm.py"
 EXEC_RIVWTH="$CODE_DIR/param_channel_calc_rivwth.py"
 EXEC_MERIT="$CODE_DIR/param_channel_set_merit_width.py"
+for program in "$EXEC_OUTCLM" "$EXEC_RIVWTH" "$EXEC_MERIT"; do
+    if [ ! -f "$program" ]; then
+        printf '[ERROR] Required Python program not found: %s\n' "$program" >&2
+        exit 1
+    fi
+done
 
 cd "$MAP_DIR"
 
-STEP="Calculate mean river discharge from annual runoff and the input matrix"
-printf '\n==================================================\n[STEP 1/3] Calculate mean river discharge\n==================================================\n\n'
+cmf_check_step 1 3 "Calculate mean river discharge"
 "$PYTHON_CMD" "$EXEC_OUTCLM" "$TYPE" "$INTERP" "$DIMINFO" "$CROFBIN" --map-format "$MAP_FORMAT"
 
-# 2. Estimate width, depth, roughness, and the no-floodplain depth field.
-STEP="Estimate channel width, depth, and roughness"
-printf '\n==================================================\n[STEP 2/3] Estimate channel parameters\n==================================================\n\n'
-"$PYTHON_CMD" "$EXEC_RIVWTH" "$TYPE" "$DIMINFO" "$HC" "$HP" "$HO" "$HMIN" \
-    "$WC" "$WP" "$WO" "$WMIN" --map-format "$MAP_FORMAT"
+cmf_check_step 2 3 "Estimate channel parameters"
+"$PYTHON_CMD" "$EXEC_RIVWTH" "$TYPE" "$DIMINFO" \
+    "$HC" "$HP" "$HO" "$HMIN" \
+    "$WC" "$WP" "$WO" "$WMIN" \
+    --map-format "$MAP_FORMAT"
 
-# 3. Merge MERIT Hydro width estimates with the power-law river widths.
-STEP="Merge power-law channel widths with MERIT Hydro widths"
-printf '\n==================================================\n[STEP 3/3] Merge MERIT Hydro channel widths\n==================================================\n\n'
+cmf_check_step 3 3 "Merge MERIT Hydro channel widths"
 "$PYTHON_CMD" "$EXEC_MERIT" "$DIMINFO" --map-format "$MAP_FORMAT"
 
-printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"
+cmf_check_success
