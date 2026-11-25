@@ -33,7 +33,7 @@ retains its own grid tag.
 
 1. Prepare runoff files in a supported [Binary or NetCDF layout](#supported-input-formats-and-simulation-settings).
 2. Identify the input-grid resolution and geographic boundaries, latitude row order, temporal resolution, runoff units and accumulation meaning, missing-value encoding, and filename pattern from the source data and documentation.
-3. Copy the shared [`s03-generate_inpmat.sh` template](../map/tools/script_params/s03-generate_inpmat.sh) into the target map's `script_params/`, configure its settings, and [generate the Input Matrix](#preparing-the-input-matrix). The runoff grid may have a different spatial resolution and extent from the CaMa-Flood river map.
+3. Copy the shared [`s01-inpmat_default.sh` template](../map/tools/script_params/s01-inpmat_default.sh) into the target map's `script_params/`, configure its settings, and [generate the Input Matrix](#preparing-the-input-matrix). The runoff grid may have a different spatial resolution and extent from the CaMa-Flood river map.
 4. Configure the relevant v5 `gosh_test/` or tutorial simulation script with matching file paths and format, `IFRQ_INP`, `DROFUNIT`, and the matching `CDIMINFO`/`CINPMAT` pair; see [simulation settings](#supported-input-formats-and-simulation-settings).
 5. Run a short simulation and check the log, dates, and runoff/discharge values for correct loading and reasonable magnitudes.
 6. Optionally document the dataset and its provenance in [`runoff_datasets.csv`](runoff_datasets.csv) when sharing it with other users.
@@ -87,9 +87,9 @@ Package-only data are not added by cloning the GitHub repository. Obtain the v4.
 
 ## Preparing the Input Matrix
 
-The runoff input grid and CaMa-Flood river map are separate grids. They may have different resolution, dimensions, and geographic extent. Use the runoff product's own regular latitude/longitude grid geometry to configure [the map-local `s03-generate_inpmat.sh` workflow](../map/tools/script_params/s03-generate_inpmat.sh). The workflow maps high-resolution map-pixel centers into runoff cells and accumulates overlap area for each map catchment. If the runoff grid does not cover part of the map, some catchments may have incomplete or no runoff coverage.
+The runoff input grid and CaMa-Flood river map are separate grids. They may have different resolution, dimensions, and geographic extent. Use the runoff product's own regular latitude/longitude grid geometry to configure [the map-local `s01-inpmat_default.sh` workflow](../map/tools/script_params/s01-inpmat_default.sh). The workflow maps high-resolution map-pixel centers into runoff cells and accumulates overlap area for each map catchment. If the runoff grid does not cover part of the map, some catchments may have incomplete or no runoff coverage.
 
-The standard s03 example matches the converted global ERA5-Land sample:
+The alternative i01 example matches the converted global ERA5-Land sample:
 
 ```sh
 ROFFTAG="ERA5land_global"
@@ -296,7 +296,7 @@ These checks distinguish configuration mismatches from software defects; a suspi
 
 - [ERA5-Land download and conversion guide](download_ERA5-Land/README.md)
 - [Map and Input Matrix overview](../map/README.md)
-- [v5 Input Matrix generation workflow](../map/tools/script_params/s03-generate_inpmat.sh)
+- [v5 Input Matrix generation workflow](../map/tools/script_params/s01-inpmat_default.sh)
 - [V5 execution guide](../gosh_test/README.md)
 - [V5 forcing implementation](../src_main/cmf_ctrl_forcing_mod.F90)
 

@@ -258,8 +258,8 @@ class AnalysisMigrationTests(unittest.TestCase):
         map_dir, params = self.make_map("scripts")
         analysis = map_dir / "script_analysis"
         for source, target in (
-            (PARAM_SCRIPTS / "s06-subbasin.sh", params / "s06-subbasin.sh"),
-            (PARAM_SCRIPTS / "s07-upbasin.sh", params / "s07-upbasin.sh"),
+            (PARAM_SCRIPTS / "s05-subbasin.sh", params / "s05-subbasin.sh"),
+            (PARAM_SCRIPTS / "x02-upbasin.sh", params / "x02-upbasin.sh"),
             (ANALYSIS_SCRIPTS / "a01-river_point_info.sh", analysis / "a01-river_point_info.sh"),
             (ANALYSIS_SCRIPTS / "a02-upbasin.sh", analysis / "a02-upbasin.sh"),
             (ANALYSIS_SCRIPTS / "a03-subbasin.sh", analysis / "a03-subbasin.sh"),
@@ -270,12 +270,12 @@ class AnalysisMigrationTests(unittest.TestCase):
             syntax = run(["sh", "-n", str(target)], self.root)
             self.assertEqual(syntax.returncode, 0, syntax.stderr)
 
-        result = run([str(params / "s06-subbasin.sh")], self.root)
+        result = run([str(params / "s05-subbasin.sh")], self.root)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual((map_dir / "subbsn-sample.bin").stat().st_size, 80 * 120 * 4)
         self.assertEqual((map_dir / "subcol-sample.bin").stat().st_size, 80 * 120 * 4)
 
-        result = run([str(params / "s07-upbasin.sh")], self.root)
+        result = run([str(params / "x02-upbasin.sh")], self.root)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         selection = (map_dir / "grdc_station_selection.txt").read_text(encoding="utf-8")
         self.assertIn("2569002", selection)
@@ -304,8 +304,8 @@ class AnalysisMigrationTests(unittest.TestCase):
 
     def test_mekong_sample_subbasin_wrapper_uses_stable_output_names(self) -> None:
         map_dir, params = self.make_map("sample-script")
-        script = params / "s06-subbasin.sh"
-        shutil.copy2(SAMPLE / "script_params" / "s06-subbasin.sh", script)
+        script = params / "s05-subbasin.sh"
+        shutil.copy2(SAMPLE / "script_params" / "s05-subbasin.sh", script)
         script.chmod(0o755)
         result = run([str(script)], self.root)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -448,8 +448,8 @@ class AnalysisMigrationTests(unittest.TestCase):
 
     def test_missing_or_headerless_grdc_allocation_fails_clearly(self) -> None:
         map_dir, params = self.make_map("invalid-grdc")
-        script = params / "s07-upbasin.sh"
-        shutil.copy2(PARAM_SCRIPTS / "s07-upbasin.sh", script)
+        script = params / "x02-upbasin.sh"
+        shutil.copy2(PARAM_SCRIPTS / "x02-upbasin.sh", script)
         script.chmod(0o755)
         (map_dir / "GRDC_alloc.txt").write_text("ID lat lon\n", encoding="ascii")
         result = run([str(script)], self.root)
@@ -458,8 +458,8 @@ class AnalysisMigrationTests(unittest.TestCase):
 
     def test_grdc_selection_filters_invalid_rows_and_keeps_first_tie(self) -> None:
         map_dir, params = self.make_map("grdc-tie")
-        script = params / "s07-upbasin.sh"
-        shutil.copy2(PARAM_SCRIPTS / "s07-upbasin.sh", script)
+        script = params / "x02-upbasin.sh"
+        shutil.copy2(PARAM_SCRIPTS / "x02-upbasin.sh", script)
         script.chmod(0o755)
         header = "ID lat lon area_Input area_CaMa error diff Type ix1 iy1 ix2 iy2 area1 area2\n"
         rows = (
@@ -480,8 +480,8 @@ class AnalysisMigrationTests(unittest.TestCase):
     def test_missing_grdc_allocation_fails_with_manual_next_step(self) -> None:
         map_dir, params = self.make_map("missing-grdc")
         (map_dir / "GRDC_alloc.txt").unlink()
-        script = params / "s07-upbasin.sh"
-        shutil.copy2(PARAM_SCRIPTS / "s07-upbasin.sh", script)
+        script = params / "x02-upbasin.sh"
+        shutil.copy2(PARAM_SCRIPTS / "x02-upbasin.sh", script)
         script.chmod(0o755)
         result = run([str(script)], self.root)
         self.assertNotEqual(result.returncode, 0)

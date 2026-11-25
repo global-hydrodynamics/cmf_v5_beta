@@ -2,7 +2,7 @@
 """Runoff-grid daily climatology and mm/s exports, independent of river maps.
 
 One native-grid preset can support many river maps: map-specific assignment belongs
-only to downstream s01-channel_params.sh, not to this product's climatology.
+only to downstream s02-channel_params.sh, not to this product's climatology.
 """
 from __future__ import annotations
 

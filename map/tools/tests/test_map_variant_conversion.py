@@ -225,7 +225,7 @@ class VariantConversionTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('subbsn-sample.bin', result.stderr)
 
-    def test_shell_s08_converts_s06_netcdf_samples_to_binary(self):
+    def test_shell_s08_converts_s05_netcdf_samples_to_binary(self):
         binary_dir = self.map/'binary'
         binary_dir.mkdir()
         arrays = {

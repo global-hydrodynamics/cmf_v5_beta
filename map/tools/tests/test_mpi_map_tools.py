@@ -259,7 +259,7 @@ class MpiMapToolsTests(unittest.TestCase):
             self.run_mpi(root)
             first = {n: (root / f"mpireg-{n}.bin").read_bytes() for n in (4, 8, 16)}
             self.assertEqual((root / "bifprm.txt").read_bytes(), bifprm_before)
-            self.assertTrue((root / "bifbsn_mpi.tmp").exists())  # s04 removes this after all partitions are made
+            self.assertTrue((root / "bifbsn_mpi.tmp").exists())  # x01 removes this after all partitions are made
             for count in (4, 8, 16):
                 self.assertEqual((root / f"mpireg-{count}.bin").stat().st_size, 80 * 120 * 4)
             self.assertFalse((root / "mpireg.bin").exists())
@@ -462,7 +462,7 @@ class MpiMapToolsTests(unittest.TestCase):
 
     def test_shell_entry_points_have_valid_syntax(self):
         for script in (
-            TOOLS / "script_params" / "s04-mpi_map_setup.sh",
+            TOOLS / "script_params" / "x01-mpi_map_setup.sh",
             TOOLS / "script_analysis" / "a05-check_mpi_bifurcation.sh",
         ):
             subprocess.run(["sh", "-n", str(script)], check=True)

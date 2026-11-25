@@ -6,6 +6,17 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Map parameterization workflow names and order (DT-0193, 2026-11-26; branch-local proposal)
+
+Maintained template, Rhine, and Mekong `script_params/` wrappers now use
+`s01`–`s05` for the recommended standard run sequence, `i01` for the alternate
+ERA5-Land input matrix, and `x01`/`x02` for optional MPI/upstream-basin tools.
+Only the input-matrix → channel-parameter → bifurcation chain is a processing
+dependency; the guide explains supplementary products and independent analysis.
+The 21 renamed wrappers are byte-identical to their prior versions. Focused
+tests (24), Shell syntax, and diff checks pass. No map processing was run.
+See [VR-0237](../research/records/validation_runs/VR-0237.md).
+
 ### Shared Shell functions and interactive high-resolution map selection (DT-0192, 2026-11-26; branch-local proposal)
 
 The common Shell functions now have a public import entry point at

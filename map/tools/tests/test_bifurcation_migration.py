@@ -25,8 +25,8 @@ SAMPLE = ROOT / "map" / "mekong_15min"
 CODE_SOURCE = ROOT / "map" / "tools" / "code"
 LEGACY_FORTRAN = CODE_SOURCE / "legacy_fortran"
 LEGACY_SOURCE = ROOT / "map" / "src" / "src_param"
-S02_TEMPLATE = ROOT / "map" / "tools" / "script_params" / "s02-bifurcation.sh"
-S01_TEMPLATE = ROOT / "map" / "tools" / "script_params" / "s01-channel_params.sh"
+S02_TEMPLATE = ROOT / "map" / "tools" / "script_params" / "s03-bifurcation.sh"
+S01_TEMPLATE = ROOT / "map" / "tools" / "script_params" / "s02-channel_params.sh"
 MAP_INPUTS = (
     "params.txt", "nextxy.bin", "basin.bin", "bifori.txt",
     "lonlat.bin", "diminfo_test-1deg.txt",
@@ -85,7 +85,7 @@ class S02InputGuardTests(unittest.TestCase):
             for name in ("param_bif_set_params", "param_bif_set_basin"):
                 executable = code_dir / f"{name}.py"
                 executable.write_text("print('parameter program invoked')\nraise SystemExit(99)\n", encoding="ascii")
-            script = script_dir / "s02-bifurcation.sh"
+            script = script_dir / "s03-bifurcation.sh"
             shutil.copy2(S02_TEMPLATE, script)
             script.chmod(0o755)
 
@@ -108,7 +108,7 @@ class S02InputGuardTests(unittest.TestCase):
             code_dir.mkdir(parents=True)
             bin_dir.mkdir()
             install_shell_library(root)
-            script = script_dir / "s02-bifurcation.sh"
+            script = script_dir / "s03-bifurcation.sh"
             shutil.copy2(S02_TEMPLATE, script)
             source = script.read_text(encoding="utf-8")
             source = source.replace('"$RIVHGT" "$BIFPRM_CSV" "$BIFLAYER" "$DIMINFO" --map-dir ..',
@@ -203,14 +203,14 @@ class BifurcationMigrationTests(unittest.TestCase):
             shutil.copy2(SAMPLE / name, map_root / name)
         if include_depth:
             shutil.copy2(SAMPLE / "rivhgt.bin", map_root / "rivhgt.bin")
-        shutil.copy2(S02_TEMPLATE, map_root / "script_params" / "s02-bifurcation.sh")
-        shutil.copy2(S01_TEMPLATE, map_root / "script_params" / "s01-channel_params.sh")
+        shutil.copy2(S02_TEMPLATE, map_root / "script_params" / "s03-bifurcation.sh")
+        shutil.copy2(S01_TEMPLATE, map_root / "script_params" / "s02-channel_params.sh")
         shutil.copy2(self.legacy_dir / "set_bifparam", map_root / "src_param" / "set_bifparam")
         shutil.copy2(self.legacy_dir / "set_bif_basin", map_root / "src_param" / "set_bif_basin")
         return map_root
 
     def run_s02(self, map_root: Path, *args: str) -> subprocess.CompletedProcess[str]:
-        script = map_root / "script_params" / "s02-bifurcation.sh"
+        script = map_root / "script_params" / "s03-bifurcation.sh"
         return subprocess.run(
             [str(script), *args], cwd=self.root / "outside",
             env=dict(os.environ, CMF_V50_ROOT=str(self.root)),
@@ -218,7 +218,7 @@ class BifurcationMigrationTests(unittest.TestCase):
         )
 
     def enable_check_map(self, map_root: Path) -> None:
-        script = map_root / "script_params" / "s02-bifurcation.sh"
+        script = map_root / "script_params" / "s03-bifurcation.sh"
         script.write_text(
             script.read_text(encoding="utf-8").replace('CHECK_MAP=""', 'CHECK_MAP="--check-map"'),
             encoding="utf-8",
@@ -329,7 +329,7 @@ class BifurcationMigrationTests(unittest.TestCase):
         shutil.copy2(runoff, data_dir / "ELSE_GPCC_clm-1981-2010.one")
 
         s01 = subprocess.run(
-            [str(map_root / "script_params" / "s01-channel_params.sh")],
+            [str(map_root / "script_params" / "s02-channel_params.sh")],
             cwd=self.root / "outside", env=dict(os.environ, CMF_V50_ROOT=str(self.root)),
             text=True, capture_output=True, check=False,
         )

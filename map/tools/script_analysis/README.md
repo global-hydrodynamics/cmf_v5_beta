@@ -53,6 +53,6 @@ The `a01`–`a05` scripts show the working directory and print each command befo
 - [`a04-river_node_latlon.sh`](a04-river_node_latlon.sh) extracts connections in a configured geographic rectangle.
 - [`a05-check_mpi_bifurcation.sh`](a05-check_mpi_bifurcation.sh) checks an existing `mpireg-N.bin` and can write dropped pathways as CSV.
 
-These independent examples do not replace standard preparation workflows. `script_params/s06-subbasin.sh` and `s07-upbasin.sh` call the shared Python programs directly and write their intended standard/sample products. See the [parameter workflow guide](../script_params/README.md#river-network-analysis).
+These independent examples do not replace standard preparation workflows. `script_params/s05-subbasin.sh` and `x02-upbasin.sh` call the shared Python programs directly and write their intended standard/sample products. See the [parameter workflow guide](../script_params/README.md#river-network-analysis).
 
-The separate `analysis_mpi_region_color` utility writes optional `bsncol_mpi-N.bin` maps; s04 does not invoke it. See the [MPI map-preparation guide](../script_params/README.md#mpi-map-preparation).
+The separate `analysis_mpi_region_color` utility writes optional `bsncol_mpi-N.bin` maps; x01 does not invoke it. See the [MPI map-preparation guide](../script_params/README.md#mpi-map-preparation).

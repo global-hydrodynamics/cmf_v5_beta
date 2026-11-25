@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-WRAPPER = ROOT / "map" / "tools" / "script_params" / "s01-channel_params.sh"
+WRAPPER = ROOT / "map" / "tools" / "script_params" / "s02-channel_params.sh"
 
 
 class ChannelParamsWrapperTests(unittest.TestCase):
@@ -51,7 +51,7 @@ class ChannelParamsWrapperTests(unittest.TestCase):
                 + "\n".join(f"Path('../{output}').write_text('x')" for output in outputs) + "\n",
                 encoding="ascii",
             )
-        script = self.script_dir / "s01-channel_params.sh"
+        script = self.script_dir / "s02-channel_params.sh"
         script.write_bytes(WRAPPER.read_bytes())
         script.chmod(0o755)
         self.script = script
@@ -134,7 +134,7 @@ class ChannelParamsWrapperTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 2)
         self.assertIn("param_channel_set_merit_width.py", result.stderr)
-        self.assertIn("ERROR: s01-channel_params.sh FAILED", result.stderr)
+        self.assertIn("ERROR: s02-channel_params.sh FAILED", result.stderr)
         records = [line.split("|") for line in self.calls.read_text().splitlines()]
         self.assertEqual(len(records), 2)
 

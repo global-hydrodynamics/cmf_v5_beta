@@ -104,7 +104,7 @@ class WorkflowMessageTests(unittest.TestCase):
 
     def test_s01_success_and_failures_stop_at_first_middle_and_final_program(self) -> None:
         executables = ("param_channel_calc_outclm", "param_channel_calc_rivwth", "param_channel_set_merit_width")
-        script = self.install("s01-channel_params.sh", executables)
+        script = self.install("s02-channel_params.sh", executables)
         result = self.run_script(script)
         self.assert_success(result, script.name)
         self.assertEqual([line.split()[0] for line in self.calls()], list(executables))
@@ -124,7 +124,7 @@ class WorkflowMessageTests(unittest.TestCase):
 
     def test_s02_runs_generation_conversion_then_basin_merge_and_stops_on_each_failure(self) -> None:
         executables = ("param_bif_set_params", "param_bif_set_basin")
-        script = self.install("s02-bifurcation.sh", executables)
+        script = self.install("s03-bifurcation.sh", executables)
         result = self.run_script(script)
         self.assert_success(result, script.name)
         self.assertEqual([line.split()[0] for line in self.calls()], [
@@ -143,7 +143,7 @@ class WorkflowMessageTests(unittest.TestCase):
                 self.assertEqual(len(self.calls()), expected)
 
     def test_s02_forwards_configured_check_map_option(self) -> None:
-        script = self.install("s02-bifurcation.sh", (
+        script = self.install("s03-bifurcation.sh", (
             "param_bif_set_params", "param_bif_set_basin",
         ))
         source = script.read_text(encoding="utf-8")
@@ -160,7 +160,7 @@ class WorkflowMessageTests(unittest.TestCase):
         self.assertIn("--check-map", calls[2])
 
     def test_s03_success_and_program_failure(self) -> None:
-        script = self.install("s03-generate_inpmat.sh", ("param_inpmat_generate",))
+        script = self.install("s01-inpmat_default.sh", ("param_inpmat_generate",))
         result = self.run_script(script)
         self.assert_success(result, script.name)
         self.assertIn("[STEP 1/1]", result.stdout)
@@ -218,11 +218,11 @@ class WorkflowMessageTests(unittest.TestCase):
             ["region_cut_domain", "region_cut_bifway"],
         )
 
-    def test_s04_success_cleans_visible_intermediate_and_reports_connectivity_failure(self) -> None:
+    def test_x01_success_cleans_visible_intermediate_and_reports_connectivity_failure(self) -> None:
         executables = (
             "param_mpi_set_basin", "param_mpi_set_region", "analysis_check_mpi_bifurcation",
         )
-        script = self.install("s04-mpi_map_setup.sh", executables)
+        script = self.install("x01-mpi_map_setup.sh", executables)
         result = self.run_script(script)
         self.assert_success(result, script.name)
         self.assertIn("[STEP 5/5]", result.stdout)
@@ -251,8 +251,8 @@ class WorkflowMessageTests(unittest.TestCase):
         self.assertTrue((self.map_root / "bifbsn_mpi.nc").exists())
         self.assertEqual(self.calls()[-1].split()[0], "analysis_check_mpi_bifurcation")
 
-    def test_s04_partition_loop_failure_stops_later_counts_and_cleans_intermediate(self) -> None:
-        script = self.install("s04-mpi_map_setup.sh", (
+    def test_x01_partition_loop_failure_stops_later_counts_and_cleans_intermediate(self) -> None:
+        script = self.install("x01-mpi_map_setup.sh", (
             "param_mpi_set_basin", "param_mpi_set_region", "analysis_check_mpi_bifurcation",
         ))
         result = self.run_script(script, "param_mpi_set_region:8")
@@ -262,8 +262,8 @@ class WorkflowMessageTests(unittest.TestCase):
         self.assertNotIn("analysis_check_mpi_bifurcation", "\n".join(self.calls()))
         self.assertTrue((self.map_root / "bifbsn_mpi.nc").exists())
 
-    def test_s04_forwards_check_map_only_to_basin_aggregation(self) -> None:
-        script = self.install("s04-mpi_map_setup.sh", (
+    def test_x01_forwards_check_map_only_to_basin_aggregation(self) -> None:
+        script = self.install("x01-mpi_map_setup.sh", (
             "param_mpi_set_basin", "param_mpi_set_region", "analysis_check_mpi_bifurcation",
         ))
         source = script.read_text(encoding="utf-8")

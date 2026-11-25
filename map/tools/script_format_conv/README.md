@@ -36,13 +36,13 @@ files and unrelated files are preserved.
 | `s02-nc2bin.sh` | Standard map NetCDF → `binary/*.bin` |
 | `s03-nc2bin_highres.sh` | High-resolution NetCDF → `binary/<resolution>/*.bin` |
 | `s04-nc2bin_inpmat.sh` | `inpmat_<ROFFTAG>.nc` → `binary/inpmat_<ROFFTAG>.bin` |
-| `s08-sample_nc2bin.sh` | s06 sample NetCDF maps → `binary/*-sample.bin` |
+| `s08-sample_nc2bin.sh` | s05 sample NetCDF maps → `binary/*-sample.bin` |
 | `s09-write_ctl.sh` | Generate registered CTLs beside Binary files |
 | `s11-list_bin.sh` | List registered Binary products for NetCDF migration |
 | `s12-bin2nc.sh` | Standard `binary/*.bin` → map-root NetCDF |
 | `s13-bin2nc_highres.sh` | High-resolution Binary → resolution-directory NetCDF |
 | `s14-bin2nc_inpmat.sh` | Binary INPMAT → `inpmat_<ROFFTAG>.nc` |
-| `s18-sample_bin2nc.sh` | `binary/*-sample.bin` → s06 sample NetCDF maps |
+| `s18-sample_bin2nc.sh` | `binary/*-sample.bin` → s05 sample NetCDF maps |
 | `s21-nc2cog.sh` | NetCDF → `COG/` GeoTIFFs |
 
 Numbering groups reflect direction: `s0X` covers NetCDF-based operations and
@@ -86,13 +86,13 @@ can be used to limit conversions. Existing outputs are replaced by default;
 missing diminfo files into `binary/` while retaining a format-specific INPMAT
 descriptor already present there.
 
-## s06 sample map conversions
+## s05 sample map conversions
 
-`script_params/s06-subbasin.sh` creates `subbsn-sample` and `subcol-sample`.
+`script_params/s05-subbasin.sh` creates `subbsn-sample` and `subcol-sample`.
 Use `s08-sample_nc2bin.sh` to export those NetCDF products to `binary/`, and
 `s18-sample_bin2nc.sh` to restore them. These scripts use the registered
 `subbsn.bin` and `subcol.bin` layouts while retaining the `-sample` output
-names. For the s06 NetCDF variable names (`subbsn-sample` / `subcol-sample`),
+names. For the s05 NetCDF variable names (`subbsn-sample` / `subcol-sample`),
 s08 supplies the corresponding source-variable alias while preserving the
 registered Binary type and dimensions. s18 writes the registered `subbsn` or
 `subcol` variable into the same `-sample.nc` filename, matching the existing

@@ -3,7 +3,7 @@
 This workflow creates a reusable runoff climatology **on the runoff product's
 own grid**. It reads no river map, `diminfo`, Input Matrix or land/sea mask.
 Mean runoff [mm/s] is later mapped to each river catchment by
-[`s01-channel_params.sh`](../script_params/s01-channel_params.sh), whose mean
+[`s02-channel_params.sh`](../script_params/s02-channel_params.sh), whose mean
 discharge drives channel-width/depth estimates. That later stage owns the
 map-specific Input Matrix. Nothing here copies results into `map/data/`.
 

@@ -154,9 +154,9 @@ conversion nor map generation.
 
 ### Subbasin preparation and threshold meaning
 
-The reusable [s06 subbasin workflow](../../map/tools/script_params/s06-subbasin.sh)
+The reusable [s05 subbasin workflow](../../map/tools/script_params/s05-subbasin.sh)
 calls [`analysis_subbasin.F90`](../../map/tools/code/analysis_subbasin.F90).
-The [Mekong example](../../map/mekong_15min/script_params/s06-subbasin.sh) uses
+The [Mekong example](../../map/mekong_15min/script_params/s05-subbasin.sh) uses
 editable defaults `AREA_THRESHOLD1_KM2=30000` and `AREA_THRESHOLD2_KM2=5000`,
 and writes stable `subbsn-sample.bin` / `subcol-sample.nc` filenames. Stage 1
 retains the existing large-area segmentation; Stage 2 only assigns additional

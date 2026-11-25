@@ -83,7 +83,7 @@ descriptor already present there.
 
 ## s06 sample map conversions
 
-`script_params/s06-subbasin.sh` creates `subbsn-sample` and `subcol-sample`.
+`script_params/s05-subbasin.sh` creates `subbsn-sample` and `subcol-sample`.
 Use `s08-sample_nc2bin.sh` to export those NetCDF products to `binary/`, and
 `s18-sample_bin2nc.sh` to restore them. These scripts use the registered
 `subbsn.bin` and `subcol.bin` layouts while retaining the `-sample` output

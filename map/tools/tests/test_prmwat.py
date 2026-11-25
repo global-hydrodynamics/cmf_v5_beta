@@ -137,8 +137,8 @@ class PermanentWaterTests(unittest.TestCase):
             "Path('called.args').write_text(sys.argv[1] + '\\n')\n",
             encoding="ascii",
         )
-        wrapper = work / "s05-permanent_water.sh"
-        template = (ROOT / "map/tools/script_params/s05-permanent_water.sh").read_text()
+        wrapper = work / "s04-permanent_water.sh"
+        template = (ROOT / "map/tools/script_params/s04-permanent_water.sh").read_text()
         wrapper.write_text(template)
         cases = [
             ((tag,), "\n", tag) for tag in ("1sec", "3sec", "5sec", "15sec", "30sec", "1min")

@@ -16,7 +16,7 @@ For `output_variables.csv`, `alias_of` is the authoritative relationship between
 
 The standard global ELSE_GPCC mapping uses `diminfo_test-1deg.txt` and
 `inpmat_test-1deg.bin`. The configurable example is now `ERA5land_global`,
-matching `script_params/s03-generate_inpmat.sh` and the 3600 × 1801 global
+matching `script_params/s01-inpmat_default.sh` and the 3600 × 1801 global
 0.1-degree grid of `inp/repo-ERA5land-glb_2day/`. Its pair is
 `diminfo_ERA5land_global.txt` / `inpmat_ERA5land_global.bin`; the old E2O
 example is no longer registered. Each model map requires a separate pair.

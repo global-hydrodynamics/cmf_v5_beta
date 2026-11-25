@@ -131,14 +131,14 @@ class SharedShellFunctionsTests(unittest.TestCase):
         )
 
     def test_s03_wrapper_passes_shared_selection_to_python(self) -> None:
-        result = self.run_wrapper("s03-generate_inpmat.sh", "3sec")
+        result = self.run_wrapper("s01-inpmat_default.sh", "3sec")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         call = (self.root / "python-call.txt").read_text().splitlines()
         self.assertTrue(call[0].endswith("param_inpmat_generate.py"))
         self.assertEqual(call[1], "3sec")
 
-    def test_s05_wrapper_passes_shared_selection_to_python(self) -> None:
-        result = self.run_wrapper("s05-permanent_water.sh", "3sec")
+    def test_s04_wrapper_passes_shared_selection_to_python(self) -> None:
+        result = self.run_wrapper("s04-permanent_water.sh", "3sec")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         call = (self.root / "python-call.txt").read_text().splitlines()
         self.assertTrue(call[0].endswith("param_water_calc_prmwat.py"))

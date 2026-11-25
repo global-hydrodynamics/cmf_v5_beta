@@ -40,5 +40,5 @@ and copies required geometry/text metadata. High-resolution operations use
 `1min/location.txt` and store outputs under `binary/1min/` or `1min/`.
 
 `s08` and `s18` convert the `subbsn-sample` and `subcol-sample` products created
-by `script_params/s06-subbasin.sh`. For the complete workflow and supported
+by `script_params/s05-subbasin.sh`. For the complete workflow and supported
 outputs, see [`map/tools/script_format_conv/README.md`](../../tools/script_format_conv/README.md).

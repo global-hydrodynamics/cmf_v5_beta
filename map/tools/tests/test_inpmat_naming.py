@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-WRAPPER = ROOT / "map" / "tools" / "script_params" / "s03-generate_inpmat.sh"
+WRAPPER = ROOT / "map" / "tools" / "script_params" / "s01-inpmat_default.sh"
 
 
 class InputMatrixNamingTests(unittest.TestCase):

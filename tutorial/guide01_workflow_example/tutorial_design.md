@@ -236,7 +236,7 @@ mask and treatment of catchments crossing its boundary remain open.
 ### Permanent water
 
 The current `prmwat` product is a coarse, per-catchment area in m², not a
-high-resolution pixel mask. `map/tools/script_params/s05-permanent_water.sh`
+high-resolution pixel mask. `map/tools/script_params/s04-permanent_water.sh`
 and `param_water_calc_prmwat.F90` document how it is aggregated. The existing
 1-minute downscaler instead uses high-resolution `rivwth` values as its
 permanent-water classification and applies a minimum 0.1 m depth at pixels
