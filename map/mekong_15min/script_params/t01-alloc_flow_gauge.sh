@@ -17,12 +17,7 @@ HIRES_TAG=""                            # Empty selects the coarsest installed N
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 cmf_check_init "Allocate GRDC flow gauges to CaMa-Flood catchments"
-if [ -z "$HIRES_TAG" ]; then
-    for tag in 1min 30sec 15sec 5sec 3sec 1sec; do
-        if [ -d "../$tag" ]; then HIRES_TAG=$tag; break; fi
-    done
-fi
-[ -n "$HIRES_TAG" ] || { printf 'No high-resolution map directory found in the map root.\n' >&2; exit 1; }
+HIRES_TAG=$(cmf_select_hires_tag "$HIRES_TAG" --single-area)
 cmf_check_step 1 1 "Allocate GRDC gauges using the $HIRES_TAG map"
 "$PYTHON_CMD" "$CODE_DIR/allocate_flow_gauge.py" "$GAUGE_IN" "$GAUGE_MODE" \
     "$HIRES_TAG" --map-dir .. --output-dir ..

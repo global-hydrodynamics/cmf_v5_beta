@@ -72,6 +72,15 @@ proposed for confirmation; an unset value proposes the coarsest available tag;
 declining allows selection from the available list. Invalid input and EOF fail
 instead of silently choosing another map.
 
+The public calls are `cmf_select_hires_tag "$HIRES_TAG"` for operations that
+may process multiple `location.txt` areas, and
+`cmf_select_hires_tag "$HIRES_TAG" --single-area` for allocation workflows.
+Single-area mode checks that `location.txt` declares exactly one area, its
+identifier matches the selected tag, and at least one `<TAG>.<VARIABLE>.nc` or
+`.bin` layer exists. This is a layout check, not validation of required layer
+contents; the Python reader performs scientific-input checks. The `.bin` form
+keeps explicitly selected legacy Binary maps eligible.
+
 ## Tool Catalog for AI Agents
 
 Before developing a new utility, inspect [`tools_list.csv`](tools_list.csv) and

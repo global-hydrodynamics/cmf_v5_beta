@@ -132,6 +132,8 @@ This planning phase created the project overview and a branch-local status regis
 
 **Current v5 design contract, verified from source unless explicitly marked maintainer context.** A high-resolution `location.txt` may describe one or several areas. The number of areas accepted depends on the operation; it is not a property of the map format that every tool must impose identically.
 
+**Maintainer-confirmed layout convention:** the coarsest high-resolution layer in a standard CaMa-Flood map is designed as a single-area, non-tiled river-network representation; finer layers may be tiled. Single-area layer files use `<TAG>.<VARIABLE>.nc` (or the corresponding `.bin` in an explicitly selected legacy Binary map), while tiled layers use geographic area identifiers such as `n30e120.<VARIABLE>.nc`. Allocation workflows require one area and use the shared `cmf_select_hires_tag "$HIRES_TAG" --single-area` selector. Input-matrix and permanent-water workflows retain multi-area selection through `cmf_select_hires_tag "$HIRES_TAG"`. Shell checks only the structural layout and filename convention; Python remains responsible for validating all required scientific layers and preserving the allocation reader's one-area restriction.
+
 | Workflow | Current high-resolution area contract | Source evidence | Status |
 | --- | --- | --- | --- |
 | Flow-gauge allocation | Exactly one area; v5 reports an error for any other count. | `map/tools/code/mod_allocation_map_io.F90:read_allocation_hires`; regression in `map/tools/tests/test_allocation_regression.py`. | Intentional design contract, not a missing feature for the current migration. |

@@ -151,9 +151,9 @@ The Python dam-parameter estimation workflow under legacy `map/src/src_dam/` is 
 
 ## Allocation workflows
 
-The three optional wrappers use shared `allocate_*.py` programs in `map/tools/code/`. Copy the wrappers into a map-local `script_params/` directory, configure the input path, then run (the coarsest available `HIRES_TAG` is selected automatically) from that `script_params/` directory. Each allocation program intentionally requires exactly one high-resolution river-network area; the shared reader reports an error for multi-area layouts. This preserves the single-network topology/catchment matching contract, not a universal limit on map resolution. `HIRES_TAG` is explicit and does not fall back between `1min` and `15sec`.
+The three optional wrappers use shared `allocate_*.py` programs in `map/tools/code/`. Copy the wrappers into a map-local `script_params/` directory, configure the input path, then run them from that directory. They call `cmf_select_hires_tag "$HIRES_TAG" --single-area`, which recommends the coarsest compatible resolution in `1min`, `30sec`, `15sec`, `5sec`, `3sec`, `1sec` order and allows an interactive alternative. It checks the structural single-area `location.txt` and `<TAG>.<VARIABLE>.nc`/`.bin` naming convention; the Python reader validates scientific layers and independently rejects any map declaring multiple areas. Use `--map-format binary` on the Python invocation only for a legacy Binary map. This single-network topology/catchment contract is not a universal limit on map resolution.
 
-The v4.30 distribution package includes a single-area global `glb_15min/1min` layer and a single-area Japan `tej_01min/15sec` layer, which the maintainer identifies as the intended CaMa-Flood allocation inputs. These are distinct from the global 30-arcsec MERIT Hydro and Japan 5-arcsec J-FlwDir maps used for the first-stage allocation described by the AllocRiverGauge manual. See the [area-handling rationale and validation plan](../../../docs/map_data_tools_plan.md#high-resolution-area-handling-contract).
+The maintainer-confirmed map convention is that the coarsest high-resolution layer is a single-area, non-tiled river-network representation; finer layers may be tiled. Single-area files use `<TAG>.<VARIABLE>.nc`; tiled files use geographic area identifiers such as `n30e120.<VARIABLE>.nc`. Legacy Binary maps use the same basename with `.bin`. The v4.30 distribution package includes a single-area global `glb_15min/1min` layer and a single-area Japan `tej_01min/15sec` layer, which the maintainer identifies as intended CaMa-Flood allocation inputs. These are distinct from the global 30-arcsec MERIT Hydro and Japan 5-arcsec J-FlwDir maps used for first-stage allocation. See the [area-handling rationale and validation plan](../../../docs/map_data_tools_plan.md#high-resolution-area-handling-contract).
 
 The input tables are expected to have already been matched and reviewed on the high-resolution MERIT Hydro network using [AllocRiverGauge](../../../doc/Manual_AllocateRiverGauges.docx). CaMa-Flood performs the second-stage mapping from those allocated coordinates and drainage areas to its own unit catchments. This consistency rationale does not establish that each individual station or dam is correct. Inspect the outputs before using them in analysis.
 
@@ -225,8 +225,9 @@ and EOF fail without starting processing. The selected value is returned to
 the wrapper, which passes it to the existing Python program.
 
 `t01-alloc_flow_gauge.sh`, `t02-alloc_dams.sh` and `t03-alloc_level_gauge.sh`
-automatically use the same coarsest-first order, displaying the chosen path.
-The coarser grid is preferred for domain-wide allocation; directory presence
-alone does not establish full coverage. The existing Fortran checks still
-apply, including the single-area requirement. A Japan map with only `15sec/`
-selects `15sec`. No numerical or allocation algorithm is changed.
+use the same resolution order with the selector's `--single-area` filter.
+Only layouts whose `location.txt` declares one area and whose layer filenames
+use the resolution tag are offered. Python validates the required data and
+retains the single-area restriction. Legacy Binary maps remain usable when
+Binary is explicitly selected for the Python command. No allocation algorithm
+is changed.

@@ -6,6 +6,18 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Single-area high-resolution selection and allocation NetCDF I/O (DT-0194, 2026-11-26; branch-local proposal)
+
+The three maintained allocation wrappers in the shared template, Rhine, and
+Mekong now use `cmf_select_hires_tag "$HIRES_TAG" --single-area`. The selector
+checks the one-row `location.txt` structure and resolution-prefixed NetCDF or
+legacy Binary filenames; Python continues to validate required scientific
+layers and reject multi-area inputs. The existing Python readers already
+resolved their logical `.bin` paths to standard NetCDF, so no allocation
+algorithm or reader change was needed. Focused selector tests (20), real Mekong
+NetCDF allocation parity tests (3), legacy allocation regression (1), Shell
+syntax, and diff checks pass. See [VR-0238](../research/records/validation_runs/VR-0238.md).
+
 ### Map parameterization workflow names and order (DT-0193, 2026-11-26; branch-local proposal)
 
 Maintained template, Rhine, and Mekong `script_params/` wrappers now use

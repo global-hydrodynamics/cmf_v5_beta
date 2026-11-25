@@ -31,6 +31,14 @@ Maintained Shell preprocessing workflows are launched from their corresponding m
 
 The POSIX implementation at `tools/shell_functions/cmf_check_shell_error.sh` defines `cmf_check_init`, `cmf_check_step`, and `cmf_check_success`; the public entry point at `tools/cmf_shell_functions.sh` also loads `cmf_select_hires_tag`. Each workflow checks that `CMF_V50_ROOT` is set before sourcing the public entry point. The channel-parameter workflow initializes reporting, marks each processing step, and prints success after all three programs finish.
 
+`cmf_select_hires_tag "$HIRES_TAG"` is the standard selector for workflows
+that allow multiple `location.txt` areas. Allocation wrappers use
+`cmf_select_hires_tag "$HIRES_TAG" --single-area`; this checks the one-area
+layout and `<TAG>.<VARIABLE>.nc` naming (or `.bin` for explicitly selected
+legacy maps). These Shell checks are structural only. Allocation Python
+readers validate required map variables and continue to reject multi-area
+inputs.
+
 Keep the `CMF_V50_ROOT` check in each calling workflow immediately before sourcing. Errors before loading cannot be handled by the library. Sourcing the file alone only defines functions; traps are installed by `cmf_check_init`. On failure the exit handler prints the script name, last step, and original status, then exits with that status. HUP, INT, and TERM use statuses 129, 130, and 143. Successful completion does not print an error banner.
 
 For example, from a map-local `script_params/` directory, the channel workflow keeps the current directory and calls each program directly with required inputs:

@@ -3,6 +3,7 @@
 import csv
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -204,21 +205,25 @@ class AllocationRegressionTest(unittest.TestCase):
                 "t02-alloc_dams.sh": ('GRanD_allocated.csv', 'testgrand.csv'),
                 "t03-alloc_level_gauge.sh": ('MLIT_LevelGauge_allocated.csv', 'testlevel.csv'),
             }
+            wrapper_outputs = {
+                "t01-alloc_flow_gauge.sh": (("flow_multi.txt", "gauge_alloc.txt"),),
+                "t02-alloc_dams.sh": (("dam_river.txt", "dam_alloc_river.txt"),
+                                      ("dam_small.txt", "dam_alloc_small.txt"),
+                                      ("dam_error.txt", "dam_alloc_error.txt")),
+                "t03-alloc_level_gauge.sh": (("level_gauge.txt", "gauge_alloc.txt"),),
+            }
             for script_name, (default_name, fixture_name) in wrapper_inputs.items():
                 script = TOOLS / "script_params" / script_name
                 text = script.read_text(encoding="utf-8").replace(default_name, fixture_name)
                 copied = wrapper_scripts / script_name
                 copied.write_text(text, encoding="utf-8")
                 copied.chmod(0o755)
-                result = subprocess.run([str(copied)], cwd=wrapper_root, capture_output=True,
-                                        text=True, errors="replace")
+                result = subprocess.run([str(copied)], cwd=wrapper_scripts, capture_output=True,
+                                        input="yes\n", text=True, errors="replace",
+                                        env={**os.environ, "PATH": f"{REPO / '.venv' / 'bin'}:{os.environ['PATH']}"})
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            for golden, output in (("flow_multi.txt", "GRDC_alloc.txt"),
-                                   ("dam_river.txt", "GRanD_river.txt"),
-                                   ("dam_small.txt", "GRanD_small.txt"),
-                                   ("dam_error.txt", "GRanD_error.txt"),
-                                   ("level_gauge.txt", "MLIT_levelgauge.txt")):
-                assert_output_equivalent(self, GOLDEN / golden, wrapper_map / output)
+                for golden, output in wrapper_outputs[script_name]:
+                    assert_output_equivalent(self, GOLDEN / golden, wrapper_map / output)
 
             missing_tag = subprocess.run([str(programs["flow_gauge"][1]), str(grdc), "multi"],
                                          cwd=script_dir, capture_output=True, text=True, errors="replace")

@@ -41,9 +41,18 @@ The new programs run from map-local `script_params/` and read map files from `..
 
 | Workflow | V5 command-line arguments | Required map files | Wrapper and persistent outputs |
 | --- | --- | --- | --- |
-| Flow gauge | `allocate_flow_gauge GaugeListFile multi\|single HIRES_TAG` | `params.txt`, `uparea.bin`, `nextxy.bin`, plus `<HIRES_TAG>/location.txt`, `.uparea.bin`, `.catmxy.bin`, `.downxy.bin` | `t01-alloc_flow_gauge.sh` writes `GRDC_alloc.txt` |
-| Dam/reservoir | `allocate_dam DamListFile HIRES_TAG` | Flow-gauge inputs plus `ctmare.bin` | `t02-alloc_dams.sh` writes `GRanD_river.txt`, `GRanD_small.txt`, and `GRanD_error.txt` |
-| Water-level gauge | `allocate_level_gauge GaugeListFile HIRES_TAG` | Flow-gauge inputs plus `elevtn.bin` and `<HIRES_TAG>/<HIRES_TAG>.elevtn.bin` | `t03-alloc_level_gauge.sh` writes `MLIT_levelgauge.txt` |
+| Flow gauge | `allocate_flow_gauge GaugeListFile multi\|single HIRES_TAG` | Standard NetCDF: `params.txt`, `uparea.nc`, `nextxy.nc`, plus `<HIRES_TAG>/location.txt`, `<HIRES_TAG>.uparea.nc`, `<HIRES_TAG>.catmxy.nc`, `<HIRES_TAG>.downxy.nc`. Explicit legacy Binary mode uses the corresponding `.bin` layers. | `t01-alloc_flow_gauge.sh` writes `GRDC_alloc.txt` |
+| Dam/reservoir | `allocate_dam DamListFile HIRES_TAG` | Flow-gauge inputs plus `ctmare.nc` (or `ctmare.bin` in explicit Binary mode). | `t02-alloc_dams.sh` writes `GRanD_river.txt`, `GRanD_small.txt`, and `GRanD_error.txt` |
+| Water-level gauge | `allocate_level_gauge GaugeListFile HIRES_TAG` | Flow-gauge inputs plus `elevtn.nc` and `<HIRES_TAG>/<HIRES_TAG>.elevtn.nc` (or corresponding `.bin` layers in explicit Binary mode). | `t03-alloc_level_gauge.sh` writes `MLIT_levelgauge.txt` |
+
+The maintained wrappers select a high-resolution tag with
+`cmf_select_hires_tag "$HIRES_TAG" --single-area`. It recommends the coarsest
+compatible layout and permits an interactive alternative. Shell checks
+`location.txt` and resolution-prefixed layer filenames; the Python reader
+validates required map data and retains the one-area restriction. Standard
+operation uses NetCDF. Legacy Binary is available only when explicitly selected
+with the allocation CLI's `--map-format binary` option; there is no silent
+fallback.
 
 The wrappers move every program output into the map root. In particular, the dam error table is retained as `GRanD_error.txt`, unlike the legacy v4 wrapper, which left it in its working directory.
 
