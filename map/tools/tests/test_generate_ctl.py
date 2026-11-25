@@ -105,18 +105,18 @@ class GenerateCtlTests(unittest.TestCase):
         result = generate_directory(self.map_dir, self.registry, input_file=Path('missing.bin'), variables=['upbasin'])
         self.assertEqual(result.failed, 1)
 
-    def test_s99_default_variants_and_single_input_cli(self):
+    def test_format_conversion_ctl_wrapper_default_variants_and_single_input_cli(self):
         import shutil
         import subprocess
         root = Path(__file__).resolve().parents[3]
         work = self.root/'workflow'
         code = work/'map/tools/code'
-        scripts = work/'map/testmap/script_params'
+        scripts = work/'map/testmap/script_format_conv'
         code.mkdir(parents=True)
         scripts.mkdir(parents=True)
         (work/'variable_table').mkdir()
         shutil.copy2(root/'map/tools/code/generate_ctl.py', code/'generate_ctl.py')
-        shutil.copy2(root/'map/tools/script_params/s99-write_ctl.sh', scripts/'s99-write_ctl.sh')
+        shutil.copy2(root/'map/tools/script_format_conv/s99-write_ctl.sh', scripts/'s99-write_ctl.sh')
         write_registry(work/'variable_table/map_variables.csv', [
             row('mpireg.bin','mpireg','int32'), row('subbsn.bin','subbsn','int32'),
             row('subcol.bin','subcol','int32'), row('upbasin.bin','upbasin','int32')])

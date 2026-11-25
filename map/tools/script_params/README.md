@@ -27,10 +27,11 @@ The v5 parameter and map-preparation workflows listed below are implemented. Num
 | `s05-permanent_water.sh` | Aggregate high-resolution permanent-water area by unit catchment. | Implemented |
 | `s06-subbasin.sh` | Generate standard optional subbasin IDs and display colors using one or two configured upstream-area-increase thresholds. | Implemented |
 | `s07-upbasin.sh` | Use the largest valid allocated GRDC station for river lookup and upstream-mask generation. | Implemented |
-| `s99-write_ctl.sh` | Final optional step: generate GrADS CTLs for existing registered base-map and high-resolution binaries. | Implemented |
 | `t01-alloc_flow_gauge.sh`, `t02-alloc_dams.sh`, `t03-alloc_level_gauge.sh` | Flow-gauge, reservoir, and water-level-gauge mapping from MERIT Hydro to CaMa-Flood catchments. | Implemented |
 
 Independent diagnostics belong in `script_analysis/`. No `script_allocate/` directory is part of the approved design.
+
+CTL generation is separate from this NetCDF-first workflow; NetCDF products do not need GrADS CTLs. For optional legacy Binary visualization, see the [map-tools CTL guide](../README.md#grads-ctl-files).
 
 Run only the workflows required for a map. The common dependency chain is s01 before s02, and s02 before s04; s03 creates a separately configured runoff-grid matrix and is independent of s01 when its own `ROFFTAG` is used. s05 requires base-map and selected high-resolution inputs. s06 is an optional map analysis. s07 requires a valid `GRDC_alloc.txt`, normally produced by t01. The t01-t03 allocation workflows are optional and each uses its configured external allocation CSV.
 
@@ -111,14 +112,6 @@ Run the wrapper from any directory after copying it into the target map:
 
 The programs read standard map files `params.txt`, `basin.nc`, `bifprm.csv`, and `nextxy.nc`; no package-only global map is required. Basin aggregation and region assignment run from map-local `script_params/`, while the connectivity analysis runs from the map root. A successful map-generation run does not establish scientific validity of the partition or of a subsequent simulation.
 
-## GrADS CTL generation
-
-`s99-write_ctl.sh` is an optional legacy Binary utility; it is not part of the normal NetCDF workflow and does not create or modify map data.
-
-Copy [`s99-write_ctl.sh`](s99-write_ctl.sh) into a map-local `script_params/` directory and run it there. It prefers the dedicated `<map>/binary/` tree and scans only existing `.bin` files in that tree and immediate high-resolution children with `location.txt`. For a legacy pre-`binary/` map-root layout, it scans the root only when `nextxy.bin` exists and `nextxy.nc` does not. A NetCDF-only map without `binary/` is skipped successfully. The shared `generate_ctl.py` creates CTLs only for registered files whose dimensions and binary sizes validate against `params.txt` or `location.txt`.
-
-The wrapper supports `--dry-run` and `--no-overwrite`; existing CTLs are replaced by default. It does not create, modify, or infer binary map data. For the optional MPI basin diagnostic, it creates `check_bif_bsnmod_mpi.ctl` only when `check_bif_bsnmod_mpi.nc` exists; the registry defines its two variables in record order. See the [map-tools guide](../README.md#grads-ctl-files) for registry, missing-value, and format details.
-
 ## General-purpose runoff input matrix
 
 [`s03-generate_inpmat.sh`](s03-generate_inpmat.sh) invokes `param_inpmat_generate` to create a matrix for a user-selected regular runoff grid. Its standard example uses the ERA5-Land global 0.1-degree grid: 3600 × 1801 cells, west/east edges -180.05/179.95 degrees, north/south edges 90.05/-90.05 degrees, and north-to-south row order. These half-cell edges match the inspected converted `inp/repo-ERA5land-glb_2day/runoff_200001.nc`; source and converted coordinate arrays are identical. Edit these values to match the runoff data; they describe that input grid, not the CaMa-Flood map grid.
@@ -184,7 +177,7 @@ Both copies of `s06-subbasin.sh` write `subbsn-sample.nc` and `subcol-sample.nc`
 
 [`s07-upbasin.sh`](s07-upbasin.sh) requires map-local `GRDC_alloc.txt` (normally produced by `t01-alloc_flow_gauge.sh`). It filters unallocated/invalid records, chooses the largest positive `area_CaMa` (first file row wins a tie), and uses that row's primary `ix1,iy1` cell. It writes `grdc_station_selection.txt`, `grdc_river_info.txt`, and `upbasin-<GRDC_ID>.nc`; repeated execution overwrites the selected station's same-named mask and reports. The Mekong sample is `upbasin-2569002.nc`. The primary-cell upstream mask is not guaranteed to represent the complete aggregate drainage area of a gauge mapped to multiple catchments, so do not treat its cell count/area as equal to `area_CaMa` or observed drainage area.
 
-These are independent map-preparation recipes; neither requires the other. They create optional diagnostics, not simulation inputs. Afterward, `s99-write_ctl.sh` can create CTLs for registered products. See [`script_analysis/README.md`](../script_analysis/README.md) for arbitrary-cell analysis that keeps exploratory outputs separate from standard names. User-selected filenames need an additional registry entry to use automatic CTL generation.
+These are independent map-preparation recipes; neither requires the other. They create optional diagnostics, not simulation inputs. See [`script_analysis/README.md`](../script_analysis/README.md) for arbitrary-cell analysis that keeps exploratory outputs separate from standard names.
 
 ### Standard ELSE_GPCC grid tag
 
@@ -218,39 +211,3 @@ The coarser grid is preferred for domain-wide allocation; directory presence
 alone does not establish full coverage. The existing Fortran checks still
 apply, including the single-area requirement. A Japan map with only `15sec/`
 selects `15sec`. No numerical or allocation algorithm is changed.
-
-
-### Standard definitions for CTL variants
-
-The shared Python generator accepts `--input FILE.bin` with
-`--reference-binary registered.bin` or `--variables name[,name...]`. The input
-is a filename relative to `--map-dir`, or an absolute path directly inside it.
-Explicit selection requires one input so a layout cannot be applied accidentally
-to unrelated binaries. Reference filenames are exact registered keys; variable
-names must identify one complete base-file definition. For a single canonical
-variable, its same-name `.bin` row is preferred; ambiguous choices fail rather
-than guessing. Missing inputs/references, invalid names and size/layout conflicts
-fail with nonzero status.
-
-CTL describes the whole Binary record sequence: `--variables nexty` resolves the
-complete `nextxy.nc` layout, retaining nextx and nexty in order. It does not
-remove unselected records or change Binary offsets. Dtype, dimensions, sentinels
-and labels remain in CSV; CTL dset/output retain the actual input filename.
-Existing --dry-run and overwrite/no-overwrite behavior is preserved.
-
-From a map-local script_params/ or script_format_conv/:
-
-```sh
-./s99-write_ctl.sh --input subcol-sample.bin --variables subcol
-./s99-write_ctl.sh --input subbsn-sample.bin --reference-binary subbsn.bin --dry-run
-./s99-write_ctl.sh --input nextxy-experiment.bin --reference-binary nextxy.bin
-```
-
-Default s99 still scans registered existing files. Positive numbered mpireg-N.bin
-now automatically uses mpireg.bin in the generator. Its top-level VARIANTS Shell
-setting adds existing subbsn-sample.bin:subbsn.bin, subcol-sample.bin:subcol.bin and
-upbasin-*.bin:upbasin.bin products; adjust these concrete names/patterns for other
-experiments. They can first appear as SKIP in the ordinary registry scan and
-are then handled in the explicit variant pass. No absent Binary is generated.
-High-resolution handling is unchanged: only existing .bin inputs produce CTLs;
-NetCDF-only *_nc directories have no Binary CTLs to write.

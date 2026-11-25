@@ -210,7 +210,7 @@ class MpiMapToolsTests(unittest.TestCase):
             ctl_registry_dir = root / "ctl_repository" / "variable_table"
             ctl_code = ctl_map_dir / "tools" / "code"
             ctl_target = ctl_map_dir / "mekong_15min"
-            ctl_script_dir = ctl_target / "script_params"
+            ctl_script_dir = ctl_target / "script_format_conv"
             ctl_code.mkdir(parents=True)
             ctl_script_dir.mkdir(parents=True)
             ctl_registry_dir.mkdir(parents=True)
@@ -220,7 +220,7 @@ class MpiMapToolsTests(unittest.TestCase):
             shutil.copy2(MAP / "params.txt", ctl_target / "params.txt")
             shutil.copy2(diagnostic, ctl_target / diagnostic.name)
             shutil.copy2(v5_map / "bifcol_mpi.bin", ctl_target / "bifcol_mpi.bin")
-            shutil.copy2(TOOLS / "script_params" / "s99-write_ctl.sh", ctl_script_dir)
+            shutil.copy2(TOOLS / "script_format_conv" / "s99-write_ctl.sh", ctl_script_dir)
             ctl_result = subprocess.run(
                 ["sh", str(ctl_script_dir / "s99-write_ctl.sh")],
                 cwd=root,
@@ -238,10 +238,10 @@ class MpiMapToolsTests(unittest.TestCase):
             self.assertLess(ctl.index("bifmod_mpi 1"), ctl.index("bpoint_mpi 1"))
 
             no_diagnostic = ctl_map_dir / "without_diagnostic"
-            no_diagnostic_script_dir = no_diagnostic / "script_params"
+            no_diagnostic_script_dir = no_diagnostic / "script_format_conv"
             no_diagnostic_script_dir.mkdir(parents=True)
             shutil.copy2(MAP / "params.txt", no_diagnostic / "params.txt")
-            shutil.copy2(TOOLS / "script_params" / "s99-write_ctl.sh", no_diagnostic_script_dir)
+            shutil.copy2(TOOLS / "script_format_conv" / "s99-write_ctl.sh", no_diagnostic_script_dir)
             absent_result = subprocess.run(
                 ["sh", str(no_diagnostic_script_dir / "s99-write_ctl.sh")],
                 cwd=root,
