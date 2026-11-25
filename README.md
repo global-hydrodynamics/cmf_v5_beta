@@ -51,6 +51,25 @@ Run the interactive Fortran diagnostic/setup helper:
 
 If it generates a root-level `Mkinclude`, review it and activate it as the ignored `config/Mkinclude` following the build guide. An existing active configuration must be reviewed before replacement. The helper does not activate it automatically. Complete this configuration step before building.
 
+Configure the installation root for tools that opt into the versioned root variable:
+
+```bash
+./s00-configure_cama_root.sh
+```
+
+The script detects the physical repository/package directory from its own location and proposes a managed `CMF_V50_ROOT` setting. This variable names a CaMa-Flood v5.00–v5.09 installation; v5.10–v5.19 uses `CMF_V51_ROOT`, and v5.20–v5.29 uses `CMF_V52_ROOT`.
+
+The script supports Bash and zsh. It selects `~/.bash_profile` for macOS Bash, `~/.bashrc` for Linux Bash, and `~/.zshrc` for zsh, while checking common startup files to avoid duplicate definitions. A Bash login shell reads `~/.bash_profile` or `~/.bash_login`; on Linux, ensure that the login file sources `~/.bashrc` if you want the Linux default to apply to login shells. Use `--rc FILE` to select the file your setup reads. Use `--show` to inspect settings or `--print` to print only the safely quoted export statement. Registration defaults to No; `--yes` applies a first install without prompting, but cannot authorize changing a different managed path.
+
+After installation, start a new terminal or source the configuration file reported by the script, then verify:
+
+```bash
+source ~/.zshrc   # replace with the selected startup file
+echo "$CMF_V50_ROOT"
+```
+
+For unsupported shells, use `--print` and translate the assignment to that shell's syntax manually. Existing workflow scripts will be migrated to `CMF_V50_ROOT` incrementally in separate tasks; this setup utility does not change their current variables.
+
 Prepare the repository-local Python environment, then build and run the basic experiment:
 
 ```bash

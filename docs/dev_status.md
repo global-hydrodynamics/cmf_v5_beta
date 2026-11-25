@@ -6,6 +6,17 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### CMF v5-series root configuration (DT-0188, 2026-11-25; branch-local proposal)
+
+Maintainer authorizes this bounded configuration utility on the existing
+feature/package-builder branch. Codex owns the root s00 helper, focused
+temporary-HOME tests, and root setup documentation/records. CMF_V50_ROOT is
+the approved v5.00–v5.09 variable; existing CMF5_ROOT integrations are
+explicitly untouched for separate migration tasks. Fifteen focused tests,
+sh/Bash/zsh syntax and activation checks, plus diff checks, pass; no personal startup files were modified.
+See [VR-0232](../research/records/validation_runs/VR-0232.md).
+
+
 ### NetCDF-first `script_format_conv` end-to-end validation (DT-0187, 2026-11-25; branch-local proposal)
 
 The maintained conversion sequence (`s01`–`s04`, `s09`, `s11`–`s14`, `s21`)
