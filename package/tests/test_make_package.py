@@ -45,11 +45,12 @@ class AssemblyTests(unittest.TestCase):
         self.put(self.source, 'inp/ELSE_GPCC/runoff2000.nc', b'runoff')
         self.put(self.source, 'inp/ELSE_GPCC/convert.py', b'not selected')
         for name, resolution in [('glb_15min','1min'), ('TE-Japan_01min','15sec')]:
-            for path in ('netcdf/map.nc', resolution+'_nc/tile.nc', 'COG/'+resolution+'/tile.tif', 'script_params/run.sh'):
+            for path in ('map.nc', resolution+'/tile.nc', 'COG/'+resolution+'/tile.tif',
+                         'binary/map.bin', 'binary/'+resolution+'/tile.bin', 'script_params/run.sh'):
                 f = self.put(self.source, 'map/'+name+'/'+path, b'dataset content')
                 if path.endswith('.sh'):
                     f.chmod(0o755)
-            for path in (resolution+'/raw.bin', '__pycache__/cached.pyc', 'build.o', 'run.log'):
+            for path in ('binary/'+resolution+'/raw.bin', '__pycache__/cached.pyc', 'build.o', 'run.log'):
                 self.put(self.source, 'map/'+name+'/'+path, b'excluded')
 
     @staticmethod
@@ -83,7 +84,10 @@ class AssemblyTests(unittest.TestCase):
         self.assertEqual(os.readlink(self.output/'tools/link'), '../src_main')
         self.assertTrue((self.output/'map/glb_15min/COG/1min/tile.tif').is_file())
         self.assertTrue((self.output/'map/TE-Japan_01min/COG/15sec/tile.tif').is_file())
-        for path in ('map/glb_15min/1min', 'map/TE-Japan_01min/15sec', 'inp/ELSE_GPCC/convert.py', '.git', 'research'):
+        self.assertTrue((self.output/'map/glb_15min/1min/tile.nc').is_file())
+        self.assertTrue((self.output/'map/TE-Japan_01min/15sec/tile.nc').is_file())
+        for path in ('map/glb_15min/binary', 'map/TE-Japan_01min/binary',
+                     'inp/ELSE_GPCC/convert.py', '.git', 'research'):
             self.assertFalse((self.output/path).exists(), path)
         self.assertEqual(builder.MANIFEST, 'package/PACKAGE_MANIFEST.json')
         self.assertTrue((self.output/'package/PACKAGE_BUILD_INFO.txt').is_file())
@@ -157,7 +161,7 @@ class AssemblyTests(unittest.TestCase):
         self.assertFalse(self.output.exists())
 
     def test_clean_source_cannot_force_excluded_binary_into_distribution(self):
-        self.put(self.clean, 'map/glb_15min/1min/raw.bin', b'not distributable')
+        self.put(self.clean, 'map/glb_15min/binary/1min/raw.bin', b'not distributable')
         with self.assertRaisesRegex(data.DataError, 'catalog exclusion'):
             self.plan()
         self.assertFalse(self.output.exists())
@@ -173,7 +177,7 @@ class AssemblyTests(unittest.TestCase):
             self.plan(str(self.clean))
 
     def test_duplicate_identical_skips_copy_and_conflict_stops_before_staging(self):
-        duplicate = 'map/glb_15min/netcdf/map.nc'
+        duplicate = 'map/glb_15min/map.nc'
         self.put(self.clean, duplicate, (self.source/duplicate).read_bytes())
         plan = self.plan()
         self.assertEqual(plan['summaries'][1]['identical_duplicates'], 1)

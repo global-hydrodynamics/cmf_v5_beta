@@ -2,8 +2,8 @@
 # Generate a map-to-runoff matrix for a regular runoff grid.
 # Copy to <map>/script_params/, edit the grid settings, and run from any CWD.
 #
-# Inputs: params.txt and <HIRES_TAG>/location.txt with each area's catmxy.bin.
-# Outputs: diminfo_<ROFFTAG>.txt and inpmat_<ROFFTAG>.bin in the map root.
+# Inputs: params.txt and <HIRES_TAG>/location.txt with each area's catmxy.nc.
+# Outputs: diminfo_<ROFFTAG>.txt and inpmat_<ROFFTAG>.nc in the map root.
 set -eu
 
 # Paths
@@ -34,7 +34,7 @@ SOUTHIN=-90.05            # Southern edge: last latitude center (-90) minus half
 OLAT="NtoS"               # Runoff latitude row order: NtoS or StoN.
 
 # High-resolution map selection is independent of the runoff-grid tag.
-HIRES_TAG=""  # Empty proposes the coarsest installed Binary grid; confirm before running.
+HIRES_TAG=""  # Empty proposes the coarsest installed NetCDF grid; confirm before running.
 
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
@@ -64,7 +64,7 @@ trap 'exit 143' TERM
 # End of error handling.
 # ----------------------------------------------------------------------
 
-# Prefer the coarsest installed Binary grid; the data consumer validates its contents.
+# Prefer the coarsest installed NetCDF grid; the data consumer validates its contents.
 AVAILABLE=""
 for tag in 1min 30sec 15sec 5sec 3sec 1sec; do
     if [ -d "$MAP_DIR/$tag" ]; then
@@ -73,7 +73,7 @@ for tag in 1min 30sec 15sec 5sec 3sec 1sec; do
     fi
 done
 if [ -z "$HIRES_TAG" ]; then
-    printf 'ERROR: No Binary high-resolution directory found in %s.\n' "$MAP_DIR" >&2
+    printf 'ERROR: No NetCDF high-resolution directory found in %s.\n' "$MAP_DIR" >&2
     exit 1
 fi
 
@@ -103,7 +103,7 @@ done
 printf 'Using high-resolution map: %s/%s\n' "$MAP_DIR" "$HIRES_TAG"
 
 DIMINFO="diminfo_${ROFFTAG}.txt"
-INPMAT="inpmat_${ROFFTAG}.bin"
+INPMAT="inpmat_${ROFFTAG}.nc"
 
 EXEC_INPMAT="$CODE_DIR/param_inpmat_generate.py"
 

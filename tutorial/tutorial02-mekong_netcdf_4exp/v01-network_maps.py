@@ -17,8 +17,9 @@ import numpy as np
 # User settings: map extents and output resolution for the four figures.
 ROOT = Path(__file__).resolve().parents[2]
 MAP_ROOT = ROOT / "map" / "mekong_15min"
-NETCDF_DIR = MAP_ROOT / "netcdf"
+NETCDF_DIR = MAP_ROOT
 HIRES_DIR = MAP_ROOT / "1min"
+BINARY_DIR = MAP_ROOT / "binary"
 FIGURE_DIR = Path(__file__).resolve().parent / "figure"
 FULL_EXTENT = (90.0, 110.0, 5.0, 35.0)
 BASIN_EXTENT = (99.5, 108.2, 8.5, 18.5)
@@ -93,10 +94,11 @@ def read_grid_geometry():
 def read_catchment_mapping(geometry, river_cells):
     """Read the two int16 catmxy records and their assigned coarse cell values."""
     nx, ny, _, _, _, _, _, nxhi, nyhi, _, _, _, _, _ = geometry
-    values = np.fromfile(HIRES_DIR / "1min.catmxy.bin", dtype="<i2")
-    if values.size != 2 * nxhi * nyhi:
-        raise ValueError(f"catmxy has {values.size} values; expected {2 * nxhi * nyhi}")
-    catmx, catmy = values.reshape(2, nyhi, nxhi)
+    with Dataset(HIRES_DIR / "1min.catmxy.nc") as dataset:
+        catmx = np.asarray(dataset["catmx"][:], dtype="i2")
+        catmy = np.asarray(dataset["catmy"][:], dtype="i2")
+    if catmx.shape != (nyhi, nxhi) or catmy.shape != (nyhi, nxhi):
+        raise ValueError("catmxy dimensions do not match the high-resolution geometry")
     valid = ((catmx >= 1) & (catmx <= nx) & (catmy >= 1) & (catmy <= ny))
     maps_to_river = np.zeros(valid.shape, dtype=bool)
     rows, cols = np.where(valid)
@@ -849,14 +851,14 @@ def main():
 
     # Ensure the displayed NetCDF connectivity matches the distributed Binary map.
     nx, ny = geometry[:2]
-    binary_nextxy = np.fromfile(MAP_ROOT / "nextxy_noedge.bin", dtype="<i4")
+    binary_nextxy = np.fromfile(BINARY_DIR / "nextxy_noedge.bin", dtype="<i4")
     if binary_nextxy.size != 2 * nx * ny:
         raise ValueError("nextxy_noedge.bin has an unexpected size")
     if not (np.array_equal(binary_nextxy.reshape(2, ny, nx)[0], nextx) and
             np.array_equal(binary_nextxy.reshape(2, ny, nx)[1], nexty)):
         raise ValueError("NetCDF nextxy_noedge does not match the Binary map")
-    binary_uparea = np.fromfile(MAP_ROOT / "uparea.bin", dtype="<f4")
-    binary_lonlat = np.fromfile(MAP_ROOT / "lonlat.bin", dtype="<f4")
+    binary_uparea = np.fromfile(BINARY_DIR / "uparea.bin", dtype="<f4")
+    binary_lonlat = np.fromfile(BINARY_DIR / "lonlat.bin", dtype="<f4")
     if binary_uparea.size != nx * ny or binary_lonlat.size != 2 * nx * ny:
         raise ValueError("uparea.bin or lonlat.bin has an unexpected size")
     if not np.array_equal(binary_uparea.reshape(ny, nx),

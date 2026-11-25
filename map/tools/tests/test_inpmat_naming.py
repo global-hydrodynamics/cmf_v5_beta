@@ -24,7 +24,7 @@ class InputMatrixNamingTests(unittest.TestCase):
             hires_dir.mkdir()
             (map_root / "params.txt").write_text("3\n2\n2\n1\n-1.5\n1.5\n-1\n1\n", encoding="ascii")
             (hires_dir / "location.txt").write_text("1\narea west east south north nx ny cell\n1 tile\n", encoding="ascii")
-            (hires_dir / "tile.catmxy.bin").write_bytes(b"fixture")
+            (hires_dir / "tile.catmxy.nc").write_bytes(b"fixture")
 
             program = code_dir / "param_inpmat_generate"
             program.write_text(
@@ -36,6 +36,11 @@ class InputMatrixNamingTests(unittest.TestCase):
                 encoding="ascii",
             )
             program.chmod(0o755)
+            program_path = code_dir / "param_inpmat_generate.py"
+            program.rename(program_path)
+            python_cmd = root / "python-mock"
+            python_cmd.write_text("#!/bin/sh\nprogram=$1\nshift\nexec \"$program\" \"$@\"\n", encoding="ascii")
+            python_cmd.chmod(0o755)
             script = script_dir / WRAPPER.name
             script_text = WRAPPER.read_text(encoding="utf-8")
             script_text = script_text.replace(
@@ -46,16 +51,16 @@ class InputMatrixNamingTests(unittest.TestCase):
 
             result = subprocess.run(
                 [str(script)], cwd=root,
-                env=os.environ.copy(),
+                env=dict(os.environ, PYTHON_CMD=str(python_cmd)),
                 input="\n", text=True, capture_output=True, check=False,
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertTrue((map_root / "diminfo_rainfall-025.txt").is_file())
-            self.assertTrue((map_root / "inpmat_rainfall-025.bin").is_file())
+            self.assertTrue((map_root / "inpmat_rainfall-025.nc").is_file())
             self.assertEqual((map_root / "diminfo_rainfall-025.txt").read_text().splitlines()[6],
-                             "inpmat_rainfall-025.bin")
+                             "inpmat_rainfall-025.nc")
             self.assertEqual((map_root / "called.args").read_text().splitlines(), [
-                "15sec", "diminfo_rainfall-025.txt", "inpmat_rainfall-025.bin"
+                "15sec", "diminfo_rainfall-025.txt", "inpmat_rainfall-025.nc"
             ])
             self.assertIn("[STEP 1/1] Generate runoff input matrix", result.stdout)
             self.assertEqual(result.stdout.count("[SUCCESS]"), 1)

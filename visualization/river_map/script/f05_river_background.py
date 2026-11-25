@@ -64,11 +64,13 @@ def read_high_resolution_grid(location_path: Path, geometry):
 
 
 def read_float_raster(path: Path, nx: int, ny: int):
-    """Read one little-endian float32, Fortran-order high-resolution raster."""
-    expected_bytes = nx * ny * 4
-    if path.stat().st_size != expected_bytes:
-        raise ValueError(f"{path} has {path.stat().st_size} bytes; expected {expected_bytes}")
-    values = np.fromfile(path, dtype="<f4").reshape((ny, nx))
+    """Read the registered high-resolution NetCDF variable as a raster."""
+    variable_name = path.stem.rsplit(".", 1)[-1]
+    with Dataset(path) as source:
+        variable = source.variables[variable_name]
+        if variable.dimensions != ("lat", "lon") or variable.shape != (ny, nx):
+            raise ValueError(f"{path}:{variable_name} must have shape ({ny}, {nx}) in (lat, lon) order")
+        values = np.ma.asarray(variable[:], dtype=np.float32)
     return np.ma.masked_where(~np.isfinite(values) | (values == -9999), values)
 
 

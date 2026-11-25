@@ -195,19 +195,18 @@ the external `cmf_v5_package_data/` root, never the local checkout's map copy.
 
 | Include | Exclude |
 | --- | --- |
-| Model-grid `.bin`, `netcdf/`, and standard parameter products | High-resolution Binary `1min/` |
-| Compressed `1min_nc/` including `location.txt` | Build products and temporary files |
+| Root-level NetCDF and standard parameter products | Optional legacy Binary products under `binary/` |
+| High-resolution NetCDF under `1min/`, including `location.txt` | Build products and temporary files |
 | `COG/` for immediate visualization | Logs, caches and `.DS_Store` |
 | Generation script/source directories and Makefiles, as provenance snapshots | Git metadata |
 | Observation/station information, bifurcation products, CTL and auxiliary text | Build products, logs, temporary files, caches and `.DS_Store` |
 
-**Distribution format: compressed NetCDF** for high-resolution maps.
-**Legacy-compatible working format: Binary generated on demand.** Use the
+**Distribution format: NetCDF** for base and high-resolution model maps.
+**Legacy-compatible format: optional Binary under `binary/`, generated on demand.** Use the
 [high-resolution restoration tool](../map/tools/script_format_conv/README.md#restore-high-resolution-binary-working-files-s04)
-when legacy processing needs Binary. Do not package both `1min/` and `1min_nc/`.
-Model-grid Binary remains included, alongside model-grid NetCDF. This first
-selection does not prune generated standard products or change the Input Matrix
-format; further data reduction and Input Matrix NetCDF are separate work.
+when legacy processing needs Binary. The package catalog excludes `binary/` by
+default. Input matrices are distributed as `inpmat_<ROFFTAG>.nc`, with their
+paired `diminfo_<ROFFTAG>.txt` retained at the map root.
 
 ### Visualization inputs and generation provenance
 
@@ -219,8 +218,8 @@ snapshots; active shared development remains under the Git repository's
 `map/tools/`. Inclusion does not imply that every historical recipe is a
 maintained or independently reproducible entry point.
 
-High-resolution Binary directories remain excluded (`1min/` for Global,
-`15sec/` for Japan); restore them from compressed NetCDF when required.
+Binary compatibility directories remain excluded by default; create them from
+the root/resolution NetCDF products when a legacy workflow requires them.
 The catalog selects existing files only; it does not generate missing COGs or
 refresh provenance snapshots. Import/Diff and beta assembly enforce the same
 selection; no raster generation is performed.
@@ -231,19 +230,18 @@ The catalog retains all six original columns and adds optional `exclude_patterns
 as the final column. This is the only selection configuration; no parallel manifest
 or dataset registry is introduced. `file_pattern` selects candidate regular files;
 `exclude_patterns` then filters them on both source and target, including
-TARGET_ONLY discovery. The glb_15min row uses exactly the existing policy:
+TARGET_ONLY discovery. The map rows use the following policy:
 
 ```text
-/1min/;__pycache__/;.git/;*.pyc;*.o;*.mod;*.log;*.tmp;.DS_Store
+/binary/;*.bin;*.ctl;__pycache__/;.git/;*.pyc;*.o;*.mod;*.log;*.tmp;.DS_Store
 ```
 
-Split exclusions on `;`. `/TAG/` excludes only the directory directly under
-the dataset root: `/1min/` excludes raw Binary but preserves `COG/1min/`;
-`/15sec/` likewise preserves `COG/15sec/`. Other patterns ending in `/` match relative parent directory
+Split exclusions on `;`. `/binary/` excludes optional compatibility products and `*.bin`/`*.ctl` exclude
+legacy files not yet placed in `binary/`, while preserving high-resolution NetCDF directories such as `1min/` and `15sec/`.
+Other patterns ending in `/` match relative parent directory
 components using case-sensitive shell-style `fnmatch` rules; all descendants are
 excluded and not traversed. Other patterns match a file basename at any depth.
-Thus `1min/` never excludes `1min_nc/`; `15sec/` never excludes `15sec_nc/`.
-Model-grid `.bin` products remain included. Empty/absent exclude_patterns means no
+Empty/absent exclude_patterns means no
 exclusions; six-column catalogs remain readable. Keep the approved map exclusions
 when editing the catalog: `**/*` alone is not the map-selection policy.
 
@@ -274,13 +272,11 @@ symbolic link. Its `params.txt` specifies 1500 × 1320 model cells, 1-minute
 spacing, 123–148°E and 24–46°N. Supporting high-resolution data use 15 seconds,
 not 1 minute.
 
-Apply the same selection policy as the global map above, substituting
-`15sec_nc/` (include, with `location.txt`) and `15sec/` (exclude). Include
-model-grid Binary, `netcdf/`, standard parameter products, station/bifurcation
-information and auxiliary text, `COG/`, and generation scripts/source snapshots.
-Exclude build products, logs, caches and temporary files. The exclude_patterns column
-implements this same policy, replacing `/1min/` with `/15sec/`.
-Do not copy `**/*` without this filtering. Restore high-resolution Binary on
+Apply the same selection policy as the global map above. Include root-level
+NetCDF, `15sec/` NetCDF tiles and `location.txt`, standard parameter products,
+station/bifurcation information and auxiliary text, `COG/`, and generation
+scripts/source snapshots. The catalog excludes optional `binary/` compatibility
+files and build products, logs, caches and temporary files. Restore Binary on
 demand with the shared restoration tool and `HIRES="15sec"`.
 
 Generation scripts/source snapshots are selected by both Import and Diff,

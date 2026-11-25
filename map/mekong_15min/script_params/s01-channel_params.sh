@@ -11,12 +11,21 @@ set -eu
 # Paths
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+PYTHON_CMD="${PYTHON_CMD:-python3}"
+if [ -n "${CMF5_ROOT:-}" ]; then
+    CODE_DIR="$CMF5_ROOT/map/tools/code"
+else
+    CODE_DIR="$SCRIPT_DIR/../../tools/code"
+fi
+if [ ! -d "$CODE_DIR" ]; then
+    printf '[ERROR] Shared Python tools not found: %s (set CMF5_ROOT to the repository root)\n' "$CODE_DIR" >&2
+    exit 1
+fi
 MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
-CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 
 # Runoff format, interpolation, and paired runoff-grid matrix files.
 TYPE="bin"                                     # Runoff format: bin for binary or cdf for NetCDF.
-INTERP="inpmat"                                # Runoff mapping: inpmat for input matrix or near for nearest-grid.
+INTERP="mat"                                   # Python CLI: mat for input matrix or near for nearest-grid.
 # test-1deg: global ELSE_GPCC 360 x 180 grid; matrix is specific to this model map.
 # Shared grid: inp/ELSE_GPCC/runoffYYYY.nc [mm/day] and map/data/ELSE_GPCC_clm-1981-2010.one [mm/s].
 ROFFTAG="test-1deg"                        # Runoff dataset ID used in both matrix filenames.
@@ -63,26 +72,26 @@ trap 'exit 143' TERM
 # End of error handling.
 # ----------------------------------------------------------------------
 
-# Shared executables (build beforehand with map/tools/code/Makefile).
-EXEC_OUTCLM="$CODE_DIR/param_channel_calc_outclm"
-EXEC_RIVWTH="$CODE_DIR/param_channel_calc_rivwth"
-EXEC_MERIT="$CODE_DIR/param_channel_set_merit_width"
+# Shared Python programs used by this workflow.
+EXEC_OUTCLM="$CODE_DIR/param_channel_calc_outclm.py"
+EXEC_RIVWTH="$CODE_DIR/param_channel_calc_rivwth.py"
+EXEC_MERIT="$CODE_DIR/param_channel_set_merit_width.py"
 
 cd "$MAP_DIR"
 
 STEP="Calculate mean river discharge from annual runoff and the input matrix"
 printf '\n==================================================\n[STEP 1/3] Calculate mean river discharge\n==================================================\n\n'
-"$EXEC_OUTCLM" "$TYPE" "$INTERP" "$DIMINFO" "$CROFBIN"
+"$PYTHON_CMD" "$EXEC_OUTCLM" "$TYPE" "$INTERP" "$DIMINFO" "$CROFBIN"
 
 # 2. Estimate width, depth, roughness, and the no-floodplain depth field.
 STEP="Estimate channel width, depth, and roughness"
 printf '\n==================================================\n[STEP 2/3] Estimate channel parameters\n==================================================\n\n'
-"$EXEC_RIVWTH" "$TYPE" "$DIMINFO" "$HC" "$HP" "$HO" "$HMIN" \
+"$PYTHON_CMD" "$EXEC_RIVWTH" "$TYPE" "$DIMINFO" "$HC" "$HP" "$HO" "$HMIN" \
     "$WC" "$WP" "$WO" "$WMIN"
 
 # 3. Merge MERIT Hydro width estimates with the power-law river widths.
 STEP="Merge power-law channel widths with MERIT Hydro widths"
 printf '\n==================================================\n[STEP 3/3] Merge MERIT Hydro channel widths\n==================================================\n\n'
-"$EXEC_MERIT" "$DIMINFO"
+"$PYTHON_CMD" "$EXEC_MERIT" "$DIMINFO"
 
 printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"

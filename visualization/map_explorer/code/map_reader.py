@@ -137,12 +137,12 @@ class MapReader:
             if source:
                 self.network_sources[key] = source
         known = set(SCHEMA) | {'nextxy', 'nextxy_noedge','subcol-sample','lonlat','fldhgt','subbsn','subbsn-sample'}
-        unknown = sorted(p.name for p in self.path.glob('*.bin') if p.stem not in known)
+        unknown = sorted(p.name for p in (self.path/'binary').glob('*.bin') if p.stem not in known) if (self.path/'binary').is_dir() else []
         if unknown:
             self.messages.append('Unsupported Binary products skipped (no dtype guessing): ' + ', '.join(unknown))
 
     def _discover(self, key, names, dtype, units):
-        for path in (self.path/'netcdf'/f'{key}.nc', self.path/f'{key}.nc', self.path/f'{key}.bin'):
+        for path in (self.path/f'{key}.nc', self.path/'netcdf'/f'{key}.nc', self.path/'binary'/f'{key}.bin', self.path/f'{key}.bin'):
             if not path.is_file():
                 continue
             source = Source(path, path.suffix == '.nc', names)

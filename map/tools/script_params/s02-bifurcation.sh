@@ -2,9 +2,9 @@
 # Generate bifurcation CSV/NetCDF parameters and standard basin connectivity.
 # Copy to <map>/script_params/, configure BIFLAYER and ROFFTAG, and run from any CWD.
 #
-# Inputs: params.txt, nextxy.bin, basin.bin, bifori.txt, rivhgt.bin,
+# Inputs: params.txt, nextxy.nc, basin.nc, bifori.txt, rivhgt.nc,
 #         and diminfo_<ROFFTAG>.txt in the map root.
-# Outputs: bifprm.csv, netcdf/bifprm.nc, bifbsn.bin, bifcol.bin; optional check maps.
+# Outputs: bifprm.csv, bifprm.nc, bifbsn.nc, bifcol.nc; optional check maps.
 # Usage: ./s02-bifurcation.sh [check_map]
 set -eu
 
@@ -29,9 +29,9 @@ BIFLAYER=5                      # Number of bifori.txt layers to process (1-10).
 # Use the same grid tag as s01, which reads map/data/ELSE_GPCC_clm-1981-2010.one.
 ROFFTAG="test-1deg"         # Runoff dataset ID used to derive DIMINFO.
 DIMINFO="diminfo_${ROFFTAG}.txt"  # Simulation dimension information (model and input grids).
-RIVHGT="rivhgt.bin"             # Channel-depth map used to estimate bifurcation depth.
+RIVHGT="rivhgt.nc"              # Channel-depth map used to estimate bifurcation depth.
 BIFPRM_CSV="bifprm.csv"         # Finalized, named bifurcation parameter table.
-BIFPRM_NC="netcdf/bifprm.nc"    # NetCDF conversion of the same CSV table.
+BIFPRM_NC="bifprm.nc"           # NetCDF conversion at the map root.
 
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
@@ -94,7 +94,6 @@ printf '[SUCCESS] Generated %s\n' "$BIFPRM_CSV"
 # 2. Convert the finalized CSV without reordering or recalculating its rows.
 STEP="Convert finalized bifurcation CSV to NetCDF"
 printf '\n==================================================\n[STEP 2/3] Convert CSV to NetCDF\n==================================================\n\n'
-mkdir -p "$(dirname "$BIFPRM_NC")"
 "$PYTHON_CMD" "$EXEC_CONVERT" "$BIFPRM_CSV" "$BIFPRM_NC"
 printf '[SUCCESS] Generated %s from %s\n' "$BIFPRM_NC" "$BIFPRM_CSV"
 

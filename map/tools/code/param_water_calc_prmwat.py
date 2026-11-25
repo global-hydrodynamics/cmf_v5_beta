@@ -2,22 +2,23 @@
 # Parallel port of param_water_calc_prmwat.F90; original Fortran authors and license retained.
 """Aggregate permanent-water area using the current reference criteria.
 
-Read binary catchment assignments, rivwth, flddif and pixel areas; accumulate
+Read catchment assignments, rivwth, flddif and pixel areas; accumulate
 float32 areas in native pixel order and cap at ctmare. Preserve flddif <= 5 m,
 including the documented legacy inclusion of flddif=-9999. No scientific
 reinterpretation of that sentinel is made in this parallel implementation.
 """
 import numpy as np
 
-from mod_map_io import Grid, output_root, parser, write_raster
+from mod_map_io import Grid, input_path, output_root, parser, read_array, write_raster
 from region_combine_hires import PIXELS_PER_DEGREE
 
 
 def exact_array(path, dtype, shape):
-    """Require the same complete direct-access file length as the reference."""
-    if path.stat().st_size != np.prod(shape)*np.dtype(dtype).itemsize:
-        raise ValueError(f'Wrong binary size: {path}')
-    return np.memmap(path, mode='r', dtype=dtype, shape=shape)
+    """Read the declared raster from standard NetCDF or explicit legacy Binary."""
+    resolved = input_path(path)
+    if resolved.suffix == '.bin' and resolved.stat().st_size != np.prod(shape)*np.dtype(dtype).itemsize:
+        raise ValueError(f'Wrong binary size: {resolved}')
+    return read_array(path, dtype, shape)
 
 
 def fallback_area(north, rows, size):
@@ -68,7 +69,8 @@ def main():
         width = exact_array(root/(name+'.rivwth.bin'), '<f4', (ny, nx))
         height = exact_array(root/(name+'.flddif.bin'), '<f4', (ny, nx))
         pixel_path = root/(name+'.grdare.bin')
-        pixel = exact_array(pixel_path, '<f4', (ny, nx)) if pixel_path.exists() else None
+        resolved_pixel = input_path(pixel_path)
+        pixel = exact_array(pixel_path, '<f4', (ny, nx)) if resolved_pixel.exists() else None
         fallback = fallback_area(north, ny, size) if pixel is None else None
         if pixel is None:
             used_fallback = True

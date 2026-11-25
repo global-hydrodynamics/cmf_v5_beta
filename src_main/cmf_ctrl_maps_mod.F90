@@ -87,18 +87,18 @@ OPEN(NSETFILE,FILE=CSETFILE,STATUS="OLD")
 WRITE(LOGNAM,*) "CMF::MAPS_NMLIST: namelist OPEN in unit: ", TRIM(CSETFILE), NSETFILE
 
 !*** 2. Set default map files and options
-CNEXTXY="./nextxy.bin"
-CGRAREA="./ctmare.bin"
-CELEVTN="./elevtn.bin"
-CNXTDST="./nxtdst.bin"
-CRIVLEN="./rivlen.bin"
-CFLDHGT="./fldhgt.bin"
+CNEXTXY="./nextxy.nc"
+CGRAREA="./ctmare.nc"
+CELEVTN="./elevtn.nc"
+CNXTDST="./nxtdst.nc"
+CRIVLEN="./rivlen.nc"
+CFLDHGT="./fldhgt.nc"
 
-CRIVWTH="./rivwth.bin"
-CRIVHGT="./rivhgt.bin"
-CRIVMAN="./rivman.bin"
+CRIVWTH="./rivwth.nc"
+CRIVHGT="./rivhgt.nc"
+CRIVMAN="./rivman.nc"
 
-CPTHOUT="./bifprm.txt"
+CPTHOUT="./bifprm.csv"
 CGDWDLY="NONE"
 CMEANSL="NONE"
 

@@ -54,9 +54,9 @@
         13.0,
         53.0
       ],
-      "network": "map/Rhine_15min/netcdf/nextxy.nc",
-      "bifurcation_parameters": "map/Rhine_15min/netcdf/bifprm.nc",
-      "elevation_background": "map/Rhine_15min/1min_nc/1min.elevtn.nc"
+      "network": "map/Rhine_15min/nextxy.nc",
+      "bifurcation_parameters": "map/Rhine_15min/bifprm.nc",
+      "elevation_background": "map/Rhine_15min/1min/1min.elevtn.nc"
     },
     "aoi_metadata": "metadata/02_domain_selection.json",
     "aoi_bounds_west_south_east_north_degrees": [

@@ -36,9 +36,9 @@ class PackageDataTest(unittest.TestCase):
         for name, hires in [("glb_15min", "1min"), ("TE-Japan_01min", "15sec")]:
             root = f"map/{name}/"
             self.put(self.source, root + "params.txt", b"parameters")
-            self.put(self.source, root + "netcdf/river.nc", b"CDF\x01river")
-            self.put(self.source, root + f"{hires}_nc/location.txt", b"location")
-            self.put(self.source, root + f"{hires}_nc/tile.nc", b"CDF\x01hires")
+            self.put(self.source, root + "river.nc", b"CDF\x01river")
+            self.put(self.source, root + f"{hires}/location.txt", b"location")
+            self.put(self.source, root + f"{hires}/tile.nc", b"CDF\x01hires")
             for included in ["script_params/run.sh", "src_old/source.F90", "code/tool",
                              "source.F90", "Makefile", "convert.py", "COG/river.tif", f"COG/{hires}/tile.tif"]:
                 self.put(self.source, root + included, b"provenance or visualization input")
@@ -106,20 +106,20 @@ class PackageDataTest(unittest.TestCase):
 
     def test_all_four_statuses_and_same_size_same_mtime_change(self):
         self.run_tool()
-        modified = self.repo / "map/glb_15min/netcdf/river.nc"
+        modified = self.repo / "map/glb_15min/river.nc"
         old = modified.stat()
         modified.write_bytes(b"CDF\x01RIVER")
         os.utime(modified, ns=(old.st_atime_ns, old.st_mtime_ns))
         (self.repo / "map/TE-Japan_01min/params.txt").unlink()
         self.put(self.repo, "map/glb_15min/custom.nc", b"local-only")
         statuses = {d.path.as_posix(): d.status for d in self.compare()}
-        self.assertEqual(statuses["map/glb_15min/netcdf/river.nc"], "MODIFIED")
+        self.assertEqual(statuses["map/glb_15min/river.nc"], "MODIFIED")
         self.assertEqual(statuses["map/TE-Japan_01min/params.txt"], "SOURCE_ONLY")
         self.assertEqual(statuses["map/glb_15min/custom.nc"], "TARGET_ONLY")
         self.assertEqual(statuses["inp/ELSE_GPCC/runoff2000.nc"], "IDENTICAL")
 
     def test_binary_difference_at_end_of_large_file(self):
-        relative = "map/glb_15min/area.bin"
+        relative = "map/glb_15min/area.nc"
         contents = b"\x00" * (2 * data.CHUNK_SIZE + 13)
         self.put(self.source, relative, contents)
         self.put(self.repo, relative, contents[:-1] + b"\x01")
@@ -129,7 +129,7 @@ class PackageDataTest(unittest.TestCase):
     def test_hires_exclusion_and_provenance_cog_inclusion_both_sides(self):
         for root, hires in [("map/glb_15min", "1min"), ("map/TE-Japan_01min", "15sec")]:
             self.put(self.repo, root + "/script_local/user.sh", b"tracked-workflow-like")
-            self.put(self.repo, root + "/" + hires + "/local.bin", b"raw")
+            self.put(self.repo, root + "/binary/" + hires + "/local.bin", b"raw")
             self.put(self.repo, root + "/local.py", b"source")
         rows = self.compare()
         self.assertEqual(len(rows), 29)  # 25 source files plus four local-only script files.
@@ -141,13 +141,14 @@ class PackageDataTest(unittest.TestCase):
             self.assertIn(f"map/{name}/local.py", names)
         self.assertIn("map/glb_15min/COG/1min/tile.tif", names)
         self.assertIn("map/TE-Japan_01min/COG/15sec/tile.tif", names)
-        self.assertIn("map/glb_15min/1min_nc/tile.nc", names)
-        self.assertIn("map/TE-Japan_01min/15sec_nc/location.txt", names)
+        self.assertIn("map/glb_15min/1min/tile.nc", names)
+        self.assertIn("map/TE-Japan_01min/15sec/location.txt", names)
         self.run_tool()
         for name in ("glb_15min", "TE-Japan_01min"):
             for relative in ("COG/river.tif", "script_params/run.sh", "src_old/source.F90", "Makefile", "convert.py"):
                 self.assertEqual((self.repo / f"map/{name}/{relative}").read_bytes(), b"provenance or visualization input")
-        self.assertFalse((self.repo / "map/glb_15min/1min/raw.bin").exists())
+        self.assertTrue((self.repo / "map/glb_15min/binary/1min/local.bin").is_file())
+        self.assertEqual((self.repo / "map/glb_15min/binary/1min/local.bin").read_bytes(), b"raw")
         self.assertFalse((self.repo / "inp/ELSE_GPCC/convert.py").exists())
         self.assertEqual((self.repo / "map/glb_15min/script_local/user.sh").read_bytes(), b"tracked-workflow-like")
 
@@ -231,7 +232,7 @@ class PackageDataTest(unittest.TestCase):
     def test_source_and_target_dataset_symlinks_rejected(self):
         for side in (self.source, self.repo):
             with self.subTest(side=side):
-                link = side / "map/glb_15min/netcdf/link.nc"
+                link = side / "map/glb_15min/test/link.nc"
                 link.parent.mkdir(parents=True, exist_ok=True)
                 link.symlink_to(self.base / "outside")
                 with self.assertRaisesRegex(data.DataError, "Symlink"):
@@ -331,7 +332,7 @@ class PackageDataTest(unittest.TestCase):
             self.assertEqual(row.target.read_bytes(), b"changed since diff")
 
     def test_non_directory_destination_ancestor_stops_before_copy(self):
-        path = self.put(self.repo, "map/glb_15min/netcdf", b"local file occupying directory")
+        path = self.put(self.repo, "map/glb_15min/1min", b"local file occupying directory")
         with self.assertRaisesRegex(data.DataError, "not a directory"):
             self.run_tool(overwrite_all=True)
         self.assertEqual(path.read_bytes(), b"local file occupying directory")

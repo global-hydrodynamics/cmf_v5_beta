@@ -127,7 +127,7 @@ Source scripts should be kept in Git. Generated products should follow the repos
 
 Create a reproducible procedure that:
 
-1. Reads the shared `map/mekong_15min/netcdf/rivhgt.nc`.
+1. Reads the shared `map/mekong_15min/rivhgt.nc`.
 2. Identifies valid river cells using the source missing-data mask.
 3. Adds exactly 3.0 m to valid `rivhgt` values.
 4. Preserves missing values, dimensions, coordinates, dtype, variable name, and relevant attributes.
@@ -159,7 +159,7 @@ The only intended scientific input difference is `rivhgt`.
 
 Read:
 
-`map/mekong_15min/netcdf/rivhgt.nc`
+`map/mekong_15min/rivhgt.nc`
 
 ### Deep Channel
 

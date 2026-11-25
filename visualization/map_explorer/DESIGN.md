@@ -566,7 +566,7 @@ independent records. Reshaping as (record,NY,NX) in C order is equivalent to the
 Fortran (NX,NY,record) layout; never guess dtype from size. nextxy contains two
 Int32 records. Only known filenames are supported. Unexpected sizes are errors.
 
-NetCDF files in netcdf/ (or MAP_DIR itself) must contain named lon/lat axes and
+Standard NetCDF files at MAP_DIR (legacy `netcdf/` files are also accepted) must contain named lon/lat axes and
 the expected variable. Either ascending/descending axis orientation and either
 (lat,lon)/(lon,lat) dimension order can be normalized if coordinates match the
 params centers. Other grids are rejected. Coordinates are checked without

@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 
-from mod_map_io import Grid, output_root, parser, write_raster
+from mod_map_io import Grid, output_root, parser, read_inpmat, write_raster
 
 
 def local_runoff(nextx, area, source, matrix=None):
@@ -110,8 +110,7 @@ def main():
         path = Path(lines[6].strip())
         if not path.is_absolute():
             path = args.map_dir/path
-        bits = np.memmap(path, mode='r', dtype='<i4', shape=(3, slots, ny, nx))
-        matrix = (bits[0], bits[1], bits[2].view('<f4'))
+        matrix = read_inpmat(path, nx, ny, slots)
     write_raster(output_root(args)/'outclm.bin', route(nextxy, local_runoff(nextxy[0], area, source, matrix)), '<f4')
 
 

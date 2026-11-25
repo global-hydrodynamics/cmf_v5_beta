@@ -232,7 +232,7 @@ def assemble(args: argparse.Namespace) -> bool:
     if args.rivwth not in {"rivwth.nc", "rivwth_merit.nc"}:
         raise ValueError("--rivwth must be rivwth.nc or rivwth_merit.nc")
     map_dir = args.map_dir.resolve()
-    netcdf_dir = map_dir / "netcdf"
+    netcdf_dir = map_dir
     nx, ny, nlfp = read_map_shape(map_dir / "params.txt")
     inputs = {
         "network": netcdf_dir / args.nextxy,
@@ -310,7 +310,7 @@ def assemble(args: argparse.Namespace) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--map-dir", type=Path, required=True, help="map root containing params.txt and netcdf/ individual maps")
+    parser.add_argument("--map-dir", type=Path, required=True, help="map root containing params.txt and individual NetCDF maps")
     parser.add_argument("--nextxy", default="nextxy_noedge.nc", help="network file: nextxy.nc or nextxy_noedge.nc")
     parser.add_argument("--rivwth", default="rivwth_merit.nc", help="width file: rivwth.nc or rivwth_merit.nc")
     parser.add_argument("--force", action="store_true", default=True, help=argparse.SUPPRESS)

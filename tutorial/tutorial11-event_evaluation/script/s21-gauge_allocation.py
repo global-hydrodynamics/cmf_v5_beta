@@ -34,7 +34,7 @@ def read_csv(path: Path) -> list[dict[str, str]]:
 
 def load_map(map_dir: Path):
     """Read aligned north-first maps, outlet degrees, uparea [m2] and stored nextxy."""
-    netcdf = map_dir / "netcdf"
+    netcdf = map_dir
     with Dataset(netcdf / "lonlat.nc") as data:
         lon = np.asarray(data.variables["lon"][:], dtype=np.float64)
         lat = np.asarray(data.variables["lat"][:], dtype=np.float64)
@@ -339,7 +339,7 @@ def load_catchments(map_dir: Path, lon, lat, uparea):
             not np.allclose(lat, north - (np.arange(ny) + .5) * res)):
         raise ValueError("params.txt and model NetCDF cell centers disagree")
     result = catchment.read_catchment_mapping(
-        map_dir / "1min/1min.catmxy.bin", map_dir / "1min/location.txt",
+        map_dir / "1min/1min.catmxy.nc", map_dir / "1min/location.txt",
         geometry, np.isfinite(uparea) & (uparea > 0))
     return (*result, catchment)
 
@@ -561,9 +561,9 @@ def add_catchment_allocations(map_dir: Path, map_data, output_path: Path):
                 "outlet_lon_lat": [[float(outlon[cell]), float(outlat[cell])] for cell in path],
                 "termination": termination,
             }
-    sources = ["params.txt", "1min/location.txt", "1min/1min.catmxy.bin",
-               "netcdf/nextxy.nc", "netcdf/lonlat.nc", "netcdf/uparea.nc",
-               "netcdf/rivwth_merit.nc", "netcdf/basin.nc"]
+    sources = ["params.txt", "1min/location.txt", "1min/1min.catmxy.nc",
+               "nextxy.nc", "lonlat.nc", "uparea.nc",
+               "rivwth_merit.nc", "basin.nc"]
     summary = {
         "review_status": "proposed",
         "method": "Existing p01-f04 Binary catchment reader; point containment in 1-minute pixels; no snapping",
@@ -613,9 +613,9 @@ def main() -> None:
         raise ValueError(f"Expected the three selected existing gauges; found {len(selected)}")
 
     lon, lat, outlon, outlat, uparea, nextx, nexty = load_map(map_dir)
-    with Dataset(map_dir / "netcdf/rivwth_merit.nc") as data:
+    with Dataset(map_dir / "rivwth_merit.nc") as data:
         river_width = np.ma.asarray(data.variables["rivwth"][:], dtype=np.float64).filled(0)
-    with Dataset(map_dir / "netcdf/basin.nc") as data:
+    with Dataset(map_dir / "basin.nc") as data:
         basin = np.ma.asarray(data.variables["basin"][:]).filled(0).astype(np.int32)
     if river_width.shape != uparea.shape or basin.shape != uparea.shape:
         raise ValueError("basin/rivwth map arrays do not match the current map grid")

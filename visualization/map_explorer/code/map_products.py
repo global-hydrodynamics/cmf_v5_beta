@@ -33,7 +33,7 @@ class Products:
         self.messages = []
         self.outlet_source = None
         # Longitude and latitude have different units; validate separately.
-        for path in (reader.path / "netcdf/lonlat.nc", reader.path / "lonlat.nc", reader.path / "lonlat.bin"):
+        for path in (reader.path / "lonlat.nc", reader.path / "netcdf/lonlat.nc", reader.path / "binary/lonlat.bin", reader.path / "lonlat.bin"):
             if not path.is_file():
                 continue
             try:
@@ -48,7 +48,7 @@ class Products:
             except (OSError, ValueError, KeyError) as exc:
                 self.messages.append(f"Outlets skipped: {exc}")
         self.bif_path = next(
-            (p for p in [reader.path / "netcdf/bifprm.nc", reader.path / "bifprm.nc"] if p.is_file()), None
+            (p for p in [reader.path / "bifprm.nc", reader.path / "netcdf/bifprm.nc"] if p.is_file()), None
         )
         self._views = {}
 

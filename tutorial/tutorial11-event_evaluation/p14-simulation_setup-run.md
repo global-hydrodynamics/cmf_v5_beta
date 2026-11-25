@@ -31,7 +31,7 @@ Instructions; it is not a standalone Prompt.
 **Tasks**
 
 - Review the actual map, forcing, matrix and model interfaces.
-- Use the standard regional river network `map/Rhine_15min/netcdf/nextxy.nc`;
+- Use the standard regional river network `map/Rhine_15min/nextxy.nc`;
   do not use `nextxy_noedge.nc` for this Rhine run.
 - Read the runoff tag and matrix/diminfo paths from Step 13 metadata; do not substitute the global ERA5-Land matrix.
 - Configure and run the specified single 31-day, hourly cold-start experiment.
@@ -79,7 +79,7 @@ Complete Tutorial 11 Step 14 using p14-simulation_setup-run.md and the existing
 Rhine 2021 sample configuration. Inspect the current branch, local rules,
 Step 11–13 artifacts, actual map/forcing/matrix files, and current model
 Namelist/output interfaces before implementation. Set `CNEXTXY` to the
-standard Rhine `map/Rhine_15min/netcdf/nextxy.nc`. Reuse the existing v5
+standard Rhine `map/Rhine_15min/nextxy.nc`. Reuse the existing v5
 GOSH defaults and do not change model source, map products, runoff conversion,
 or the Input Matrix.
 

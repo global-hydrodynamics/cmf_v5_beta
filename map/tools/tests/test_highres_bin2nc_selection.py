@@ -47,7 +47,7 @@ def test_default_s03_adds_missing_registered_products_losslessly(tmp_path, sourc
     script = script_dir / "s03-convert_highres_netcdf.sh"
     # Keep only concurrency small; use the real configured variable list unchanged.
     script.write_text(re.sub(r'^JOBS=.*$', 'JOBS=1', script_text, flags=re.M))
-    binary = map_dir / "1min"
+    binary = map_dir / "binary" / "1min"
     binary.mkdir()
     (binary / "location.txt").write_text(
         "1 narea\niarea carea west east south north nx ny csize\n"
@@ -72,19 +72,19 @@ def test_default_s03_adds_missing_registered_products_losslessly(tmp_path, sourc
     (binary / "tile.unregistered.bin").write_bytes(b"not a registered raster")
     # Simulate the reported state: seven products already converted.
     converter.convert_variable(map_dir, "1min", BASE, REGISTRY, False, 3, 1)
-    existing = {path: path.read_bytes() for path in (map_dir / "1min_nc").glob("*.nc")}
+    existing = {path: path.read_bytes() for path in (map_dir / "1min").glob("*.nc")}
     result = subprocess.run(["sh", str(script)], cwd=script_dir, input="\n", text=True,
                             capture_output=True, timeout=30)
     assert result.returncode == 0, result.stdout + result.stderr
     assert f"Converted: {len(variables)}" in result.stdout
     assert "Skipped:   0" in result.stdout
-    assert {path.name for path in (map_dir / "1min_nc").glob("*.nc")} == {
+    assert {path.name for path in (map_dir / "1min").glob("*.nc")} == {
         f"tile.{variable}.nc" for variable in variables
     }
     for variable in variables:
         selected = sorted(converter.rows_for_tile(rows, "1min", "tile", variable),
                           key=lambda row: int(row["record_index"] or "1"))
-        with netCDF4.Dataset(map_dir / f"1min_nc/tile.{variable}.nc") as ds:
+        with netCDF4.Dataset(map_dir / f"1min/tile.{variable}.nc") as ds:
             actual = b""
             for row in selected:
                 field = ds.variables[row["name"]]
@@ -93,7 +93,7 @@ def test_default_s03_adds_missing_registered_products_losslessly(tmp_path, sourc
                 assert field.dtype == np.dtype(row["dtype"])
                 actual += field[:].astype(np.dtype(row["dtype"]).newbyteorder("<")).tobytes()
             assert actual == originals[variable]
-    assert (map_dir / "1min_nc/location.txt").read_bytes() == (binary / "location.txt").read_bytes()
+    assert (map_dir / "1min/location.txt").read_bytes() == (binary / "location.txt").read_bytes()
     assert all((binary / f"tile.{variable}.bin").read_bytes() == data
                for variable, data in originals.items())
     transcript = run_tty(
@@ -104,7 +104,7 @@ def test_default_s03_adds_missing_registered_products_losslessly(tmp_path, sourc
     assert "already exists. Overwrite?" not in transcript
     assert f"Converted: {len(variables)}" in transcript
     assert "Skipped:   0" in transcript
-    preserved = {path: path.read_bytes() for path in (map_dir / "1min_nc").glob("*.nc")}
+    preserved = {path: path.read_bytes() for path in (map_dir / "1min").glob("*.nc")}
     result = subprocess.run(["sh", str(script), "--no-overwrite"], cwd=script_dir, input="\n",
                             text=True, capture_output=True, timeout=30)
     assert result.returncode == 0, result.stdout + result.stderr
@@ -160,11 +160,11 @@ def test_preflight_skips_missing_and_validates_all_resolutions_before_writing(tm
         tmp_path, ["1min", "15sec"], ["all"], REGISTRY, 3
     )
     assert len(variables) == 12 and len(planned) == 2 and len(missing) == 22
-    assert not (tmp_path / "1min_nc").exists()
+    assert not (tmp_path / "1min").exists()
     (tmp_path / "15sec/tile.visual.bin").write_bytes(b"bad")
     with pytest.raises(converter.ConversionError, match="bytes"):
         converter.plan_conversion(tmp_path, ["1min", "15sec"], ["all"], REGISTRY, 3)
-    assert not (tmp_path / "1min_nc").exists()
+    assert not (tmp_path / "1min").exists()
 
 
 def test_csv_new_variable_is_selected_without_changing_default_list():

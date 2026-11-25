@@ -15,6 +15,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from netCDF4 import Dataset
 from PIL import Image
 
 import river_network_layout as layout
@@ -36,14 +37,14 @@ class NetworkLayoutTest(unittest.TestCase):
                                "c-line_river_map-enhance_color"):
                     output = Path(tmp) / f"f02{suffix}.png"
                     argv = [str(SCRIPTS / f"f02{suffix}.py"),
-                            "--uparea", str(MAP / "netcdf/uparea.nc"),
-                            "--nextxy", str(MAP / "netcdf/nextxy.nc"),
+                            "--uparea", str(MAP / "uparea.nc"),
+                            "--nextxy", str(MAP / "nextxy.nc"),
                             "--params", str(MAP / "params.txt"),
                             "--west", "99", "--east", "109", "--south", "9", "--north", "19",
                             "--dpi", "100", "--max-height", str(height),
                             "--max-width", str(width), "--output", str(output)]
                     if suffix.startswith("c-"):
-                        argv.extend(["--subcol", str(MAP / "subcol-sample.bin")])
+                        argv.extend(["--subcol", str(MAP / "subcol-sample.nc")])
                     original_save = layout.save_network_panel
 
                     def inspect(fig, ax, cax, args):
@@ -75,7 +76,8 @@ class NetworkLayoutTest(unittest.TestCase):
                                 self.assertEqual(item.get_mutation_scale(), 7.0)
                                 self.assertEqual(item.get_connectionstyle().rad, 0.22)
                         if suffix.startswith("c-"):
-                            raw = np.fromfile(MAP / "subcol-sample.bin", dtype="<i4").reshape(120,80)
+                            with Dataset(MAP / "subcol-sample.nc") as source:
+                                raw = np.ma.asarray(source["subcol"][:]).filled(-9999)
                             expected = np.ma.masked_where((raw<0)|(raw>10), raw)
                             np.testing.assert_array_equal(ax.images[0].get_array(), expected)
                             self.assertEqual(cax._colorbar.mappable.cmap.name, "shade_rainbow")

@@ -216,7 +216,10 @@ def restore_location(source, target, areas):
 def restore(map_dir, hires, variables, registry, jobs=1, force=True, areas_filter=None):
     if jobs < 1 or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*', hires) or hires in ('.', '..'):
         raise ConversionError('jobs must be positive and hires must be a single directory tag')
-    source_dir, output_dir = map_dir / f'{hires}_nc', map_dir / hires
+    source_dir = map_dir / hires
+    if not (source_dir / 'location.txt').is_file():
+        source_dir = map_dir / f'{hires}_nc'  # legacy layout
+    output_dir = map_dir / 'binary' / hires
     areas = forward.read_location(source_dir / 'location.txt')
     if not areas or not variables:
         raise ConversionError('location.txt and variable selection must be nonempty')

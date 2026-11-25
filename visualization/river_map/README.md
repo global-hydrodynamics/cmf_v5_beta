@@ -84,10 +84,10 @@ observation-station data are required.
 
 | Panel | File and variable | Display |
 | --- | --- | --- |
-| f01a | `map/mekong_15min/netcdf/uparea.nc`: `uparea(lat, lon)`, m² | Convert to km²; mask missing/non-finite/non-positive values; retain `YlGnBu` with logarithmic normalization over all valid map cells. |
-| f01b | `map/mekong_15min/netcdf/basin.nc`: `basin(lat, lon)`, unitless | Display original positive integer IDs with one discrete bin per original integer value. Repeat the qualitative `tab20` palette across IDs; no conversion to `bsncol`. A display-only pseudo-log categorical legend expands IDs 1–20 and labels representative higher IDs. |
-| f01c | `map/mekong_15min/netcdf/bsncol.nc`: `bsncol(lat, lon)`, unitless | Display the precomputed indices directly with discrete bins for 1–10. Mix the base `tab10` RGB colors with 60% opaque white to obtain distinguishable pastel colors; only used indices are labeled. |
-| f01d | `map/mekong_15min/subcol-sample.bin`: `subcol`, unitless; `map/mekong_15min/netcdf/bsncol.nc`: `bsncol(lat, lon)`, unitless | Read `subcol` as little-endian int32 in Fortran order (x varies fastest). Use the f01c `tab10` palette with 60% opaque white mix and discrete nearest-neighbor categories. Draw gray where `bsncol` is valid but `subcol` is zero/missing; leave missing `bsncol` white. Draw black shared cell edges where neighboring valid `bsncol` indices differ. The indices are categorical display classes, not basin IDs. |
+| f01a | `map/mekong_15min/uparea.nc`: `uparea(lat, lon)`, m² | Convert to km²; mask missing/non-finite/non-positive values; retain `YlGnBu` with logarithmic normalization over all valid map cells. |
+| f01b | `map/mekong_15min/basin.nc`: `basin(lat, lon)`, unitless | Display original positive integer IDs with one discrete bin per original integer value. Repeat the qualitative `tab20` palette across IDs; no conversion to `bsncol`. A display-only pseudo-log categorical legend expands IDs 1–20 and labels representative higher IDs. |
+| f01c | `map/mekong_15min/bsncol.nc`: `bsncol(lat, lon)`, unitless | Display the precomputed indices directly with discrete bins for 1–10. Mix the base `tab10` RGB colors with 60% opaque white to obtain distinguishable pastel colors; only used indices are labeled. |
+| f01d | `map/mekong_15min/subcol-sample.nc`: `subcol`, unitless; `map/mekong_15min/bsncol.nc`: `bsncol(lat, lon)`, unitless | Read the NetCDF `subcol(lat, lon)` variable. Use the f01c `tab10` palette with 60% opaque white mix and discrete nearest-neighbor categories. Draw gray where `bsncol` is valid but `subcol` is zero/missing; leave missing `bsncol` white. Draw black shared cell edges where neighboring valid `bsncol` indices differ. The indices are categorical display classes, not basin IDs. |
 
 All main and overlay rasters are Git-tracked and share an 80 × 120 grid at
 0.25°. Coordinates are cell centers, longitude increases eastward, latitude
@@ -111,8 +111,8 @@ outside the network), but is not read by the f01d plotting script. Shared
 colors do not identify a segment; use `subbsn` when segment identity is
 needed.
 
-For plotting, the two raster inputs are `subcol-sample.bin` and
-`netcdf/bsncol.nc`; `params.txt` supplies grid geometry. `bsncol` must be a
+For plotting, the two raster inputs are `subcol-sample.nc` and
+`bsncol.nc`; `params.txt` supplies grid geometry. `bsncol` must be a
 valid categorical index (1–10) for a cell to be treated as network-covered.
 Valid coverage with zero or missing `subcol` is gray, positive `subcol` is
 pastel-colored, and missing `bsncol` is white. White can include network-
@@ -158,7 +158,7 @@ The reusable [s06 subbasin workflow](../../map/tools/script_params/s06-subbasin.
 calls [`analysis_subbasin.F90`](../../map/tools/code/analysis_subbasin.F90).
 The [Mekong example](../../map/mekong_15min/script_params/s06-subbasin.sh) uses
 editable defaults `AREA_THRESHOLD1_KM2=30000` and `AREA_THRESHOLD2_KM2=5000`,
-and writes stable `subbsn-sample.bin` / `subcol-sample.bin` filenames. Stage 1
+and writes stable `subbsn-sample.bin` / `subcol-sample.nc` filenames. Stage 1
 retains the existing large-area segmentation; Stage 2 only assigns additional
 IDs to previously unassigned river-network regions and preserves all positive
 Stage 1 IDs and boundaries. The Mekong sample retains 64 Stage 1 IDs, adds 49,
@@ -240,7 +240,7 @@ Upstream drainage area is contributing land area, not discharge.
 - **f02c:** Arrowless links use the same straight local and curved Flexible
   Downstream geometry as f02b. Both `shade-rainbow` color and f02b's six-class
   line widths encode source-cell upstream area; the colorbar identifies both
-  encodings. `subcol-sample.bin` categories form a discrete light-gray
+  encodings. NetCDF `subcol-sample.nc` categories form a discrete light-gray
   background: zero is light gray, positive classes are progressively darker,
   and `-9999` remains white.
 
@@ -252,9 +252,9 @@ station data, external download, or map preparation is needed.
 
 | Input | Meaning and use |
 | --- | --- |
-| `netcdf/uparea.nc`: `uparea(lat, lon)`, m² | Convert to km²; read source-cell areas for network links and a faint logarithmic background in a/b. Missing, non-finite and non-positive areas are excluded. |
-| `netcdf/nextxy.nc`: `nextx`, `nexty` | One-based destination indices; paired non-positive terminal/sentinel values do not define links. |
-| `subcol-sample.bin`: little-endian int32, one Fortran-order record | Categorical subbasin display indices for c's background. Zero maps to gray (0.50 brightness); positive classes 1–10 map to discrete grays from 0.45 to 0.10; `-9999` is white. The file has 80 × 120 values, with x varying fastest. |
+| `uparea.nc`: `uparea(lat, lon)`, m² | Convert to km²; read source-cell areas for network links and a faint logarithmic background in a/b. Missing, non-finite and non-positive areas are excluded. |
+| `nextxy.nc`: `nextx`, `nexty` | One-based destination indices; paired non-positive terminal/sentinel values do not define links. |
+| `subcol-sample.nc`: NetCDF `subcol(lat, lon)` raster | Categorical subbasin display indices for c's background. Zero maps to gray (0.50 brightness); positive classes 1–10 map to discrete grays from 0.45 to 0.10; `-9999` is white. The file has 80 × 120 values, with x varying fastest. |
 | `params.txt` | Grid dimensions, resolution and bounds, checked against NetCDF cell-center coordinates. |
 
 The complete nextxy map contains 6,152 valid links (5,919 local and 233 Flexible
@@ -273,7 +273,7 @@ before wider ones. In c, `shade-rainbow` color uses the same full-map area
 normalization as its line widths and logarithmic colorbar. Inputs are never
 modified.
 
-The c background reads `subcol-sample.bin` as little-endian int32 in Fortran
+The c background reads `subcol-sample.nc` as a NetCDF `subcol(lat, lon)` variable
 array order, reshaped to the 120 × 80 image orientation (x varies fastest).
 Category zero is gray (0.50 brightness), positive display categories
 are discrete grays from 0.45 to 0.10, and `-9999` is white. Gray shades
@@ -356,7 +356,7 @@ physical thresholds. These are stored network connections, not traced
 river-centerline paths: straight segments join exact outlet endpoints.
 The legend is omitted to keep the panel uncluttered; color and line width still
 encode the four full-map upstream-area quartiles described above.
-The background uses `subcol-sample.bin`: category `0` is gray, positive
+The background uses `subcol-sample.nc`: category `0` is gray, positive
 display-color indices use the same lightened `tab10` colors as f01c, and
 `-9999` remains white. This categorical fill is visual context; river links
 and their area encoding are unchanged.
@@ -369,7 +369,7 @@ are drawn as straight, arrowless segments between exact outlet coordinates.
 Smaller source-cell areas are drawn first so larger main-channel links remain
 visible on top. `shade-rainbow` colors each segment by source-cell `uparea`
 using logarithmic normalization (area in km²), with an aligned colorbar. The
-`subcol-sample.bin` background uses discrete gray shades: `0` is medium gray,
+`subcol-sample.nc` background uses discrete gray shades: `0` is medium gray,
 positive display indices use progressively darker gray, and `-9999` or other
 invalid values are white. These gray categories are display context, not a
 physical quantity or a unique basin identifier.
@@ -417,14 +417,14 @@ observed flows.
 
 | Relative path | Variables and format | Use |
 | --- | --- | --- |
-| `map/mekong_15min/netcdf/nextxy.nc` | NetCDF `nextx`, `nexty` (`lat × lon`); one-based indices | Supplies main-channel links for f03a and f03b. |
-| `map/mekong_15min/netcdf/nextxy.nc` | NetCDF `nextx`, `nexty` (`lat × lon`); one-based indices | Supplies main-channel links for f03c. |
-| `map/mekong_15min/netcdf/lonlat.nc` | NetCDF `outlon`, `outlat` (`lat × lon`); degrees east/north | Gives outlet coordinates for main links, bifurcation endpoints, and headwater guide termini. |
-| `map/mekong_15min/netcdf/uparea.nc` | NetCDF `uparea` (`lat × lon`); m² | Provides main-channel source-cell area classes and identifies valid river cells. |
-| `map/mekong_15min/subcol-sample.bin` | Binary little-endian int32; one 80 × 120 Fortran-order record | Categorical background for f03a and f03c. f03a uses pastel display colors; f03c uses discrete grays. Zero is gray and `-9999` is white in both. |
-| `map/mekong_15min/netcdf/bsncol.nc` | NetCDF `bsncol` (`lat × lon`); categorical indices | Pale basin-color background for f03b; it is display context, not connectivity. |
-| `map/mekong_15min/netcdf/bifprm.nc` | NetCDF `ix`, `iy`, `jx`, `jy`, `width(layer, path)` | Defines bifurcation endpoints and channel width. Width is in metres; first-layer width distinguishes channel from overland paths. |
-| `map/mekong_15min/1min/1min.catmxy.bin` | Binary little-endian int16; two `1200 × 1800` planes (`catmx`, `catmy`) | Assigns each 1-minute pixel to a one-based coarse cell. `-999` and `-9999` sentinel indices are excluded from centroids. |
+| `map/mekong_15min/nextxy.nc` | NetCDF `nextx`, `nexty` (`lat × lon`); one-based indices | Supplies main-channel links for f03a and f03b. |
+| `map/mekong_15min/nextxy.nc` | NetCDF `nextx`, `nexty` (`lat × lon`); one-based indices | Supplies main-channel links for f03c. |
+| `map/mekong_15min/lonlat.nc` | NetCDF `outlon`, `outlat` (`lat × lon`); degrees east/north | Gives outlet coordinates for main links, bifurcation endpoints, and headwater guide termini. |
+| `map/mekong_15min/uparea.nc` | NetCDF `uparea` (`lat × lon`); m² | Provides main-channel source-cell area classes and identifies valid river cells. |
+| `map/mekong_15min/subcol-sample.nc` | Binary little-endian int32; one 80 × 120 Fortran-order record | Categorical background for f03a and f03c. f03a uses pastel display colors; f03c uses discrete grays. Zero is gray and `-9999` is white in both. |
+| `map/mekong_15min/bsncol.nc` | NetCDF `bsncol` (`lat × lon`); categorical indices | Pale basin-color background for f03b; it is display context, not connectivity. |
+| `map/mekong_15min/bifprm.nc` | NetCDF `ix`, `iy`, `jx`, `jy`, `width(layer, path)` | Defines bifurcation endpoints and channel width. Width is in metres; first-layer width distinguishes channel from overland paths. |
+| `map/mekong_15min/1min/1min.catmxy.nc` | NetCDF `catmx`, `catmy` variables on the `lat × lon` grid | Assigns each 1-minute pixel to a one-based coarse cell. `-999` and `-9999` sentinel indices are excluded from centroids. |
 | `map/mekong_15min/1min/location.txt` | Text grid metadata; 1-minute resolution and bounds | Converts high-resolution pixel row/column positions to geographic pixel-center coordinates. |
 | `map/mekong_15min/params.txt` | Text metadata; 80 × 120 grid at 0.25° | Checks the coarse grid geometry shared by the NetCDF products and catchment assignments. |
 
@@ -471,7 +471,7 @@ and reserves the same legend area.
 The combined figure is also included in the repository Gallery.
 
 The background follows Tutorial02 fig01d. Each assigned pixel in
-`1min.catmxy.bin` inherits the upstream area of its one-based 15-minute
+`1min.catmxy.nc` inherits the upstream area of its one-based 15-minute
 unit-catchment from `uparea.nc`. It is shown in km² with a logarithmic
 pale-yellow-to-green scale. Pixels with `catmxy = -999` are unassigned land
 and are gray; other unassigned/background pixels, including the sea, are
@@ -515,7 +515,7 @@ panel-b Overland line/legend width in points (default1.2).
 
 For `p01-f04b` (`channel_pixel`), the same green area raster, main network and
 Channel bifurcations are retained, and stored Overland bifurcations are added.
-The signed-int8 `1min.visual.bin` categories are overlaid only on
+The signed-int8 `1min.visual.nc` categories are overlaid only on
 pixels assigned by `catmxy`: value 10 marks main-channel pixels (pale blue),
 and value 7 is the source-defined small-stream category (pale purple, usable as
 a tributary visualization class). The remaining `visual` categories are not
@@ -527,12 +527,12 @@ without Channel Pixel or Overland entries.
 
 | Input | Use |
 | --- | --- |
-| `map/mekong_15min/1min/1min.catmxy.bin`, `1min/location.txt` | Two little-endian int16 assignment planes and 1-minute grid geometry; provide high-resolution pixels and their one-based coarse-cell assignment. |
-| `map/mekong_15min/1min/1min.visual.bin` | Signed int8 visualization categories; f04b overlays value 10 (main stream) and value 7 (small stream) on assigned catchment pixels only. |
-| `map/mekong_15min/netcdf/uparea.nc` | Coarse-grid upstream drainage area in m²; supplies pixel colors and main-link area classes. |
-| `map/mekong_15min/netcdf/nextxy.nc` | Main-network downstream connectivity (`nextx`, `nexty`), with one-based grid indices. |
-| `map/mekong_15min/netcdf/lonlat.nc` | Coarse-cell outlet coordinates (`outlon`, `outlat`) in degrees east/north. |
-| `map/mekong_15min/netcdf/bifprm.nc` | Bifurcation endpoint indices and layer widths; panel a draws positive-first-layer-width Channel paths; panel b also draws zero-first-layer-width Overland paths. |
+| `map/mekong_15min/1min/1min.catmxy.nc`, `1min/location.txt` | NetCDF assignment variables and 1-minute grid geometry; provide high-resolution pixels and their one-based coarse-cell assignment. |
+| `map/mekong_15min/1min/1min.visual.nc` | NetCDF signed-int8 visualization categories; f04b overlays value 10 (main stream) and value 7 (small stream) on assigned catchment pixels only. |
+| `map/mekong_15min/uparea.nc` | Coarse-grid upstream drainage area in m²; supplies pixel colors and main-link area classes. |
+| `map/mekong_15min/nextxy.nc` | Main-network downstream connectivity (`nextx`, `nexty`), with one-based grid indices. |
+| `map/mekong_15min/lonlat.nc` | Coarse-cell outlet coordinates (`outlon`, `outlat`) in degrees east/north. |
+| `map/mekong_15min/bifprm.nc` | Bifurcation endpoint indices and layer widths; panel a draws positive-first-layer-width Channel paths; panel b also draws zero-first-layer-width Overland paths. |
 | `map/mekong_15min/params.txt` | Coarse-grid dimensions, resolution, and bounds used to validate map alignment. |
 
 Run the Figure script after the standard Python setup. It renders both
@@ -557,12 +557,12 @@ Method identifier: `hires_background`.
 
 | Panel | Option | Background data | Panel image |
 | --- | --- | --- | --- |
-| p01-f05a — Elevation (`elevtn`) | `gray_elevtn` | `1min.elevtn.bin` (`elevtn`, m) | `f05a-hires_background-gray_elevtn.png` |
-| p01-f05b — Slope (based on `elevtn`) | `gray_slope` | `1min.elevtn.bin` (`elevtn`, m; derived) | `f05b-hires_background-gray_slope.png` |
-| p01-f05c — Floodplain height (`flddif`) | `gray_flddif` | `1min.flddif.bin` (`flddif`, m) | `f05c-hires_background-gray_flddif.png` |
-| p01-f05d — Elevation (`elevtn`) | `terrain_elevtn` | `1min.elevtn.bin` (`elevtn`, m) | `f05d-hires_background-terrain_elevtn.png` |
-| p01-f05e — Slope (based on `elevtn`) | `terrain_slope` | `1min.elevtn.bin` (`elevtn`, m; derived) | `f05e-hires_background-terrain_slope.png` |
-| p01-f05f — Floodplain height (`flddif`) | `terrain_flddif` | `1min.flddif.bin` (`flddif`, m) | `f05f-hires_background-terrain_flddif.png` |
+| p01-f05a — Elevation (`elevtn`) | `gray_elevtn` | `1min.elevtn.nc` (`elevtn`, m) | `f05a-hires_background-gray_elevtn.png` |
+| p01-f05b — Slope (based on `elevtn`) | `gray_slope` | `1min.elevtn.nc` (`elevtn`, m; derived) | `f05b-hires_background-gray_slope.png` |
+| p01-f05c — Floodplain height (`flddif`) | `gray_flddif` | `1min.flddif.nc` (`flddif`, m) | `f05c-hires_background-gray_flddif.png` |
+| p01-f05d — Elevation (`elevtn`) | `terrain_elevtn` | `1min.elevtn.nc` (`elevtn`, m) | `f05d-hires_background-terrain_elevtn.png` |
+| p01-f05e — Slope (based on `elevtn`) | `terrain_slope` | `1min.elevtn.nc` (`elevtn`, m; derived) | `f05e-hires_background-terrain_slope.png` |
+| p01-f05f — Floodplain height (`flddif`) | `terrain_flddif` | `1min.flddif.nc` (`flddif`, m) | `f05f-hires_background-terrain_flddif.png` |
 
 
 The combined figure is also included in the repository Gallery.
@@ -630,14 +630,14 @@ for each background field.
 
 | Input | Role |
 | --- | --- |
-| `map/mekong_15min/1min/1min.elevtn.bin` | 1-minute elevation [m]; background for f05a, source for f05b, and land-validity mask for f05c. |
-| `map/mekong_15min/1min/1min.flddif.bin` | 1-minute floodplain height field [m] (`flddif`); background for f05c. Missing `flddif` where `elevtn` is valid is filled with 50% gray. |
+| `map/mekong_15min/1min/1min.elevtn.nc` | 1-minute elevation [m]; background for f05a, source for f05b, and land-validity mask for f05c. |
+| `map/mekong_15min/1min/1min.flddif.nc` | 1-minute floodplain height field [m] (`flddif`); background for f05c. Missing `flddif` where `elevtn` is valid is filled with 50% gray. |
 | `map/mekong_15min/1min/location.txt` | 1-minute grid bounds, dimensions, and resolution. |
-| `map/mekong_15min/1min/1min.catmxy.bin` | Coarse-cell assignments used to summarize headwater catchment pixel centroids. |
-| `map/mekong_15min/netcdf/uparea.nc` | Coarse-grid upstream area [m²] for link color and width. |
-| `map/mekong_15min/netcdf/nextxy.nc` | One-based main-network downstream connectivity. |
-| `map/mekong_15min/netcdf/lonlat.nc` | Geographic grid and outlet coordinates (`outlon`, `outlat`). |
-| `map/mekong_15min/netcdf/bifprm.nc` | Stored bifurcation paths and layer widths; positive first-layer width selects channel paths. |
+| `map/mekong_15min/1min/1min.catmxy.nc` | Coarse-cell assignments used to summarize headwater catchment pixel centroids. |
+| `map/mekong_15min/uparea.nc` | Coarse-grid upstream area [m²] for link color and width. |
+| `map/mekong_15min/nextxy.nc` | One-based main-network downstream connectivity. |
+| `map/mekong_15min/lonlat.nc` | Geographic grid and outlet coordinates (`outlon`, `outlat`). |
+| `map/mekong_15min/bifprm.nc` | Stored bifurcation paths and layer widths; positive first-layer width selects channel paths. |
 | `map/mekong_15min/params.txt` | Coarse-grid geometry used to validate alignment. |
 
 Run `./visualization/river_map/f05-hires_background.sh` after the standard
@@ -667,8 +667,8 @@ Halen has lower coordinate confidence and is marked `(?)`.
 | Input | Use and availability |
 | --- | --- |
 | `map/glb_15min/params.txt` | Global 15-minute map geometry; Package Additional Data. |
-| `map/glb_15min/netcdf/basin.nc` | Basin ID raster for f06a; Package Additional Data. |
-| `map/glb_15min/netcdf/uparea.nc`, `nextxy.nc`, `lonlat.nc` | Upstream-area classes and routed river links for both panels; Package Additional Data. |
+| `map/glb_15min/basin.nc` | Basin ID raster for f06a; Package Additional Data. |
+| `map/glb_15min/uparea.nc`, `nextxy.nc`, `lonlat.nc` | Upstream-area classes and routed river links for both panels; Package Additional Data. |
 | `data/f06_settings.json` | Panel extents, basin ID, labels, tick spacing, OSM/mask style, and locality-group appearance. |
 | `data/f06b_zoomup.csv`, `data/f06b_plot.csv` | Candidate AOIs and sourced event-locality points; Git-tracked plotting data. |
 | OSM Standard tiles | Online basemap tiles fetched for each displayed extent; internet access required unless tiles are cached. |

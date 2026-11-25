@@ -21,7 +21,7 @@
   },
   "previous_run_preserved": {
     "run_directory": "experiment/Rhine2021/",
-    "river_network": "map/Rhine_15min/netcdf/nextxy_noedge.nc",
+    "river_network": "map/Rhine_15min/nextxy_noedge.nc",
     "note": "The earlier noedge run was recorded in this same directory. The directory now contains the standard-nextxy July 1–31 run; the earlier noedge files are no longer present at this path."
   },
   "map": {
@@ -36,10 +36,10 @@
       53.0
     ],
     "input_mode": "Individual NetCDF map files; LMAPCDF=.FALSE.",
-    "river_network": "map/Rhine_15min/netcdf/nextxy.nc",
+    "river_network": "map/Rhine_15min/nextxy.nc",
     "river_network_reason": "Use the standard Rhine map river network, including boundary-affected connections.",
-    "river_width": "map/Rhine_15min/netcdf/rivwth_merit.nc",
-    "bifurcation_parameters": "map/Rhine_15min/netcdf/bifprm.nc",
+    "river_width": "map/Rhine_15min/rivwth_merit.nc",
+    "bifurcation_parameters": "map/Rhine_15min/bifprm.nc",
     "map_files_loaded": [
       "ctmare.nc",
       "elevtn.nc",

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from netCDF4 import Dataset
 from matplotlib.colors import BoundaryNorm, ListedColormap, LogNorm
 from cmf_colormap import get_cmap
 from matplotlib.ticker import FuncFormatter, LogLocator
@@ -45,13 +46,11 @@ def main() -> None:
         show_colorbar=True,
     )
     nx, ny, _, _, _, _, _ = geometry
-    subcol = np.fromfile(args.subcol, dtype="<i4")
-    if subcol.size != nx * ny:
-        raise ValueError(
-            f"{args.subcol} contains {subcol.size} int32 values; expected {nx * ny}"
-        )
-    # Fortran (NX, NY) storage has x varying fastest; reshape to plotted (NY, NX).
-    subcol = subcol.reshape((ny, nx))
+    with Dataset(args.subcol) as source:
+        variable = source.variables["subcol"]
+        if variable.dimensions != ("lat", "lon") or variable.shape != (ny, nx):
+            raise ValueError(f"{args.subcol}: subcol must have shape ({ny}, {nx}) in (lat, lon) order")
+        subcol = np.ma.asarray(variable[:]).filled(-9999).astype(np.int32)
     valid = (subcol >= 0) & (subcol <= 10)
     gray_levels = [0.50, *np.linspace(0.45, 0.10, 10)]
     gray = ListedColormap([(level, level, level) for level in gray_levels])

@@ -111,7 +111,7 @@ def main() -> None:
     args = parser.parse_args()
     event = selected_event(args.event_csv)
     case_dir = ROOT / "out" / args.case
-    rivhgt = (REPO / "map/mekong_15min/netcdf/rivhgt.nc" if args.case == "control"
+    rivhgt = (REPO / "map/mekong_15min/rivhgt.nc" if args.case == "control"
               else ROOT / "map_modify/rivhgt_deep.nc")
     destination = args.output or OUTPUT_DIR / args.case / "input" / f"flddph{event.strftime('%Y%m%d')}.bin"
     result = prepare_input(case_dir / "o_rivdph2000.nc", rivhgt, event, destination)

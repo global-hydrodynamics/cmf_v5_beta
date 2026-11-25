@@ -73,7 +73,7 @@ def resolve_resolutions(map_dir, requested):
     """Choose the first available standard NetCDF directory, coarse to fine."""
     if requested == ['auto']:
         selected = next((tag for tag in ('1min', '30sec', '15sec')
-                         if (map_dir / f'{tag}_nc').is_dir()), None)
+                         if (map_dir / tag / 'location.txt').is_file()), None)
         resolutions = ['base', selected] if selected else ['base']
         print('AUTO resolutions: ' + ' '.join(resolutions))
         return resolutions
@@ -124,10 +124,7 @@ def plan(map_dir, resolutions, variables, registry):
                     filename = filename.strip()
                     if '/' not in filename and filename.endswith('.bin') and '<' not in filename:
                         groups.setdefault(filename[:-4], []).append(row)
-            directory = map_dir / 'netcdf'
-            if not directory.is_dir():
-                print(f'SKIP missing NetCDF directory: {directory}')
-                continue
+            directory = map_dir
             geometry = base_geometry(map_dir / 'params.txt')
             matched = set()
             for stem, selected in groups.items():
@@ -157,7 +154,7 @@ def plan(map_dir, resolutions, variables, registry):
                     tasks.append(Task(source, map_dir / 'COG' / source.with_suffix('.tif').name,
                                       selected, geometry, skip_reason=reason))
         else:
-            directory = map_dir / f'{resolution}_nc'
+            directory = map_dir / resolution
             if not directory.is_dir():
                 print(f'SKIP missing NetCDF directory: {directory}')
                 continue
@@ -410,7 +407,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--map-dir', type=Path)
     parser.add_argument('--resolutions', default='auto',
-                        help='auto: base plus first available 1min_nc, 30sec_nc, 15sec_nc; '
+                        help='auto: base plus first available 1min, 30sec, 15sec; '
                              'or explicit tags, e.g. "base 1min"')
     parser.add_argument('--variables', default='all', help='registered or resolved variant file stems separated by spaces; mpireg selects its numbered family')
     parser.add_argument('--registry', type=Path, default=DEFAULT_REGISTRY)

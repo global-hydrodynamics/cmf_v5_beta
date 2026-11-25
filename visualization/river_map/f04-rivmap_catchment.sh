@@ -11,12 +11,12 @@ REPO_ROOT="$(cd "$VISUALIZATION_DIR/.." && pwd)"
 
 # User settings: Mekong map products and the requested delta extent.
 MAP_DIR="$REPO_ROOT/map/mekong_15min"
-UPAREA_FILE="$MAP_DIR/netcdf/uparea.nc"          # Coarse-grid upstream area [m²].
-NEXTXY_FILE="$MAP_DIR/netcdf/nextxy.nc"   # One-based downstream cell indices.
-LONLAT_FILE="$MAP_DIR/netcdf/lonlat.nc"          # Coarse-cell outlet coordinates.
-BIFPRM_FILE="$MAP_DIR/netcdf/bifprm.nc"          # Bifurcation endpoints and widths [m].
-CATMXY_FILE="$MAP_DIR/1min/1min.catmxy.bin"      # 1-minute pixel to coarse-cell assignment.
-VISUAL_FILE="$MAP_DIR/1min/1min.visual.bin"      # Signed int8 channel-pixel categories.
+UPAREA_FILE="$MAP_DIR/uparea.nc"                 # Coarse-grid upstream area [m²].
+NEXTXY_FILE="$MAP_DIR/nextxy.nc"                 # One-based downstream cell indices.
+LONLAT_FILE="$MAP_DIR/lonlat.nc"                 # Coarse-cell outlet coordinates.
+BIFPRM_FILE="$MAP_DIR/bifprm.nc"                 # Bifurcation endpoints and widths [m].
+CATMXY_FILE="$MAP_DIR/1min/1min.catmxy.nc"        # 1-minute pixel to coarse-cell assignment.
+VISUAL_FILE="$MAP_DIR/1min/1min.visual.nc"        # Signed int8 channel-pixel categories.
 LOCATION_FILE="$MAP_DIR/1min/location.txt"       # 1-minute grid geometry.
 PARAMS_FILE="$MAP_DIR/params.txt"                # Coarse grid dimensions and bounds.
 

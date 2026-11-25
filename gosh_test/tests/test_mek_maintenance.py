@@ -46,10 +46,10 @@ class MekMaintenance(unittest.TestCase):
                 self.assertEqual(self.run_script(script, after, self.root), baseline)
                 self.assertEqual(self.run_script(script, after, self.root/'src_main'), baseline)
                 text = b'\n'.join(baseline.values()).decode()
-                suffix = 'nextxy_noedge.bin' if script.startswith('mek01') else 'netcdf/nextxy.nc'
+                suffix = 'nextxy_noedge.nc' if script.startswith('mek01') else 'nextxy.nc'
                 self.assertIn(f'{self.root}/map/mekong_15min/{suffix}', text)
                 self.assertIn('diminfo_repo-mek_1deg.txt', text)
-                self.assertIn('inpmat_repo-mek_1deg.bin', text)
+                self.assertIn('inpmat_repo-mek_1deg.nc', text)
 
     def test_cleanup_exact_current_and_added_variables(self):
         source = (REPO/'gosh_test'/SCRIPTS[1]).read_text()

@@ -101,23 +101,23 @@ class AllocationRegressionTest(unittest.TestCase):
             bin_dir = temp / "bin"
             script_dir.mkdir(parents=True)
             bin_dir.mkdir()
-            (map_root / "1min").symlink_to(SAMPLE / "1min", target_is_directory=True)
-            map_inputs = [SAMPLE / name for name in (
+            (map_root / "1min").symlink_to(SAMPLE / "binary" / "1min", target_is_directory=True)
+            map_inputs = [SAMPLE / "binary" / name for name in (
                 "params.txt", "uparea.bin", "ctmare.bin", "nextxy.bin", "elevtn.bin"
             )]
-            hires_inputs = [SAMPLE / "1min" / f"1min.{name}.bin" for name in (
+            hires_inputs = [SAMPLE / "binary" / "1min" / f"1min.{name}.bin" for name in (
                 "uparea", "catmxy", "downxy", "elevtn"
             )]
             sample_hashes = {path: sha256(path) for path in [*map_inputs, *hires_inputs]}
             for name in ("params.txt", "uparea.bin", "ctmare.bin", "nextxy.bin", "elevtn.bin"):
-                (map_root / name).symlink_to(SAMPLE / name)
+                (map_root / name).symlink_to(SAMPLE / "binary" / name)
 
             compiler = shutil.which("gfortran")
             legacy_dir = REPO / "map/src/src_param"
-            tools_dir = TOOLS / "code"
-            module_object = temp / "mod_allocation_map_io.o"
+            tools_dir = TOOLS / "code" / "legacy_fortran"
+            module_object = bin_dir / "mod_allocation_map_io.o"
             subprocess.run([compiler, *FLAGS, "-c", str(tools_dir / "mod_allocation_map_io.F90"),
-                            "-o", str(module_object)], check=True, capture_output=True, text=True, cwd=temp)
+                            "-o", str(module_object)], check=True, capture_output=True, text=True, cwd=bin_dir)
             programs = {}
             for stem in ("flow_gauge", "dam", "level_gauge"):
                 legacy_name = "allocate_" + stem + ".F90"

@@ -8,7 +8,7 @@ execution, not a final learner manual or scientific validation.
 
 ## Inputs and environment
 
-- Shared map input: `map/mekong_15min/netcdf/rivhgt.nc` (read-only).
+- Shared map input: `map/mekong_15min/rivhgt.nc` (read-only).
 - Runoff: `inp/test-mek_1deg_nc/runoff2000.nc`.
 - Input matrix/dimensions: `map/mekong_15min/inpmat_test-mek_1deg.bin` and
   `inpdim_test-mek_1deg.txt`.

@@ -4,7 +4,7 @@
 set -eu
 
 # -------------------------- User settings ------------------------------
-RESOLUTIONS="auto"             # Base + first available: 1min_nc, 30sec_nc, 15sec_nc.
+RESOLUTIONS="auto"             # Base + first available: 1min, 30sec, 15sec.
 VARS="all"                     # All registered products, or space-separated file stems.
 BLOCKSIZE=512                  # TIFF tile edge [pixels], 128..4096 and divisible by16.
 COMPRESSION="DEFLATE"          # Lossless DEFLATE, LZW, ZSTD or NONE.

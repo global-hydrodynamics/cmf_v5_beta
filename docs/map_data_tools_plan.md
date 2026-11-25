@@ -2,12 +2,35 @@
 
 > Migration note (2026-11-15): Historical branch names, v4 Issue/PR references and dated approvals below are preserved evidence, not current branch assignments. Current v5 development uses cmf_v5_beta/main, src_main/, config/, gosh_test/ and tools/; old root model/build/run files are under legacy/. See [current status](dev_status.md) and [the migration audit](migration_consistency_audit.md).
 
-**Status:** Planning proposal. The detailed implementation scope and architecture are not yet approved.
+**Status:** Approved v5 architecture; implementation is being migrated and validated on `feature/package-builder`.
 
-- **Persistent working branch:** `feature/map-data-tools` (based on `master`).
-- **Owner:** Dai Yamazaki (maintainer); Codex supports tasks assigned by the owner.
-- **Approval recorded:** The maintainer authorized this project branch and planning task in the Codex conversation. This document prepares the project plan; it does not authorize implementation changes.
-- **Development policy:** Follow the repository's [AGENTS.md](../AGENTS.md). Project coordination and current progress are summarized in [docs/dev_status.md](dev_status.md). GitHub Issue: [#122](https://github.com/global-hydrodynamics/CaMa-Flood_v4/issues/122). Issues are recommended for substantial development but optional; when none is used, record approved scope, assignments, and checks in this plan and the project status.
+The proposal and audit history below are retained as historical context. They are superseded by this approved architecture for current v5 workflows.
+
+## Approved v5 map-data architecture
+
+NetCDF4 is the standard format for model-map products and preprocessing inputs/outputs. GrADS Binary remains an explicit compatibility representation; COG remains a visualization derivative. The standard paths are:
+
+```text
+map/<MAPNAME>/*.nc                 # base map and input matrices
+map/<MAPNAME>/<RESOLUTION>/*.nc    # high-resolution NetCDF tiles
+map/<MAPNAME>/binary/*.bin,.ctl    # legacy-compatible Binary and CTL files
+map/<MAPNAME>/binary/<RESOLUTION>/ # high-resolution Binary and CTL files
+map/<MAPNAME>/COG/                 # optional visualization products
+```
+
+Keep `params.txt`, `diminfo_<ROFFTAG>.txt`, `location.txt`, and relevant text metadata readable at the map root or resolution directory; copy structural metadata under `binary/` only when legacy workflows need it. Preserve CSV tables as authoritative inputs where specified. Do not create new `netcdf/` or `<RESOLUTION>_nc/` directories. Existing layouts are migrated using the collision-safe, copy-only `map/tools/code/migrate_map_layout.py`; it defaults to a dry run, never deletes the source, and aborts before copying if any destination differs.
+
+Maintained Python map tools default to NetCDF input/output. `--map-format binary` explicitly selects the legacy layout. NetCDF and Binary rasters preserve registry data types, record/layer order, array orientation, missing values, and index conventions. INPMAT remains a dedicated three-variable (`inpx`, `inpy`, `inpa`) product with `NX`, `NY`, `INPN`, `NXIN`, `NYIN`, `NLFP`, and geographic metadata; it is not handled by the ordinary raster converter.
+
+The model's normal configuration uses individual NetCDF map products and NetCDF INPMAT while keeping `LMAPCDF=.FALSE.`. `LMAPCDF=.TRUE.` retains its separate historical consolidated-file interface. Binary paths remain usable through explicit `.bin` settings under `binary/`. `diminfo_<ROFFTAG>.txt` remains required by current model input initialization.
+
+The architecture applies to maintained Python tools, converters, Shell templates, the model, examples/tutorials, visualization, package selection, and variable metadata. Global/external map trees are not rewritten automatically; run the migrator explicitly after reviewing its dry-run plan. Package assembly remains separate from migration.
+
+## Implementation status
+
+The shared Python map I/O layer, individual-map model defaults, dedicated INPMAT read/write contract, safe copy-only layout migrator, converters, package rules, and Mekong sample layout have been implemented on the current feature branch. Value comparison of the 32 standard Mekong NetCDF products against their prior Binary sources passed exactly. A 40-day Mekong model run using individual NetCDF maps and NetCDF INPMAT completed, and the maintained river-map plotting tests opened the standard map-root NetCDF products and verified rendered raster values and layout. Focused converter, layout, metadata, package, and model-build checks passed. External-map migration and a Binary-input model run remain pending; no browser-based Map Explorer interaction or global-map validation is claimed.
+
+**Superseded planning status:** The original format and API questions in the historical proposal are resolved by the approved rules above. The remaining sections preserve the prior inventory and should be read as historical evidence, not as current format guidance.
 
 ## Purpose
 

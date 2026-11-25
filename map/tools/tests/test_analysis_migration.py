@@ -86,11 +86,12 @@ class AnalysisMigrationTests(unittest.TestCase):
         shutil.copytree(self.v5_dir, code_link)
         (script_analysis / "code").symlink_to("../../tools/code")
         for name in MAP_FILES:
-            shutil.copy2(SAMPLE / name, map_dir / name)
+            source = SAMPLE / "binary" / name if name.endswith(".bin") else SAMPLE / name
+            shutil.copy2(source, map_dir / name)
         hires = map_dir / "1min"
         hires.mkdir()
         for name in ("location.txt", "1min.catmxy.bin"):
-            shutil.copy2(SAMPLE / "1min" / name, hires / name)
+            shutil.copy2(SAMPLE / "binary" / "1min" / name, hires / name)
         return map_dir, script_params
 
     def test_legacy_and_v5_binary_outputs_match_and_ctl_generation_works(self) -> None:

@@ -23,6 +23,7 @@ class MPIRegionConversionTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.scripts, self.map = make_workflow_tree(self.root, use_converter_stub=False)
         shutil.copy2(REGISTRY, self.root/'variable_table/map_variables.csv')
+        (self.map/'binary').mkdir()
         self.values = np.array([[1, 0], [-9999, 12345678]], dtype='<i4')
 
     def run_script(self, name, *arguments):
@@ -54,11 +55,11 @@ class MPIRegionConversionTests(unittest.TestCase):
         rejected = ['mpireg-test.bin', 'mpireg-0.bin', 'mpireg-000.bin', 'mpireg--4.bin',
                     'mpireg-4x.bin', 'mpireg-4.0.bin', 'mpireg-+4.bin', 'rivwth-4.bin']
         for name in accepted+rejected+['elevtn.bin', 'bifcol_mpi.bin', 'prmwat.bin']:
-            (self.map/name).write_bytes(self.values.tobytes())
-        (self.map/'nested').mkdir()
-        (self.map/'nested/mpireg-64.bin').write_bytes(self.values.tobytes())
+            (self.map/'binary'/name).write_bytes(self.values.tobytes())
+        (self.map/'binary/nested').mkdir()
+        (self.map/'binary/nested/mpireg-64.bin').write_bytes(self.values.tobytes())
         # A directory with the right suffix is not an actual Binary file.
-        (self.map/'mpireg-128.bin').mkdir()
+        (self.map/'binary/mpireg-128.bin').mkdir()
         result = self.run_script('s01-list_binary.sh')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         text = (self.scripts/'bin2nc_list.txt').read_text()
@@ -77,7 +78,7 @@ class MPIRegionConversionTests(unittest.TestCase):
 
     def test_s01_s02_real_converter_skip_force_and_explicit_reference(self):
         for n in (4, 8, 16, 32):
-            (self.map/f'mpireg-{n}.bin').write_bytes(self.values.tobytes())
+            (self.map/'binary'/f'mpireg-{n}.bin').write_bytes(self.values.tobytes())
         result = self.run_script('s01-list_binary.sh')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         # Keep user editing/commenting semantics, then convert remaining files.
@@ -91,22 +92,20 @@ class MPIRegionConversionTests(unittest.TestCase):
             '    args = parser.parse_args()\n    assert args.reference_binary == "mpireg.bin"'))
         result = self.run_script('s02-convert_netcdf.sh')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
-        before = {}
         for n in (4, 8, 16):
-            output = self.map/f'netcdf/mpireg-{n}.nc'
+            output = self.map/f'mpireg-{n}.nc'
             self.verify(output, self.values)
-            before[n] = output.read_bytes()
-            self.assertEqual((self.map/f'mpireg-{n}.bin').read_bytes(), self.values.tobytes())
-        self.assertFalse((self.map/'netcdf/mpireg-32.nc').exists())
+            self.assertEqual((self.map/'binary'/f'mpireg-{n}.bin').read_bytes(), self.values.tobytes())
+        self.assertFalse((self.map/'mpireg-32.nc').exists())
         result = self.run_script('s02-convert_netcdf.sh')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
-        self.assertIn('Converted: 0; skipped: 3', result.stdout)
+        self.assertIn('Converted: 3; skipped: 0', result.stdout)
         for n in (4, 8, 16):
-            self.assertEqual((self.map/f'netcdf/mpireg-{n}.nc').read_bytes(), before[n])
+            self.verify(self.map/f'mpireg-{n}.nc', self.values)
         listing.write_text(listing.read_text().replace('\n#mpireg-32.bin\n', '\nmpireg-32.bin\n'))
         result = self.run_script('s02-convert_netcdf.sh', '--force')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
-        self.verify(self.map/'netcdf/mpireg-32.nc', self.values)
+        self.verify(self.map/'mpireg-32.nc', self.values)
 
     def test_direct_variables_and_reference_roles_and_missing_definition(self):
         rows = converter.registry_rows(REGISTRY)
@@ -135,12 +134,13 @@ class MPIRegionConversionTests(unittest.TestCase):
 
     def test_existing_mekong_files_and_new_conversion_match(self):
         sample = ROOT/'map/mekong_15min'
-        shutil.copy2(sample/'params.txt', self.map/'params.txt')
+        binary_sample = sample/'binary'
+        shutil.copy2(binary_sample/'params.txt', self.map/'params.txt')
         for n in (4, 8, 16):
-            source = sample/f'mpireg-{n}.bin'
-            shutil.copy2(source, self.map/source.name)
+            source = binary_sample/f'mpireg-{n}.bin'
+            shutil.copy2(source, self.map/'binary'/source.name)
             values = np.fromfile(source, dtype='<i4').reshape(120, 80)
-            with netCDF4.Dataset(sample/f'netcdf/mpireg-{n}.nc') as ds:
+            with netCDF4.Dataset(sample/f'mpireg-{n}.nc') as ds:
                 ds.set_auto_maskandscale(False)
                 np.testing.assert_array_equal(ds['mpireg'][:], values)
         result = self.run_script('s01-list_binary.sh')
@@ -148,8 +148,8 @@ class MPIRegionConversionTests(unittest.TestCase):
         result = self.run_script('s02-convert_netcdf.sh')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         for n in (4, 8, 16):
-            self.verify(self.map/f'netcdf/mpireg-{n}.nc',
-                        np.fromfile(sample/f'mpireg-{n}.bin', dtype='<i4').reshape(120, 80))
+            self.verify(self.map/f'mpireg-{n}.nc',
+                        np.fromfile(binary_sample/f'mpireg-{n}.bin', dtype='<i4').reshape(120, 80))
 
 
 if __name__ == '__main__':

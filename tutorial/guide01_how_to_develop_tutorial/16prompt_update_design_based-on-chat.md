@@ -47,7 +47,7 @@ The Guide01 workflow example will generate:
 
 The baseline input remains:
 
-`map/mekong_15min/netcdf/rivhgt.nc`
+`map/mekong_15min/rivhgt.nc`
 
 The original shared map must not be modified.
 
@@ -105,7 +105,7 @@ The planned learner manual should explicitly distinguish:
 
 | File or directory | Role | Expected operation |
 |---|---|---|
-| `map/mekong_15min/netcdf/rivhgt.nc` | Shared baseline map | Read only |
+| `map/mekong_15min/rivhgt.nc` | Shared baseline map | Read only |
 | `workflow_example/map_modify/rivhgt_deep.nc` | Tutorial-specific modified input | Generate and read |
 | `workflow_example/out/` | Simulation results | Generate |
 | `workflow_example/analysis/` | Derived analysis results | Generate |

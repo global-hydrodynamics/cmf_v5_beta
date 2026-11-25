@@ -25,7 +25,7 @@ The intended difference is the file selected by `CRIVHGT`:
 
 | Case | `CRIVHGT` input |
 | --- | --- |
-| Control | Shared sample map, `map/mekong_15min/netcdf/rivhgt.nc` |
+| Control | Shared sample map, `map/mekong_15min/rivhgt.nc` |
 | Deep Channel | Tutorial-local `map_modify/rivhgt_deep.nc` |
 
 Both are one-year cold starts for calendar year 2000, using the Tutorial02
@@ -116,7 +116,7 @@ package assembler exists yet.
 
 The sample inputs used by the runner are repository-level files:
 
-- Mekong map files under `map/mekong_15min/netcdf/` and
+- Mekong map files under `map/mekong_15min/` and
   `map/mekong_15min/`;
 - runoff file `inp/repo-mek_1deg/runoff2000.nc`;
 - input matrix `map/mekong_15min/inpmat_repo-mek_1deg.bin` and its dimension

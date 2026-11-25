@@ -5,7 +5,7 @@
 # Inputs: params.txt, nextxy.bin, ctmare.bin, and
 #         <HIRES_TAG>/location.txt plus each area's catmxy, rivwth, flddif,
 #         and optional grdare binary files.
-# Output: prmwat.bin (float32, NX x NY, one record, m2) in the map root.
+# Output: prmwat.nc (float32, NX x NY, one record, m2) in the map root.
 set -eu
 
 # Paths
@@ -23,7 +23,7 @@ if [ ! -d "$CODE_DIR" ]; then
 fi
 MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
 
-# Resolution is selected interactively from installed Binary directories below.
+# Resolution is selected interactively from installed NetCDF directories below.
 
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
@@ -55,18 +55,18 @@ trap 'exit 143' TERM
 
 EXEC_PRMWAT="$CODE_DIR/param_water_calc_prmwat.py"
 
-# Offer the finest installed Binary resolution; Fortran validates its contents.
+# Offer the coarsest installed NetCDF resolution; the Python program validates its contents.
 STEP="Select high-resolution map"
 AVAILABLE=""
 HIRES_TAG=""
-for tag in 1sec 3sec 5sec 15sec 30sec 1min; do
+for tag in 1min 30sec 15sec 5sec 3sec 1sec; do
     if [ -d "$MAP_DIR/$tag" ]; then
         AVAILABLE="${AVAILABLE}${AVAILABLE:+ }$tag"
         if [ -z "$HIRES_TAG" ]; then HIRES_TAG=$tag; fi
     fi
 done
 if [ -z "$HIRES_TAG" ]; then
-    printf 'ERROR: No Binary high-resolution directory found in %s (1sec, 3sec, 5sec, 15sec, 30sec, 1min).\n' "$MAP_DIR" >&2
+    printf 'ERROR: No NetCDF high-resolution directory found in %s (1min, 30sec, 15sec, 5sec, 3sec, 1sec).\n' "$MAP_DIR" >&2
     exit 1
 fi
 

@@ -12,14 +12,14 @@ REPO_ROOT="$(cd "$VISUALIZATION_DIR/.." && pwd)"
 
 # User settings: tracked coarse- and high-resolution Mekong map products.
 MAP_DIR="$REPO_ROOT/map/mekong_15min"
-UPAREA_FILE="$MAP_DIR/netcdf/uparea.nc"          # Source-cell upstream area [m²].
-NEXTXY_FILE="$MAP_DIR/netcdf/nextxy.nc"  # One-based downstream cell indices.
-LONLAT_FILE="$MAP_DIR/netcdf/lonlat.nc"          # Unit-catchment outlet coordinates.
-SUBCOL_FILE="$MAP_DIR/subcol-sample.bin"         # Subbasin display-color categories.
-BSNCOL_FILE="$MAP_DIR/netcdf/bsncol.nc"          # Categorical basin display colors.
-BIFPRM_FILE="$MAP_DIR/netcdf/bifprm.nc"          # Bifurcation paths and layer widths.
+UPAREA_FILE="$MAP_DIR/uparea.nc"                 # Source-cell upstream area [m²].
+NEXTXY_FILE="$MAP_DIR/nextxy.nc"                 # One-based downstream cell indices.
+LONLAT_FILE="$MAP_DIR/lonlat.nc"                 # Unit-catchment outlet coordinates.
+SUBCOL_FILE="$MAP_DIR/subcol-sample.nc"          # Subbasin display-color categories.
+BSNCOL_FILE="$MAP_DIR/bsncol.nc"                 # Categorical basin display colors.
+BIFPRM_FILE="$MAP_DIR/bifprm.nc"                 # Bifurcation paths and layer widths.
 PARAMS_FILE="$MAP_DIR/params.txt"                # Coarse grid dimensions and bounds.
-CATMXY_FILE="$MAP_DIR/1min/1min.catmxy.bin"      # 1-minute to coarse-cell assignment.
+CATMXY_FILE="$MAP_DIR/1min/1min.catmxy.nc"        # 1-minute to coarse-cell assignment.
 LOCATION_FILE="$MAP_DIR/1min/location.txt"       # High-resolution grid bounds and size.
 
 # User settings: independent extents for the three vector-map panels.

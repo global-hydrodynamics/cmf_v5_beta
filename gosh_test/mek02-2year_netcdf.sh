@@ -20,9 +20,9 @@ END_YEAR=2001                    # Last simulation year; extend to continue the 
 ROFFTAG="repo-mek_1deg"     # Selects inp/repo-mek_1deg/ with one NetCDF file per year.
 INPMAT_TAG="repo-mek_1deg"     # Selects the existing input matrix for the same 1-degree grid.
 
-# Map input files; LMAPCDF=.FALSE. makes the reader select Binary or NetCDF from each extension.
-MAPDIR="${CMF_BASE}/map/mekong_15min"  # Mekong river-map root containing params.txt and bifprm.txt.
-MAP_NETCDF_DIR="${MAPDIR}/netcdf"      # Individual NetCDF map products.
+# Map input files; LMAPCDF=.FALSE. reads individual NetCDF products by extension.
+MAPDIR="${CMF_BASE}/map/mekong_15min"  # Mekong river-map root containing params.txt and bifprm.csv.
+MAP_NETCDF_DIR="${MAPDIR}"             # Standard individual NetCDF map products.
 NEXTXY="${MAP_NETCDF_DIR}/nextxy.nc"       # Includes boundary-affected river networks (mek02 default).
 #NEXTXY="${MAP_NETCDF_DIR}/nextxy_noedge.nc" # Excludes boundary-affected networks (mek01 uses this choice).
 #RIVWTH="${MAP_NETCDF_DIR}/rivwth.nc"       # Empirical power-law channel width.
@@ -60,7 +60,7 @@ LRESTCDF=".TRUE."               # TRUE: NetCDF restart; FALSE: Binary restart.
 NAMELIST="${RUNDIR}/input_cmf.nam"
 RUNOFF_DIR="${CMF_BASE}/inp/${ROFFTAG}"
 DIMINFO="${MAPDIR}/diminfo_${INPMAT_TAG}.txt"
-INPMAT="${MAPDIR}/inpmat_${INPMAT_TAG}.bin"
+INPMAT="${MAPDIR}/inpmat_${INPMAT_TAG}.nc"
 
 EXEC_CMF="${CMF_BASE}/src_main/MAIN_cmf"
 
@@ -170,7 +170,8 @@ IFRQ_RST = ${IFRQ_RST}     ! 0=end only; 1-24=hourly; 30=monthly (also writes at
 LINPCDF = .TRUE.           ! TRUE reads NetCDF runoff; independent of the model-output format.
 CROFFREQ = "YEAR"          ! One NetCDF file per calendar year; the reader switches at January 1.
 LINTERP = .TRUE.           ! TRUE maps runoff through CINPMAT; FALSE uses nearest-grid mapping.
-CINPMAT = "${INPMAT}"     ! Binary runoff-to-river input-mapping matrix.
+LITRPCDF = .TRUE.          ! TRUE reads the input-mapping matrix from NetCDF.
+CINPMAT = "${INPMAT}"     ! NetCDF runoff-to-river input-mapping matrix.
 DROFUNIT = ${DROFUNIT}     ! Divide input units by this factor to obtain runoff depth rate [m/s].
 CVNTIME = "${CVNTIME}"    ! CF time-coordinate variable within each annual file.
 CVNROF = "${CVNROF}"      ! Runoff data variable within each annual file.

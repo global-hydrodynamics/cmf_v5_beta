@@ -8,7 +8,6 @@ import io
 from pathlib import Path
 import runpy
 import sys
-import struct
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -30,21 +29,24 @@ MAP = ROOT / "map/mekong_15min"
 
 
 class RasterRiverMapTest(unittest.TestCase):
-    def test_subbasin_binary_contract(self):
+    def test_subbasin_netcdf_contract(self):
         reader = runpy.run_path(str(SCRIPTS / "f01d-raster_river_map-subbasin_color.py"))["read_subbasin_colors"]
         geometry = (3, 2, 1, 90, 93, 5, 7)
         with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "subcol.bin"
-            # First Fortran row is the northern row; x increases eastward.
-            payload = struct.pack("<6i", 2, 3, 4, 5, 0, -9999)
-            path.write_bytes(payload)
+            path = Path(tmp) / "subcol.nc"
+            with Dataset(path, "w") as target:
+                target.createDimension("lat", 2)
+                target.createDimension("lon", 3)
+                variable = target.createVariable("subcol", "i4", ("lat", "lon"), fill_value=-9999)
+                # NetCDF rows are north-to-south and columns west-to-east.
+                variable[:] = [[2, 3, 4], [5, 0, -9999]]
             data = reader(path, geometry)
             np.testing.assert_array_equal(data.data, [[2, 3, 4], [5, 0, -9999]])
             np.testing.assert_array_equal(data.mask, [[False, False, False], [False, True, True]])
-            for invalid in (payload[:-1], payload + b"\0", struct.pack(">6i", 2, 3, 4, 5, 0, -9999)):
-                path.write_bytes(invalid)
-                with self.assertRaises(ValueError):
-                    reader(path, geometry)
+            with Dataset(path, "r+") as target:
+                target.variables["subcol"][:] = [[2, 3, 11], [5, 0, -9999]]
+            with self.assertRaises(ValueError):
+                reader(path, geometry)
 
     def test_data_and_layout(self):
         with (ROOT / "visualization/visualization_catalog.csv").open() as source:
@@ -62,23 +64,24 @@ class RasterRiverMapTest(unittest.TestCase):
                     name = f"f01{panel}-raster_river_map-{option}"
                     output = Path(tmp) / (name + ".png")
                     argv = [str(SCRIPTS / (name + ".py")),
-                            "--input", str(MAP / "subcol-sample.bin" if variable == "subcol"
-                                           else MAP / "netcdf" / (variable + ".nc")),
+                            "--input", str(MAP / "subcol-sample.nc" if variable == "subcol"
+                                           else MAP / (variable + ".nc")),
                             "--params", str(MAP / "params.txt"),
                             "--west", "90", "--east", "110", "--south", "5", "--north", "35",
                             f"--{mode}-height", str(height), f"--{mode}-width", str(width),
                             "--dpi", "100", "--output", str(output)]
                     if variable == "subcol":
-                        argv += ["--bsncol", str(MAP / "netcdf/bsncol.nc")]
+                        argv += ["--bsncol", str(MAP / "bsncol.nc")]
                     original_save = layout.save_network_panel
 
                     def inspect(fig, ax, cax, args):
                         image = ax.images[-1] if variable == "subcol" else ax.images[0]
                         if variable == "subcol":
-                            # Independent Fortran (NX,NY) view checks the real
-                            # sample's orientation and original cell values.
-                            data = np.ndarray((80, 120), dtype="<i4", buffer=args.input.read_bytes(), order="F").T
-                            with Dataset(MAP / "netcdf/bsncol.nc") as src:
+                            # NetCDF latitude/longitude dimensions preserve
+                            # north-first rows and west-to-east columns.
+                            with Dataset(args.input) as source:
+                                data = np.ma.asarray(source["subcol"][:]).filled(-9999)
+                            with Dataset(MAP / "bsncol.nc") as src:
                                 context = np.ma.asarray(src['bsncol'][:]).filled(0)
                             raw = np.ma.masked_where((data <= 0) | (data > 10) | (context < 1) | (context > 10), data)
                         else:

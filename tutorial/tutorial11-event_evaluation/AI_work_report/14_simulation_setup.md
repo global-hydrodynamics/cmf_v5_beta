@@ -32,7 +32,7 @@
 
 ## Historical 20-day execution — standard `nextxy.nc`
 
-On 2026-11-23, set `CNEXTXY` to `map/Rhine_15min/netcdf/nextxy.nc` and reran
+On 2026-11-23, set `CNEXTXY` to `map/Rhine_15min/nextxy.nc` and reran
 the same 480-hour, 20-day cold-start experiment in a new directory to preserve
 the original results:
 

@@ -100,13 +100,13 @@ for VARIANT in "${VARIANTS[@]}"; do
     esac
     INPUTS+=("$INPUT")
     REFERENCES+=("$REFERENCE")
-    if [ -f "$MAP_DIR/netcdf/${INPUT%.bin}.nc" ]; then
+    if [ -f "$MAP_DIR/${INPUT%.bin}.nc" ]; then
         EXISTING_COUNT=$((EXISTING_COUNT + 1))
     fi
 done
 
 printf '\nConversion summary\n'
-printf 'Map: %s\nOutput directory: %s\n' "$MAP_DIR" "$MAP_DIR/netcdf"
+printf 'Map: %s\nOutput directory: %s\n' "$MAP_DIR" "$MAP_DIR"
 printf 'Selected inputs: %s; existing outputs: %s; new outputs: %s\n' \
     "${#INPUTS[@]}" "$EXISTING_COUNT" "$((${#INPUTS[@]} - EXISTING_COUNT))"
 NUMBER=0
@@ -118,7 +118,7 @@ for INPUT in "${INPUTS[@]}"; do
     STEP="Convert $INPUT using $REFERENCE"
     printf '\n==================================================\n[STEP %s/%s] %s\n==================================================\n\n' "$NUMBER" "${#VARIANTS[@]}" "$STEP"
 
-    OUTPUT_FILE="$MAP_DIR/netcdf/${INPUT%.bin}.nc"
+    OUTPUT_FILE="$MAP_DIR/${INPUT%.bin}.nc"
     if [ -f "$OUTPUT_FILE" ] && [ "$NO_OVERWRITE" -eq 1 ]; then
         printf 'Existing output preserved: %s\n' "$OUTPUT_FILE"
         SKIPPED=$((SKIPPED + 1))
@@ -132,7 +132,7 @@ for INPUT in "${INPUTS[@]}"; do
 
     python3 "$CONVERTER" \
         --map-dir "$MAP_DIR" \
-        --input "$MAP_DIR/$INPUT" \
+        --input "$MAP_DIR/binary/$INPUT" \
         --output "$OUTPUT_FILE" \
         --reference-binary "$REFERENCE" \
         "$@"

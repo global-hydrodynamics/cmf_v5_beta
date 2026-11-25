@@ -63,7 +63,7 @@ def finish(fig: plt.Figure, name: str) -> None:
 
 
 def plot_map_change() -> None:
-    src = xr.open_dataset(REPO / "map/mekong_15min/netcdf/rivhgt.nc", mask_and_scale=True)
+    src = xr.open_dataset(REPO / "map/mekong_15min/rivhgt.nc", mask_and_scale=True)
     base = src["rivhgt"].load()
     deep = xr.open_dataset(ROOT / "map_modify/rivhgt_deep.nc", mask_and_scale=True)["rivhgt"].load()
     delta = data_values(deep) - data_values(base)
@@ -139,7 +139,7 @@ def plot_timeseries() -> None:
 def plot_flooded_area(event: dict[str, str]) -> None:
     bbox = (104.0, 108.0, 8.0, 13.0)
     stamp = np.datetime64(event["time_coordinate_interval_end"])
-    ctmare = xr.open_dataset(REPO / "map/mekong_15min/netcdf/ctmare.nc", mask_and_scale=True)["ctmare"].load()
+    ctmare = xr.open_dataset(REPO / "map/mekong_15min/ctmare.nc", mask_and_scale=True)["ctmare"].load()
     fig = plt.figure(figsize=(12, 11), constrained_layout=True)
     grid = fig.add_gridspec(3, 2, height_ratios=(1, 1, 0.8))
     axes = [fig.add_subplot(grid[0, 0]), fig.add_subplot(grid[0, 1]),

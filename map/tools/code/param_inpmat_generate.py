@@ -11,7 +11,7 @@ from pathlib import Path
 
 import numpy as np
 
-from mod_map_io import Grid, output_root, parser
+from mod_map_io import Grid, output_root, parser, read_array, write_inpmat
 
 
 def pixel_area(size, latitude, legacy_default=False):
@@ -36,7 +36,7 @@ def pixel_area(size, latitude, legacy_default=False):
 
 
 def generate(grid, source, out, size, west, east, north, south, order,
-             diminfo, inpmat, legacy_default=False):
+             diminfo, inpmat, legacy_default=False, map_format='netcdf'):
     """Accumulate bounded row blocks without changing float32 addition order."""
     nxin = int(np.floor(np.float32((east-west)/size)+np.float32(.5)))
     nyin = int(np.floor(np.float32((north-south)/size)+np.float32(.5)))
@@ -53,9 +53,10 @@ def generate(grid, source, out, size, west, east, north, south, order,
         nx, ny = int(fields[6]), int(fields[7])
         resolution = np.float32(fields[8])
         path = source/(name+'.catmxy.bin')
-        if not path.is_file():
+        nc_path = path.with_suffix('.nc')
+        if not (nc_path.is_file() if map_format == 'netcdf' else path.is_file()):
             continue
-        assignments = np.memmap(path, mode='r', dtype='<i2', shape=(2, ny, nx))
+        assignments = read_array(path, '<i2', (ny, nx), 2)
         longitude = origin_x+(np.arange(nx, dtype='f4')+np.float32(.5))*resolution
         longitude[longitude >= 180] -= np.float32(360)
         longitude[longitude < -180] += np.float32(360)
@@ -67,8 +68,8 @@ def generate(grid, source, out, size, west, east, north, south, order,
         if order == 'StoN':
             iyin = nyin-iyin+1
         area_path = source/(name+'.grdare.bin')
-        area_map = (np.memmap(area_path, mode='r', dtype='<f4', shape=(ny, nx))
-                    if area_path.is_file() else None)
+        area_exists = area_path.with_suffix('.nc').is_file() if map_format == 'netcdf' else area_path.is_file()
+        area_map = read_array(area_path, '<f4', (ny, nx)) if area_exists else None
         reference_area = pixel_area(resolution, latitude, legacy_default)
         for start in range(0, ny, 64):
             stop = min(ny, start+64)
@@ -107,18 +108,32 @@ def generate(grid, source, out, size, west, east, north, south, order,
     if maximum == 0:
         raise ValueError('No valid input-grid overlap; reference has zero-length records')
     out.mkdir(parents=True, exist_ok=True)
-    with (out/inpmat).open('wb') as stream:
-        for field in (xslots, yslots, areas):
-            field[:, :maximum].T.reshape(maximum, grid.ny, grid.nx).tofile(stream)
-    descriptor = out/diminfo
-    with descriptor.open('w') as stream:
-        for value, label in zip([grid.nx, grid.ny, grid.nlfp, nxin, nyin, maximum],
-                                ['nXX', 'nYY', 'floodplain layer', 'input nXX ', 'input nYY ', 'input num']):
-            stream.write(f'{value:10d}     !! {label}\n')
-        stream.write(str(inpmat)+'\n')
-        for value, label in [(grid.west, 'west  edge'), (grid.east, 'east  edge'),
-                             (grid.north, 'north edge'), (grid.south, 'south edge')]:
-            stream.write(f'{value:12.3f}     !! {label}\n')
+    inpx, inpy, inpa = (field[:, :maximum].T.reshape(maximum, grid.ny, grid.nx)
+                        for field in (xslots, yslots, areas))
+    inpmat_path = Path(inpmat)
+    if map_format == 'netcdf':
+        inpmat_path = inpmat_path.with_suffix('.nc')
+        metadata = {'nx': grid.nx, 'ny': grid.ny, 'nlfp': grid.nlfp, 'nxin': nxin,
+                    'nyin': nyin, 'inpn': maximum, 'west': float(grid.west),
+                    'east': float(grid.east), 'north': float(grid.north), 'south': float(grid.south)}
+        write_inpmat(out/inpmat_path, inpx, inpy, inpa, metadata)
+    else:
+        with (out/inpmat_path).open('wb') as stream:
+            for field in (inpx, inpy, inpa):
+                field.tofile(stream)
+    descriptor_paths = {source.parent/diminfo}
+    if out != source.parent:
+        descriptor_paths.add(out/diminfo)
+    matrix_name = inpmat_path.name
+    for descriptor in descriptor_paths:
+        with descriptor.open('w') as stream:
+            for value, label in zip([grid.nx, grid.ny, grid.nlfp, nxin, nyin, maximum],
+                                    ['nXX', 'nYY', 'floodplain layer', 'input nXX ', 'input nYY ', 'input num']):
+                stream.write(f'{value:10d}     !! {label}\n')
+            stream.write(matrix_name+'\n')
+            for value, label in [(grid.west, 'west  edge'), (grid.east, 'east  edge'),
+                                 (grid.north, 'north edge'), (grid.south, 'south edge')]:
+                stream.write(f'{value:12.3f}     !! {label}\n')
 
 
 def main():
@@ -133,7 +148,7 @@ def main():
     args = p.parse_args()
     generate(Grid.read(args.map_dir/'params.txt'), args.map_dir/args.hires_tag,
              output_root(args), args.size, args.west, args.east, args.north, args.south,
-             args.order, args.diminfo, args.inpmat)
+             args.order, args.diminfo, args.inpmat, map_format=args.map_format)
 
 
 if __name__ == '__main__':

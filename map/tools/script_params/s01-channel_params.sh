@@ -2,10 +2,10 @@
 # Generate annual-runoff channel parameters for a map.
 # Copy to <map>/script_params/, configure the paths and coefficients, and run from any CWD.
 #
-# Inputs: diminfo_<ROFFTAG>.txt, inpmat_<ROFFTAG>.bin, annual runoff climatology,
-#         nextxy.bin, ctmare.bin, and width.bin.
-# Outputs: outclm.bin, rivwth.bin, rivhgt.bin, rivman.bin, rivhgt_inf.bin,
-#          and rivwth_merit.bin in the map root.
+# Inputs: diminfo_<ROFFTAG>.txt, inpmat_<ROFFTAG>.nc, annual runoff climatology,
+#         nextxy.nc, ctmare.nc, and width.nc.
+# Outputs: outclm.nc, rivwth.nc, rivhgt.nc, rivman.nc, rivhgt_inf.nc,
+#          and rivwth_merit.nc in the map root.
 set -eu
 
 # Paths
@@ -30,7 +30,7 @@ INTERP="mat"                                   # Python CLI: mat for input matri
 # Shared grid: inp/ELSE_GPCC/runoffYYYY.nc [mm/day] and map/data/ELSE_GPCC_clm-1981-2010.one [mm/s].
 ROFFTAG="test-1deg"                        # Runoff dataset ID used in both matrix filenames.
 DIMINFO="diminfo_${ROFFTAG}.txt"                 # Simulation dimension information (model and input grids).
-INPMAT="inpmat_${ROFFTAG}.bin"                 # Runoff input matrix file derived from ROFFTAG.
+INPMAT="inpmat_${ROFFTAG}.nc"                  # Runoff input matrix file derived from ROFFTAG.
 CROFBIN="../data/ELSE_GPCC_clm-1981-2010.one"  # Annual-mean runoff input [mm/s], relative to the map root.
 # Source: Kim et al. (2009), https://doi.org/10.1029/2009GL039006
 

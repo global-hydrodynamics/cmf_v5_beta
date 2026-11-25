@@ -69,7 +69,7 @@ input; the modified river-depth parameter belongs to `workflow_example/`.
 
 | File or directory | Role and owner |
 |---|---|
-| `map/mekong_15min/netcdf/rivhgt.nc` | Shared baseline map; read-only input used by Control |
+| `map/mekong_15min/rivhgt.nc` | Shared baseline map; read-only input used by Control |
 | Shared Mekong map, runoff, input matrix, and model executable | Repository/sample inputs; do not edit as part of this example |
 | `workflow_example/sNN-*`, `aNN-*`, `vNN-*` | Tutorial-owned preparation, run, analysis, and plotting scripts; exact names are set during implementation |
 | `workflow_example/map_modify/rivhgt_deep.nc` | Tutorial-generated input selected only by Deep Channel |
@@ -137,7 +137,7 @@ implementation. The default ownership plan keeps modified inputs, model
 outputs, analysis products, and figures inside `workflow_example/`.
 
 **Inspect:** Confirm the shared baseline
-`map/mekong_15min/netcdf/rivhgt.nc` exists and can be read. Record its
+`map/mekong_15min/rivhgt.nc` exists and can be read. Record its
 reproducible integrity check before and after preparation to show that the
 shared map was not changed. Also confirm that the required forcing and
 input-matrix files can be opened by the documented workflow.
@@ -152,7 +152,7 @@ baseline map or its valid-cell coverage?
 
 Explain that `rivhgt` is channel depth in metres and that the model derives
 channel-bed elevation as `elevtn - rivhgt`. The shared source
-`map/mekong_15min/netcdf/rivhgt.nc` is read-only. The proposed preparation
+`map/mekong_15min/rivhgt.nc` is read-only. The proposed preparation
 script belongs to this workflow example and will write the modified map to
 `workflow_example/map_modify/rivhgt_deep.nc`. Control uses the shared source;
 Deep Channel selects the tutorial-local product through `CRIVHGT`. The manual

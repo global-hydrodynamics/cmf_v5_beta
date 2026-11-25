@@ -63,11 +63,13 @@ def read_catchment_mapping(path: Path, location_path: Path, geometry,
                             (west, east, south, north))):
         raise ValueError(f"{location_path} grid geometry does not match params.txt")
 
-    values = np.fromfile(path, dtype="<i2")
-    expected_values = 2 * nxhi * nyhi
-    if values.size != expected_values:
-        raise ValueError(f"{path} contains {values.size} values; expected {expected_values}")
-    catmx, catmy = values.reshape(2, nyhi, nxhi)
+    with Dataset(path) as dataset:
+        if not {"catmx", "catmy"}.issubset(dataset.variables):
+            raise ValueError(f"{path} must contain catmx and catmy NetCDF variables")
+        catmx = np.ma.asarray(dataset.variables["catmx"][:]).filled(-999).astype(np.int32)
+        catmy = np.ma.asarray(dataset.variables["catmy"][:]).filled(-999).astype(np.int32)
+    if catmx.shape != (nyhi, nxhi) or catmy.shape != (nyhi, nxhi):
+        raise ValueError(f"{path} assignment grids must have shape {(nyhi, nxhi)}")
 
     valid_x = (catmx >= 1) & (catmx <= nx)
     valid_y = (catmy >= 1) & (catmy <= ny)
@@ -121,12 +123,13 @@ def crop_catchment_data(catmx, catmy, valid, unassigned_land, uparea,
 
 
 def read_visual_categories(path: Path, hires, extent):
-    """Read signed-int8 1-minute FLOW visual classes in Fortran raster order."""
-    values = np.fromfile(path, dtype=np.int8)
-    expected = hires["nx"] * hires["ny"]
-    if values.size != expected:
-        raise ValueError(f"{path} contains {values.size} values; expected {expected}")
-    visual = values.reshape(hires["ny"], hires["nx"])
+    """Read signed-int8 visual classes from the high-resolution NetCDF tile."""
+    with Dataset(path) as source:
+        variable = source.variables["visual"]
+        expected_shape = (hires["ny"], hires["nx"])
+        if variable.dimensions != ("lat", "lon") or variable.shape != expected_shape:
+            raise ValueError(f"{path}: visual must have shape {expected_shape} in (lat, lon) order")
+        visual = np.ma.asarray(variable[:]).filled(-128).astype(np.int8)
     xmin, xmax, ymin, ymax = extent
     resolution = hires["resolution"]
     col0 = max(0, int((xmin - hires["west"]) / resolution) - 1)

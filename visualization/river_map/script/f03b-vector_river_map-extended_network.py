@@ -115,11 +115,11 @@ def read_catchment_mapping(path: Path, location_path: Path, geometry,
             not np.allclose((west, east, south, north),
                             (map_west, map_east, map_south, map_north))):
         raise ValueError(f"{location_path} has inconsistent 1-minute grid geometry")
-    expected_size = 2 * nxhi * nyhi
-    values = np.fromfile(path, dtype="<i2")
-    if values.size != expected_size:
-        raise ValueError(f"{path} has {values.size} values; expected {expected_size}")
-    catmx, catmy = values.reshape(2, nyhi, nxhi)
+    with Dataset(path) as source:
+        catmx = np.ma.asarray(source.variables["catmx"][:]).filled(-999).astype(np.int32)
+        catmy = np.ma.asarray(source.variables["catmy"][:]).filled(-999).astype(np.int32)
+    if catmx.shape != (nyhi, nxhi) or catmy.shape != (nyhi, nxhi):
+        raise ValueError(f"{path} assignment grids must have shape {(nyhi, nxhi)}")
 
     valid_x = (catmx >= 1) & (catmx <= nx)
     valid_y = (catmy >= 1) & (catmy <= ny)

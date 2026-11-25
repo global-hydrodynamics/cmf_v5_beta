@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-SOURCE = ROOT / "map/tools/code/param_water_calc_prmwat.F90"
+SOURCE = ROOT / "map/tools/code/legacy_fortran/param_water_calc_prmwat.F90"
 
 
 @unittest.skipUnless(shutil.which("gfortran"), "gfortran is not installed")
@@ -131,9 +131,12 @@ class PermanentWaterTests(unittest.TestCase):
         map_dir = work.parent
         code = map_dir.parent / "tools/code"
         code.mkdir(parents=True)
-        executable = code / "param_water_calc_prmwat"
-        executable.write_text('#!/bin/sh\nprintf "%s\\n" "$@" > called.args\n')
-        executable.chmod(0o755)
+        executable = code / "param_water_calc_prmwat.py"
+        executable.write_text(
+            "from pathlib import Path\nimport sys\n"
+            "Path('called.args').write_text(sys.argv[1] + '\\n')\n",
+            encoding="ascii",
+        )
         wrapper = work / "s05-permanent_water.sh"
         template = (ROOT / "map/tools/script_params/s05-permanent_water.sh").read_text()
         wrapper.write_text(template)

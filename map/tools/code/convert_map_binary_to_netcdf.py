@@ -135,7 +135,9 @@ def generate_conversion_list(map_dir: Path, registry_path: Path, list_path: Path
         for filename in registered_base_filenames(row):
             rows_by_filename.setdefault(filename, []).append((row_index, row))
 
-    binary_files = {path.name for path in map_dir.glob("*.bin") if path.is_file()}
+    binary_root = map_dir / "binary"
+    binary_root = binary_root if binary_root.is_dir() else map_dir
+    binary_files = {path.name for path in binary_root.glob("*.bin") if path.is_file()}
     candidates = []
     for filename in sorted(binary_files):
         file_rows = rows_by_filename.get(standard_binary_filename(filename), [])
@@ -474,7 +476,7 @@ def main() -> int:
     parser.add_argument("--output", type=Path, help="destination NetCDF file")
     parser.add_argument("--registry", type=Path, default=root / "variable_table/map_variables.csv", help="map variable registry")
     parser.add_argument("--generate-list", action="store_true", help="write a human-editable base-map conversion list")
-    parser.add_argument("--list-file", type=Path, help="conversion-list path; defaults to <map-dir>/netcdf/bin2nc_list.txt")
+    parser.add_argument("--list-file", type=Path, help="conversion-list path; defaults to <map-dir>/script_format_conv/bin2nc_list.txt")
     parser.add_argument("--variables", help="comma-separated registry variable names; defaults to all variables in the file")
     parser.add_argument(
         "--byte-order",
@@ -491,7 +493,7 @@ def main() -> int:
         if args.input or args.output or args.variables or args.no_overwrite or args.reference_binary:
             parser.error("--generate-list cannot be combined with conversion options")
         args.registry = args.registry.resolve()
-        args.list_file = (args.list_file or args.map_dir / "netcdf/bin2nc_list.txt").resolve()
+        args.list_file = (args.list_file or args.map_dir / "script_format_conv/bin2nc_list.txt").resolve()
         try:
             generate_conversion_list(args.map_dir, args.registry, args.list_file)
         except (OSError, ValueError) as error:

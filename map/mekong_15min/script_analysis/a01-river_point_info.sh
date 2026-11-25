@@ -1,12 +1,22 @@
 #!/bin/sh
 # Example: inspect river-network and unit-catchment information at a selected point.
-# Run from script_analysis/ after a00-link_codes.sh creates the shared-code link.
+# Run from script_analysis/; shared Python sources are resolved by this wrapper.
 # Inputs: standard river-map files; latlon mode may use 15sec/ or 1min/ catmxy data.
 # Output: river-point report in OUT_DIR.
 set -eu
 
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+PYTHON_CMD="${PYTHON_CMD:-python3}"
+if [ -n "${CMF5_ROOT:-}" ]; then
+    CODE_DIR="$CMF5_ROOT/map/tools/code"
+else
+    CODE_DIR="$SCRIPT_DIR/../../tools/code"
+fi
+if [ ! -d "$CODE_DIR" ]; then
+    printf '[ERROR] Shared Python tools not found: %s (set CMF5_ROOT to the repository root)\n' "$CODE_DIR" >&2
+    exit 1
+fi
 
 # Analysis output directory, relative to script_analysis/.
 OUT_DIR="out_analysis"  # Change to ../out_analysis to use the map-root output folder.
@@ -43,26 +53,26 @@ printf '==================================================\n\n'
 case "$QUERY_MODE" in
     xy)
         if [ -n "$REPORT_FILE" ]; then
-            printf './code/analysis_river_point_info xy %s %s > ' "$IX" "$IY"
+            printf '"$PYTHON_CMD" "$CODE_DIR/analysis_river_point_info.py" xy %s %s > ' "$IX" "$IY"
             quote_shell_arg "$REPORT_FILE"
             printf '\n'
-            ./code/analysis_river_point_info xy "$IX" "$IY" > "$REPORT_FILE"
+            "$PYTHON_CMD" "$CODE_DIR/analysis_river_point_info.py" xy "$IX" "$IY" > "$REPORT_FILE"
             printf 'River-information report: %s\n' "$REPORT_FILE"
         else
-            printf './code/analysis_river_point_info xy %s %s\n' "$IX" "$IY"
-            ./code/analysis_river_point_info xy "$IX" "$IY"
+            printf '"$PYTHON_CMD" "$CODE_DIR/analysis_river_point_info.py" xy %s %s\n' "$IX" "$IY"
+            "$PYTHON_CMD" "$CODE_DIR/analysis_river_point_info.py" xy "$IX" "$IY"
         fi
         ;;
     latlon)
         if [ -n "$REPORT_FILE" ]; then
-            printf './code/analysis_river_point_info latlon %s %s > ' "$LAT" "$LON"
+            printf '"$PYTHON_CMD" "$CODE_DIR/analysis_river_point_info.py" latlon %s %s > ' "$LAT" "$LON"
             quote_shell_arg "$REPORT_FILE"
             printf '\n'
-            ./code/analysis_river_point_info latlon "$LAT" "$LON" > "$REPORT_FILE"
+            "$PYTHON_CMD" "$CODE_DIR/analysis_river_point_info.py" latlon "$LAT" "$LON" > "$REPORT_FILE"
             printf 'River-information report: %s\n' "$REPORT_FILE"
         else
-            printf './code/analysis_river_point_info latlon %s %s\n' "$LAT" "$LON"
-            ./code/analysis_river_point_info latlon "$LAT" "$LON"
+            printf '"$PYTHON_CMD" "$CODE_DIR/analysis_river_point_info.py" latlon %s %s\n' "$LAT" "$LON"
+            "$PYTHON_CMD" "$CODE_DIR/analysis_river_point_info.py" latlon "$LAT" "$LON"
         fi
         ;;
     *)

@@ -25,7 +25,7 @@ from param_channel_calc_outclm import local_runoff, route
 from param_mpi_set_region import assign_regions
 from region_combine_hires import translated
 from region_set_map import derive, heap_order
-import test_prmwat as water_fixtures
+from map.tools.tests import test_prmwat as water_fixtures
 
 
 class ScientificContractTests(unittest.TestCase):
@@ -116,13 +116,21 @@ class FallbackParityTests(unittest.TestCase):
                 root = Path(temp); source=root/'source'; source.mkdir(); work=source/'work'; work.mkdir(); out=root/'out';out.mkdir()
                 water_fixtures.PermanentWaterTests.make_inputs(SimpleNamespace(map_root=source))
                 np.full((2,2),1e10,dtype='<f4').tofile(source/'ctmare.bin')
+                binary = source/'binary'
+                binary.mkdir(exist_ok=True)
+                for path in source.glob('*.bin'):
+                    shutil.copy2(path, binary/path.name)
+                hires_binary = binary/'1min'
+                hires_binary.mkdir()
+                for path in (source/'1min').glob('*.bin'):
+                    shutil.copy2(path, hires_binary/path.name)
                 args=['1min'];cwd=source
                 product='prmwat.bin'
                 if name=='param_inpmat_generate':
                     args += ['1','-180','180','90','-90','NtoS','diminfo_trial.txt','inpmat_trial.bin'];product='inpmat_trial.bin'
                 elif name=='region_default_inpmat':cwd=work;product='inpmat_test-1deg.bin'
                 a=subprocess.run([str(self.executables[name]),*args],cwd=cwd,capture_output=True,text=True)
-                b=subprocess.run([sys.executable,str(CODE/(name+'.py')),*args,'--map-dir',str(source),'--output-dir',str(out)],cwd=root,capture_output=True,text=True)
+                b=subprocess.run([sys.executable,str(CODE/(name+'.py')),*args,'--map-format','binary','--map-dir',str(source),'--output-dir',str(out)],cwd=root,capture_output=True,text=True)
                 self.assertEqual(a.returncode,0,a.stdout+a.stderr)
                 self.assertEqual(b.returncode,0,b.stdout+b.stderr)
                 reference=np.fromfile(source/product,dtype='<f4');actual=np.fromfile(out/product,dtype='<f4')
@@ -135,12 +143,19 @@ class FallbackParityTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='cmf-invalid-assignment-') as temp:
             root = Path(temp)
             water_fixtures.PermanentWaterTests.make_inputs(SimpleNamespace(map_root=root), grdare=[.1]*4)
+            binary = root/'binary'
+            binary.mkdir()
+            for path in root.glob('*.bin'):
+                shutil.copy2(path, binary/path.name)
+            (binary/'1min').mkdir()
+            for path in (root/'1min').glob('*.bin'):
+                shutil.copy2(path, binary/'1min'/path.name)
             path = root/'1min/area.catmxy.bin'
             values = np.fromfile(path,dtype='<i2').reshape(2,2,2)
             values[1,0,0] = -9
             values.tofile(path)
             a = subprocess.run([str(self.executables['param_water_calc_prmwat']),'1min'],cwd=root,capture_output=True)
-            b = subprocess.run([sys.executable,str(CODE/'param_water_calc_prmwat.py'),'1min','--map-dir',str(root),'--output-dir',str(root/'out')],capture_output=True)
+            b = subprocess.run([sys.executable,str(CODE/'param_water_calc_prmwat.py'),'1min','--map-format','binary','--map-dir',str(root),'--output-dir',str(root/'out')],capture_output=True)
             self.assertNotEqual(a.returncode,0)
             self.assertNotEqual(b.returncode,0)
             self.assertFalse((root/'prmwat.bin').exists())
@@ -150,7 +165,7 @@ class FallbackParityTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='cmf-overlap-') as temp:
             root = Path(temp)
             source = root/'source';source.mkdir()
-            hires = source/'1min';hires.mkdir()
+            hires = source/'binary'/'1min';hires.mkdir(parents=True)
             extent = 1/30
             (hires/'location.txt').write_text('2 narea\niarea carea west east south north nx ny csize\n'
                 + ''.join(f'{i} {name} 0 {extent} 0 {extent} 2 2 {1/60}\n' for i,name in enumerate(('one','two'),1)))
@@ -159,11 +174,11 @@ class FallbackParityTests(unittest.TestCase):
             for index,name in enumerate(('one','two')):
                 (np.arange(4,dtype='i1').reshape(2,2)+index*10).tofile(hires/(name+'.catmzz.bin'))
                 np.full((2,2),index+1,dtype='i1').tofile(hires/(name+'.visual.bin'))
-            f = root/'f';f.mkdir();(f/'1min').mkdir();work=f/'work';work.mkdir();out=root/'out'
+            f = root/'f';f.mkdir();(f/'binary'/'1min').mkdir(parents=True);work=f/'work';work.mkdir();out=root/'out'
             change=work/'dim_change.txt'
             change.write_text('\n'.join([str(source)+'/', '3','2',str(1/60),'0',str(extent),'0',str(extent),'../','2','2','1','0','0',str(extent),'0',str(extent)])+'\n')
             a=subprocess.run([str(self.executables['region_combine_hires']),'1min'],cwd=work,capture_output=True,text=True)
-            b=subprocess.run([sys.executable,str(CODE/'region_combine_hires.py'),'1min','--map-dir',str(f),'--output-dir',str(out),'--change-info',str(change)],cwd=root,capture_output=True,text=True)
+            b=subprocess.run([sys.executable,str(CODE/'region_combine_hires.py'),'1min','--map-format','binary','--map-dir',str(f),'--output-dir',str(f),'--change-info',str(change)],cwd=root,capture_output=True,text=True)
             self.assertEqual(a.returncode,0,a.stdout+a.stderr)
             self.assertEqual(b.returncode,0,b.stdout+b.stderr)
             for reference in (f/'1min').glob('*.bin'):
@@ -177,10 +192,13 @@ class FallbackParityTests(unittest.TestCase):
         for mode in ('normal','MaxMPI'):
             with self.subTest(mode=mode), tempfile.TemporaryDirectory(prefix='cmf-mpi-port-') as temp:
                 root=Path(temp);work=root/'work';work.mkdir();out=root/'out'
-                for name in ('params.txt','basin.bin','nextxy.bin','bifprm.csv'):
-                    shutil.copyfile(sample/name,root/name)
+                for name in ('params.txt','bifprm.csv'):
+                    shutil.copyfile(sample/'binary'/name if name.endswith('.bin') else sample/name,root/name)
+                for name in ('basin.bin','nextxy.bin'):
+                    binary_root=root/'binary';binary_root.mkdir(exist_ok=True)
+                    shutil.copyfile(sample/'binary'/name,binary_root/name)
                 a=subprocess.run([str(self.executables['param_mpi_set_basin']),mode,'check_map'],cwd=work,capture_output=True,text=True)
-                b=subprocess.run([sys.executable,str(CODE/'param_mpi_set_basin.py'),mode,'check_map','--map-dir',str(root),'--output-dir',str(out)],cwd=work,capture_output=True,text=True)
+                b=subprocess.run([sys.executable,str(CODE/'param_mpi_set_basin.py'),mode,'check_map','--map-format','binary','--map-dir',str(root),'--output-dir',str(out)],cwd=work,capture_output=True,text=True)
                 self.assertEqual(a.returncode,0,a.stdout+a.stderr)
                 self.assertEqual(b.returncode,0,b.stdout+b.stderr)
                 for name in ('bifcol_mpi.bin','bifbsn_mpi.tmp','check_bif_bsnmod_mpi.bin'):
@@ -190,11 +208,11 @@ class FallbackParityTests(unittest.TestCase):
         sample = ROOT/'map/mekong_15min'
         with tempfile.TemporaryDirectory(prefix='cmf-inpmat-port-') as temp:
             root=Path(temp);out=root/'out'
-            shutil.copyfile(sample/'params.txt',root/'params.txt')
+            shutil.copyfile(sample/'binary'/'params.txt',root/'params.txt')
             (root/'1min').symlink_to(sample/'1min')
             options=['1min','.5','-180','180','90','-90','StoN','diminfo_trial.txt','inpmat_trial.bin']
             a=subprocess.run([str(self.executables['param_inpmat_generate']),*options],cwd=root,capture_output=True,text=True)
-            b=subprocess.run([sys.executable,str(CODE/'param_inpmat_generate.py'),*options,'--map-dir',str(root),'--output-dir',str(out)],cwd=root,capture_output=True,text=True)
+            b=subprocess.run([sys.executable,str(CODE/'param_inpmat_generate.py'),*options,'--map-format','binary','--map-dir',str(root),'--output-dir',str(out)],cwd=root,capture_output=True,text=True)
             self.assertEqual(a.returncode,0,a.stdout+a.stderr)
             self.assertEqual(b.returncode,0,b.stdout+b.stderr)
             self.assertEqual((root/'inpmat_trial.bin').read_bytes(),(out/'inpmat_trial.bin').read_bytes())

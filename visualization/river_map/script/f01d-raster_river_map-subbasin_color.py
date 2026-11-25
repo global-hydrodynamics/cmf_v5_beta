@@ -8,6 +8,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from netCDF4 import Dataset
 from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib.collections import LineCollection
 
@@ -19,14 +20,13 @@ from river_network_layout import (
 
 
 def read_subbasin_colors(path, geometry):
-    """Read one little-endian int32 Fortran (NX, NY) record, x varying fastest."""
+    """Read registered subcol values in NetCDF north-first grid order."""
     nx, ny = geometry[:2]
-    expected_bytes = nx * ny * 4
-    if path.stat().st_size != expected_bytes:
-        raise ValueError(f"{path} must contain exactly {expected_bytes} bytes for {nx}x{ny} int32 cells")
-    # Fortran's first index (x) is contiguous: C-order (NY, NX) gives north-to-
-    # south rows, matching origin='upper'. Do not transpose or flip the map.
-    values = np.fromfile(path, dtype="<i4").reshape(ny, nx)
+    with Dataset(path) as source:
+        variable = source.variables["subcol"]
+        if variable.dimensions != ("lat", "lon") or variable.shape != (ny, nx):
+            raise ValueError(f"{path}: subcol must have shape ({ny}, {nx}) in (lat, lon) order")
+        values = np.ma.asarray(variable[:]).filled(-9999).astype(np.int32)
     valid = (values >= 1) & (values <= 10)
     if np.any(~(valid | (values == -9999) | (values == 0))):
         raise ValueError(f"{path} has invalid display indices; expected 1–10, -9999, or unassigned 0")
@@ -53,7 +53,7 @@ def draw_bsncol_class_boundaries(ax, bsncol, geometry):
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, required=True, help="Prepared subcol-sample.bin")
+    parser.add_argument("--input", type=Path, required=True, help="Prepared subcol-sample.nc")
     parser.add_argument("--bsncol", type=Path, required=True,
                         help="Basin display-color index NetCDF raster")
     parser.add_argument("--cmap", default="tab10", help="Qualitative discrete palette, as in Basin Color")

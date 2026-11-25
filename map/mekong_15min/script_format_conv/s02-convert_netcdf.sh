@@ -1,7 +1,7 @@
 #!/bin/sh
 # Convert selected map-root Binary files to individual NetCDF files.
 # Inputs: bin2nc_list.txt in the current working directory, params.txt, registered .bin files.
-# Outputs: <map>/netcdf/<binary-stem>.nc.
+# Outputs: <map>/<binary-stem>.nc.
 set -eu
 
 # No map-name setting is needed; target selection follows the working directory or --map-dir.
@@ -88,7 +88,8 @@ if [ ! -f "$CONVERTER" ] || [ ! -f "$REGISTRY" ]; then
     printf 'ERROR: shared converter or variable registry not found under %s\n' "$REPO_ROOT" >&2
     exit 1
 fi
-NETCDF_DIR="$MAP_DIR/netcdf"
+BINARY_DIR="$MAP_DIR/binary"
+NETCDF_DIR="$MAP_DIR"
 
 if [ ! -f "$LIST_FILE" ]; then
     printf 'ERROR: conversion list not found: %s\n' "$LIST_FILE" >&2
@@ -120,8 +121,8 @@ while IFS= read -r FILE || [ -n "$FILE" ]; do
             exit 1
             ;;
     esac
-    if [ ! -f "$MAP_DIR/$FILE" ]; then
-        printf 'ERROR: listed Binary file does not exist: %s\n' "$MAP_DIR/$FILE" >&2
+    if [ ! -f "$BINARY_DIR/$FILE" ]; then
+        printf 'ERROR: listed Binary file does not exist: %s\n' "$BINARY_DIR/$FILE" >&2
         exit 1
     fi
     case " $SEEN_FILES " in
@@ -195,7 +196,7 @@ while IFS= read -r FILE <&3 || [ -n "$FILE" ]; do
         python3 "$CONVERTER" \
             --map-dir "$MAP_DIR" \
             --registry "$REGISTRY" \
-            --input "$MAP_DIR/$FILE" \
+            --input "$BINARY_DIR/$FILE" \
             --output "$OUTPUT_FILE" \
             "$@" \
             --force
@@ -203,7 +204,7 @@ while IFS= read -r FILE <&3 || [ -n "$FILE" ]; do
         python3 "$CONVERTER" \
             --map-dir "$MAP_DIR" \
             --registry "$REGISTRY" \
-            --input "$MAP_DIR/$FILE" \
+            --input "$BINARY_DIR/$FILE" \
             --output "$OUTPUT_FILE" \
             "$@"
     fi

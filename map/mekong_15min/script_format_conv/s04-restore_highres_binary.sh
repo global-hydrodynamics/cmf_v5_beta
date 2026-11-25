@@ -5,9 +5,9 @@ set -eu
 
 # User settings: select available high-resolution directories and variables.
 # Choose one or more available high-resolution map directories.
-# Each <HIRES>_nc/ must contain location.txt and registered NetCDF tile files.
+# Each <HIRES>/ must contain location.txt and registered NetCDF tile files.
 #HIRES="1min 15sec 3sec"
-HIRES=""  # Empty proposes the coarsest available *_nc directory; explicit lists remain supported.
+HIRES=""  # Empty proposes the coarsest available NetCDF resolution; explicit lists remain supported.
 
 # Choose registered file stems present in the selected NetCDF directories.
 # Options shown here are high-resolution registry products; a map need not

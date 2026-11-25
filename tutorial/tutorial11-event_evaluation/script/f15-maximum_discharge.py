@@ -368,7 +368,7 @@ def draw_regional(map_dir: Path, peak: np.ndarray, geometry, map_data, path_resu
 
     extent = (west, east, south, north)
     background, bg_extent, bg_min, bg_max, _, _ = VECTOR.BACKGROUND.read_elevation_background(
-        map_dir / "1min_nc" / "1min.elevtn.nc", extent,
+        map_dir / "1min" / "1min.elevtn.nc", extent,
     )
     fig, ax = plt.subplots(figsize=(9.0 * figure_height / 10.0, figure_height))
     fig.subplots_adjust(left=0.12, right=0.82, top=0.89, bottom=0.14)
@@ -443,8 +443,8 @@ def draw_regional(map_dir: Path, peak: np.ndarray, geometry, map_data, path_resu
         "bifurcation_paths_displayed": int(np.count_nonzero(pth_eligible)),
         "channel_bifurcation_paths": int(np.count_nonzero(pth_eligible & channel_paths)),
         "overland_only_paths": int(np.count_nonzero(pth_eligible & ~channel_paths)),
-        "network_file": "map/Rhine_15min/netcdf/nextxy.nc",
-        "elevation_background": "map/Rhine_15min/1min_nc/1min.elevtn.nc",
+        "network_file": "map/Rhine_15min/nextxy.nc",
+        "elevation_background": "map/Rhine_15min/1min/1min.elevtn.nc",
     }
 
 def draw_aoi(map_dir: Path, extent, map_data, out_peak: np.ndarray, path_result,
@@ -499,7 +499,7 @@ def draw_aoi(map_dir: Path, extent, map_data, out_peak: np.ndarray, path_result,
     valid_bif = np.all(np.isfinite(bif_segments), axis=(1, 2)) & np.all(bif_segments != -9999, axis=(1, 2))
     pth_eligible &= valid_bif
     channel_paths = path_result["channel"]
-    background_path = map_dir / "1min_nc" / "1min.elevtn.nc"
+    background_path = map_dir / "1min" / "1min.elevtn.nc"
     background, bg_extent, bg_min, bg_max, _, _ = VECTOR.BACKGROUND.read_elevation_background(
         background_path, extent,
     )
@@ -580,7 +580,7 @@ def draw_aoi(map_dir: Path, extent, map_data, out_peak: np.ndarray, path_result,
         "bifurcation_paths_displayed": int(np.count_nonzero(pth_eligible)),
         "channel_bifurcation_paths": int(np.count_nonzero(pth_eligible & channel_paths)),
         "overland_only_paths": int(np.count_nonzero(pth_eligible & ~channel_paths)),
-        "elevation_background": "map/Rhine_15min/1min_nc/1min.elevtn.nc",
+        "elevation_background": "map/Rhine_15min/1min/1min.elevtn.nc",
     }
 
 

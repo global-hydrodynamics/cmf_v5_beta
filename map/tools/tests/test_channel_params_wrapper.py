@@ -32,21 +32,18 @@ class ChannelParamsWrapperTests(unittest.TestCase):
         )
         self.calls = self.root / "calls.txt"
         for name, outputs in (
-            ("param_channel_calc_outclm", ("outclm.bin",)),
-            ("param_channel_calc_rivwth", ("rivwth.bin", "rivhgt.bin", "rivman.bin", "rivhgt_inf.bin")),
-            ("param_channel_set_merit_width", ("rivwth_merit.bin",)),
+            ("param_channel_calc_outclm", ("outclm.nc",)),
+            ("param_channel_calc_rivwth", ("rivwth.nc", "rivhgt.nc", "rivman.nc", "rivhgt_inf.nc")),
+            ("param_channel_set_merit_width", ("rivwth_merit.nc",)),
         ):
-            output_lines = "\n".join(f"printf x > '{output}'" for output in outputs)
-            program = self.code_dir / name
+            program = self.code_dir / f"{name}.py"
             program.write_text(
-                "#!/bin/sh\n"
-                f"printf '%s|' \"$PWD\" >> \"$CALL_LOG\"\n"
-                "for arg do printf '%s|' \"$arg\" >> \"$CALL_LOG\"; done\n"
-                "printf '\\n' >> \"$CALL_LOG\"\n"
-                f"{output_lines}\n",
+                "import os, sys\nfrom pathlib import Path\n"
+                "with open(os.environ['CALL_LOG'], 'a') as log:\n"
+                "    log.write(os.getcwd() + '|' + '|'.join(sys.argv[1:]) + '|\\n')\n"
+                + "\n".join(f"Path('{output}').write_text('x')" for output in outputs) + "\n",
                 encoding="ascii",
             )
-            program.chmod(0o755)
         script = self.script_dir / "s01-channel_params.sh"
         script.write_bytes(WRAPPER.read_bytes())
         script.chmod(0o755)
@@ -65,13 +62,13 @@ class ChannelParamsWrapperTests(unittest.TestCase):
         records = [line.split("|") for line in self.calls.read_text().splitlines()]
         self.assertEqual(len(records), 3)
         self.assertTrue(all(Path(row[0]).resolve() == self.map_root.resolve() for row in records))
-        self.assertEqual(records[0][1:], ["bin", "inpmat", "diminfo_test-1deg.txt",
+        self.assertEqual(records[0][1:], ["bin", "mat", "diminfo_test-1deg.txt",
                                           "../data/ELSE_GPCC_clm-1981-2010.one", ""])
         self.assertEqual(records[1][1:], ["bin", "diminfo_test-1deg.txt", "0.1", "0.50",
                                           "0.00", "1.0", "2.50", "0.60", "0.00", "5.0", ""])
         self.assertEqual(records[2][1:], ["diminfo_test-1deg.txt", ""])
-        for name in ("outclm.bin", "rivwth.bin", "rivhgt.bin", "rivman.bin",
-                     "rivhgt_inf.bin", "rivwth_merit.bin"):
+        for name in ("outclm.nc", "rivwth.nc", "rivhgt.nc", "rivman.nc",
+                     "rivhgt_inf.nc", "rivwth_merit.nc"):
             self.assertTrue((self.map_root / name).is_file(), name)
 
     def test_missing_runoff_path_is_passed_to_the_compiled_program(self) -> None:

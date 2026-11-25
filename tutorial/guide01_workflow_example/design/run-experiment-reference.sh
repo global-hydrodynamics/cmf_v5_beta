@@ -117,6 +117,7 @@ IFRQ_RST = 0
 LINPCDF = .TRUE.
 CROFFREQ = "YEAR"
 LINTERP = .TRUE.
+LITRPCDF = .TRUE.           ! Read the input-mapping matrix from NetCDF.
 CINPMAT = "$INPMAT"
 DROFUNIT = 86400000
 CVNTIME = "time"

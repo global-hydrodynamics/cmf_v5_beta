@@ -19,14 +19,13 @@ AREA_WIDTHS = (0.014, 0.018, 0.024, 0.032)
 
 
 def read_subcol(path: Path, geometry):
-    """Read one little-endian int32 Fortran-order subcol raster."""
+    """Read the NetCDF subcol raster in north-first (lat, lon) order."""
     nx, ny = geometry[:2]
-    expected_bytes = nx * ny * 4
-    if path.stat().st_size != expected_bytes:
-        raise ValueError(
-            f"{path} must contain exactly {expected_bytes} bytes for {nx}x{ny} int32 cells"
-        )
-    values = np.fromfile(path, dtype="<i4").reshape((ny, nx))
+    with Dataset(path) as source:
+        variable = source.variables["subcol"]
+        if variable.dimensions != ("lat", "lon") or variable.shape != (ny, nx):
+            raise ValueError(f"{path}: subcol must have shape ({ny}, {nx}) in (lat, lon) order")
+        values = np.ma.asarray(variable[:]).filled(-9999).astype(np.int32)
     valid = ((values == -9999) | (values == 0) | ((values >= 1) & (values <= 10)))
     if not np.all(valid):
         raise ValueError(f"{path} has values outside -9999, 0, or display indices 1–10")

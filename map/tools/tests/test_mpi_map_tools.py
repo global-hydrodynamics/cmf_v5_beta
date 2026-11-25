@@ -12,6 +12,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[3]
 MAP = ROOT / "map" / "mekong_15min"
 CODE = ROOT / "map" / "tools" / "code"
+LEGACY_FORTRAN = CODE / "legacy_fortran"
 TOOLS = ROOT / "map" / "tools"
 
 
@@ -21,10 +22,11 @@ class MpiMapToolsTests(unittest.TestCase):
     def setUpClass(cls):
         cls.build = tempfile.TemporaryDirectory(prefix="cmf-mpi-build-")
         cls.bin = Path(cls.build.name)
+        legacy_fortran = CODE / "legacy_fortran"
         subprocess.run(
             [
                 shutil.which("gfortran"), "-O0", "-fcheck=all", "-ffree-line-length-none",
-                "-J", str(cls.bin), "-c", str(CODE / "mod_map_color.F90"),
+                "-J", str(cls.bin), "-c", str(legacy_fortran / "mod_map_color.F90"),
                 "-o", str(cls.bin / "mod_map_color.o"),
             ],
             check=True,
@@ -34,7 +36,7 @@ class MpiMapToolsTests(unittest.TestCase):
         subprocess.run(
             [
                 shutil.which("gfortran"), "-O0", "-fcheck=all", "-ffree-line-length-none",
-                "-J", str(cls.bin), "-c", str(CODE / "mod_bifprm_csv.F90"),
+                "-J", str(cls.bin), "-c", str(legacy_fortran / "mod_bifprm_csv.F90"),
                 "-o", str(cls.bin / "mod_bifprm_csv.o"),
             ],
             check=True,
@@ -54,7 +56,7 @@ class MpiMapToolsTests(unittest.TestCase):
                 command.extend(["-I", str(cls.bin), str(cls.bin / "mod_map_color.o")])
             if source in {"param_mpi_set_basin.F90", "analysis_check_mpi_bifurcation.F90"}:
                 command.extend(["-I", str(cls.bin), str(cls.bin / "mod_bifprm_csv.o")])
-            command.extend([str(CODE / source), "-o", str(cls.bin / source.removesuffix(".F90"))])
+            command.extend([str(legacy_fortran / source), "-o", str(cls.bin / source.removesuffix(".F90"))])
             subprocess.run(command, check=True, capture_output=True, text=True)
         subprocess.run(
             [
@@ -78,7 +80,8 @@ class MpiMapToolsTests(unittest.TestCase):
     def make_map(self, root: Path, *, bifprm_text: str | None = None) -> Path:
         root.mkdir(parents=True, exist_ok=True)
         for name in ("params.txt", "basin.bin", "nextxy.bin", "bifprm.txt", "lonlat.bin"):
-            shutil.copy2(MAP / name, root / name)
+            source = MAP / "binary" / name if name.endswith((".bin", ".txt")) and (MAP / "binary" / name).is_file() else MAP / name
+            shutil.copy2(source, root / name)
         if bifprm_text is not None:
             (root / "bifprm.txt").write_text(bifprm_text, encoding="ascii")
         self.write_csv_from_legacy(root)
@@ -377,24 +380,32 @@ class MpiMapToolsTests(unittest.TestCase):
             map_root = repo / "map" / "mekong"
             code_dir = repo / "map" / "tools" / "code"
             script_dir = map_root / "script_analysis"
+            binary_dir = map_root / "binary"
             code_dir.mkdir(parents=True)
             script_dir.mkdir(parents=True)
+            binary_dir.mkdir()
             (code_dir / "Makefile").write_text(".PHONY: analysis\nanalysis:\n\t@:\n", encoding="ascii")
             shutil.copy2(self.bin / "analysis_check_mpi_bifurcation", code_dir / "analysis_check_mpi_bifurcation")
+            shutil.copy2(CODE / "analysis_check_mpi_bifurcation.py", code_dir / "analysis_check_mpi_bifurcation.py")
+            shutil.copy2(CODE / "mod_bifprm_csv.py", code_dir / "mod_bifprm_csv.py")
+            shutil.copy2(CODE / "mod_map_io.py", code_dir / "mod_map_io.py")
             shutil.copy2(TOOLS / "script_analysis" / "a05-check_mpi_bifurcation.sh", script_dir)
             (script_dir / "code").symlink_to("../../tools/code")
-            for name in ("params.txt", "nextxy.bin", "bifprm.txt", "lonlat.bin"):
-                shutil.copy2(MAP / name, map_root / name)
+            for name in ("params.txt", "bifprm.txt", "lonlat.bin"):
+                source = MAP / "binary" / name if (MAP / "binary" / name).is_file() else MAP / name
+                shutil.copy2(source, map_root / name)
+            shutil.copy2(MAP / "binary" / "nextxy.bin", binary_dir / "nextxy.bin")
             self.write_csv_from_legacy(map_root)
-            (map_root / "mpireg-1.bin").write_bytes(struct.pack("<9600i", *([1] * 9600)))
+            (binary_dir / "mpireg-1.bin").write_bytes(struct.pack("<9600i", *([1] * 9600)))
             result = subprocess.run(
-                [str(script_dir / "a05-check_mpi_bifurcation.sh"), "mpireg-1.bin"],
+                [str(script_dir / "a05-check_mpi_bifurcation.sh"), "binary/mpireg-1.bin", "--map-format", "binary"],
                 cwd=tmp,
-                check=True,
+                check=False,
                 capture_output=True,
                 text=True,
-            ).stdout
-            self.assertIn("Bifurcation pathways: 382", result)
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("Bifurcation pathways: 382", result.stdout)
 
     def test_parsed_sort_is_layer_independent_and_tie_deterministic(self):
         fields = []

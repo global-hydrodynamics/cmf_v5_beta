@@ -26,13 +26,13 @@ LADPSTP=".FALSE."           # TRUE: adaptive timestep; FALSE: fixed DT.
 # User settings end here. Input paths and annual execution follow.
 # ----------------------------------------------------------------------
 MAPDIR="${CMF_BASE}/map/mekong_15min"
-MAP_NETCDF_DIR="${MAPDIR}/netcdf"
+MAP_NETCDF_DIR="${MAPDIR}"
 RUNOFF_DIR="${CMF_BASE}/inp/repo-mek_1deg"
 RUNDIR="${SCRIPT_DIR}/out/${PROJ}"
 # Reuse the NetCDF-enabled model already built in Tutorial01; do not compile here.
 EXEC_CMF="${CMF_BASE}/src_main/MAIN_cmf"
 DIMINFO="${MAPDIR}/diminfo_repo-mek_1deg.txt"
-INPMAT="${MAPDIR}/inpmat_repo-mek_1deg.bin"
+INPMAT="${MAPDIR}/inpmat_repo-mek_1deg.nc"
 
 if [ ! -x "$EXEC_CMF" ]; then
     printf '[ERROR] Tutorial01 model executable not found: %s\n' "$EXEC_CMF" >&2
@@ -129,7 +129,8 @@ IFRQ_RST = 0                ! 0: write Restart at the segment end.
 LINPCDF = .TRUE.            ! TRUE: read NetCDF runoff.
 CROFFREQ = "YEAR"          ! One runoff file per calendar year.
 LINTERP = .TRUE.            ! TRUE: map runoff using the input matrix.
-CINPMAT = "$INPMAT"        ! Binary runoff-to-river input matrix.
+LITRPCDF = .TRUE.           ! TRUE: read the input-mapping matrix from NetCDF.
+CINPMAT = "$INPMAT"        ! NetCDF runoff-to-river input matrix.
 DROFUNIT = 86400000         ! Divide daily mm input by this factor to obtain m/s.
 CVNTIME = "time"            ! CF time-coordinate variable.
 CVNROF = "runoff"           ! Runoff variable in annual files.

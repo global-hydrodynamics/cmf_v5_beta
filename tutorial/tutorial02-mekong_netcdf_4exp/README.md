@@ -111,7 +111,7 @@ compares. Columns are Default, No Bifurcation,
 Kinematic Wave, and No Floodplain. Read the difference sequence from right to
 left to follow the requested progression from No Floodplain toward Default.
 Rows 2 and 3 use a grayscale background from
-`map/mekong_15min/1min_nc/1min.elevtn.nc`; elevation is transformed with
+`map/mekong_15min/1min/1min.elevtn.nc`; elevation is transformed with
 `log1p` and clipped to the local 2nd–98th percentiles. The darker gray range
 makes lowland relief more visible while keeping the background subdued.
 In the network and difference rows, bifurcation lines are drawn first; main

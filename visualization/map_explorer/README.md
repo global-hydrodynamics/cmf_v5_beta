@@ -1113,8 +1113,9 @@ registry or import any existing visualization or preprocessing module.
 | `rivman` | roughness; registry/source units unspecified, shown as such | Float32 | `rivman` |
 | `nextxy`, `nextxy_noedge` | explicit downstream indices; two records | Int32 | `nextx`, `nexty` |
 
-NetCDF files are preferred in `MAP_DIR/netcdf/NAME.nc`, then `MAP_DIR/NAME.nc`,
-then `MAP_DIR/NAME.bin`. Invalid candidates are skipped with a diagnostic;
+NetCDF files are preferred at `MAP_DIR/NAME.nc`, then legacy
+`MAP_DIR/netcdf/NAME.nc`, then Binary at `MAP_DIR/binary/NAME.bin` (with
+legacy `MAP_DIR/NAME.bin` also accepted). Invalid candidates are skipped with a diagnostic;
 valid Binary fallback is allowed and the selected raster source is reported.
 NetCDF must have named one-dimensional lon/lat axes matching params.txt centers,
 32-bit fields of the declared type, and compatible units. Both axis directions

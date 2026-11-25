@@ -106,10 +106,10 @@ if [ ! -f "$CONVERTER" ] || [ ! -f "$REGISTRY" ]; then
     exit 1
 fi
 
-# Prefer the coarsest installed Binary grid; the data consumer validates its contents.
+# Prefer the coarsest installed Binary grid under binary/; NetCDF outputs share the resolution folder.
 AVAILABLE=""
 for tag in 1min 30sec 15sec 5sec 3sec 1sec; do
-    if [ -d "$MAP_DIR/$tag" ]; then
+    if [ -d "$MAP_DIR/binary/$tag" ]; then
         AVAILABLE="${AVAILABLE}${AVAILABLE:+ }$tag"
         if [ -z "$HIRES" ]; then HIRES=$tag; fi
     fi
@@ -119,7 +119,7 @@ if [ -z "$HIRES" ]; then
     exit 1
 fi
 
-printf 'Selected high-resolution map: %s/%s\n' "$MAP_DIR" "$HIRES"
+printf 'Selected high-resolution Binary map: %s/binary/%s\n' "$MAP_DIR" "$HIRES"
 while :; do
     printf 'Use this high-resolution map? [Y/n]: '
     IFS= read -r answer
@@ -142,7 +142,7 @@ while :; do
         *) printf 'Please answer Yes or No (Enter = Yes).\n' ;;
     esac
 done
-printf 'Using high-resolution map: %s/%s\n' "$MAP_DIR" "$HIRES"
+printf 'Using high-resolution Binary map: %s/binary/%s\n' "$MAP_DIR" "$HIRES"
 
 STEP="Convert selected high-resolution tiles"
 printf '\n==================================================\n'

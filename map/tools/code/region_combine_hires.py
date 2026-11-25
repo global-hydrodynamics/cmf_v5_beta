@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Parallel port of region_combine_hires.F90; original Fortran authors and license retained.
-"""Combine/crop binary high-resolution map tiles with bounded working memory.
+"""Combine/crop high-resolution map tiles with bounded working memory.
 
 Read dim_change and source locations, translate stored catchment assignments,
 and copy field blocks to independent outputs. Preserve the reference's two
@@ -11,7 +11,7 @@ from pathlib import Path
 
 import numpy as np
 
-from mod_map_io import output_root, parser
+from mod_map_io import RasterTile, output_root, parser, write_highres_raster
 
 
 PIXELS_PER_DEGREE = {'1min': 60, '30sec': 120, '15sec': 240, '5sec': 720, '3sec': 1200, '1sec': 3600}
@@ -23,7 +23,11 @@ LAYERS = [('catmxy', '<i2', 2, -9999), ('catmzz', 'i1', 1, -9), ('catmz100', 'i1
 
 
 def source_array(path, dtype, records, ny, nx):
-    return np.memmap(path, mode='r', dtype=dtype, shape=(records, ny, nx)) if path.is_file() else None
+    return RasterTile(path, dtype, records, (ny, nx), optional=True)
+
+
+def scratch_path_for(destination, netcdf):
+    return destination.with_suffix(destination.suffix + '.tmp') if netcdf else destination
 
 
 def translated(assignments, dx, dy, mx, my, tiled=False):
@@ -37,7 +41,7 @@ def translated(assignments, dx, dy, mx, my, tiled=False):
     return result
 
 
-def copy_native_tile(source, out, tag, region, offsets, coarse_shape):
+def copy_native_tile(source, out, tag, region, offsets, coarse_shape, netcdf=False):
     """Copy contiguous whole-tile blocks; only catmxy requires a transform."""
     name, _, _, _, _, nx, ny = region
     dx, dy = offsets
@@ -47,26 +51,34 @@ def copy_native_tile(source, out, tag, region, offsets, coarse_shape):
             continue  # The reference tiled branch never writes this layer.
         values = source_array(source/(name+'.'+layer+'.bin'), dtype, records, ny, nx)
         destination = out/(tag+'.'+layer+'.bin')
-        with destination.open('wb') as stream:
+        scratch = scratch_path_for(destination, netcdf)
+        with scratch.open('wb') as stream:
             stream.truncate(records*ny*nx*np.dtype(dtype).itemsize)
-        target = np.memmap(destination, mode='r+', dtype=dtype, shape=(records, ny, nx))
+        target = np.memmap(scratch, mode='r+', dtype=dtype, shape=(records, ny, nx))
         for start in range(0, ny, 64):
             stop = min(ny, start+64)
-            if values is None:
+            block = values.read(start, stop, 0, nx, dtype) if values.path is not None else None
+            if block is None:
                 target[:, start:stop] = missing
             elif layer == 'catmxy':
-                target[:, start:stop] = translated(values[:, start:stop], dx, dy, mx, my, tiled=True)
+                target[:, start:stop] = translated(block, dx, dy, mx, my, tiled=True)
             else:
-                target[:, start:stop] = values[:, start:stop]
+                target[:, start:stop] = block
         # Closing the mapping schedules writes, like closing Fortran's file;
         # no extra synchronous disk flush is part of the reference contract.
         del target
+        values.close()
+        if netcdf:
+            mapped = np.memmap(scratch, mode='r', dtype=dtype, shape=(records, ny, nx))
+            write_highres_raster(destination, mapped, dtype, region[1:5])
+            del mapped
+            scratch.unlink()
 
 
-def copy_region(source, out, tag, regions, bounds, shape, offsets, coarse_shape, tiled=False):
+def copy_region(source, out, tag, regions, bounds, shape, offsets, coarse_shape, tiled=False, netcdf=False):
     """Copy one layer at a time; first assignment wins, other fields last win."""
     if tiled:
-        copy_native_tile(source, out, tag, regions[0], offsets, coarse_shape)
+        copy_native_tile(source, out, tag, regions[0], offsets, coarse_shape, netcdf)
         return
     west, east, south, north = bounds
     ny, nx = shape
@@ -77,17 +89,20 @@ def copy_region(source, out, tag, regions, bounds, shape, offsets, coarse_shape,
     accepted = []
     for region in regions:
         name, w, e, s, n, sx, sy = region
-        if (source/(name+'.catmxy.bin')).is_file():
+        assignment = source_array(source/(name+'.catmxy.bin'), '<i2', 2, sy, sx)
+        if assignment.path is not None:
             accepted.append(region)
+        assignment.close()
     for layer, dtype, records, missing in LAYERS:
         if layer == 'grdare' and (tag == '3sec' or tiled):
             continue
         if layer in ('downxy', 'flwdir') and not accepted:
             continue
         destination = out/(tag+'.'+layer+'.bin')
-        with destination.open('wb') as stream:
+        scratch = scratch_path_for(destination, netcdf)
+        with scratch.open('wb') as stream:
             stream.truncate(records*ny*nx*np.dtype(dtype).itemsize)
-        target = np.memmap(destination, mode='r+', dtype=dtype, shape=(records, ny, nx))
+        target = np.memmap(scratch, mode='r+', dtype=dtype, shape=(records, ny, nx))
         for row in range(0, ny, 64):
             target[:, row:row+64] = missing
         # A disk-backed first-fill mask is unnecessary: recompute assignment occupancy
@@ -108,17 +123,25 @@ def copy_region(source, out, tag, regions, bounds, shape, offsets, coarse_shape,
                 source_rows = np.flatnonzero((latitude > south) & (latitude < north))
                 target_x = ((longitude[columns].astype('f8')-west)/size).astype('i8')
                 target_y = ((north-latitude[source_rows].astype('f8'))/size).astype('i8')
+            if len(columns) == 0 or len(source_rows) == 0:
+                values.close()
+                assignment.close()
+                continue
+            x0, x1 = int(columns[0]), int(columns[-1])+1
             for start in range(0, len(source_rows), 64):
                 rows = source_rows[start:start+64]
                 yy = target_y[start:start+64]
+                y0, y1 = int(rows[0]), int(rows[-1])+1
                 index = np.ix_(yy, target_x)
+                original_block = assignment.read(y0, y1, x0, x1, '<i2')
+                values_block = values.read(y0, y1, x0, x1, dtype) if values.path is not None else None
                 if layer in ('catmxy', 'catmzz', 'catmz100'):
-                    original = assignment[:, rows[:, None], columns]
+                    original = original_block
                     mask = ~chosen[index] if not tiled else np.ones((len(rows), len(columns)), dtype=bool)
                     if layer == 'catmxy':
                         block = translated(original, dx, dy, mx, my, tiled)
                     else:
-                        block = (values[:, rows[:, None], columns] if values is not None
+                        block = (values_block if values_block is not None
                                  else np.full((records, len(rows), len(columns)), missing, dtype=dtype))
                     for record in range(records):
                         previous = target[record][index]
@@ -130,9 +153,16 @@ def copy_region(source, out, tag, regions, bounds, shape, offsets, coarse_shape,
                     chosen[index] = occupied
                 else:
                     for record in range(records):
-                        target[record][index] = (values[record, rows[:, None], columns] if values is not None else missing)
+                        target[record][index] = (values_block[record] if values_block is not None else missing)
+            values.close()
+            assignment.close()
         target.flush()
         del target
+        if netcdf:
+            mapped = np.memmap(scratch, mode='r', dtype=dtype, shape=(records, ny, nx))
+            write_highres_raster(destination, mapped, dtype, bounds)
+            del mapped
+            scratch.unlink()
 
 
 def main():
@@ -143,6 +173,8 @@ def main():
     lines = args.change_info.read_text().splitlines()
     tag = args.hires_tag
     source = Path(lines[0].strip())/tag
+    if args.map_format == 'binary' and not (source/'location.txt').is_file():
+        source = Path(lines[0].strip())/'binary'/tag
     mx, my, dx, dy = (int(lines[i].split()[0]) for i in (9, 10, 11, 12))
     west, east, south, north = (float(lines[i].split()[0]) for i in (13, 14, 15, 16))
     cnum = PIXELS_PER_DEGREE[tag]
@@ -160,7 +192,8 @@ def main():
             if w > east or e < west or n < south or s > north:
                 continue
             regions.append((f[1], w, e, s, n, int(f[6]), int(f[7])))
-        copy_region(source, out, tag, regions, (west, east, south, north), (ny, nx), (dx, dy), (mx, my))
+        copy_region(source, out, tag, regions, (west, east, south, north), (ny, nx), (dx, dy), (mx, my),
+                    netcdf=args.map_format == 'netcdf')
         locations.append((tag, west, east, south, north, nx, ny))
     else:
         width = 30 if tag in ('30sec', '15sec') else 10 if tag in ('5sec', '3sec') else 5
@@ -175,7 +208,8 @@ def main():
                 # copy_region writes the tag prefix; rename the prefix via its output argument.
                 temporary = out/name
                 temporary.mkdir()
-                copy_region(source, temporary, tag, [region], region[1:5], (width*cnum, width*cnum), (dx, dy), (mx, my), True)
+                copy_region(source, temporary, tag, [region], region[1:5], (width*cnum, width*cnum),
+                            (dx, dy), (mx, my), True, args.map_format == 'netcdf')
                 for product in temporary.iterdir():
                     product.rename(out/(name+product.name[len(tag):]))
                 temporary.rmdir()

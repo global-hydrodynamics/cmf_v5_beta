@@ -1,12 +1,12 @@
 #!/bin/sh
 # Combine individual map NetCDF files into legacy consolidated containers.
-# Inputs: individual map NetCDF files in <map>/netcdf/.
-# Outputs: rivclim.nc and rivpar.nc in <map>/netcdf/.
+# Inputs: individual map NetCDF files in <map>/.
+# Outputs: consolidated rivclim.nc and rivpar.nc in <map>/.
 set -eu
 
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 MAP_DIR="$SCRIPT_DIR/../../mekong_15min"  # Change this path when using another map.
-NETCDF_DIR="$MAP_DIR/netcdf"
+NETCDF_DIR="$MAP_DIR"
 if [ -f "$SCRIPT_DIR/../code/create_legacy_netcdf_map.py" ]; then
     TOOL_DIR="$SCRIPT_DIR/../code"
 else
@@ -58,7 +58,7 @@ if [ "$#" -eq 1 ]; then
 fi
 
 if [ ! -d "$NETCDF_DIR" ]; then
-    printf 'ERROR: individual NetCDF map directory not found: %s\n' "$NETCDF_DIR" >&2
+    printf 'ERROR: map directory not found: %s\n' "$NETCDF_DIR" >&2
     exit 1
 fi
 

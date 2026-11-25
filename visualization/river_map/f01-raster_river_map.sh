@@ -9,10 +9,10 @@ REPO_ROOT="$(cd "$VISUALIZATION_DIR/.." && pwd)"
 
 # User settings: tracked map inputs and common geographic extent.
 MAP_DIR="$REPO_ROOT/map/mekong_15min"
-UPAREA_FILE="$MAP_DIR/netcdf/uparea.nc"              # Upstream catchment area [m²].
-BASIN_FILE="$MAP_DIR/netcdf/basin.nc"                 # Original basin IDs.
-BSNCOL_FILE="$MAP_DIR/netcdf/bsncol.nc"              # Precomputed basin display-color indices.
-SUBCOL_FILE="$MAP_DIR/subcol-sample.bin"              # Prepared int32 subbasin display-color indices.
+UPAREA_FILE="$MAP_DIR/uparea.nc"                     # Upstream catchment area [m²].
+BASIN_FILE="$MAP_DIR/basin.nc"                       # Original basin IDs.
+BSNCOL_FILE="$MAP_DIR/bsncol.nc"                     # Precomputed basin display-color indices.
+SUBCOL_FILE="$MAP_DIR/subcol-sample.nc"              # Prepared int32 subbasin display-color indices.
 PARAMS_FILE="$MAP_DIR/params.txt"                    # 15-minute grid dimensions and extent.
 WEST=90
 EAST=110

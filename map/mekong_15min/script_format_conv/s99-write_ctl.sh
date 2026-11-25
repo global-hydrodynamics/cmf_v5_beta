@@ -25,6 +25,7 @@ EOF
 }
 
 # These internal flags are set by the command-line options in usage().
+PYTHON_CMD="${PYTHON_CMD:-python3}"
 DRY_RUN=0    # Set to 1 by --dry-run.
 OVERWRITE=1  # Set to 0 by --no-overwrite; existing CTLs are replaced by default.
 INPUT=""
@@ -73,20 +74,20 @@ STATUS=0
 # set -- rebuilds the argument list passed to each generator invocation.
 set --
 [ "$DRY_RUN" -eq 0 ] || set -- "$@" --dry-run
-[ "$OVERWRITE" -eq 0 ] || set -- "$@" --overwrite
+[ "$OVERWRITE" -eq 1 ] || set -- "$@" --no-overwrite
 
 # Explicit single-file mode does not scan unrelated base/high-resolution data.
 if [ -n "$INPUT" ]; then
   [ -z "$VARIABLES" ] || set -- "$@" --variables "$VARIABLES"
   [ -z "$REFERENCE" ] || set -- "$@" --reference-binary "$REFERENCE"
-  exec python3 "$GENERATOR" --map-dir .. --input "$INPUT" "$@"
+  exec "$PYTHON_CMD" "$GENERATOR" --map-dir .. --input "$INPUT" "$@"
 fi
 
 # The generator examines only .bin files that already exist in each directory.
 printf '\n==================================================\n'
 printf '[STEP 1/2] Generate CTLs for the base map\n'
 printf '==================================================\n\n'
-python3 "$GENERATOR" --map-dir .. "$@" || STATUS=1
+"$PYTHON_CMD" "$GENERATOR" --map-dir .. "$@" || STATUS=1
 printf '\n'
 
 # High-resolution grids provide their geometry in location.txt.
@@ -98,7 +99,7 @@ do
   printf '\n==================================================\n'
   printf '[STEP 2/2] Generate CTLs for high-resolution map %s\n' "$MAP_DIR"
   printf '==================================================\n\n'
-  python3 "$GENERATOR" --map-dir "$MAP_DIR" "$@" || STATUS=1
+"$PYTHON_CMD" "$GENERATOR" --map-dir "$MAP_DIR" "$@" || STATUS=1
   printf '\n'
 done
 
@@ -110,7 +111,7 @@ for ENTRY in $VARIANTS; do
   for BINARY in ../$PATTERN; do
     [ -f "$BINARY" ] || continue
     printf '\nGenerate variant CTL: %s (reference %s)\n' "${BINARY##*/}" "$REFERENCE"
-    python3 "$GENERATOR" --map-dir .. --input "${BINARY##*/}" --reference-binary "$REFERENCE" "$@" || STATUS=1
+    "$PYTHON_CMD" "$GENERATOR" --map-dir .. --input "${BINARY##*/}" --reference-binary "$REFERENCE" "$@" || STATUS=1
   done
 done
 

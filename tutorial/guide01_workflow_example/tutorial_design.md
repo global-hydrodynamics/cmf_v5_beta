@@ -73,7 +73,7 @@ inside this tutorial at
 `tutorial/guide01_workflow_example/map_modify/rivhgt_deep.nc`.
 The learner map-preparation script belongs to this tutorial, not the shared
 map-building tools. Control reads the original
-`map/mekong_15min/netcdf/rivhgt.nc`; Deep Channel points `CRIVHGT` directly to
+`map/mekong_15min/rivhgt.nc`; Deep Channel points `CRIVHGT` directly to
 the tutorial-local NetCDF file. Do not write the variant or a symlink into
 `map/mekong_15min/`. The existing individual-map NetCDF convention stores the
 logical variable as `rivhgt` even when the file has a different descriptive
@@ -99,7 +99,7 @@ not by itself imply an increase in absolute `sfcelv`.
 The current `map/mekong_15min/params.txt` declares an 80 × 120 grid at 0.25°
 covering 90–110°E and 5–35°N. Cell centers are 90.125–109.875°E and
 5.125–34.875°N. The existing
-[`netcdf/rivhgt.nc`](../../map/mekong_15min/netcdf/rivhgt.nc) has a Float32
+[`netcdf/rivhgt.nc`](../../map/mekong_15min/rivhgt.nc) has a Float32
 `rivhgt(lat,lon)` variable in metres with `_FillValue` and `missing_value`
 `-9999`; its coordinates and missing mask match the corresponding map fields.
 The inspected sample has 6,566 nonmissing cells and 3,034 masked cells. The
@@ -130,7 +130,7 @@ verified settings include `LKINE=.FALSE.` (Local Inertial routing),
 `LFPLAIN=.TRUE.`, `LPTHOUT=.TRUE.`, `LFLDOUT=.TRUE.`, `LSLPMIX=.FALSE.`,
 `LADPSTP=.TRUE.`, `DT=600` s, 4 OpenMP threads, and Gregorian leap-year
 handling. It reads individual map NetCDF files under
-`map/mekong_15min/netcdf/`, the 2000 annual runoff file
+`map/mekong_15min/`, the 2000 annual runoff file
 `inp/repo-mek_1deg/runoff2000.nc`, and the existing
 `inpmat_repo-mek_1deg.bin` / `diminfo_repo-mek_1deg.txt` pair. Its forcing setup
 uses `CROFFREQ="YEAR"`, `IFRQ_INP=24`, `CVNROF="runoff"`, and

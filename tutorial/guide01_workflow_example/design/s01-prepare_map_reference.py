@@ -13,7 +13,7 @@ import netCDF4
 import numpy as np
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-SOURCE = SCRIPT_DIR.parents[2] / "map/mekong_15min/netcdf/rivhgt.nc"
+SOURCE = SCRIPT_DIR.parents[2] / "map/mekong_15min/rivhgt.nc"
 OUTPUT = SCRIPT_DIR / "map_modify/rivhgt_deep.nc"
 
 

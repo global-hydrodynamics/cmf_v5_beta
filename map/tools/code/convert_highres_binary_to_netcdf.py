@@ -354,16 +354,22 @@ def plan_conversion(map_dir, hires_tags, variables, registry_path, compression_l
     variables = registered_variables(rows) if variables == ["all"] else variables
     planned, missing = [], []
     for hires in hires_tags:
-        areas = read_location(map_dir / hires / "location.txt")
+        location = map_dir / hires / "location.txt"
+        if not location.is_file():
+            location = map_dir / "binary" / hires / "location.txt"
+        areas = read_location(location)
         for variable in variables:
             for area in areas:
-                source = map_dir / hires / f"{area['carea']}.{variable}.bin"
+                binary_dir = map_dir / 'binary' / hires
+                if not binary_dir.is_dir():
+                    binary_dir = map_dir / hires
+                source = binary_dir / f"{area['carea']}.{variable}.bin"
                 selected = rows_for_tile(rows, hires, str(area["carea"]), variable)
                 if not source.is_file():
                     missing.append(source)
                     continue
                 selected = validate_tile(source, area, selected)
-                output = map_dir / f"{hires}_nc" / f"{area['carea']}.{variable}.nc"
+                output = map_dir / hires / f"{area['carea']}.{variable}.nc"
                 planned.append((source, output, area, selected, compression_level, False))
     return variables, planned, missing
 
@@ -532,9 +538,13 @@ def main() -> int:
         tasks, skipped_tasks = select_tasks(planned, args.force, args.interactive_overwrite)
         # Geometry is copied only after all resolutions have passed validation.
         for hires in hires_tags:
-            output_dir = args.map_dir / f"{hires}_nc"
+            output_dir = args.map_dir / hires
             output_dir.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(args.map_dir / hires / "location.txt", output_dir / "location.txt")
+            binary_location = args.map_dir / "binary" / hires / "location.txt"
+            if not binary_location.is_file():
+                binary_location = args.map_dir / hires / "location.txt"
+            if not (output_dir / "location.txt").is_file():
+                shutil.copyfile(binary_location, output_dir / "location.txt")
         converted, skipped = execute_tasks(tasks, skipped_tasks, args.jobs)
     except KeyboardInterrupt:
         print("ERROR: interrupted; active conversion workers have been stopped and collected", file=sys.stderr)

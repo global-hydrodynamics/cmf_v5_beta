@@ -23,10 +23,10 @@ class RestorationTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.map = Path(self.temp.name)
-        self.nc = self.map / '1min_nc'
-        self.binary = self.map / '1min'
+        self.nc = self.map / '1min'
+        self.binary = self.map / 'binary' / '1min'
         self.nc.mkdir()
-        self.binary.mkdir()
+        self.binary.mkdir(parents=True)
         # Width crosses the production 256-cell chunk boundary; the two record planes differ.
         self.nx, self.ny = 259, 3
         text = ('2 narea\niarea carea west east south north nx ny csize\n'

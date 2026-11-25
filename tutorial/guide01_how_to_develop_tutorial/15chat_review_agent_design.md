@@ -23,7 +23,7 @@ The experimental objective was already defined: compare Control and Deep Channel
 
 The Tutorial Design proposed producing a modified NetCDF file, `rivhgt_deep.nc`, under the shared directory:
 
-`map/mekong_15min/netcdf/`
+`map/mekong_15min/`
 
 The design also contained a proposed `workflow_example/s01-prepare_rivhgt.sh` script while other passages described map preparation under `map/mekong_15min/`. The proposed location and responsibility for generated files were therefore not completely consistent.
 
@@ -44,7 +44,7 @@ The discussion compared three approaches:
 
 | Option | Approach | Main consideration |
 |---|---|---|
-| A | Generate `rivhgt_deep.nc` in the shared `map/mekong_15min/netcdf/` directory | Follows the original map-data location but leaves tutorial-generated content in a shared directory. |
+| A | Generate `rivhgt_deep.nc` in the shared `map/mekong_15min/` directory | Follows the original map-data location but leaves tutorial-generated content in a shared directory. |
 | B | Generate the file inside the tutorial and create a symbolic link from the shared map directory | Keeps the data local but still changes the shared directory and introduces link-management concerns. |
 | C | Generate the file inside the tutorial and have the model reference it directly | Makes file ownership explicit and avoids shared-directory changes, provided the model supports the path. |
 
@@ -69,7 +69,7 @@ tutorial/guide01_how_to_develop_tutorial/workflow_example/
 
 The future independent Tutorial03 should use its own `map_modify/rivhgt_deep.nc`, rather than share the Guide01-generated product.
 
-The Control simulation uses the unchanged shared `map/mekong_15min/netcdf/rivhgt.nc`. The Deep Channel simulation uses its own tutorial-local modified NetCDF file through `CRIVHGT`. Direct-path support and path resolution must be verified in the model code before implementation; they were not demonstrated by this discussion alone.
+The Control simulation uses the unchanged shared `map/mekong_15min/rivhgt.nc`. The Deep Channel simulation uses its own tutorial-local modified NetCDF file through `CRIVHGT`. Direct-path support and path resolution must be verified in the model code before implementation; they were not demonstrated by this discussion alone.
 
 ## 4. General design principle extracted from the discussion
 

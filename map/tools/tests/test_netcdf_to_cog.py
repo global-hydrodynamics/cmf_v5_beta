@@ -20,9 +20,9 @@ def fixture(tmp_path, product='elevtn', dtype='float32', order=('lat', 'lon'), r
             reverse_x=False, layers=0, names=None, fill=-9999, nx=16, ny=16):
     names = names or [product]
     root = tmp_path / 'map'
-    (root/'netcdf').mkdir(parents=True, exist_ok=True)
+    root.mkdir(parents=True, exist_ok=True)
     (root/'params.txt').write_text(f'{nx}\n{ny}\n{layers or 1}\n.1\n10\n{10+nx*.1}\n{30-ny*.1}\n30\n')
-    source = root/'netcdf'/f'{product}.nc'
+    source = root/f'{product}.nc'
     arrays = []
     with nc.Dataset(source, 'w') as ds:
         for name, size in [('lat', ny), ('lon', nx)]:
@@ -152,7 +152,7 @@ def test_unsupported_is_explicit_and_never_publishes(tmp_path, change):
 def test_discovery_all_registry_files_highres_and_unknowns(tmp_path, capsys):
     task, _ = fixture(tmp_path, 'nextxy_noedge', 'int32', names=['nextx','nexty'])
     root = task.source.parent.parent
-    high = root/'15sec_nc'
+    high = root/'15sec'
     high.mkdir()
     (high/'location.txt').write_text('1 narea\niarea carea west east south north nx ny csize\n1 a 10 11.6 28.4 30 16 16 .1\n')
     pair, _ = fixture(tmp_path/'seed', 'catmxy', 'int16', names=['catmxx','catmyy'])
@@ -272,10 +272,10 @@ from pathlib import Path
 import netCDF4 as nc
 import numpy as np
 from map.tools.code import convert_netcdf_to_cog as c
-root=Path(sys.argv[1]); (root/'netcdf').mkdir()
+root=Path(sys.argv[1]); root.mkdir(exist_ok=True)
 (root/'params.txt').write_text('16384\n8192\n1\n.001\n10\n26.384\n21.808\n30\n')
 nc.set_chunk_cache(4*1024*1024,1009,.75)
-p=root/'netcdf/elevtn.nc'
+p=root/'elevtn.nc'
 with nc.Dataset(p,'w') as ds:
  for name in ('lat','lon'):
   ds.createDimension(name,8192 if name=='lat' else 16384)
@@ -370,7 +370,7 @@ def test_known_non_targets_skip_without_error_or_output(tmp_path, capsys, jobs):
     root = task.source.parent.parent
     for name in cog.EXCLUDED_INPUTS:
         # Not even opened: known exclusions must not depend on table/container schema.
-        (root/'netcdf'/name).write_bytes(b'non-target sentinel')
+        (root/name).write_bytes(b'non-target sentinel')
     options = ['--map-dir', str(root), '--resolutions', 'base', '--jobs', str(jobs), '--blocksize', '128']
     assert cog.main(options) == 0
     text = capsys.readouterr()
@@ -379,11 +379,11 @@ def test_known_non_targets_skip_without_error_or_output(tmp_path, capsys, jobs):
     for name, reason in cog.EXCLUDED_INPUTS.items():
         assert reason in text.out
         assert not (root/'COG'/Path(name).with_suffix('.tif')).exists()
-        assert (root/'netcdf'/name).read_bytes() == b'non-target sentinel'
+        assert (root/name).read_bytes() == b'non-target sentinel'
     assert cog.main(options + ['--variables', 'bifprm rivclim rivpar', '--force']) == 0
     assert '0 PASS; 3 SKIP; 0 UNSUPPORTED; 0 FAIL' in capsys.readouterr().out
     # An unexpected unmapped raster/file remains an error, rather than silently skipped.
-    with nc.Dataset(root/'netcdf/unknown.nc', 'w'):
+    with nc.Dataset(root/'unknown.nc', 'w'):
         pass
     assert cog.main(options) == 1
     assert 'UNSUPPORTED' in capsys.readouterr().err
@@ -398,15 +398,15 @@ def test_copied_shell_automatically_selects_distributed_highres(tmp_path, tag):
     root = repository/'map'/'custom-map-name'
     shutil.copytree(task.source.parent.parent, root)
     (repository/'map'/'tools').symlink_to(ROOT/'map/tools', target_is_directory=True)
-    high = root/f'{tag}_nc'
+    high = root/tag
     high.mkdir()
     (high/'location.txt').write_text(
         '1 narea\niarea carea west east south north nx ny csize\n1 a 10 11.6 28.4 30 16 16 .1\n')
     source = high/'a.elevtn.nc'
     shutil.copyfile(task.source, source)
     # Original-resolution directories must never become implicit conversion targets.
-    (root/'3sec_nc').mkdir()
-    (root/'1sec_nc').mkdir()
+    (root/'3sec').mkdir()
+    (root/'1sec').mkdir()
     local = root/'script_format_conv'
     local.mkdir()
     script = local/'s05-convert_netcdf_to_cog.sh'
@@ -429,12 +429,12 @@ def test_copied_shell_automatically_selects_distributed_highres(tmp_path, tag):
 
 
 def test_auto_resolution_scope_and_explicit_compatibility(tmp_path, capsys):
-    (tmp_path/'3sec_nc').mkdir()
-    (tmp_path/'1sec_nc').mkdir()
+    (tmp_path/'3sec').mkdir()
+    (tmp_path/'1sec').mkdir()
     assert cog.resolve_resolutions(tmp_path, ['auto']) == ['base']
     assert 'AUTO resolutions: base' in capsys.readouterr().out
     for tag in ('15sec', '30sec', '1min'):
-        (tmp_path/f'{tag}_nc').mkdir()
+        (tmp_path/tag).mkdir()
         assert cog.resolve_resolutions(tmp_path, ['auto']) == ['base', tag]
     assert cog.resolve_resolutions(tmp_path, ['15sec']) == ['15sec']
     assert cog.resolve_resolutions(tmp_path, ['base', '3sec', '1sec']) == ['base', '3sec', '1sec']

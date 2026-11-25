@@ -85,7 +85,7 @@ if NETWORK_SPEC is None or NETWORK_SPEC.loader is None:
     raise RuntimeError(f"Cannot load Figure 1 network helpers: {NETWORK_SCRIPT}")
 NETWORK_MAPS = importlib.util.module_from_spec(NETWORK_SPEC)
 NETWORK_SPEC.loader.exec_module(NETWORK_MAPS)
-ELEVATION_FILE = NETWORK_MAPS.MAP_ROOT / "1min_nc" / "1min.elevtn.nc"
+ELEVATION_FILE = NETWORK_MAPS.MAP_ROOT / "1min" / "1min.elevtn.nc"
 ELEVATION_EXTENT = NETWORK_MAPS.PANEL_C_EXTENT
 
 
@@ -313,13 +313,13 @@ def write_analysis_data(lon, lat, annual_grids, main_segments, main_source_cells
             f"out/{experiment}/o_outflw{YEAR}.nc" for experiment in experiments
         ) + f", out/mek_default/o_pthflw{YEAR}.nc"
         analysis.map_sources = (
-            "map/mekong_15min/netcdf/uparea.nc; "
-            "map/mekong_15min/netcdf/nextxy_noedge.nc; "
-            "map/mekong_15min/netcdf/lonlat.nc; "
-            "map/mekong_15min/netcdf/bifprm.nc"
+            "map/mekong_15min/uparea.nc; "
+            "map/mekong_15min/nextxy_noedge.nc; "
+            "map/mekong_15min/lonlat.nc; "
+            "map/mekong_15min/bifprm.nc"
         )
         analysis.context_background_source = (
-            "map/mekong_15min/1min_nc/1min.elevtn.nc; not copied into this analysis file"
+            "map/mekong_15min/1min/1min.elevtn.nc; not copied into this analysis file"
         )
         analysis.processing = (
             "Annual grid and path statistics are max_t(abs(daily mean discharge)); "

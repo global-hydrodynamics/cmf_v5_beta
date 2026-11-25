@@ -38,18 +38,18 @@ authoritative source is `cmf_v5_package_data/map/glb_15min/`; GitHub holds the
 small Mekong sample and generation/conversion tools. Local checkout copies are
 not authoritative package inputs.
 
-The catalog includes model-grid Binary, model-grid `netcdf/`, standard generated
+The catalog includes root-level model-grid NetCDF, standard generated
 parameter data, observation/station information, bifurcation products and other
-auxiliary text. High-resolution `1min_nc/` plus its `location.txt` are distributed
-as compressed NetCDF; `1min/` Binary is excluded and can be restored on demand
+auxiliary text. High-resolution NetCDF under `1min/` plus its `location.txt` is distributed;
+optional Binary compatibility products under `binary/` are excluded by default and can be restored on demand
 with `cmf_v5_beta/map/tools/script_format_conv/s04-restore_highres_binary.sh`. Do not
 include both high-resolution formats. Include `COG/` for immediate visualization
 and stored generation scripts, source files, settings and Makefiles as provenance
 snapshots. Temporary/build/log files and caches remain excluded by the selection
 policy in `cmf_v5_beta/package/README.md`; the optional final
-`exclude_patterns` CSV column encodes these rules for both Import and Diff. Existing standard `.bin` products are
-not removed by those exclusions. Input Matrix format and further data pruning
-are deferred to a later round.
+`exclude_patterns` CSV column encodes these rules for both Import and Diff. Existing `.bin` products already in the destination are
+not removed by those import exclusions. Input Matrix format and further data pruning
+are governed by the NetCDF-first map architecture.
 
 This registration does not alter the stored data or establish scientific
 validation. Map-product provenance, redistribution permissions and required
@@ -60,10 +60,11 @@ package's contents alone do not establish redistribution permission.
 
 Japan 1-minute model maps are additional package data, with authoritative
 source `cmf_v5_package_data/map/TE-Japan_01min/`. The model grid has 1500 × 1320
-cells over 123–148°E, 24–46°N (`params.txt`). Model-grid Binary, `netcdf/`,
+cells over 123–148°E, 24–46°N (`params.txt`). Root-level model-grid NetCDF,
 standard parameter products, station/bifurcation information and auxiliary
-text are included. High-resolution distribution uses compressed `15sec_nc/`
-with `location.txt`; `15sec/` Binary is excluded and restored only when needed.
+text are included. High-resolution NetCDF resides in `15sec/` with
+`location.txt`; optional Binary compatibility files under `binary/` are excluded
+and restored only when needed.
 `COG/` and stored generation scripts/source/settings are included for immediate
 visualization and generation provenance. Build/log/temporary files and caches
 are excluded according to `cmf_v5_beta/package/README.md`. The entire local development copy

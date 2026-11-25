@@ -45,7 +45,7 @@ from those expectations.
 
 The only intended experiment change is the static channel-depth parameter.
 Keep the source `rivhgt` intact. Store the modified map parameter separately
-under `map/mekong_15min/netcdf/` and point only the Deep Channel namelist's
+under `map/mekong_15min/` and point only the Deep Channel namelist's
 `CRIVHGT` to it. The existing individual-map NetCDF convention stores the
 logical variable as `rivhgt` even if its file has a different descriptive
 filename.
@@ -62,7 +62,7 @@ not by itself imply an increase in absolute `sfcelv`.
 The current `map/mekong_15min/params.txt` declares an 80 × 120 grid at 0.25°
 covering 90–110°E and 5–35°N. Cell centers are 90.125–109.875°E and
 5.125–34.875°N. The existing
-[`netcdf/rivhgt.nc`](../../map/mekong_15min/netcdf/rivhgt.nc) has a Float32
+[`netcdf/rivhgt.nc`](../../map/mekong_15min/rivhgt.nc) has a Float32
 `rivhgt(lat,lon)` variable in metres with `_FillValue` and `missing_value`
 `-9999`; its coordinates and missing mask match the corresponding map fields.
 The inspected sample has 6,566 nonmissing cells and 3,034 masked cells. The
@@ -77,7 +77,7 @@ name, units, and missing-value attributes, and add 3.0 m only where the source
 `rivhgt` is valid. Validate that the baseline file remains unchanged, that the
 valid-cell difference is exactly +3.0 m within Float32 representation, and
 that missing cells remain missing. A proposed filename is
-`map/mekong_15min/netcdf/rivhgt_deep.nc`; it is not an existing product.
+`map/mekong_15min/rivhgt_deep.nc`; it is not an existing product.
 
 Relevant metadata are in [`map_variables.csv`](../../variable_table/map_variables.csv),
 and the model map reader is documented in
@@ -93,7 +93,7 @@ verified settings include `LKINE=.FALSE.` (Local Inertial routing),
 `LFPLAIN=.TRUE.`, `LPTHOUT=.TRUE.`, `LFLDOUT=.TRUE.`, `LSLPMIX=.FALSE.`,
 `LADPSTP=.TRUE.`, `DT=600` s, 4 OpenMP threads, and Gregorian leap-year
 handling. It reads individual map NetCDF files under
-`map/mekong_15min/netcdf/`, the 2000 annual runoff file
+`map/mekong_15min/`, the 2000 annual runoff file
 `inp/test-mek_1deg_nc/runoff2000.nc`, and the existing
 `inpmat_test-mek_1deg.bin` / `inpdim_test-mek_1deg.txt` pair. Its forcing setup
 uses `CROFFREQ="YEAR"`, `IFRQ_INP=24`, `CVNROF="runoff"`, and
@@ -236,7 +236,7 @@ keep the per-day Float32 high-resolution output convention. NetCDF support
 here means direct NetCDF model-input reading, not a new output format.
 
 The available Mekong map has 1-minute binary tiles and `1min/location.txt`,
-and a `1min_nc/location.txt` metadata copy. The current downscaler reads the
+and a `1min/location.txt` metadata copy. The current downscaler reads the
 binary tile layers, so use the binary `map/mekong_15min/1min/` products for
 this workflow. The downscaling calculation needs matching map/network data;
 the high-resolution directory's presence alone does not verify full coverage

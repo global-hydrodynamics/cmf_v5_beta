@@ -8,7 +8,7 @@ All reported IX/IY are explicitly one-based; Python indices are also printed.
 """
 import numpy as np
 
-from mod_map_io import Grid, parser
+from mod_map_io import Grid, parser, read_array
 
 
 def main():
@@ -35,6 +35,8 @@ def main():
         for tag in ('15sec', '1min'):
             location = args.map_dir / tag / 'location.txt'
             if not location.exists():
+                location = args.map_dir / 'binary' / tag / 'location.txt'
+            if not location.exists():
                 continue
             row = location.read_text().splitlines()[2].split()
             if row[1] != tag:
@@ -44,7 +46,7 @@ def main():
             y = int(np.float32((grid.north - lat) / size))
             if not (0 <= x < nx and 0 <= y < ny):
                 p.error('ix,iy cannot be defined')
-            assignment = np.memmap(args.map_dir / tag / f'{tag}.catmxy.bin', dtype='<i2', mode='r', shape=(2, ny, nx))
+            assignment = read_array(args.map_dir / tag / f'{tag}.catmxy.bin', '<i2', (2, ny, nx))
             ix, iy = (int(v) for v in assignment[:, y, x])
             break
         if ix is None:

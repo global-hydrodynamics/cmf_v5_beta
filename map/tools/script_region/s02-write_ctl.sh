@@ -50,15 +50,15 @@ set --
 [ "$DRY_RUN" -eq 0 ] || set -- "$@" --dry-run
 [ "$OVERWRITE" -eq 1 ] || set -- "$@" --no-overwrite
 
-# params.txt in the parent directory defines the base-resolution grid.
+# The copied params.txt in binary/ defines the base-grid Binary compatibility set.
 printf '\n==================================================\n'
 printf '[STEP 1/2] Generate CTLs for the base map\n'
 printf '==================================================\n\n'
-"$PYTHON_CMD" "$GENERATOR" --map-dir .. "$@" || STATUS=1
+"$PYTHON_CMD" "$GENERATOR" --map-dir ../binary "$@" || STATUS=1
 printf '\n'
 
-# Each high-resolution directory provides its own grid through location.txt.
-for LOCATION in ../*/location.txt
+# Binary resolution directories carry their location.txt and generated CTLs.
+for LOCATION in ../binary/*/location.txt
 do
   [ -f "$LOCATION" ] || continue
   # Remove the /location.txt suffix to get the high-resolution map directory.

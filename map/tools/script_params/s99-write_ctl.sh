@@ -70,6 +70,11 @@ if [ ! -f "$GENERATOR" ]; then
   exit 1
 fi
 
+# Prefer the standard compatibility tree while retaining the former root layout
+# for existing maps that have not yet been migrated.
+DATA_DIR=..
+[ ! -d ../binary ] || DATA_DIR=../binary
+
 STATUS=0
 # set -- rebuilds the argument list passed to each generator invocation.
 set --
@@ -80,18 +85,18 @@ set --
 if [ -n "$INPUT" ]; then
   [ -z "$VARIABLES" ] || set -- "$@" --variables "$VARIABLES"
   [ -z "$REFERENCE" ] || set -- "$@" --reference-binary "$REFERENCE"
-  exec "$PYTHON_CMD" "$GENERATOR" --map-dir .. --input "$INPUT" "$@"
+  exec "$PYTHON_CMD" "$GENERATOR" --map-dir "$DATA_DIR" --input "$INPUT" "$@"
 fi
 
 # The generator examines only .bin files that already exist in each directory.
 printf '\n==================================================\n'
 printf '[STEP 1/2] Generate CTLs for the base map\n'
 printf '==================================================\n\n'
-"$PYTHON_CMD" "$GENERATOR" --map-dir .. "$@" || STATUS=1
+"$PYTHON_CMD" "$GENERATOR" --map-dir "$DATA_DIR" "$@" || STATUS=1
 printf '\n'
 
 # High-resolution grids provide their geometry in location.txt.
-for LOCATION in ../*/location.txt
+for LOCATION in "$DATA_DIR"/*/location.txt
 do
   [ -f "$LOCATION" ] || continue
   # Remove the /location.txt suffix to get the high-resolution map directory.
@@ -108,10 +113,10 @@ for ENTRY in $VARIANTS; do
   PATTERN=${ENTRY%%:*}
   REFERENCE=${ENTRY#*:}
   # Intentional glob expansion: process existing map-root matches only.
-  for BINARY in ../$PATTERN; do
+  for BINARY in "$DATA_DIR"/$PATTERN; do
     [ -f "$BINARY" ] || continue
     printf '\nGenerate variant CTL: %s (reference %s)\n' "${BINARY##*/}" "$REFERENCE"
-    python3 "$GENERATOR" --map-dir .. --input "${BINARY##*/}" --reference-binary "$REFERENCE" "$@" || STATUS=1
+    python3 "$GENERATOR" --map-dir "$DATA_DIR" --input "${BINARY##*/}" --reference-binary "$REFERENCE" "$@" || STATUS=1
   done
 done
 

@@ -37,16 +37,16 @@ END_HOUR=0                    # End hour (00:00).
 MAPDIR="${CMF_BASE}/map/mekong_15min"
 
 # River network connectivity.
-# nextxy.bin:        Includes rivers draining outside the regional domain.
-# nextxy_noedge.bin: Excludes river networks affected by regional boundaries (default).
-#NEXTXY="${MAPDIR}/nextxy.bin"
-NEXTXY="${MAPDIR}/nextxy_noedge.bin"
+# nextxy.nc:        Includes rivers draining outside the regional domain.
+# nextxy_noedge.nc: Excludes river networks affected by regional boundaries (default).
+#NEXTXY="${MAPDIR}/nextxy.nc"
+NEXTXY="${MAPDIR}/nextxy_noedge.nc"
 
 # River channel width.
-# rivwth_merit.bin: Satellite-derived river width (default).
-# rivwth.bin:       Power-law river width estimated from upstream area.
-#RIVWTH="${MAPDIR}/rivwth.bin"
-RIVWTH="${MAPDIR}/rivwth_merit.bin"
+# rivwth_merit.nc: Satellite-derived river width (default).
+# rivwth.nc:       Power-law river width estimated from upstream area.
+#RIVWTH="${MAPDIR}/rivwth.nc"
+RIVWTH="${MAPDIR}/rivwth_merit.nc"
 
 # CPU execution settings; this sample runs with OpenMP and without MPI.
 OMP_NUM_THREADS=1             # Number of OpenMP threads (non-MPI execution).
@@ -66,6 +66,7 @@ DROFUNIT=86400000             # Input runoff units / DROFUNIT -> m/s; 86400000 c
 LINPCDF=".FALSE."             # TRUE: read NetCDF runoff; FALSE: read binary runoff.
 CROFFREQ="MON"               # Daily records indexed from 00:00 at each month start.
 LINTERP=".TRUE."              # TRUE: map runoff with input matrix; FALSE: use nearest-grid conversion.
+LITRPCDF=".TRUE."             # TRUE: read the input-mapping matrix from NetCDF.
 CROFPRE="Roff____"            # Monthly filename prefix: Roff____YYYYMM.one.
 CROFSUF=".one"                # Binary filename suffix.
 
@@ -115,7 +116,7 @@ RUNOFF_DIR="${CMF_BASE}/inp/${ROFFTAG}/runoff"
 
 # The dimension descriptor and matrix were generated for this map/runoff pair.
 DIMINFO="${MAPDIR}/diminfo_${INPMAT_TAG}.txt"
-INPMAT="${MAPDIR}/inpmat_${INPMAT_TAG}.bin"
+INPMAT="${MAPDIR}/inpmat_${INPMAT_TAG}.nc"
 
 # Source executable; a copy is placed in RUNDIR and executed there.
 EXEC_CMF="${CMF_BASE}/src_main/MAIN_cmf"
@@ -183,16 +184,16 @@ EDAY  = ${END_DAY}           ! Simulation end day (end time is exclusive).
 EHOUR = ${END_HOUR}          ! Simulation end hour (end time is exclusive).
 /
 &NMAP
-LMAPCDF = .FALSE.                   ! TRUE: read NetCDF maps; FALSE: read binary maps.
+LMAPCDF = .FALSE.                   ! FALSE: read individual NetCDF files; TRUE: legacy consolidated NetCDF maps.
 CNEXTXY = "${NEXTXY}"               ! River-network downstream connectivity.
-CGRAREA = "${MAPDIR}/ctmare.bin"    ! Unit catchment area [m2].
-CELEVTN = "${MAPDIR}/elevtn.bin"    ! River-bank elevation [m].
-CNXTDST = "${MAPDIR}/nxtdst.bin"    ! Distance to downstream outlet [m].
-CRIVLEN = "${MAPDIR}/rivlen.bin"    ! River channel length [m].
-CFLDHGT = "${MAPDIR}/fldhgt.bin"    ! Floodplain elevation profile [m].
+CGRAREA = "${MAPDIR}/ctmare.nc"     ! Unit catchment area [m2].
+CELEVTN = "${MAPDIR}/elevtn.nc"     ! River-bank elevation [m].
+CNXTDST = "${MAPDIR}/nxtdst.nc"     ! Distance to downstream outlet [m].
+CRIVLEN = "${MAPDIR}/rivlen.nc"     ! River channel length [m].
+CFLDHGT = "${MAPDIR}/fldhgt.nc"     ! Floodplain elevation profile [m].
 CRIVWTH = "${RIVWTH}"               ! River channel width [m].
-CRIVHGT = "${MAPDIR}/rivhgt.bin"    ! River channel depth [m].
-CRIVMAN = "${MAPDIR}/rivman.bin"    ! River Manning roughness [s m-1/3].
+CRIVHGT = "${MAPDIR}/rivhgt.nc"     ! River channel depth [m].
+CRIVMAN = "${MAPDIR}/rivman.nc"     ! River Manning roughness [s m-1/3].
 CPTHOUT = "${MAPDIR}/bifprm.csv"    ! Bifurcation channel parameters.
 /
 &NRESTART
@@ -205,7 +206,8 @@ IFRQ_RST = ${IFRQ_RST}       ! 0=end only; 1-24=hour interval; 30=monthly (nonze
 LINPCDF  = ${LINPCDF}         ! TRUE: read NetCDF runoff; FALSE: read binary runoff.
 CROFFREQ = "${CROFFREQ}"     ! Explicit grouping mode; DAY/MON/YEAR/SEQ.
 LINTERP  = ${LINTERP}         ! TRUE: map runoff with input matrix; FALSE: use nearest-grid conversion.
-CINPMAT  = "${INPMAT}"        ! Runoff-to-river input-mapping matrix.
+LITRPCDF  = ${LITRPCDF}        ! TRUE: read the input-mapping matrix from NetCDF.
+CINPMAT  = "${INPMAT}"        ! NetCDF runoff-to-river input-mapping matrix.
 DROFUNIT = ${DROFUNIT}        ! Input runoff units / DROFUNIT -> m/s; 86400000 converts mm/day.
 CROFDIR  = "${RUNOFF_DIR}"    ! Directory containing runoff input files.
 CROFPRE  = "${CROFPRE}"       ! Runoff filename prefix before the date.

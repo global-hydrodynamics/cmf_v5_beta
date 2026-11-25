@@ -83,7 +83,7 @@ def write_outputs(validate_only: bool = False) -> None:
     if times[0] != pd.Timestamp("2000-01-02") or times[-1] != pd.Timestamp("2001-01-01"):
         raise ValueError(f"Unexpected interval-end timestamps: {times[0]} through {times[-1]}")
 
-    ctmare_ds = xr.open_dataset(MAP_DIR / "netcdf/ctmare.nc", decode_times=False, mask_and_scale=True)
+    ctmare_ds = xr.open_dataset(MAP_DIR / "ctmare.nc", decode_times=False, mask_and_scale=True)
     ctmare = ctmare_ds["ctmare"].load()
     if not np.array_equal(ctmare.lon.values, control_ds.lon.values) or not np.array_equal(ctmare.lat.values, control_ds.lat.values):
         raise ValueError("ctmare grid does not match model output grid")

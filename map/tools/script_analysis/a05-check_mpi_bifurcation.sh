@@ -22,7 +22,7 @@ OUT_DIR="out_analysis"  # Change to ../out_analysis to use the map-root output f
 
 # Command-line inputs: an existing region map and optional dropped-path CSV filename.
 if [ "$#" -lt 1 ] || [ "$#" -gt 3 ] || [ "$#" -eq 2 ]; then
-    printf '\n[ERROR] Usage: %s <region-map.bin> [--csv <dropped.csv>]\n' "$0" >&2
+    printf '\n[ERROR] Usage: %s <region-map.nc> [--csv <dropped.csv> | --map-format binary]\n' "$0" >&2
     exit 2
 fi
 
@@ -32,6 +32,12 @@ REGION_MAP=$1
 CSV_OPTION=${2:-}
 CSV_ARGUMENT=${3:-}
 CSV_IN_OUT_DIR=0
+MAP_FORMAT=netcdf
+if [ "$CSV_OPTION" = "--map-format" ]; then
+    [ "$CSV_ARGUMENT" = "binary" ] || { printf '\n[ERROR] --map-format supports only binary as an explicit legacy option.\n' >&2; exit 2; }
+    MAP_FORMAT=binary
+    CSV_ARGUMENT=""
+fi
 
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
@@ -44,8 +50,8 @@ quote_shell_arg() {
     printf "'"
 }
 
-if [ "$#" -eq 3 ] && [ "$CSV_OPTION" != "--csv" ]; then
-    printf '\n[ERROR] Usage: %s <region-map.bin> [--csv <dropped.csv>]\n' "$0" >&2
+if [ "$#" -eq 3 ] && [ "$CSV_OPTION" != "--csv" ] && [ "$CSV_OPTION" != "--map-format" ]; then
+    printf '\n[ERROR] Usage: %s <region-map.nc> [--csv <dropped.csv> | --map-format binary]\n' "$0" >&2
     exit 2
 fi
 
@@ -84,7 +90,7 @@ printf '\n==================================================\n'
 printf '[STEP 1/1] Check bifurcation connectivity\n'
 printf '==================================================\n\n'
 
-if [ "$#" -ge 3 ]; then
+if [ -n "$CSV_ARGUMENT" ]; then
     printf '"$PYTHON_CMD" "$CODE_DIR/analysis_check_mpi_bifurcation.py" '
     quote_shell_arg "$REGION_MAP"
     printf ' '
@@ -92,12 +98,12 @@ if [ "$#" -ge 3 ]; then
     printf ' '
     quote_shell_arg "$CSV_FILE"
     printf '\n'
-    "$PYTHON_CMD" "$CODE_DIR/analysis_check_mpi_bifurcation.py" --map-dir "$MAP_DIR" "$REGION_MAP" --csv "$CSV_FILE"
+    "$PYTHON_CMD" "$CODE_DIR/analysis_check_mpi_bifurcation.py" --map-dir "$MAP_DIR" --map-format "$MAP_FORMAT" "$REGION_MAP" --csv "$CSV_FILE"
 else
     printf '"$PYTHON_CMD" "$CODE_DIR/analysis_check_mpi_bifurcation.py" '
     quote_shell_arg "$REGION_MAP"
     printf '\n'
-    "$PYTHON_CMD" "$CODE_DIR/analysis_check_mpi_bifurcation.py" --map-dir "$MAP_DIR" "$REGION_MAP"
+    "$PYTHON_CMD" "$CODE_DIR/analysis_check_mpi_bifurcation.py" --map-dir "$MAP_DIR" --map-format "$MAP_FORMAT" "$REGION_MAP"
 fi
 
 printf '\n==================================================\n'

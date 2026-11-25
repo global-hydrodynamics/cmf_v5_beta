@@ -33,34 +33,29 @@ class WorkflowMessageTests(unittest.TestCase):
         shutil.copyfile(SCRIPT_DIR / script_name, script)
         script.chmod(0o755)
         for name in executables:
-            path = self.code_dir / name
-            path.write_text(
-                "#!/bin/sh\n"
-                "NAME=${0##*/}\n"
-                "printf '%s %s\\n' \"$NAME\" \"$*\" >> \"$MOCK_LOG\"\n"
-                "if [ \"${FAIL_MATCH:-}\" = \"$NAME\" ] || [ \"${FAIL_MATCH:-}\" = \"$NAME:${1:-}\" ]; then\n"
-                "    exit \"${FAIL_STATUS:-23}\"\n"
-                "fi\n"
-                "case \"$NAME\" in\n"
-                "    param_mpi_set_basin) : > ../bifbsn_mpi.tmp ; : > ../bifcol_mpi.bin ;;\n"
-                "    param_mpi_set_region) : > ../mpireg-$1.bin ;;\n"
-                "    analysis_mpi_region_color) : > bsncol_mpi-${1#mpireg-} ;;\n"
-                "esac\n",
-                encoding="ascii",
-            )
-            path.chmod(0o755)
-        if script_name == "s02-bifurcation.sh":
-            converter = self.code_dir / "python3"
-            converter.write_text(
-                "#!/bin/sh\n"
-                "printf 'python3 %s\\n' \"$*\" >> \"$MOCK_LOG\"\n"
-                "if [ \"${FAIL_MATCH:-}\" = python3 ] || [ \"${FAIL_MATCH:-}\" = python3:\"${2:-}\" ]; then\n"
-                "    exit \"${FAIL_STATUS:-23}\"\n"
-                "fi\n"
-                ": > \"$3\"\n",
-                encoding="ascii",
-            )
-            converter.chmod(0o755)
+            (self.code_dir / f"{name}.py").write_text("# fixture\n", encoding="ascii")
+        (self.code_dir / "convert_bifprm_csv_to_netcdf.py").write_text(
+            "# fixture\n", encoding="ascii"
+        )
+        python = self.code_dir / "python3"
+        python.write_text(
+            "#!/bin/sh\n"
+            "SCRIPT=${1##*/}; NAME=${SCRIPT%.py}; shift\n"
+            "LOG_NAME=$NAME\n"
+            "if [ \"$NAME\" = convert_bifprm_csv_to_netcdf ]; then LOG_NAME=python3; fi\n"
+            "printf '%s %s\\n' \"$LOG_NAME\" \"$*\" >> \"$MOCK_LOG\"\n"
+            "if [ \"${FAIL_MATCH:-}\" = \"$LOG_NAME\" ] || [ \"${FAIL_MATCH:-}\" = \"$LOG_NAME:${1:-}\" ]; then\n"
+            "    exit \"${FAIL_STATUS:-23}\"\n"
+            "fi\n"
+            "case \"$NAME\" in\n"
+            "    param_mpi_set_basin) : > ../bifbsn_mpi.tmp ; : > ../bifcol_mpi.nc ;;\n"
+            "    param_mpi_set_region) : > ../mpireg-$1.nc ;;\n"
+            "    analysis_mpi_region_color) : > bsncol_mpi-${1#mpireg-}.nc ;;\n"
+            "    convert_bifprm_csv_to_netcdf) : > \"$2\" ;;\n"
+            "esac\n",
+            encoding="ascii",
+        )
+        python.chmod(0o755)
         return script
 
     def run_script(

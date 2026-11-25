@@ -33,7 +33,7 @@ class VariantConversionTests(unittest.TestCase):
 
     def args(self, source='experiment.bin', reference='nextxy.bin', variables=None, force=False):
         return argparse.Namespace(map_dir=self.map, registry=REGISTRY, input=self.map/source,
-                                  output=self.map/'netcdf'/f'{Path(source).stem}.nc',
+                                  output=self.map/f'{Path(source).stem}.nc',
                                   reference_binary=reference, variables=variables, force=force,
                                   no_overwrite=False, byte_order='little')
 
@@ -154,7 +154,7 @@ class VariantConversionTests(unittest.TestCase):
             converter.convert(args)
         self.assertFalse(args.output.exists())
         args.input.write_bytes(np.arange(12, dtype='<i4').tobytes())
-        args.output.parent.mkdir()
+        args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_bytes(b'prior-output')
         args.no_overwrite = True
         with self.assertRaises(FileExistsError):
@@ -196,20 +196,22 @@ class VariantConversionTests(unittest.TestCase):
         self.assertEqual(SCRIPT.read_bytes(), local.read_bytes())
         directory = self.map/'script_format_conv'
         directory.mkdir()
+        binary_dir = self.map/'binary'
+        binary_dir.mkdir()
         values = np.array([[-9999, 0, 1], [2, 10, 3]], dtype='<i4')
         for name in ('subbsn', 'subcol'):
-            (self.map/f'{name}-sample.bin').write_bytes(values.tobytes())
+            (binary_dir/f'{name}-sample.bin').write_bytes(values.tobytes())
         def run(script, cwd, *arguments):
             return subprocess.run(['bash', str(script), *arguments], cwd=cwd, capture_output=True, text=True)
         result = run(local, directory)
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         for name in ('subbsn', 'subcol'):
-            self.check_data(self.map/f'netcdf/{name}-sample.nc', {name: values})
+            self.check_data(self.map/f'{name}-sample.nc', {name: values})
         result = run(SCRIPT, self.root, '--map-dir', str(self.map))
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         self.assertIn('Converted: 2; skipped: 0', result.stdout)
         for name in ('subbsn', 'subcol'):
-            self.check_data(self.map/f'netcdf/{name}-sample.nc', {name: values})
+            self.check_data(self.map/f'{name}-sample.nc', {name: values})
         result = run(SCRIPT, self.root, '--map-dir', str(self.map), '--no-overwrite')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         self.assertIn('Converted: 0; skipped: 2', result.stdout)
@@ -218,7 +220,7 @@ class VariantConversionTests(unittest.TestCase):
         result = run(SCRIPT, SCRIPT.parent)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('template, not a map', result.stderr)
-        (self.map/'subbsn-sample.bin').unlink()
+        (binary_dir/'subbsn-sample.bin').unlink()
         result = run(SCRIPT, self.root, '--map-dir', str(self.map), '--force')
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('subbsn-sample.bin', result.stderr)
@@ -242,14 +244,15 @@ target.parent.mkdir(parents=True,exist_ok=True)
 target.write_bytes(Path(a.input).read_bytes())
 print('copied',Path(a.input).name,'force='+str(a.force))
 """)
-        output = self.map/'netcdf'
-        output.mkdir()
+        output = self.map
+        binary_dir = self.map/'binary'
+        binary_dir.mkdir()
         for name in ('subbsn','subcol'):
-            (self.map/f'{name}-sample.bin').write_bytes(b'new-'+name.encode())
+            (binary_dir/f'{name}-sample.bin').write_bytes(b'new-'+name.encode())
         shim = self.root/'run-s90.sh'
         shim.write_text('exec bash '+shlex.quote(str(script))+' --map-dir '+shlex.quote(str(self.map))+'\n')
         for name in ('subbsn','subcol'):
-            (self.map/f'{name}-sample.bin').write_bytes(b'new-'+name.encode())
+            (binary_dir/f'{name}-sample.bin').write_bytes(b'new-'+name.encode())
             (output/f'{name}-sample.nc').write_bytes(b'old-'+name.encode())
         result = subprocess.run(['bash',str(script),'--map-dir',str(self.map)],cwd=self.root,
                                 input='',capture_output=True,text=True)
@@ -267,7 +270,7 @@ print('copied',Path(a.input).name,'force='+str(a.force))
             self.assertEqual((output/f'{name}-sample.nc').read_bytes(),b'preserve-'+name.encode())
 
     def test_actual_mekong_pair_under_arbitrary_input_name(self):
-        source = ROOT/'map/mekong_15min/nextxy.bin'
+        source = ROOT/'map/mekong_15min/binary/nextxy.bin'
         shutil.copy2(source.parent/'params.txt', self.map/'params.txt')
         args = self.args('unrelated-name.bin')
         shutil.copy2(source, args.input)

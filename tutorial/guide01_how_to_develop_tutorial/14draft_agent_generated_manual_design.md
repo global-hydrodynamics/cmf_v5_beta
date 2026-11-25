@@ -105,7 +105,7 @@ matrix. Identify which inputs are repository samples and which are generated
 locally. State how outputs are stored and which generated files are excluded
 from Git, based on the actual implementation.
 
-**Inspect:** Confirm the baseline `map/mekong_15min/netcdf/rivhgt.nc` exists and
+**Inspect:** Confirm the baseline `map/mekong_15min/rivhgt.nc` exists and
 will remain unchanged; confirm that the required map, forcing, and input-matrix
 files can be opened by the documented workflow.
 

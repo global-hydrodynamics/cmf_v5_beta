@@ -327,6 +327,8 @@ def discover_tiles(map_dir, messages):
                     raise ValueError("invalid area filename prefix")
                 g = Geometry(nx, ny, 1, step, w, e, s, n)
                 relative = location.parent.relative_to(root)
+                if relative.parts and relative.parts[0] == 'binary':
+                    relative = Path(*relative.parts[1:])
                 # Keep legacy JSON/tile identities stable while preferring _nc
                 # products for the same declared native geometry and prefix.
                 canonical = relative.with_name(relative.name[:-3]) if relative.name.endswith("_nc") else relative
@@ -334,8 +336,11 @@ def discover_tiles(map_dir, messages):
                 tile = tiles.get(key)
                 if tile is not None and tile.geometry != g:
                     raise ValueError(f"{key}: Binary/NetCDF native geometries disagree")
+                data_directory = root / canonical
+                if not data_directory.is_dir():
+                    data_directory = root / 'binary' / canonical
                 if tile is None:
-                    tile = Tile(key, location.parent, name, g, coarse_geometry=Geometry.read(root / "params.txt"))
+                    tile = Tile(key, data_directory, name, g, coarse_geometry=Geometry.read(root / "params.txt"))
                 for field_name, bytes_per_pixel in [
                     ("catmxy", 4),
                     ("visual", 1),
@@ -345,8 +350,11 @@ def discover_tiles(map_dir, messages):
                     ("uparea", 4),
                     ("rivwth", 4),
                 ]:
-                    nc_path = location.parent / f"{name}.{field_name}.nc"
-                    path = location.parent / f"{name}.{field_name}.bin"
+                    nc_path = root / canonical / f"{name}.{field_name}.nc"
+                    path = root / 'binary' / canonical / f"{name}.{field_name}.bin"
+                    legacy_binary_path = location.parent / f"{name}.{field_name}.bin"
+                    if not path.is_file() and legacy_binary_path.is_file():
+                        path = legacy_binary_path
                     cog_path = root / "COG" / canonical / f"{name}.{field_name}.tif"
                     if cog_path.is_file():
                         try:
