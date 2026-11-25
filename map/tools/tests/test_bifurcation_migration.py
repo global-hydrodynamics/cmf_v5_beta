@@ -88,7 +88,7 @@ class S02InputGuardTests(unittest.TestCase):
             script.chmod(0o755)
 
             env = dict(os.environ, CMF_V50_ROOT=str(root))
-            result = subprocess.run([str(script)], cwd=outside, env=env, text=True, capture_output=True)
+            result = subprocess.run([str(script)], cwd=script_dir, env=env, text=True, capture_output=True)
 
             self.assertNotEqual(result.returncode, 0, result.stdout)
             self.assertIn("parameter program invoked", result.stdout)
@@ -108,10 +108,12 @@ class S02InputGuardTests(unittest.TestCase):
             install_shell_library(root)
             script = script_dir / "s02-bifurcation.sh"
             shutil.copy2(S02_TEMPLATE, script)
-            script.write_text(
-                script.read_text(encoding="utf-8").replace('CHECK_MAP=""', 'CHECK_MAP="--check-map"'),
-                encoding="utf-8",
-            )
+            source = script.read_text(encoding="utf-8")
+            source = source.replace('"$RIVHGT" "$BIFPRM_CSV" "$BIFLAYER" "$DIMINFO" --map-dir ..',
+                                    '"$RIVHGT" "$BIFPRM_CSV" "$BIFLAYER" "$DIMINFO" --check-map --map-dir ..')
+            source = source.replace('"$CODE_DIR/param_bif_set_basin.py" --map-dir ..',
+                                    '"$CODE_DIR/param_bif_set_basin.py" --check-map --map-dir ..')
+            script.write_text(source, encoding="utf-8")
             script.chmod(0o755)
             log = root / "calls.txt"
             python = bin_dir / "python3"
