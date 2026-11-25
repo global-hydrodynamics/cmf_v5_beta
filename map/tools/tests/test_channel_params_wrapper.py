@@ -27,7 +27,7 @@ class ChannelParamsWrapperTests(unittest.TestCase):
                      self.shell_library_dir / "cmf_check_shell_error.sh")
         (self.root / "map" / "data").mkdir()
         (self.root / "outside").mkdir()
-        (self.root / "map" / "data" / "ELSE_GPCC_clm-1981-2010.one").write_bytes(b"runoff")
+        (self.root / "map" / "data" / "ELSE_GPCC_clm-1981-2010.nc").write_bytes(b"runoff")
         for name in ("params.txt", "nextxy.bin", "ctmare.bin", "width.bin",
                      "inpmat_test-1deg.bin"):
             (self.map_root / name).write_bytes(b"input")
@@ -45,7 +45,7 @@ class ChannelParamsWrapperTests(unittest.TestCase):
             program.write_text(
                 "import os, sys\nfrom pathlib import Path\n"
                 "with open(os.environ['CALL_LOG'], 'a') as log:\n"
-                "    log.write(os.getcwd() + '|' + '|'.join(sys.argv[1:]) + '|\\n')\n"
+                "    log.write(os.getcwd() + '|' + sys.argv[0] + '|' + '|'.join(sys.argv[1:]) + '|\\n')\n"
                 + "\n".join(f"Path('{output}').write_text('x')" for output in outputs) + "\n",
                 encoding="ascii",
             )
@@ -67,19 +67,23 @@ class ChannelParamsWrapperTests(unittest.TestCase):
         records = [line.split("|") for line in self.calls.read_text().splitlines()]
         self.assertEqual(len(records), 3)
         self.assertTrue(all(Path(row[0]).resolve() == self.map_root.resolve() for row in records))
-        self.assertEqual(records[0][1:], ["bin", "mat", "diminfo_test-1deg.txt",
-                                          "../data/ELSE_GPCC_clm-1981-2010.one",
+        self.assertEqual([Path(row[1]).name for row in records], [
+            "param_channel_calc_outclm.py", "param_channel_calc_rivwth.py",
+            "param_channel_set_merit_width.py",
+        ])
+        self.assertEqual(records[0][2:], ["cdf", "mat", "diminfo_test-1deg.txt",
+                                          str(self.root / "map" / "data" / "ELSE_GPCC_clm-1981-2010.nc"),
                                           "--map-format", "netcdf", ""])
-        self.assertEqual(records[1][1:], ["bin", "diminfo_test-1deg.txt", "0.1", "0.50",
+        self.assertEqual(records[1][2:], ["cdf", "diminfo_test-1deg.txt", "0.1", "0.50",
                                           "0.00", "1.0", "2.50", "0.60", "0.00", "5.0",
                                           "--map-format", "netcdf", ""])
-        self.assertEqual(records[2][1:], ["diminfo_test-1deg.txt", "--map-format", "netcdf", ""])
+        self.assertEqual(records[2][2:], ["diminfo_test-1deg.txt", "--map-format", "netcdf", ""])
         for name in ("outclm.nc", "rivwth.nc", "rivhgt.nc", "rivman.nc",
                      "rivhgt_inf.nc", "rivwth_merit.nc"):
             self.assertTrue((self.map_root / name).is_file(), name)
 
-    def test_missing_runoff_path_is_passed_to_the_compiled_program(self) -> None:
-        (self.root / "map" / "data" / "ELSE_GPCC_clm-1981-2010.one").unlink()
+    def test_missing_runoff_path_is_passed_to_the_python_program(self) -> None:
+        (self.root / "map" / "data" / "ELSE_GPCC_clm-1981-2010.nc").unlink()
         result = subprocess.run(
             [str(self.script)], cwd=self.root / "outside",
             env={**os.environ, "CALL_LOG": str(self.calls), "CMF_V50_ROOT": str(self.root)},
@@ -88,7 +92,7 @@ class ChannelParamsWrapperTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         records = [line.split("|") for line in self.calls.read_text().splitlines()]
         self.assertEqual(len(records), 3)
-        self.assertEqual(records[0][4], "../data/ELSE_GPCC_clm-1981-2010.one")
+        self.assertEqual(records[0][5], str(self.root / "map" / "data" / "ELSE_GPCC_clm-1981-2010.nc"))
 
     def test_unset_cmf_root_fails_before_sourcing_library(self) -> None:
         env = {**os.environ, "CALL_LOG": str(self.calls)}
@@ -101,17 +105,18 @@ class ChannelParamsWrapperTests(unittest.TestCase):
         self.assertIn("CMF_V50_ROOT is not set", result.stderr)
         self.assertFalse(self.calls.exists())
 
-    def test_missing_shared_program_uses_common_failure_report(self) -> None:
+    def test_missing_shared_program_uses_python_error_and_common_failure_report(self) -> None:
         (self.code_dir / "param_channel_set_merit_width.py").unlink()
         result = subprocess.run(
             [str(self.script)], cwd=self.root / "outside",
             env={**os.environ, "CALL_LOG": str(self.calls), "CMF_V50_ROOT": str(self.root)},
             text=True, capture_output=True, check=False,
         )
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("Required Python program not found", result.stderr)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("param_channel_set_merit_width.py", result.stderr)
         self.assertIn("ERROR: s01-channel_params.sh FAILED", result.stderr)
-        self.assertFalse(self.calls.exists())
+        records = [line.split("|") for line in self.calls.read_text().splitlines()]
+        self.assertEqual(len(records), 2)
 
 
 if __name__ == "__main__":
