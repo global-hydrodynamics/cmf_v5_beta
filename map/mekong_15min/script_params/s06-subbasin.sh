@@ -1,14 +1,15 @@
 #!/bin/sh
 # Generate standard subbasin segmentation and display-color maps.
 # Copy to <map>/script_params/ and run from any working directory.
-# Inputs: params.txt, nextxy.bin, uparea.bin.
-# Outputs: subbsn-sample.bin and subcol-sample.bin in the map root; existing files are overwritten.
+# Inputs: params.txt, nextxy, uparea (NetCDF by default).
+# Outputs: subbsn-sample.nc and subcol-sample.nc in the map root; existing files are overwritten.
 set -eu
 
 # Paths
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 PYTHON_CMD="${PYTHON_CMD:-python3}"
+MAP_FORMAT="${MAP_FORMAT:-netcdf}"  # Set binary only for legacy Binary maps.
 if [ -n "${CMF5_ROOT:-}" ]; then
     CODE_DIR="$CMF5_ROOT/map/tools/code"
 else
@@ -61,10 +62,10 @@ STEP="Segment the river network at the ${AREA_THRESHOLD1_KM2}/${AREA_THRESHOLD2_
 printf '\n==================================================\n[STEP 1/1] Generate sample subbasin maps (%s / %s km2)\n==================================================\n\n' "$AREA_THRESHOLD1_KM2" "$AREA_THRESHOLD2_KM2"
 if [ -n "$AREA_THRESHOLD2_KM2" ]; then
     "$PYTHON_CMD" "$EXEC_SUBBASIN" "$AREA_THRESHOLD1_KM2" "$AREA_THRESHOLD2_KM2" \
-        "$MAP_DIR/subbsn-sample.bin" "$MAP_DIR/subcol-sample.bin"
+        "$MAP_DIR/subbsn-sample.bin" "$MAP_DIR/subcol-sample.bin" --map-format "$MAP_FORMAT"
 else
     "$PYTHON_CMD" "$EXEC_SUBBASIN" "$AREA_THRESHOLD1_KM2" \
-        "$MAP_DIR/subbsn-sample.bin" "$MAP_DIR/subcol-sample.bin"
+        "$MAP_DIR/subbsn-sample.bin" "$MAP_DIR/subcol-sample.bin" --map-format "$MAP_FORMAT"
 fi
 
 printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"

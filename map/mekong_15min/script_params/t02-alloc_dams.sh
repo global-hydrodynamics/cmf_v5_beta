@@ -8,6 +8,7 @@ set -eu
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 PYTHON_CMD="${PYTHON_CMD:-python3}"
+MAP_FORMAT="${MAP_FORMAT:-netcdf}"  # Set binary only for legacy Binary maps.
 if [ -n "${CMF5_ROOT:-}" ]; then
     CODE_DIR="$CMF5_ROOT/map/tools/code"
 else
@@ -74,7 +75,7 @@ cd "$SCRIPT_DIR"
 
 STEP="Allocate dams and separate river, small, and error records"
 printf '\n==================================================\n[STEP 1/2] Allocate dams (%s)\n==================================================\n\n' "$HIRES_TAG"
-"$PYTHON_CMD" "$EXEC_ALLOCATE" "$DAM_IN" "$HIRES_TAG"
+"$PYTHON_CMD" "$EXEC_ALLOCATE" "$DAM_IN" "$HIRES_TAG" --map-format "$MAP_FORMAT"
 
 STEP="Move allocated dam tables into the map root"
 printf '\n==================================================\n[STEP 2/2] Save GRanD allocation tables\n==================================================\n\n'

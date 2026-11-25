@@ -2,14 +2,15 @@
 # Generate a map-to-runoff matrix for a regular runoff grid.
 # Copy to <map>/script_params/, edit the grid settings, and run from any CWD.
 #
-# Inputs: params.txt and <HIRES_TAG>/location.txt with each area's catmxy.bin.
-# Outputs: diminfo_<ROFFTAG>.txt and inpmat_<ROFFTAG>.bin in the map root.
+# Inputs: params.txt and <HIRES_TAG>/location.txt with each area's catmxy.nc.
+# Outputs: diminfo_<ROFFTAG>.txt and inpmat_<ROFFTAG>.nc in the map root.
 set -eu
 
 # Paths
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 PYTHON_CMD="${PYTHON_CMD:-python3}"
+MAP_FORMAT="${MAP_FORMAT:-netcdf}"  # Set binary only for legacy Binary maps.
 if [ -n "${CMF5_ROOT:-}" ]; then
     CODE_DIR="$CMF5_ROOT/map/tools/code"
 else
@@ -21,17 +22,15 @@ if [ ! -d "$CODE_DIR" ]; then
 fi
 MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
 
-# Runoff input grid: ERA5-Land global 0.1-degree grid, independent of the model map.
-# ERA5land_global labels the spatial grid, not the repo-ERA5land-glb_2day period.
-# Reuse this grid tag for longer ERA5-Land series with identical coordinates/order;
-# generate a separate matrix in each target CaMa-Flood map.
-ROFFTAG="ERA5land_global"  # User-editable runoff-grid tag for the paired output filenames.
-GRSIZEIN=0.1              # Runoff grid-cell size (degrees).
-WESTIN=-180.05            # Western edge: first longitude center (-180) minus half a cell.
-EASTIN=179.95             # Eastern edge: last longitude center (179.9) plus half a cell.
-NORTHIN=90.05             # Northern edge: first latitude center (90) plus half a cell.
-SOUTHIN=-90.05            # Southern edge: last latitude center (-90) minus half a cell.
-OLAT="NtoS"               # Runoff latitude row order: NtoS or StoN.
+# Standard global 1-degree runoff grid used by the test-1deg matrix pair.
+# Cell centers are longitude -179.5..179.5 and latitude 89.5..-89.5.
+ROFFTAG="test-1deg"  # Standard tag for the paired output filenames.
+GRSIZEIN=1.0           # Runoff grid-cell size (degrees).
+WESTIN=-180.0          # Western edge: first center (-179.5) minus half a cell.
+EASTIN=180.0           # Eastern edge: last center (179.5) plus half a cell.
+NORTHIN=90.0           # Northern edge: first center (89.5) plus half a cell.
+SOUTHIN=-90.0          # Southern edge: last center (-89.5) minus half a cell.
+OLAT="NtoS"            # Runoff latitude row order: NtoS or StoN.
 
 # High-resolution map selection is independent of the runoff-grid tag.
 HIRES_TAG=""  # Empty proposes the coarsest installed NetCDF grid; confirm before running.
@@ -103,7 +102,7 @@ done
 printf 'Using high-resolution map: %s/%s\n' "$MAP_DIR" "$HIRES_TAG"
 
 DIMINFO="diminfo_${ROFFTAG}.txt"
-INPMAT="inpmat_${ROFFTAG}.bin"
+INPMAT="inpmat_${ROFFTAG}.nc"
 
 EXEC_INPMAT="$CODE_DIR/param_inpmat_generate.py"
 
@@ -113,6 +112,6 @@ cd "$MAP_DIR"
 STEP="Map river cells to the configured runoff grid"
 printf '\n==================================================\n[STEP 1/1] Generate runoff input matrix\n==================================================\n\n'
 "$PYTHON_CMD" "$EXEC_INPMAT" "$HIRES_TAG" "$GRSIZEIN" "$WESTIN" "$EASTIN" \
-    "$NORTHIN" "$SOUTHIN" "$OLAT" "$DIMINFO" "$INPMAT"
+    "$NORTHIN" "$SOUTHIN" "$OLAT" "$DIMINFO" "$INPMAT" --map-format "$MAP_FORMAT"
 
 printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"

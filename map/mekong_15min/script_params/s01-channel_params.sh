@@ -2,16 +2,17 @@
 # Generate annual-runoff channel parameters for a map.
 # Copy to <map>/script_params/, configure the paths and coefficients, and run from any CWD.
 #
-# Inputs: diminfo_<ROFFTAG>.txt, inpmat_<ROFFTAG>.bin, annual runoff climatology,
-#         nextxy.bin, ctmare.bin, and width.bin.
-# Outputs: outclm.bin, rivwth.bin, rivhgt.bin, rivman.bin, rivhgt_inf.bin,
-#          and rivwth_merit.bin in the map root.
+# Inputs: diminfo_<ROFFTAG>.txt, inpmat_<ROFFTAG>.nc, annual runoff climatology,
+#         nextxy.nc, ctmare.nc, and width.nc.
+# Outputs: outclm.nc, rivwth.nc, rivhgt.nc, rivman.nc, rivhgt_inf.nc,
+#          and rivwth_merit.nc in the map root.
 set -eu
 
 # Paths
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 PYTHON_CMD="${PYTHON_CMD:-python3}"
+MAP_FORMAT="${MAP_FORMAT:-netcdf}"  # Set binary only for legacy Binary maps.
 if [ -n "${CMF5_ROOT:-}" ]; then
     CODE_DIR="$CMF5_ROOT/map/tools/code"
 else
@@ -30,7 +31,7 @@ INTERP="mat"                                   # Python CLI: mat for input matri
 # Shared grid: inp/ELSE_GPCC/runoffYYYY.nc [mm/day] and map/data/ELSE_GPCC_clm-1981-2010.one [mm/s].
 ROFFTAG="test-1deg"                        # Runoff dataset ID used in both matrix filenames.
 DIMINFO="diminfo_${ROFFTAG}.txt"                 # Simulation dimension information (model and input grids).
-INPMAT="inpmat_${ROFFTAG}.bin"                 # Runoff input matrix file derived from ROFFTAG.
+INPMAT="inpmat_${ROFFTAG}.nc"                  # Runoff input matrix file derived from ROFFTAG.
 CROFBIN="../data/ELSE_GPCC_clm-1981-2010.one"  # Annual-mean runoff input [mm/s], relative to the map root.
 # Source: Kim et al. (2009), https://doi.org/10.1029/2009GL039006
 
@@ -81,17 +82,17 @@ cd "$MAP_DIR"
 
 STEP="Calculate mean river discharge from annual runoff and the input matrix"
 printf '\n==================================================\n[STEP 1/3] Calculate mean river discharge\n==================================================\n\n'
-"$PYTHON_CMD" "$EXEC_OUTCLM" "$TYPE" "$INTERP" "$DIMINFO" "$CROFBIN"
+"$PYTHON_CMD" "$EXEC_OUTCLM" "$TYPE" "$INTERP" "$DIMINFO" "$CROFBIN" --map-format "$MAP_FORMAT"
 
 # 2. Estimate width, depth, roughness, and the no-floodplain depth field.
 STEP="Estimate channel width, depth, and roughness"
 printf '\n==================================================\n[STEP 2/3] Estimate channel parameters\n==================================================\n\n'
 "$PYTHON_CMD" "$EXEC_RIVWTH" "$TYPE" "$DIMINFO" "$HC" "$HP" "$HO" "$HMIN" \
-    "$WC" "$WP" "$WO" "$WMIN"
+    "$WC" "$WP" "$WO" "$WMIN" --map-format "$MAP_FORMAT"
 
 # 3. Merge MERIT Hydro width estimates with the power-law river widths.
 STEP="Merge power-law channel widths with MERIT Hydro widths"
 printf '\n==================================================\n[STEP 3/3] Merge MERIT Hydro channel widths\n==================================================\n\n'
-"$PYTHON_CMD" "$EXEC_MERIT" "$DIMINFO"
+"$PYTHON_CMD" "$EXEC_MERIT" "$DIMINFO" --map-format "$MAP_FORMAT"
 
 printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"

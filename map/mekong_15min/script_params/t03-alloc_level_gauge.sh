@@ -8,6 +8,7 @@ set -eu
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 PYTHON_CMD="${PYTHON_CMD:-python3}"
+MAP_FORMAT="${MAP_FORMAT:-netcdf}"  # Set binary only for legacy Binary maps.
 if [ -n "${CMF5_ROOT:-}" ]; then
     CODE_DIR="$CMF5_ROOT/map/tools/code"
 else
@@ -72,7 +73,7 @@ cd "$SCRIPT_DIR"
 
 STEP="Allocate water-level gauges and calculate river-path attributes"
 printf '\n==================================================\n[STEP 1/2] Allocate level gauges (%s)\n==================================================\n\n' "$HIRES_TAG"
-"$PYTHON_CMD" "$EXEC_ALLOCATE" "$GAUGE_IN" "$HIRES_TAG"
+"$PYTHON_CMD" "$EXEC_ALLOCATE" "$GAUGE_IN" "$HIRES_TAG" --map-format "$MAP_FORMAT"
 
 STEP="Move allocated level-gauge table into the map root"
 printf '\n==================================================\n[STEP 2/2] Save MLIT_levelgauge.txt\n==================================================\n\n'
