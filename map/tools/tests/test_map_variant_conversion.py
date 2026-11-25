@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import argparse
-import shlex
 import csv
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -197,30 +197,31 @@ class VariantConversionTests(unittest.TestCase):
         self.assertEqual(SCRIPT.read_bytes(), local.read_bytes())
         directory = self.map/'script_format_conv'
         directory.mkdir()
+        script = directory/SCRIPT.name
+        shutil.copy2(SCRIPT, script)
         binary_dir = self.map/'binary'
         binary_dir.mkdir()
         values = np.array([[-9999, 0, 1], [2, 10, 3]], dtype='<i4')
         for name in ('subbsn', 'subcol'):
             (binary_dir/f'{name}-sample.bin').write_bytes(values.tobytes())
-        def run(script, cwd, *arguments):
-            return subprocess.run(['bash', str(script), *arguments], cwd=cwd, capture_output=True, text=True)
-        result = run(local, directory)
+        env = dict(os.environ, CMF_V50_ROOT=str(ROOT))
+        def run(*arguments):
+            return subprocess.run(['bash', str(script), *arguments], cwd=directory, env=env,
+                                  capture_output=True, text=True)
+        result = run()
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         for name in ('subbsn', 'subcol'):
             self.check_data(self.map/f'{name}-sample.nc', {name: values})
-        result = run(SCRIPT, self.root, '--map-dir', str(self.map))
+        result = run()
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         self.assertIn('Converted: 2; skipped: 0', result.stdout)
         for name in ('subbsn', 'subcol'):
             self.check_data(self.map/f'{name}-sample.nc', {name: values})
-        result = run(SCRIPT, self.root, '--map-dir', str(self.map), '--no-overwrite')
+        result = run('--no-overwrite')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         self.assertIn('Converted: 0; skipped: 2', result.stdout)
-        result = run(SCRIPT, SCRIPT.parent)
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn('template, not a map', result.stderr)
         (binary_dir/'subbsn-sample.bin').unlink()
-        result = run(SCRIPT, self.root, '--map-dir', str(self.map))
+        result = run()
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('subbsn-sample.bin', result.stderr)
 
@@ -242,9 +243,16 @@ class VariantConversionTests(unittest.TestCase):
             original_sources[source.name] = source.read_bytes()
             (binary_dir/f'{name}-sample.bin').write_bytes(b'preserve-'+name.encode())
 
+        script_dir = self.map/'script_format_conv'
+        script_dir.mkdir()
+        script = script_dir/NC2BIN_SCRIPT.name
+        shutil.copy2(NC2BIN_SCRIPT, script)
+        shutil.copy2(SCRIPT, script_dir/SCRIPT.name)
         def run(*arguments):
-            return subprocess.run(['bash', str(NC2BIN_SCRIPT), '--map-dir', str(self.map), *arguments],
-                                  cwd=self.root, capture_output=True, text=True)
+            return subprocess.run(['bash', str(script), *arguments], cwd=script_dir,
+                                  env=dict(os.environ, CMF_V50_ROOT=str(ROOT),
+                                           PATH=f"{ROOT/'.venv/bin'}:{os.environ['PATH']}"),
+                                  capture_output=True, text=True)
 
         result = run('--no-overwrite')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
@@ -259,8 +267,9 @@ class VariantConversionTests(unittest.TestCase):
             self.assertEqual((self.map/source_name).read_bytes(), original)
         for name, values in arrays.items():
             self.assertEqual((binary_dir/f'{name}-sample.bin').read_bytes(), values.astype('<i4').tobytes())
-        result = subprocess.run(['bash', str(ROOT/'map/mekong_15min/script_format_conv/s18-sample_bin2nc.sh'),
-                                 '--map-dir', str(self.map)], cwd=self.root, capture_output=True, text=True)
+        result = subprocess.run(['bash', str(script_dir/'s18-sample_bin2nc.sh')], cwd=script_dir,
+                                env=dict(os.environ, CMF_V50_ROOT=str(ROOT)),
+                                capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         self.assertIn('Converted: 2; skipped: 0', result.stdout)
         for name, values in arrays.items():
@@ -272,11 +281,16 @@ class VariantConversionTests(unittest.TestCase):
 
     def test_shell_no_overwrite_preserves_existing_outputs(self):
         fixture = self.root/'fixture repository'
-        script = fixture/'map/tools/script_format_conv'/SCRIPT.name
-        script.parent.mkdir(parents=True)
+        map_root = fixture/'map/sample'
+        local_script_dir = map_root/'script_format_conv'
+        local_script_dir.mkdir(parents=True)
+        script = local_script_dir/SCRIPT.name
         shutil.copy2(SCRIPT, script)
+        (fixture/'tools/code').mkdir(parents=True)
+        shutil.copy2(ROOT/'tools/code/cmf_check_shell_error.sh',
+                     fixture/'tools/code/cmf_check_shell_error.sh')
         fake = fixture/'map/tools/code/convert_map_binary_to_netcdf.py'
-        fake.parent.mkdir()
+        fake.parent.mkdir(parents=True)
         fake.write_text("""import argparse
 from pathlib import Path
 p=argparse.ArgumentParser()
@@ -289,17 +303,17 @@ target.parent.mkdir(parents=True,exist_ok=True)
 target.write_bytes(Path(a.input).read_bytes())
 print('copied',Path(a.input).name,'force='+str(a.force))
 """)
-        output = self.map
-        binary_dir = self.map/'binary'
+        output = map_root
+        shutil.copy2(self.map/'params.txt', map_root/'params.txt')
+        binary_dir = map_root/'binary'
         binary_dir.mkdir()
         for name in ('subbsn','subcol'):
             (binary_dir/f'{name}-sample.bin').write_bytes(b'new-'+name.encode())
-        shim = self.root/'run-s18.sh'
-        shim.write_text('exec bash '+shlex.quote(str(script))+' --map-dir '+shlex.quote(str(self.map))+'\n')
         for name in ('subbsn','subcol'):
             (binary_dir/f'{name}-sample.bin').write_bytes(b'new-'+name.encode())
             (output/f'{name}-sample.nc').write_bytes(b'old-'+name.encode())
-        result = subprocess.run(['bash',str(script),'--map-dir',str(self.map)],cwd=self.root,
+        env = dict(os.environ, CMF_V50_ROOT=str(fixture))
+        result = subprocess.run(['bash',str(script)],cwd=local_script_dir,env=env,
                                 input='',capture_output=True,text=True)
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
         self.assertIn('Converted: 2; skipped: 0',result.stdout)
@@ -307,7 +321,7 @@ print('copied',Path(a.input).name,'force='+str(a.force))
         for name in ('subbsn','subcol'):
             self.assertEqual((output/f'{name}-sample.nc').read_bytes(),b'new-'+name.encode())
             (output/f'{name}-sample.nc').write_bytes(b'preserve-'+name.encode())
-        result = subprocess.run(['bash',str(script),'--map-dir',str(self.map),'--no-overwrite'],cwd=self.root,
+        result = subprocess.run(['bash',str(script),'--no-overwrite'],cwd=local_script_dir,env=env,
                                 input='',capture_output=True,text=True)
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
         self.assertIn('Converted: 0; skipped: 2',result.stdout)

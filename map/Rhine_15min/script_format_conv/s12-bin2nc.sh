@@ -1,217 +1,80 @@
 #!/bin/sh
-# Convert selected map-root Binary files to individual NetCDF files.
-# Inputs: bin2nc_list.txt in the current working directory, params.txt, registered .bin files.
-# Outputs: <map>/<binary-stem>.nc.
+# Convert selected registered Binary files into NetCDF files at ../.
+# Run s11-list_bin.sh first; edit bin2nc_list.txt in this directory.
 set -eu
 
-# No map-name setting is needed; target selection follows the working directory or --map-dir.
-# Command substitution locates shared resources independently of the target map.
-SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
-REPO_ROOT=$(CDPATH= cd "$SCRIPT_DIR/../../.." && pwd -P)
-TOOL_DIR="$REPO_ROOT/map/tools/code"
-REGISTRY="$REPO_ROOT/variable_table/map_variables.csv"
-CONVERTER="$TOOL_DIR/convert_map_binary_to_netcdf.py"
-# The physical current directory owns the list and supplies the implicit target.
-RUN_DIR=$(pwd -P)
-MAP_DIR=""
-LIST_FILE="$RUN_DIR/bin2nc_list.txt"
-
-SCRIPT_NAME=${0##*/}
-STEP="Read and validate the selected conversion list"
-trap '
-    EXIT_STATUS=$?
-    trap - 0
-    if [ "$EXIT_STATUS" -ne 0 ]; then
-        printf "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" >&2
-        printf "!!! ERROR: %s FAILED !!!\n" "$SCRIPT_NAME" >&2
-        printf "!!! Step: %s\n" "$STEP" >&2
-        printf "!!! Exit status: %s\n" "$EXIT_STATUS" >&2
-        printf "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" >&2
-    fi
-    exit "$EXIT_STATUS"
-' 0
-trap 'exit 129' HUP
-trap 'exit 130' INT
-trap 'exit 143' TERM
+# CaMa-Flood general setting (check CMF root, import shell error checker)
+PYTHON_CMD="python3"
+: "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
+. "$CMF_V50_ROOT/tools/code/cmf_check_shell_error.sh"
 
 # ----------------------------------------------------------------------
-# End of error handling.
+# User settings
 # ----------------------------------------------------------------------
-
-# --map-dir is explicit; otherwise require a map-local script_format_conv/ current directory.
 NO_OVERWRITE=0
 while [ "$#" -gt 0 ]; do
     case "$1" in
-        --map-dir)
-            if [ "$#" -lt 2 ] || [ -z "$2" ]; then
-                printf 'ERROR: --map-dir requires a directory.\n' >&2
-                exit 2
-            fi
-            MAP_DIR=$2
-            shift 2
-            ;;
-        --force) NO_OVERWRITE=0; shift ;;
         --no-overwrite) NO_OVERWRITE=1; shift ;;
-        --help|-h)
-            printf 'Usage: %s [--map-dir PATH] [--no-overwrite]\n' "$SCRIPT_NAME"
-            exit 0
-            ;;
-        *)
-            printf 'Usage: %s [--map-dir PATH] [--no-overwrite]\n' "$SCRIPT_NAME" >&2
-            exit 2
-            ;;
+        --force) NO_OVERWRITE=0; shift ;;
+        --help|-h) printf 'Usage: ./%s [--no-overwrite]\n' "${0##*/}"; exit 0 ;;
+        *) printf 'Usage: ./%s [--no-overwrite]\n' "${0##*/}" >&2; exit 2 ;;
     esac
 done
 
-if [ -z "$MAP_DIR" ]; then
-    # Shell suffix removal gives the last directory component without invoking basename.
-    if [ "${RUN_DIR##*/}" != script_format_conv ]; then
-        printf 'ERROR: run from <map>/script_format_conv/ or supply --map-dir PATH.\n' >&2
-        exit 2
-    fi
-    MAP_DIR="$RUN_DIR/.."
-fi
-if [ ! -d "$MAP_DIR" ]; then
-    printf 'ERROR: map directory does not exist: %s\n' "$MAP_DIR" >&2
-    exit 1
-fi
-MAP_DIR=$(CDPATH= cd "$MAP_DIR" && pwd -P)
-if [ "$MAP_DIR" = "$REPO_ROOT/map/tools" ]; then
-    printf 'ERROR: map/tools/script_format_conv is a template, not a map. Run from a map-local directory or supply --map-dir PATH.\n' >&2
-    exit 2
-fi
-if [ ! -f "$MAP_DIR/params.txt" ]; then
-    printf 'ERROR: target is not a map directory (params.txt missing): %s\n' "$MAP_DIR" >&2
-    exit 1
-fi
-if [ ! -f "$CONVERTER" ] || [ ! -f "$REGISTRY" ]; then
-    printf 'ERROR: shared converter or variable registry not found under %s\n' "$REPO_ROOT" >&2
-    exit 1
-fi
-BINARY_DIR="$MAP_DIR/binary"
-NETCDF_DIR="$MAP_DIR"
-
-if [ ! -f "$LIST_FILE" ]; then
-    printf 'ERROR: conversion list not found: %s\n' "$LIST_FILE" >&2
-    printf 'Run s11-list_bin.sh first.\n' >&2
-    exit 1
-fi
+# ----------------------------------------------------------------------
+# User settings end here. Program paths and processing steps follow.
+# ----------------------------------------------------------------------
+CODE_DIR="$CMF_V50_ROOT/map/tools/code"
+REGISTRY="$CMF_V50_ROOT/variable_table/map_variables.csv"
+LIST_FILE="bin2nc_list.txt"
+BINARY_DIR="../binary"
+NETCDF_DIR=".."
+cmf_check_init "Convert selected base-map Binary files to NetCDF"
+[ -f ../params.txt ] || { printf 'Map-root params.txt is missing.\n' >&2; exit 1; }
+[ -f "$LIST_FILE" ] || { printf 'Conversion list missing; run s11-list_bin.sh first.\n' >&2; exit 1; }
 
 FILE_COUNT=0
-EXISTING_COUNT=0
-SEEN_FILES=""
+SEEN=""
 while IFS= read -r FILE || [ -n "$FILE" ]; do
-    case "$FILE" in
-        ""|\#*)
-            continue
-            ;;
-    esac
-
-    case "$FILE" in
-        *.bin)
-            ;;
-        *)
-            printf 'ERROR: invalid list entry (expected a .bin filename): %s\n' "$FILE" >&2
-            exit 1
-            ;;
-    esac
-    case "$FILE" in
-        *[!a-zA-Z0-9_.-]*)
-            printf 'ERROR: invalid or non-base filename in conversion list: %s\n' "$FILE" >&2
-            exit 1
-            ;;
-    esac
-    if [ ! -f "$BINARY_DIR/$FILE" ]; then
-        printf 'ERROR: listed Binary file does not exist: %s\n' "$BINARY_DIR/$FILE" >&2
-        exit 1
-    fi
-    case " $SEEN_FILES " in
-        *" $FILE "*)
-            printf 'ERROR: duplicate file in conversion list: %s\n' "$FILE" >&2
-            exit 1
-            ;;
-    esac
-    SEEN_FILES="$SEEN_FILES $FILE"
+    case "$FILE" in ''|\#*) continue ;; esac
+    case "$FILE" in *.bin) ;; *) printf 'Invalid list entry (expected .bin): %s\n' "$FILE" >&2; exit 1 ;; esac
+    case "$FILE" in *[!a-zA-Z0-9_.-]*) printf 'Invalid base filename: %s\n' "$FILE" >&2; exit 1 ;; esac
+    [ -f "$BINARY_DIR/$FILE" ] || { printf 'Listed Binary file missing: %s\n' "$BINARY_DIR/$FILE" >&2; exit 1; }
+    case " $SEEN " in *" $FILE "*) printf 'Duplicate file in conversion list: %s\n' "$FILE" >&2; exit 1 ;; esac
+    SEEN="$SEEN $FILE"
     FILE_COUNT=$((FILE_COUNT + 1))
-    if [ -f "$NETCDF_DIR/${FILE%.bin}.nc" ]; then
-        EXISTING_COUNT=$((EXISTING_COUNT + 1))
-    fi
 done < "$LIST_FILE"
+[ "$FILE_COUNT" -gt 0 ] || { printf 'No files selected in %s.\n' "$LIST_FILE" >&2; exit 1; }
 
-if [ "$FILE_COUNT" -eq 0 ]; then
-    printf 'ERROR: no files are selected in %s.\n' "$LIST_FILE" >&2
-    exit 1
-fi
-
-# Summarize the complete validated selection before conversion.
-printf '\nConversion summary\n'
-printf 'Map: %s\nOutput directory: %s\n' "$MAP_DIR" "$NETCDF_DIR"
-printf 'Selected inputs: %s; existing outputs: %s; new outputs: %s\n' \
-    "$FILE_COUNT" "$EXISTING_COUNT" "$((FILE_COUNT - EXISTING_COUNT))"
-mkdir -p "$NETCDF_DIR"
+cmf_check_step 1 1 "Convert the $FILE_COUNT selected Binary map files"
+FILE_NUMBER=0
 CONVERTED=0
 SKIPPED=0
-FILE_NUMBER=0
-STEP="Convert selected Binary map files"
-
-# Keep the list on file descriptor 3 while processing selected inputs.
-while IFS= read -r FILE <&3 || [ -n "$FILE" ]; do
-    case "$FILE" in
-        ""|\#*)
-            continue
-            ;;
-    esac
-
+for FILE in $SEEN; do
     FILE_NUMBER=$((FILE_NUMBER + 1))
     OUTPUT_FILE="$NETCDF_DIR/${FILE%.bin}.nc"
-    printf '\n==================================================\n'
-    printf '[STEP %s/%s] Convert %s\n' "$FILE_NUMBER" "$FILE_COUNT" "$FILE"
-    printf '==================================================\n\n'
-
+    printf '[%s/%s] %s -> %s\n' "$FILE_NUMBER" "$FILE_COUNT" "$BINARY_DIR/$FILE" "$OUTPUT_FILE"
+    set --
+    case "$FILE" in
+        mpireg-*.bin)
+            MPI_COUNT=${FILE#mpireg-}; MPI_COUNT=${MPI_COUNT%.bin}
+            case "$MPI_COUNT" in *[1-9]*) set -- --reference-binary mpireg.bin ;; esac ;;
+    esac
     if [ -f "$OUTPUT_FILE" ] && [ "$NO_OVERWRITE" -eq 1 ]; then
         printf 'Existing output preserved: %s\n' "$OUTPUT_FILE"
         SKIPPED=$((SKIPPED + 1))
         continue
     fi
-
-    # Only numbered MPI-region maps have a standard filename convention.
-    # All other files retain the converter's existing inference/selection rules.
-    set --
-    case "$FILE" in
-        mpireg-*.bin)
-            MPI_COUNT=${FILE#mpireg-}
-            MPI_COUNT=${MPI_COUNT%.bin}
-            case "$MPI_COUNT" in
-                ""|*[!0-9]*) ;;
-                *)
-                    case "$MPI_COUNT" in
-                        *[1-9]*) set -- --reference-binary mpireg.bin ;;
-                    esac
-                    ;;
-            esac
-            ;;
-    esac
-
-    if [ "$NO_OVERWRITE" -eq 0 ]; then
-        python3 "$CONVERTER" \
-            --map-dir "$MAP_DIR" \
-            --registry "$REGISTRY" \
-            --input "$BINARY_DIR/$FILE" \
-            --output "$OUTPUT_FILE" \
-            "$@" \
-            --force
+    if [ "$NO_OVERWRITE" -eq 1 ]; then
+        "$PYTHON_CMD" "$CODE_DIR/convert_map_binary_to_netcdf.py" --map-dir .. \
+            --registry "$REGISTRY" --input "$BINARY_DIR/$FILE" --output "$OUTPUT_FILE" "$@"
     else
-        python3 "$CONVERTER" \
-            --map-dir "$MAP_DIR" \
-            --registry "$REGISTRY" \
-            --input "$BINARY_DIR/$FILE" \
-            --output "$OUTPUT_FILE" \
-            "$@"
+        "$PYTHON_CMD" "$CODE_DIR/convert_map_binary_to_netcdf.py" --map-dir .. \
+            --registry "$REGISTRY" --input "$BINARY_DIR/$FILE" --output "$OUTPUT_FILE" "$@" --force
     fi
     CONVERTED=$((CONVERTED + 1))
-done 3< "$LIST_FILE"
+done
+printf 'Converted: %s; skipped: %s\n' "$CONVERTED" "$SKIPPED"
+cmf_check_success
 
-printf '\nConverted: %s; skipped: %s\n' "$CONVERTED" "$SKIPPED"
-printf '\n==================================================\n'
-printf '[SUCCESS] %s\n' "$SCRIPT_NAME"
-printf '==================================================\n'
+# Optional shell flag: --no-overwrite preserves existing NetCDF outputs.

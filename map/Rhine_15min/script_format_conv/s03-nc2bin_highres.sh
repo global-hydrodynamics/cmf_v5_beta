@@ -1,39 +1,36 @@
 #!/bin/sh
-# Restore registered high-resolution Binary tiles from NetCDF.
+# Convert registered high-resolution NetCDF products to Binary.
+# Run from this map's script_format_conv/ directory.
 set -eu
 
-# User settings: blank selects the first available NetCDF resolution.
-HIRES=""
-VARS="all"
-JOBS=8
-NO_OVERWRITE=0
+# CaMa-Flood general setting (check CMF root, import shell error checker)
+PYTHON_CMD="python3"
+: "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
+. "$CMF_V50_ROOT/tools/code/cmf_check_shell_error.sh"
 
-SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
-REPO_ROOT=$(CDPATH= cd "$SCRIPT_DIR/../../.." && pwd -P)
-RUN_DIR=$(pwd -P)
-MAP_DIR=""
-while [ "$#" -gt 0 ]; do
-    case "$1" in
-        --map-dir) [ "$#" -ge 2 ] || { echo 'ERROR: --map-dir requires a path.' >&2; exit 2; }; MAP_DIR=$2; shift 2 ;;
-        --no-overwrite) NO_OVERWRITE=1; shift ;;
-        --help|-h) echo "Usage: ${0##*/} [--map-dir PATH] [--no-overwrite]"; exit 0 ;;
-        *) echo "Usage: ${0##*/} [--map-dir PATH] [--no-overwrite]" >&2; exit 2 ;;
-    esac
-done
-if [ -z "$MAP_DIR" ]; then
-    [ "${RUN_DIR##*/}" = script_format_conv ] || { echo 'ERROR: run from <map>/script_format_conv/ or pass --map-dir.' >&2; exit 2; }
-    MAP_DIR="$RUN_DIR/.."
-fi
-MAP_DIR=$(CDPATH= cd "$MAP_DIR" && pwd -P)
-[ -f "$MAP_DIR/params.txt" ] || { echo "ERROR: params.txt not found in $MAP_DIR" >&2; exit 1; }
+# ----------------------------------------------------------------------
+# User settings
+# ----------------------------------------------------------------------
+HIRES=""       # Empty selects the coarsest installed NetCDF resolution.
+VARS="all"    # Use all registered products or list selected file stems.
+JOBS=8         # Maximum parallel conversion workers.
+
+# ----------------------------------------------------------------------
+# User settings end here. Program paths and processing steps follow.
+# ----------------------------------------------------------------------
+CODE_DIR="$CMF_V50_ROOT/map/tools/code"
+REGISTRY="$CMF_V50_ROOT/variable_table/map_variables.csv"
+cmf_check_init "Convert high-resolution NetCDF map products"
 if [ -z "$HIRES" ]; then
     for tag in 1min 30sec 15sec 5sec 3sec 1sec; do
-        if [ -f "$MAP_DIR/$tag/location.txt" ]; then HIRES=$tag; break; fi
+        if [ -f "../$tag/location.txt" ]; then HIRES=$tag; break; fi
     done
 fi
-[ -n "$HIRES" ] || { echo "ERROR: no NetCDF high-resolution location.txt found in $MAP_DIR" >&2; exit 1; }
+[ -n "$HIRES" ] || { printf 'No NetCDF high-resolution location.txt found in the map root.\n' >&2; exit 1; }
+cmf_check_step 1 1 "Convert registered high-resolution products for $HIRES"
+"$PYTHON_CMD" "$CODE_DIR/convert_highres_netcdf_to_binary.py" \
+    --map-dir .. --hires "$HIRES" --variables "$VARS" \
+    --registry "$REGISTRY" --jobs "$JOBS"
+cmf_check_success
 
-set -- --map-dir "$MAP_DIR" --hires "$HIRES" --variables "$VARS" \
-    --registry "$REPO_ROOT/variable_table/map_variables.csv" --jobs "$JOBS"
-[ "$NO_OVERWRITE" -eq 0 ] || set -- "$@" --no-overwrite
-python3 "$REPO_ROOT/map/tools/code/convert_highres_netcdf_to_binary.py" "$@"
+# Optional converter flags: --no-overwrite, --force, --map-format binary.

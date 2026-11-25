@@ -2,9 +2,11 @@
 
 These map-local Shell workflows implement the NetCDF-first map layout. Copy the
 required wrappers from this directory to a map's `script_format_conv/` folder,
-then run them there. `--map-dir PATH` can be used when running from elsewhere.
-The shared converters and `variable_table/map_variables.csv` remain in the
-repository; map products stay with the target map.
+then run them from that directory. The Shell and Python programs keep it as
+CWD; map-root products use `../` paths, and list files remain local to
+`script_format_conv/`. The shared converters and
+`variable_table/map_variables.csv` remain in the repository; map products stay
+with the target map.
 
 ## Directory layout
 
@@ -46,7 +48,10 @@ files and unrelated files are preserved.
 Numbering groups reflect direction: `s0X` covers NetCDF-based operations and
 Binary export, `s1X` covers Binary-to-NetCDF migration, and `s2X` covers
 NetCDF-to-COG conversion. Listing and conversion scripts use their matching
-numbered list file in the current `script_format_conv/` directory.
+numbered list file in the current `script_format_conv/` directory. Wrappers use
+the shared `CMF_V50_ROOT` initialization and `cmf_check_*` reporting functions;
+Python program paths come from `CODE_DIR` and required inputs are visible in
+the direct command calls.
 
 ## Typical use
 
