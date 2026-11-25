@@ -262,7 +262,7 @@ class FallbackParityTests(unittest.TestCase):
                     binary_root=root/'binary';binary_root.mkdir(exist_ok=True)
                     shutil.copyfile(sample/'binary'/name,binary_root/name)
                 a=subprocess.run([str(self.executables['param_mpi_set_basin']),mode,'check_map'],cwd=work,capture_output=True,text=True)
-                b=subprocess.run([sys.executable,str(CODE/'param_mpi_set_basin.py'),mode,'check_map','--map-format','binary','--map-dir',str(root),'--output-dir',str(out)],cwd=work,capture_output=True,text=True)
+                b=subprocess.run([sys.executable,str(CODE/'param_mpi_set_basin.py'),'--mode',mode,'--check-map','--map-format','binary','--map-dir',str(root),'--output-dir',str(out)],cwd=work,capture_output=True,text=True)
                 self.assertEqual(a.returncode,0,a.stdout+a.stderr)
                 self.assertEqual(b.returncode,0,b.stdout+b.stderr)
                 for name in ('bifcol_mpi.bin','bifbsn_mpi.tmp','check_bif_bsnmod_mpi.bin'):

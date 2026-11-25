@@ -30,39 +30,47 @@ class InputMatrixNamingTests(unittest.TestCase):
             program.write_text(
                 "#!/bin/sh\n"
                 "hires=$1; diminfo=$8; inpmat=$9\n"
-                "printf '%s\\n%s\\n%s\\n' \"$hires\" \"$diminfo\" \"$inpmat\" > called.args\n"
-                "printf '3\\n2\\n2\\n360\\n180\\n1\\n%s\\n-1.5\\n1.5\\n1\\n-1\\n' \"$inpmat\" > \"$diminfo\"\n"
-                "printf x > \"$inpmat\"\n",
+                "printf '%s\\n%s\\n%s\\n' \"$hires\" \"$diminfo\" \"$inpmat\" > ../called.args\n"
+                "printf '3\\n2\\n2\\n360\\n180\\n1\\n%s\\n-1.5\\n1.5\\n1\\n-1\\n' \"$inpmat\" > ../\"$diminfo\"\n"
+                "printf x > ../\"$inpmat\"\n",
                 encoding="ascii",
             )
             program.chmod(0o755)
             program_path = code_dir / "param_inpmat_generate.py"
             program.rename(program_path)
-            python_cmd = root / "python-mock"
+            shell_library = root / "tools" / "code"
+            shell_library.mkdir(parents=True)
+            (shell_library / "cmf_check_shell_error.sh").write_bytes(
+                (ROOT / "tools" / "code" / "cmf_check_shell_error.sh").read_bytes()
+            )
+            bin_dir = root / "bin"
+            bin_dir.mkdir()
+            python_cmd = bin_dir / "python3"
             python_cmd.write_text("#!/bin/sh\nprogram=$1\nshift\nexec \"$program\" \"$@\"\n", encoding="ascii")
             python_cmd.chmod(0o755)
             script = script_dir / WRAPPER.name
             script_text = WRAPPER.read_text(encoding="utf-8")
             script_text = script_text.replace(
-                'ROFFTAG="ERA5land_global"', 'ROFFTAG="rainfall-025"'
+                'ROFFTAG="test-1deg"', 'ROFFTAG="rainfall-025"'
             ).replace('HIRES_TAG=""', 'HIRES_TAG="15sec"')
             script.write_text(script_text, encoding="utf-8")
             script.chmod(0o755)
 
             result = subprocess.run(
-                [str(script)], cwd=root,
-                env=dict(os.environ, PYTHON_CMD=str(python_cmd)),
+                [str(script)], cwd=script_dir,
+                env=dict(os.environ, CMF_V50_ROOT=str(root), PATH=f"{bin_dir}:{os.environ['PATH']}"),
                 input="\n", text=True, capture_output=True, check=False,
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertTrue((map_root / "diminfo_rainfall-025.txt").is_file())
+            self.assertTrue((map_root / "diminfo_rainfall-025.txt").is_file(),
+                            result.stdout + result.stderr)
             self.assertTrue((map_root / "inpmat_rainfall-025.nc").is_file())
             self.assertEqual((map_root / "diminfo_rainfall-025.txt").read_text().splitlines()[6],
                              "inpmat_rainfall-025.nc")
             self.assertEqual((map_root / "called.args").read_text().splitlines(), [
                 "15sec", "diminfo_rainfall-025.txt", "inpmat_rainfall-025.nc"
             ])
-            self.assertIn("[STEP 1/1] Generate runoff input matrix", result.stdout)
+            self.assertIn("[STEP 1/1] Map river cells to the configured runoff grid", result.stdout)
             self.assertEqual(result.stdout.count("[SUCCESS]"), 1)
 
 

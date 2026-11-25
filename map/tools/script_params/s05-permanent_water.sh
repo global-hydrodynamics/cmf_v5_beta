@@ -1,107 +1,49 @@
 #!/bin/sh
-# Estimate permanent-water area per CaMa-Flood unit catchment.
-# Copy to <map>/script_params/ and run from any working directory.
-#
-# Inputs: params.txt, nextxy.bin, ctmare.bin, and
-#         <HIRES_TAG>/location.txt plus each area's catmxy, rivwth, flddif,
-#         and optional grdare binary files.
-# Output: prmwat.nc (float32, NX x NY, one record, m2) in the map root.
 set -eu
 
-# Paths
-# Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
-SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
-PYTHON_CMD="${PYTHON_CMD:-python3}"
-MAP_FORMAT="${MAP_FORMAT:-netcdf}"  # Set binary only for legacy Binary maps.
-if [ -n "${CMF5_ROOT:-}" ]; then
-    CODE_DIR="$CMF5_ROOT/map/tools/code"
-else
-    CODE_DIR="$SCRIPT_DIR/../../tools/code"
-fi
-if [ ! -d "$CODE_DIR" ]; then
-    printf '[ERROR] Shared Python tools not found: %s (set CMF5_ROOT to the repository root)\n' "$CODE_DIR" >&2
-    exit 1
-fi
-MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
+# CaMa-Flood general setting (check CMF root, import shell error checker)
+PYTHON_CMD="python3"
+: "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
+. "$CMF_V50_ROOT/tools/code/cmf_check_shell_error.sh"
 
-# Resolution is selected interactively from installed NetCDF directories below.
-
+# ----------------------------------------------------------------------
+# User settings
+# ----------------------------------------------------------------------
+HIRES_TAG=""  # Empty selects the coarsest installed resolution; set explicitly if needed.
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
 # ----------------------------------------------------------------------
+CODE_DIR="$CMF_V50_ROOT/map/tools/code"
+cmf_check_init "Estimate permanent-water area"
 
-# ${0##*/} removes the directory portion of the script path for readable messages.
-SCRIPT_NAME=${0##*/}
-STEP="Prepare permanent-water area calculation"
-# The exit trap reports failures and preserves status; signal traps use standard nonzero statuses.
-trap '
-    EXIT_STATUS=$?
-    trap - 0
-    if [ "$EXIT_STATUS" -ne 0 ]; then
-        printf "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" >&2
-        printf "!!! ERROR: %s FAILED !!!\n" "$SCRIPT_NAME" >&2
-        printf "!!! Step: %s\n" "$STEP" >&2
-        printf "!!! Exit status: %s\n" "$EXIT_STATUS" >&2
-        printf "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" >&2
-    fi
-    exit "$EXIT_STATUS"
-' 0
-trap 'exit 129' HUP
-trap 'exit 130' INT
-trap 'exit 143' TERM
-
-# ----------------------------------------------------------------------
-# End of error handling.
-# ----------------------------------------------------------------------
-
-EXEC_PRMWAT="$CODE_DIR/param_water_calc_prmwat.py"
-
-# Offer the coarsest installed NetCDF resolution; the Python program validates its contents.
-STEP="Select high-resolution map"
 AVAILABLE=""
-HIRES_TAG=""
-for tag in 1min 30sec 15sec 5sec 3sec 1sec; do
-    if [ -d "$MAP_DIR/$tag" ]; then
-        AVAILABLE="${AVAILABLE}${AVAILABLE:+ }$tag"
-        if [ -z "$HIRES_TAG" ]; then HIRES_TAG=$tag; fi
-    fi
-done
 if [ -z "$HIRES_TAG" ]; then
-    printf 'ERROR: No NetCDF high-resolution directory found in %s (1min, 30sec, 15sec, 5sec, 3sec, 1sec).\n' "$MAP_DIR" >&2
-    exit 1
+    for tag in 1min 30sec 15sec 5sec 3sec 1sec; do
+        if [ -d "../$tag" ]; then
+            AVAILABLE="${AVAILABLE}${AVAILABLE:+ }$tag"
+            [ -n "$HIRES_TAG" ] || HIRES_TAG=$tag
+        fi
+    done
+    [ -n "$HIRES_TAG" ] || { printf 'No high-resolution map found in the map root.\n' >&2; exit 1; }
+    printf 'Selected high-resolution map: ../%s\n' "$HIRES_TAG"
+    while :; do
+        printf 'Use this map? [Y/n]: '
+        IFS= read -r answer
+        case "$answer" in
+            ''|y|Y|yes|Yes|YES) break ;;
+            n|N|no|No|NO)
+                while :; do
+                    printf 'Available resolutions: %s\nChoose resolution: ' "$AVAILABLE"
+                    IFS= read -r HIRES_TAG
+                    case " $AVAILABLE " in *" $HIRES_TAG "*) break 2 ;; esac
+                    printf 'Choose one of the listed resolutions.\n'
+                done ;;
+            *) printf 'Please answer Yes or No (Enter = Yes).\n' ;;
+        esac
+    done
 fi
+cmf_check_step 1 1 "Aggregate permanent-water area from the selected high-resolution map"
+"$PYTHON_CMD" "$CODE_DIR/param_water_calc_prmwat.py" "$HIRES_TAG" --map-dir ..
+cmf_check_success
 
-printf 'Highest available resolution: %s (%s/%s)\n' "$HIRES_TAG" "$MAP_DIR" "$HIRES_TAG"
-while :; do
-    printf 'Use this high-resolution map? [Y/n]: '
-    IFS= read -r answer
-    case "$answer" in
-        ""|y|Y|yes|Yes|YES) break ;;
-        n|N|no|No|NO)
-            while :; do
-                printf 'Available resolutions: %s\nChoose resolution: ' "$AVAILABLE"
-                IFS= read -r chosen
-                for tag in $AVAILABLE; do
-                    if [ "$chosen" = "$tag" ]; then
-                        HIRES_TAG=$chosen
-                        break 2
-                    fi
-                done
-                printf 'Choose one of the listed resolutions.\n'
-            done
-            break
-            ;;
-        *) printf 'Please answer Yes or No (Enter = Yes).\n' ;;
-    esac
-done
-printf 'Selected high-resolution map: %s/%s\n' "$MAP_DIR" "$HIRES_TAG"
-
-# The program reads map inputs relative to the map root.
-cd "$MAP_DIR"
-
-STEP="Aggregate permanent-water pixels from $HIRES_TAG into unit catchments"
-printf '\n==================================================\n[STEP 1/1] Estimate permanent-water area (%s)\n==================================================\n\n' "$HIRES_TAG"
-# Fortran owns the tag/geometry/file validation as well as the aggregation.
-"$PYTHON_CMD" "$EXEC_PRMWAT" "$HIRES_TAG" --map-format "$MAP_FORMAT"
-
-printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"
+# Optional Python CLI flags: add --map-format binary to use legacy Binary maps.

@@ -80,8 +80,10 @@ def diagnostic(original, basin, paths):
 
 def main():
     p = parser(__doc__)
-    p.add_argument('mode',nargs='?',choices=['normal','MaxMPI'],default='normal')
-    p.add_argument('check',nargs='?',choices=['check_map'])
+    p.add_argument('--mode', choices=['normal', 'MaxMPI'], default='normal',
+                   help='Basin aggregation threshold mode (default: normal).')
+    p.add_argument('--check-map', action='store_true',
+                   help='Write the optional basin aggregation diagnostic map.')
     args = p.parse_args()
     grid = Grid.read(args.map_dir / 'params.txt')
     original = grid.raster(args.map_dir / 'basin.bin','<i4')
@@ -92,7 +94,7 @@ def main():
     basin = merge_basins(original,paths,.03 if args.mode=='MaxMPI' else .06)
     out = output_root(args)
     write_raster(out/'bifcol_mpi.bin',color_map(basin,grid.west,grid.east),'<i4',grid=grid)
-    if args.check:
+    if args.check_map:
         write_raster(out/'check_bif_bsnmod_mpi.bin',diagnostic(original,basin,paths),'<i4',grid=grid)
     intermediate = out/'bifbsn_mpi.bin' if args.map_format == 'netcdf' else out/'bifbsn_mpi.tmp'
     write_raster(intermediate,basin,'<i4',grid=grid)
