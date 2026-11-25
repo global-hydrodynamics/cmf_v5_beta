@@ -22,17 +22,15 @@ if [ ! -d "$CODE_DIR" ]; then
 fi
 MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
 
-# Runoff input grid: ERA5-Land global 0.1-degree grid, independent of the model map.
-# ERA5land_global labels the spatial grid, not the repo-ERA5land-glb_2day period.
-# Reuse this grid tag for longer ERA5-Land series with identical coordinates/order;
-# generate a separate matrix in each target CaMa-Flood map.
-ROFFTAG="ERA5land_global"  # User-editable runoff-grid tag for the paired output filenames.
-GRSIZEIN=0.1              # Runoff grid-cell size (degrees).
-WESTIN=-180.05            # Western edge: first longitude center (-180) minus half a cell.
-EASTIN=179.95             # Eastern edge: last longitude center (179.9) plus half a cell.
-NORTHIN=90.05             # Northern edge: first latitude center (90) plus half a cell.
-SOUTHIN=-90.05            # Southern edge: last latitude center (-90) minus half a cell.
-OLAT="NtoS"               # Runoff latitude row order: NtoS or StoN.
+# Standard global 1-degree runoff grid used by the test-1deg matrix pair.
+# Cell centers are longitude -179.5..179.5 and latitude 89.5..-89.5.
+ROFFTAG="test-1deg"  # Standard tag for the paired output filenames.
+GRSIZEIN=1.0           # Runoff grid-cell size (degrees).
+WESTIN=-180.0          # Western edge: first center (-179.5) minus half a cell.
+EASTIN=180.0           # Eastern edge: last center (179.5) plus half a cell.
+NORTHIN=90.0           # Northern edge: first center (89.5) plus half a cell.
+SOUTHIN=-90.0          # Southern edge: last center (-89.5) minus half a cell.
+OLAT="NtoS"            # Runoff latitude row order: NtoS or StoN.
 
 # High-resolution map selection is independent of the runoff-grid tag.
 HIRES_TAG=""  # Empty proposes the coarsest installed NetCDF grid; confirm before running.

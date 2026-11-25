@@ -22,7 +22,8 @@ The v5 parameter and map-preparation workflows listed below are implemented. Num
 | --- | --- | --- |
 | `s01-channel_params.sh` | Annual mean discharge, power-law channel width/depth/roughness, and MERIT Hydro width merging. | Implemented |
 | `s02-bifurcation.sh` | Standard non-MPI bifurcation parameters and basin-connectivity products. | Implemented |
-| `s03-generate_inpmat.sh` | User-configured runoff-grid mapping matrix. | Implemented |
+| `s03-generate_inpmat.sh` | Standard global 1-degree `test-1deg` runoff-grid matrix. | Implemented |
+| `i01-inpmat_ERA5land.sh` | ERA5-Land global 0.1-degree runoff-grid matrix. | Implemented |
 | `s04-mpi_map_setup.sh` | MPI basin aggregation and coloring, region assignment, and default-N connectivity report; optional pre-partition basin diagnostic with `check_map`. | Implemented |
 | `s05-permanent_water.sh` | Aggregate high-resolution permanent-water area by unit catchment. | Implemented |
 | `s06-subbasin.sh` | Generate standard optional subbasin IDs and display colors using one or two configured upstream-area-increase thresholds. | Implemented |
@@ -112,24 +113,39 @@ Run the wrapper from any directory after copying it into the target map:
 
 The programs read standard map files `params.txt`, `basin.nc`, `bifprm.csv`, and `nextxy.nc`; no package-only global map is required. Basin aggregation and region assignment run from map-local `script_params/`, while the connectivity analysis runs from the map root. A successful map-generation run does not establish scientific validity of the partition or of a subsequent simulation.
 
-## General-purpose runoff input matrix
+## Runoff input-matrix generators
 
-[`s03-generate_inpmat.sh`](s03-generate_inpmat.sh) invokes `param_inpmat_generate` to create a matrix for a user-selected regular runoff grid. Its standard example uses the ERA5-Land global 0.1-degree grid: 3600 × 1801 cells, west/east edges -180.05/179.95 degrees, north/south edges 90.05/-90.05 degrees, and north-to-south row order. These half-cell edges match the inspected converted `inp/repo-ERA5land-glb_2day/runoff_200001.nc`; source and converted coordinate arrays are identical. Edit these values to match the runoff data; they describe that input grid, not the CaMa-Flood map grid.
+The standard workflow entrypoint remains `s03-generate_inpmat.sh`; use the
+`iXX-` prefix for additional input-grid-specific recipes. Both wrappers call
+`param_inpmat_generate.py` and create map-specific matrices from the selected
+high-resolution catchment mapping.
 
-`repo-ERA5land-glb_2day` names the converted runoff dataset; `ERA5land_global`
-is its reusable spatial-grid tag (`ROFFTAG`); `glb_15min`, for example, names
-an independent CaMa-Flood model map. The standard s03 writes
-`diminfo_ERA5land_global.txt` and `inpmat_ERA5land_global.nc` into the selected
-map root. The same pair can be reused for longer runoff series on exactly the
-same grid/order **and the same model map**; generate it separately for every
-other model map. Other regular runoff grids remain manually configurable.
+[`s03-generate_inpmat.sh`](s03-generate_inpmat.sh) creates the standard global
+1-degree `test-1deg` matrix pair. Its grid edges are west/east -180/180° and
+north/south 90/-90°, with `NtoS` latitude order (360 × 180 cells). This is the
+ELSE_GPCC grid used by the standard annual-runoff channel workflow. The output
+names are `diminfo_test-1deg.txt` and `inpmat_test-1deg.nc` in the selected map
+root.
+
+[`i01-inpmat_ERA5land.sh`](i01-inpmat_ERA5land.sh) preserves the former s03
+ERA5-Land example: a global 0.1-degree grid with 3600 × 1801 cells, edges
+-180.05/179.95° and 90.05/-90.05°, and `NtoS` row order. These bounds match the
+coordinates in the inspected converted
+`inp/repo-ERA5land-glb_2day/runoff_200001.nc`. It uses `ROFFTAG=ERA5land_global`,
+which names the spatial grid rather than the dataset period. Reuse that matrix
+only for forcing with identical coordinates/order and the same model map;
+generate a separate matrix for every other model map. Other regular runoff
+grids remain configurable by editing the wrapper settings.
+
+The target map must provide `params.txt`, a selected high-resolution
+directory with `location.txt`, and each area's `catmxy.nc`; `grdare.nc` is
+optional. The runoff values themselves are not read while constructing the
+matrix. Set `HIRES_TAG` independently when the default high-resolution map
+selection is unsuitable.
+
 For the global map, generated matrices belong in Package Additional Data at
-`cmf_v5_package_data/map/glb_15min/`, not in Git. This settings update generates
-no matrices and does not change the external data store.
-
-The target map must provide `params.txt`, a selected high-resolution directory with `location.txt`, and each area's `catmxy.nc`; `grdare.nc` is optional. The runoff values themselves are not read while constructing the matrix. Set `ROFFTAG` to identify the runoff grid; the wrapper derives `diminfo_<ROFFTAG>.txt` and `inpmat_<ROFFTAG>.nc`. Set `HIRES_TAG` separately when the default high-resolution map selection is unsuitable.
-
-This configurable matrix is distinct from the standard `inpmat_test-1deg.nc` and `diminfo_test-1deg.txt` produced by `region_default_inpmat` and distributed with prepared v5 maps for the standard annual-runoff channel workflow. The ERA5-Land setting defines the standard sample grid; generation and model-ingestion validation of its matrix remain separate work. The restored `diminfo_<ROFFTAG>.txt` naming is shared with v4; existing v4 reading behavior is unchanged. See the [Phase B2 migration plan](../../../docs/map_params_migration_plan.md) for migration evidence and limitations.
+`cmf_v5_package_data/map/glb_15min/`, not in Git. These wrappers generate no
+matrices until run and do not modify the external data store.
 
 The Python dam-parameter estimation workflow under legacy `map/src/src_dam/` is separate from the Fortran dam-location allocation workflows listed below.
 
