@@ -6,6 +6,24 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### NetCDF-first `script_format_conv` end-to-end validation (DT-0187, 2026-11-25; branch-local proposal)
+
+The maintained conversion sequence (`s01`–`s04`, `s09`, `s11`–`s14`, `s21`)
+was exercised through its map-local Shell entry points against an isolated copy
+of `map/mekong_15min/`; the tracked source map was preserved. All ten workflows
+completed after fixing multi-layer record counting, `nextxy_noedge` variable
+selection, INPMAT metadata pairing, and non-geographic COG exclusions. The
+round-trip check found 53/53 Binary products byte-identical; 57 base/highres
+NetCDF products preserved variable values, shape, dtype, missing values and
+attributes (coordinates differed by at most 6e-13 degrees). INPMAT variables
+and geographic metadata matched. COG conversion reported 49 PASS, 8 expected
+SKIP, and no failures. Focused unit tests (36) and Shell syntax checks passed.
+Six pre-existing map Binary files differ from their NetCDF counterparts; the
+NetCDF-to-Binary conversion faithfully reflects the NetCDF source, and no source
+map data was changed. Details: [VR-0231](../research/records/validation_runs/VR-0231.md)
+and the [format-conversion guide](../map/tools/script_format_conv/README.md).
+
+
 ### Python map-tool Shell migration and rerun behavior (DT-0185, 2026-11-25; branch-local proposal)
 
 On the maintainer-selected `feature/package-builder` branch, maintained

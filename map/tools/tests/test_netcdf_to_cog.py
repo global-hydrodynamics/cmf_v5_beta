@@ -78,6 +78,14 @@ def test_native_types_coordinates_and_order(tmp_path, dtype, order, ry, rx):
     assert hashlib.sha256(task.source.read_bytes()).digest() == before
 
 
+def test_missing_coordinate_units_are_accepted_only_with_map_aligned_values(tmp_path):
+    task, _ = fixture(tmp_path, 'bifbsn_mpi', 'int32', names=['bifbsn'])
+    with nc.Dataset(task.source, 'a') as ds:
+        ds['lon'].delncattr('units')
+        ds['lat'].delncattr('units')
+    assert cog.convert(task, blocksize=128).startswith('PASS')
+
+
 def test_multivariable_layers_and_band_order(tmp_path):
     task, arrays = fixture(tmp_path, 'nextxy', 'int32', names=['nextx','nexty'])
     cog.convert(task, blocksize=128)
@@ -134,12 +142,13 @@ def test_skip_force_failure_and_no_sidecars(tmp_path, monkeypatch):
     assert sorted(p.name for p in task.target.parent.iterdir()) == [task.target.name]
 
 
-@pytest.mark.parametrize('change', ['coords','packing','dtype','mixed_fill','extra','irregular'])
+@pytest.mark.parametrize('change', ['coords','packing','dtype','mixed_fill','extra','irregular','bad_units'])
 def test_unsupported_is_explicit_and_never_publishes(tmp_path, change):
     task, _ = fixture(tmp_path, 'nextxy', 'int32', names=['nextx','nexty'])
     with nc.Dataset(task.source, 'a') as ds:
         if change == 'coords': ds['lat'][:] = ds['lat'][:]+.2
         if change == 'irregular': ds['lat'][3] += .001
+        if change == 'bad_units': ds['lon'].units = 'radians'
         if change == 'packing': ds['nextx'].scale_factor = 2
         if change == 'mixed_fill': ds['nexty'].missing_value = -123
         if change == 'extra': ds.createVariable('unmapped', 'i4', ('lat','lon'))[:] = 1
@@ -183,7 +192,7 @@ def test_cog_standard_validator_and_shell_paths(tmp_path, monkeypatch):
     validator = pytest.importorskip('rio_cogeo.cogeo')
     assert validator.cog_validate(task.target, strict=True)[0]
     for folder in ('tools','mekong_15min'):
-        script = ROOT/f'map/{folder}/script_format_conv/s05-convert_netcdf_to_cog.sh'
+        script = ROOT/f'map/{folder}/script_format_conv/s21-nc2cog.sh'
         subprocess.run(['sh','-n',str(script)], check=True)
         env = dict(os.environ, PATH=str(Path(sys.executable).parent)+os.pathsep+os.environ['PATH'])
         result = subprocess.run(['sh', str(script),'--map-dir',str(task.source.parent.parent),
@@ -380,6 +389,12 @@ def test_known_non_targets_skip_without_error_or_output(tmp_path, capsys, jobs):
         assert reason in text.out
         assert not (root/'COG'/Path(name).with_suffix('.tif')).exists()
         assert (root/name).read_bytes() == b'non-target sentinel'
+    for name in ('inpmat_test-1deg.nc', 'subbsn-sample.nc', 'subcol-sample.nc'):
+        (root/name).write_bytes(b'non-raster sentinel')
+    assert cog.main(options) == 0
+    text = capsys.readouterr().out
+    assert 'input-grid mapping matrix; not a geographic raster' in text
+    assert 'sample Binary-to-NetCDF variant' in text
     assert cog.main(options + ['--variables', 'bifprm rivclim rivpar', '--force']) == 0
     assert '0 PASS; 3 SKIP; 0 UNSUPPORTED; 0 FAIL' in capsys.readouterr().out
     # An unexpected unmapped raster/file remains an error, rather than silently skipped.
@@ -409,7 +424,7 @@ def test_copied_shell_automatically_selects_distributed_highres(tmp_path, tag):
     (root/'1sec').mkdir()
     local = root/'script_format_conv'
     local.mkdir()
-    script = local/'s05-convert_netcdf_to_cog.sh'
+    script = local/'s21-nc2cog.sh'
     shutil.copyfile(ROOT/'map/tools/script_format_conv'/script.name, script)
     digest = hashlib.sha256(source.read_bytes()).digest()
     env = dict(os.environ, PATH=str(Path(sys.executable).parent)+os.pathsep+os.environ['PATH'])

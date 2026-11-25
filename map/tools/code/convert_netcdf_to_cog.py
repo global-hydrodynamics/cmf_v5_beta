@@ -45,6 +45,16 @@ class Unsupported(ValueError):
     """A registered product cannot be represented without changing its contract."""
 
 
+def excluded_input_reason(source):
+    if source.name in EXCLUDED_INPUTS:
+        return EXCLUDED_INPUTS[source.name]
+    if source.name.startswith('inpmat_'):
+        return 'input-grid mapping matrix; not a geographic raster'
+    if source.stem in {'subbsn-sample', 'subcol-sample'}:
+        return 'sample Binary-to-NetCDF variant; not a registered map raster'
+    return ''
+
+
 @dataclass
 class Task:
     source: Path
@@ -122,7 +132,8 @@ def plan(map_dir, resolutions, variables, registry):
             for row in rows:
                 for filename in row['binary_filename'].split(';'):
                     filename = filename.strip()
-                    if '/' not in filename and filename.endswith('.bin') and '<' not in filename:
+                    if (not filename.startswith('inpmat_') and '/' not in filename
+                            and filename.endswith('.bin') and '<' not in filename):
                         groups.setdefault(filename[:-4], []).append(row)
             directory = map_dir
             geometry = base_geometry(map_dir / 'params.txt')
@@ -147,7 +158,7 @@ def plan(map_dir, resolutions, variables, registry):
             # Known non-target tables/containers are normal skips, not failed conversions.
             for source in sorted(directory.glob('*.nc')):
                 if source not in matched and (requested is None or source.stem in requested):
-                    reason = EXCLUDED_INPUTS.get(source.name, '')
+                    reason = excluded_input_reason(source)
                     selected = [] if reason else rows_for_base_variant(source, groups)
                     if reason or selected:
                         found.add(source.stem)
@@ -191,7 +202,10 @@ def axis(ds, candidates, size, origin, step):
     units = str(getattr(var, 'units', '')).lower()
     allowed = ('degrees_east', 'degree_east', 'degrees_e', 'degree_e') if candidates[0] == 'lon' else (
         'degrees_north', 'degree_north', 'degrees_n', 'degree_n')
-    if units not in allowed:
+    # Some legacy auxiliary rasters have coordinate vectors without CF units.
+    # Their values are still accepted only if every center matches the
+    # authoritative map geometry below; an explicit incompatible unit fails.
+    if units and units not in allowed:
         raise Unsupported(f'{name}: expected geographic degree coordinate units')
     first, last = float(var[0]), float(var[-1])
     reverse = size > 1 and (last - first) * step < 0

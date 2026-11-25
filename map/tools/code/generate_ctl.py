@@ -427,10 +427,11 @@ def read_input_matrix_descriptor(binary_path: Path, grid: Grid,
         raise CtlValidationError(
             f"{descriptor} describes {Path(lines[6]).name}, not {binary_path.name}"
         )
-    if not all(math.isclose(a, b, rel_tol=1e-6, abs_tol=1e-6) for a, b in (
-        (west, grid.west), (east, grid.east), (south, grid.south), (north, grid.north)
-    )):
-        raise CtlValidationError(f"{descriptor} geographic bounds do not match params.txt")
+    # The last four diminfo values describe the *input* runoff grid, not the
+    # model grid.  The model-grid dimensions are checked above; CTL coordinates
+    # continue to come from params.txt.
+    if east <= west or north <= south:
+        raise CtlValidationError(f"{descriptor} has invalid input-grid bounds")
     expected_types = {"inpx": "int32", "inpy": "int32", "inpa": "float32"}
     expected_indices = {"inpx": 1, "inpy": 2, "inpa": 3}
     if len(registry_rows) != 3 or {(row.get("name") or "").strip() for row in registry_rows} != set(expected_types):

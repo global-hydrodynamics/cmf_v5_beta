@@ -105,7 +105,7 @@ class GenerateCtlTests(unittest.TestCase):
         result = generate_directory(self.map_dir, self.registry, input_file=Path('missing.bin'), variables=['upbasin'])
         self.assertEqual(result.failed, 1)
 
-    def test_format_conversion_ctl_wrapper_default_variants_and_single_input_cli(self):
+    def test_format_conversion_ctl_wrapper_generates_registered_variants(self):
         import shutil
         import subprocess
         root = Path(__file__).resolve().parents[3]
@@ -116,32 +116,31 @@ class GenerateCtlTests(unittest.TestCase):
         scripts.mkdir(parents=True)
         (work/'variable_table').mkdir()
         shutil.copy2(root/'map/tools/code/generate_ctl.py', code/'generate_ctl.py')
-        shutil.copy2(root/'map/tools/script_format_conv/s99-write_ctl.sh', scripts/'s99-write_ctl.sh')
+        shutil.copy2(root/'map/tools/script_format_conv/s09-write_ctl.sh', scripts/'s09-write_ctl.sh')
         write_registry(work/'variable_table/map_variables.csv', [
             row('mpireg.bin','mpireg','int32'), row('subbsn.bin','subbsn','int32'),
             row('subcol.bin','subcol','int32'), row('upbasin.bin','upbasin','int32')])
         target = scripts.parent
         write_params(target/'params.txt')
+        binary = target/'binary'
+        binary.mkdir()
         filenames = ['mpireg-4','mpireg-8','mpireg-16','subbsn-sample','subcol-sample','upbasin-2587100']
         for name in filenames:
-            (target/f'{name}.bin').write_bytes(b'\0'*24)
-        script = scripts/'s99-write_ctl.sh'
-        result = subprocess.run(['sh',str(script)], cwd=self.root, capture_output=True, text=True)
+            (binary/f'{name}.bin').write_bytes(b'\0'*24)
+        script = scripts/'s09-write_ctl.sh'
+        result = subprocess.run(['sh',str(script), '--map-dir', str(target)], cwd=self.root,
+                                capture_output=True, text=True)
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
         for name in filenames:
-            text = (target/f'{name}.ctl').read_text()
+            text = (binary/f'{name}.ctl').read_text()
             self.assertIn(f'dset ^{name}.bin',text)
-            self.assertEqual((target/f'{name}.bin').read_bytes(),b'\0'*24)
-        output=target/'subcol-sample.ctl'
+            self.assertEqual((binary/f'{name}.bin').read_bytes(),b'\0'*24)
+        output=binary/'subcol-sample.ctl'
         output.write_text('preserve existing')
-        result = subprocess.run(['sh',str(script),'--input','subcol-sample.bin','--variables','subcol','--no-overwrite'], capture_output=True,text=True)
+        result = subprocess.run(['sh',str(script),'--map-dir',str(target),'--no-overwrite'],
+                                capture_output=True,text=True)
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
         self.assertEqual(output.read_text(),'preserve existing')
-        result = subprocess.run(['sh',str(script),'--input','subcol-sample.bin','--reference-binary','subcol.bin'],capture_output=True,text=True)
-        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
-        self.assertIn('subcol 1',output.read_text(),result.stdout+result.stderr)
-        result = subprocess.run(['sh',str(script),'--variables','subcol'],capture_output=True,text=True)
-        self.assertNotEqual(result.returncode,0)
 
     def test_single_record_float_and_integer_coordinates_and_y_orientation(self):
         write_registry(self.registry, [row("elevtn.bin", "elevtn", "float32"), row("basin.bin", "basin", "int32")])
@@ -250,7 +249,7 @@ class GenerateCtlTests(unittest.TestCase):
         (self.map_dir / "diminfo_test-1deg.txt").write_text(
             "3 !! nXX\n2 !! nYY\n2 !! floodplain layers\n360 !! input nXX\n"
             "180 !! input nYY\n4 !! input num\ninpmat_test-1deg.bin\n"
-            "-1.5 !! west\n1.5 !! east\n1.0 !! north\n-1.0 !! south\n",
+            "90.0 !! west\n110.0 !! east\n35.0 !! north\n5.0 !! south\n",
             encoding="ascii",
         )
         (self.map_dir / "inpmat_test-1deg.bin").write_bytes(b"\0" * (3 * 2 * 4 * 3 * 4))
@@ -263,6 +262,9 @@ class GenerateCtlTests(unittest.TestCase):
         self.assertIn("inpx 4 -1,40,4", ctl)
         self.assertIn("inpy 4 -1,40,4", ctl)
         self.assertIn("inpa 4 99", ctl)
+        # Input-grid bounds belong to diminfo; the CTL spatial grid remains
+        # the model map geometry from params.txt.
+        self.assertIn("xdef 3 linear -1 1", ctl)
         for item in matrix_rows:
             item["missing_value"] = "-7"
         write_registry(self.registry, matrix_rows)

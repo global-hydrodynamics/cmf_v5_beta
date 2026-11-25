@@ -25,6 +25,8 @@ def list_sources(map_dir: Path, registry: Path, source_format: str, output: Path
     extension = ".nc" if source_format == "netcdf" else ".bin"
     candidates: list[tuple[int, int, str, str]] = []
     for path in sorted(directory.glob(f"*{extension}")):
+        if not path.is_file():
+            continue
         binary_name = path.stem + ".bin"
         binary_name = converter.standard_binary_filename(binary_name)
         matches = supported_rows.get(binary_name, [])

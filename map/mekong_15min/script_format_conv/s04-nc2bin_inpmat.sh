@@ -32,4 +32,5 @@ OUTPUT="$OUTPUT_DIR/inpmat_${ROFFTAG}.bin"
 mkdir -p "$OUTPUT_DIR"
 "$PYTHON_CMD" "$REPO_ROOT/map/tools/code/convert_inpmat.py" \
     netcdf-to-binary --input "$SOURCE" --output "$OUTPUT" --diminfo "$DIMINFO"
-cp "$DIMINFO" "$OUTPUT_DIR/diminfo_${ROFFTAG}.txt"
+awk -v binary="inpmat_${ROFFTAG}.bin" 'NR == 7 { $0 = binary } { print }' \
+    "$DIMINFO" > "$OUTPUT_DIR/diminfo_${ROFFTAG}.txt"

@@ -30,4 +30,4 @@ OUTPUT="$MAP_DIR/inpmat_${ROFFTAG}.nc"
 [ -f "$DIMINFO" ] || { echo "ERROR: paired diminfo not found: $DIMINFO" >&2; exit 1; }
 "$PYTHON_CMD" "$REPO_ROOT/map/tools/code/convert_inpmat.py" \
     binary-to-netcdf --input "$SOURCE" --output "$OUTPUT" --diminfo "$DIMINFO"
-cp "$DIMINFO" "$MAP_DIR/diminfo_${ROFFTAG}.txt"
+# Keep the NetCDF-side descriptor paired with the .nc product at the map root.

@@ -1,4 +1,4 @@
-"""Numbered MPI regions use one standard definition in the normal s01/s02 flow."""
+"""Numbered MPI regions use one standard definition in the s11/s12 flow."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -60,7 +60,7 @@ class MPIRegionConversionTests(unittest.TestCase):
         (self.map/'binary/nested/mpireg-64.bin').write_bytes(self.values.tobytes())
         # A directory with the right suffix is not an actual Binary file.
         (self.map/'binary/mpireg-128.bin').mkdir()
-        result = self.run_script('s01-list_binary.sh')
+        result = self.run_script('s11-list_bin.sh')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         text = (self.scripts/'bin2nc_list.txt').read_text()
         listed = [line for line in text.splitlines() if line and not line.startswith('#')]
@@ -76,34 +76,34 @@ class MPIRegionConversionTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 converter.select_variables(name, converter.registry_rows(REGISTRY), None)
 
-    def test_s01_s02_real_converter_skip_force_and_explicit_reference(self):
+    def test_s11_s12_real_converter_skip_force_and_explicit_reference(self):
         for n in (4, 8, 16, 32):
             (self.map/'binary'/f'mpireg-{n}.bin').write_bytes(self.values.tobytes())
-        result = self.run_script('s01-list_binary.sh')
+        result = self.run_script('s11-list_bin.sh')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         # Keep user editing/commenting semantics, then convert remaining files.
         listing = self.scripts/'bin2nc_list.txt'
         listing.write_text(listing.read_text().replace('\nmpireg-32.bin\n', '\n#mpireg-32.bin\n'))
-        # Probe the converter boundary to establish that s02 passes an explicit
+        # Probe the converter boundary to establish that s12 passes an explicit
         # reference, rather than accidentally relying on --variables fallback.
         script = self.root/'map/tools/code/convert_map_binary_to_netcdf.py'
         source = script.read_text()
         script.write_text(source.replace('    args = parser.parse_args()',
             '    args = parser.parse_args()\n    assert args.reference_binary == "mpireg.bin"'))
-        result = self.run_script('s02-convert_netcdf.sh')
+        result = self.run_script('s12-bin2nc.sh')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         for n in (4, 8, 16):
             output = self.map/f'mpireg-{n}.nc'
             self.verify(output, self.values)
             self.assertEqual((self.map/'binary'/f'mpireg-{n}.bin').read_bytes(), self.values.tobytes())
         self.assertFalse((self.map/'mpireg-32.nc').exists())
-        result = self.run_script('s02-convert_netcdf.sh')
+        result = self.run_script('s12-bin2nc.sh')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         self.assertIn('Converted: 3; skipped: 0', result.stdout)
         for n in (4, 8, 16):
             self.verify(self.map/f'mpireg-{n}.nc', self.values)
         listing.write_text(listing.read_text().replace('\n#mpireg-32.bin\n', '\nmpireg-32.bin\n'))
-        result = self.run_script('s02-convert_netcdf.sh', '--force')
+        result = self.run_script('s12-bin2nc.sh', '--force')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         self.verify(self.map/'mpireg-32.nc', self.values)
 
@@ -143,9 +143,9 @@ class MPIRegionConversionTests(unittest.TestCase):
             with netCDF4.Dataset(sample/f'mpireg-{n}.nc') as ds:
                 ds.set_auto_maskandscale(False)
                 np.testing.assert_array_equal(ds['mpireg'][:], values)
-        result = self.run_script('s01-list_binary.sh')
+        result = self.run_script('s11-list_bin.sh')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
-        result = self.run_script('s02-convert_netcdf.sh')
+        result = self.run_script('s12-bin2nc.sh')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         for n in (4, 8, 16):
             self.verify(self.map/f'mpireg-{n}.nc',

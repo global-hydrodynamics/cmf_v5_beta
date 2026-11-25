@@ -27,12 +27,13 @@ def convert(map_dir: Path, source: Path, output: Path, registry: Path,
     if len(rows) != len(all_rows):
         raise ValueError('restoring a multi-record Binary requires every registered record')
     rows.sort(key=lambda row: int(row.get('record_index') or '1'))
-    expected_records = len(all_rows)
+    expected_records = nlfp if rows[0]['dimensions'] == 'NX,NY,NLFP' else len(all_rows)
     expected_shape = (nlfp, ny, nx) if rows[0]['dimensions'] == 'NX,NY,NLFP' else (ny, nx)
     if source.resolve() == output.resolve():
         raise ValueError('input NetCDF and output Binary paths must differ')
     if output.exists() and no_overwrite:
         raise FileExistsError(f'{output} exists; rerun without --no-overwrite to replace it')
+    output.parent.mkdir(parents=True, exist_ok=True)
 
     import netCDF4
 

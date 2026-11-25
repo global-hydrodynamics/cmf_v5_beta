@@ -65,8 +65,12 @@ def make_workflow_tree(root: Path, *, use_converter_stub: bool, script_source: P
     registry_dir = root / "variable_table"
     registry_dir.mkdir()
     (registry_dir / "map_variables.csv").write_text("unused by the shell fixture\n", encoding="utf-8")
-    for name in ("s01-list_binary.sh", "s02-convert_netcdf.sh"):
+    for name in ("s11-list_bin.sh", "s12-bin2nc.sh"):
         shutil.copyfile(script_source / name, script_dir / name)
+    shutil.copyfile(
+        ROOT / "map/tools/code/list_map_conversion_sources.py",
+        code_dir / "list_map_conversion_sources.py",
+    )
     if use_converter_stub:
         converter = code_dir / "convert_map_binary_to_netcdf.py"
         converter.write_text(
@@ -153,7 +157,7 @@ def run_tty(script: Path, cwd: Path, response: bytes, prompt: bytes) -> str:
 
 class BinaryToNetCDFWorkflowTests(unittest.TestCase):
     def test_map_local_scripts_match_shared_templates_except_map_directory(self):
-        for name in ("s01-list_binary.sh", "s02-convert_netcdf.sh"):
+        for name in ("s11-list_bin.sh", "s12-bin2nc.sh"):
             template = (SCRIPT_TEMPLATE / name).read_text(encoding="utf-8")
             sample = (SCRIPT_SOURCE / name).read_text(encoding="utf-8")
             self.assertEqual(sample, template)
@@ -199,7 +203,7 @@ class BinaryToNetCDFWorkflowTests(unittest.TestCase):
             self.assertIn("unregistered.bin is not registered", messages)
             self.assertIn("matrix.bin is registered but not supported", messages)
 
-    def test_s01_preserves_existing_list_without_a_terminal_and_regenerates_after_confirmation(self):
+    def test_s11_regenerates_existing_list_without_confirmation(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             script_dir, map_dir = make_workflow_tree(root, use_converter_stub=False)
@@ -209,20 +213,16 @@ class BinaryToNetCDFWorkflowTests(unittest.TestCase):
             (map_dir / "binary" / "elevtn.bin").write_bytes(b"\0" * 16)
             list_file = script_dir / "bin2nc_list.txt"
             list_file.write_text("# maintainer selection\n", encoding="utf-8")
-            script = script_dir / "s01-list_binary.sh"
+            script = script_dir / "s11-list_bin.sh"
 
             result = subprocess.run(
                 ["sh", str(script)], cwd=script_dir, input="", text=True, capture_output=True, check=True
             )
-            self.assertIn("non-interactive mode", result.stdout)
-            self.assertEqual(list_file.read_text(), "# maintainer selection\n")
-
-            transcript = run_tty(script, script_dir, b"y\n", b"Regenerate it? [y/N]:")
-            self.assertIn("Generated 1 conversion candidates", transcript)
+            self.assertIn("Listed 1 registered binary source files", result.stdout)
             self.assertIn("elevtn.bin", list_file.read_text())
             self.assertFalse((map_dir / "bin2nc_list.txt").exists())
 
-    def test_s02_overwrites_existing_selected_outputs_by_default_without_prompt(self):
+    def test_s12_overwrites_existing_selected_outputs_by_default_without_prompt(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             script_dir, map_dir = make_workflow_tree(root, use_converter_stub=True)
@@ -234,7 +234,7 @@ class BinaryToNetCDFWorkflowTests(unittest.TestCase):
             (script_dir / "bin2nc_list.txt").write_text(
                 "# select files\nfirst.bin\n#second.bin\n\n", encoding="ascii"
             )
-            script = script_dir / "s02-convert_netcdf.sh"
+            script = script_dir / "s12-bin2nc.sh"
             output = netcdf_dir / "first.nc"
             output.write_text("old")
 
@@ -247,7 +247,7 @@ class BinaryToNetCDFWorkflowTests(unittest.TestCase):
             self.assertFalse((netcdf_dir / "second.nc").exists())
             self.assertNotIn("Overwrite?", result.stdout)
 
-    def test_s02_no_overwrite_preserves_existing_selected_outputs(self):
+    def test_s12_no_overwrite_preserves_existing_selected_outputs(self):
         for source in (SCRIPT_SOURCE, SCRIPT_TEMPLATE):
             with self.subTest(source=source), tempfile.TemporaryDirectory() as temp:
                 root = Path(temp)
@@ -262,7 +262,7 @@ class BinaryToNetCDFWorkflowTests(unittest.TestCase):
                 output = netcdf_dir / "first.nc"
                 output.write_text("keep")
                 (script_dir / "bin2nc_list.txt").write_text("first.bin\nsecond.bin\n", encoding="ascii")
-                script = script_dir / "s02-convert_netcdf.sh"
+                script = script_dir / "s12-bin2nc.sh"
 
                 result = subprocess.run(
                     ["sh", str(script), "--no-overwrite"], cwd=script_dir,
@@ -272,13 +272,13 @@ class BinaryToNetCDFWorkflowTests(unittest.TestCase):
                 self.assertEqual(output.read_text(), "keep")
                 self.assertEqual((netcdf_dir / "second.nc").read_text(), "converted")
 
-    def test_s02_rejects_missing_and_invalid_list_entries(self):
+    def test_s12_rejects_missing_and_invalid_list_entries(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             script_dir, map_dir = make_workflow_tree(root, use_converter_stub=True)
             netcdf_dir = map_dir
             list_file = script_dir / "bin2nc_list.txt"
-            script = script_dir / "s02-convert_netcdf.sh"
+            script = script_dir / "s12-bin2nc.sh"
             list_file.write_text("missing.bin\n", encoding="ascii")
             result = subprocess.run(["sh", str(script)], cwd=script_dir, text=True, capture_output=True)
             self.assertNotEqual(result.returncode, 0)
@@ -291,7 +291,7 @@ class BinaryToNetCDFWorkflowTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("invalid or non-base filename", result.stderr)
 
-    def test_s02_converts_real_multirecord_and_layered_rasters(self):
+    def test_s12_converts_real_multirecord_and_layered_rasters(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             script_dir, map_dir = make_workflow_tree(root, use_converter_stub=False)
@@ -311,7 +311,7 @@ class BinaryToNetCDFWorkflowTests(unittest.TestCase):
             )
 
             result = subprocess.run(
-                ["sh", str(script_dir / "s02-convert_netcdf.sh")],
+                ["sh", str(script_dir / "s12-bin2nc.sh")],
                 cwd=script_dir,
                 text=True,
                 capture_output=True,
@@ -329,7 +329,7 @@ class BinaryToNetCDFWorkflowTests(unittest.TestCase):
                 struct.pack("<8i", 1, 0, 2, -9999, 1, 2, 0, -9999)
             )
             result = subprocess.run(
-                ["sh", str(script_dir / "s02-convert_netcdf.sh")],
+                ["sh", str(script_dir / "s12-bin2nc.sh")],
                 cwd=script_dir,
                 text=True,
                 capture_output=True,

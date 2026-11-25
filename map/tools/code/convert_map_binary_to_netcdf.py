@@ -198,7 +198,7 @@ def select_variables(
         matches = [dict(row) for row in rows if row.get("binary_filename") in filenames]
     if not matches:
         raise ValueError(f"{filename} is not registered in variable_table/map_variables.csv; use --variables with a registered variable")
-    if definition.startswith("nextxy"):
+    if definition == "nextxy.bin":
         for row in matches:
             row["_individual_name"] = "nextx" if row.get("record_index") == "1" else "nexty"
     else:
@@ -309,7 +309,8 @@ def write_netcdf(args: argparse.Namespace, rows: list[dict[str, str]], params: t
         lon_dim, lat_dim, layer_dim = ci(), ci(), ci()
         check(lib, lib.nc_def_dim(ncid.value, b"lon", nx, ctypes.byref(lon_dim)), "define lon dimension")
         check(lib, lib.nc_def_dim(ncid.value, b"lat", ny, ctypes.byref(lat_dim)), "define lat dimension")
-        check(lib, lib.nc_def_dim(ncid.value, b"layer", nlfp, ctypes.byref(layer_dim)), "define layer dimension")
+        if any(row.get("dimensions") == "NX,NY,NLFP" for row in rows):
+            check(lib, lib.nc_def_dim(ncid.value, b"layer", nlfp, ctypes.byref(layer_dim)), "define layer dimension")
         lon_var, lat_var = ci(), ci()
         check(
             lib,

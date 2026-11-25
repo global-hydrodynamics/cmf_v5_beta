@@ -220,9 +220,9 @@ class MpiMapToolsTests(unittest.TestCase):
             shutil.copy2(MAP / "params.txt", ctl_target / "params.txt")
             shutil.copy2(diagnostic, ctl_target / diagnostic.name)
             shutil.copy2(v5_map / "bifcol_mpi.bin", ctl_target / "bifcol_mpi.bin")
-            shutil.copy2(TOOLS / "script_format_conv" / "s99-write_ctl.sh", ctl_script_dir)
+            shutil.copy2(TOOLS / "script_format_conv" / "s09-write_ctl.sh", ctl_script_dir)
             ctl_result = subprocess.run(
-                ["sh", str(ctl_script_dir / "s99-write_ctl.sh")],
+                ["sh", str(ctl_script_dir / "s09-write_ctl.sh")],
                 cwd=root,
                 check=False,
                 capture_output=True,
@@ -241,9 +241,9 @@ class MpiMapToolsTests(unittest.TestCase):
             no_diagnostic_script_dir = no_diagnostic / "script_format_conv"
             no_diagnostic_script_dir.mkdir(parents=True)
             shutil.copy2(MAP / "params.txt", no_diagnostic / "params.txt")
-            shutil.copy2(TOOLS / "script_format_conv" / "s99-write_ctl.sh", no_diagnostic_script_dir)
+            shutil.copy2(TOOLS / "script_format_conv" / "s09-write_ctl.sh", no_diagnostic_script_dir)
             absent_result = subprocess.run(
-                ["sh", str(no_diagnostic_script_dir / "s99-write_ctl.sh")],
+                ["sh", str(no_diagnostic_script_dir / "s09-write_ctl.sh")],
                 cwd=root,
                 check=False,
                 capture_output=True,

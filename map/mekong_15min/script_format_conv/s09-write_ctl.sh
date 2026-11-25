@@ -27,7 +27,7 @@ mkdir -p "$BINARY_DIR"
 cp "$MAP_DIR/params.txt" "$BINARY_DIR/params.txt"
 for DIMINFO in "$MAP_DIR"/diminfo_*.txt; do
     [ -f "$DIMINFO" ] || continue
-    cp "$DIMINFO" "$BINARY_DIR/${DIMINFO##*/}"
+    [ -f "$BINARY_DIR/${DIMINFO##*/}" ] || cp "$DIMINFO" "$BINARY_DIR/${DIMINFO##*/}"
 done
 for SOURCE_LOCATION in "$MAP_DIR"/*/location.txt; do
     [ -f "$SOURCE_LOCATION" ] || continue
