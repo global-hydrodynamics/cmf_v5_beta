@@ -19,7 +19,8 @@ from map.tools.code import convert_map_binary_to_netcdf as converter
 
 ROOT = Path(__file__).resolve().parents[3]
 REGISTRY = ROOT / 'variable_table/map_variables.csv'
-SCRIPT = ROOT / 'map/tools/script_format_conv/s90-sample_netCDF_conversion.sh'
+SCRIPT = ROOT / 'map/tools/script_format_conv/s18-sample_bin2nc.sh'
+NC2BIN_SCRIPT = ROOT / 'map/tools/script_format_conv/s08-sample_nc2bin.sh'
 
 
 class VariantConversionTests(unittest.TestCase):
@@ -75,7 +76,7 @@ class VariantConversionTests(unittest.TestCase):
         for filename, reference, dtype, shape, names in [
             ('elevtn.bin', None, '<f4', (2, 3), ['elevtn']),
             ('nextxy.bin', None, '<i4', (2, 2, 3), ['nextx', 'nexty']),
-            ('nextxy_noedge.bin', None, '<i4', (2, 2, 3), ['nextx', 'nexty']),
+            ('nextxy_noedge.bin', None, '<i4', (2, 2, 3), ['nextx_noedge', 'nexty_noedge']),
             ('fldhgt.bin', None, '<f4', (2, 2, 3), ['fldhgt']),
             ('profile-experiment.bin', 'fldhgt.bin', '<f4', (2, 2, 3), ['fldhgt']),
             ('legacy.bin', None, '<i4', (2, 3), ['subcol']),
@@ -191,7 +192,7 @@ class VariantConversionTests(unittest.TestCase):
                                  '--generate-list', '--reference-binary', 'subcol.bin'], capture_output=True)
         self.assertEqual(result.returncode, 2)
 
-    def test_shell_map_local_explicit_target_overwrite_and_template_rejection(self):
+    def test_shell_s18_map_local_explicit_target_overwrite_and_template_rejection(self):
         local = ROOT/'map/mekong_15min/script_format_conv'/SCRIPT.name
         self.assertEqual(SCRIPT.read_bytes(), local.read_bytes())
         directory = self.map/'script_format_conv'
@@ -215,15 +216,59 @@ class VariantConversionTests(unittest.TestCase):
         result = run(SCRIPT, self.root, '--map-dir', str(self.map), '--no-overwrite')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         self.assertIn('Converted: 0; skipped: 2', result.stdout)
-        result = run(SCRIPT, self.root, '--map-dir', str(self.map), '--force')
-        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         result = run(SCRIPT, SCRIPT.parent)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('template, not a map', result.stderr)
         (binary_dir/'subbsn-sample.bin').unlink()
-        result = run(SCRIPT, self.root, '--map-dir', str(self.map), '--force')
+        result = run(SCRIPT, self.root, '--map-dir', str(self.map))
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('subbsn-sample.bin', result.stderr)
+
+    def test_shell_s08_converts_s06_netcdf_samples_to_binary(self):
+        binary_dir = self.map/'binary'
+        binary_dir.mkdir()
+        arrays = {
+            'subbsn': np.array([[-9999, 0, 1], [2, 10, 3]], dtype='int32'),
+            'subcol': np.array([[-9999, 0, 5], [4, 10, 2]], dtype='int32'),
+        }
+        original_sources = {}
+        for name, values in arrays.items():
+            source = self.map/f'{name}-sample.nc'
+            with netCDF4.Dataset(source, 'w') as dataset:
+                dataset.createDimension('lat', 2)
+                dataset.createDimension('lon', 3)
+                variable = dataset.createVariable(f'{name}-sample', 'i4', ('lat', 'lon'))
+                variable[:] = values
+            original_sources[source.name] = source.read_bytes()
+            (binary_dir/f'{name}-sample.bin').write_bytes(b'preserve-'+name.encode())
+
+        def run(*arguments):
+            return subprocess.run(['bash', str(NC2BIN_SCRIPT), '--map-dir', str(self.map), *arguments],
+                                  cwd=self.root, capture_output=True, text=True)
+
+        result = run('--no-overwrite')
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertIn('Converted: 0; skipped: 2', result.stdout)
+        for name in arrays:
+            self.assertEqual((binary_dir/f'{name}-sample.bin').read_bytes(), b'preserve-'+name.encode())
+
+        result = run()
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertIn('Converted: 2; skipped: 0', result.stdout)
+        for source_name, original in original_sources.items():
+            self.assertEqual((self.map/source_name).read_bytes(), original)
+        for name, values in arrays.items():
+            self.assertEqual((binary_dir/f'{name}-sample.bin').read_bytes(), values.astype('<i4').tobytes())
+        result = subprocess.run(['bash', str(ROOT/'map/mekong_15min/script_format_conv/s18-sample_bin2nc.sh'),
+                                 '--map-dir', str(self.map)], cwd=self.root, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertIn('Converted: 2; skipped: 0', result.stdout)
+        for name, values in arrays.items():
+            with netCDF4.Dataset(self.map/f'{name}-sample.nc') as ds:
+                ds.set_auto_maskandscale(False)
+                np.testing.assert_array_equal(ds[name][:], values)
+                self.assertEqual(ds[name].dtype, values.dtype)
+        self.assertEqual(list(binary_dir.glob('.sample-nc2bin.*')), [])
 
     def test_shell_no_overwrite_preserves_existing_outputs(self):
         fixture = self.root/'fixture repository'
@@ -236,7 +281,7 @@ class VariantConversionTests(unittest.TestCase):
 from pathlib import Path
 p=argparse.ArgumentParser()
 p.add_argument('--map-dir');p.add_argument('--input');p.add_argument('--output')
-p.add_argument('--reference-binary');p.add_argument('--force',action='store_true')
+p.add_argument('--reference-binary');p.add_argument('--registry');p.add_argument('--force',action='store_true')
 p.add_argument('--no-overwrite',action='store_true')
 a=p.parse_args();target=Path(a.output)
 if target.exists() and a.no_overwrite: raise SystemExit('no-overwrite violated')
@@ -249,7 +294,7 @@ print('copied',Path(a.input).name,'force='+str(a.force))
         binary_dir.mkdir()
         for name in ('subbsn','subcol'):
             (binary_dir/f'{name}-sample.bin').write_bytes(b'new-'+name.encode())
-        shim = self.root/'run-s90.sh'
+        shim = self.root/'run-s18.sh'
         shim.write_text('exec bash '+shlex.quote(str(script))+' --map-dir '+shlex.quote(str(self.map))+'\n')
         for name in ('subbsn','subcol'):
             (binary_dir/f'{name}-sample.bin').write_bytes(b'new-'+name.encode())
