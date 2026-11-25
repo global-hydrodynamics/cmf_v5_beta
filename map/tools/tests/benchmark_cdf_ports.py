@@ -35,8 +35,8 @@ def main():
                 var=ds.createVariable('runoff','f4',('time','lat','lon'))
                 var[0]=np.full((180,360),.001,dtype='f4')
                 var[1]=np.full((180,360),10,dtype='f4')
-            options=['cdf','mat',str(diminfo),str(runoff),'runoff']
-        else:options=['cdf',str(diminfo)]
+            options=[str(diminfo),str(runoff),'--map-binary']
+        else:options=[str(diminfo),'.1','.5','0','1','.4','.75','0','10','--map-binary']
         times=[[],[]];memory=[[],[]]
         for repeat in range(args.repeats):
             if repeat:

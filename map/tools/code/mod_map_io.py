@@ -77,12 +77,13 @@ def write_raster(path, values, dtype, grid=None):
         np.asarray(values, dtype=dtype).tofile(stream)
 
 
-def parser(description, map_default='..'):
+def parser(description, map_default='..', *, map_binary_flag=False):
     """Keep positional Fortran arguments, with explicit parallel-tool I/O roots."""
     class MapArgumentParser(argparse.ArgumentParser):
         def parse_args(self, args=None, namespace=None):
             parsed = super().parse_args(args, namespace)
             global _MAP_FORMAT, _MAP_ROOT
+            parsed.map_format = 'binary' if getattr(parsed, 'map_binary', False) else getattr(parsed, 'map_format', 'netcdf')
             _MAP_FORMAT = parsed.map_format
             _MAP_ROOT = parsed.map_dir.resolve()
             return parsed
@@ -90,7 +91,10 @@ def parser(description, map_default='..'):
     result = MapArgumentParser(description=description)
     result.add_argument('--map-dir', type=Path, default=Path(map_default), help='Read-only input map root; default follows Fortran CWD contract')
     result.add_argument('--output-dir', type=Path, help='Explicit output destination; default follows the Fortran CWD convention; existing outputs are replaced')
-    result.add_argument('--map-format', choices=('netcdf', 'binary'), default='netcdf', help='Map input/output format (default: netcdf; binary is the legacy-compatible mode)')
+    if map_binary_flag:
+        result.add_argument('--map-binary', action='store_true', help='Use legacy Binary map input/output instead of the default NetCDF maps.')
+    else:
+        result.add_argument('--map-format', choices=('netcdf', 'binary'), default='netcdf', help='Map input/output format (default: netcdf; binary is the legacy-compatible mode)')
     return result
 
 

@@ -26,7 +26,7 @@ def merge_widths(nextx, width, merit):
 
 
 def main():
-    p = parser(__doc__, '.')
+    p = parser(__doc__, '.', map_binary_flag=True)
     p.add_argument('diminfo', type=Path)
     args = p.parse_args()
     dims = [int(line.split()[0]) for line in args.diminfo.read_text().splitlines()[:2]]

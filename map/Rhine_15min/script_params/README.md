@@ -2,14 +2,14 @@
 
 `script_params/` contains reusable map-local recipes for parameterization and related map preparation. The shell layer holds configuration, selects working directories, sequences the maintained Python programs under `map/tools/code/`, and reports progress. No compilation is required. Set `PYTHON_CMD` for the intended interpreter and, when the relative shared-code path is unavailable, `CMF5_ROOT` to the repository root. Existing outputs owned by a workflow are replaced by default; use `--no-overwrite` where supported to preserve them. Inputs and unrelated files are not removed. The s01-s07 parameter scripts use self-contained ASCII `[STEP]` and `[SUCCESS]` banners plus a prominent `ERROR` banner on failure, using POSIX exit traps; no shared message helper is required. Some migrated programs still have incomplete file-open/read diagnostics, a code-layer follow-up. See the [shell-script convention](../../../AGENTS.md#shell-script-design-principles).
 
-The maintained wrappers use NetCDF map input/output by default. Set `MAP_FORMAT=binary` when running a wrapper against an explicitly maintained legacy Binary map; runoff `TYPE=bin` in s01 is a separate setting and does not select the map format. High-resolution NetCDF products are expected under `<map>/<tag>/`, and allocation inputs remain the external CSVs configured by each tXX wrapper.
+The channel Python programs use NetCDF map input/output by default. The Rhine s01 sample keeps its legacy Binary runoff input by passing `--runoff-binary`; its input-matrix interpolation remains the default. Use `--map-binary` directly on a Python invocation only for a legacy Binary map. High-resolution NetCDF products are expected under `<map>/<tag>/`, and allocation inputs remain the external CSVs configured by each tXX wrapper.
 
 ```sh
 cd "$MAP_DIR"
-"$EXEC_OUTCLM" "$TYPE" "$INTERP" "$DIMINFO" "$CROFBIN"
-"$EXEC_RIVWTH" "$TYPE" "$DIMINFO" "$HC" "$HP" "$HO" "$HMIN" \
-    "$WC" "$WP" "$WO" "$WMIN"
-"$EXEC_MERIT" "$DIMINFO"
+"$PYTHON_CMD" "$CODE_DIR/param_channel_calc_outclm.py" "$DIMINFO" "$CROFBIN" --runoff-binary
+"$PYTHON_CMD" "$CODE_DIR/param_channel_calc_rivwth.py" "$DIMINFO" "$HC" "$HP" "$HO" "$HMIN" \
+    "$WC" "$WP" "$WO" "$WMIN" --no-rivpar-netcdf
+"$PYTHON_CMD" "$CODE_DIR/param_channel_set_merit_width.py" "$DIMINFO"
 ```
 
 `map/src/` is preserved as the historical v4 tree; v5 migrations belong under `map/tools/` and do not rewrite those legacy workflows. The `diminfo_` naming convention is shared with v4; the v5 workflows derive both descriptor and matrix names from `ROFFTAG` without changing their formats.
@@ -44,11 +44,11 @@ Run only the workflows required for a map. The common dependency chain is s01 be
 2. `param_channel_calc_rivwth` derives power-law channel width, depth, roughness, and infinite-depth products.
 3. `param_channel_set_merit_width` combines the power-law width with the MERIT Hydro width layer.
 
-It does not run bifurcation, MPI, or permanent-water processing. Configure the script's runoff path and coefficients before use. Its defaults retain the legacy standard recipe: binary runoff in mm/s, `inpmat` interpolation, `ROFFTAG=test-1deg`, and the height/width coefficients shown in the script. It reads the paired `diminfo_test-1deg.txt` and `inpmat_test-1deg.nc` without regenerating them. `ROFFTAG` identifies runoff/input-grid configuration and is distinct from `HIRES_TAG`, which selects high-resolution map data during map generation.
+It does not run bifurcation, MPI, or permanent-water processing. Configure the script's runoff path and coefficients before use. Its standard Python defaults are NetCDF maps/runoff and input-matrix interpolation; the map-local Rhine wrapper explicitly selects Binary runoff with `--runoff-binary`. It uses `ROFFTAG=test-1deg` and the height/width coefficients shown in the script. It reads the paired `diminfo_test-1deg.txt` and `inpmat_test-1deg.nc` without regenerating them. `ROFFTAG` identifies runoff/input-grid configuration and is distinct from `HIRES_TAG`, which selects high-resolution map data during map generation.
 
-The expected annual-mean runoff input is `../data/ELSE_GPCC_clm-1981-2010.one`, relative to the map root. This 360 x 180, one-record little-endian binary is now included in the Git repository; its CTL specifies runoff in mm/s. The CTL variable comment says "daily runoff climatology," despite the single record and the channel workflow's annual-mean use; treat this as an existing metadata inconsistency. The package guide identifies ELSE_GPCC and cites Kim et al. (2009). Its inclusion in this repository was directed by the maintainer; upstream terms for other ELSE_GPCC products or derivatives have not been established.
+The Rhine sample currently reads `../data/ELSE_GPCC_clm-1981-2010.one`, relative to the map root, as its legacy Binary input. The 360 x 180, one-record little-endian file is also included alongside the standard NetCDF runoff file; its CTL specifies runoff in mm/s. The CTL variable comment says "daily runoff climatology," despite the single record and the channel workflow's annual-mean use; treat this as an existing metadata inconsistency. The package guide identifies ELSE_GPCC and cites Kim et al. (2009). Its inclusion in this repository was directed by the maintainer; upstream terms for other ELSE_GPCC products or derivatives have not been established.
 
-Copy the script into the target map's `script_params/`, edit its configuration, then run it from any working directory. The script selects the map root as CWD and calls the Python programs in order. The programs read the configured inputs and perform the calculations. The workflow writes or replaces `outclm.nc`, `rivwth.nc`, `rivhgt.nc`, `rivman.nc`, `rivhgt_inf.nc`, and `rivwth_merit.nc` in the map root. Use a separate map copy or output location when earlier products must be retained.
+Copy the script into the target map's `script_params/`, edit its configuration, then run it from any working directory. The script selects the map root as CWD and calls the Python programs in order. The programs read the configured inputs and perform the calculations. The workflow writes or replaces `outclm.nc`, `rivwth.nc`, `rivhgt.nc`, `rivman.nc`, `rivhgt_inf.nc`, and `rivwth_merit.nc` in the map root. The Rhine sample skips supplementary `rivpar.nc` to preserve its earlier Binary-runoff recipe. Use a separate map copy or output location when earlier products must be retained.
 
 The standard channel workflow uses annual mean runoff. The historical `map/src/src_param/calc_outclmday.F90` remains legacy-only: it reflects the older maximum-30-day climatology approach associated with Yamazaki et al. (2011). The maintainer reports that later evaluation favored annual mean runoff. This migration does not revalidate the historical method scientifically.
 

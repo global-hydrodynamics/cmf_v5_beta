@@ -2,9 +2,8 @@
 # Parallel port of param_channel_calc_rivwth.F90; original Fortran authors and license retained.
 """Calculate channel depth, width and roughness from annual mean discharge.
 
-Read the existing DIMINFO and binary topology/discharge, apply the reference
-float32 power laws, and write the four independent binary parameter products.
-The optional cdf mode also writes the reference rivpar.nc interface.
+Read DIMINFO and map-root discharge, apply the reference float32 power laws,
+and write the parameter rasters plus the standard NetCDF parameter interface.
 """
 from pathlib import Path
 
@@ -14,12 +13,11 @@ from mod_map_io import Grid, output_root, parser, write_raster
 
 
 def main():
-    p = parser(__doc__, map_default='.')
-    p.add_argument('type', nargs='?', default='bin', choices=['bin', 'cdf'])
-    p.add_argument('diminfo', nargs='?', type=Path, default=Path('diminfo_test-1deg.txt'))
-    for name, default in [('hc', .1), ('hp', .5), ('ho', 0), ('hmin', 1),
-                          ('wc', .4), ('wp', .75), ('wo', 0), ('wmin', 10)]:
-        p.add_argument(name, nargs='?', type=np.float32, default=np.float32(default))
+    p = parser(__doc__, map_default='.', map_binary_flag=True)
+    p.add_argument('diminfo', type=Path)
+    for name in ('hc', 'hp', 'ho', 'hmin', 'wc', 'wp', 'wo', 'wmin'):
+        p.add_argument(name, type=np.float32)
+    p.add_argument('--no-rivpar-netcdf', action='store_true', help='Do not write the supplementary rivpar.nc interface.')
     args = p.parse_args()
     lines = args.diminfo.read_text().splitlines()
     nx, ny = (int(lines[i].split()[0]) for i in (0, 1))
@@ -35,12 +33,12 @@ def main():
     }
     out = output_root(args)
     output_grid = Grid.from_file(args.map_dir/'params.txt')
-    # Import before producing outputs so an unavailable optional interface fails cleanly.
-    if args.type == 'cdf':
+    # Import before producing outputs so an unavailable NetCDF interface fails cleanly.
+    if not args.no_rivpar_netcdf:
         from netCDF4 import Dataset
     for name, values in fields.items():
         write_raster(out/(name+'.bin'), values, '<f4', grid=output_grid)
-    if args.type == 'cdf':
+    if not args.no_rivpar_netcdf:
         destination = out/'rivpar.nc'
         with Dataset(destination, 'w', format='NETCDF3_64BIT_OFFSET') as dataset:
             dataset.createDimension('lon', nx)

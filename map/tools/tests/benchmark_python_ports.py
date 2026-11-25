@@ -192,10 +192,10 @@ def prepare(case, name):
         args = [str(f/'rivhgt.bin'), 'trial.csv', '10', str(f/'diminfo_test-1deg.txt'), '--check-map']; fcwd = f
     elif name == 'analysis_check_mpi_bifurcation': args = [str(f/'mpireg-4.bin'), '--csv', 'dropped.csv']; fcwd = f
     elif name == 'param_channel_calc_rivwth':
-        args = ['bin', str(f/'diminfo_test-1deg.txt')]; fcwd = f
+        args = [str(f/'diminfo_test-1deg.txt'), '.1', '.5', '0', '1', '.4', '.75', '0', '10', '--map-binary']; fcwd = f
     elif name == 'param_channel_calc_outclm':
         np.full((180, 360), .001, dtype='<f4').tofile(f/'trial_runoff.bin')
-        args = ['bin', 'mat', str(f/'diminfo_test-1deg.txt'), str(f/'trial_runoff.bin')]; fcwd = f
+        args = [str(f/'diminfo_test-1deg.txt'), str(f/'trial_runoff.bin'), '--runoff-binary', '--map-binary']; fcwd = f
     elif name == 'param_inpmat_generate':
         args = ['1min', '1', '-180', '180', '90', '-90', 'NtoS', 'diminfo_trial.txt', 'inpmat_trial.bin']; fcwd = f
     elif name in ('region_default_inpmat', 'region_combine_hires', 'param_water_calc_prmwat'):

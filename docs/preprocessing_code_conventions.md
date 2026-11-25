@@ -119,14 +119,20 @@ directory, program calls and meaningful completion/error summaries. Keep the
 `User settings` section near the beginning, use explicit literal assignments,
 and retain environment fallbacks only for documented intentional interfaces.
 
-For every newly written or refactored map-preprocessing workflow, check
-`CMF_V50_ROOT` immediately after `set -eu` and source the shared Shell error
-library immediately after that check:
+For every newly written or refactored map-preprocessing workflow, use this
+initialization block immediately after the script header and `set -eu`, in this
+exact order:
 
 ```sh
+# CaMa-Flood general setting (check CMF root, import shell error checker)
+PYTHON_CMD="python3"
 : "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
 . "$CMF_V50_ROOT/tools/code/cmf_check_shell_error.sh"
 ```
+
+Start the separately labeled `User settings` section immediately afterward.
+Keep scientific parameters, dataset identifiers and essential input paths in
+that section; do not duplicate interpreter or ROOT initialization there.
 
 Do not use the obsolete `CMF5_ROOT` or guess the repository root from a
 relative path. Use `cmf_check_init`, `cmf_check_step` and `cmf_check_success`
@@ -151,15 +157,37 @@ directly. Do not add preflight `[ -f ]` checks for an explicitly invoked
 program unless the Shell must select or prepare it; let the command fail and
 use the workflow's normal error reporting.
 
-For new or readability-refactored map wrappers, show the standard settings as
-simple values such as `PYTHON_CMD=python3` and `MAP_FORMAT=netcdf`. Keep
-legacy-only alternatives (for example, Binary map input) separate at the end
-of the settings section and label when they apply. Retain environment overrides
-only when they are an intentional, documented interface. Load required shared
-Shell libraries near the start, with each required environment-variable check
-in the calling script immediately before the source command. For paths, use
-the repository root for centrally maintained shared data and the map root for
-map-specific data; keep that ownership clear in the setting comment.
+### Standard preprocessing Shell structure
+
+New or refactored preprocessing wrappers use four recognizable parts:
+
+1. **CaMa-Flood general setting:** the standard block above (Python interpreter,
+   ROOT validation and shared error-checker import).
+2. **User settings:** scientific parameters, input datasets and essential paths.
+3. **Processing steps:** direct Python calls with required positional arguments,
+   using `cmf_check_init`, `cmf_check_step` and `cmf_check_success` for progress.
+4. **Optional Python CLI flags:** a concise reference at the end, grouped by
+   invoked program. Document only supported options; the comments do not set
+   flags or add Shell selection variables.
+
+Python CLIs should keep essential files and always-required scientific
+parameters as stable positional arguments. Standard choices belong in Python
+defaults (for the channel tools: NetCDF maps, NetCDF runoff and input-matrix
+interpolation). Optional or legacy behavior uses descriptive named flags. Shell
+wrappers retain scientific settings but should not repeat defaults or expose
+rare modes through extra variables. Group optional-flag comments after the
+processing commands and success call, separately for each Python program.
+
+For new or readability-refactored map wrappers, use simple assignments for
+scientific settings and input paths. Put standard processing choices in Python
+defaults rather than repeating them as Shell settings. Add a legacy-mode flag
+directly to a Python invocation only when that workflow needs the legacy mode.
+Retain environment overrides only when they are an intentional, documented
+interface. Load required shared Shell libraries near the start, with each
+required environment-variable check in the calling script immediately before
+the source command. For paths, use the repository root for centrally maintained
+shared data and the map root for map-specific data; keep that ownership clear
+in the setting comment.
 
 ## Component data contracts to keep visible
 

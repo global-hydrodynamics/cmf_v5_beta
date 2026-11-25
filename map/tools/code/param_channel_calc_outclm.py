@@ -81,24 +81,27 @@ def route(nextxy, runoff):
 
 
 def main():
-    p = parser(__doc__, map_default='.')
-    p.add_argument('type', choices=['bin', 'cdf'])
-    p.add_argument('interpolation', choices=['near', 'mat'])
+    p = parser(__doc__, map_default='.', map_binary_flag=True)
     p.add_argument('diminfo', type=Path)
     p.add_argument('runoff', type=Path)
-    p.add_argument('variable', nargs='?', default='runoff')
+    p.add_argument('--runoff-binary', action='store_true', help='Read legacy float32 Binary runoff instead of the default NetCDF runoff.')
+    p.add_argument('--interp-near', action='store_true', help='Use nearest-grid runoff interpolation instead of the default input matrix.')
     args = p.parse_args()
+    if args.runoff_binary and args.runoff.suffix.lower() == '.nc':
+        p.error('--runoff-binary cannot be used with a NetCDF (.nc) input path')
+    if not args.runoff_binary and args.runoff.suffix.lower() in {'.one', '.bin'}:
+        p.error('Binary runoff input requires --runoff-binary')
     lines = args.diminfo.read_text().splitlines()
     nx, ny, nlfp, sx, sy, slots = (int(lines[i].split()[0]) for i in range(6))
     grid = Grid(nx, ny, nlfp, *[np.float32(0)]*5)
     nextxy = grid.raster(args.map_dir/'nextxy.bin', '<i4', 2)
     area = grid.raster(args.map_dir/'ctmare.bin')
-    if args.type == 'bin':
+    if args.runoff_binary:
         source = np.memmap(args.runoff, mode='r', dtype='<f4', shape=(sy, sx))
     else:
         from netCDF4 import Dataset
         with Dataset(args.runoff) as dataset:
-            variable = dataset.variables[args.variable]
+            variable = dataset.variables['runoff']
             variable.set_auto_maskandscale(False)
             if variable.ndim not in (2, 3):
                 raise ValueError('Runoff must have (lat,lon) or (time,lat,lon) dimensions')
@@ -106,7 +109,7 @@ def main():
             if source.shape != (sy, sx):
                 raise ValueError('Runoff dimensions do not match DIMINFO')
     matrix = None
-    if args.interpolation != 'near':
+    if not args.interp_near:
         path = Path(lines[6].strip())
         if not path.is_absolute():
             path = args.map_dir/path

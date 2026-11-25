@@ -38,7 +38,7 @@ class ChannelParamsWrapperTests(unittest.TestCase):
         self.calls = self.root / "calls.txt"
         for name, outputs in (
             ("param_channel_calc_outclm", ("outclm.nc",)),
-            ("param_channel_calc_rivwth", ("rivwth.nc", "rivhgt.nc", "rivman.nc", "rivhgt_inf.nc")),
+            ("param_channel_calc_rivwth", ("rivwth.nc", "rivhgt.nc", "rivman.nc", "rivhgt_inf.nc", "rivpar.nc")),
             ("param_channel_set_merit_width", ("rivwth_merit.nc",)),
         ):
             program = self.code_dir / f"{name}.py"
@@ -71,15 +71,31 @@ class ChannelParamsWrapperTests(unittest.TestCase):
             "param_channel_calc_outclm.py", "param_channel_calc_rivwth.py",
             "param_channel_set_merit_width.py",
         ])
-        self.assertEqual(records[0][2:], ["cdf", "mat", "diminfo_test-1deg.txt",
-                                          str(self.root / "map" / "data" / "ELSE_GPCC_clm-1981-2010.nc"),
-                                          "--map-format", "netcdf", ""])
-        self.assertEqual(records[1][2:], ["cdf", "diminfo_test-1deg.txt", "0.1", "0.50",
-                                          "0.00", "1.0", "2.50", "0.60", "0.00", "5.0",
-                                          "--map-format", "netcdf", ""])
-        self.assertEqual(records[2][2:], ["diminfo_test-1deg.txt", "--map-format", "netcdf", ""])
+        self.assertEqual(records[0][2:], ["diminfo_test-1deg.txt",
+                                          str(self.root / "map" / "data" / "ELSE_GPCC_clm-1981-2010.nc"), ""])
+        self.assertEqual(records[1][2:], ["diminfo_test-1deg.txt", "0.1", "0.50", "0.00", "1.0",
+                                          "2.50", "0.60", "0.00", "5.0", ""])
+        self.assertEqual(records[2][2:], ["diminfo_test-1deg.txt", ""])
+        wrapper_text = self.script.read_text()
+        self.assertIn('PYTHON_CMD="python3"', wrapper_text)
+        self.assertIn('# CaMa-Flood general setting (check CMF root, import shell error checker)', wrapper_text)
+        self.assertIn('# Optional Python CLI flags', wrapper_text)
+        init = [
+            '# CaMa-Flood general setting (check CMF root, import shell error checker)',
+            'PYTHON_CMD="python3"',
+            ': "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"',
+            '. "$CMF_V50_ROOT/tools/code/cmf_check_shell_error.sh"',
+            '',
+            '# ----------------------------------------------------------------------',
+            '# User settings',
+        ]
+        self.assertEqual(wrapper_text.splitlines()[8], 'set -eu')
+        self.assertEqual(wrapper_text.splitlines()[10:17], init)
+        self.assertNotIn('TYPE=', wrapper_text)
+        self.assertNotIn('INTERP=', wrapper_text)
+        self.assertNotIn('MAP_FORMAT=', wrapper_text)
         for name in ("outclm.nc", "rivwth.nc", "rivhgt.nc", "rivman.nc",
-                     "rivhgt_inf.nc", "rivwth_merit.nc"):
+                     "rivhgt_inf.nc", "rivpar.nc", "rivwth_merit.nc"):
             self.assertTrue((self.map_root / name).is_file(), name)
 
     def test_missing_runoff_path_is_passed_to_the_python_program(self) -> None:
@@ -92,7 +108,7 @@ class ChannelParamsWrapperTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         records = [line.split("|") for line in self.calls.read_text().splitlines()]
         self.assertEqual(len(records), 3)
-        self.assertEqual(records[0][5], str(self.root / "map" / "data" / "ELSE_GPCC_clm-1981-2010.nc"))
+        self.assertEqual(records[0][3], str(self.root / "map" / "data" / "ELSE_GPCC_clm-1981-2010.nc"))
 
     def test_unset_cmf_root_fails_before_sourcing_library(self) -> None:
         env = {**os.environ, "CALL_LOG": str(self.calls)}
