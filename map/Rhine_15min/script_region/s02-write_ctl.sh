@@ -1,80 +1,47 @@
 #!/bin/sh
+# Generate GrADS CTLs for the base map and available high-resolution products.
+# Run from this map's script_region/ directory after reviewing regional outputs.
+set -eu
 
-# Generate GrADS CTL files for the base map and high-resolution directories.
-# Run from this script's map-local script_region directory. All data paths are
-# resolved by the shared generator relative to the parent map directory.
+# CaMa-Flood general setting (check CMF root, import shell error checker)
+PYTHON_CMD="python3"
+: "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
+. "$CMF_V50_ROOT/tools/code/cmf_check_shell_error.sh"
 
-usage() {
-  cat <<'EOF'
-Usage: ./s02-write_ctl.sh [--dry-run] [--no-overwrite | --overwrite]
-
-  --dry-run    Validate inputs and list planned CTLs without writing files.
-  --overwrite  Replace existing CTLs (the default).
-  --no-overwrite  Preserve existing CTLs instead of replacing them (default replaces).
-EOF
-}
-
-# These internal flags are set by the command-line options in usage().
-PYTHON_CMD="${PYTHON_CMD:-python3}"
-DRY_RUN=0    # Set to 1 by --dry-run.
-OVERWRITE=1  # Set to 0 by --no-overwrite; existing CTLs are replaced by default.
-for OPTION in "$@"
-do
-  case "$OPTION" in
-    --dry-run) DRY_RUN=1 ;;
-    --overwrite) OVERWRITE=1 ;;
-    --no-overwrite) OVERWRITE=0 ;;
-    -h|--help) usage; exit 0 ;;
-    *) usage >&2; exit 2 ;;
-  esac
+# ----------------------------------------------------------------------
+# User settings
+# ----------------------------------------------------------------------
+DRY_RUN=0        # Set to 1 to validate and list planned CTLs without writing.
+OVERWRITE=1      # Set to 0 to preserve existing CTLs.
+for OPTION in "$@"; do
+    case "$OPTION" in
+        --dry-run) DRY_RUN=1 ;;
+        --overwrite) OVERWRITE=1 ;;
+        --no-overwrite) OVERWRITE=0 ;;
+        -h|--help)
+            printf 'Usage: ./%s [--dry-run] [--no-overwrite]\n' "${0##*/}"
+            exit 0 ;;
+        *) printf 'Unknown option: %s\n' "$OPTION" >&2; exit 2 ;;
+    esac
 done
 
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
 # ----------------------------------------------------------------------
+CODE_DIR="$CMF_V50_ROOT/map/tools/code"
+cmf_check_init "Generate Binary GrADS CTL files"
 
-# Like s01, keep the map-local script directory as the working directory.
-# Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
-SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd) || exit 1
-cd "$SCRIPT_DIR" || exit 1
-
-GENERATOR="../../tools/code/generate_ctl.py"
-if [ ! -f "$GENERATOR" ]; then
-  printf '\n[ERROR] Missing shared CTL generator: %s\n' "$GENERATOR" >&2
-  exit 1
-fi
-
-STATUS=0
-# set -- rebuilds the argument list passed to each generator invocation.
 set --
 [ "$DRY_RUN" -eq 0 ] || set -- "$@" --dry-run
 [ "$OVERWRITE" -eq 1 ] || set -- "$@" --no-overwrite
 
-# The copied params.txt in binary/ defines the base-grid Binary compatibility set.
-printf '\n==================================================\n'
-printf '[STEP 1/2] Generate CTLs for the base map\n'
-printf '==================================================\n\n'
-"$PYTHON_CMD" "$GENERATOR" --map-dir ../binary "$@" || STATUS=1
-printf '\n'
-
-# Binary resolution directories carry their location.txt and generated CTLs.
-for LOCATION in ../binary/*/location.txt
-do
-  [ -f "$LOCATION" ] || continue
-  # Remove the /location.txt suffix to get the high-resolution map directory.
-  MAP_DIR=${LOCATION%/location.txt}
-  printf '\n==================================================\n'
-  printf '[STEP 2/2] Generate CTLs for high-resolution map %s\n' "$MAP_DIR"
-  printf '==================================================\n\n'
-  "$PYTHON_CMD" "$GENERATOR" --map-dir "$MAP_DIR" "$@" || STATUS=1
-  printf '\n'
+cmf_check_step 1 1 "Generate CTLs for the base and available high-resolution maps"
+"$PYTHON_CMD" "$CODE_DIR/generate_ctl.py" --map-dir ../binary "$@"
+for LOCATION in ../binary/*/location.txt; do
+    [ -f "$LOCATION" ] || continue
+    printf 'Generating CTLs for %s\n' "${LOCATION%/location.txt}"
+    "$PYTHON_CMD" "$CODE_DIR/generate_ctl.py" --map-dir "${LOCATION%/location.txt}" "$@"
 done
+cmf_check_success
 
-if [ "$STATUS" -eq 0 ]; then
-  printf '\n==================================================\n'
-  # ${0##*/} prints only this script's filename in the success message.
-  printf '[SUCCESS] %s\n' "${0##*/}"
-  printf '==================================================\n'
-fi
-
-exit "$STATUS"
+# Optional generator flags: --dry-run, --no-overwrite, --overwrite. Default replaces outputs.

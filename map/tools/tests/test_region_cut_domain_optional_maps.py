@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import struct
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-PROGRAM = ROOT / "map" / "tools" / "code" / "region_cut_domain"
+PROGRAM = ROOT / "map" / "tools" / "code" / "region_cut_domain.py"
 
 
 def _write_records(path: Path, values: list[int | float], code: str) -> None:
@@ -17,9 +18,6 @@ def _write_records(path: Path, values: list[int | float], code: str) -> None:
 
 class OptionalRegionalMapTests(unittest.TestCase):
     def test_catmpx_and_class_are_cropped_when_present_and_omitted_when_absent(self) -> None:
-        if not PROGRAM.is_file():
-            self.skipTest("build map/tools/code/region_cut_domain first")
-
         for include_optional in (True, False):
             with self.subTest(include_optional=include_optional), tempfile.TemporaryDirectory(
                 prefix="cmf-region-optional-"
@@ -45,6 +43,10 @@ class OptionalRegionalMapTests(unittest.TestCase):
                     _write_records(source / f"{name}.bin", [float(i) for i in range(cells)], "f")
                 _write_records(source / "fldhgt.bin", [float(i) for i in range(2 * cells)], "f")
                 _write_records(source / "lonlat.bin", [float(i) for i in range(2 * cells)], "f")
+                binary = source / "binary"
+                binary.mkdir()
+                for path in source.glob("*.bin"):
+                    path.rename(binary / path.name)
 
                 expected_catmpx = [102, 103, 202, 203]
                 expected_class = [12, 13, 22, 23]
@@ -53,9 +55,13 @@ class OptionalRegionalMapTests(unittest.TestCase):
                     classmap = [10 * y + x for y in range(1, 4) for x in range(1, 5)]
                     _write_records(source / "catmpx.bin", catmpx, "i")
                     _write_records(source / "class.bin", classmap, "i")
+                    _write_records(binary / "catmpx.bin", catmpx, "i")
+                    _write_records(binary / "class.bin", classmap, "i")
 
                 result = subprocess.run(
-                    [str(PROGRAM)], cwd=work, text=True, capture_output=True, check=False
+                    [sys.executable, str(PROGRAM), "--map-dir", "../source", "--output-dir", "..",
+                     "--map-format", "binary"],
+                    cwd=work, text=True, capture_output=True, check=False
                 )
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 if include_optional:
