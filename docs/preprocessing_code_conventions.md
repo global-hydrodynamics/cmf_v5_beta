@@ -98,9 +98,18 @@ Give standalone modules a short purpose docstring. Use cohesive functions and
 necessary type hints/docstrings to expose units, array dimension order, dtype,
 missing-value behavior and ownership of I/O. Document automatic masking/scaling
 or raw-bit handling where it affects the tool contract; do not change that
-behavior during readability work. Keep existing dependencies, CLI arguments
-and errors. Avoid trivial helpers, duplicate transformations and framework-like
-abstractions that obscure the data path.
+behavior during readability work. Avoid trivial helpers, duplicate
+transformations and framework-like abstractions that obscure the data path.
+
+For preprocessing CLIs, normally use positional arguments for required core
+inputs and essential parameters that are always supplied; keep their order
+stable and documented. Use lowercase, hyphen-separated named options for
+optional behavior and parameters with defaults. Prefer boolean flags such as
+`--check-map` with `action="store_true"` over optional positional keywords.
+Avoid excessive positional arguments when their meaning becomes difficult to
+distinguish. Apply this convention when creating or refactoring a tool; it does
+not require immediate repository-wide migration. Preserve numerical behavior
+when modernizing an interface.
 
 ### Shell
 
@@ -110,6 +119,22 @@ directory, program calls and meaningful completion/error summaries. Keep the
 `User settings` section near the beginning, use explicit literal assignments,
 and retain environment fallbacks only for documented intentional interfaces.
 
+For every newly written or refactored map-preprocessing workflow, check
+`CMF_V50_ROOT` immediately after `set -eu` and source the shared Shell error
+library immediately after that check:
+
+```sh
+: "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
+. "$CMF_V50_ROOT/tools/code/cmf_check_shell_error.sh"
+```
+
+Do not use the obsolete `CMF5_ROOT` or guess the repository root from a
+relative path. Use `cmf_check_init`, `cmf_check_step` and `cmf_check_success`
+instead of inline traps or duplicated progress banners. Locate shared map
+programs with `CODE_DIR="$CMF_V50_ROOT/map/tools/code"`; keep map-specific
+paths relative to the selected map directory. Apply this incrementally as
+individual workflows are refactored, not as a repository-wide cleanup.
+
 Product Shells own dataset/region/period/time-resolution/format settings.
 Download and Convert Shells receive explicit arguments and orchestrate the
 corresponding Python programs. Map wrappers select configuration and sequence
@@ -118,6 +143,23 @@ diagnostics belong to Fortran/Python, not duplicate Shell implementations.
 Keep only the command parsing and job/log control required by the existing
 interface; do not add new parsers, fallback paths, nested helpers or log chatter
 for hypothetical cases. Preserve existing CWD/explicit external-map conventions.
+
+Make the invoked program recognizable at its command site. A shared directory
+variable such as `CODE_DIR` is useful, but avoid separate `EXEC_*` variables
+that hide the program name; prefer `"$PYTHON_CMD" "$CODE_DIR/program.py" ...`
+directly. Do not add preflight `[ -f ]` checks for an explicitly invoked
+program unless the Shell must select or prepare it; let the command fail and
+use the workflow's normal error reporting.
+
+For new or readability-refactored map wrappers, show the standard settings as
+simple values such as `PYTHON_CMD=python3` and `MAP_FORMAT=netcdf`. Keep
+legacy-only alternatives (for example, Binary map input) separate at the end
+of the settings section and label when they apply. Retain environment overrides
+only when they are an intentional, documented interface. Load required shared
+Shell libraries near the start, with each required environment-variable check
+in the calling script immediately before the source command. For paths, use
+the repository root for centrally maintained shared data and the map root for
+map-specific data; keep that ownership clear in the setting comment.
 
 ## Component data contracts to keep visible
 

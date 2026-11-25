@@ -21,6 +21,12 @@ class WorkflowMessageTests(unittest.TestCase):
         self.code_dir = self.root / "map" / "tools" / "code"
         self.script_dir.mkdir(parents=True)
         self.code_dir.mkdir(parents=True)
+        shell_library_dir = self.root / "tools" / "code"
+        shell_library_dir.mkdir(parents=True)
+        shutil.copy2(
+            ROOT / "tools" / "code" / "cmf_check_shell_error.sh",
+            shell_library_dir / "cmf_check_shell_error.sh",
+        )
         (self.map_root / "1min").mkdir()
         (self.map_root / "1min" / "location.txt").write_text("fixture\n", encoding="ascii")
         self.log = self.root / "calls.txt"
@@ -62,7 +68,12 @@ class WorkflowMessageTests(unittest.TestCase):
         self, script: Path, fail_match: str | None = None, cwd: Path | None = None,
         args: tuple[str, ...] = (),
     ) -> subprocess.CompletedProcess[str]:
-        env = {**os.environ, "MOCK_LOG": str(self.log), "PATH": f"{self.code_dir}:{os.environ['PATH']}"}
+        env = {
+            **os.environ,
+            "CMF_V50_ROOT": str(self.root),
+            "MOCK_LOG": str(self.log),
+            "PATH": f"{self.code_dir}:{os.environ['PATH']}",
+        }
         if fail_match:
             env["FAIL_MATCH"] = fail_match
             env["FAIL_STATUS"] = "23"
@@ -116,21 +127,36 @@ class WorkflowMessageTests(unittest.TestCase):
         executables = ("param_bif_set_params", "param_bif_set_basin")
         script = self.install("s02-bifurcation.sh", executables)
         result = self.run_script(script)
-        self.assert_success(result, script.name, success_count=4)
+        self.assert_success(result, script.name)
         self.assertEqual([line.split()[0] for line in self.calls()], [
             "param_bif_set_params", "python3", "param_bif_set_basin",
         ])
 
         for fail_match, step, expected, successes in (
-            ("param_bif_set_params", "Filter bifurcation paths and estimate bifurcation-channel depth", 1, 0),
-            ("python3", "Convert finalized bifurcation CSV to NetCDF", 2, 1),
-            ("param_bif_set_basin:--map-format", "Merge basins connected by bifurcation pathways", 3, 2),
+            ("param_bif_set_params", "Generate finalized bifurcation CSV", 1, 0),
+            ("python3", "Convert finalized bifurcation CSV to NetCDF", 2, 0),
+            ("param_bif_set_basin:--map-format", "Merge basins connected by bifurcation pathways", 3, 0),
         ):
             with self.subTest(fail_match=fail_match):
                 self.log.unlink(missing_ok=True)
                 result = self.run_script(script, fail_match)
                 self.assert_failure(result, script.name, step, expected_success_count=successes)
                 self.assertEqual(len(self.calls()), expected)
+
+    def test_s02_forwards_configured_check_map_option(self) -> None:
+        script = self.install("s02-bifurcation.sh", (
+            "param_bif_set_params", "param_bif_set_basin",
+        ))
+        script.write_text(
+            script.read_text(encoding="utf-8").replace('CHECK_MAP=""', 'CHECK_MAP="--check-map"'),
+            encoding="utf-8",
+        )
+        result = self.run_script(script)
+        self.assert_success(result, script.name)
+        calls = [line.split() for line in self.calls()]
+        self.assertIn("--check-map", calls[0])
+        self.assertNotIn("--check-map", calls[1])
+        self.assertIn("--check-map", calls[2])
 
     def test_s03_success_and_program_failure(self) -> None:
         script = self.install("s03-generate_inpmat.sh", ("param_inpmat_generate",))

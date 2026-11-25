@@ -14,7 +14,11 @@ from param_mpi_set_basin import diagnostic, merge_basins
 
 def main():
     p = parser(__doc__)
-    p.add_argument('check',nargs='?',choices=['check_map'])
+    p.add_argument(
+        '--check-map',
+        action='store_true',
+        help='Generate optional diagnostic maps.',
+    )
     args = p.parse_args()
     grid = Grid.read(args.map_dir / 'params.txt')
     # The reference also requires nextxy, even though merging uses path endpoints.
@@ -25,7 +29,7 @@ def main():
     out = output_root(args)
     write_raster(out/'bifbsn.bin',basin,'<i4',grid=grid)
     write_raster(out/'bifcol.bin',color_map(basin,grid.west,grid.east),'<i4',grid=grid)
-    if args.check:
+    if args.check_map:
         write_raster(out/'check_bif_bsnmod.bin',diagnostic(original,basin,paths),'<i4',grid=grid)
 
 

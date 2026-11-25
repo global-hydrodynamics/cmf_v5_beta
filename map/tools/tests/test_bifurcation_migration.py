@@ -11,6 +11,7 @@ import os
 import csv
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -42,7 +43,31 @@ def run(command: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(command, cwd=cwd, text=True, capture_output=True, check=False)
 
 
+def install_shell_library(root: Path) -> None:
+    library_dir = root / "tools" / "code"
+    library_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(ROOT / "tools" / "code" / "cmf_check_shell_error.sh",
+                 library_dir / "cmf_check_shell_error.sh")
+
+
 class S02InputGuardTests(unittest.TestCase):
+    def test_python_tools_use_named_check_map_option(self) -> None:
+        tools = (
+            ("param_bif_set_params.py", ["rivhgt.bin", "bifprm.csv", "5", "diminfo.txt"]),
+            ("param_bif_set_basin.py", []),
+        )
+        for tool, positional in tools:
+            with self.subTest(tool=tool):
+                help_result = run([sys.executable, str(CODE_SOURCE / tool), "--help"], cwd=ROOT)
+                self.assertEqual(help_result.returncode, 0, help_result.stdout + help_result.stderr)
+                self.assertIn("--check-map", help_result.stdout)
+                legacy = run(
+                    [sys.executable, str(CODE_SOURCE / tool), *positional, "check_map"],
+                    cwd=ROOT,
+                )
+                self.assertEqual(legacy.returncode, 2)
+                self.assertIn("unrecognized arguments", legacy.stderr)
+
     def test_missing_channel_depth_is_passed_to_the_program(self) -> None:
         with tempfile.TemporaryDirectory(prefix="cmf-s02-guard-") as temp:
             root = Path(temp)
@@ -53,9 +78,8 @@ class S02InputGuardTests(unittest.TestCase):
             script_dir.mkdir(parents=True)
             code_dir.mkdir(parents=True)
             outside.mkdir()
+            install_shell_library(root)
 
-            for name in MAP_INPUTS:
-                shutil.copy2(SAMPLE / name, map_root / name)
             for name in ("param_bif_set_params", "param_bif_set_basin"):
                 executable = code_dir / f"{name}.py"
                 executable.write_text("print('parameter program invoked')\nraise SystemExit(99)\n", encoding="ascii")
@@ -63,7 +87,7 @@ class S02InputGuardTests(unittest.TestCase):
             shutil.copy2(S02_TEMPLATE, script)
             script.chmod(0o755)
 
-            env = dict(os.environ, CMF5_ROOT=str(root))
+            env = dict(os.environ, CMF_V50_ROOT=str(root))
             result = subprocess.run([str(script)], cwd=outside, env=env, text=True, capture_output=True)
 
             self.assertNotEqual(result.returncode, 0, result.stdout)
@@ -71,21 +95,43 @@ class S02InputGuardTests(unittest.TestCase):
             for output in OUTPUTS:
                 self.assertFalse((map_root / output).exists(), output)
 
-    def test_unknown_check_option_is_rejected(self) -> None:
+    def test_check_map_is_configured_in_shell_and_forwarded_to_python(self) -> None:
         with tempfile.TemporaryDirectory(prefix="cmf-s02-usage-") as temp:
             root = Path(temp)
             map_root = root / "map" / "sample"
             script_dir = map_root / "script_params"
             code_dir = root / "map" / "tools" / "code"
+            bin_dir = root / "bin"
             script_dir.mkdir(parents=True)
             code_dir.mkdir(parents=True)
+            bin_dir.mkdir()
+            install_shell_library(root)
             script = script_dir / "s02-bifurcation.sh"
             shutil.copy2(S02_TEMPLATE, script)
+            script.write_text(
+                script.read_text(encoding="utf-8").replace('CHECK_MAP=""', 'CHECK_MAP="--check-map"'),
+                encoding="utf-8",
+            )
             script.chmod(0o755)
+            log = root / "calls.txt"
+            python = bin_dir / "python3"
+            python.write_text(
+                "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$MOCK_LOG\"\n",
+                encoding="utf-8",
+            )
+            python.chmod(0o755)
 
-            result = run([str(script), "unknown"], cwd=root)
-            self.assertNotEqual(result.returncode, 0)
-            self.assertIn("Usage:", result.stderr)
+            result = subprocess.run(
+                [str(script)], cwd=root,
+                env=dict(os.environ, CMF_V50_ROOT=str(root), MOCK_LOG=str(log),
+                         PATH=f"{bin_dir}:{os.environ['PATH']}"),
+                text=True, capture_output=True, check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            calls = log.read_text(encoding="utf-8").splitlines()
+            self.assertIn("--check-map", calls[0])
+            self.assertNotIn("--check-map", calls[1])
+            self.assertIn("--check-map", calls[2])
 
 
 class BifurcationMigrationTests(unittest.TestCase):
@@ -136,6 +182,7 @@ class BifurcationMigrationTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix="cmf-bif-map-")
         self.root = Path(self.temp.name)
         (self.root / "outside").mkdir()
+        install_shell_library(self.root)
         (self.root / "map" / "tools").mkdir(parents=True)
         (self.root / "map" / "tools" / "code").symlink_to(self.code_dir, target_is_directory=True)
 
@@ -160,7 +207,18 @@ class BifurcationMigrationTests(unittest.TestCase):
 
     def run_s02(self, map_root: Path, *args: str) -> subprocess.CompletedProcess[str]:
         script = map_root / "script_params" / "s02-bifurcation.sh"
-        return run([str(script), *args], cwd=self.root / "outside")
+        return subprocess.run(
+            [str(script), *args], cwd=self.root / "outside",
+            env=dict(os.environ, CMF_V50_ROOT=str(self.root)),
+            text=True, capture_output=True, check=False,
+        )
+
+    def enable_check_map(self, map_root: Path) -> None:
+        script = map_root / "script_params" / "s02-bifurcation.sh"
+        script.write_text(
+            script.read_text(encoding="utf-8").replace('CHECK_MAP=""', 'CHECK_MAP="--check-map"'),
+            encoding="utf-8",
+        )
 
     def test_basin_program_rejects_unknown_argument(self) -> None:
         result = run([str(self.code_dir / "param_bif_set_basin"), "unknown"],
@@ -201,7 +259,8 @@ class BifurcationMigrationTests(unittest.TestCase):
         legacy_basin = run([str(self.legacy_dir / "set_bif_basin")], cwd=legacy / "src_param")
         self.assertEqual(legacy_basin.returncode, 0, legacy_basin.stdout + legacy_basin.stderr)
 
-        optional = self.run_s02(v5, "check_map")
+        self.enable_check_map(v5)
+        optional = self.run_s02(v5)
         self.assertEqual(optional.returncode, 0, optional.stdout + optional.stderr)
         for name in ("bifbsn.bin", "bifcol.bin"):
             self.assertEqual((v5 / name).read_bytes(), (legacy / name).read_bytes(), name)
@@ -265,8 +324,11 @@ class BifurcationMigrationTests(unittest.TestCase):
         data_dir.mkdir()
         shutil.copy2(runoff, data_dir / "ELSE_GPCC_clm-1981-2010.one")
 
-        s01 = run([str(map_root / "script_params" / "s01-channel_params.sh")],
-                  cwd=self.root / "outside")
+        s01 = subprocess.run(
+            [str(map_root / "script_params" / "s01-channel_params.sh")],
+            cwd=self.root / "outside", env=dict(os.environ, CMF_V50_ROOT=str(self.root)),
+            text=True, capture_output=True, check=False,
+        )
         self.assertEqual(s01.returncode, 0, s01.stdout + s01.stderr)
         depth = map_root / "rivhgt.bin"
         self.assertTrue(depth.is_file(), "s01 did not produce rivhgt.bin")

@@ -187,9 +187,9 @@ def prepare(case, name):
     elif name == 'analysis_river_node_latlon': args = ['90', '110', '5', '35']
     elif name == 'analysis_river_point_info': args = ['xy', '62', '93']
     elif name == 'param_channel_set_merit_width': args = [str(f/'diminfo_test-1deg.txt')]; fcwd = f
-    elif name == 'param_bif_set_basin': args = ['check_map']
+    elif name == 'param_bif_set_basin': args = ['--check-map']
     elif name == 'param_bif_set_params':
-        args = [str(f/'rivhgt.bin'), 'trial.csv', '10', str(f/'diminfo_test-1deg.txt'), 'check_map']; fcwd = f
+        args = [str(f/'rivhgt.bin'), 'trial.csv', '10', str(f/'diminfo_test-1deg.txt'), '--check-map']; fcwd = f
     elif name == 'analysis_check_mpi_bifurcation': args = [str(f/'mpireg-4.bin'), '--csv', 'dropped.csv']; fcwd = f
     elif name == 'param_channel_calc_rivwth':
         args = ['bin', str(f/'diminfo_test-1deg.txt')]; fcwd = f

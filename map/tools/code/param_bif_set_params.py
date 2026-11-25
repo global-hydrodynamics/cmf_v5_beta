@@ -20,7 +20,11 @@ def main():
     p.add_argument('output',type=Path)
     p.add_argument('layers',type=int)
     p.add_argument('diminfo',nargs='?',type=Path,default=Path('diminfo_test-1deg.txt'))
-    p.add_argument('check',nargs='?',choices=['check_map'])
+    p.add_argument(
+        '--check-map',
+        action='store_true',
+        help='Generate optional diagnostic maps.',
+    )
     args = p.parse_args()
     if not 1 <= args.layers <= 10:
         p.error('BIFLAYER must be 1..10')
@@ -60,7 +64,7 @@ def main():
             ibsn,jbsn=sorted((int(basin[a]),int(basin[b])))
             real_fields=[f'{x:.2f}' for x in [values[0],values[1],estimate,*widths]]
             writer.writerow([number,ix,iy,jx,jy,*real_fields,f'{values[-2]:.3f}',f'{values[-1]:.3f}',f'{end[1]:.16e}',f'{end[0]:.16e}',ibsn,jbsn])
-    if args.check:
+    if args.check_map:
         write_raster(output_root(args)/'check_bif_dphwth.bin',diagnostic,'<f4',
                      grid=Grid.from_file(args.map_dir/'params.txt'))
 
