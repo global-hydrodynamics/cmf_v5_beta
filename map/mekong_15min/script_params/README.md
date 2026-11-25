@@ -23,10 +23,11 @@ The maintainer-approved organization follows the preferred map-preparation seque
 | `s03-generate_inpmat.sh` | User-configured runoff-grid mapping matrix. | Implemented |
 | `s04-mpi_map_setup.sh` | MPI basin aggregation and coloring, region assignment, and default-N connectivity report; optional pre-partition basin diagnostic with `check_map`. | Implemented |
 | `s05-permanent_water.sh` | Aggregate high-resolution permanent-water area by unit catchment. | Implemented |
-| `s99-write_ctl.sh` | Final optional step: generate GrADS CTLs for existing registered base-map and high-resolution binaries. | Implemented |
 | `t01-alloc_flow_gauge.sh`, `t02-alloc_dams.sh`, `t03-alloc_level_gauge.sh` | Flow-gauge, reservoir, and water-level-gauge mapping from MERIT Hydro to CaMa-Flood catchments. | Implemented |
 
 Independent diagnostics belong in `script_analysis/`. No `script_allocate/` directory is part of the approved design.
+
+CTL generation is separate from this NetCDF-first `script_params/` workflow; NetCDF products do not need GrADS CTLs. For optional legacy Binary visualization, see the [map-tools CTL guide](../../tools/README.md#grads-ctl-files).
 
 ## Channel parameter workflow
 
@@ -107,14 +108,6 @@ Run the wrapper from any directory after copying it into the target map:
 ```
 
 The programs read standard map files `params.txt`, `basin.nc`, `bifprm.csv`, and `nextxy.nc`; no package-only global map is required. Basin aggregation and region assignment run from map-local `script_params/`, while the connectivity analysis runs from the map root. A successful map-generation run does not establish scientific validity of the partition or of a subsequent simulation.
-
-## GrADS CTL generation
-
-`s99-write_ctl.sh` is numbered last because it describes products after map preparation; it does not create or modify map binaries.
-
-Copy [`s99-write_ctl.sh`](s99-write_ctl.sh) into a map-local `script_params/` directory and run it there. It is an optional legacy-format step: the shared `generate_ctl.py` scans registered `.bin` products under `binary/` and `binary/<resolution>/`, using the copied `params.txt` and each `location.txt`. CTLs are created only when dimensions and Binary sizes validate against the corresponding geometry metadata.
-
-The wrapper supports `--dry-run` and `--no-overwrite`; existing CTLs are replaced by default. It does not create, modify, or infer map data. For the optional MPI basin diagnostic, a CTL can be generated for `binary/check_bif_bsnmod_mpi.bin` when that Binary product exists; the registry defines its two variables in record order. See the [map-tools guide](../../tools/README.md#grads-ctl-files) for registry, missing-value, and format details.
 
 ## General-purpose runoff input matrix
 
