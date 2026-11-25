@@ -1,6 +1,6 @@
 #!/bin/sh
 # Create an editable list of registered base-map Binary files for conversion.
-# Inputs: <map>/params.txt, variable_table/map_variables.csv, and map-root .bin files.
+# Inputs: <map>/params.txt, variable_table/map_variables.csv, and <map>/binary/*.bin.
 # Output: bin2nc_list.txt in the current working directory.
 set -eu
 

@@ -1,0 +1,11 @@
+        80     !! nXX
+       120     !! nYY
+        10     !! floodplain layer
+      3600     !! input nXX 
+      1801     !! input nYY 
+        31     !! input num
+inpmat_ERA5land_global.nc
+      90.000     !! west  edge
+     110.000     !! east  edge
+      35.000     !! north edge
+       5.000     !! south edge

@@ -93,7 +93,7 @@ NETCDF_DIR="$MAP_DIR"
 
 if [ ! -f "$LIST_FILE" ]; then
     printf 'ERROR: conversion list not found: %s\n' "$LIST_FILE" >&2
-    printf 'Run s01-list_binary.sh first.\n' >&2
+    printf 'Run s11-list_bin.sh first.\n' >&2
     exit 1
 fi
 

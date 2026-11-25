@@ -15,6 +15,7 @@ EOF
 }
 
 # These internal flags are set by the command-line options in usage().
+PYTHON_CMD="${PYTHON_CMD:-python3}"
 DRY_RUN=0    # Set to 1 by --dry-run.
 OVERWRITE=1  # Set to 0 by --no-overwrite; existing CTLs are replaced by default.
 for OPTION in "$@"
@@ -47,17 +48,17 @@ STATUS=0
 # set -- rebuilds the argument list passed to each generator invocation.
 set --
 [ "$DRY_RUN" -eq 0 ] || set -- "$@" --dry-run
-[ "$OVERWRITE" -eq 0 ] || set -- "$@" --overwrite
+[ "$OVERWRITE" -eq 1 ] || set -- "$@" --no-overwrite
 
-# params.txt in the parent directory defines the base-resolution grid.
+# The copied params.txt in binary/ defines the base-grid Binary compatibility set.
 printf '\n==================================================\n'
 printf '[STEP 1/2] Generate CTLs for the base map\n'
 printf '==================================================\n\n'
-python3 "$GENERATOR" --map-dir .. "$@" || STATUS=1
+"$PYTHON_CMD" "$GENERATOR" --map-dir ../binary "$@" || STATUS=1
 printf '\n'
 
-# Each high-resolution directory provides its own grid through location.txt.
-for LOCATION in ../*/location.txt
+# Binary resolution directories carry their location.txt and generated CTLs.
+for LOCATION in ../binary/*/location.txt
 do
   [ -f "$LOCATION" ] || continue
   # Remove the /location.txt suffix to get the high-resolution map directory.
@@ -65,7 +66,7 @@ do
   printf '\n==================================================\n'
   printf '[STEP 2/2] Generate CTLs for high-resolution map %s\n' "$MAP_DIR"
   printf '==================================================\n\n'
-  python3 "$GENERATOR" --map-dir "$MAP_DIR" "$@" || STATUS=1
+  "$PYTHON_CMD" "$GENERATOR" --map-dir "$MAP_DIR" "$@" || STATUS=1
   printf '\n'
 done
 

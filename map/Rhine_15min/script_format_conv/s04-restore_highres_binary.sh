@@ -5,9 +5,9 @@ set -eu
 
 # User settings: select available high-resolution directories and variables.
 # Choose one or more available high-resolution map directories.
-# Each <HIRES>_nc/ must contain location.txt and registered NetCDF tile files.
+# Each <HIRES>/ must contain location.txt and registered NetCDF tile files.
 #HIRES="1min 15sec 3sec"
-HIRES=""  # Empty proposes the coarsest available *_nc directory; explicit lists remain supported.
+HIRES=""  # Empty proposes the coarsest available NetCDF resolution; explicit lists remain supported.
 
 # Choose registered file stems present in the selected NetCDF directories.
 # Options shown here are high-resolution registry products; a map need not
@@ -107,17 +107,17 @@ fi
 # Prefer the coarsest distributed NetCDF grid; Python validates its contents.
 AVAILABLE=""
 for tag in 1min 30sec 15sec 5sec 3sec 1sec; do
-    if [ -d "$MAP_DIR/${tag}_nc" ]; then
+    if [ -f "$MAP_DIR/$tag/location.txt" ]; then
         AVAILABLE="${AVAILABLE}${AVAILABLE:+ }$tag"
         if [ -z "$HIRES" ]; then HIRES=$tag; fi
     fi
 done
 if [ -z "$HIRES" ]; then
-    printf 'ERROR: No high-resolution NetCDF directory (*_nc) found in %s.\n' "$MAP_DIR" >&2
+    printf 'ERROR: No high-resolution NetCDF directory with location.txt found in %s.\n' "$MAP_DIR" >&2
     exit 1
 fi
 
-printf 'Map: %s\nSelected NetCDF resolutions (*_nc): %s\n' "$MAP_DIR" "$HIRES"
+printf 'Map: %s\nSelected NetCDF resolutions: %s\n' "$MAP_DIR" "$HIRES"
 while :; do
     printf 'Use this high-resolution map? [Y/n]: '
     IFS= read -r answer

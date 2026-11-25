@@ -1,17 +1,30 @@
 #!/bin/sh
-# Generate the Mekong map-to-runoff matrix for the 1-degree runoff sample.
+# Generate a map-to-runoff matrix for a regular runoff grid.
+# Copy to <map>/script_params/, edit the grid settings, and run from any CWD.
 #
-# Inputs: params.txt and 1min/location.txt with 1min.catmxy.bin.
-# Outputs: diminfo_repo-mek_1deg.txt and inpmat_repo-mek_1deg.bin in the map root.
+# Inputs: params.txt and <HIRES_TAG>/location.txt with each area's catmxy.bin.
+# Outputs: diminfo_<ROFFTAG>.txt and inpmat_<ROFFTAG>.bin in the map root.
 set -eu
 
 # Paths
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+PYTHON_CMD="${PYTHON_CMD:-python3}"
+if [ -n "${CMF5_ROOT:-}" ]; then
+    CODE_DIR="$CMF5_ROOT/map/tools/code"
+else
+    CODE_DIR="$SCRIPT_DIR/../../tools/code"
+fi
+if [ ! -d "$CODE_DIR" ]; then
+    printf '[ERROR] Shared Python tools not found: %s (set CMF5_ROOT to the repository root)\n' "$CODE_DIR" >&2
+    exit 1
+fi
 MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
-CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 
-# Runoff grid and output tag; these describe runoff data, not the river map grid.
+# Runoff input grid: ERA5-Land global 0.1-degree grid, independent of the model map.
+# ERA5land_global labels the spatial grid, not the repo-ERA5land-glb_2day period.
+# Reuse this grid tag for longer ERA5-Land series with identical coordinates/order;
+# generate a separate matrix in each target CaMa-Flood map.
 ROFFTAG="repo-mek_1deg"  # Runoff sample ID used in the paired output filenames.
 GRSIZEIN=1                # Runoff grid-cell size (degrees).
 WESTIN=90                 # Western boundary (degrees longitude).
@@ -19,9 +32,8 @@ EASTIN=110                # Eastern boundary (degrees longitude).
 NORTHIN=35                # Northern boundary (degrees latitude).
 SOUTHIN=5                 # Southern boundary (degrees latitude).
 OLAT="NtoS"               # Runoff latitude rows are ordered north to south.
-
 # High-resolution map selection is independent of the runoff-grid tag.
-HIRES_TAG="1min"  # High-resolution source used to map runoff cells to river catchments.
+HIRES_TAG="1min"  # Empty proposes the coarsest installed NetCDF grid; confirm before running.
 
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
@@ -51,34 +63,55 @@ trap 'exit 143' TERM
 # End of error handling.
 # ----------------------------------------------------------------------
 
-# Select the map-resolution input automatically when HIRES_TAG is not set.
-if [ -z "$HIRES_TAG" ]; then
-    if [ -f "$MAP_DIR/1min/location.txt" ]; then
-        HIRES_TAG=1min
-    elif [ -f "$MAP_DIR/15sec/location.txt" ]; then
-        HIRES_TAG=15sec
-    else
-        echo "Set HIRES_TAG to an available map directory (expected 1min or 15sec)." >&2
-        exit 1
+# Prefer the coarsest installed NetCDF grid; the data consumer validates its contents.
+AVAILABLE=""
+for tag in 1min 30sec 15sec 5sec 3sec 1sec; do
+    if [ -d "$MAP_DIR/$tag" ]; then
+        AVAILABLE="${AVAILABLE}${AVAILABLE:+ }$tag"
+        if [ -z "$HIRES_TAG" ]; then HIRES_TAG=$tag; fi
     fi
+done
+if [ -z "$HIRES_TAG" ]; then
+    printf 'ERROR: No NetCDF high-resolution directory found in %s.\n' "$MAP_DIR" >&2
+    exit 1
 fi
+
+printf 'Selected high-resolution map: %s/%s\n' "$MAP_DIR" "$HIRES_TAG"
+while :; do
+    printf 'Use this high-resolution map? [Y/n]: '
+    IFS= read -r answer
+    case "$answer" in
+        ""|y|Y|yes|Yes|YES) break ;;
+        n|N|no|No|NO)
+            while :; do
+                printf 'Available resolutions: %s\nChoose resolution: ' "$AVAILABLE"
+                IFS= read -r chosen
+                for tag in $AVAILABLE; do
+                    if [ "$chosen" = "$tag" ]; then
+                        HIRES_TAG=$chosen
+                        break 2
+                    fi
+                done
+                printf 'Choose one of the listed resolutions.\n'
+            done
+            break
+            ;;
+        *) printf 'Please answer Yes or No (Enter = Yes).\n' ;;
+    esac
+done
+printf 'Using high-resolution map: %s/%s\n' "$MAP_DIR" "$HIRES_TAG"
 
 DIMINFO="diminfo_${ROFFTAG}.txt"
 INPMAT="inpmat_${ROFFTAG}.bin"
 
-if [ -e "$MAP_DIR/$DIMINFO" ] || [ -e "$MAP_DIR/$INPMAT" ]; then
-    printf 'ERROR: refusing to overwrite existing %s or %s\n' "$DIMINFO" "$INPMAT" >&2
-    exit 1
-fi
-
-EXEC_INPMAT="$CODE_DIR/param_inpmat_generate"
+EXEC_INPMAT="$CODE_DIR/param_inpmat_generate.py"
 
 # For each river cell, find its runoff-grid source cell and write the matrix and descriptor.
 cd "$MAP_DIR"
 
 STEP="Map river cells to the configured runoff grid"
 printf '\n==================================================\n[STEP 1/1] Generate runoff input matrix\n==================================================\n\n'
-"$EXEC_INPMAT" "$HIRES_TAG" "$GRSIZEIN" "$WESTIN" "$EASTIN" \
+"$PYTHON_CMD" "$EXEC_INPMAT" "$HIRES_TAG" "$GRSIZEIN" "$WESTIN" "$EASTIN" \
     "$NORTHIN" "$SOUTHIN" "$OLAT" "$DIMINFO" "$INPMAT"
 
 printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"
