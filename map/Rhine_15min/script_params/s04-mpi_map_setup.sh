@@ -2,17 +2,27 @@
 # Generate MPI region maps for CaMa-Flood.
 # Copy to <map>/script_params/, edit the settings below, and run from any CWD.
 #
-# Inputs:  params.txt, basin.bin, bifprm.csv, nextxy.bin
-# Outputs: bifcol_mpi.bin; mpireg-N.bin for each MPI count; default connectivity report
-# Optional: ./s04-mpi_map_setup.sh check_map also writes check_bif_bsnmod_mpi.bin
+# Inputs:  params.txt, basin, bifprm.csv, nextxy (NetCDF by default)
+# Outputs: bifcol_mpi.nc; mpireg-N.nc for each MPI count; default connectivity report
+# Optional: ./s04-mpi_map_setup.sh check_map also writes check_bif_bsnmod_mpi.nc
 # Usage:   ./s04-mpi_map_setup.sh [check_map]
 set -eu
 
 # Paths
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+PYTHON_CMD="${PYTHON_CMD:-python3}"
+MAP_FORMAT="${MAP_FORMAT:-netcdf}"  # Set binary only for legacy Binary maps.
+if [ -n "${CMF5_ROOT:-}" ]; then
+    CODE_DIR="$CMF5_ROOT/map/tools/code"
+else
+    CODE_DIR="$SCRIPT_DIR/../../tools/code"
+fi
+if [ ! -d "$CODE_DIR" ]; then
+    printf '[ERROR] Shared Python tools not found: %s (set CMF5_ROOT to the repository root)\n' "$CODE_DIR" >&2
+    exit 1
+fi
 MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
-CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 
 # MPI partition configuration for this map.
 MPIMODE=normal       # Basin merging mode: normal (6%) or MaxMPI (3%).
@@ -51,10 +61,14 @@ trap 'exit 143' TERM
 # ----------------------------------------------------------------------
 
 # Programs (compile these with the shared Makefile before running this script).
-EXEC_SETBASIN_MPI="$CODE_DIR/param_mpi_set_basin"
-EXEC_SETREGION_MPI="$CODE_DIR/param_mpi_set_region"
-EXEC_CHECKBIF="$CODE_DIR/analysis_check_mpi_bifurcation"
-TEMP_BASIN="$MAP_DIR/bifbsn_mpi.tmp"
+EXEC_SETBASIN_MPI="$CODE_DIR/param_mpi_set_basin.py"
+EXEC_SETREGION_MPI="$CODE_DIR/param_mpi_set_region.py"
+EXEC_CHECKBIF="$CODE_DIR/analysis_check_mpi_bifurcation.py"
+if [ "$MAP_FORMAT" = netcdf ]; then
+    TEMP_BASIN="$MAP_DIR/bifbsn_mpi.nc"
+else
+    TEMP_BASIN="$MAP_DIR/binary/bifbsn_mpi.tmp"
+fi
 
 # Both preprocessing programs read map inputs relative to script_params/.
 cd "$SCRIPT_DIR"
@@ -63,9 +77,9 @@ cd "$SCRIPT_DIR"
 STEP="Aggregate basins for MPI mode $MPIMODE"
 printf '\n==================================================\n[STEP 1/3] Aggregate basins for MPI decomposition (%s)\n==================================================\n\n' "$MPIMODE"
 if [ "${1:-}" = "check_map" ]; then
-    "$EXEC_SETBASIN_MPI" "$MPIMODE" check_map
+    "$PYTHON_CMD" "$EXEC_SETBASIN_MPI" "$MPIMODE" check_map --map-format "$MAP_FORMAT"
 else
-    "$EXEC_SETBASIN_MPI" "$MPIMODE"
+    "$PYTHON_CMD" "$EXEC_SETBASIN_MPI" "$MPIMODE" --map-format "$MAP_FORMAT"
 fi
 
 # 2. Assign the merged basins to each requested number of regions.
@@ -73,17 +87,17 @@ fi
 for N in $MPI_COUNTS; do
     STEP="Generate mpireg-$N.bin"
     printf '\n==================================================\n[STEP 2/3] Generate mpireg-%s.bin\n==================================================\n\n' "$N"
-    "$EXEC_SETREGION_MPI" "$N"
+    "$PYTHON_CMD" "$EXEC_SETREGION_MPI" "$N" --map-format "$MAP_FORMAT"
 done
 
 # 3. Analyze bifurcation pathways for the selected default partition.
 STEP="Analyze bifurcation connectivity for mpireg-$DEFAULT_MPI.bin"
 printf '\n==================================================\n[STEP 3/3] Analyze default partition mpireg-%s.bin\n==================================================\n\n' "$DEFAULT_MPI"
-(cd "$MAP_DIR" && "$EXEC_CHECKBIF" "mpireg-$DEFAULT_MPI.bin")
+(cd "$MAP_DIR" && "$PYTHON_CMD" "$EXEC_CHECKBIF" "mpireg-$DEFAULT_MPI.bin" --map-format "$MAP_FORMAT")
 
 # Optional manual visualization and analysis for another partition from the map root.
 echo "To visualize and analyze another partition from the map root:"
-echo "  ../tools/code/analysis_mpi_region_color mpireg-8.bin"
+echo "  ../tools/code/analysis_mpi_region_color.py mpireg-8.bin"
 echo "  ./script_analysis/a05-check_mpi_bifurcation.sh mpireg-8.bin"
 echo "  ./script_analysis/a05-check_mpi_bifurcation.sh mpireg-8.bin --csv dropped_bifurcations.csv"
 

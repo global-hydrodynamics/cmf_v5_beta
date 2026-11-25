@@ -12,6 +12,7 @@ set -eu
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 PYTHON_CMD="${PYTHON_CMD:-python3}"
+MAP_FORMAT="${MAP_FORMAT:-netcdf}"  # Set binary only for legacy Binary maps.
 if [ -n "${CMF5_ROOT:-}" ]; then
     CODE_DIR="$CMF5_ROOT/map/tools/code"
 else
@@ -81,17 +82,17 @@ cd "$MAP_DIR"
 
 STEP="Calculate mean river discharge from annual runoff and the input matrix"
 printf '\n==================================================\n[STEP 1/3] Calculate mean river discharge\n==================================================\n\n'
-"$PYTHON_CMD" "$EXEC_OUTCLM" "$TYPE" "$INTERP" "$DIMINFO" "$CROFBIN"
+"$PYTHON_CMD" "$EXEC_OUTCLM" "$TYPE" "$INTERP" "$DIMINFO" "$CROFBIN" --map-format "$MAP_FORMAT"
 
 # 2. Estimate width, depth, roughness, and the no-floodplain depth field.
 STEP="Estimate channel width, depth, and roughness"
 printf '\n==================================================\n[STEP 2/3] Estimate channel parameters\n==================================================\n\n'
 "$PYTHON_CMD" "$EXEC_RIVWTH" "$TYPE" "$DIMINFO" "$HC" "$HP" "$HO" "$HMIN" \
-    "$WC" "$WP" "$WO" "$WMIN"
+    "$WC" "$WP" "$WO" "$WMIN" --map-format "$MAP_FORMAT"
 
 # 3. Merge MERIT Hydro width estimates with the power-law river widths.
 STEP="Merge power-law channel widths with MERIT Hydro widths"
 printf '\n==================================================\n[STEP 3/3] Merge MERIT Hydro channel widths\n==================================================\n\n'
-"$PYTHON_CMD" "$EXEC_MERIT" "$DIMINFO"
+"$PYTHON_CMD" "$EXEC_MERIT" "$DIMINFO" --map-format "$MAP_FORMAT"
 
 printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"

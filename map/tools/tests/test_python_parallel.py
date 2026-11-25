@@ -13,6 +13,11 @@ from types import SimpleNamespace
 
 import numpy as np
 
+try:
+    from netCDF4 import Dataset
+except ImportError:
+    Dataset = None
+
 ROOT = Path(__file__).resolve().parents[3]
 CODE = ROOT/'map/tools/code'
 LEGACY_FORTRAN = CODE/'legacy_fortran'
@@ -20,6 +25,7 @@ sys.path.insert(0, str(CODE))
 
 from analysis_upbasin import upstream_mask
 from mod_map_color import color_map
+import mod_map_io
 from mod_map_io import Grid, write_raster
 from param_channel_calc_outclm import local_runoff, route
 from param_mpi_set_region import assign_regions
@@ -29,6 +35,64 @@ from map.tools.tests import test_prmwat as water_fixtures
 
 
 class ScientificContractTests(unittest.TestCase):
+    @unittest.skipIf(Dataset is None, 'netCDF4 is optional')
+    def test_single_layered_netcdf_variable_reads_as_requested_records(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary)/'fldhgt.nc'
+            expected = np.arange(12, dtype='f4').reshape(3, 2, 2)
+            with Dataset(path, 'w') as dataset:
+                dataset.createDimension('layer', 3)
+                dataset.createDimension('lat', 2)
+                dataset.createDimension('lon', 2)
+                variable = dataset.createVariable('fldhgt', 'f4', ('layer', 'lat', 'lon'))
+                variable[:] = expected
+            grid = Grid(2, 2, 3, *[np.float32(0)]*5)
+            np.testing.assert_array_equal(grid.raster(path, '<f4', 3), expected)
+
+    def test_netcdf_map_outside_map_dir_keeps_relative_source_location(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            regional_map = root/'regional'
+            source_map = root/'global'
+            regional_map.mkdir()
+            source_map.mkdir()
+            (source_map/'nextxy.nc').touch()
+            previous_format, previous_root = mod_map_io._MAP_FORMAT, mod_map_io._MAP_ROOT
+            try:
+                args = mod_map_io.parser('test').parse_args(['--map-dir', str(regional_map)])
+                self.assertEqual(args.map_format, 'netcdf')
+                self.assertEqual([name for name, _ in mod_map_io._variable_definitions('downxy')],
+                                 ['downx', 'downy'])
+                hires_rows = mod_map_io._variable_rows('sample.downxy', highres=True)
+                self.assertEqual([row['name'] for row in hires_rows], ['downx', 'downy'])
+                self.assertTrue(all('<HIRES>' in row['binary_filename'] for row in hires_rows))
+                selected = mod_map_io._input_path(source_map/'nextxy.bin')
+            finally:
+                mod_map_io._MAP_FORMAT, mod_map_io._MAP_ROOT = previous_format, previous_root
+            self.assertEqual(selected, (source_map/'nextxy.nc').resolve())
+
+    @unittest.skipIf(Dataset is None, 'netCDF4 is optional')
+    def test_netcdf_writer_uses_explicit_output_grid_without_global_initialization(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            output = root/'separate-output'/'outclm.nc'
+            values = np.arange(6, dtype='f4').reshape(2, 3)
+            grid = Grid(3, 2, 1, np.float32(.25), np.float32(3), np.float32(3.75),
+                        np.float32(49.5), np.float32(50))
+            previous_format, previous_root = mod_map_io._MAP_FORMAT, mod_map_io._MAP_ROOT
+            try:
+                mod_map_io._MAP_FORMAT = 'netcdf'
+                mod_map_io._MAP_ROOT = root/'input-map'
+                write_raster(output, values, '<f4', grid=grid)
+            finally:
+                mod_map_io._MAP_FORMAT, mod_map_io._MAP_ROOT = previous_format, previous_root
+            with Dataset(output) as dataset:
+                variable = dataset.variables['outclm']
+                variable.set_auto_maskandscale(False)
+                np.testing.assert_array_equal(variable[:], values)
+                np.testing.assert_allclose(dataset.variables['lon'][:], [3.125, 3.375, 3.625])
+                np.testing.assert_allclose(dataset.variables['lat'][:], [49.875, 49.625])
+
     def test_upstream_branched_network_terminals_and_outside(self):
         xy = np.array([[[2,3,-10,-9,-9999]], [[1,1,-10,-9,-9999]]],dtype='i4')
         np.testing.assert_array_equal(upstream_mask(xy,2,1), [[1,1,0,0,-9999]])

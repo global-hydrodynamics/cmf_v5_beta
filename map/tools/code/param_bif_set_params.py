@@ -61,7 +61,8 @@ def main():
             real_fields=[f'{x:.2f}' for x in [values[0],values[1],estimate,*widths]]
             writer.writerow([number,ix,iy,jx,jy,*real_fields,f'{values[-2]:.3f}',f'{values[-1]:.3f}',f'{end[1]:.16e}',f'{end[0]:.16e}',ibsn,jbsn])
     if args.check:
-        write_raster(output_root(args)/'check_bif_dphwth.bin',diagnostic,'<f4')
+        write_raster(output_root(args)/'check_bif_dphwth.bin',diagnostic,'<f4',
+                     grid=Grid.from_file(args.map_dir/'params.txt'))
 
 
 if __name__ == '__main__':

@@ -12,6 +12,7 @@ set -eu
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 PYTHON_CMD="${PYTHON_CMD:-python3}"
+MAP_FORMAT="${MAP_FORMAT:-netcdf}"  # Set binary only for legacy Binary maps.
 if [ -n "${CMF5_ROOT:-}" ]; then
     CODE_DIR="$CMF5_ROOT/map/tools/code"
 else
@@ -101,6 +102,6 @@ cd "$MAP_DIR"
 STEP="Aggregate permanent-water pixels from $HIRES_TAG into unit catchments"
 printf '\n==================================================\n[STEP 1/1] Estimate permanent-water area (%s)\n==================================================\n\n' "$HIRES_TAG"
 # Fortran owns the tag/geometry/file validation as well as the aggregation.
-"$PYTHON_CMD" "$EXEC_PRMWAT" "$HIRES_TAG"
+"$PYTHON_CMD" "$EXEC_PRMWAT" "$HIRES_TAG" --map-format "$MAP_FORMAT"
 
 printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"

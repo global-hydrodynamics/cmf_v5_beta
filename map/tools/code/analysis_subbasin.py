@@ -80,8 +80,8 @@ def main():
     else:
         label = '_'.join(args.values[:count])
         outputs = [output_root(args) / f'analysis_{tag}_{label}.bin' for tag in ('subbsn', 'subcol')]
-    write_raster(outputs[0], basin, '<i4')
-    write_raster(outputs[1], colors, '<i4')
+    write_raster(outputs[0], basin, '<i4', grid=grid)
+    write_raster(outputs[1], colors, '<i4', grid=grid)
 
 
 if __name__ == '__main__':

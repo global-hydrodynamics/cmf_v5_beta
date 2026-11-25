@@ -20,7 +20,6 @@ import numpy as np
 # explicitly through --map-format, whose production default is NetCDF.
 _MAP_FORMAT = 'binary'
 _MAP_ROOT = None
-_GRID = None
 _REGISTRY = None
 
 
@@ -38,11 +37,16 @@ class Grid:
     @classmethod
     def read(cls, path):
         """Read the eight leading scalar records of params.txt, without comments."""
-        values = [line.split()[0] for line in Path(path).read_text().splitlines() if line.strip()][:8]
-        grid = cls(*(int(x) for x in values[:3]), *(np.float32(x) for x in values[3:]))
-        global _GRID, _MAP_ROOT
-        _GRID, _MAP_ROOT = grid, Path(path).resolve().parent
+        grid = cls.from_file(path)
+        global _MAP_ROOT
+        _MAP_ROOT = Path(path).resolve().parent
         return grid
+
+    @classmethod
+    def from_file(cls, path):
+        """Read map geometry without changing shared I/O state."""
+        values = [line.split()[0] for line in Path(path).read_text().splitlines() if line.strip()][:8]
+        return cls(*(int(x) for x in values[:3]), *(np.float32(x) for x in values[3:]))
 
     def raster(self, path, dtype='<f4', records=1):
         """Map complete records without loading another full-array copy."""
@@ -56,13 +60,15 @@ class Grid:
         return result[0] if records == 1 else result
 
 
-def write_raster(path, values, dtype):
+def write_raster(path, values, dtype, grid=None):
     """Write a map product in the selected format, replacing only its output."""
     path = Path(path)
     if _MAP_FORMAT == 'netcdf' and path.suffix in {'.bin', '.nc'}:
         if path.suffix == '.bin':
             path = _netcdf_path(path)
-        _write_netcdf(path, np.asarray(values), dtype)
+        if grid is None:
+            grid = _output_grid(path)
+        _write_netcdf(path, np.asarray(values), dtype, grid=grid)
         return
     if _MAP_FORMAT == 'binary' and _MAP_ROOT is not None and path.suffix == '.bin':
         path = _binary_path(path)
@@ -116,10 +122,15 @@ def _input_path(path):
 def _relative_map_path(path):
     if _MAP_ROOT is None:
         return path
+    resolved = path.resolve()
     try:
-        return path.resolve().relative_to(_MAP_ROOT)
+        return resolved.relative_to(_MAP_ROOT)
     except ValueError:
-        return path
+        # A caller may provide a relative source outside --map-dir (for
+        # example, a regional map cropped from ../../glb_15min). Keep that
+        # path anchored to the working directory instead of re-rooting it
+        # beneath --map-dir.
+        return resolved
 
 
 def _netcdf_path(path):
@@ -152,19 +163,22 @@ def _binary_path(path):
     return path
 
 
-def _variable_rows(stem):
+def _variable_rows(stem, highres=False):
     global _REGISTRY
     if _REGISTRY is None:
         registry = Path(__file__).resolve().parents[3] / 'variable_table/map_variables.csv'
         with registry.open(newline='', encoding='utf-8-sig') as stream:
             _REGISTRY = list(csv.DictReader(stream))
-    base = stem.rsplit('.', 1)[-1]
+    base = _registry_stem(stem.rsplit('.', 1)[-1])
     normalized = f'{base}.bin'
     if base.startswith('mpireg-'):
         normalized = 'mpireg.bin'
     rows = []
     for row in _REGISTRY:
         filenames = [item.strip() for item in row.get('binary_filename', '').split(';')]
+        is_highres = any('<HIRES>' in item or '<AREA>' in item for item in filenames)
+        if is_highres != highres:
+            continue
         if any(item.rsplit('/', 1)[-1].endswith(normalized) for item in filenames):
             rows.append(row)
     if not rows:
@@ -173,8 +187,14 @@ def _variable_rows(stem):
     return rows
 
 
-def _variable_definitions(stem):
-    return [(row['name'], int(row.get('record_index') or 1)) for row in _variable_rows(stem)]
+def _registry_stem(stem):
+    """Map the internal MPI basin-group file to its registered basin schema."""
+    return 'bifbsn' if stem == 'bifbsn_mpi' else stem
+
+
+def _variable_definitions(stem, highres=False):
+    return [(row['name'], int(row.get('record_index') or 1))
+            for row in _variable_rows(stem, highres=highres)]
 
 
 def _netcdf_module():
@@ -231,12 +251,15 @@ class RasterTile:
             Dataset = _netcdf_module()
             self.dataset = Dataset(self.path)
             self.variables = []
-            for name, _ in _variable_definitions(self.path.stem):
+            highres = (self.path.parent / 'location.txt').is_file()
+            for name, _ in _variable_definitions(self.path.stem, highres=highres):
                 if name in self.dataset.variables:
                     variable = self.dataset.variables[name]
                     variable.set_auto_maskandscale(False)
                     self.variables.append(variable)
-            if len(self.variables) != records:
+            self.layered = (len(self.variables) == 1 and self.variables[0].ndim == 3
+                            and self.variables[0].shape[0] == records)
+            if not self.layered and len(self.variables) != records:
                 self.close()
                 raise ValueError(f'{self.path}: expected {records} registered variable(s)')
         else:
@@ -251,6 +274,8 @@ class RasterTile:
             return None
         if self.dataset is None:
             return np.asarray(self.values[:, row_start:row_stop, col_start:col_stop])
+        if self.layered:
+            return np.asarray(self.variables[0][:, row_start:row_stop, col_start:col_stop], dtype=dtype)
         return np.stack([np.asarray(variable[row_start:row_stop, col_start:col_stop], dtype=dtype)
                          for variable in self.variables])
 
@@ -304,7 +329,8 @@ def write_inpmat(path, inpx, inpy, inpa, metadata):
 
 def _read_netcdf_shape(path, dtype, records, ny, nx):
     Dataset = _netcdf_module()
-    names = _variable_definitions(path.stem)
+    highres = (Path(path).parent / 'location.txt').is_file()
+    names = _variable_definitions(_registry_stem(Path(path).stem), highres=highres)
     target_dtype = np.dtype(dtype)
     with Dataset(path) as dataset:
         variables = []
@@ -326,7 +352,8 @@ def _read_netcdf_shape(path, dtype, records, ny, nx):
     if records == 1:
         result = variables[0]
         return result[0] if result.ndim == 3 and result.shape[0] == 1 else result
-    result = np.stack(variables, axis=0)
+    result = (variables[0] if len(variables) == 1 and variables[0].ndim == 3
+              else np.stack(variables, axis=0))
     if result.shape[-2:] != (ny, nx):
         raise ValueError(f'{path}: NetCDF raster shape {result.shape[-2:]} does not match expected {(ny, nx)}')
     if result.shape[0] != records:
@@ -334,20 +361,15 @@ def _read_netcdf_shape(path, dtype, records, ny, nx):
     return result
 
 
-def _write_netcdf(path, values, dtype):
-    global _GRID
-    if _GRID is None:
-        raise RuntimeError('read params.txt before writing NetCDF map output')
+def _write_netcdf(path, values, dtype, grid):
     Dataset = _netcdf_module()
     values = np.asarray(values, dtype=dtype)
-    stem = path.stem.rsplit('.', 1)[-1]
+    stem = _registry_stem(path.stem.rsplit('.', 1)[-1])
     definitions = _variable_definitions(stem)
     layered = values.ndim == 3 and len(definitions) == 1 and values.shape[0] > 1
     records = values if values.ndim == 3 else values[None, ...]
-    if records.shape[-2:] != (_GRID.ny, _GRID.nx):
-        _GRID = _output_grid(path, records.shape[-2:])
-        if records.shape[-2:] != (_GRID.ny, _GRID.nx):
-            raise ValueError(f'{path}: output shape {records.shape[-2:]} differs from map geometry {(_GRID.ny, _GRID.nx)}')
+    if records.shape[-2:] != (grid.ny, grid.nx):
+        raise ValueError(f'{path}: output shape {records.shape[-2:]} differs from map geometry {(grid.ny, grid.nx)}')
     rows = _variable_rows(stem)
     names = rows[:1] if layered else rows
     if len(names) < records.shape[0]:
@@ -358,14 +380,14 @@ def _write_netcdf(path, values, dtype):
     temporary = path.with_name(path.name + '.tmp')
     try:
         with Dataset(temporary, 'w', format='NETCDF4') as dataset:
-            dataset.createDimension('lat', _GRID.ny)
-            dataset.createDimension('lon', _GRID.nx)
+            dataset.createDimension('lat', grid.ny)
+            dataset.createDimension('lon', grid.nx)
             if layered:
                 dataset.createDimension('layer', records.shape[0])
             lon = dataset.createVariable('lon', 'f8', ('lon',))
             lat = dataset.createVariable('lat', 'f8', ('lat',))
-            lon[:] = float(_GRID.west) + (np.arange(_GRID.nx) + .5) * float(_GRID.size)
-            lat[:] = float(_GRID.north) - (np.arange(_GRID.ny) + .5) * float(_GRID.size)
+            lon[:] = float(grid.west) + (np.arange(grid.nx) + .5) * float(grid.size)
+            lat[:] = float(grid.north) - (np.arange(grid.ny) + .5) * float(grid.size)
             for index, row in enumerate(names):
                 name = row['name']
                 array = records if layered else records[index]
@@ -399,7 +421,7 @@ def write_highres_raster(path, values, dtype, bounds, chunk_rows=64):
         return path
     path = path.with_suffix('.nc')
     Dataset = _netcdf_module()
-    rows = _variable_rows(path.stem)
+    rows = _variable_rows(path.stem, highres=True)
     if len(rows) < values.shape[0]:
         raise ValueError(f'{path}: registry defines fewer records than the tile contains')
     west, east, south, north = bounds
@@ -437,19 +459,8 @@ def write_highres_raster(path, values, dtype, bounds, chunk_rows=64):
     return path
 
 
-def _output_grid(path, shape):
+def _output_grid(path):
     params = path.parent / 'params.txt'
     if params.is_file():
-        return Grid.read(params)
-    location = path.parent / 'location.txt'
-    if location.is_file():
-        lines = location.read_text().splitlines()
-        prefix = path.stem.rsplit('.', 1)[0]
-        for line in lines[2:]:
-            fields = line.split()
-            if len(fields) < 9 or fields[1] != prefix:
-                continue
-            _, _, west, east, south, north, nx, ny, step = fields[:9]
-            return Grid(int(nx), int(ny), 1, np.float32(step), np.float32(west),
-                        np.float32(east), np.float32(south), np.float32(north))
-    return Grid(shape[1], shape[0], 1, _GRID.size, _GRID.west, _GRID.east, _GRID.south, _GRID.north)
+        return Grid.from_file(params)
+    raise FileNotFoundError(f'{path}: NetCDF output grid requires params.txt beside the output or an explicit grid argument to write_raster')

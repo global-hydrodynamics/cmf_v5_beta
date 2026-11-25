@@ -2,7 +2,7 @@
 # Parallel port of param_mpi_set_region.F90; original Fortran authors and license retained.
 """Greedily assign aggregated basins to MPI regions, preserving Fortran ties.
 
-Read ../bifbsn_mpi.tmp and params; visit positive basins in ascending ID,
+Read the temporary aggregated basin map and params; visit positive basins in ascending ID,
 assign each to the lowest-index least-loaded partition, and write mpireg-N.bin.
 """
 import numpy as np
@@ -35,10 +35,12 @@ def main():
     p.add_argument('count', type=int)
     args = p.parse_args()
     grid = Grid.read(args.map_dir / 'params.txt')
-    basin = grid.raster(args.map_dir / 'bifbsn_mpi.tmp', '<i4')
+    basin_path = (args.map_dir/'bifbsn_mpi.bin' if args.map_format == 'netcdf'
+                  else output_root(args)/'bifbsn_mpi.tmp')
+    basin = grid.raster(basin_path, '<i4')
     regions, loads = assign_regions(basin, args.count)
     path = output_root(args) / f'mpireg-{args.count}.bin'
-    write_raster(path, regions, '<i4')
+    write_raster(path, regions, '<i4', grid=grid)
     print(f'Created {path}')
     for region, load in enumerate(loads, 1):
         print(f'  region {region}: {load} river cells')

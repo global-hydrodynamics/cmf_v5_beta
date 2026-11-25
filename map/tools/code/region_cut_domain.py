@@ -97,7 +97,9 @@ def main():
         stream.write('../\n')
         for value in (mx, my, dx, dy, west, east, south, north):
             stream.write(str(value)+'\n')
-    grid = Grid(nx, ny, nlfp, size, sw, se, ss, sn)
+    # Register source geometry and I/O roots for NetCDF reads and output writes.
+    grid = Grid.read(source/'params.txt')
+    output_grid = Grid.from_file(out/'params.txt')
     crop = (slice(dy, dy+my), slice(dx, dx+mx))
     nextxy = np.array(grid.raster(source/'nextxy.bin', '<i4', 2)[:, crop[0], crop[1]])
     downxy = np.array(grid.raster(source/'downxy.bin', '<i4', 2)[:, crop[0], crop[1]])
@@ -109,18 +111,18 @@ def main():
     downxy[:, outside] = -1000
     valid = nextxy[0] != -9999
     downxy[:, ~valid] = -9999
-    write_raster(out/'nextxy.bin', nextxy, '<i4')
-    write_raster(out/'downxy.bin', downxy, '<i4')
+    write_raster(out/'nextxy.bin', nextxy, '<i4', grid=output_grid)
+    write_raster(out/'downxy.bin', downxy, '<i4', grid=output_grid)
     for name, records in [('elevtn', 1), ('fldhgt', nlfp), ('ctmare', 1), ('grdare', 1),
                            ('uparea', 1), ('lonlat', 2), ('nxtdst', 1), ('rivlen', 1), ('width', 1)]:
         data = grid.raster(source/(name+'.bin'), '<f4', records)
         clipped = data[..., crop[0], crop[1]]
-        write_raster(out/(name+'.bin'), np.where(valid, clipped, np.float32(-9999)), '<f4')
-    write_raster(out/'lsmask.bin', valid, '<i4')
+        write_raster(out/(name+'.bin'), np.where(valid, clipped, np.float32(-9999)), '<f4', grid=output_grid)
+    write_raster(out/'lsmask.bin', valid, '<i4', grid=output_grid)
     for name in ('catmpx', 'class'):
         if (source/(name+'.bin')).is_file():
-            write_raster(out/(name+'.bin'), grid.raster(source/(name+'.bin'), '<i4')[crop], '<i4')
-    write_raster(out/'nextxy_noedge.bin', edge_mask(nextxy), '<i4')
+            write_raster(out/(name+'.bin'), grid.raster(source/(name+'.bin'), '<i4')[crop], '<i4', grid=output_grid)
+    write_raster(out/'nextxy_noedge.bin', edge_mask(nextxy), '<i4', grid=output_grid)
 
 
 if __name__ == '__main__':

@@ -5,16 +5,26 @@
 # Inputs: params.txt, nextxy.bin, ctmare.bin, and
 #         <HIRES_TAG>/location.txt plus each area's catmxy, rivwth, flddif,
 #         and optional grdare binary files.
-# Output: prmwat.bin (float32, NX x NY, one record, m2) in the map root.
+# Output: prmwat.nc (float32, NX x NY, one record, m2) in the map root.
 set -eu
 
 # Paths
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+PYTHON_CMD="${PYTHON_CMD:-python3}"
+MAP_FORMAT="${MAP_FORMAT:-netcdf}"  # Set binary only for legacy Binary maps.
+if [ -n "${CMF5_ROOT:-}" ]; then
+    CODE_DIR="$CMF5_ROOT/map/tools/code"
+else
+    CODE_DIR="$SCRIPT_DIR/../../tools/code"
+fi
+if [ ! -d "$CODE_DIR" ]; then
+    printf '[ERROR] Shared Python tools not found: %s (set CMF5_ROOT to the repository root)\n' "$CODE_DIR" >&2
+    exit 1
+fi
 MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
-CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 
-# Resolution is selected interactively from installed Binary directories below.
+# Resolution is selected interactively from installed NetCDF directories below.
 
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
@@ -44,20 +54,20 @@ trap 'exit 143' TERM
 # End of error handling.
 # ----------------------------------------------------------------------
 
-EXEC_PRMWAT="$CODE_DIR/param_water_calc_prmwat"
+EXEC_PRMWAT="$CODE_DIR/param_water_calc_prmwat.py"
 
-# Offer the finest installed Binary resolution; Fortran validates its contents.
+# Offer the coarsest installed NetCDF resolution; the Python program validates its contents.
 STEP="Select high-resolution map"
 AVAILABLE=""
 HIRES_TAG=""
-for tag in 1sec 3sec 5sec 15sec 30sec 1min; do
+for tag in 1min 30sec 15sec 5sec 3sec 1sec; do
     if [ -d "$MAP_DIR/$tag" ]; then
         AVAILABLE="${AVAILABLE}${AVAILABLE:+ }$tag"
         if [ -z "$HIRES_TAG" ]; then HIRES_TAG=$tag; fi
     fi
 done
 if [ -z "$HIRES_TAG" ]; then
-    printf 'ERROR: No Binary high-resolution directory found in %s (1sec, 3sec, 5sec, 15sec, 30sec, 1min).\n' "$MAP_DIR" >&2
+    printf 'ERROR: No NetCDF high-resolution directory found in %s (1min, 30sec, 15sec, 5sec, 3sec, 1sec).\n' "$MAP_DIR" >&2
     exit 1
 fi
 
@@ -92,6 +102,6 @@ cd "$MAP_DIR"
 STEP="Aggregate permanent-water pixels from $HIRES_TAG into unit catchments"
 printf '\n==================================================\n[STEP 1/1] Estimate permanent-water area (%s)\n==================================================\n\n' "$HIRES_TAG"
 # Fortran owns the tag/geometry/file validation as well as the aggregation.
-"$EXEC_PRMWAT" "$HIRES_TAG"
+"$PYTHON_CMD" "$EXEC_PRMWAT" "$HIRES_TAG" --map-format "$MAP_FORMAT"
 
 printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"

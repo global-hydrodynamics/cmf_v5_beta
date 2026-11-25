@@ -91,10 +91,11 @@ def main():
             p.error('path endpoint outside map')
     basin = merge_basins(original,paths,.03 if args.mode=='MaxMPI' else .06)
     out = output_root(args)
-    write_raster(out/'bifcol_mpi.bin',color_map(basin,grid.west,grid.east),'<i4')
+    write_raster(out/'bifcol_mpi.bin',color_map(basin,grid.west,grid.east),'<i4',grid=grid)
     if args.check:
-        write_raster(out/'check_bif_bsnmod_mpi.bin',diagnostic(original,basin,paths),'<i4')
-    write_raster(out/'bifbsn_mpi.tmp',basin,'<i4')
+        write_raster(out/'check_bif_bsnmod_mpi.bin',diagnostic(original,basin,paths),'<i4',grid=grid)
+    intermediate = out/'bifbsn_mpi.bin' if args.map_format == 'netcdf' else out/'bifbsn_mpi.tmp'
+    write_raster(intermediate,basin,'<i4',grid=grid)
 
 
 if __name__ == '__main__':

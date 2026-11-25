@@ -129,7 +129,7 @@ def main():
               ('nxtdst_grid', distance, '<f4'), ('rivlen_grid', distance, '<f4'),
               ('bsncol', color_map(basin, grid.west, grid.east), '<i4')]
     for name, values, dtype in fields:
-        write_raster(output_root(args)/(name+'.bin'), values, dtype)
+        write_raster(output_root(args)/(name+'.bin'), values, dtype, grid=grid)
 
 
 if __name__ == '__main__':

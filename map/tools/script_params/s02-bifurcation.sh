@@ -12,6 +12,7 @@ set -eu
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 PYTHON_CMD="${PYTHON_CMD:-python3}"
+MAP_FORMAT="${MAP_FORMAT:-netcdf}"  # Set binary only for legacy Binary maps.
 if [ -n "${CMF5_ROOT:-}" ]; then
     CODE_DIR="$CMF5_ROOT/map/tools/code"
 else
@@ -85,9 +86,9 @@ cd "$MAP_DIR"
 STEP="Filter bifurcation paths and estimate bifurcation-channel depth"
 printf '\n==================================================\n[STEP 1/3] Generate finalized bifurcation CSV\n==================================================\n\n'
 if [ "$CHECK_MAP" = check_map ]; then
-    "$PYTHON_CMD" "$EXEC_SETPARAM" "$RIVHGT" "$BIFPRM_CSV" "$BIFLAYER" "$DIMINFO" check_map
+    "$PYTHON_CMD" "$EXEC_SETPARAM" "$RIVHGT" "$BIFPRM_CSV" "$BIFLAYER" "$DIMINFO" check_map --map-format "$MAP_FORMAT"
 else
-    "$PYTHON_CMD" "$EXEC_SETPARAM" "$RIVHGT" "$BIFPRM_CSV" "$BIFLAYER" "$DIMINFO"
+    "$PYTHON_CMD" "$EXEC_SETPARAM" "$RIVHGT" "$BIFPRM_CSV" "$BIFLAYER" "$DIMINFO" --map-format "$MAP_FORMAT"
 fi
 printf '[SUCCESS] Generated %s\n' "$BIFPRM_CSV"
 
@@ -103,9 +104,9 @@ cd "$SCRIPT_DIR"
 STEP="Merge basins connected by bifurcation pathways"
 printf '\n==================================================\n[STEP 3/3] Merge connected basins\n==================================================\n\n'
 if [ "$CHECK_MAP" = check_map ]; then
-    "$PYTHON_CMD" "$EXEC_SETBASIN" check_map
+    "$PYTHON_CMD" "$EXEC_SETBASIN" check_map --map-format "$MAP_FORMAT"
 else
-    "$PYTHON_CMD" "$EXEC_SETBASIN"
+    "$PYTHON_CMD" "$EXEC_SETBASIN" --map-format "$MAP_FORMAT"
 fi
 printf '[SUCCESS] Generated basin-connectivity products\n'
 

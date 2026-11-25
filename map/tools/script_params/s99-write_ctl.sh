@@ -72,8 +72,16 @@ fi
 
 # Prefer the standard compatibility tree while retaining the former root layout
 # for existing maps that have not yet been migrated.
-DATA_DIR=..
-[ ! -d ../binary ] || DATA_DIR=../binary
+DATA_DIR=../binary
+if [ ! -d "$DATA_DIR" ]; then
+  if [ -n "$INPUT" ] || { [ -f ../nextxy.bin ] && [ ! -f ../nextxy.nc ]; }; then
+    # Explicit legacy inputs may still use the pre-binary/ map-root layout.
+    DATA_DIR=..
+  else
+    printf '[SKIP] No ../binary directory; NetCDF maps do not require GrADS CTL files.\n'
+    exit 0
+  fi
+fi
 
 STATUS=0
 # set -- rebuilds the argument list passed to each generator invocation.
@@ -116,7 +124,7 @@ for ENTRY in $VARIANTS; do
   for BINARY in "$DATA_DIR"/$PATTERN; do
     [ -f "$BINARY" ] || continue
     printf '\nGenerate variant CTL: %s (reference %s)\n' "${BINARY##*/}" "$REFERENCE"
-    python3 "$GENERATOR" --map-dir "$DATA_DIR" --input "${BINARY##*/}" --reference-binary "$REFERENCE" "$@" || STATUS=1
+    "$PYTHON_CMD" "$GENERATOR" --map-dir "$DATA_DIR" --input "${BINARY##*/}" --reference-binary "$REFERENCE" "$@" || STATUS=1
   done
 done
 

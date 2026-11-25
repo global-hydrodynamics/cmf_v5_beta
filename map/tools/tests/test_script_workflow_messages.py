@@ -48,7 +48,7 @@ class WorkflowMessageTests(unittest.TestCase):
             "    exit \"${FAIL_STATUS:-23}\"\n"
             "fi\n"
             "case \"$NAME\" in\n"
-            "    param_mpi_set_basin) : > ../bifbsn_mpi.tmp ; : > ../bifcol_mpi.nc ;;\n"
+            "    param_mpi_set_basin) : > ../bifbsn_mpi.nc ; : > ../bifcol_mpi.nc ;;\n"
             "    param_mpi_set_region) : > ../mpireg-$1.nc ;;\n"
             "    analysis_mpi_region_color) : > bsncol_mpi-${1#mpireg-}.nc ;;\n"
             "    convert_bifprm_csv_to_netcdf) : > \"$2\" ;;\n"
@@ -68,7 +68,7 @@ class WorkflowMessageTests(unittest.TestCase):
             env["FAIL_STATUS"] = "23"
         return subprocess.run(
             [str(script), *args], cwd=cwd or self.root, env=env, text=True,
-            capture_output=True, check=False,
+            input="\n", capture_output=True, check=False,
         )
 
     def calls(self) -> list[str]:
@@ -124,7 +124,7 @@ class WorkflowMessageTests(unittest.TestCase):
         for fail_match, step, expected, successes in (
             ("param_bif_set_params", "Filter bifurcation paths and estimate bifurcation-channel depth", 1, 0),
             ("python3", "Convert finalized bifurcation CSV to NetCDF", 2, 1),
-            ("param_bif_set_basin:", "Merge basins connected by bifurcation pathways", 3, 2),
+            ("param_bif_set_basin:--map-format", "Merge basins connected by bifurcation pathways", 3, 2),
         ):
             with self.subTest(fail_match=fail_match):
                 self.log.unlink(missing_ok=True)
@@ -166,6 +166,15 @@ class WorkflowMessageTests(unittest.TestCase):
                 encoding="ascii",
             )
             path.chmod(0o755)
+        python = self.code_dir / "python3"
+        python.write_text(
+            "#!/bin/sh\n"
+            "SCRIPT=${1##*/}; NAME=${SCRIPT%.py}; shift\n"
+            "printf '%s %s\\n' \"$NAME\" \"$*\" >> \"$MOCK_LOG\"\n"
+            "if [ \"${FAIL_MATCH:-}\" = \"$NAME\" ]; then exit \"${FAIL_STATUS:-23}\"; fi\n",
+            encoding="ascii",
+        )
+        python.chmod(0o755)
 
         result = self.run_script(script, cwd=regional_dir)
         self.assert_success(result, script.name)
@@ -196,15 +205,15 @@ class WorkflowMessageTests(unittest.TestCase):
             "param_mpi_set_region", "analysis_check_mpi_bifurcation",
         ])
         self.assertEqual(calls[1:4], [
-            ["param_mpi_set_region", "4"],
-            ["param_mpi_set_region", "8"],
-            ["param_mpi_set_region", "16"],
+            ["param_mpi_set_region", "4", "--map-format", "netcdf"],
+            ["param_mpi_set_region", "8", "--map-format", "netcdf"],
+            ["param_mpi_set_region", "16", "--map-format", "netcdf"],
         ])
-        self.assertEqual(calls[4], ["analysis_check_mpi_bifurcation", "mpireg-16.bin"])
+        self.assertEqual(calls[4], ["analysis_check_mpi_bifurcation", "mpireg-16.bin", "--map-format", "netcdf"])
         self.assertFalse((self.map_root / "mpireg.bin").exists())
-        self.assertTrue((self.map_root / "bifcol_mpi.bin").exists())
+        self.assertTrue((self.map_root / "bifcol_mpi.nc").exists())
         self.assertFalse(list(self.map_root.glob("bsncol_mpi-*.bin")))
-        self.assertFalse((self.map_root / "bifbsn_mpi.tmp").exists())
+        self.assertFalse((self.map_root / "bifbsn_mpi.nc").exists())
         self.log.unlink()
 
         result = self.run_script(script, "analysis_check_mpi_bifurcation:mpireg-16.bin")
@@ -212,7 +221,7 @@ class WorkflowMessageTests(unittest.TestCase):
             result, script.name,
             "Analyze bifurcation connectivity for mpireg-16.bin",
         )
-        self.assertFalse((self.map_root / "bifbsn_mpi.tmp").exists())
+        self.assertFalse((self.map_root / "bifbsn_mpi.nc").exists())
         self.assertEqual(self.calls()[-1].split()[0], "analysis_check_mpi_bifurcation")
 
     def test_s04_partition_loop_failure_stops_later_counts_and_cleans_intermediate(self) -> None:
@@ -221,10 +230,10 @@ class WorkflowMessageTests(unittest.TestCase):
         ))
         result = self.run_script(script, "param_mpi_set_region:8")
         self.assert_failure(result, script.name, "Generate mpireg-8.bin")
-        self.assertEqual(self.calls()[-1].split(), ["param_mpi_set_region", "8"])
+        self.assertEqual(self.calls()[-1].split(), ["param_mpi_set_region", "8", "--map-format", "netcdf"])
         self.assertNotIn("param_mpi_set_region 16", self.calls())
         self.assertNotIn("analysis_check_mpi_bifurcation", "\n".join(self.calls()))
-        self.assertFalse((self.map_root / "bifbsn_mpi.tmp").exists())
+        self.assertFalse((self.map_root / "bifbsn_mpi.nc").exists())
 
     def test_s04_forwards_check_map_only_to_basin_aggregation(self) -> None:
         script = self.install("s04-mpi_map_setup.sh", (
@@ -233,8 +242,8 @@ class WorkflowMessageTests(unittest.TestCase):
         result = self.run_script(script, args=("check_map",))
         self.assert_success(result, script.name)
         calls = self.calls()
-        self.assertEqual(calls[0].split(), ["param_mpi_set_basin", "normal", "check_map"])
-        self.assertEqual(calls[-1].split(), ["analysis_check_mpi_bifurcation", "mpireg-16.bin"])
+        self.assertEqual(calls[0].split(), ["param_mpi_set_basin", "normal", "check_map", "--map-format", "netcdf"])
+        self.assertEqual(calls[-1].split(), ["analysis_check_mpi_bifurcation", "mpireg-16.bin", "--map-format", "netcdf"])
         self.assertNotIn("analysis_mpi_region_color", "\n".join(calls))
         self.assertTrue(all("check_map" not in call for call in calls[1:]))
 

@@ -59,7 +59,7 @@ def main():
     print('Upstream Grid #:', upgrid[args.iy - 1, args.ix - 1])
     print('Upstream Area [km2]:', np.float32(uparea[args.iy - 1, args.ix - 1] * np.float32(1e-6)))
     output = args.output or output_root(args) / f'analysis_upbasin_{args.ix}_{args.iy}.bin'
-    write_raster(output, labels, '<i4')
+    write_raster(output, labels, '<i4', grid=grid)
 
 
 if __name__ == '__main__':

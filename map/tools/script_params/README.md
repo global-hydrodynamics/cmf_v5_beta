@@ -2,6 +2,8 @@
 
 `script_params/` contains reusable map-local recipes for parameterization and related map preparation. The shell layer holds configuration, selects working directories, sequences the maintained Python programs under `map/tools/code/`, and reports progress. No compilation is required. Set `PYTHON_CMD` for the intended interpreter and, when the relative shared-code path is unavailable, `CMF5_ROOT` to the repository root. Existing outputs owned by a workflow are replaced by default; use `--no-overwrite` where supported to preserve them. Inputs and unrelated files are not removed. The s01-s07 parameter scripts use self-contained ASCII `[STEP]` and `[SUCCESS]` banners plus a prominent `ERROR` banner on failure, using POSIX exit traps; no shared message helper is required. Some migrated programs still have incomplete file-open/read diagnostics, a code-layer follow-up. See the [shell-script convention](../../../AGENTS.md#shell-script-design-principles).
 
+The maintained wrappers use NetCDF map input/output by default. Set `MAP_FORMAT=binary` when running a wrapper against an explicitly maintained legacy Binary map; runoff `TYPE=bin` in s01 is a separate setting and does not select the map format. High-resolution NetCDF products are expected under `<map>/<tag>/`, and allocation inputs remain the external CSVs configured by each tXX wrapper.
+
 ```sh
 cd "$MAP_DIR"
 "$EXEC_OUTCLM" "$TYPE" "$INTERP" "$DIMINFO" "$CROFBIN"
@@ -29,6 +31,8 @@ The v5 parameter and map-preparation workflows listed below are implemented. Num
 | `t01-alloc_flow_gauge.sh`, `t02-alloc_dams.sh`, `t03-alloc_level_gauge.sh` | Flow-gauge, reservoir, and water-level-gauge mapping from MERIT Hydro to CaMa-Flood catchments. | Implemented |
 
 Independent diagnostics belong in `script_analysis/`. No `script_allocate/` directory is part of the approved design.
+
+Run only the workflows required for a map. The common dependency chain is s01 before s02, and s02 before s04; s03 creates a separately configured runoff-grid matrix and is independent of s01 when its own `ROFFTAG` is used. s05 requires base-map and selected high-resolution inputs. s06 is an optional map analysis. s07 requires a valid `GRDC_alloc.txt`, normally produced by t01. The t01-t03 allocation workflows are optional and each uses its configured external allocation CSV.
 
 ## Channel parameter workflow
 
@@ -96,7 +100,7 @@ MPI basin integration is distinct from standard s02 basin connectivity. It appli
 
 The legacy workflow sorted its MPI pathway table by columns 15, 16, and 6. Those basin-ID columns move when the number of width layers changes. The v5 aggregation tool parses the standard row and sorts by the values `ibsn`, `jbsn`, and `elv`, with the source text row as a deterministic equal-key fallback matching the legacy sort's whole-line tie behavior. This order is part of the order-sensitive basin-merge algorithm. For the Mekong v4.30 sample, normal and `MaxMPI` basin groups and 4/8/16 maps match the legacy implementation byte-for-byte.
 
-The persistent s04 products are `bifcol_mpi.nc`, generated from the MPI-aggregated basin IDs, and `mpireg-N.nc` for every requested partition count. `bifcol_mpi.nc` is visualization-only, independent of N, and may vary with `MPIMODE`; `check_bif_bsnmod_mpi.nc` is created only when explicitly requested. The separate optional `analysis_mpi_region_color` utility colors MPI region IDs into `bsncol_mpi-N.nc` when run manually; this product depends on N and is not produced by s04. The color raster does not encode rank assignment. `bifbsn_mpi.tmp` is a visible intermediate basin-group raster removed by the wrapper, including on failure. The v5 workflow does not write the legacy MPI products `bifprm_mpi.txt`, `bifprm-N.txt`, `bifmod_mpi.bin`, or `bpoint_mpi.bin`, or the standard non-MPI `bifcol.bin`. The historical `map/src/` tools remain unchanged. The combined MPI basin diagnostic describes connectivity changes before MPI region assignment. The separate `analysis_check_mpi_bifurcation` report examines retained or excluded pathways for a selected `mpireg-N.nc` and therefore depends on the chosen partition. See [`script_analysis/README.md`](../script_analysis/README.md) for the model-side retention criterion and optional CSV export.
+The persistent s04 products are `bifcol_mpi.nc`, generated from the MPI-aggregated basin IDs, and `mpireg-N.nc` for every requested partition count. `bifcol_mpi.nc` is visualization-only, independent of N, and may vary with `MPIMODE`; `check_bif_bsnmod_mpi.nc` is created only when explicitly requested. The separate optional `analysis_mpi_region_color` utility colors MPI region IDs into `bsncol_mpi-N.nc` when run manually; this product depends on N and is not produced by s04. The color raster does not encode rank assignment. During s04, the temporary MPI basin-group map is `bifbsn_mpi.nc` (registered `bifbsn` variable) in NetCDF mode; explicit legacy Binary mode uses `binary/bifbsn_mpi.tmp`. The wrapper removes only that temporary output, including on failure. The v5 workflow does not write the legacy MPI products `bifprm_mpi.txt`, `bifprm-N.txt`, `bifmod_mpi.bin`, or `bpoint_mpi.bin`, or the standard non-MPI `bifcol.bin`. The historical `map/src/` tools remain unchanged. The combined MPI basin diagnostic describes connectivity changes before MPI region assignment. The separate `analysis_check_mpi_bifurcation` report examines retained or excluded pathways for a selected `mpireg-N.nc` and therefore depends on the chosen partition. See [`script_analysis/README.md`](../script_analysis/README.md) for the model-side retention criterion and optional CSV export.
 
 Run the wrapper from any directory after copying it into the target map:
 
@@ -109,9 +113,9 @@ The programs read standard map files `params.txt`, `basin.nc`, `bifprm.csv`, and
 
 ## GrADS CTL generation
 
-`s99-write_ctl.sh` is numbered last because it describes products after map preparation; it does not create or modify map binaries.
+`s99-write_ctl.sh` is an optional legacy Binary utility; it is not part of the normal NetCDF workflow and does not create or modify map data.
 
-Copy [`s99-write_ctl.sh`](s99-write_ctl.sh) into a map-local `script_params/` directory and run it there. Like the reusable [`script_region/s02-write_ctl.sh`](../script_region/s02-write_ctl.sh), it calls the shared `generate_ctl.py` and scans only `.bin` files that already exist directly in the map root and in immediate child directories containing `location.txt`. The generator creates CTLs only for files registered in `variable_table/map_variables.csv` whose dimensions and binary sizes validate against `params.txt` or `location.txt`.
+Copy [`s99-write_ctl.sh`](s99-write_ctl.sh) into a map-local `script_params/` directory and run it there. It prefers the dedicated `<map>/binary/` tree and scans only existing `.bin` files in that tree and immediate high-resolution children with `location.txt`. For a legacy pre-`binary/` map-root layout, it scans the root only when `nextxy.bin` exists and `nextxy.nc` does not. A NetCDF-only map without `binary/` is skipped successfully. The shared `generate_ctl.py` creates CTLs only for registered files whose dimensions and binary sizes validate against `params.txt` or `location.txt`.
 
 The wrapper supports `--dry-run` and `--no-overwrite`; existing CTLs are replaced by default. It does not create, modify, or infer binary map data. For the optional MPI basin diagnostic, it creates `check_bif_bsnmod_mpi.ctl` only when `check_bif_bsnmod_mpi.nc` exists; the registry defines its two variables in record order. See the [map-tools guide](../README.md#grads-ctl-files) for registry, missing-value, and format details.
 

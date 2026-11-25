@@ -34,11 +34,12 @@ def main():
         'rivhgt_inf': np.full((ny, nx), 100000, dtype='<f4'),
     }
     out = output_root(args)
+    output_grid = Grid.from_file(args.map_dir/'params.txt')
     # Import before producing outputs so an unavailable optional interface fails cleanly.
     if args.type == 'cdf':
         from netCDF4 import Dataset
     for name, values in fields.items():
-        write_raster(out/(name+'.bin'), values, '<f4')
+        write_raster(out/(name+'.bin'), values, '<f4', grid=output_grid)
     if args.type == 'cdf':
         destination = out/'rivpar.nc'
         with Dataset(destination, 'w', format='NETCDF3_64BIT_OFFSET') as dataset:

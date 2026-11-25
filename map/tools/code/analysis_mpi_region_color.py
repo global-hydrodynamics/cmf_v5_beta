@@ -28,7 +28,7 @@ def main():
     colors = color_map(regions, grid.west, grid.east)
     suffix = '.nc' if args.map_format == 'netcdf' else '.bin'
     destination = (args.output_dir or args.region_file.parent) / f'bsncol_mpi-{int(match[1])}{suffix}'
-    write_raster(destination, colors, '<i4')
+    write_raster(destination, colors, '<i4', grid=grid)
     print(f'Created {destination} (visualization only)')
 
 

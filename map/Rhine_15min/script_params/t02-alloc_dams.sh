@@ -7,8 +7,18 @@ set -eu
 # Paths
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+PYTHON_CMD="${PYTHON_CMD:-python3}"
+MAP_FORMAT="${MAP_FORMAT:-netcdf}"  # Set binary only for legacy Binary maps.
+if [ -n "${CMF5_ROOT:-}" ]; then
+    CODE_DIR="$CMF5_ROOT/map/tools/code"
+else
+    CODE_DIR="$SCRIPT_DIR/../../tools/code"
+fi
+if [ ! -d "$CODE_DIR" ]; then
+    printf '[ERROR] Shared Python tools not found: %s (set CMF5_ROOT to the repository root)\n' "$CODE_DIR" >&2
+    exit 1
+fi
 MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
-CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 
 # Dam allocation input and map-root output tables; input path is relative to script_params/.
 DAM_IN="../../data/GRanD_allocated.csv"   # MERIT Hydro-preallocated GRanD reservoir table.
@@ -45,7 +55,7 @@ trap 'exit 143' TERM
 # End of error handling.
 # ----------------------------------------------------------------------
 
-# Prefer the coarsest installed Binary grid; the data consumer validates its contents.
+# Prefer the coarsest installed NetCDF grid; the data consumer validates its contents.
 AVAILABLE=""
 for tag in 1min 30sec 15sec 5sec 3sec 1sec; do
     if [ -d "$MAP_DIR/$tag" ]; then
@@ -54,18 +64,18 @@ for tag in 1min 30sec 15sec 5sec 3sec 1sec; do
     fi
 done
 if [ -z "$HIRES_TAG" ]; then
-    printf 'ERROR: No Binary high-resolution directory found in %s.\n' "$MAP_DIR" >&2
+    printf 'ERROR: No NetCDF high-resolution directory found in %s.\n' "$MAP_DIR" >&2
     exit 1
 fi
 printf 'Allocation high-resolution map: %s/%s\n' "$MAP_DIR" "$HIRES_TAG"
 
-EXEC_ALLOCATE="$CODE_DIR/allocate_dam"
+EXEC_ALLOCATE="$CODE_DIR/allocate_dam.py"
 
 cd "$SCRIPT_DIR"
 
 STEP="Allocate dams and separate river, small, and error records"
 printf '\n==================================================\n[STEP 1/2] Allocate dams (%s)\n==================================================\n\n' "$HIRES_TAG"
-"$EXEC_ALLOCATE" "$DAM_IN" "$HIRES_TAG"
+"$PYTHON_CMD" "$EXEC_ALLOCATE" "$DAM_IN" "$HIRES_TAG" --map-format "$MAP_FORMAT"
 
 STEP="Move allocated dam tables into the map root"
 printf '\n==================================================\n[STEP 2/2] Save GRanD allocation tables\n==================================================\n\n'

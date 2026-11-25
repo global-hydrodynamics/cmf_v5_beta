@@ -23,10 +23,10 @@ def main():
     paths = read_bifprm_csv(args.map_dir / 'bifprm.csv')
     basin = merge_basins(original,paths,None,sort_paths=False)
     out = output_root(args)
-    write_raster(out/'bifbsn.bin',basin,'<i4')
-    write_raster(out/'bifcol.bin',color_map(basin,grid.west,grid.east),'<i4')
+    write_raster(out/'bifbsn.bin',basin,'<i4',grid=grid)
+    write_raster(out/'bifcol.bin',color_map(basin,grid.west,grid.east),'<i4',grid=grid)
     if args.check:
-        write_raster(out/'check_bif_bsnmod.bin',diagnostic(original,basin,paths),'<i4')
+        write_raster(out/'check_bif_bsnmod.bin',diagnostic(original,basin,paths),'<i4',grid=grid)
 
 
 if __name__ == '__main__':

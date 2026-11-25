@@ -2,15 +2,25 @@
 # Select the largest valid allocated GRDC gauge, report its river cell, and create its upstream mask.
 # Copy to <map>/script_params/ and run from any working directory.
 # Input: map-local GRDC_alloc.txt from t01-alloc_flow_gauge.sh; standard river-map files.
-# Outputs: upbasin-<GRDC_ID>.bin plus a concise station-selection report and river information.
+# Outputs: upbasin-<GRDC_ID>.nc plus a concise station-selection report and river information by default.
 # Existing output files are overwritten. This script does not run t01 automatically.
 set -eu
 
 # Paths
 # Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
+PYTHON_CMD="${PYTHON_CMD:-python3}"
+MAP_FORMAT="${MAP_FORMAT:-netcdf}"  # Set binary only for legacy Binary maps.
+if [ -n "${CMF5_ROOT:-}" ]; then
+    CODE_DIR="$CMF5_ROOT/map/tools/code"
+else
+    CODE_DIR="$SCRIPT_DIR/../../tools/code"
+fi
+if [ ! -d "$CODE_DIR" ]; then
+    printf '[ERROR] Shared Python tools not found: %s (set CMF5_ROOT to the repository root)\n' "$CODE_DIR" >&2
+    exit 1
+fi
 MAP_DIR=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
-CODE_DIR=$(CDPATH= cd "$SCRIPT_DIR/../../tools/code" && pwd -P)
 
 # GRDC allocation table used to select a station for the upstream-basin example.
 GRDC_ALLOC="$MAP_DIR/GRDC_alloc.txt"  # Map-local GRDC_alloc.txt; change this path to use another table.
@@ -43,8 +53,8 @@ trap 'exit 143' TERM
 # End of error handling.
 # ----------------------------------------------------------------------
 
-EXEC_RIVINFO="$CODE_DIR/analysis_river_point_info"
-EXEC_UPBASIN="$CODE_DIR/analysis_upbasin"
+EXEC_RIVINFO="$CODE_DIR/analysis_river_point_info.py"
+EXEC_UPBASIN="$CODE_DIR/analysis_upbasin.py"
 STATION_REPORT="$MAP_DIR/grdc_station_selection.txt"
 RIVER_INFO_REPORT="$MAP_DIR/grdc_river_info.txt"
 
@@ -92,11 +102,11 @@ cd "$SCRIPT_DIR"
 
 STEP="Write river information for GRDC $GRDC_ID at cell ($IX,$IY)"
 printf '\n==================================================\n[STEP 2/3] Inspect selected GRDC river cell\n==================================================\n\n'
-"$EXEC_RIVINFO" xy "$IX" "$IY" > "$RIVER_INFO_REPORT"
+"$PYTHON_CMD" "$EXEC_RIVINFO" xy "$IX" "$IY" --map-format "$MAP_FORMAT" > "$RIVER_INFO_REPORT"
 
 STEP="Create the single-cell upstream-basin mask for GRDC $GRDC_ID"
 printf '\n==================================================\n[STEP 3/3] Create upstream-basin mask\n==================================================\n\n'
-"$EXEC_UPBASIN" "$IX" "$IY" "$UPBASIN_OUTPUT"
+"$PYTHON_CMD" "$EXEC_UPBASIN" "$IX" "$IY" "$UPBASIN_OUTPUT" --map-format "$MAP_FORMAT"
 printf 'Selected GRDC station: %s; cell=(%s,%s); area_CaMa=%s km2\n' \
     "$GRDC_ID" "$IX" "$IY" "$AREA_CAMA"
 printf 'Station summary: %s\nRiver information: %s\nUpstream mask: %s\n' \
