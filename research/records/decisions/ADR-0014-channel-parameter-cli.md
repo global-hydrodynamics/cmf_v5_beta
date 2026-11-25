@@ -31,6 +31,7 @@ The old positional mode interface is intentionally replaced. The direct Rhine ca
 - `map/mekong_15min/script_params/s01-channel_params.sh`
 - `docs/preprocessing_code_conventions.md`
 - `VR-0234`
+- Implementation commit: `bdcc579ef944a21a72af999509d15da5e8b2e9aa`
 
 ## Supersedes / superseded by
 
