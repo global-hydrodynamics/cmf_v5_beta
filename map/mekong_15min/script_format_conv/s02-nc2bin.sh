@@ -55,7 +55,7 @@ for FILE in $SEEN; do
             --map-dir .. --input "../$FILE" --output "$OUTPUT" --registry "$REGISTRY" --no-overwrite
     else
         "$PYTHON_CMD" "$CODE_DIR/convert_map_netcdf_to_binary.py" \
-            --map-dir .. --input "../$FILE" --output "$OUTPUT" --registry "$REGISTRY" --force
+            --map-dir .. --input "../$FILE" --output "$OUTPUT" --registry "$REGISTRY"
     fi
 done
 cmf_check_success

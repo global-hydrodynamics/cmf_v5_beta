@@ -6,6 +6,13 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### nc2bin wrapper argument fix (DT-0196, 2026-11-26; branch-local proposal)
+
+Removed unsupported `--force` from shared/Mekong/Rhine s02-nc2bin wrappers;
+default overwrite and `--no-overwrite` remain unchanged. Three syntax checks,
+six temporary wrapper/CLI cases and two existing converter tests pass.
+No converter change. See [VR-0240](../research/records/validation_runs/VR-0240.md).
+
 ### Single-area high-resolution selection and allocation NetCDF I/O (DT-0194, 2026-11-26; branch-local proposal)
 
 The three maintained allocation wrappers in the shared template, Rhine, and
