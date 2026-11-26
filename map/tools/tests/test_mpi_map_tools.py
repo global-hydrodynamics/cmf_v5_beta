@@ -386,19 +386,21 @@ class MpiMapToolsTests(unittest.TestCase):
             binary_dir.mkdir()
             (code_dir / "Makefile").write_text(".PHONY: analysis\nanalysis:\n\t@:\n", encoding="ascii")
             shutil.copy2(self.bin / "analysis_check_mpi_bifurcation", code_dir / "analysis_check_mpi_bifurcation")
-            shutil.copy2(CODE / "analysis_check_mpi_bifurcation.py", code_dir / "analysis_check_mpi_bifurcation.py")
+            shutil.copy2(CODE / "analysis_mpi_dropped_bifurcation.py", code_dir / "analysis_mpi_dropped_bifurcation.py")
             shutil.copy2(CODE / "mod_bifprm_csv.py", code_dir / "mod_bifprm_csv.py")
             shutil.copy2(CODE / "mod_map_io.py", code_dir / "mod_map_io.py")
-            shutil.copy2(TOOLS / "script_analysis" / "a05-check_mpi_bifurcation.sh", script_dir)
+            shutil.copy2(TOOLS / "script_analysis" / "a05-mpi_dropped_bifurcation.sh", script_dir)
             (script_dir / "code").symlink_to("../../tools/code")
             for name in ("params.txt", "bifprm.txt", "lonlat.bin"):
                 source = MAP / "binary" / name if (MAP / "binary" / name).is_file() else MAP / name
                 shutil.copy2(source, map_root / name)
             shutil.copy2(MAP / "binary" / "nextxy.bin", binary_dir / "nextxy.bin")
             self.write_csv_from_legacy(map_root)
-            (binary_dir / "mpireg-1.bin").write_bytes(struct.pack("<9600i", *([1] * 9600)))
+            region_map = binary_dir / "mpireg-1.bin"
+            region_map.write_bytes(struct.pack("<9600i", *([1] * 9600)))
+            region_map_before = region_map.read_bytes()
             result = subprocess.run(
-                [str(script_dir / "a05-check_mpi_bifurcation.sh"), "binary/mpireg-1.bin", "--map-format", "binary"],
+                [str(script_dir / "a05-mpi_dropped_bifurcation.sh"), "binary/mpireg-1.bin", "--map-format", "binary"],
                 cwd=tmp,
                 check=False,
                 capture_output=True,
@@ -406,6 +408,7 @@ class MpiMapToolsTests(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("Bifurcation pathways: 382", result.stdout)
+            self.assertEqual(region_map.read_bytes(), region_map_before)
 
     def test_parsed_sort_is_layer_independent_and_tie_deterministic(self):
         fields = []
@@ -463,7 +466,7 @@ class MpiMapToolsTests(unittest.TestCase):
     def test_shell_entry_points_have_valid_syntax(self):
         for script in (
             TOOLS / "script_params" / "x01-mpi_map_setup.sh",
-            TOOLS / "script_analysis" / "a05-check_mpi_bifurcation.sh",
+            TOOLS / "script_analysis" / "a05-mpi_dropped_bifurcation.sh",
         ):
             subprocess.run(["sh", "-n", str(script)], check=True)
 

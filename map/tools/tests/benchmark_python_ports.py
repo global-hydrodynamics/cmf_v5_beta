@@ -255,7 +255,8 @@ def run_case(index, name, work, build, repeats):
         if name == 'region_cut_domain': extra += ['--region-info', str(fcwd/'region_info.txt'), '--change-info', str(p/'dim_change.txt')]
         if name in ('region_combine_hires','region_cut_bifway'): extra += ['--change-info', str(fcwd/'dim_change.txt')]
         if name == 'region_cut_domain': (p/'dim_change.txt').unlink(missing_ok=True)
-        b, elapsed, rss = timed([sys.executable, str(CODE/(name+'.py')), *pargs, *extra], case, case/f'p{repetition}.log')
+        python_name = 'analysis_mpi_dropped_bifurcation' if name == 'analysis_check_mpi_bifurcation' else name
+        b, elapsed, rss = timed([sys.executable, str(CODE/(python_name+'.py')), *pargs, *extra], case, case/f'p{repetition}.log')
         ptimes.append(elapsed); pmem.append(rss)
         if a.returncode or b.returncode:
             return {'program': name, 'status': 'FAIL', 'reason': f'Fortran={a.returncode}, Python={b.returncode}; see c{index:02d} logs'}

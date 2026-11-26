@@ -220,7 +220,7 @@ class WorkflowMessageTests(unittest.TestCase):
 
     def test_x01_success_cleans_visible_intermediate_and_reports_connectivity_failure(self) -> None:
         executables = (
-            "param_mpi_set_basin", "param_mpi_set_region", "analysis_check_mpi_bifurcation",
+            "param_mpi_set_basin", "param_mpi_set_region", "analysis_mpi_dropped_bifurcation",
         )
         script = self.install("x01-mpi_map_setup.sh", executables)
         result = self.run_script(script)
@@ -229,53 +229,80 @@ class WorkflowMessageTests(unittest.TestCase):
         calls = [line.split() for line in self.calls()]
         self.assertEqual([call[0] for call in calls], [
             "param_mpi_set_basin", "param_mpi_set_region", "param_mpi_set_region",
-            "param_mpi_set_region", "analysis_check_mpi_bifurcation",
+            "param_mpi_set_region", "analysis_mpi_dropped_bifurcation",
         ])
         self.assertEqual(calls[1:4], [
             ["param_mpi_set_region", "4", "--map-dir", ".."],
             ["param_mpi_set_region", "8", "--map-dir", ".."],
             ["param_mpi_set_region", "16", "--map-dir", ".."],
         ])
-        self.assertEqual(calls[4], ["analysis_check_mpi_bifurcation", "../mpireg-16.nc", "--map-dir", ".."])
+        self.assertEqual(calls[4], ["analysis_mpi_dropped_bifurcation", "../mpireg-16.nc", "--map-dir", ".."])
         self.assertFalse((self.map_root / "mpireg.bin").exists())
         self.assertTrue((self.map_root / "bifcol_mpi.nc").exists())
         self.assertFalse(list(self.map_root.glob("bsncol_mpi-*.bin")))
         self.assertFalse((self.map_root / "bifbsn_mpi.nc").exists())
         self.log.unlink()
 
-        result = self.run_script(script, "analysis_check_mpi_bifurcation:../mpireg-16.nc")
+        result = self.run_script(script, "analysis_mpi_dropped_bifurcation:../mpireg-16.nc")
         self.assert_failure(
             result, script.name,
-            "Check bifurcation connectivity for the default partition",
+            "Check dropped bifurcation pathways for the largest requested MPI count (16)",
         )
-        self.assertTrue((self.map_root / "bifbsn_mpi.nc").exists())
-        self.assertEqual(self.calls()[-1].split()[0], "analysis_check_mpi_bifurcation")
+        self.assertFalse((self.map_root / "bifbsn_mpi.nc").exists())
+        self.assertEqual(self.calls()[-1].split()[0], "analysis_mpi_dropped_bifurcation")
 
     def test_x01_partition_loop_failure_stops_later_counts_and_cleans_intermediate(self) -> None:
         script = self.install("x01-mpi_map_setup.sh", (
-            "param_mpi_set_basin", "param_mpi_set_region", "analysis_check_mpi_bifurcation",
+            "param_mpi_set_basin", "param_mpi_set_region", "analysis_mpi_dropped_bifurcation",
         ))
         result = self.run_script(script, "param_mpi_set_region:8")
         self.assert_failure(result, script.name, "Assign basins to 8 MPI regions")
         self.assertEqual(self.calls()[-1].split(), ["param_mpi_set_region", "8", "--map-dir", ".."])
         self.assertNotIn("param_mpi_set_region 16", self.calls())
-        self.assertNotIn("analysis_check_mpi_bifurcation", "\n".join(self.calls()))
-        self.assertTrue((self.map_root / "bifbsn_mpi.nc").exists())
+        self.assertNotIn("analysis_mpi_dropped_bifurcation", "\n".join(self.calls()))
+        self.assertFalse((self.map_root / "bifbsn_mpi.nc").exists())
 
     def test_x01_forwards_check_map_only_to_basin_aggregation(self) -> None:
         script = self.install("x01-mpi_map_setup.sh", (
-            "param_mpi_set_basin", "param_mpi_set_region", "analysis_check_mpi_bifurcation",
+            "param_mpi_set_basin", "param_mpi_set_region", "analysis_mpi_dropped_bifurcation",
         ))
         source = script.read_text(encoding="utf-8")
-        source = source.replace('--mode "$MPIMODE" \\\n    --map-dir ..', '--mode "$MPIMODE" \\\n    --check-map --map-dir ..')
+        source = source.replace('--mode "$BASIN_MERGE_MODE" \\\n    --map-dir ..', '--mode "$BASIN_MERGE_MODE" \\\n    --check-map --map-dir ..')
         script.write_text(source, encoding="utf-8")
         result = self.run_script(script)
         self.assert_success(result, script.name)
         calls = self.calls()
-        self.assertEqual(calls[0].split(), ["param_mpi_set_basin", "--mode", "normal", "--check-map", "--map-dir", ".."])
-        self.assertEqual(calls[-1].split(), ["analysis_check_mpi_bifurcation", "../mpireg-16.nc", "--map-dir", ".."])
+        self.assertEqual(calls[0].split(), ["param_mpi_set_basin", "--mode", "standard", "--check-map", "--map-dir", ".."])
+        self.assertEqual(calls[-1].split(), ["analysis_mpi_dropped_bifurcation", "../mpireg-16.nc", "--map-dir", ".."])
         self.assertNotIn("analysis_mpi_region_color", "\n".join(calls))
         self.assertTrue(all("check_map" not in call for call in calls[1:]))
+
+    def test_x01_uses_largest_unsorted_count_once_for_diagnostic(self) -> None:
+        script = self.install("x01-mpi_map_setup.sh", (
+            "param_mpi_set_basin", "param_mpi_set_region", "analysis_mpi_dropped_bifurcation",
+        ))
+        source = script.read_text(encoding="utf-8").replace('MPI_COUNTS="4 8 16"', 'MPI_COUNTS="8 4 12"')
+        script.write_text(source, encoding="utf-8")
+        result = self.run_script(script)
+        self.assert_success(result, script.name)
+        calls = [line.split() for line in self.calls()]
+        self.assertEqual([call[1] for call in calls[1:4]], ["8", "4", "12"])
+        diagnostics = [call for call in calls if call[0] == "analysis_mpi_dropped_bifurcation"]
+        self.assertEqual(diagnostics, [["analysis_mpi_dropped_bifurcation", "../mpireg-12.nc", "--map-dir", ".."]])
+
+    def test_x01_rejects_invalid_mpi_counts_before_processing(self) -> None:
+        for counts in ("", "4 0", "4 nope"):
+            with self.subTest(counts=counts):
+                self.log.unlink(missing_ok=True)
+                script = self.install("x01-mpi_map_setup.sh", (
+                    "param_mpi_set_basin", "param_mpi_set_region", "analysis_mpi_dropped_bifurcation",
+                ))
+                source = script.read_text(encoding="utf-8").replace('MPI_COUNTS="4 8 16"', f'MPI_COUNTS="{counts}"')
+                script.write_text(source, encoding="utf-8")
+                result = self.run_script(script)
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                self.assertIn("positive integers", result.stderr)
+                self.assertEqual(self.calls(), [])
 
 
 if __name__ == "__main__":

@@ -80,8 +80,12 @@ def diagnostic(original, basin, paths):
 
 def main():
     p = parser(__doc__)
-    p.add_argument('--mode', choices=['normal', 'MaxMPI'], default='normal',
-                   help='Basin aggregation threshold mode (default: normal).')
+    p.add_argument(
+        '--mode', choices=['standard', 'small_basins', 'normal', 'MaxMPI'],
+        default='standard',
+        help='Basin aggregation threshold mode: standard (6%) or small_basins (3%); '
+             'normal and MaxMPI remain compatible aliases.',
+    )
     p.add_argument('--check-map', action='store_true',
                    help='Write the optional basin aggregation diagnostic map.')
     args = p.parse_args()
@@ -91,7 +95,8 @@ def main():
     for row in paths:
         if not (1<=row['ix']<=grid.nx and 1<=row['jx']<=grid.nx and 1<=row['iy']<=grid.ny and 1<=row['jy']<=grid.ny):
             p.error('path endpoint outside map')
-    basin = merge_basins(original,paths,.03 if args.mode=='MaxMPI' else .06)
+    rate = .03 if args.mode in ('small_basins', 'MaxMPI') else .06
+    basin = merge_basins(original,paths,rate)
     out = output_root(args)
     write_raster(out/'bifcol_mpi.bin',color_map(basin,grid.west,grid.east),'<i4',grid=grid)
     if args.check_map:

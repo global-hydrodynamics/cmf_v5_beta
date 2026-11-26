@@ -1,5 +1,5 @@
 #!/bin/sh
-# Example: inspect bifurcation connectivity for an existing MPI region map.
+# Example: inspect bifurcation pathways dropped from an existing MPI region map.
 # The executable reads map inputs from the map root, so this example runs there.
 set -eu
 
@@ -85,27 +85,27 @@ cd "$MAP_DIR"
 
 printf '\nWorking directory: %s\n' "$PWD"
 
-STEP="Check bifurcation connectivity for $REGION_MAP"
+STEP="Check dropped bifurcation pathways for $REGION_MAP"
 printf '\n==================================================\n'
-printf '[STEP 1/1] Check bifurcation connectivity\n'
+printf '[STEP 1/1] Check dropped bifurcation pathways\n'
 printf '==================================================\n\n'
 
 if [ -n "$CSV_ARGUMENT" ]; then
-    printf '"$PYTHON_CMD" "$CODE_DIR/analysis_check_mpi_bifurcation.py" '
+    printf '"$PYTHON_CMD" "$CODE_DIR/analysis_mpi_dropped_bifurcation.py" '
     quote_shell_arg "$REGION_MAP"
     printf ' '
     quote_shell_arg "$CSV_OPTION"
     printf ' '
     quote_shell_arg "$CSV_FILE"
     printf '\n'
-    "$PYTHON_CMD" "$CODE_DIR/analysis_check_mpi_bifurcation.py" --map-dir "$MAP_DIR" --map-format "$MAP_FORMAT" "$REGION_MAP" --csv "$CSV_FILE"
+    "$PYTHON_CMD" "$CODE_DIR/analysis_mpi_dropped_bifurcation.py" --map-dir "$MAP_DIR" --map-format "$MAP_FORMAT" "$REGION_MAP" --csv "$CSV_FILE"
 else
-    printf '"$PYTHON_CMD" "$CODE_DIR/analysis_check_mpi_bifurcation.py" '
+    printf '"$PYTHON_CMD" "$CODE_DIR/analysis_mpi_dropped_bifurcation.py" '
     quote_shell_arg "$REGION_MAP"
     printf '\n'
-    "$PYTHON_CMD" "$CODE_DIR/analysis_check_mpi_bifurcation.py" --map-dir "$MAP_DIR" --map-format "$MAP_FORMAT" "$REGION_MAP"
+    "$PYTHON_CMD" "$CODE_DIR/analysis_mpi_dropped_bifurcation.py" --map-dir "$MAP_DIR" --map-format "$MAP_FORMAT" "$REGION_MAP"
 fi
 
 printf '\n==================================================\n'
-printf '[SUCCESS] MPI bifurcation connectivity check complete.\n'
+printf '[SUCCESS] Dropped bifurcation pathway check complete.\n'
 printf '==================================================\n'

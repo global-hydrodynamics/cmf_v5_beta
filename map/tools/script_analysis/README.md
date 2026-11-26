@@ -51,7 +51,7 @@ The `a01`–`a05` scripts show the working directory and print each command befo
 - [`a02-upbasin.sh`](a02-upbasin.sh) creates an exploratory mask for one configured cell.
 - [`a03-subbasin.sh`](a03-subbasin.sh) demonstrates an exploratory 50,000 km2 threshold.
 - [`a04-river_node_latlon.sh`](a04-river_node_latlon.sh) extracts connections in a configured geographic rectangle.
-- [`a05-check_mpi_bifurcation.sh`](a05-check_mpi_bifurcation.sh) checks an existing `mpireg-N.bin` and can write dropped pathways as CSV.
+- [`a05-mpi_dropped_bifurcation.sh`](a05-mpi_dropped_bifurcation.sh) checks an existing `mpireg-N.bin` and can write dropped pathways as CSV using `analysis_mpi_dropped_bifurcation.py`.
 
 These independent examples do not replace standard preparation workflows. `script_params/s05-subbasin.sh` and `x02-upbasin.sh` call the shared Python programs directly and write their intended standard/sample products. See the [parameter workflow guide](../script_params/README.md#river-network-analysis).
 

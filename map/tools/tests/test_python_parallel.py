@@ -253,15 +253,17 @@ class FallbackParityTests(unittest.TestCase):
 
     def test_mpi_modes_and_diagnostic_integer_records(self):
         sample = ROOT/'map/mekong_15min'
-        for mode in ('normal','MaxMPI'):
+        for mode, legacy_mode in (('standard','normal'),('small_basins','MaxMPI'),
+                                  ('normal','normal'),('MaxMPI','MaxMPI')):
             with self.subTest(mode=mode), tempfile.TemporaryDirectory(prefix='cmf-mpi-port-') as temp:
-                root=Path(temp);work=root/'work';work.mkdir();out=root/'out'
+                root=Path(temp);work=root/'work';work.mkdir();out=root/'binary'
                 for name in ('params.txt','bifprm.csv'):
                     shutil.copyfile(sample/'binary'/name if name.endswith('.bin') else sample/name,root/name)
                 for name in ('basin.bin','nextxy.bin'):
                     binary_root=root/'binary';binary_root.mkdir(exist_ok=True)
                     shutil.copyfile(sample/'binary'/name,binary_root/name)
-                a=subprocess.run([str(self.executables['param_mpi_set_basin']),mode,'check_map'],cwd=work,capture_output=True,text=True)
+                    shutil.copyfile(sample/'binary'/name,root/name)
+                a=subprocess.run([str(self.executables['param_mpi_set_basin']),legacy_mode,'check_map'],cwd=work,capture_output=True,text=True)
                 b=subprocess.run([sys.executable,str(CODE/'param_mpi_set_basin.py'),'--mode',mode,'--check-map','--map-format','binary','--map-dir',str(root),'--output-dir',str(out)],cwd=work,capture_output=True,text=True)
                 self.assertEqual(a.returncode,0,a.stdout+a.stderr)
                 self.assertEqual(b.returncode,0,b.stdout+b.stderr)
