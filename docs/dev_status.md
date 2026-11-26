@@ -6,6 +6,15 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### All-map local script synchronization (DT-0202, 2026-11-26; branch-local proposal)
+
+Maintainer authorizes accumulated fixes in local glb/TE-Japan copies too.
+48 scripts and3 READMEs synchronized;15 obsolete local scripts backed up and
+retired. tools/Mekong/Rhine already current; local data/lists and ignore policy
+retained.127 syntax checks/441 spacing checks pass; no conversion. TE-Japan
+still needs legacy data-layout migration before NetCDF-first processing.
+See [VR-0246](../research/records/validation_runs/VR-0246.md).
+
 ### s02 overwrite setting simplification (DT-0201, 2026-11-26; branch-local proposal)
 
 Shared/Mekong/Rhine s02 replace Shell flags with editable NO_OVERWRITE and one
