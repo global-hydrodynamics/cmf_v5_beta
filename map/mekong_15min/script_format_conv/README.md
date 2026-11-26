@@ -64,3 +64,14 @@ directory is absent, and writes `../<tag>/*.nc`. Existing standard Binary
 directories take precedence; Python validates metadata. External maps use the
 same copied s13 workflow via `CMF_V50_ROOT`; the old t03 wrapper is retired.
 See the [shared selection guide](../../tools/script_format_conv/README.md#high-resolution-selection-s03-and-s13).
+
+## s02 overwrite setting
+
+Choose one assignment in `s02-nc2bin.sh`'s `User settings` section:
+
+- `NO_OVERWRITE=""`: overwrite existing Binary outputs (default).
+- `NO_OVERWRITE="--no-overwrite"`: preserve existing Binary outputs.
+
+These are alternatives, not consecutive assignments. Run `./s02-nc2bin.sh`
+without Shell flags; its old `--no-overwrite`/`--help` parser is removed.
+The Python CLI and other scripts' command-line options are unchanged.

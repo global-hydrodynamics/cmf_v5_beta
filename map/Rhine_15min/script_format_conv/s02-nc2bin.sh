@@ -11,14 +11,7 @@ PYTHON_CMD="python3"
 # ----------------------------------------------------------------------
 # User settings
 # ----------------------------------------------------------------------
-NO_OVERWRITE=0
-while [ "$#" -gt 0 ]; do
-    case "$1" in
-        --no-overwrite) NO_OVERWRITE=1; shift ;;
-        --help|-h) printf 'Usage: ./%s [--no-overwrite]\n' "${0##*/}"; exit 0 ;;
-        *) printf 'Usage: ./%s [--no-overwrite]\n' "${0##*/}" >&2; exit 2 ;;
-    esac
-done
+NO_OVERWRITE=""   # Set to "--no-overwrite" to preserve existing files.
 
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
@@ -52,15 +45,10 @@ for FILE in $SEEN; do
     NUMBER=$((NUMBER + 1))
     OUTPUT="$BINARY_DIR/${FILE%.nc}.bin"
     printf '[%s/%s] ../%s -> %s\n' "$NUMBER" "$COUNT" "$FILE" "$OUTPUT"
-    if [ "$NO_OVERWRITE" -eq 1 ]; then
-        "$PYTHON_CMD" "$CODE_DIR/convert_map_netcdf_to_binary.py" \
-            --map-dir .. --input "../$FILE" --output "$OUTPUT" --registry "$REGISTRY" --no-overwrite
-    else
-        "$PYTHON_CMD" "$CODE_DIR/convert_map_netcdf_to_binary.py" \
-            --map-dir .. --input "../$FILE" --output "$OUTPUT" --registry "$REGISTRY"
-    fi
+    # Intentionally unquoted: empty adds no argument; otherwise forward the option.
+    "$PYTHON_CMD" "$CODE_DIR/convert_map_netcdf_to_binary.py" \
+        --map-dir .. --input "../$FILE" --output "$OUTPUT" \
+        --registry "$REGISTRY" $NO_OVERWRITE
 done
 
 cmf_check_success
-
-# Optional converter flag: --no-overwrite preserves existing Binary outputs.

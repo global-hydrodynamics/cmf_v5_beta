@@ -6,6 +6,13 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### s02 overwrite setting simplification (DT-0201, 2026-11-26; branch-local proposal)
+
+Shared/Mekong/Rhine s02 replace Shell flags with editable NO_OVERWRITE and one
+Python call; both modes and all selection/validation remain intact. Direct
+usage docs updated. Three syntax checks and six capture-only two-file checks
+pass; no conversion. See [Work Report / VR-0245](../research/records/validation_runs/VR-0245.md).
+
 ### Map workflow message spacing (DT-0200, 2026-11-26; branch-local proposal)
 
 Root AGENTS defines one blank line before workflow init/step/success calls.

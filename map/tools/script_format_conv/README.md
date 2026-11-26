@@ -165,3 +165,14 @@ includes regional-boundary connections, and `RIVWTH="rivwth_merit.nc"`
 selects MERIT width (`rivwth.nc` is the empirical-width alternative).
 It writes `rivclim.nc` and `rivpar.nc` in the selected map directory;
 the existing `--force` behavior is retained.
+
+## s02 overwrite setting
+
+Choose one assignment in `s02-nc2bin.sh`'s `User settings` section:
+
+- `NO_OVERWRITE=""`: overwrite existing Binary outputs (default).
+- `NO_OVERWRITE="--no-overwrite"`: preserve existing Binary outputs.
+
+These are alternatives, not consecutive assignments. Run `./s02-nc2bin.sh`
+without Shell flags; its old `--no-overwrite`/`--help` parser is removed.
+The Python CLI and other scripts' command-line options are unchanged.
