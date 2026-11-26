@@ -24,7 +24,8 @@ class WorkflowMessageTests(unittest.TestCase):
         shell_functions_dir = self.root / "tools" / "shell_functions"
         shell_functions_dir.mkdir(parents=True)
         shutil.copy2(ROOT / "tools" / "cmf_shell_functions.sh", self.root / "tools" / "cmf_shell_functions.sh")
-        for name in ("cmf_check_shell_error.sh", "cmf_select_hires_tag.sh"):
+        for name in ("cmf_check_shell_error.sh", "cmf_select_hires_tag.sh",
+                     "cmf_select_hires_for_conversion.sh"):
             shutil.copy2(ROOT / "tools" / "shell_functions" / name, shell_functions_dir / name)
         (self.map_root / "1min").mkdir()
         (self.map_root / "1min" / "location.txt").write_text("fixture\n", encoding="ascii")
@@ -281,28 +282,25 @@ class WorkflowMessageTests(unittest.TestCase):
         script = self.install("x01-mpi_map_setup.sh", (
             "param_mpi_set_basin", "param_mpi_set_region", "analysis_mpi_dropped_bifurcation",
         ))
-        source = script.read_text(encoding="utf-8").replace('MPI_COUNTS="4 8 16"', 'MPI_COUNTS="8 4 12"')
+        source = script.read_text(encoding="utf-8").replace('MPI_COUNTS="4 8 16"', 'MPI_COUNTS="16 4 8"')
         script.write_text(source, encoding="utf-8")
         result = self.run_script(script)
         self.assert_success(result, script.name)
         calls = [line.split() for line in self.calls()]
-        self.assertEqual([call[1] for call in calls[1:4]], ["8", "4", "12"])
+        self.assertEqual([call[1] for call in calls[1:4]], ["16", "4", "8"])
         diagnostics = [call for call in calls if call[0] == "analysis_mpi_dropped_bifurcation"]
-        self.assertEqual(diagnostics, [["analysis_mpi_dropped_bifurcation", "../mpireg-12.nc", "--map-dir", ".."]])
+        self.assertEqual(diagnostics, [["analysis_mpi_dropped_bifurcation", "../mpireg-16.nc", "--map-dir", ".."]])
 
-    def test_x01_rejects_invalid_mpi_counts_before_processing(self) -> None:
-        for counts in ("", "4 0", "4 nope"):
-            with self.subTest(counts=counts):
-                self.log.unlink(missing_ok=True)
-                script = self.install("x01-mpi_map_setup.sh", (
-                    "param_mpi_set_basin", "param_mpi_set_region", "analysis_mpi_dropped_bifurcation",
-                ))
-                source = script.read_text(encoding="utf-8").replace('MPI_COUNTS="4 8 16"', f'MPI_COUNTS="{counts}"')
-                script.write_text(source, encoding="utf-8")
-                result = self.run_script(script)
-                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
-                self.assertIn("positive integers", result.stderr)
-                self.assertEqual(self.calls(), [])
+    def test_x01_empty_list_stops_before_processing(self) -> None:
+        script = self.install("x01-mpi_map_setup.sh", (
+            "param_mpi_set_basin", "param_mpi_set_region", "analysis_mpi_dropped_bifurcation",
+        ))
+        source = script.read_text(encoding="utf-8").replace('MPI_COUNTS="4 8 16"', 'MPI_COUNTS=""')
+        script.write_text(source, encoding="utf-8")
+        result = self.run_script(script)
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("MPI_COUNTS must not be empty", result.stderr)
+        self.assertEqual(self.calls(), [])
 
 
 if __name__ == "__main__":

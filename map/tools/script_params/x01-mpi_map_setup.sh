@@ -21,40 +21,11 @@ cmf_check_init "Prepare MPI map products"
 TEMP_BASIN="../bifbsn_mpi.nc"
 trap 'status=$?; rm -f "$TEMP_BASIN"; cmf_check_on_exit "$status"' 0
 
-case "$MPI_COUNTS" in
-    *[!0-9\ ]*)
-        printf '[ERROR] MPI_COUNTS may contain only positive integers separated by spaces.\n' >&2
-        exit 2
-        ;;
-esac
+# Count MPI partitions and select the largest for the diagnostic.
 set -- $MPI_COUNTS
-if [ "$#" -eq 0 ]; then
-    printf '[ERROR] MPI_COUNTS must contain one or more positive integers.\n' >&2
-    exit 2
-fi
-MAX_MPI=0
-NORMALIZED_MPI_COUNTS=""
-for N do
-    case "$N" in
-        *[!0-9]*|'')
-            printf '[ERROR] MPI_COUNTS entries must be positive integers: %s\n' "$N" >&2
-            exit 2
-            ;;
-    esac
-    ORIGINAL_N=$N
-    while [ "${N#0}" != "$N" ]; do
-        N=${N#0}
-    done
-    if [ -z "$N" ]; then
-        printf '[ERROR] MPI_COUNTS entries must be positive integers: %s\n' "$ORIGINAL_N" >&2
-        exit 2
-    fi
-    NORMALIZED_MPI_COUNTS="${NORMALIZED_MPI_COUNTS}${NORMALIZED_MPI_COUNTS:+ }$N"
-    if [ "$N" -gt "$MAX_MPI" ]; then
-        MAX_MPI=$N
-    fi
-done
 PARTITION_COUNT=$#
+[ "$PARTITION_COUNT" -gt 0 ] || { printf 'MPI_COUNTS must not be empty.\n' >&2; exit 2; }
+MAX_MPI=$(printf '%s\n' "$@" | sort -n | tail -n 1)
 TOTAL_STEPS=$((PARTITION_COUNT + 2))
 
 cmf_check_step 1 "$TOTAL_STEPS" "Aggregate basins using $BASIN_MERGE_MODE threshold"
@@ -62,7 +33,7 @@ cmf_check_step 1 "$TOTAL_STEPS" "Aggregate basins using $BASIN_MERGE_MODE thresh
     --map-dir ..
 
 STEP_COUNT=2
-for N in $NORMALIZED_MPI_COUNTS; do
+for N in $MPI_COUNTS; do
     cmf_check_step "$STEP_COUNT" "$TOTAL_STEPS" "Assign basins to $N MPI regions"
     "$PYTHON_CMD" "$CODE_DIR/param_mpi_set_region.py" "$N" --map-dir ..
     STEP_COUNT=$((STEP_COUNT + 1))

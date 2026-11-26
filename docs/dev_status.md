@@ -6,6 +6,14 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Simplified MPI_COUNTS handling (DT-0199, 2026-11-26; branch-local proposal)
+
+Shared/Mekong/Rhine x01 use argument count and numeric sort for the largest MPI
+count, then loop over the original configuration. Defensive normalization is
+removed; only an empty-list check remains. Settings, diagnostic frequency,
+progress and cleanup are unchanged. Three syntax checks and10 stubbed workflow
+tests pass; no map generation. See [VR-0243](../research/records/validation_runs/VR-0243.md).
+
 ### Interactive multi-resolution format conversion (DT-0198, 2026-11-26; branch-local proposal)
 
 Shared/Mekong/Rhine s03/s13 use a conversion-only selector with source-aware
