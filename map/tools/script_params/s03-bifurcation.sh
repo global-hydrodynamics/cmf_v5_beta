@@ -5,7 +5,7 @@
 # Outputs: bifprm.csv, bifprm.nc, bifbsn.nc, bifcol.nc in the map root.
 set -eu
 
-# CaMa-Flood general setting (check CMF root, import shell error checker)
+# CaMa-Flood general setting (check CMF root, import CMF common shell functions)
 PYTHON_CMD="python3"
 : "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
 . "$CMF_V50_ROOT/tools/cmf_shell_functions.sh"

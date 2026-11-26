@@ -124,10 +124,33 @@ initialization block immediately after the script header and `set -eu`, in this
 exact order:
 
 ```sh
-# CaMa-Flood general setting (check CMF root, import shell error checker)
+# CaMa-Flood general setting (check CMF root, import CMF common shell functions)
 PYTHON_CMD="python3"
 : "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
 . "$CMF_V50_ROOT/tools/cmf_shell_functions.sh"
+```
+
+When selecting a high-resolution map, explain the selection briefly at the call
+site:
+
+```sh
+HIRES_TAG=$(cmf_select_hires_tag "$HIRES_TAG")  # Select high-res map (e.g., 1min, 15sec, 3sec).
+HIRES_TAG=$(cmf_select_hires_tag "$HIRES_TAG" --single-area)  # Select a single-area high-res map.
+```
+
+For input-matrix workflows, label grid settings as properties of the external
+runoff input, not the CaMa-Flood map domain. For example:
+
+```sh
+# Standard global 1-degree ELSE_GPCC runoff input grid.
+ROFFTAG="test-1deg"  # Runoff dataset/grid identifier.
+GRSIZEIN=1.0         # Input runoff grid resolution [degree].
+WESTIN=-180.0        # Input runoff grid western boundary [degree].
+EASTIN=180.0         # Input runoff grid eastern boundary [degree].
+NORTHIN=90.0         # Input runoff grid northern boundary [degree].
+SOUTHIN=-90.0        # Input runoff grid southern boundary [degree].
+OLAT="NtoS"          # Input runoff grid latitude ordering (north to south).
+HIRES_TAG=""         # Empty recommends the coarsest available high-res map.
 ```
 
 Start the separately labeled `User settings` section immediately afterward.
@@ -162,7 +185,7 @@ use the workflow's normal error reporting.
 New or refactored preprocessing wrappers use four recognizable parts:
 
 1. **CaMa-Flood general setting:** the standard block above (Python interpreter,
-   ROOT validation and shared error-checker import).
+   ROOT validation and common Shell function import).
 2. **User settings:** scientific parameters, input datasets and essential paths.
 3. **Processing steps:** direct Python calls with required positional arguments,
    using `cmf_check_init`, `cmf_check_step` and `cmf_check_success` for progress.

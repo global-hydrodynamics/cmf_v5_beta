@@ -3,7 +3,7 @@
 # Run from this map's script_params/ directory.
 set -eu
 
-# CaMa-Flood general setting (check CMF root, import shell error checker)
+# CaMa-Flood general setting (check CMF root, import CMF common shell functions)
 PYTHON_CMD="python3"
 : "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
 . "$CMF_V50_ROOT/tools/cmf_shell_functions.sh"
@@ -11,13 +11,13 @@ PYTHON_CMD="python3"
 # ----------------------------------------------------------------------
 # User settings
 # ----------------------------------------------------------------------
-ROFFTAG="repo-mek_1deg"  # Tag for the paired input matrix and diminfo products.
-GRSIZEIN=1                 # Runoff grid-cell size (degrees).
-WESTIN=90                  # Western edge (degrees longitude).
-EASTIN=110                 # Eastern edge (degrees longitude).
-NORTHIN=35                 # Northern edge (degrees latitude).
-SOUTHIN=5                  # Southern edge (degrees latitude).
-OLAT="NtoS"               # Runoff latitude rows are ordered north to south.
+ROFFTAG="repo-mek_1deg"  # Runoff dataset/grid identifier.
+GRSIZEIN=1                 # Input runoff grid resolution [degree].
+WESTIN=90                  # Input runoff grid western boundary [degree].
+EASTIN=110                 # Input runoff grid eastern boundary [degree].
+NORTHIN=35                 # Input runoff grid northern boundary [degree].
+SOUTHIN=5                  # Input runoff grid southern boundary [degree].
+OLAT="NtoS"               # Input runoff grid latitude ordering (north to south).
 HIRES_TAG="1min"          # High-resolution source map used for grid overlap.
 
 # ----------------------------------------------------------------------

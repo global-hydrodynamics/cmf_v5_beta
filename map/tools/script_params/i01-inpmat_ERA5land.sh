@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-# CaMa-Flood general setting (check CMF root, import shell error checker)
+# CaMa-Flood general setting (check CMF root, import CMF common shell functions)
 PYTHON_CMD="python3"
 : "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
 . "$CMF_V50_ROOT/tools/cmf_shell_functions.sh"
@@ -9,14 +9,14 @@ PYTHON_CMD="python3"
 # ----------------------------------------------------------------------
 # User settings
 # ----------------------------------------------------------------------
-# ERA5-Land global 0.1-degree grid, labels coordinates/order independent of time period.
-ROFFTAG="ERA5land_global"
-GRSIZEIN=0.1
-WESTIN=-180.05
-EASTIN=179.95
-NORTHIN=90.05
-SOUTHIN=-90.05
-OLAT="NtoS"
+# ERA5-Land runoff input grid; settings describe the external data grid, not the map domain.
+ROFFTAG="ERA5land_global"  # Runoff dataset/grid identifier.
+GRSIZEIN=0.1               # Input runoff grid resolution [degree].
+WESTIN=-180.05              # Input runoff grid western boundary [degree].
+EASTIN=179.95               # Input runoff grid eastern boundary [degree].
+NORTHIN=90.05               # Input runoff grid northern boundary [degree].
+SOUTHIN=-90.05              # Input runoff grid southern boundary [degree].
+OLAT="NtoS"                 # Input runoff grid latitude ordering (north to south).
 HIRES_TAG=""  # Empty selects the coarsest installed map; set a tag to choose explicitly.
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
