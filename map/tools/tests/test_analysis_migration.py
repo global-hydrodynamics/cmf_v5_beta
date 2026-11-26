@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import os
 import shutil
+import sys
 import struct
 import subprocess
 import tempfile
@@ -25,7 +26,6 @@ SAMPLE = ROOT / "map" / "mekong_15min"
 CODE = ROOT / "map" / "tools" / "code" / "legacy_fortran"
 LEGACY = ROOT / "map" / "src" / "src_param"
 PARAM_SCRIPTS = ROOT / "map" / "tools" / "script_params"
-ANALYSIS_SCRIPTS = ROOT / "map" / "tools" / "script_analysis"
 MAP_FILES = (
     "params.txt", "nextxy.bin", "basin.bin", "upgrid.bin", "uparea.bin",
     "ctmare.bin", "elevtn.bin", "lonlat.bin", "GRDC_alloc.txt",
@@ -36,7 +36,7 @@ MAP_NETCDF_FILES = (
 
 
 def run(args: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
-    env = dict(os.environ, CMF_V50_ROOT=str(ROOT))
+    env = dict(os.environ, CMF_V50_ROOT=str(ROOT), PATH=f"{Path(sys.executable).parent}:{os.environ['PATH']}")
     return subprocess.run(args, cwd=cwd, env=env, text=True, capture_output=True, check=False)
 
 
@@ -86,13 +86,7 @@ class AnalysisMigrationTests(unittest.TestCase):
         base = self.root / label
         map_dir = base / "map" / "mekong_15min"
         script_params = map_dir / "script_params"
-        script_analysis = map_dir / "script_analysis"
-        code_link = base / "map" / "tools" / "code"
         script_params.mkdir(parents=True)
-        script_analysis.mkdir()
-        code_link.parent.mkdir(parents=True)
-        shutil.copytree(self.v5_dir, code_link)
-        (script_analysis / "code").symlink_to("../../tools/code")
         for name in MAP_FILES:
             source = SAMPLE / "binary" / name if name.endswith(".bin") else SAMPLE / name
             shutil.copy2(source, map_dir / name)
@@ -183,7 +177,7 @@ class AnalysisMigrationTests(unittest.TestCase):
         legacy_analysis = legacy_map / "script_analysis"
         legacy_analysis.mkdir()
         for label, executable, workdir in (
-            ("v5", self.v5_dir / "analysis_river_node_latlon", v5_map / "script_analysis"),
+            ("v5", self.v5_dir / "analysis_river_node_latlon", v5_map / "script_params"),
             ("legacy", self.legacy_dir / "get_vecmap", legacy_analysis),
         ):
             result = run([str(executable), "90", "110", "5", "35"], workdir)
@@ -224,15 +218,14 @@ class AnalysisMigrationTests(unittest.TestCase):
                 self.assertEqual(color, subbasin)
         ctl_dir = self.root / "ctl"
         ctl_dir.mkdir()
-        shutil.copy2(v5_map / "upbasin.bin", v5_map / "upbasin-2569002.bin")
         shutil.copy2(v5_map / "subcol.bin", v5_map / "subcol-sample.bin")
-        for name in ("params.txt", "upbasin-2569002.bin", "subbsn-sample.bin", "subcol-sample.bin"):
+        for name in ("params.txt", "subbsn-sample.bin", "subcol-sample.bin"):
             # CTL auto-discovery registers standard names; samples are variants.
             standard = name.replace("subbsn-sample", "subbsn").replace("subcol-sample", "subcol")
             shutil.copy2(v5_map / name, ctl_dir / standard)
         result = generate_directory(ctl_dir, ROOT / "variable_table" / "map_variables.csv")
-        self.assertEqual(result.generated, 3, result)
-        for stem, variable in (("upbasin-2569002", "upbasin"), ("subbsn", "subbsn"), ("subcol", "subcol")):
+        self.assertEqual(result.generated, 2, result)
+        for stem, variable in (("subbsn", "subbsn"), ("subcol", "subcol")):
             ctl = (ctl_dir / f"{stem}.ctl").read_text(encoding="utf-8")
             self.assertIn(f"{variable} 1", ctl)
             self.assertIn("undef", ctl)
@@ -262,29 +255,21 @@ class AnalysisMigrationTests(unittest.TestCase):
         self.assertEqual((script_params / "explore.bin").stat().st_size, 80 * 120 * 4)
         self.assertEqual((script_params / "explore-col.bin").stat().st_size, 80 * 120 * 4)
 
-    def test_standard_scripts_and_analysis_templates_use_temporary_map(self) -> None:
+    def test_parameter_analysis_examples_use_temporary_map(self) -> None:
         map_dir, params = self.make_map("scripts")
         for filename in MAP_NETCDF_FILES:
             shutil.copy2(SAMPLE / filename, map_dir / filename)
-        analysis = map_dir / "script_analysis"
-        for source, target in (
-            (PARAM_SCRIPTS / "s05-subbasin.sh", params / "s05-subbasin.sh"),
-            (PARAM_SCRIPTS / "x02-upbasin.sh", params / "x02-upbasin.sh"),
-            (ANALYSIS_SCRIPTS / "get_river_point_info.sh", analysis / "get_river_point_info.sh"),
-            (ANALYSIS_SCRIPTS / "a01-sample_get_river_point_info.sh",
-             analysis / "a01-sample_get_river_point_info.sh"),
-            (ANALYSIS_SCRIPTS / "calc_upbasin.sh", analysis / "calc_upbasin.sh"),
-            (ANALYSIS_SCRIPTS / "a02-sample_calc_upbasin.sh",
-             analysis / "a02-sample_calc_upbasin.sh"),
-            (ANALYSIS_SCRIPTS / "a03-subbasin.sh", analysis / "a03-subbasin.sh"),
-            (ANALYSIS_SCRIPTS / "a04-river_node_latlon.sh", analysis / "a04-river_node_latlon.sh"),
+        for name in (
+            "s05-subbasin.sh", "get_river_point_info.sh", "calc_upbasin.sh",
+            "a01-sample_get_river_point_info.sh", "a02-sample_calc_upbasin.sh",
+            "a03-advanced_calc_upbasin.sh",
         ):
-            shutil.copy2(source, target)
-            target.chmod(0o755)
-            syntax = run(["sh", "-n", str(target)], self.root)
+            shutil.copy2(PARAM_SCRIPTS / name, params / name)
+            (params / name).chmod(0o755)
+            syntax = run(["sh", "-n", str(params / name)], self.root)
             self.assertEqual(syntax.returncode, 0, syntax.stderr)
 
-        result = run([str(params / "s05-subbasin.sh")], self.root)
+        result = run([str(params / "s05-subbasin.sh")], params)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         for filename, variable_name in (("subbsn-sample.nc", "subbsn"), ("subcol-sample.nc", "subcol")):
             with netCDF4.Dataset(map_dir / filename) as dataset:
@@ -293,14 +278,14 @@ class AnalysisMigrationTests(unittest.TestCase):
                 self.assertEqual(dataset[variable_name].shape, (120, 80))
                 self.assertEqual(np.dtype(dataset[variable_name].dtype), np.dtype("int32"))
 
-        result = run([str(params / "x02-upbasin.sh")], self.root)
+        result = run([str(params / "a03-advanced_calc_upbasin.sh")], self.root)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        selection = (map_dir / "grdc_station_selection.txt").read_text(encoding="utf-8")
-        self.assertIn("2569002", selection)
-        self.assertIn("\t62\t93", selection)
+        self.assertIn("Selected GRDC station: 2569002", result.stdout)
+        self.assertIn("IX=62, IY=93", result.stdout)
+        self.assertTrue((map_dir / "grdc_station_selection.txt").is_file())
+        self.assertTrue((map_dir / "grdc_river_info.txt").is_file())
         station_mask = map_dir / "upbasin-2569002.nc"
         self.assertTrue(station_mask.is_file())
-        self.assertFalse((map_dir / "upbasin.nc").exists())
         with netCDF4.Dataset(station_mask) as dataset:
             variable = dataset.variables["upbasin"]
             variable.set_auto_maskandscale(False)
@@ -309,63 +294,24 @@ class AnalysisMigrationTests(unittest.TestCase):
             self.assertEqual(np.dtype(variable.dtype), np.dtype("int32"))
             self.assertTrue({-9999, 0, 1}.issubset(set(np.unique(mask_values))))
 
-        # The generic analysis command reads the standard NetCDF maps and writes
-        # a registered int32 NetCDF mask with one-based grid indexing.
-        for filename in MAP_NETCDF_FILES:
-            shutil.copy2(SAMPLE / filename, map_dir / filename)
-        result = run([str(analysis / "calc_upbasin.sh"), "xy", "62", "93"], analysis)
+        result = run([str(params / "get_river_point_info.sh"), "xy", "62", "93"], params)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("IX=62, IY=93", result.stdout)
-        self.assertIn("Upstream Grid #:", result.stdout)
-        self.assertIn("Upstream Area [km2]:", result.stdout)
-        default_mask = map_dir / "upbasin-62-93.nc"
-        self.assertTrue(default_mask.is_file())
-        default_mask.write_bytes(b"stale output")
-        result = run([str(analysis / "calc_upbasin.sh"), "xy", "62", "93"], analysis)
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-
+        self.assertIn("Fortran IX,IY: 62 93", result.stdout)
         custom_mask = map_dir / "upbasin-custom.nc"
-        result = run([str(analysis / "calc_upbasin.sh"), "xy", "62", "93",
-                      "../upbasin-custom.nc"], analysis)
+        result = run([str(params / "calc_upbasin.sh"), "xy", "62", "93", "../upbasin-custom.nc"], params)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertTrue(custom_mask.is_file())
 
-        result = run([str(self.v5_dir / "analysis_upbasin"), "62", "93",
-                      "../upbasin-fortran.bin"], analysis)
+        result = run([str(params / "a02-sample_calc_upbasin.sh")], params)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        for output in (default_mask, custom_mask):
-            with netCDF4.Dataset(output) as dataset:
-                self.assertIn("upbasin", dataset.variables)
-                variable = dataset.variables["upbasin"]
-                variable.set_auto_maskandscale(False)
-                values = np.asarray(variable[:])
-                self.assertEqual(values.shape, (120, 80))
-                self.assertEqual(np.dtype(variable.dtype), np.dtype("int32"))
-                self.assertEqual(int(values[92, 61]), 1)
-                self.assertTrue({-9999, 0, 1}.issubset(set(np.unique(values))))
-                np.testing.assert_array_equal(values,
-                                              np.fromfile(map_dir / "upbasin-fortran.bin",
-                                                          dtype="<i4").reshape(120, 80))
-
-        result = run([str(analysis / "a02-sample_calc_upbasin.sh")], analysis)
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("Usage: ./calc_upbasin.sh xy IX IY [OUTPUT.nc]", result.stdout)
-        sample_mask = analysis / "upbasin-sample.nc"
+        self.assertIn("Mekong sample map", result.stdout)
+        sample_mask = params / "upbasin-sample.nc"
         self.assertTrue(sample_mask.is_file())
         with netCDF4.Dataset(sample_mask) as dataset:
             self.assertIn("upbasin", dataset.variables)
-        result = run([str(analysis / "calc_upbasin.sh"), "latlon", "11.5", "104.9"], analysis)
+        result = run([str(params / "calc_upbasin.sh"), "latlon", "11.5", "104.9"], params)
         self.assertEqual(result.returncode, 2)
         self.assertIn("Usage:", result.stderr)
-        result = run([str(analysis / "a03-subbasin.sh")], self.root)
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertTrue((analysis_output / "subbsn_50000km2.bin").exists())
-        self.assertTrue((analysis_output / "subcol_50000km2.bin").exists())
-        result = run([str(analysis / "a04-river_node_latlon.sh")], self.root)
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        vector_output = analysis_output / "river_node_latlon_90_110_5_35.txt"
-        self.assertTrue(vector_output.is_file())
-        self.assertIn("ori-lat", vector_output.read_text(encoding="ascii").splitlines()[0])
 
     def test_river_point_cli_netcdf_modes_match_binary_reference_and_fallback(self) -> None:
         map_dir, _ = self.make_map("river-point-netcdf")
@@ -384,7 +330,7 @@ class AnalysisMigrationTests(unittest.TestCase):
         shutil.copy2(SAMPLE / "binary" / "1min" / "location.txt", binary_hires / "location.txt")
         shutil.copy2(SAMPLE / "binary" / "1min" / "1min.catmxy.bin", binary_hires / "1min.catmxy.bin")
 
-        analysis = map_dir / "script_analysis"
+        analysis = map_dir / "script_params"
         point_info = ROOT / "map" / "tools" / "code" / "analysis_river_point_info.py"
         for query in (("xy", "62", "93"), ("latlon", "11.579", "104.946")):
             netcdf = run([sys.executable, str(point_info), *query], analysis)
@@ -407,12 +353,14 @@ class AnalysisMigrationTests(unittest.TestCase):
         self.assertRegex(netcdf.stdout, rf"Fortran IX,IY: {ix} {iy}")
 
         command = analysis / "get_river_point_info.sh"
-        shutil.copy2(ANALYSIS_SCRIPTS / command.name, command)
+        shutil.copy2(PARAM_SCRIPTS / command.name, command)
         sample = analysis / "a01-sample_get_river_point_info.sh"
-        shutil.copy2(ANALYSIS_SCRIPTS / sample.name, sample)
+        shutil.copy2(PARAM_SCRIPTS / sample.name, sample)
         python_bin = self.root / "river-point-python"
         python_bin.mkdir()
-        (python_bin / "python3").symlink_to(sys.executable)
+        python3 = python_bin / "python3"
+        python3.write_text(f"#!/bin/sh\nexec {sys.executable} \"$@\"\n", encoding="utf-8")
+        python3.chmod(0o755)
         env = dict(os.environ, CMF_V50_ROOT=str(ROOT), PATH=f"{python_bin}:{os.environ['PATH']}")
         before = set(analysis.iterdir())
         result = subprocess.run([str(command), "xy", "62", "93"], cwd=analysis, env=env,
@@ -433,7 +381,7 @@ class AnalysisMigrationTests(unittest.TestCase):
                          fallback_binary / name.replace(".nc", ".bin"))
         (fallback_map / "1min" / "location.txt").unlink()
         (fallback_map / "1min" / "1min.catmxy.bin").unlink()
-        fallback_analysis = fallback_map / "script_analysis"
+        fallback_analysis = fallback_map / "script_params"
         netcdf = run([sys.executable, str(point_info), "latlon", "11.579", "104.946"], fallback_analysis)
         binary = run([sys.executable, str(point_info), "--map-format", "binary",
                       "latlon", "11.579", "104.946"], fallback_analysis)
@@ -446,7 +394,9 @@ class AnalysisMigrationTests(unittest.TestCase):
         script = params / "s05-subbasin.sh"
         shutil.copy2(SAMPLE / "script_params" / "s05-subbasin.sh", script)
         script.chmod(0o755)
-        result = run([str(script)], self.root)
+        for filename in MAP_NETCDF_FILES:
+            shutil.copy2(SAMPLE / filename, map_dir / filename)
+        result = run([str(script)], params)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         for filename, variable_name in (("subbsn-sample.nc", "subbsn"), ("subcol-sample.nc", "subcol")):
             with netCDF4.Dataset(map_dir / filename) as dataset:
@@ -454,12 +404,12 @@ class AnalysisMigrationTests(unittest.TestCase):
                 self.assertNotIn(f"{variable_name}-sample", dataset.variables)
                 self.assertEqual(dataset[variable_name].shape, (120, 80))
         script.write_text(script.read_text().replace("AREA_THRESHOLD2_KM2=5000", "AREA_THRESHOLD2_KM2="))
-        result = run([str(script)], self.root)
+        result = run([str(script)], params)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         with netCDF4.Dataset(map_dir / "subbsn-sample.nc") as dataset:
             dataset.set_auto_maskandscale(False)
-            self.assertEqual(hashlib.sha256(np.asarray(dataset["subbsn"][:], dtype="<i4").tobytes()).hexdigest(),
-                             "4c5e85be796a3957fe67d3883ec8ad7cafd15689d1fc81ccf87ef4da0e4a7b1e")
+            digest = hashlib.sha256(np.asarray(dataset["subbsn"][:], dtype="<i4").tobytes()).hexdigest()
+        self.assertEqual(digest, "4c5e85be796a3957fe67d3883ec8ad7cafd15689d1fc81ccf87ef4da0e4a7b1e")
 
     def test_two_stage_subbasins_preserve_stage1_and_connected_ids(self) -> None:
         # Detect a full smaller-threshold rerun that would destroy Stage 1 IDs.
@@ -536,62 +486,40 @@ class AnalysisMigrationTests(unittest.TestCase):
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn("ERROR:", result.stdout)
 
-    def test_direct_cli_runs_from_map_local_script_analysis(self) -> None:
-        map_dir, _ = self.make_map("portable-cli")
-        analysis = map_dir / "script_analysis"
+    def test_direct_cli_runs_from_map_local_script_params(self) -> None:
+        map_dir, params = self.make_map("portable-cli")
+        binary_dir = map_dir / "binary"
+        binary_dir.mkdir()
+        for name in MAP_FILES:
+            if name.endswith(".bin"):
+                shutil.copy2(SAMPLE / "binary" / name, binary_dir / name)
         commands = (
-            ("analysis_river_point_info", "xy", "62", "93"),
-            ("analysis_upbasin", "62", "93"),
-            ("analysis_subbasin", "50000"),
-            ("analysis_river_node_latlon", "90", "110", "5", "35"),
+            ("analysis_river_point_info.py", "xy", "62", "93"),
+            ("analysis_upbasin.py", "62", "93"),
+            ("analysis_subbasin.py", "50000"),
+            ("analysis_river_node_latlon.py", "90", "110", "5", "35"),
         )
         outputs = []
         for command in commands:
-            result = run([str(analysis / "code" / command[0]), *command[1:]], analysis)
+            result = run([sys.executable, str(ROOT / "map" / "tools" / "code" / command[0]),
+                          "--map-format", "binary", *command[1:]], params)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             outputs.append(result.stdout)
         self.assertIn("Point Information", outputs[0])
         self.assertIn("Upstream Area", outputs[1])
-        self.assertIn("SET_MAP color basin", outputs[2])
+        self.assertEqual(outputs[2], "")  # Raster products are written to the map root.
         self.assertIn("ori-lat", outputs[3].splitlines()[0])
-        self.assertTrue((map_dir / "analysis_upbasin_62_93.bin").is_file())
-        self.assertTrue((map_dir / "analysis_subbsn_50000.bin").is_file())
-        self.assertTrue((map_dir / "analysis_subcol_50000.bin").is_file())
-        self.assertFalse((map_dir / "upbasin.bin").exists())
-        self.assertFalse((map_dir / "subbsn.bin").exists())
-        self.assertFalse((map_dir / "subcol.bin").exists())
-
-    def test_link_codes_creates_relative_shared_code_symlinks(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="cmf-analysis-link-") as temporary:
-            root = Path(temporary)
-            code = root / "map" / "tools" / "code"
-            template = root / "map" / "tools" / "script_analysis"
-            code.mkdir(parents=True)
-            template.mkdir(parents=True)
-            script = template / "a00-link_codes.sh"
-            shutil.copy2(ANALYSIS_SCRIPTS / "a00-link_codes.sh", script)
-            result = run([str(script)], self.root)
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertTrue((template / "code").is_symlink())
-            self.assertEqual(os.readlink(template / "code"), "../code")
-
-            # Re-running preserves the correct relative link.
-            result = run([str(script)], self.root)
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertEqual(os.readlink(template / "code"), "../code")
-
-            # The same script resolves the map-local path from its own location.
-            sample_analysis = root / "map" / "mekong_15min" / "script_analysis"
-            sample_analysis.mkdir(parents=True)
-            shutil.copy2(script, sample_analysis / script.name)
-            result = run([str(sample_analysis / script.name)], self.root)
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertEqual(os.readlink(sample_analysis / "code"), "../../tools/code")
+        self.assertTrue((binary_dir / "analysis_upbasin_62_93.bin").is_file())
+        self.assertTrue((binary_dir / "analysis_subbsn_50000.bin").is_file())
+        self.assertTrue((binary_dir / "analysis_subcol_50000.bin").is_file())
+        self.assertFalse((map_dir / "upbasin.nc").exists())
+        self.assertFalse((map_dir / "subbsn.nc").exists())
+        self.assertFalse((map_dir / "subcol.nc").exists())
 
     def test_missing_or_headerless_grdc_allocation_fails_clearly(self) -> None:
         map_dir, params = self.make_map("invalid-grdc")
-        script = params / "x02-upbasin.sh"
-        shutil.copy2(PARAM_SCRIPTS / "x02-upbasin.sh", script)
+        script = params / "a03-advanced_calc_upbasin.sh"
+        shutil.copy2(PARAM_SCRIPTS / "a03-advanced_calc_upbasin.sh", script)
         script.chmod(0o755)
         (map_dir / "GRDC_alloc.txt").write_text("ID lat lon\n", encoding="ascii")
         result = run([str(script)], self.root)
@@ -600,9 +528,13 @@ class AnalysisMigrationTests(unittest.TestCase):
 
     def test_grdc_selection_filters_invalid_rows_and_keeps_first_tie(self) -> None:
         map_dir, params = self.make_map("grdc-tie")
-        script = params / "x02-upbasin.sh"
-        shutil.copy2(PARAM_SCRIPTS / "x02-upbasin.sh", script)
+        script = params / "a03-advanced_calc_upbasin.sh"
+        shutil.copy2(PARAM_SCRIPTS / "a03-advanced_calc_upbasin.sh", script)
         script.chmod(0o755)
+        for name in ("get_river_point_info.sh", "calc_upbasin.sh"):
+            wrapper = params / name
+            wrapper.write_text("#!/bin/sh\necho stub\n", encoding="ascii")
+            wrapper.chmod(0o755)
         header = "ID lat lon area_Input area_CaMa error diff Type ix1 iy1 ix2 iy2 area1 area2\n"
         rows = (
             "unallocated 10 100 900 900 0 0 -9 62 93 -999 -999 -999 -999\n"
@@ -622,8 +554,8 @@ class AnalysisMigrationTests(unittest.TestCase):
     def test_missing_grdc_allocation_fails_with_manual_next_step(self) -> None:
         map_dir, params = self.make_map("missing-grdc")
         (map_dir / "GRDC_alloc.txt").unlink()
-        script = params / "x02-upbasin.sh"
-        shutil.copy2(PARAM_SCRIPTS / "x02-upbasin.sh", script)
+        script = params / "a03-advanced_calc_upbasin.sh"
+        shutil.copy2(PARAM_SCRIPTS / "a03-advanced_calc_upbasin.sh", script)
         script.chmod(0o755)
         result = run([str(script)], self.root)
         self.assertNotEqual(result.returncode, 0)

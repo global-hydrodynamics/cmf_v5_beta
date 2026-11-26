@@ -19,7 +19,8 @@ class MekongCtlWrapperIntegrationTests(unittest.TestCase):
             map_root = temp_root / "map"
             fixture = map_root / "mekong_15min"
             (map_root / "tools" / "code").mkdir(parents=True)
-            (fixture / "script_region").mkdir(parents=True)
+            (fixture / "script_format_conv").mkdir(parents=True)
+            (fixture / "1min").mkdir(parents=True)
             (fixture / "binary" / "1min").mkdir(parents=True)
 
             registry_dir = temp_root / "variable_table"
@@ -28,10 +29,13 @@ class MekongCtlWrapperIntegrationTests(unittest.TestCase):
                           registry_dir / "map_variables.csv")
             shutil.copy2(ROOT / "map" / "tools" / "code" / "generate_ctl.py",
                          map_root / "tools" / "code" / "generate_ctl.py")
-            shutil.copy2(SAMPLE / "script_region" / "s02-write_ctl.sh",
-                         fixture / "script_region" / "s02-write_ctl.sh")
+            shutil.copy2(ROOT / "map" / "tools" / "script_format_conv" / "s09-write_ctl.sh",
+                         fixture / "script_format_conv" / "s09-write_ctl.sh")
             for name in ("params.txt", "diminfo_test-1deg.txt"):
                 shutil.copy2(SAMPLE / "binary" / name, fixture / "binary" / name)
+            shutil.copy2(SAMPLE / "params.txt", fixture / "params.txt")
+            shutil.copy2(SAMPLE / "diminfo_test-1deg.txt", fixture / "diminfo_test-1deg.txt")
+            shutil.copy2(SAMPLE / "1min" / "location.txt", fixture / "1min" / "location.txt")
             for path in (SAMPLE / "binary").glob("*.bin"):
                 shutil.copy2(path, fixture / "binary" / path.name)
             shutil.copy2(SAMPLE / "binary" / "1min" / "location.txt",
@@ -40,14 +44,14 @@ class MekongCtlWrapperIntegrationTests(unittest.TestCase):
                 shutil.copy2(path, fixture / "binary" / "1min" / path.name)
 
             process = subprocess.run(
-                ["sh", "s02-write_ctl.sh"], cwd=fixture / "script_region",
+                ["sh", "s09-write_ctl.sh"], cwd=fixture / "script_format_conv",
                 text=True, capture_output=True, check=False,
             )
             self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
             summaries = [tuple(map(int, match)) for match in re.findall(
                 r"Summary: generated=(\d+), skipped=(\d+), failed=(\d+), fallback=(\d+)", process.stdout
             )]
-            self.assertEqual(len(summaries), 2, process.stdout + process.stderr)
+            self.assertEqual(len(summaries), 5, process.stdout + process.stderr)
             expected = (len(list((SAMPLE / "binary").glob("*.bin"))),
                         len(list((SAMPLE / "binary" / "1min").glob("*.bin"))))
             # Two base-map registry entries intentionally have no declared
@@ -59,10 +63,13 @@ class MekongCtlWrapperIntegrationTests(unittest.TestCase):
             # The two sample variants likewise use standard definitions through
             # explicit NetCDF conversion rather than CTL auto-discovery.
             # Numbered MPI regions now resolve to the standard mpireg row.
-            self.assertEqual([summary[:3] for summary in summaries],
-                             [(expected[0] - 3, 3, 0), (expected[1], 0, 0)],
-                             process.stdout + process.stderr)
-            self.assertIn("SKIP inpmat_repo-mek_1deg.bin: not registered", process.stdout)
+            self.assertEqual(
+                [summary[:3] for summary in summaries],
+                [(expected[0] - 4, 4, 0), (expected[1], 0, 0),
+                 (1, 0, 0), (1, 0, 0), (1, 0, 0)],
+                process.stdout + process.stderr,
+            )
+            self.assertIn("SKIP inpmat_repo-mek_1deg.bin: input matrix needs its paired dimension description", process.stdout)
 
             for variant in ("subbsn-sample.bin", "subcol-sample.bin"):
                 self.assertIn(f"SKIP {variant}: not registered", process.stdout)
@@ -70,7 +77,7 @@ class MekongCtlWrapperIntegrationTests(unittest.TestCase):
             binary_map = fixture / "binary"
             base_ctls = list(binary_map.glob("*.ctl"))
             high_ctls = list((binary_map / "1min").glob("*.ctl"))
-            self.assertEqual(len(base_ctls), expected[0] - 3)
+            self.assertEqual(len(base_ctls), expected[0] - 1)
             self.assertEqual(len(high_ctls), expected[1])
             for ctl in base_ctls + high_ctls:
                 text = ctl.read_text(encoding="utf-8")
@@ -83,8 +90,8 @@ class MekongCtlWrapperIntegrationTests(unittest.TestCase):
             self.assertIn("nextx 1 -1,40,4", (binary_map / "nextxy.ctl").read_text())
             self.assertIn("undef -9999", (binary_map / "nextxy.ctl").read_text())
             noedge_ctl = (binary_map / "nextxy_noedge.ctl").read_text()
-            self.assertIn("nextx_noedge 1 -1,40,4", noedge_ctl)
-            self.assertIn("nexty_noedge 1 -1,40,4", noedge_ctl)
+            self.assertIn("nextx 1 -1,40,4", noedge_ctl)
+            self.assertIn("nexty 1 -1,40,4", noedge_ctl)
             self.assertIn("downx 1 -1,40,4", (binary_map / "downxy.ctl").read_text())
             self.assertIn("downy 1 -1,40,4", (binary_map / "downxy.ctl").read_text())
             self.assertIn("zdef 10 linear", (binary_map / "fldhgt.ctl").read_text())

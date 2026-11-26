@@ -112,7 +112,7 @@ A successful build of the map tools does not supply external source datasets or 
 
 A **global map** supplies a connected network and parameters over its published global domain at a selected grid spacing; `glb_15min/` is the global 15-minute example used by the standard runs. A **regional map** is derived for a smaller domain, usually by starting from a compatible global map and selecting region bounds. The regional tools adjust the network and related arrays to the regional grid and can combine available higher-resolution map information. Source global maps used for preparation are package data, not GitHub fixtures.
 
-The legacy v4 regionalization template is under `map/src/src_region/`; the reusable v5 template is under `map/tools/script_region/`. These are map-preparation workflows, not automated tests. The v5 template can be copied to another target map directory, configured with a compatible source map and bounds, and run from its map-local `script_region/` directory. `s02-write_ctl.sh` is a separate CTL-generation step. See the [v5 regional workflow guide](tools/script_region/README.md) and [v5 tools overview](tools/README.md) for commands and limitations.
+The legacy v4 regionalization template is under `map/src/src_region/`; the reusable v5 template is under `map/tools/script_region/`. These are map-preparation workflows, not automated tests. The v5 template can be copied to another target map directory, configured with a compatible source map and bounds, and run from its map-local `script_region/` directory. Optional CTL generation is separate and belongs to `script_format_conv/`. See the [v5 regional workflow guide](tools/script_region/README.md) and [v5 tools overview](tools/README.md) for commands and limitations.
 
 GitHub-only map-tools checks validate metadata, source functionality, and CTL generation using synthetic fixtures and the committed Mekong binary sample. They do not execute regionalization or require the distribution package's global data. See [GitHub-only automated tests](tools/README.md#github-only-automated-tests).
 
@@ -128,12 +128,12 @@ The bifurcation workflow writes authoritative named `bifprm.csv` at the map root
 
 ### GrADS CTL generation
 
-The v5 CTL generator is [`map/tools/code/generate_ctl.py`](tools/code/generate_ctl.py), invoked by the map-local [`s02-write_ctl.sh`](tools/script_region/s02-write_ctl.sh) wrapper. It reads `variable_table/map_variables.csv` and map geometry metadata, then validates registered binary layouts and file sizes before writing GrADS descriptors. The maintained [format-conversion workflow](tools/script_format_conv/README.md) also provides Binary-to-NetCDF, high-resolution NetCDF-to-Binary restoration, and optional numeric NetCDF-to-COG caches.
+The v5 CTL generator is [`map/tools/code/generate_ctl.py`](tools/code/generate_ctl.py), invoked by the map-local [`s09-write_ctl.sh`](tools/script_format_conv/s09-write_ctl.sh) wrapper. It reads `variable_table/map_variables.csv` and map geometry metadata, then validates registered binary layouts and file sizes before writing GrADS descriptors. The maintained [format-conversion workflow](tools/script_format_conv/README.md) also provides Binary-to-NetCDF, high-resolution NetCDF-to-Binary restoration, and optional numeric NetCDF-to-COG caches.
 
 ```sh
-cd map/<map-tag>/script_region
-./s02-write_ctl.sh --dry-run
-./s02-write_ctl.sh
+cd map/<map-tag>/script_format_conv
+./s09-write_ctl.sh --dry-run
+./s09-write_ctl.sh
 ```
 
 See the [v5 tools guide](tools/README.md#grads-ctl-files) for supported registry formats, missing-value handling, and current limitations. NetCDF map-reading support in the model is separate from map conversion tooling.
@@ -182,7 +182,7 @@ Not every feature uses a file generated under `map/`, and some optional products
 1. Obtain a compatible source map and any high-resolution layers or sample runoff data the workflow needs.
 2. Build the shared v5 regional programs with `make -C map/tools/code region`.
 3. Copy `map/tools/script_region/` into the target map directory, configure `SOURCE` and the domain bounds in `s01-regional_map.sh`, then run it from the copied `script_region/` directory.
-4. Review the program output and map dimensions/products; run `s02-write_ctl.sh` separately if GrADS descriptors are needed.
+4. Review the program output and map dimensions/products; run `s09-write_ctl.sh` from `script_format_conv/` separately if GrADS descriptors are needed.
 5. Prepare simulation-specific channel parameters and runoff input matrices in the separate `script_params/` workflow when available; the regionalization sample matrix is only for channel parameterization from sample runoff.
 
 The [v5 regional workflow guide](tools/script_region/README.md) lists the current source requirements, outputs, and verification limits. The v4 template remains documented under `map/src/src_region/README.md`.

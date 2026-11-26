@@ -51,18 +51,19 @@ Consult [`variable_table/map_variables.csv`](../../../variable_table/map_variabl
 
 In high-resolution `downxy` files, record 1 (`downx`) and record 2 (`downy`) are signed 16-bit offsets on that same high-resolution grid. For a source pixel `(ix, iy)` with 1-based indices, add the two offsets to recover its downstream pixel: `(ix + downx, iy + downy)`. These are relative offsets, not absolute indices. FLOW adjusts the x offset for periodic wrapping at the global longitude seam. The paired sentinel values are `-999` for a river mouth and `-1000` for an inland termination. The output array starts at `-9999`; source inspection shows this remains when no downstream offset is assigned. The maintainer confirms `-9999` means sea in the low-resolution layer, but the high-resolution layer may use a different value for land pixels without an assigned unit catchment; that encoding remains unconfirmed. Consumers treat `downx <= -900` as a stop condition. The regional combiner preserves the offsets as-is. The common registry distinguishes the resolutions and records the unresolved high-resolution sentinel.
 
-Review terminal output after each internal program. The shell stops on the first failed processing command and reports the current step. Confirm expected outputs exist, dimensions agree with the generated `params.txt` / `location.txt`, and binary sizes match the declared record layout. These checks establish file consistency only; they do not validate network correctness or scientific suitability. Run the separate CTL wrapper from the same `script_region/` directory after reviewing map outputs:
+Review terminal output after each internal program. The shell stops on the first failed processing command and reports the current step. Confirm expected outputs exist, dimensions agree with the generated `params.txt` / `location.txt`, and binary sizes match the declared record layout. These checks establish file consistency only; they do not validate network correctness or scientific suitability. If GrADS descriptors are needed, run the separate Binary-format wrapper from the map-local `script_format_conv/` directory after reviewing map outputs:
 
 ```sh
-./s02-write_ctl.sh --dry-run
-./s02-write_ctl.sh
+cd ../script_format_conv
+./s09-write_ctl.sh --dry-run
+./s09-write_ctl.sh
 ```
 
-The wrapper uses `params.txt` for the base map and each immediate child directory's `location.txt` for its own grid; existing CTLs are overwritten by default. A high-resolution `location.txt` starts with the area count, then a column header, then one row per area containing its identifier/name, bounds, dimensions, and cell size.
+The format-conversion wrapper uses map metadata to generate registered descriptors; existing CTLs are overwritten by default. A high-resolution `location.txt` starts with the area count, then a column header, then one row per area containing its identifier/name, bounds, dimensions, and cell size.
 
 ## Automated checks and scientific validation
 
-The automated Mekong CTL check copies the tracked binary files and metadata to a temporary directory and runs the `s02-write_ctl.sh` wrapper there. It verifies CTL generation and file-format declarations without overwriting the checked-in sample. Other synthetic CTL generator checks and the sample/registry validators are listed in the [map-tools overview](../README.md#github-only-automated-tests). GitHub Actions does not execute this regionalization template or the Mekong sample-preparation scripts.
+The automated Mekong CTL check copies the tracked binary files and metadata to a temporary directory and runs the `s09-write_ctl.sh` wrapper from `script_format_conv/` there. It verifies CTL generation and file-format declarations without overwriting the checked-in sample. Other synthetic CTL generator checks and the sample/registry validators are listed in the [map-tools overview](../README.md#github-only-automated-tests). GitHub Actions does not execute this regionalization template or the Mekong sample-preparation scripts.
 
 Successful regional product generation, binary size checks, and CTL generation do not establish that the river network or hydraulic fields are scientifically correct. No full simulation, independent river-network validation, or v4/v5 numerical equivalence test is claimed. Check the registry for variables whose meaning, special codes, or units remain provisional. The regionalization shell uses `set -eu` and stops at the first failed command; its error banner identifies the current step and preserves the command exit status. Inspect the expected products after a successful run.
 

@@ -5,7 +5,7 @@ Date: 2026-11-25 · Task DT-0184 · branch `feature/package-builder`.
 ## Workflow follow-up on `feature/package-builder`
 
 The Python implementations are now the maintained execution path for the
-`script_analysis/`, `script_params/`, and `script_region/` Shell workflows.
+`script_params/`, `script_region/`, and `script_format_conv/` Shell workflows.
 Shell wrappers resolve shared code from `CMF5_ROOT` or the repository-relative
 `map/tools/code/` path and use `PYTHON_CMD` (default `python3`). Fortran sources
 remain preserved under `code/legacy_fortran/` for reference comparisons; this

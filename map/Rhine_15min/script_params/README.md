@@ -27,14 +27,14 @@ The v5 parameter and map-preparation workflows listed below are implemented. Num
 | `x01-mpi_map_setup.sh` | MPI basin aggregation and coloring, region assignment, and default-N connectivity report; optional pre-partition basin diagnostic with `--check-map`. | Implemented |
 | `s04-permanent_water.sh` | Aggregate high-resolution permanent-water area by unit catchment. | Implemented |
 | `s05-subbasin.sh` | Generate standard optional subbasin IDs and display colors using one or two configured upstream-area-increase thresholds. | Implemented |
-| `x02-upbasin.sh` | Use the largest valid allocated GRDC station for river lookup and upstream-mask generation. | Implemented |
+| `a03-advanced_calc_upbasin.sh` | Use the largest valid allocated GRDC station for river lookup and upstream-mask generation. | Implemented |
 | `t01-alloc_flow_gauge.sh`, `t02-alloc_dams.sh`, `t03-alloc_level_gauge.sh` | Flow-gauge, reservoir, and water-level-gauge mapping from MERIT Hydro to CaMa-Flood catchments. | Implemented |
 
-Independent diagnostics belong in `script_analysis/`. No `script_allocate/` directory is part of the approved design.
+Reusable river-network commands (`get_river_point_info.sh`, `calc_upbasin.sh`) and examples (`a01`–`a03`) are kept with map parameter workflows. No `script_analysis/` workflow directory is maintained; Python analysis programs remain under `map/tools/code/`. No `script_allocate/` directory is part of the approved design.
 
 CTL generation is separate from this NetCDF-first workflow; NetCDF products do not need GrADS CTLs. For optional legacy Binary visualization, see the [map-tools CTL guide](../README.md#grads-ctl-files).
 
-Run only the workflows required for a map. The common dependency chain is s01 before s02, and s02 before s04; s03 creates a separately configured runoff-grid matrix and is independent of s01 when its own `ROFFTAG` is used. s05 requires base-map and selected high-resolution inputs. s06 is an optional map analysis. s07 requires a valid `GRDC_alloc.txt`, normally produced by t01. The t01-t03 allocation workflows are optional and each uses its configured external allocation CSV.
+Run only the workflows required for a map. The common dependency chain is s01 before s02, and s02 before s04; i01 creates an alternative runoff-grid matrix and is independent of s01 when its own `ROFFTAG` is used. s05 requires base-map and selected high-resolution inputs. The optional a03 example requires a valid `GRDC_alloc.txt`, normally produced by t01. The t01–t03 allocation workflows are optional and each uses its configured external allocation CSV.
 
 ## Channel parameter workflow
 
@@ -102,7 +102,7 @@ MPI basin integration remains separate from standard s02 basin connectivity. The
 
 The v5 tool parses `ibsn`, `jbsn`, and `elv` rather than relying on width-layer-dependent text columns, preserving the source-row fallback for deterministic ties. On the Mekong v4.30 sample, `standard`/`small_basins` retain the previous `normal`/`MaxMPI` results, including byte-identical basin groups and 4/8/16 region maps.
 
-The persistent products are `bifcol_mpi.nc` and the numbered `mpireg-N.nc` maps requested in `MPI_COUNTS`; the temporary `bifbsn_mpi.nc` is removed on success or failure. `check_bif_bsnmod_mpi.nc` remains opt-in. The renamed `analysis_mpi_dropped_bifurcation.py` checks model-local pathway retention for a selected partition and can export dropped rows with `--csv`; it is verification-only and does not modify maps. The historical Fortran source and `map/src/` workflows remain unchanged. See [`script_analysis/README.md`](../script_analysis/README.md) for standalone invocation and output details.
+The persistent products are `bifcol_mpi.nc` and the numbered `mpireg-N.nc` maps requested in `MPI_COUNTS`; the temporary `bifbsn_mpi.nc` is removed on success or failure. `check_bif_bsnmod_mpi.nc` remains opt-in. The renamed `analysis_mpi_dropped_bifurcation.py` checks model-local pathway retention for a selected partition and can export dropped rows with `--csv`; it is verification-only and does not modify maps. The historical Fortran source and `map/src/` workflows remain unchanged. Run `../tools/code/analysis_mpi_dropped_bifurcation.py` from the map root for its standalone CSV option.
 
 Run the wrapper from the map-local `script_params/` directory after copying it into the target map:
 
@@ -187,13 +187,30 @@ The general parameter input-matrix generator (`s01-inpmat_default.sh`) and perma
 
 ## River-network analysis
 
-The shell layer sets locations and parameters; `analysis_river_point_info`, `analysis_upbasin`, `analysis_subbasin`, and other Python programs in `map/tools/code/` read and validate map data and perform the network calculations. No compilation is required; the standard s06/s07 workflows invoke these programs directly and do not depend on the example symlink in `script_analysis/`.
+### Reusable inspection commands and examples
+
+Copy the shared command/examples from `map/tools/script_params/` into the target map's `script_params/` directory. Run them there so map-root inputs resolve consistently:
+
+```sh
+cd map/<MAPNAME>/script_params
+./get_river_point_info.sh xy IX IY
+./get_river_point_info.sh latlon LAT LON
+./calc_upbasin.sh xy IX IY [OUTPUT.nc]
+./a01-sample_get_river_point_info.sh
+./a02-sample_calc_upbasin.sh
+./a03-advanced_calc_upbasin.sh
+```
+
+Indices are one-based Fortran grid indices. The lat/lon form takes latitude then longitude. The default upstream mask is `../upbasin-IX-IY.nc`; a02 writes `./upbasin-sample.nc`. The coordinates in a01/a02 are Mekong sample values. The advanced example selects the largest valid GRDC allocation for the current map and is preferable to fixed coordinates when comparing maps with different grids or domains.
+
+
+The shell layer sets locations and parameters; `analysis_river_point_info`, `analysis_upbasin`, `analysis_subbasin`, and other Python programs in `map/tools/code/` read and validate map data and perform the network calculations. No compilation is required; the s05 workflow and a01–a03 examples invoke shared Python programs under `map/tools/code/`.
 
 Both copies of `s05-subbasin.sh` write `subbsn-sample.nc` and `subcol-sample.nc` directly in the map root. The editable example settings are `AREA_THRESHOLD1_KM2=30000` and `AREA_THRESHOLD2_KM2=5000`; set the second value empty for single-stage operation. These are example defaults, not universal scientific parameters. Stage 1 uses the existing upstream-area-increase rule; Stage 2 applies the smaller threshold only to previously unassigned river-network regions, preserves all positive Stage 1 IDs and boundaries, and assigns new IDs after them. Links into Stage 1 segments are terminal boundaries. In each stage, a link is cut when the current upstream area exceeds its threshold and the valid downstream area exceeds the current area by more than that threshold. Neither threshold guarantees a minimum segment area. Positive `subbsn` values are segment IDs, 0 marks remaining unassigned network cells, and -9999 marks outside-network cells. `subcol` uses the same spatial mask convention: positive IDs receive display colors 1–10, 0 marks unassigned network cells, and -9999 marks cells outside the network. These optional products are not simulation inputs.
 
-[`x02-upbasin.sh`](x02-upbasin.sh) requires map-local `GRDC_alloc.txt` (normally produced by `t01-alloc_flow_gauge.sh`). It filters unallocated/invalid records, chooses the largest positive `area_CaMa` (first file row wins a tie), and uses that row's primary `ix1,iy1` cell. It writes `grdc_station_selection.txt`, `grdc_river_info.txt`, and `upbasin-<GRDC_ID>.nc`; repeated execution overwrites the selected station's same-named mask and reports. The Mekong sample is `upbasin-2569002.nc`. The primary-cell upstream mask is not guaranteed to represent the complete aggregate drainage area of a gauge mapped to multiple catchments, so do not treat its cell count/area as equal to `area_CaMa` or observed drainage area.
+[`a03-advanced_calc_upbasin.sh`](a03-advanced_calc_upbasin.sh) requires map-local `GRDC_alloc.txt` (normally produced by `t01-alloc_flow_gauge.sh`). It filters unallocated/invalid records, chooses the largest positive `area_CaMa` (first file row wins a tie), and uses that row's primary `ix1,iy1` cell. It writes `grdc_station_selection.txt`, `grdc_river_info.txt`, and `upbasin-<GRDC_ID>.nc`; repeated execution overwrites the selected station's same-named mask and reports. The Mekong sample is `upbasin-2569002.nc`. The primary-cell upstream mask is not guaranteed to represent the complete aggregate drainage area of a gauge mapped to multiple catchments, so do not treat its cell count/area as equal to `area_CaMa` or observed drainage area.
 
-These are independent map-preparation recipes; neither requires the other. They create optional diagnostics, not simulation inputs. See [`script_analysis/README.md`](../script_analysis/README.md) for arbitrary-cell analysis that keeps exploratory outputs separate from standard names.
+The generic commands and a01–a03 examples are optional map-specific inspection workflows. The sample point coordinates in a01 and a02 are for the Mekong map; use the allocated-point a03 example where a fixed coordinate may fall outside another map or on an unrelated cell.
 
 ### Standard ELSE_GPCC grid tag
 

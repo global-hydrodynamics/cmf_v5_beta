@@ -4,6 +4,7 @@ set -eu
 echo "=================================================="
 echo "Example: Get river information at a selected point"
 echo "=================================================="
+echo "These example coordinates are for the Mekong sample map, not arbitrary maps."
 echo "Usage:"
 echo "  ./get_river_point_info.sh xy IX IY"
 echo "  ./get_river_point_info.sh latlon LAT LON"

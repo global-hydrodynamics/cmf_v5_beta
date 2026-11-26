@@ -4,6 +4,7 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 import shutil
+import sys
 import struct
 import subprocess
 import tempfile
@@ -218,24 +219,26 @@ class MpiMapToolsTests(unittest.TestCase):
             shutil.copy2(ROOT / "variable_table" / "map_variables.csv",
                          ctl_registry_dir / "map_variables.csv")
             shutil.copy2(MAP / "params.txt", ctl_target / "params.txt")
-            shutil.copy2(diagnostic, ctl_target / diagnostic.name)
-            shutil.copy2(v5_map / "bifcol_mpi.bin", ctl_target / "bifcol_mpi.bin")
+            ctl_binary = ctl_target / "binary"
+            ctl_binary.mkdir()
+            shutil.copy2(diagnostic, ctl_binary / diagnostic.name)
+            shutil.copy2(v5_map / "bifcol_mpi.bin", ctl_binary / "bifcol_mpi.bin")
             shutil.copy2(TOOLS / "script_format_conv" / "s09-write_ctl.sh", ctl_script_dir)
             ctl_result = subprocess.run(
                 ["sh", str(ctl_script_dir / "s09-write_ctl.sh")],
-                cwd=root,
+                cwd=ctl_script_dir,
                 check=False,
                 capture_output=True,
                 text=True,
             )
             self.assertEqual(ctl_result.returncode, 0, ctl_result.stdout + ctl_result.stderr)
             self.assertTrue(
-                (ctl_target / "check_bif_bsnmod_mpi.ctl").is_file(),
+                (ctl_binary / "check_bif_bsnmod_mpi.ctl").is_file(),
                 ctl_result.stdout + ctl_result.stderr,
             )
-            ctl = (ctl_target / "check_bif_bsnmod_mpi.ctl").read_text(encoding="utf-8")
+            ctl = (ctl_binary / "check_bif_bsnmod_mpi.ctl").read_text(encoding="utf-8")
             self.assertIn("vars 2", ctl)
-            self.assertLess(ctl.index("bifmod_mpi 1"), ctl.index("bpoint_mpi 1"))
+            self.assertLess(ctl.index("bifmod 1"), ctl.index("bpoint 1"))
 
             no_diagnostic = ctl_map_dir / "without_diagnostic"
             no_diagnostic_script_dir = no_diagnostic / "script_format_conv"
@@ -244,7 +247,7 @@ class MpiMapToolsTests(unittest.TestCase):
             shutil.copy2(TOOLS / "script_format_conv" / "s09-write_ctl.sh", no_diagnostic_script_dir)
             absent_result = subprocess.run(
                 ["sh", str(no_diagnostic_script_dir / "s09-write_ctl.sh")],
-                cwd=root,
+                cwd=no_diagnostic_script_dir,
                 check=False,
                 capture_output=True,
                 text=True,
@@ -374,23 +377,19 @@ class MpiMapToolsTests(unittest.TestCase):
             for count in (4, 8, 16):
                 self.assertEqual((root / f"mpireg-{count}.bin").stat().st_size, 80 * 120 * 4)
 
-    def test_standalone_analysis_wrapper_resolves_map_root_inputs(self):
+    def test_standalone_mpi_analysis_cli_resolves_map_root_inputs(self):
         with tempfile.TemporaryDirectory(prefix="cmf-mpi-cli-") as tmp:
             repo = Path(tmp) / "repo"
             map_root = repo / "map" / "mekong"
             code_dir = repo / "map" / "tools" / "code"
-            script_dir = map_root / "script_analysis"
             binary_dir = map_root / "binary"
             code_dir.mkdir(parents=True)
-            script_dir.mkdir(parents=True)
-            binary_dir.mkdir()
+            binary_dir.mkdir(parents=True)
             (code_dir / "Makefile").write_text(".PHONY: analysis\nanalysis:\n\t@:\n", encoding="ascii")
             shutil.copy2(self.bin / "analysis_check_mpi_bifurcation", code_dir / "analysis_check_mpi_bifurcation")
             shutil.copy2(CODE / "analysis_mpi_dropped_bifurcation.py", code_dir / "analysis_mpi_dropped_bifurcation.py")
             shutil.copy2(CODE / "mod_bifprm_csv.py", code_dir / "mod_bifprm_csv.py")
             shutil.copy2(CODE / "mod_map_io.py", code_dir / "mod_map_io.py")
-            shutil.copy2(TOOLS / "script_analysis" / "a05-mpi_dropped_bifurcation.sh", script_dir)
-            (script_dir / "code").symlink_to("../../tools/code")
             for name in ("params.txt", "bifprm.txt", "lonlat.bin"):
                 source = MAP / "binary" / name if (MAP / "binary" / name).is_file() else MAP / name
                 shutil.copy2(source, map_root / name)
@@ -400,8 +399,8 @@ class MpiMapToolsTests(unittest.TestCase):
             region_map.write_bytes(struct.pack("<9600i", *([1] * 9600)))
             region_map_before = region_map.read_bytes()
             result = subprocess.run(
-                [str(script_dir / "a05-mpi_dropped_bifurcation.sh"), "binary/mpireg-1.bin", "--map-format", "binary"],
-                cwd=tmp,
+                [sys.executable, str(CODE / "analysis_mpi_dropped_bifurcation.py"), "binary/mpireg-1.bin", "--map-format", "binary"],
+                cwd=map_root,
                 check=False,
                 capture_output=True,
                 text=True,
@@ -466,7 +465,6 @@ class MpiMapToolsTests(unittest.TestCase):
     def test_shell_entry_points_have_valid_syntax(self):
         for script in (
             TOOLS / "script_params" / "x01-mpi_map_setup.sh",
-            TOOLS / "script_analysis" / "a05-mpi_dropped_bifurcation.sh",
         ):
             subprocess.run(["sh", "-n", str(script)], check=True)
 
