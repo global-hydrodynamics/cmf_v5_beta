@@ -27,6 +27,7 @@ CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 REGISTRY="$CMF_V50_ROOT/variable_table/map_variables.csv"
 LIST_FILE="nc2bin_list.txt"
 BINARY_DIR="../binary"
+
 cmf_check_init "Convert selected base-map NetCDF files to Binary"
 [ -f "$LIST_FILE" ] || { printf 'Conversion list missing; run s01-list_nc.sh first.\n' >&2; exit 1; }
 [ -f ../params.txt ] || { printf 'Map-root params.txt is missing.\n' >&2; exit 1; }
@@ -44,6 +45,7 @@ while IFS= read -r FILE || [ -n "$FILE" ]; do
 done < "$LIST_FILE"
 [ "$COUNT" -gt 0 ] || { printf 'No files selected in %s.\n' "$LIST_FILE" >&2; exit 1; }
 mkdir -p "$BINARY_DIR"
+
 cmf_check_step 1 1 "Convert the $COUNT selected NetCDF map files"
 NUMBER=0
 for FILE in $SEEN; do
@@ -58,6 +60,7 @@ for FILE in $SEEN; do
             --map-dir .. --input "../$FILE" --output "$OUTPUT" --registry "$REGISTRY"
     fi
 done
+
 cmf_check_success
 
 # Optional converter flag: --no-overwrite preserves existing Binary outputs.

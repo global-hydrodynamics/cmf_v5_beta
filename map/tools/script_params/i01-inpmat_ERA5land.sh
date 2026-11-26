@@ -22,6 +22,7 @@ HIRES_TAG=""  # Empty selects the coarsest installed map; set a tag to choose ex
 # User settings end here. Program paths and processing steps follow.
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
+
 cmf_check_init "Generate the standard runoff input matrix"
 
 AVAILABLE=""
@@ -55,6 +56,7 @@ cmf_check_step 1 1 "Map river cells to the configured runoff grid"
 "$PYTHON_CMD" "$CODE_DIR/param_inpmat_generate.py" "$HIRES_TAG" "$GRSIZEIN" \
     "$WESTIN" "$EASTIN" "$NORTHIN" "$SOUTHIN" "$OLAT" \
     "diminfo_${ROFFTAG}.txt" "inpmat_${ROFFTAG}.nc" --map-dir ..
+
 cmf_check_success
 
 # Optional Python CLI flags: add --map-format binary to use legacy Binary maps.

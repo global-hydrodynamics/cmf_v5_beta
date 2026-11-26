@@ -23,10 +23,13 @@ JOBS=4                    # Independent file workers.
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 REGISTRY="$CMF_V50_ROOT/variable_table/map_variables.csv"
+
 cmf_check_init "Generate registered numeric COG caches"
+
 cmf_check_step 1 1 "Convert the selected NetCDF map products to COG"
 "$PYTHON_CMD" "$CODE_DIR/convert_netcdf_to_cog.py" --map-dir .. \
     --resolutions "$RESOLUTIONS" --variables "$VARS" \
     --blocksize "$BLOCKSIZE" --compression "$COMPRESSION" \
     --overviews "$OVERVIEWS" --jobs "$JOBS"
+
 cmf_check_success

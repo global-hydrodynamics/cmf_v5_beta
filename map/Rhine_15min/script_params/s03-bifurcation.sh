@@ -24,6 +24,7 @@ BIFPRM_NC="../bifprm.nc"        # NetCDF copy of the finalized table.
 # User settings end here. Program paths and processing steps follow.
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
+
 cmf_check_init "Bifurcation parameter calculation"
 
 cmf_check_step 1 3 "Generate the finalized bifurcation CSV"

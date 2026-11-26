@@ -18,8 +18,11 @@ OUTPUT="bin2nc_list.txt"
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 REGISTRY="$CMF_V50_ROOT/variable_table/map_variables.csv"
+
 cmf_check_init "List registered Binary map inputs"
+
 cmf_check_step 1 1 "Create the local Binary-to-NetCDF conversion list"
 "$PYTHON_CMD" "$CODE_DIR/list_map_conversion_sources.py" \
     --map-dir .. --format binary --output "$OUTPUT"
+
 cmf_check_success

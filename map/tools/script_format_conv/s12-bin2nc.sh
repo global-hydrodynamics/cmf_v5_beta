@@ -29,6 +29,7 @@ REGISTRY="$CMF_V50_ROOT/variable_table/map_variables.csv"
 LIST_FILE="bin2nc_list.txt"
 BINARY_DIR="../binary"
 NETCDF_DIR=".."
+
 cmf_check_init "Convert selected base-map Binary files to NetCDF"
 [ -f ../params.txt ] || { printf 'Map-root params.txt is missing.\n' >&2; exit 1; }
 [ -f "$LIST_FILE" ] || { printf 'Conversion list missing; run s11-list_bin.sh first.\n' >&2; exit 1; }
@@ -75,6 +76,7 @@ for FILE in $SEEN; do
     CONVERTED=$((CONVERTED + 1))
 done
 printf 'Converted: %s; skipped: %s\n' "$CONVERTED" "$SKIPPED"
+
 cmf_check_success
 
 # Optional shell flag: --no-overwrite preserves existing NetCDF outputs.

@@ -21,11 +21,14 @@ REGISTRY="$CMF_V50_ROOT/variable_table/map_variables.csv"
 SOURCE="../binary/inpmat_${ROFFTAG}.bin"
 DIMINFO="../binary/diminfo_${ROFFTAG}.txt"
 OUTPUT="../inpmat_${ROFFTAG}.nc"
+
 cmf_check_init "Convert runoff input matrix to NetCDF"
 [ -f "$SOURCE" ] || { printf 'Binary INPMAT missing: %s\n' "$SOURCE" >&2; exit 1; }
 [ -f "$DIMINFO" ] || { printf 'Paired Binary diminfo missing: %s\n' "$DIMINFO" >&2; exit 1; }
+
 cmf_check_step 1 1 "Convert the three-variable runoff input matrix"
 "$PYTHON_CMD" "$CODE_DIR/convert_inpmat.py" \
     binary-to-netcdf --input "$SOURCE" --output "$OUTPUT" --diminfo "$DIMINFO"
 # The map-root descriptor belongs to the NetCDF product; the Binary-side pair remains in binary/.
+
 cmf_check_success

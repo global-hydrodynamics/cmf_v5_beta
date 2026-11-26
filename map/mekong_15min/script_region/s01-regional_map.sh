@@ -21,6 +21,7 @@ NORTH="35.0"               # Northern boundary (degrees latitude).
 # User settings end here. Program paths and processing steps follow.
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
+
 cmf_check_init "Regional map preparation"
 
 cmf_check_step 1 6 "Save source-map path and requested geographic bounds"
@@ -38,6 +39,7 @@ cmf_check_step 4 6 "Derive regional river and basin maps"
 # Process each supported high-resolution source when its location metadata exists.
 for HIRES in 1min 30sec 15sec 5sec 3sec 1sec; do
     if [ -f "$SOURCE/$HIRES/location.txt" ]; then
+
         cmf_check_step 5 6 "Crop the $HIRES high-resolution data"
         mkdir -p "../$HIRES"
         "$PYTHON_CMD" "$CODE_DIR/region_combine_hires.py" "$HIRES"
@@ -53,6 +55,7 @@ for HIRES in 1min 30sec 15sec 5sec 3sec 1sec; do
     fi
 done
 if [ -n "$INPMAT_HIRES" ]; then
+
     cmf_check_step 6 6 "Build the standard runoff-climatology matrix from $INPMAT_HIRES data"
     "$PYTHON_CMD" "$CODE_DIR/region_default_inpmat.py" "$INPMAT_HIRES"
 fi

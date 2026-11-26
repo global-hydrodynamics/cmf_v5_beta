@@ -29,6 +29,7 @@ done
 # User settings end here. Program paths and processing steps follow.
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
+
 cmf_check_init "Generate Binary GrADS CTL files"
 
 set --
@@ -42,6 +43,7 @@ for LOCATION in ../binary/*/location.txt; do
     printf 'Generating CTLs for %s\n' "${LOCATION%/location.txt}"
     "$PYTHON_CMD" "$CODE_DIR/generate_ctl.py" --map-dir "${LOCATION%/location.txt}" "$@"
 done
+
 cmf_check_success
 
 # Optional generator flags: --dry-run, --no-overwrite, --overwrite. Default replaces outputs.

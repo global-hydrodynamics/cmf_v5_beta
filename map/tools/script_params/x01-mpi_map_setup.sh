@@ -15,6 +15,7 @@ MPI_COUNTS="4 8 16"          # Generate mpireg-4.nc, mpireg-8.nc, mpireg-16.nc.
 # User settings end here. Program paths and processing steps follow.
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
+
 cmf_check_init "Prepare MPI map products"
 
 # Temporary aggregated MPI basin map; removed after region assignment or on failure.
@@ -34,6 +35,7 @@ cmf_check_step 1 "$TOTAL_STEPS" "Aggregate basins using $BASIN_MERGE_MODE thresh
 
 STEP_COUNT=2
 for N in $MPI_COUNTS; do
+
     cmf_check_step "$STEP_COUNT" "$TOTAL_STEPS" "Assign basins to $N MPI regions"
     "$PYTHON_CMD" "$CODE_DIR/param_mpi_set_region.py" "$N" --map-dir ..
     STEP_COUNT=$((STEP_COUNT + 1))
@@ -41,10 +43,12 @@ done
 
 # Verification-only diagnostic: report bifurcation pathways dropped by MPI partitioning.
 # This check does not modify MPI maps or generate inputs required by simulation.
+
 cmf_check_step "$STEP_COUNT" "$TOTAL_STEPS" "Check dropped bifurcation pathways for the largest requested MPI count ($MAX_MPI)"
 # The largest requested count provides one representative diagnostic, not a guaranteed maximum of dropped pathways.
 "$PYTHON_CMD" "$CODE_DIR/analysis_mpi_dropped_bifurcation.py" \
     "../mpireg-$MAX_MPI.nc" --map-dir ..
+
 cmf_check_success
 
 # Optional Python CLI flags:

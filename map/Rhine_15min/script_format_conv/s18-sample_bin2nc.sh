@@ -29,12 +29,14 @@ done
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 REGISTRY="$CMF_V50_ROOT/variable_table/map_variables.csv"
+
 cmf_check_init "Convert sample Binary maps to NetCDF"
 [ -f ../params.txt ] || { printf 'Map-root params.txt is missing.\n' >&2; exit 1; }
 for VARIANT in "${VARIANTS[@]}"; do
     INPUT=${VARIANT%%:*}
     [ -f "../binary/$INPUT" ] || { printf 'Sample Binary is missing: ../binary/%s\n' "$INPUT" >&2; exit 1; }
 done
+
 cmf_check_step 1 1 "Convert the sample subbasin and color maps"
 CONVERTED=0
 SKIPPED=0
@@ -55,6 +57,7 @@ for VARIANT in "${VARIANTS[@]}"; do
     CONVERTED=$((CONVERTED + 1))
 done
 printf 'Converted: %s; skipped: %s\n' "$CONVERTED" "$SKIPPED"
+
 cmf_check_success
 
 # Optional shell flag: --no-overwrite preserves existing NetCDF outputs.

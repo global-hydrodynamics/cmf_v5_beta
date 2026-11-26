@@ -29,6 +29,7 @@ done
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 REGISTRY="$CMF_V50_ROOT/variable_table/map_variables.csv"
+
 cmf_check_init "Convert sample NetCDF maps to Binary"
 BINARY_DIR="../binary"
 mkdir -p "$BINARY_DIR"
@@ -67,6 +68,7 @@ for VARIANT in "${VARIANTS[@]}"; do
     CONVERTED=$((CONVERTED + 1))
 done
 printf 'Converted: %s; skipped: %s\n' "$CONVERTED" "$SKIPPED"
+
 cmf_check_success
 
 # Optional shell flag: --no-overwrite preserves existing Binary outputs.

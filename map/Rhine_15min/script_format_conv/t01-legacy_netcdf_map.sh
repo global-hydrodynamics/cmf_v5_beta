@@ -21,8 +21,11 @@ RIVWTH="rivwth_merit.nc"      # Alternative: rivwth.nc (empirical channel width)
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 REGISTRY="$CMF_V50_ROOT/variable_table/map_variables.csv"
+
 cmf_check_init "Create legacy consolidated NetCDF maps"
+
 cmf_check_step 1 1 "Combine the selected connectivity and channel-width maps"
 "$PYTHON_CMD" "$CODE_DIR/create_legacy_netcdf_map.py" --map-dir "$MAP_DIR" \
     --nextxy "$NEXTXY" --rivwth "$RIVWTH" --force
+
 cmf_check_success

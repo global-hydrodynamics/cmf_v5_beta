@@ -6,6 +6,13 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Map workflow message spacing (DT-0200, 2026-11-26; branch-local proposal)
+
+Root AGENTS defines one blank line before workflow init/step/success calls.
+79 maintained map Shell scripts now conform at279 calls; nonblank lines are
+unchanged. Syntax and spacing/diff checks pass; no workflow execution or new
+linter. See [VR-0244](../research/records/validation_runs/VR-0244.md).
+
 ### Simplified MPI_COUNTS handling (DT-0199, 2026-11-26; branch-local proposal)
 
 Shared/Mekong/Rhine x01 use argument count and numeric sort for the largest MPI

@@ -14,6 +14,7 @@ GRDC_ALLOC="../GRDC_alloc.txt"  # Create with t01-alloc_flow_gauge.sh or provide
 # User settings end here. Program paths and processing steps follow.
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
+
 cmf_check_init "Create an upstream-basin example from the largest valid GRDC station"
 
 cmf_check_step 1 3 "Select the valid allocated station with the largest CaMa area"
@@ -34,6 +35,7 @@ cmf_check_step 3 3 "Write the selected station's upstream-basin mask"
 "$PYTHON_CMD" "$CODE_DIR/analysis_upbasin.py" "$IX" "$IY" \
     "../upbasin-${GRDC_ID}.bin" --map-dir ..
 printf 'Selected GRDC station %s at cell (%s, %s), CaMa area %s km2.\n' "$GRDC_ID" "$IX" "$IY" "$AREA_CAMA"
+
 cmf_check_success
 
 # Optional Python CLI flags: add --map-format binary to use legacy Binary maps.

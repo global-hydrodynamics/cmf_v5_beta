@@ -16,6 +16,7 @@ PYTHON_CMD="python3"
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 PYTHON_CMD="python3"
+
 cmf_check_init "Write CTLs for registered Binary products"
 
 # Preserve map-root parameters, Binary-side diminfo files and high-resolution locations.
@@ -54,6 +55,7 @@ for ENTRY in "subbsn-sample.bin:subbsn.bin" "subcol-sample.bin:subcol.bin" "upba
             --input "${BINARY##*/}" --reference-binary "$REFERENCE" "$@"
     done
 done
+
 cmf_check_success
 
 # Optional generator flags: --dry-run, --no-overwrite, --overwrite.

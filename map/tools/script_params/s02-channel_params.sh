@@ -32,6 +32,7 @@ WMIN=5.0  # Minimum channel width [m].
 # User settings end here. Program paths and processing steps follow.
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
+
 cmf_check_init "Channel parameter calculation"
 
 cmf_check_step 1 3 "Calculate mean river discharge from runoff and the input matrix"

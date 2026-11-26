@@ -24,11 +24,14 @@ HIRES_TAG="1min"          # High-resolution source map used for grid overlap.
 # User settings end here. Program paths and processing steps follow.
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
+
 cmf_check_init "Generate Mekong regional runoff input matrix"
+
 cmf_check_step 1 1 "Map river cells to the regional 1-degree runoff grid"
 "$PYTHON_CMD" "$CODE_DIR/param_inpmat_generate.py" "$HIRES_TAG" "$GRSIZEIN" \
     "$WESTIN" "$EASTIN" "$NORTHIN" "$SOUTHIN" "$OLAT" \
     "diminfo_${ROFFTAG}.txt" "inpmat_${ROFFTAG}.bin" --map-dir .. --map-format binary
+
 cmf_check_success
 
 # Optional Python CLI flag: omit --map-format binary to use standard NetCDF output.
