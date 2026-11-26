@@ -346,3 +346,9 @@ fi
 printf '[INFO] Registered %s=%s\n' "$ENV_NAME" "$ROOT"
 printf '[INFO] Activate in this terminal with: . %s\n' "$RC_PATH"
 printf '[INFO] Verify with: echo "$%s"\n' "$ENV_NAME"
+printf '\n#============================================================\n'
+printf '# NEXT STEP: APPLY THE CONFIGURATION                         #\n'
+printf '# Run this command in the current terminal:                 #\n'
+printf '#   source "%s"\n' "$RC_PATH"
+printf '# Or restart the terminal, then verify %s.             #\n' "$ENV_NAME"
+printf '#============================================================\n'
