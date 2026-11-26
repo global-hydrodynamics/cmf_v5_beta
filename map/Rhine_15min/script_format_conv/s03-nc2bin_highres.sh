@@ -11,8 +11,8 @@ PYTHON_CMD="python3"
 # ----------------------------------------------------------------------
 # User settings
 # ----------------------------------------------------------------------
-HIRES=""       # Empty selects the coarsest installed NetCDF resolution.
-VARS="all"    # Use all registered products or list selected file stems.
+HIRES=""       # Empty prompts for one or more available high-res maps.
+VARS="all"     # All registered variables, or space-separated file stems.
 JOBS=8         # Maximum parallel conversion workers.
 
 # ----------------------------------------------------------------------
@@ -21,16 +21,12 @@ JOBS=8         # Maximum parallel conversion workers.
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 REGISTRY="$CMF_V50_ROOT/variable_table/map_variables.csv"
 cmf_check_init "Convert high-resolution NetCDF map products"
-if [ -z "$HIRES" ]; then
-    for tag in 1min 30sec 15sec 5sec 3sec 1sec; do
-        if [ -f "../$tag/location.txt" ]; then HIRES=$tag; break; fi
-    done
-fi
-[ -n "$HIRES" ] || { printf 'No NetCDF high-resolution location.txt found in the map root.\n' >&2; exit 1; }
+HIRES=$(cmf_select_hires_for_conversion nc2bin "$HIRES")
+[ -n "$HIRES" ] || exit 0  # User cancelled before conversion.
 cmf_check_step 1 1 "Convert registered high-resolution products for $HIRES"
 "$PYTHON_CMD" "$CODE_DIR/convert_highres_netcdf_to_binary.py" \
     --map-dir .. --hires "$HIRES" --variables "$VARS" \
-    --registry "$REGISTRY" --jobs "$JOBS"
+    --registry "$REGISTRY" --jobs "$JOBS" "$@"
 cmf_check_success
 
-# Optional converter flags: --no-overwrite, --force, --map-format binary.
+# Optional converter flags: --no-overwrite, --force. Default replaces Binary outputs.

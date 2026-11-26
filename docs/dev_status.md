@@ -6,6 +6,16 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Interactive multi-resolution format conversion (DT-0198, 2026-11-26; branch-local proposal)
+
+Shared/Mekong/Rhine s03/s13 use a conversion-only selector with source-aware
+multi-tag discovery, one TTY confirmation and explicit non-TTY settings.
+Preprocessing's single selector is unchanged. Reverse CLI needed only multi-tag
+dispatch; algorithms and worker pools are preserved. Redundant t03 wrappers are
+retired; external maps use copied s13 with CMF_V50_ROOT.45 focused tests plus6
+subtests pass, including real small jobs2 roundtrips; no global conversion.
+See [Work Report / VR-0242](../research/records/validation_runs/VR-0242.md).
+
 ### Map-local legacy NetCDF wrapper defaults (DT-0197, 2026-11-26; branch-local proposal)
 
 Shared/Mekong/Rhine t01 wrappers select the parent map, standard nextxy.nc and

@@ -29,7 +29,7 @@ Maintained Shell preprocessing workflows are launched from their corresponding m
 
 ## Shared Shell error reporting
 
-The POSIX implementation at `tools/shell_functions/cmf_check_shell_error.sh` defines `cmf_check_init`, `cmf_check_step`, and `cmf_check_success`; the public entry point at `tools/cmf_shell_functions.sh` also loads `cmf_select_hires_tag`. Each workflow checks that `CMF_V50_ROOT` is set before sourcing the public entry point. The channel-parameter workflow initializes reporting, marks each processing step, and prints success after all three programs finish.
+The POSIX implementation at `tools/shell_functions/cmf_check_shell_error.sh` defines `cmf_check_init`, `cmf_check_step`, and `cmf_check_success`; the public entry point at `tools/cmf_shell_functions.sh` also loads `cmf_select_hires_tag` and the conversion-only multi-resolution selector `cmf_select_hires_for_conversion`. Each workflow checks that `CMF_V50_ROOT` is set before sourcing the public entry point. The channel-parameter workflow initializes reporting, marks each processing step, and prints success after all three programs finish.
 
 `cmf_select_hires_tag "$HIRES_TAG"` is the standard selector for workflows
 that allow multiple `location.txt` areas. Allocation wrappers use

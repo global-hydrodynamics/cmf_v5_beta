@@ -1,5 +1,7 @@
 """Exercise shipped s03 variable selections against actual NetCDF conversion."""
 import re
+import os
+import sys
 import shutil
 import struct
 from unittest.mock import Mock
@@ -24,8 +26,10 @@ MISSING = {"catmz100": "int8", "catmzz": "int8", "grdare": "float32", "visual": 
     "map/tools/script_format_conv/s13-bin2nc_highres.sh",
     "map/mekong_15min/script_format_conv/s13-bin2nc_highres.sh",
 ])
-def test_default_s03_adds_missing_registered_products_losslessly(tmp_path, source):
-    script_text = (ROOT / source).read_text()
+def test_default_s03_adds_missing_registered_products_losslessly(tmp_path, source, monkeypatch):
+    monkeypatch.setenv("CMF_V50_ROOT", str(ROOT))
+    monkeypatch.setenv("PATH", str(Path(sys.executable).parent) + os.pathsep + os.environ["PATH"])
+    script_text = (ROOT / source).read_text().replace('HIRES=""', 'HIRES="1min"')
     variables = re.search(r'^VARS="([^"]+)"', script_text, re.M).group(1).split()
     assert variables == ["all"]
     variables = converter.registered_variables(converter.registry_rows(REGISTRY))
@@ -48,7 +52,7 @@ def test_default_s03_adds_missing_registered_products_losslessly(tmp_path, sourc
     # Keep only concurrency small; use the real configured variable list unchanged.
     script.write_text(re.sub(r'^JOBS=.*$', 'JOBS=1', script_text, flags=re.M))
     binary = map_dir / "binary" / "1min"
-    binary.mkdir()
+    binary.mkdir(parents=True)
     (binary / "location.txt").write_text(
         "1 narea\niarea carea west east south north nx ny csize\n"
         "1 tile 0 4 0 3 4 3 1\n"
@@ -97,10 +101,10 @@ def test_default_s03_adds_missing_registered_products_losslessly(tmp_path, sourc
     assert all((binary / f"tile.{variable}.bin").read_bytes() == data
                for variable, data in originals.items())
     transcript = run_tty(
-        script, script_dir, b"\ninvalid\ny\n",
-        b"Use this high-resolution map? [Y/n]:",
+        script, script_dir, b"invalid\ny\n",
+        b"Proceed with conversion? [Y/n]:",
     )
-    assert "Please answer y or N" in transcript
+    assert "Please answer y or n" in transcript
     assert "already exists. Overwrite?" not in transcript
     assert f"Converted: {len(variables)}" in transcript
     assert "Skipped:   0" in transcript
@@ -160,14 +164,43 @@ def test_preflight_skips_missing_and_validates_all_resolutions_before_writing(tm
         tmp_path, ["1min", "15sec"], ["all"], REGISTRY, 3
     )
     assert len(variables) == 12 and len(planned) == 2 and len(missing) == 22
-    assert not (tmp_path / "1min").exists()
+    assert not list((tmp_path / "1min").glob("*.nc"))
     (tmp_path / "15sec/tile.visual.bin").write_bytes(b"bad")
     with pytest.raises(converter.ConversionError, match="bytes"):
         converter.plan_conversion(tmp_path, ["1min", "15sec"], ["all"], REGISTRY, 3)
-    assert not (tmp_path / "1min").exists()
+    assert not list((tmp_path / "1min").glob("*.nc"))
 
 
 def test_csv_new_variable_is_selected_without_changing_default_list():
     rows = converter.registry_rows(REGISTRY)
     added = dict(rows[-1], binary_filename="<HIRES>/<AREA>.newfield.bin")
     assert "newfield" in converter.registered_variables(rows + [added])
+
+
+def test_real_multi_resolution_parallel_cli_roundtrip(tmp_path):
+    for tag, pixel in [("1min", 1/60), ("3sec", 1/1200)]:
+        directory = tmp_path / "binary" / tag
+        directory.mkdir(parents=True)
+        (directory / "location.txt").write_text(
+            "1 narea\niarea carea west east south north nx ny csize\n"
+            f"1 tile 0 {2*pixel} 0 {2*pixel} 2 2 {pixel}\n"
+        )
+        (directory / "tile.visual.bin").write_bytes(bytes([0, 1, 2, 25]))
+    command = [sys.executable, str(ROOT / "map/tools/code/convert_highres_binary_to_netcdf.py"),
+               "--map-dir", str(tmp_path), "--hires", "1min 3sec", "--variables", "visual",
+               "--registry", str(REGISTRY), "--jobs", "2", "--compression-level", "3"]
+    result = subprocess.run(command, text=True, capture_output=True, timeout=30)
+    assert result.returncode == 0, result.stdout + result.stderr
+    for tag, pixel in [("1min", 1/60), ("3sec", 1/1200)]:
+        with netCDF4.Dataset(tmp_path / tag / "tile.visual.nc") as ds:
+            ds["visual"].set_auto_maskandscale(False)
+            assert ds["visual"][:].tobytes() == bytes([0, 1, 2, 25])
+            assert np.allclose(ds["lon"][:], [pixel/2, 1.5*pixel], rtol=0, atol=1e-10)
+            assert np.allclose(ds["lat"][:], [1.5*pixel, pixel/2], rtol=0, atol=1e-10)
+    command = [sys.executable, str(ROOT / "map/tools/code/convert_highres_netcdf_to_binary.py"),
+               "--map-dir", str(tmp_path), "--hires", "1min 3sec", "--variables", "visual",
+               "--registry", str(REGISTRY), "--jobs", "2"]
+    result = subprocess.run(command, text=True, capture_output=True, timeout=30)
+    assert result.returncode == 0, result.stdout + result.stderr
+    for tag in ("1min", "3sec"):
+        assert (tmp_path / "binary" / tag / "tile.visual.bin").read_bytes() == bytes([0, 1, 2, 25])

@@ -1,6 +1,9 @@
 """Focused byte-contract tests for high-resolution NetCDF to Binary restoration."""
 import csv
 import hashlib
+import shutil
+import subprocess
+import sys
 from pathlib import Path
 import struct
 import tempfile
@@ -74,6 +77,19 @@ class RestorationTests(unittest.TestCase):
                 self.expected[source.name] = bytes(data)
                 source.unlink()
         self.source_hashes = {p.name: sha(p.read_bytes()) for p in self.nc.iterdir()}
+
+    def test_cli_accepts_multiple_tags_with_parallel_workers(self):
+        shutil.copytree(self.nc, self.map / '3sec')
+        result = subprocess.run([
+            sys.executable, str(ROOT / 'map/tools/code/convert_highres_netcdf_to_binary.py'),
+            '--map-dir', str(self.map), '--hires', '1min 3sec 1min',
+            '--variables', ' '.join(self.variables), '--registry', str(self.registry),
+            '--jobs', '2',
+        ], text=True, capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        for tag in ('1min', '3sec'):
+            for name, original in self.expected.items():
+                self.assertEqual((self.map / 'binary' / tag / name).read_bytes(), original)
 
     def test_exact_sha_roundtrip_jobs_skip_force_and_location(self):
         converted, skipped = reverse.restore(self.map, '1min', self.variables, self.registry, jobs=1)

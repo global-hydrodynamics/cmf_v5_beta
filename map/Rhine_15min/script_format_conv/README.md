@@ -81,6 +81,57 @@ can be used to limit conversions. Existing outputs are replaced by default;
 missing diminfo files into `binary/` while retaining a format-specific INPMAT
 descriptor already present there.
 
+## High-resolution selection (s03 and s13)
+
+Edit the settings at the top of either wrapper:
+
+```sh
+HIRES=""             # Interactive selection from available source resolutions.
+VARS="all"           # Or space-separated registered file stems, e.g. catmxy hand.
+JOBS=8               # Maximum parallel conversion workers.
+# s13 additionally uses COMPRESSION_LEVEL=3.
+```
+
+With interactive stdin, empty `HIRES` displays available source tags in order
+`1min 30sec 15sec 5sec 3sec 1sec`. Enter selects the coarsest available tag;
+type `1min 3sec` for several or `all` for all available sources. Invalid tags
+prompt again; duplicates are removed and the result follows resolution order.
+The final selection is displayed and one `Proceed with conversion? [Y/n]`
+confirmation precedes conversion. Enter/y confirms; n cancels without conversion.
+
+For a fixed selection, edit `HIRES="15sec 3sec"`. Interactive sessions still
+confirm, but do not ask for tag selection. Non-interactive runs require explicit,
+nonempty tags and never prompt (e.g. run the configured script with stdin from
+`/dev/null`). The empty default exits with a configuration message.
+
+- **s03 NetCDF→Binary:** discovers registered `*.<stem>.nc` products with
+  `location.txt` in `../<tag>/`; writes `../binary/<tag>/`.
+- **s13 Binary→NetCDF:** discovers registered `*.<stem>.bin` products in
+  `../binary/<tag>/`, or legacy `../<tag>/` if the standard Binary directory
+  does not exist. `location.txt` may be in either layout; the converter prefers
+  the canonical map-root copy. An existing standard Binary directory takes
+  precedence even if empty: sources are not silently mixed between layouts.
+  Outputs and any needed location copy go to `../<tag>/`, not `<tag>_nc/`.
+
+Discovery inspects filenames and metadata presence only; empty directories or
+unregistered-only products are not offered. Python validates tile metadata,
+geometry and data. The shared `cmf_select_hires_for_conversion` helper is loaded
+through `$CMF_V50_ROOT/tools/cmf_shell_functions.sh`; the preprocessing selector
+`cmf_select_hires_tag` remains separate and unchanged.
+
+Each wrapper starts Python once with the complete tag list, `VARS` and `JOBS`.
+The NetCDF→Binary CLI dispatches tags to its unchanged per-resolution converter;
+its worker pool remains available within each resolution. The Binary→NetCDF
+converter retains its existing multi-tag planning/parallelism. Outputs overwrite
+by default; `./s03-nc2bin_highres.sh --no-overwrite` and
+`./s13-bin2nc_highres.sh --no-overwrite` forward that option to Python.
+
+For external map packages, copy `script_format_conv/` into the target map and
+run s13 there with `CMF_V50_ROOT` pointing to the shared repository. The former
+t03 external wrapper is retired: no separate external converter or multi-map
+batch orchestrator is needed. Its redundant `<tag>_nc/location.txt` side copy
+is not reproduced; conversion itself already writes to `<tag>/`.
+
 ## s06 sample map conversions
 
 `script_params/s05-subbasin.sh` creates `subbsn-sample` and `subcol-sample`.
@@ -94,9 +145,8 @@ registered Binary type and dimensions. s18 writes the registered `subbsn` or
 Binary-to-NetCDF conversion behavior. They overwrite their own outputs by
 default and accept `--no-overwrite`.
 
-`t01-legacy_netcdf_map.sh` and `t03-convert_external_highres.sh` remain separate
-legacy/external workflows; they are not replacements for the numbered map
-conversion sequence. `s90-sample_netCDF_conversion.sh` remains as a deprecated
+`t01-legacy_netcdf_map.sh` remains a separate legacy-container workflow;
+it is not a replacement for the numbered map conversion sequence. `s90-sample_netCDF_conversion.sh` remains as a deprecated
 compatibility alias for s18; use the directional s08/s18 scripts for new work.
 
 The conversion tools preserve registered dimensions, record/layer order,

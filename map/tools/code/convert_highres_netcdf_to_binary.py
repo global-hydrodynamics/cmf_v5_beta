@@ -302,7 +302,7 @@ def restore(map_dir, hires, variables, registry, jobs=1, force=True, areas_filte
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--map-dir', type=Path, required=True)
-    parser.add_argument('--hires', required=True, help='1min, 15sec, 3sec, or another registered tag')
+    parser.add_argument('--hires', required=True, help='space-separated high-resolution directory tags, e.g. 1min 3sec')
     parser.add_argument('--variables', required=True, help='all available registered products, or space-separated registered Binary file stems')
     parser.add_argument('--areas', help='optional space-separated carea names; default all location.txt areas')
     parser.add_argument('--registry', type=Path, default=Path(__file__).resolve().parents[3] / 'variable_table/map_variables.csv')
@@ -312,11 +312,13 @@ def main():
                         help='keep existing Binary outputs')
     args = parser.parse_args()
     variables = list(dict.fromkeys(args.variables.split()))
-    if args.jobs < 1 or not variables:
-        parser.error('jobs must be positive and variables must be nonempty')
+    hires_tags = list(dict.fromkeys(args.hires.split()))
+    if args.jobs < 1 or not variables or not hires_tags:
+        parser.error('jobs must be positive; variables and hires must be nonempty')
     try:
-        restore(args.map_dir.resolve(), args.hires, variables, args.registry.resolve(), args.jobs,
-                args.force, args.areas.split() if args.areas else None)
+        for hires in hires_tags:
+            restore(args.map_dir.resolve(), hires, variables, args.registry.resolve(), args.jobs,
+                    args.force, args.areas.split() if args.areas else None)
     except (OSError, ValueError, RuntimeError) as error:
         print(f'ERROR: {error}', file=sys.stderr)
         return 1

@@ -49,3 +49,18 @@ includes regional-boundary connections, and `RIVWTH="rivwth_merit.nc"`
 selects MERIT width (`rivwth.nc` is the empirical-width alternative).
 It writes `rivclim.nc` and `rivpar.nc` in the selected map directory;
 the existing `--force` behavior is retained.
+
+## High-resolution selection
+
+s03/s13 prompt for one or more source tags when `HIRES=""`: Enter chooses the
+coarsest, `all` selects all, and e.g. `1min 3sec` selects both. Confirm once
+with Enter/y, or cancel with n. Edit `HIRES="15sec 3sec"` for fixed tags;
+non-interactive runs require explicit tags and do not prompt. `JOBS=8` retains
+parallel processing and `--no-overwrite` is forwarded to Python.
+
+s03 reads `../<tag>/*.nc` plus location.txt and writes `../binary/<tag>/`.
+s13 reads `../binary/<tag>/*.bin`, or legacy `../<tag>/*.bin` when that Binary
+directory is absent, and writes `../<tag>/*.nc`. Existing standard Binary
+directories take precedence; Python validates metadata. External maps use the
+same copied s13 workflow via `CMF_V50_ROOT`; the old t03 wrapper is retired.
+See the [shared selection guide](../../tools/script_format_conv/README.md#high-resolution-selection-s03-and-s13).
