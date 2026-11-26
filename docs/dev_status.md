@@ -6,6 +6,13 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Map-local legacy NetCDF wrapper defaults (DT-0197, 2026-11-26; branch-local proposal)
+
+Shared/Mekong/Rhine t01 wrappers select the parent map, standard nextxy.nc and
+MERIT width; headers/READMEs name rivclim.nc/rivpar.nc outputs. Existing --force
+and Python code remain unchanged. Three syntax and three configuration-only
+checks pass; no map processing. See [VR-0241](../research/records/validation_runs/VR-0241.md).
+
 ### nc2bin wrapper argument fix (DT-0196, 2026-11-26; branch-local proposal)
 
 Removed unsupported `--force` from shared/Mekong/Rhine s02-nc2bin wrappers;

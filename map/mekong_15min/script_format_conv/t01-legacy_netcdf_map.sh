@@ -1,6 +1,7 @@
 #!/bin/sh
 # Combine individual NetCDF maps into legacy consolidated containers.
-# Run from map/tools/script_format_conv/; output is written to the configured Mekong map.
+# Run from the target map's script_format_conv/ directory.
+# Write rivclim.nc and rivpar.nc in the selected map directory.
 set -eu
 
 # CaMa-Flood general setting (check CMF root, import CMF common shell functions)
@@ -11,9 +12,9 @@ PYTHON_CMD="python3"
 # ----------------------------------------------------------------------
 # User settings
 # ----------------------------------------------------------------------
-MAP_DIR="../../mekong_15min"  # Edit for another target map.
-NEXTXY="nextxy_noedge.nc"    # Use nextxy.nc to include regional-boundary connections.
-RIVWTH="rivwth_merit.nc"      # Alternative: rivwth.nc from empirical parameterization.
+MAP_DIR="../"               # Parent directory containing the target map.
+NEXTXY="nextxy.nc"          # Include regional-boundary connections.
+RIVWTH="rivwth_merit.nc"      # Alternative: rivwth.nc (empirical channel width).
 
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.

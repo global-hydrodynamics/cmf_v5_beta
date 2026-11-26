@@ -42,3 +42,10 @@ and copies required geometry/text metadata. High-resolution operations use
 `s08` and `s18` convert the `subbsn-sample` and `subcol-sample` products created
 by `script_params/s05-subbasin.sh`. For the complete workflow and supported
 outputs, see [`map/tools/script_format_conv/README.md`](../../tools/script_format_conv/README.md).
+
+`t01-legacy_netcdf_map.sh` runs from the target map's `script_format_conv/`.
+Its default `MAP_DIR="../"` selects the parent map, `NEXTXY="nextxy.nc"`
+includes regional-boundary connections, and `RIVWTH="rivwth_merit.nc"`
+selects MERIT width (`rivwth.nc` is the empirical-width alternative).
+It writes `rivclim.nc` and `rivpar.nc` in the selected map directory;
+the existing `--force` behavior is retained.

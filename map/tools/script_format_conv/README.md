@@ -108,3 +108,10 @@ The conversion tools preserve registered dimensions, record/layer order,
 storage types, missing values, coordinate orientation, and map-local paths.
 For COG options and supported variables, consult the wrapper's `--help` and
 `map/tools/code/convert_netcdf_to_cog.py` documentation.
+
+`t01-legacy_netcdf_map.sh` runs from the target map's `script_format_conv/`.
+Its default `MAP_DIR="../"` selects the parent map, `NEXTXY="nextxy.nc"`
+includes regional-boundary connections, and `RIVWTH="rivwth_merit.nc"`
+selects MERIT width (`rivwth.nc` is the empirical-width alternative).
+It writes `rivclim.nc` and `rivpar.nc` in the selected map directory;
+the existing `--force` behavior is retained.
