@@ -6,6 +6,15 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Generic user-map format converters (DT-0204, 2026-11-26; branch-local proposal)
+
+Added registry-reference `conv_nc2bin.sh` / `conv_bin2nc.sh`; simplified s08/s18
+as user-facing examples and aligned generated subbasin NetCDF names with the
+registry. Temporary Mekong Binary-to-NetCDF values/names, shell syntax, registry
+and sample validators passed. Actual NetCDF-to-Binary validation is pending:
+Python `netCDF4` is unavailable in this environment. No map data were changed.
+See [VR-0248](../research/records/validation_runs/VR-0248.md).
+
 ### All-map local script synchronization (DT-0202, 2026-11-26; branch-local proposal)
 
 Maintainer authorizes accumulated fixes in local glb/TE-Japan copies too.

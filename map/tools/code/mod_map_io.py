@@ -192,8 +192,18 @@ def _variable_rows(stem, highres=False):
 
 
 def _registry_stem(stem):
-    """Map the internal MPI basin-group file to its registered basin schema."""
-    return 'bifbsn' if stem == 'bifbsn_mpi' else stem
+    """Resolve aliases and suffixed output names to a registered map variable."""
+    if stem == 'bifbsn_mpi':
+        return 'bifbsn'
+    for row in _REGISTRY or []:
+        for filename in row.get('filename', '').split(';'):
+            filename = filename.strip()
+            if not filename.endswith('.nc'):
+                continue
+            candidate = Path(filename).name[:-3]
+            if stem == candidate or stem.startswith(f'{candidate}-'):
+                return candidate
+    return stem
 
 
 def _variable_definitions(stem, highres=False):
@@ -368,13 +378,13 @@ def _read_netcdf_shape(path, dtype, records, ny, nx):
 def _write_netcdf(path, values, dtype, grid):
     Dataset = _netcdf_module()
     values = np.asarray(values, dtype=dtype)
-    stem = _registry_stem(path.stem.rsplit('.', 1)[-1])
-    definitions = _variable_definitions(stem)
-    layered = values.ndim == 3 and len(definitions) == 1 and values.shape[0] > 1
+    raw_stem = path.stem.rsplit('.', 1)[-1]
+    rows = _variable_rows(raw_stem)
+    stem = _registry_stem(raw_stem)
+    layered = values.ndim == 3 and len(rows) == 1 and values.shape[0] > 1
     records = values if values.ndim == 3 else values[None, ...]
     if records.shape[-2:] != (grid.ny, grid.nx):
         raise ValueError(f'{path}: output shape {records.shape[-2:]} differs from map geometry {(grid.ny, grid.nx)}')
-    rows = _variable_rows(stem)
     names = rows[:1] if layered else rows
     if len(names) < records.shape[0]:
         names.extend({'name': f'{stem}_{index+1}', 'record_index': str(index+1)}

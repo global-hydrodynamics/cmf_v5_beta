@@ -23,12 +23,12 @@ if [ -n "$AREA_THRESHOLD2_KM2" ]; then
 
     cmf_check_step 1 1 "Segment the river network at the ${AREA_THRESHOLD1_KM2}/${AREA_THRESHOLD2_KM2} km2 thresholds"
     "$PYTHON_CMD" "$CODE_DIR/analysis_subbasin.py" "$AREA_THRESHOLD1_KM2" \
-        "$AREA_THRESHOLD2_KM2" ../subbsn-sample.bin ../subcol-sample.bin --map-dir ..
+        "$AREA_THRESHOLD2_KM2" ../subbsn-sample.nc ../subcol-sample.nc --map-dir ..
 else
 
     cmf_check_step 1 1 "Segment the river network at the ${AREA_THRESHOLD1_KM2} km2 threshold"
     "$PYTHON_CMD" "$CODE_DIR/analysis_subbasin.py" "$AREA_THRESHOLD1_KM2" \
-        ../subbsn-sample.bin ../subcol-sample.bin --map-dir ..
+        ../subbsn-sample.nc ../subcol-sample.nc --map-dir ..
 fi
 
 cmf_check_success

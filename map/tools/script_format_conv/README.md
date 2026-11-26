@@ -41,6 +41,8 @@ the corresponding Binary form under `binary/inpmat_<ROFFTAG>.bin`.
 
 | Script | Operation |
 | --- | --- |
+| `conv_nc2bin.sh INPUT.nc REFERENCE` | Custom map NetCDF → registered Binary layout |
+| `conv_bin2nc.sh INPUT.bin REFERENCE` | Custom Binary map → registered NetCDF layout |
 | `s01-list_nc.sh` | List registered NetCDF products for Binary export |
 | `s02-nc2bin.sh` | Standard map NetCDF → `binary/*.bin` |
 | `s03-nc2bin_highres.sh` | High-resolution NetCDF → `binary/<resolution>/*.bin` |
@@ -148,16 +150,42 @@ is not reproduced; conversion itself already writes to `<tag>/`.
 
 ## s05 sample map conversions
 
-`script_params/s05-subbasin.sh` creates `subbsn-sample` and `subcol-sample`.
-Use `s08-sample_nc2bin.sh` to export those NetCDF products to `binary/`, and
-`s18-sample_bin2nc.sh` to restore them. These scripts use the registered
-`subbsn.bin` and `subcol.bin` layouts while retaining the `-sample` output
-names. For the s05 NetCDF variable names (`subbsn-sample` / `subcol-sample`),
-s08 supplies the corresponding source-variable alias while preserving the
-registered Binary type and dimensions. s18 writes the registered `subbsn` or
-`subcol` variable into the same `-sample.nc` filename, matching the existing
-Binary-to-NetCDF conversion behavior. They overwrite their own outputs by
-default and accept `--no-overwrite`.
+`script_params/s05-subbasin.sh` creates `subbsn-sample.nc` and
+`subcol-sample.nc`; their NetCDF variables use the registered names `subbsn`
+and `subcol`. Use `s08-sample_nc2bin.sh` and `s18-sample_bin2nc.sh` for the
+two educational round-trip examples. They print the generic command syntax
+and run those examples without a separate conversion implementation.
+
+## Generic user-map converters
+
+Run `conv_nc2bin.sh` and `conv_bin2nc.sh` from a map's
+`script_format_conv/` directory. The wrappers accept exactly two positional
+arguments: the actual input filename and the standard registry reference
+stem. The reference selects the complete registered layout independently of
+the custom filename. For example, `nextxy` selects both `nextx` and `nexty`
+records, and `fldhgt` retains all registered layers.
+
+```sh
+./conv_nc2bin.sh subbsn-sample.nc subbsn
+./conv_bin2nc.sh subbsn-sample.bin subbsn
+```
+
+NetCDF inputs are read from the parent map directory; Binary inputs are read
+from its `binary/` directory. NetCDF-to-Binary outputs go to `binary/` with the
+input stem preserved. Binary-to-NetCDF outputs go to the parent map directory,
+also preserving the input stem. Outputs are replaced by default. The converters
+write standard registry variable names regardless of filename, validate the
+registered dtype and dimensions, and publish complete outputs atomically.
+
+Supported products are registered base-map `binary_map` and `binary_mult`
+rasters that fit the existing converters: single-variable 2D maps, layered
+maps, and multi-variable products such as `nextxy`. INPMAT, high-resolution
+tiles, tables, metadata and incomplete/unsupported registry layouts remain
+with their dedicated workflows (`s04`/`s14`, `s03`/`s13`, or other tools).
+
+Older sample NetCDF files may contain filename-derived variables such as
+`subbsn-sample`. They are not modified in place; regenerate them with
+`script_params/s05-subbasin.sh` before using the generic conversion examples.
 
 `t01-legacy_netcdf_map.sh` remains a separate legacy-container workflow;
 it is not a replacement for the numbered map conversion sequence. `s90-sample_netCDF_conversion.sh` remains as a deprecated

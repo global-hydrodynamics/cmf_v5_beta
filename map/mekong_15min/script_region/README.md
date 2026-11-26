@@ -1,6 +1,6 @@
 # Regional map preparation
 
-This guide documents the reusable v5 regional-map preparation template under `map/tools/`. It prepares a regional map from a compatible source map. The legacy v4 workflow remains under `map/src/src_region/` and is not modified here. Configure and execute `s01-regional_map.sh` for a target map; the individual Fortran programs are implementation details and should not be run separately for the standard workflow.
+This guide documents the reusable v5 regional-map preparation template under `map/tools/`. It prepares a regional map from a compatible source map. The legacy v4 workflow remains under `map/src/src_region/` and is not modified here. Configure and execute `s01-regional_map.sh` for a target map; the Python programs under `map/tools/code/` perform each processing stage and should not be run separately for the standard workflow.
 
 The scripts under `map/mekong_15min/` are maintained separately to create or update the official GitHub sample using the original global map distributed with CaMa-Flood packages. They are sample-preparation tools, not test scripts. GitHub CI does not run them. The reusable template documented here can be used to prepare other regional maps.
 
@@ -8,7 +8,7 @@ The scripts under `map/mekong_15min/` are maintained separately to create or upd
 
 The source directory must contain a compatible `params.txt`, `nextxy.bin`, `downxy.bin`, `elevtn.bin`, `fldhgt.bin`, `ctmare.bin`, `grdare.bin`, `uparea.bin`, `lonlat.bin`, `nxtdst.bin`, `rivlen.bin`, `width.bin`, and `bifori.txt`. `catmpx.bin` and `class.bin` are optional supplementary int32 rasters; when present, `region_cut_domain` crops their values over the full selected grid, including non-river cells. `cut_bifway` filters `bifori.txt` using the crop metadata and regional network. Confirm the binary formats and dimensions match the selected source map.
 
-High-resolution cropping is optional. For each supported tag (`1min`, `30sec`, `15sec`, or `3sec`), the source needs that directory's `location.txt`, which lists area names, bounds, dimensions, and cell size, plus the corresponding source layer files read by the combiner. If present, the workflow crops the first available high-resolution tag in the order `1min`, `30sec`, `15sec`, `3sec` and creates the standard climatology input mapping matrix. Matrix generation uses map geometry and high-resolution lookup/area layers; it does not read runoff data. A compatible annual runoff climatology is needed later to use this matrix for channel cross-section parameter estimation. These are external/source datasets; the repository's workflow code does not supply a replacement global map or runoff archive.
+High-resolution cropping is optional. For each supported tag (`1min`, `30sec`, `15sec`, or `3sec`), the source needs that directory's `location.txt`, which lists area names, bounds, dimensions, and cell size, plus the corresponding source layer files read by the combiner. Some layers, including `flwdir.bin`, are optional; when one is absent, the v5 combiner reports a `WARNING` and fills the corresponding output with its missing-value initialization. Missing required catchment lookup tiles (`catmxy.bin`) remain errors and are skipped. If present, the workflow crops the first available high-resolution tag in the order `1min`, `30sec`, `15sec`, `3sec` and creates the standard climatology input mapping matrix. Matrix generation uses map geometry and high-resolution lookup/area layers; it does not read runoff data. A compatible annual runoff climatology is needed later to use this matrix for channel cross-section parameter estimation. These are external/source datasets; the repository's workflow code does not supply a replacement global map or runoff archive.
 
 Copy the template into a map directory and edit the settings at the top of `s01-regional_map.sh`:
 
@@ -29,15 +29,7 @@ NORTH="35.0"
 
 ## Build and run
 
-Build the shared executables explicitly from the repository root, using the v5 configuration in `config/Mkinclude`:
-
-```sh
-make -C map/tools/code region
-cd map/myregion_15min/script_region
-./s01-regional_map.sh
-```
-
-Do not run it from the map root: the Fortran programs use paths relative to the map-local `script_region/` working directory. The shell assumes the shared executables have already been built under `../../tools/code/`; it neither checks for them in advance nor compiles them. During execution, it prints a `[STEP]` message for each processing stage, a `[SUCCESS]` message on completion, and an error banner with the failed step and exit status if a command fails. The same binaries serve all map datasets. Rebuild them after changing compiler settings; clean shared build products with `make -C map/tools/code clean` from the repository root.
+No build is required. Run from the copied map-local `script_region/` directory and keep that directory as CWD throughout the workflow. The common initialization uses `CMF_V50_ROOT` to locate `map/tools/code/` and load shared error reporting. Map-root inputs and outputs are referenced relative to the script directory; script-local configuration and intermediate files use direct relative filenames. Each processing step calls its Python program directly and reports progress through `cmf_check_*`.
 
 `s01-regional_map.sh` runs the following sequence internally: `region_cut_domain`, `region_cut_bifway`, `region_set_map`, `region_combine_hires` for available source tags, and `region_default_inpmat` when a suitable high-resolution map exists. `region_default_inpmat` creates the standard input mapping matrix for the annual runoff climatology used to estimate river channel cross-sections. The `test-1deg` tag denotes the global 360 × 180 ELSE_GPCC 1-degree grid used by `inp/ELSE_GPCC/runoffYYYY.nc` (daily, mm/day) and `map/data/ELSE_GPCC_clm-1981-2010.one` (annual mean, mm/s). A distinct matrix is required for each model map. The matrix (`inpmat_test-1deg.nc`) and paired `diminfo_test-1deg.txt` (`ROFFTAG=test-1deg`) are standard map products and should be distributed with prepared v5 regional maps. `HIRES_TAG` selects the high-resolution data used to construct this matrix; it is not the runoff-grid tag. The program reads high-resolution `grdare` in km2 and converts positive values to m2 for the overlap matrix; FLOW generates `grdare` from land-pixel areas, so coastal cells contribute only their land area. This fixed-grid product is distinct from the simulation-specific runoff input matrix generated later by the general-purpose `param_inpmat_generate` workflow in `script_params/`.
 
@@ -59,7 +51,7 @@ Consult [`variable_table/map_variables.csv`](../../../variable_table/map_variabl
 
 In high-resolution `downxy` files, record 1 (`downx`) and record 2 (`downy`) are signed 16-bit offsets on that same high-resolution grid. For a source pixel `(ix, iy)` with 1-based indices, add the two offsets to recover its downstream pixel: `(ix + downx, iy + downy)`. These are relative offsets, not absolute indices. FLOW adjusts the x offset for periodic wrapping at the global longitude seam. The paired sentinel values are `-999` for a river mouth and `-1000` for an inland termination. The output array starts at `-9999`; source inspection shows this remains when no downstream offset is assigned. The maintainer confirms `-9999` means sea in the low-resolution layer, but the high-resolution layer may use a different value for land pixels without an assigned unit catchment; that encoding remains unconfirmed. Consumers treat `downx <= -900` as a stop condition. The regional combiner preserves the offsets as-is. The common registry distinguishes the resolutions and records the unresolved high-resolution sentinel.
 
-The shared shell error checker stops the workflow at the first failed processing step. Confirm expected outputs exist, dimensions agree with the generated `params.txt` / `location.txt`, and binary sizes match the declared record layout. These checks establish file consistency only; they do not validate network correctness or scientific suitability. Run the separate CTL wrapper from the same `script_region/` directory after reviewing map outputs:
+Review terminal output after each internal program. The shell stops on the first failed processing command and reports the current step. Confirm expected outputs exist, dimensions agree with the generated `params.txt` / `location.txt`, and binary sizes match the declared record layout. These checks establish file consistency only; they do not validate network correctness or scientific suitability. Run the separate CTL wrapper from the same `script_region/` directory after reviewing map outputs:
 
 ```sh
 ./s02-write_ctl.sh --dry-run
@@ -70,9 +62,13 @@ The wrapper uses `params.txt` for the base map and each immediate child director
 
 ## Automated checks and scientific validation
 
-The automated Mekong CTL check copies the tracked binary files and metadata to a temporary directory and runs the `s02-write_ctl.sh` wrapper there. It verifies CTL generation and file-format declarations without overwriting the checked-in sample. Other synthetic CTL generator checks and the sample/registry validators are listed in the [map-tools overview](../../tools/README.md#github-only-automated-tests). GitHub Actions does not execute this regionalization template or the Mekong sample-preparation scripts. For the map-wide directory guide, see the [map README](../../README.md).
+The automated Mekong CTL check copies the tracked binary files and metadata to a temporary directory and runs the `s02-write_ctl.sh` wrapper there. It verifies CTL generation and file-format declarations without overwriting the checked-in sample. Other synthetic CTL generator checks and the sample/registry validators are listed in the [map-tools overview](../README.md#github-only-automated-tests). GitHub Actions does not execute this regionalization template or the Mekong sample-preparation scripts.
 
 Successful regional product generation, binary size checks, and CTL generation do not establish that the river network or hydraulic fields are scientifically correct. No full simulation, independent river-network validation, or v4/v5 numerical equivalence test is claimed. Check the registry for variables whose meaning, special codes, or units remain provisional. The regionalization shell uses `set -eu` and stops at the first failed command; its error banner identifies the current step and preserves the command exit status. Inspect the expected products after a successful run.
+
+## Multiple high-resolution areas
+
+`location.txt` may list multiple source areas. `region_combine_hires` and regional default input-matrix generation iterate over the listed areas and combine contributions for the regional target. This source-level capability is separate from the single-area allocation tools. Full package-scale multi-area integration has not yet been run; see the [area contract and manual validation procedure](../../../docs/map_data_tools_plan.md#high-resolution-area-handling-contract).
 
 The regional wrapper crops every available source resolution in
 `1min`, `30sec`, `15sec`, `5sec`, `3sec`, `1sec`. Its standard Input Matrix

@@ -16,11 +16,14 @@ import netCDF4
 import numpy as np
 
 from map.tools.code import convert_map_binary_to_netcdf as converter
+from map.tools.code import mod_map_io
 
 ROOT = Path(__file__).resolve().parents[3]
 REGISTRY = ROOT / 'variable_table/map_variables.csv'
 SCRIPT = ROOT / 'map/tools/script_format_conv/s18-sample_bin2nc.sh'
 NC2BIN_SCRIPT = ROOT / 'map/tools/script_format_conv/s08-sample_nc2bin.sh'
+GENERIC_NC2BIN = ROOT / 'map/tools/script_format_conv/conv_nc2bin.sh'
+GENERIC_BIN2NC = ROOT / 'map/tools/script_format_conv/conv_bin2nc.sh'
 
 
 class VariantConversionTests(unittest.TestCase):
@@ -206,40 +209,63 @@ class VariantConversionTests(unittest.TestCase):
                                  '--generate-list', '--reference-binary', 'subcol.bin'], capture_output=True)
         self.assertEqual(result.returncode, 2)
 
-    def test_shell_s18_map_local_explicit_target_overwrite_and_template_rejection(self):
-        local = ROOT/'map/mekong_15min/script_format_conv'/SCRIPT.name
-        self.assertEqual(SCRIPT.read_bytes(), local.read_bytes())
-        directory = self.map/'script_format_conv'
-        directory.mkdir()
-        script = directory/SCRIPT.name
-        shutil.copy2(SCRIPT, script)
+    def test_generic_converters_keep_custom_filename_and_registered_multivariable_layout(self):
+        script_dir = self.map/'script_format_conv'
+        script_dir.mkdir()
+        for source in (GENERIC_NC2BIN, GENERIC_BIN2NC):
+            shutil.copy2(source, script_dir/source.name)
         binary_dir = self.map/'binary'
         binary_dir.mkdir()
-        values = np.array([[-9999, 0, 1], [2, 10, 3]], dtype='<i4')
-        for name in ('subbsn', 'subcol'):
-            (binary_dir/f'{name}-sample.bin').write_bytes(values.tobytes())
-        env = dict(os.environ, CMF_V50_ROOT=str(ROOT))
-        def run(*arguments):
-            return subprocess.run(['bash', str(script), *arguments], cwd=directory, env=env,
-                                  capture_output=True, text=True)
-        result = run()
-        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
-        for name in ('subbsn', 'subcol'):
-            self.check_data(self.map/f'{name}-sample.nc', {name: values})
-        result = run()
-        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
-        self.assertIn('Converted: 2; skipped: 0', result.stdout)
-        for name in ('subbsn', 'subcol'):
-            self.check_data(self.map/f'{name}-sample.nc', {name: values})
-        result = run('--no-overwrite')
-        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
-        self.assertIn('Converted: 0; skipped: 2', result.stdout)
-        (binary_dir/'subbsn-sample.bin').unlink()
-        result = run()
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn('subbsn-sample.bin', result.stderr)
+        values = {
+            'nextx': np.array([[2, -9, -10], [0, -9999, 3]], dtype='int32'),
+            'nexty': np.array([[1, -9, -10], [0, -9999, 2]], dtype='int32'),
+        }
+        source = self.map/'nextxy-test.nc'
+        with netCDF4.Dataset(source, 'w') as dataset:
+            dataset.createDimension('lat', 2)
+            dataset.createDimension('lon', 3)
+            for name, data in values.items():
+                dataset.createVariable(name, 'i4', ('lat', 'lon'))[:] = data
 
-    def test_shell_s08_converts_s05_netcdf_samples_to_binary(self):
+        env = dict(os.environ, CMF_V50_ROOT=str(ROOT))
+        nc2bin = subprocess.run(['/bin/sh', str(script_dir/'conv_nc2bin.sh'), source.name, 'nextxy'],
+                                cwd=script_dir, env=env, capture_output=True, text=True)
+        self.assertEqual(nc2bin.returncode, 0, nc2bin.stdout+nc2bin.stderr)
+        self.assertIn('Reference: nextxy', nc2bin.stdout)
+        binary = binary_dir/'nextxy-test.bin'
+        self.assertEqual(binary.read_bytes(), b''.join(data.astype('<i4').tobytes() for data in values.values()))
+
+        bin2nc = subprocess.run(['/bin/sh', str(script_dir/'conv_bin2nc.sh'), binary.name, 'nextxy'],
+                                cwd=script_dir, env=env, capture_output=True, text=True)
+        self.assertEqual(bin2nc.returncode, 0, bin2nc.stdout+bin2nc.stderr)
+        self.assertIn('Output:    ../nextxy-test.nc', bin2nc.stdout)
+        self.check_data(source, values)
+
+        bad = subprocess.run(['/bin/sh', str(script_dir/'conv_nc2bin.sh'), source.name],
+                             cwd=script_dir, env=env, capture_output=True, text=True)
+        self.assertEqual(bad.returncode, 2)
+        self.assertIn('Usage:', bad.stderr)
+
+    def test_sample_producer_uses_registered_internal_variable_names(self):
+        previous_format, previous_root, previous_registry = (
+            mod_map_io._MAP_FORMAT, mod_map_io._MAP_ROOT, mod_map_io._REGISTRY,
+        )
+        grid = mod_map_io.Grid.read(self.map/'params.txt')
+        mod_map_io._MAP_FORMAT = 'netcdf'
+        mod_map_io._REGISTRY = None
+        try:
+            for name in ('subbsn', 'subcol'):
+                values = np.array([[-9999, 0, 1], [2, 10, 3]], dtype='int32')
+                mod_map_io.write_raster(self.map/f'{name}-sample.bin', values, '<i4', grid=grid)
+                with netCDF4.Dataset(self.map/f'{name}-sample.nc') as dataset:
+                    self.assertIn(name, dataset.variables)
+                    self.assertNotIn(f'{name}-sample', dataset.variables)
+        finally:
+            mod_map_io._MAP_FORMAT = previous_format
+            mod_map_io._MAP_ROOT = previous_root
+            mod_map_io._REGISTRY = previous_registry
+
+    def test_s08_and_s18_run_the_generic_sample_conversions(self):
         binary_dir = self.map/'binary'
         binary_dir.mkdir()
         arrays = {
@@ -252,7 +278,7 @@ class VariantConversionTests(unittest.TestCase):
             with netCDF4.Dataset(source, 'w') as dataset:
                 dataset.createDimension('lat', 2)
                 dataset.createDimension('lon', 3)
-                variable = dataset.createVariable(f'{name}-sample', 'i4', ('lat', 'lon'))
+                variable = dataset.createVariable(name, 'i4', ('lat', 'lon'))
                 variable[:] = values
             original_sources[source.name] = source.read_bytes()
             (binary_dir/f'{name}-sample.bin').write_bytes(b'preserve-'+name.encode())
@@ -262,36 +288,33 @@ class VariantConversionTests(unittest.TestCase):
         script = script_dir/NC2BIN_SCRIPT.name
         shutil.copy2(NC2BIN_SCRIPT, script)
         shutil.copy2(SCRIPT, script_dir/SCRIPT.name)
+        shutil.copy2(GENERIC_NC2BIN, script_dir/GENERIC_NC2BIN.name)
+        shutil.copy2(GENERIC_BIN2NC, script_dir/GENERIC_BIN2NC.name)
         def run(*arguments):
             return subprocess.run(['bash', str(script), *arguments], cwd=script_dir,
                                   env=dict(os.environ, CMF_V50_ROOT=str(ROOT),
                                            PATH=f"{ROOT/'.venv/bin'}:{os.environ['PATH']}"),
                                   capture_output=True, text=True)
 
-        result = run('--no-overwrite')
-        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
-        self.assertIn('Converted: 0; skipped: 2', result.stdout)
-        for name in arrays:
-            self.assertEqual((binary_dir/f'{name}-sample.bin').read_bytes(), b'preserve-'+name.encode())
-
         result = run()
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
-        self.assertIn('Converted: 2; skipped: 0', result.stdout)
-        for source_name, original in original_sources.items():
-            self.assertEqual((self.map/source_name).read_bytes(), original)
+        self.assertIn('Usage: ./conv_nc2bin.sh INPUT.nc REFERENCE', result.stdout)
+        self.assertEqual(result.stdout.count('NetCDF -> Binary'), 2)
         for name, values in arrays.items():
             self.assertEqual((binary_dir/f'{name}-sample.bin').read_bytes(), values.astype('<i4').tobytes())
-        result = subprocess.run(['bash', str(script_dir/'s18-sample_bin2nc.sh')], cwd=script_dir,
+            self.assertEqual((self.map/f'{name}-sample.nc').read_bytes(), original_sources[f'{name}-sample.nc'])
+        result = subprocess.run(['/bin/sh', str(script_dir/'s18-sample_bin2nc.sh')], cwd=script_dir,
                                 env=dict(os.environ, CMF_V50_ROOT=str(ROOT)),
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
-        self.assertIn('Converted: 2; skipped: 0', result.stdout)
+        self.assertIn('Usage: ./conv_bin2nc.sh INPUT.bin REFERENCE', result.stdout)
+        self.assertEqual(result.stdout.count('Binary -> NetCDF'), 2)
         for name, values in arrays.items():
             with netCDF4.Dataset(self.map/f'{name}-sample.nc') as ds:
                 ds.set_auto_maskandscale(False)
                 np.testing.assert_array_equal(ds[name][:], values)
                 self.assertEqual(ds[name].dtype, values.dtype)
-        self.assertEqual(list(binary_dir.glob('.sample-nc2bin.*')), [])
+        self.assertEqual(list(binary_dir.glob('.*.tmp')), [])
 
     def test_shell_no_overwrite_preserves_existing_outputs(self):
         fixture = self.root/'fixture repository'

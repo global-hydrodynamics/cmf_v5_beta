@@ -132,18 +132,20 @@ t03 external wrapper is retired: no separate external converter or multi-map
 batch orchestrator is needed. Its redundant `<tag>_nc/location.txt` side copy
 is not reproduced; conversion itself already writes to `<tag>/`.
 
-## s06 sample map conversions
+## Sample maps and generic converters
 
-`script_params/s05-subbasin.sh` creates `subbsn-sample` and `subcol-sample`.
-Use `s08-sample_nc2bin.sh` to export those NetCDF products to `binary/`, and
-`s18-sample_bin2nc.sh` to restore them. These scripts use the registered
-`subbsn.bin` and `subcol.bin` layouts while retaining the `-sample` output
-names. For the s06 NetCDF variable names (`subbsn-sample` / `subcol-sample`),
-s08 supplies the corresponding source-variable alias while preserving the
-registered Binary type and dimensions. s18 writes the registered `subbsn` or
-`subcol` variable into the same `-sample.nc` filename, matching the existing
-Binary-to-NetCDF conversion behavior. They overwrite their own outputs by
-default and accept `--no-overwrite`.
+`script_params/s05-subbasin.sh` creates `subbsn-sample.nc` and
+`subcol-sample.nc`; their NetCDF variables use the registered names `subbsn`
+and `subcol`. Use `s08-sample_nc2bin.sh` and `s18-sample_bin2nc.sh` for the
+two educational round-trip examples. They print the generic command syntax
+and run those examples without a separate conversion implementation.
+
+Run `conv_nc2bin.sh INPUT.nc REFERENCE` and
+`conv_bin2nc.sh INPUT.bin REFERENCE` from this directory for other registered
+base-map rasters. The actual input filename is independent of the standard
+registry reference stem. The shared guide documents product support, directory
+placement, and overwrite behavior:
+[`map/tools/script_format_conv/README.md`](../../tools/script_format_conv/README.md).
 
 `t01-legacy_netcdf_map.sh` remains a separate legacy-container workflow;
 it is not a replacement for the numbered map conversion sequence. `s90-sample_netCDF_conversion.sh` remains as a deprecated

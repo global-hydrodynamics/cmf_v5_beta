@@ -2,7 +2,7 @@
 # Parallel port of analysis_river_point_info.F90; original Fortran authors and license retained.
 """Inspect one river cell using the same xy/latlon selection as Fortran.
 
-Read stored representative outlets, basin/upstream attributes and nextxy.
+Read standard NetCDF maps, stored outlet coordinates and basin attributes.
 latlon prefers a 15sec assignment map, then 1min, then geographic containment.
 All reported IX/IY are explicitly one-based; Python indices are also printed.
 """
@@ -18,13 +18,14 @@ def main():
     p.add_argument('second', type=np.float32)
     args = p.parse_args()
     grid = Grid.read(args.map_dir / 'params.txt')
-    nextxy = grid.raster(args.map_dir / 'nextxy.bin', '<i4', 2)
-    basin = grid.raster(args.map_dir / 'basin.bin', '<i4')
-    upgrid = grid.raster(args.map_dir / 'upgrid.bin', '<i4')
-    uparea = grid.raster(args.map_dir / 'uparea.bin')
-    ctmare = grid.raster(args.map_dir / 'ctmare.bin')
-    elevation = grid.raster(args.map_dir / 'elevtn.bin')
-    outlets = grid.raster(args.map_dir / 'lonlat.bin', '<f4', 2)
+    suffix = '.nc' if args.map_format == 'netcdf' else '.bin'
+    nextxy = grid.raster(args.map_dir / f'nextxy{suffix}', '<i4', 2)
+    basin = grid.raster(args.map_dir / f'basin{suffix}', '<i4')
+    upgrid = grid.raster(args.map_dir / f'upgrid{suffix}', '<i4')
+    uparea = grid.raster(args.map_dir / f'uparea{suffix}')
+    ctmare = grid.raster(args.map_dir / f'ctmare{suffix}')
+    elevation = grid.raster(args.map_dir / f'elevtn{suffix}')
+    outlets = grid.raster(args.map_dir / f'lonlat{suffix}', '<f4', 2)
     if args.mode == 'xy':
         ix, iy = int(args.first), int(args.second)
         lon = np.float32(grid.west + grid.size * np.float32(ix - .5))
@@ -46,7 +47,9 @@ def main():
             y = int(np.float32((grid.north - lat) / size))
             if not (0 <= x < nx and 0 <= y < ny):
                 p.error('ix,iy cannot be defined')
-            assignment = read_array(args.map_dir / tag / f'{tag}.catmxy.bin', '<i2', (2, ny, nx))
+            assignment = read_array(
+                args.map_dir / tag / f'{tag}.catmxy{suffix}', '<i2', (2, ny, nx),
+            )
             ix, iy = (int(v) for v in assignment[:, y, x])
             break
         if ix is None:

@@ -17,14 +17,15 @@ except ImportError:
 
 def convert(map_dir: Path, source: Path, output: Path, registry: Path,
             variables: list[str] | None, no_overwrite: bool,
-            source_variable: str | None = None) -> None:
+            source_variable: str | None = None,
+            reference_binary: str | None = None) -> None:
     """Write registry records in x-fastest, little-endian Fortran order."""
     params = forward.read_params(map_dir / 'params.txt')
     nx, ny, nlfp = params[:3]
     definition = forward.standard_binary_filename(output.name)
     registered_rows = forward.registry_rows(registry)
-    rows = forward.select_variables(definition, registered_rows, variables)
-    all_rows = forward.select_variables(definition, registered_rows, None)
+    rows = forward.select_variables(definition, registered_rows, variables, reference_binary)
+    all_rows = forward.select_variables(definition, registered_rows, None, reference_binary)
     if len(rows) != len(all_rows):
         raise ValueError('restoring a multi-record Binary requires every registered record')
     if source_variable is not None and len(rows) != 1:
@@ -80,6 +81,7 @@ def main() -> int:
     parser.add_argument('--registry', type=Path, default=root / 'variable_table/map_variables.csv')
     parser.add_argument('--variables', help='optional comma-separated registered variable names')
     parser.add_argument('--source-variable', help='NetCDF variable name when it differs from the registered map variable')
+    parser.add_argument('--reference-binary', help='exact registered Binary filename describing the input, independent of its custom name')
     parser.add_argument('--no-overwrite', action='store_true', help='keep an existing Binary file')
     args = parser.parse_args()
     map_dir, source = args.map_dir.resolve(), args.input.resolve()
@@ -89,7 +91,7 @@ def main() -> int:
     try:
         convert(map_dir, source, output, args.registry.resolve(),
                 args.variables.split(',') if args.variables else None, args.no_overwrite,
-                args.source_variable)
+                args.source_variable, args.reference_binary)
     except (OSError, ValueError, RuntimeError) as error:
         parser.exit(1, f'ERROR: {error}\n')
     return 0

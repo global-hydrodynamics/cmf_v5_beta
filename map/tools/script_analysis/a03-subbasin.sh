@@ -1,81 +1,32 @@
 #!/bin/sh
-# Example: generate exploratory subbasin maps without replacing standard products.
-# Run from script_analysis/; shared Python sources are resolved by this wrapper.
-# Inputs: params.txt, nextxy.bin, and uparea.bin.
-# Outputs: threshold-named subbsn/subcol maps in OUT_DIR; existing same-name files are overwritten.
 set -eu
 
-# Paths
-# Command substitution stores the resolved path; CDPATH= keeps cd output predictable.
-SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
-PYTHON_CMD="${PYTHON_CMD:-python3}"
-if [ -n "${CMF5_ROOT:-}" ]; then
-    CODE_DIR="$CMF5_ROOT/map/tools/code"
-else
-    CODE_DIR="$SCRIPT_DIR/../../tools/code"
-fi
-if [ ! -d "$CODE_DIR" ]; then
-    printf '[ERROR] Shared Python tools not found: %s (set CMF5_ROOT to the repository root)\n' "$CODE_DIR" >&2
-    exit 1
-fi
+# CaMa-Flood general setting (check CMF root, import CMF common shell functions)
+PYTHON_CMD="python3"
+: "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
+. "$CMF_V50_ROOT/tools/cmf_shell_functions.sh"
 
-# Analysis output directory, relative to script_analysis/.
-OUT_DIR="out_analysis"  # Change to ../out_analysis to use the map-root output folder.
+# ----------------------------------------------------------------------
+# User settings
+# ----------------------------------------------------------------------
+AREA_SUBBSN=30000   # Primary drainage-area subdivide threshold [km2].
+AREA_SMLBSN=5000    # Secondary threshold [km2]; empty to disable stage 2 (put ID to smaller basin).
+#AREA_SMLBSN=""       # in case small basin threshold is not used.
 
-# The threshold is illustrative; these exploratory products do not replace standard maps.
-AREA_THRESHOLD_KM2=50000                                      # Upstream-area threshold (km2), not calibrated universally.
-SUBBSN_OUTPUT="$OUT_DIR/subbsn_${AREA_THRESHOLD_KM2}km2.bin"  # Output path for subbasin IDs.
-SUBCOL_OUTPUT="$OUT_DIR/subcol_${AREA_THRESHOLD_KM2}km2.bin"  # Output path for display colors.
-
+TAG="-sample"  # Output filename suffix; empty for subbsn.nc and subcol.nc.
+#TAG="-${AREA_SUBBSN}-${AREA_SMLBSN}"  # Include thresholds in filenames.
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
 # ----------------------------------------------------------------------
+CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 
-# ${0##*/} removes the directory portion of the script path for readable messages.
-SCRIPT_NAME=${0##*/}
-STEP="Prepare exploratory subbasin outputs"
-# The exit trap reports failures and preserves status; signal traps use standard nonzero statuses.
-trap '
-    EXIT_STATUS=$?
-    trap - 0
-    if [ "$EXIT_STATUS" -ne 0 ]; then
-        printf "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" >&2
-        printf "!!! ERROR: %s FAILED !!!\n" "$SCRIPT_NAME" >&2
-        printf "!!! Step: %s\n" "$STEP" >&2
-        printf "!!! Exit status: %s\n" "$EXIT_STATUS" >&2
-        printf "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" >&2
-    fi
-    exit "$EXIT_STATUS"
-' 0
-trap 'exit 129' HUP
-trap 'exit 130' INT
-trap 'exit 143' TERM
+cmf_check_init "Generate subbasin segmentation"
 
-# ----------------------------------------------------------------------
-# End of error handling.
-# ----------------------------------------------------------------------
+cmf_check_step 1 1 "Segment river network (primary threshold: ${AREA_SUBBSN} km2)"
+"$PYTHON_CMD" "$CODE_DIR/analysis_subbasin.py" \
+    "$AREA_SUBBSN" ${AREA_SMLBSN:+"$AREA_SMLBSN"} \
+    "../subbsn${TAG}.nc" "../subcol${TAG}.nc" --map-dir ..
 
-# The sed expression escapes apostrophes so printed paths can be pasted into a shell.
-quote_shell_arg() {
-    printf "'"
-    printf '%s' "$1" | sed "s/'/'\\\\''/g"
-    printf "'"
-}
+cmf_check_success
 
-# The executable reads map inputs through ../ from this map-local directory.
-cd "$SCRIPT_DIR"
-mkdir -p "$OUT_DIR"
-
-printf '\nWorking directory: %s\n' "$PWD"
-
-STEP="Generate exploratory subbasins at ${AREA_THRESHOLD_KM2} km2"
-printf '\n==================================================\n[STEP 1/1] Generate exploratory subbasin maps (%s km2)\n==================================================\n\n' "$AREA_THRESHOLD_KM2"
-printf '"$PYTHON_CMD" "$CODE_DIR/analysis_subbasin.py" %s ' "$AREA_THRESHOLD_KM2"
-quote_shell_arg "$SUBBSN_OUTPUT"
-printf ' '
-quote_shell_arg "$SUBCOL_OUTPUT"
-printf '\n'
-"$PYTHON_CMD" "$CODE_DIR/analysis_subbasin.py" "$AREA_THRESHOLD_KM2" "$SUBBSN_OUTPUT" "$SUBCOL_OUTPUT"
-printf 'Subbasin IDs: %s\nDisplay colors: %s\n' "$SUBBSN_OUTPUT" "$SUBCOL_OUTPUT"
-
-printf '\n==================================================\n[SUCCESS] %s\n==================================================\n' "$SCRIPT_NAME"
+# Optional Python CLI flags: add --map-format binary to use legacy Binary maps.
