@@ -43,7 +43,7 @@ class RestorationTests(unittest.TestCase):
             selected.extend(forward.rows_for_tile(rows, '1min', 'a', variable))
         integer = dict(forward.rows_for_tile(rows, '1min', 'a', 'catmz100')[0])
         integer.update(name='fixture_int32', dtype='int32', missing_value='-2147483648',
-                       binary_filename='<HIRES>/<AREA>.fixture_int32.bin')
+                       filename='<HIRES>/<AREA>.fixture_int32.nc')
         selected.append(integer)
         self.registry = self.map / 'registry.csv'
         with self.registry.open('w', newline='') as stream:

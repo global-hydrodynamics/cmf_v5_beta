@@ -51,7 +51,7 @@ def fixture(tmp_path, product='elevtn', dtype='float32', order=('lat', 'lon'), r
                 data = data.swapaxes(-1, -2)
             var[:] = data
     rows = cog.hires.registry_rows(REGISTRY)
-    selected = [r for r in rows if r['binary_filename'] == f'{product}.bin']
+    selected = [r for r in rows if r['filename'] == f'{product}.nc']
     if not selected:
         selected = [dict(name=n, dtype=dtype, dimensions='NX,NY', record_index=str(i+1),
                          missing_value=str(fill), units='1', long_name=n, physical_description='test index')
@@ -297,7 +297,7 @@ with nc.Dataset(p,'w') as ds:
   for x in range(0,16384,512):v[y:y+512,x:x+512]=block
  del block
 rows=c.hires.registry_rows(c.DEFAULT_REGISTRY)
-rows=[r for r in rows if r['binary_filename']=='elevtn.bin']
+rows=[r for r in rows if r['filename']=='elevtn.nc']
 t=c.Task(p,root/'COG/elevtn.tif',rows,c.base_geometry(root/'params.txt'))
 print(c.convert(t),flush=True)
 rss=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
@@ -490,7 +490,7 @@ def test_mpi_family_and_canonical_single_variable_variant_resolution(tmp_path):
     # A renamed raster is resolved by its canonical variable, not its stem.
     variant, _ = fixture(tmp_path, 'width-experiment', names=['rivwth'])
     selected = cog.plan(root, ['base'], ['width-experiment'], REGISTRY)
-    assert len(selected) == 1 and selected[0].rows[0]['binary_filename'] == 'rivwth.bin'
+    assert len(selected) == 1 and selected[0].rows[0]['filename'] == 'rivwth.nc'
     assert cog.convert(selected[0], blocksize=128).startswith('PASS')
     for invalid in ('mpireg-0','mpireg-test','mpireg--4'):
         invalid_task, _ = fixture(tmp_path, invalid, 'int32', names=['mpireg'])

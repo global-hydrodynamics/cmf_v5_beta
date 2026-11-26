@@ -28,6 +28,15 @@ outputs live in their own directories. The workflow does not create a redundant
 `netcdf/` directory. Conversion outputs are overwritten by default; source
 files and unrelated files are preserved.
 
+The `filename` column in `variable_table/map_variables.csv` records standard
+NetCDF filenames for numerical map products. The conversion tools derive the
+optional Binary compatibility name by changing `.nc` to `.bin`; record order,
+types, dimensions, and special values remain governed by the same registry
+metadata. Text descriptors such as `diminfo_<ROFFTAG>.txt` retain their actual
+names. Input matrices use the category-23 generic name
+`inpmat_<ROFFTAG>.nc`, which also covers the existing `test-1deg` pair, with
+the corresponding Binary form under `binary/inpmat_<ROFFTAG>.bin`.
+
 ## Workflow scripts
 
 | Script | Operation |

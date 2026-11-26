@@ -22,7 +22,8 @@ CONVERTER_SOURCE = ROOT / "map/tools/code/convert_map_binary_to_netcdf.py"
 FIELDS = [
     "category_id",
     "category",
-    "binary_filename",
+    "product_kind",
+    "filename",
     "dtype",
     "dimensions",
     "record_index",
@@ -42,7 +43,9 @@ def registry_row(
     return dict(
         zip(
             FIELDS,
-            [category_id, category, filename, dtype, dimensions, record_index, record_count],
+            [category_id, category,
+             "binary_mult" if dimensions == "NX,NY,INPN" or record_count != "1" else "binary_map",
+             filename, dtype, dimensions, record_index, record_count],
         )
     )
 
@@ -156,6 +159,15 @@ def run_tty(script: Path, cwd: Path, response: bytes, prompt: bytes) -> str:
 
 
 class BinaryToNetCDFWorkflowTests(unittest.TestCase):
+    def test_input_matrix_tags_resolve_only_through_generic_registry_rows(self):
+        from map.tools.code.convert_map_binary_to_netcdf import registry_rows, registered_binary_rows
+
+        rows = registry_rows(ROOT / "variable_table/map_variables.csv")
+        for tag in ("test-1deg", "custom-runoff"):
+            selected = registered_binary_rows(f"inpmat_{tag}.bin", rows)
+            self.assertEqual({row["category_id"] for row in selected}, {"23"})
+            self.assertEqual([row["name"] for row in selected], ["inpx", "inpy", "inpa"])
+
     def test_map_local_scripts_match_shared_templates_except_map_directory(self):
         for name in ("s11-list_bin.sh", "s12-bin2nc.sh"):
             template = (SCRIPT_TEMPLATE / name).read_text(encoding="utf-8")

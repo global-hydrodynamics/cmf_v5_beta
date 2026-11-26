@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import fnmatch
 import struct
 import tempfile
 import unittest
@@ -36,19 +37,35 @@ def registry_rows() -> list[dict[str, str]]:
 
 
 def rows_for_sample_file(path: Path, rows: list[dict[str, str]]) -> list[dict[str, str]]:
-    """Resolve exact map filenames and the registry's high-resolution templates."""
+    """Resolve Binary products from the registry's standard NetCDF names."""
     matches = []
+    exact = []
     for row in rows:
-        filename = row["binary_filename"]
-        if filename == path.name:
+        if row.get("product_kind") not in {"binary_map", "binary_mult"}:
+            continue
+        filename = row["filename"]
+        patterns = []
+        for item in filename.split(";"):
+            item = item.strip()
+            if item.endswith(".nc"):
+                item = item[:-3] + ".bin"
+            patterns.append(item.replace("<ROFFTAG>", "*"))
+        if path.name in patterns:
+            exact.append(row)
+            continue
+        if any(fnmatch.fnmatchcase(path.name, pattern) for pattern in patterns):
             matches.append(row)
             continue
         prefix = "<HIRES>/<AREA>."
         if filename.startswith(prefix) and path.parent.name == "1min":
             suffix = filename[len(prefix):]
+            if suffix.endswith(".nc"):
+                suffix = suffix[:-3] + ".bin"
             if path.name == f"{path.parent.name}.{suffix}":
                 matches.append(row)
-    return matches
+    if not exact and not matches and path.name.startswith("upbasin-") and path.suffix == ".bin":
+        matches = [row for row in rows if row["filename"] == "upbasin.nc"]
+    return exact or matches
 
 
 def validate_registered_binary_size(
@@ -100,27 +117,29 @@ class MekongSampleTests(unittest.TestCase):
         self.assertEqual(dims, {"NX": 80, "NY": 120, "NLFP": 10})
         self.assertEqual(input_dims, {"INPNX": 360, "INPNY": 180, "INPN": 4})
         self.assertEqual([float(lines[i].split()[0]) for i in (7, 8, 9, 10)], [90.0, 110.0, 35.0, 5.0])
-        self.assertEqual(lines[6].strip(), "inpmat_test-1deg.bin")
-
-        expected_bytes = dims["NX"] * dims["NY"] * input_dims["INPN"] * (4 + 4 + 4)
-        self.assertEqual((MAP / lines[6].strip()).stat().st_size, expected_bytes)
+        self.assertEqual(lines[6].strip(), "inpmat_test-1deg.nc")
+        self.assertGreater((MAP / lines[6].strip()).stat().st_size, 0)
 
     def test_era5land_registry_pair_uses_same_diminfo_convention(self) -> None:
         rows = registry_rows()
-        descriptor_rows = [r for r in rows if r["binary_filename"] == "diminfo_ERA5land_global.txt"]
-        matrix_rows = [r for r in rows if r["binary_filename"] == "inpmat_ERA5land_global.bin"]
+        descriptor_rows = [r for r in rows if r["category_id"] == "23" and r["name"] == "diminfo_<ROFFTAG>"]
+        matrix_rows = [r for r in rows if r["category_id"] == "23" and r["filename"] == "inpmat_<ROFFTAG>.nc"]
         self.assertEqual(len(descriptor_rows), 1)
+        self.assertEqual(descriptor_rows[0]["filename"], "diminfo_<ROFFTAG>.txt")
         self.assertEqual([r["name"] for r in matrix_rows], ["inpx", "inpy", "inpa"])
         self.assertEqual([r["dtype"] for r in matrix_rows], ["int32", "int32", "float32"])
+        self.assertEqual([r["record_index"] for r in matrix_rows], ["1", "2", "3"])
+        self.assertEqual({r["dimensions"] for r in matrix_rows}, {"NX,NY,INPN"})
+        self.assertFalse(any(r["filename"].startswith(("diminfo_test-1deg", "inpmat_test-1deg")) for r in rows))
         self.assertTrue(all(not r["sample_availability"] for r in descriptor_rows + matrix_rows))
-        self.assertFalse(any("E2O" in r["binary_filename"] for r in rows))
-        self.assertFalse(any("repo-mek_1deg" in r["binary_filename"] for r in rows))
+        self.assertFalse(any("E2O" in r["filename"] for r in rows))
+        self.assertFalse(any("repo-mek_1deg" in r["filename"] for r in rows))
         # Validate the layout in a temporary tiny model map; no real ERA5 matrix is claimed.
         with tempfile.TemporaryDirectory(prefix="cmf-era5-matrix-") as temporary:
             fixture = Path(temporary)
-            descriptor = fixture / "diminfo_ERA5land_global.txt"
-            descriptor.write_text("2\n3\n10\n3600\n1801\n1\ninpmat_ERA5land_global.bin\n-1\n1\n1.5\n-1.5\n")
-            binary = fixture / "inpmat_ERA5land_global.bin"
+            descriptor = fixture / "diminfo_test-runoff.txt"
+            descriptor.write_text("2\n3\n10\n3600\n1801\n1\ninpmat_test-runoff.bin\n-1\n1\n1.5\n-1.5\n")
+            binary = fixture / "inpmat_test-runoff.bin"
             binary.write_bytes(bytes(2 * 3 * (4 + 4 + 4)))
             self.assertEqual(read_input_dimensions(descriptor), {"INPNX": 3600, "INPNY": 1801, "INPN": 1})
             self.assertTrue(validate_registered_binary_size(binary, rows, {"NX": 2, "NY": 3, "NLFP": 10}, fixture))
@@ -137,33 +156,34 @@ class MekongSampleTests(unittest.TestCase):
         }
         for name, size in expected.items():
             with self.subTest(name=name):
-                self.assertEqual((MAP / name).stat().st_size, size)
+                self.assertEqual((MAP / "binary" / name).stat().st_size, size)
 
-        self.assertEqual(len(struct.unpack(f"<{2*cells}i", (MAP / "nextxy.bin").read_bytes())), 2 * cells)
-        self.assertEqual(len(struct.unpack(f"<{dims['NLFP']*cells}f", (MAP / "fldhgt.bin").read_bytes())), dims["NLFP"] * cells)
+        self.assertEqual(len(struct.unpack(f"<{2*cells}i", (MAP / "binary" / "nextxy.bin").read_bytes())), 2 * cells)
+        self.assertEqual(len(struct.unpack(f"<{dims['NLFP']*cells}f", (MAP / "binary" / "fldhgt.bin").read_bytes())), dims["NLFP"] * cells)
 
     def test_required_base_and_high_resolution_products_are_present(self) -> None:
         required_base = {
-            "nextxy.bin", "ctmare.bin", "elevtn.bin", "nxtdst.bin", "rivlen.bin", "fldhgt.bin",
-            "basin.bin", "width.bin", "rivwth.bin", "rivhgt.bin", "rivman.bin",
-            "inpmat_test-1deg.bin", "diminfo_test-1deg.txt",
+            "nextxy.nc", "ctmare.nc", "elevtn.nc", "nxtdst.nc", "rivlen.nc", "fldhgt.nc",
+            "basin.nc", "width.nc", "rivwth.nc", "rivhgt.nc", "rivman.nc",
+            "inpmat_test-1deg.nc", "diminfo_test-1deg.txt",
         }
         actual_base = {path.name for path in MAP.iterdir() if path.is_file()}
         self.assertTrue(required_base <= actual_base, f"missing base-map products: {sorted(required_base - actual_base)}")
 
         required_high = {
-            "1min.catmxy.bin", "1min.downxy.bin", "1min.elevtn.bin", "1min.uparea.bin",
+            "1min.catmxy.nc", "1min.downxy.nc", "1min.elevtn.nc", "1min.uparea.nc",
         }
-        actual_high = {path.name for path in (MAP / "1min").glob("*.bin")}
+        actual_high = {path.name for path in (MAP / "1min").glob("1min.*.nc")}
         self.assertTrue(required_high <= actual_high, f"missing high-resolution products: {sorted(required_high - actual_high)}")
 
     def test_named_river_analysis_sample_products_match_network_and_registry(self) -> None:
         dims = read_map_dimensions()
         cells = dims["NX"] * dims["NY"]
-        nextx = struct.unpack("<" + "i" * cells, (MAP / "nextxy.bin").read_bytes()[:cells * 4])
-        subbasins = struct.unpack("<" + "i" * cells, (MAP / "subbsn-sample.bin").read_bytes())
-        colors = struct.unpack("<" + "i" * cells, (MAP / "subcol-sample.bin").read_bytes())
-        upstream = struct.unpack("<" + "i" * cells, (MAP / "upbasin-2569002.bin").read_bytes())
+        binary = MAP / "binary"
+        nextx = struct.unpack("<" + "i" * cells, (binary / "nextxy.bin").read_bytes()[:cells * 4])
+        subbasins = struct.unpack("<" + "i" * cells, (binary / "subbsn-sample.bin").read_bytes())
+        colors = struct.unpack("<" + "i" * cells, (binary / "subcol-sample.bin").read_bytes())
+        upstream = struct.unpack("<" + "i" * cells, (binary / "upbasin-2569002.bin").read_bytes())
         self.assertTrue(all(value == -9999 for value, downstream in zip(subbasins, nextx) if downstream == -9999))
         self.assertTrue(all(value >= 0 for value, downstream in zip(subbasins, nextx) if downstream != -9999))
         self.assertIn(0, subbasins)
@@ -175,14 +195,14 @@ class MekongSampleTests(unittest.TestCase):
         # Concrete variants resolve through standard definitions in s90, not
         # duplicate registry rows; retain the scientific sample checks above.
         for name in ("subbsn", "subcol"):
-            self.assertEqual(rows_for_sample_file(MAP / f"{name}-sample.bin", rows), [])
-            standard = rows_for_sample_file(MAP / f"{name}.bin", rows)
+            self.assertEqual(rows_for_sample_file(binary / f"{name}-sample.bin", rows), [])
+            standard = rows_for_sample_file(binary / f"{name}.bin", rows)
             self.assertEqual(len(standard), 1)
             self.assertEqual(standard[0]["name"], name)
             self.assertEqual(standard[0]["dtype"], "int32")
             self.assertEqual(standard[0]["dimensions"], "NX,NY")
             self.assertEqual(standard[0]["missing_value"], "-9999")
-        self.assertEqual(len(rows_for_sample_file(MAP / "upbasin-2569002.bin", rows)), 1)
+        self.assertEqual(len(rows_for_sample_file(binary / "upbasin-2569002.bin", rows)), 1)
 
     def test_sample_binary_sizes_match_registry_types_and_dimensions(self) -> None:
         dims = read_map_dimensions()
@@ -219,7 +239,8 @@ class MekongSampleTests(unittest.TestCase):
 
     def test_registered_binary_size_check_allows_user_files_and_rejects_bad_size(self) -> None:
         dims = {"NX": 2, "NY": 1}
-        rows = [{"binary_filename": "registered.bin", "dtype": "int32", "dimensions": "NX,NY"}]
+        rows = [{"filename": "registered.bin", "product_kind": "binary_map",
+                 "dtype": "int32", "dimensions": "NX,NY"}]
         with tempfile.TemporaryDirectory() as temp_dir:
             sample_dir = Path(temp_dir)
             registered = sample_dir / "registered.bin"

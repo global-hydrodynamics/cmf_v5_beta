@@ -32,7 +32,7 @@ class MPIRegionConversionTests(unittest.TestCase):
 
     def verify(self, output, values, map_dir=None):
         nx, ny, _, res, west, _, _, north = converter.read_params((map_dir or self.map)/'params.txt')
-        standard = next(row for row in converter.registry_rows(REGISTRY) if row['binary_filename'] == 'mpireg.bin')
+        standard = next(row for row in converter.registry_rows(REGISTRY) if row['filename'] == 'mpireg.nc')
         with netCDF4.Dataset(output) as ds:
             ds.set_auto_maskandscale(False)
             self.assertEqual(set(ds.variables), {'lon', 'lat', 'mpireg'})
@@ -72,7 +72,7 @@ class MPIRegionConversionTests(unittest.TestCase):
             self.assertLess(text.index(name), text.index('# [25]'))
         self.assertNotIn('mpireg-64.bin\n', text)
         for name in rejected:
-            self.assertEqual(converter.standard_binary_filename(name), name)
+            self.assertEqual(converter.standard_filename(name), name)
             with self.assertRaises(ValueError):
                 converter.select_variables(name, converter.registry_rows(REGISTRY), None)
 
@@ -111,7 +111,7 @@ class MPIRegionConversionTests(unittest.TestCase):
         rows = converter.registry_rows(REGISTRY)
         standard = [r for r in rows if r['name'] == 'mpireg']
         self.assertEqual(len(standard), 1)
-        self.assertEqual(standard[0]['binary_filename'], 'mpireg.bin')
+        self.assertEqual(standard[0]['filename'], 'mpireg.nc')
         for filename, requested, reference in [('mpireg-32.bin', None, None),
                 ('mpireg-32.bin', ['mpireg'], None), ('arbitrary.bin', ['mpireg'], None),
                 ('arbitrary.bin', None, 'mpireg.bin')]:

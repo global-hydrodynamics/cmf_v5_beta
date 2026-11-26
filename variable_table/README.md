@@ -10,16 +10,28 @@ Each table has its own schema and purpose; combining them into one CSV is not in
 
 A separate `input_variables.csv` may be considered if future work needs a shared inventory for multiple time-varying model inputs. No such table is defined here yet.
 
+In `map_variables.csv`, the `filename` column names the standard NetCDF product
+for raster records (`.nc`). Binary compatibility filenames are derived by
+changing `.nc` to `.bin` and placing the result under `binary/`; the Binary
+record order and metadata remain unchanged. Text metadata keeps its actual
+`.txt` filename. Input matrices use one generic registry definition:
+`diminfo_<ROFFTAG>.txt` and `inpmat_<ROFFTAG>.nc`. This template also covers
+the existing Mekong `test-1deg` map configuration without a tag-specific
+registry row. Conversion wrappers derive `binary/inpmat_<ROFFTAG>.bin` without
+changing the three-record `inpx`, `inpy`, `inpa` layout.
+
 For `output_variables.csv`, `alias_of` is the authoritative relationship between compatibility names and canonical outputs. Runtime initialization reads and validates the complete registry once, resolves columns by header, and caches the metadata selected for the run. Alias rows inherit long name, units, temporal type, and missing value from their canonical row; their required-option condition must agree as well. `internal_variable` and `internal_dtype` are informational and are not used to resolve model memory. The runtime reader uses `CMF_BASE` and `COUTVAR_TABLE` in `&NOUTPUT`: the latter defaults to `${CMF_BASE}/variable_table/output_variables.csv` and can point to another registry. The Fortran dispatcher associates each selected name with an explicit array argument to `OUTPUT_WRITE(name, array)`; metadata alone never determines which array is written. The `runoff`/`rofsfc` pair and `runoffsub`/`rofsub` pair use identical model arrays while preserving the requested output name.
 
 ## Current input-grid examples
 
-The standard global ELSE_GPCC mapping uses `diminfo_test-1deg.txt` and
-`inpmat_test-1deg.bin`. The configurable example is now `ERA5land_global`,
-matching `script_params/s01-inpmat_default.sh` and the 3600 × 1801 global
-0.1-degree grid of `inp/repo-ERA5land-glb_2day/`. Its pair is
-`diminfo_ERA5land_global.txt` / `inpmat_ERA5land_global.bin`; the old E2O
-example is no longer registered. Each model map requires a separate pair.
+Input matrices use `diminfo_<ROFFTAG>.txt` and
+`inpmat_<ROFFTAG>.nc`; the existing `test-1deg` map pair is an instance of
+this generic convention, not a separate registry definition. The configurable
+example is `ERA5land_global`, matching `script_params/s01-inpmat_default.sh`
+and the 3600 × 1801 global 0.1-degree grid of
+`inp/repo-ERA5land-glb_2day/`. Its Binary compatibility file is
+`binary/inpmat_ERA5land_global.bin`. The old E2O example is no longer
+registered. Each model map requires a separate pair.
 The ERA5 entry describes the current source/grid settings and does not claim
 a generated, validated pair in the Mekong repository sample. The regional
 `repo-mek_1deg` mapping is deliberately dataset-specific and is not registered

@@ -60,7 +60,7 @@ SUPPORTED_TYPES = {
 }
 DEFAULT_MISSING = {"int8": -9, "int16": -9999, "int32": -9999, "float32": -9999.0}
 REQUIRED_COLUMNS = {
-    "category_id", "binary_filename", "name",
+    "category_id", "filename", "name",
     "long_name", "units", "dtype", "dimensions", "record_layout",
     "record_index", "record_count", "missing_value", "special_values",
 }
@@ -163,20 +163,27 @@ def read_location(path: Path) -> list[Area]:
 
 
 def registry_patterns(row: dict[str, str]) -> list[str]:
-    value = (row.get("binary_filename") or "").strip()
+    if row.get("product_kind") not in {"binary_map", "binary_mult"}:
+        return []
+    value = (row.get("filename") or "").strip()
     if not value or value.lower() in {"n/a", "na", "none"}:
         return []
-    return [item.strip() for item in value.split(";") if item.strip()]
+    filenames = [item.strip() for item in value.split(";") if item.strip()]
+    return [item[:-3] + ".bin" if item.endswith(".nc") else item for item in filenames]
 
 
 def pattern_glob(pattern: str) -> str:
-    return pattern.replace("<HIRES>", "*").replace("<AREA>", "*")
+    return (pattern.replace("<HIRES>", "*").replace("<AREA>", "*")
+            .replace("<ROFFTAG>", "*"))
 
 
 def matching_rows(relpath: str, rows: list[dict[str, str]]) -> list[dict[str, str]]:
     # Standard numbered MPI products share the single mpireg.bin definition.
     if re.fullmatch(r"mpireg-0*[1-9][0-9]*\.bin", relpath):
         relpath = "mpireg.bin"
+    exact = [row for row in rows if relpath in registry_patterns(row)]
+    if exact:
+        return exact
     found: list[dict[str, str]] = []
     for row in rows:
         if any(fnmatch.fnmatchcase(relpath, pattern_glob(pattern)) for pattern in registry_patterns(row)):
@@ -192,6 +199,10 @@ def reference_rows(rows: list[dict[str, str]], reference: str | None,
         if Path(reference).name != reference or any(c in reference for c in "*?<>[]"):
             raise CtlValidationError("--reference-binary requires an exact registered base filename")
         matches = [row for row in rows if reference in registry_patterns(row)]
+        if not matches:
+            matches = [row for row in rows
+                       if any(fnmatch.fnmatchcase(reference, pattern_glob(pattern))
+                              for pattern in registry_patterns(row))]
         if not matches:
             raise CtlValidationError(f"reference Binary {reference!r} is not registered")
     else:
@@ -472,7 +483,7 @@ def read_input_matrix_descriptor(binary_path: Path, grid: Grid,
 def is_input_matrix(rows: list[dict[str, str]]) -> bool:
     return (
         bool(rows)
-        and (Path(rows[0].get("binary_filename", "")).name.startswith("inpmat_"))
+        and (Path(rows[0].get("filename", "")).name.startswith("inpmat_"))
         and all((row.get("dimensions") or "").replace(" ", "").upper() == "NX,NY,INPN" for row in rows)
     )
 

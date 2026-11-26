@@ -1542,3 +1542,15 @@ path/settings probes,3 no-op argument captures and114 guidance links PASS
 (VR-0225). Existing environment and frozen-report link limitations are in the
 [consolidated work record](../tutorial/tutorial11-event_evaluation/AI_work_report/00_directory_organization.md).
 No scientific rerun or compatibility wrappers. Uncommitted;15 prior registry errors.
+
+
+DT-0203 (2026-11-26), NetCDF-first map registry filename update on existing
+feature/package-builder: numerical map `filename` values use standard `.nc`
+names; converter and CTL consumers derive `.bin` compatibility names while
+retaining Binary record metadata. Input matrices now have only generic
+`diminfo_<ROFFTAG>.txt` / `inpmat_<ROFFTAG>.nc` registry rows; the Mekong
+`test-1deg` pair resolves through that generic entry. Maintainer's manual
+exclusion of `_noedge` and `_grid` from variable names was preserved. Registry
+and sample validations plus five focused tests pass (VR-0247); tests requiring
+`netCDF4` or `pytest` were unavailable. No scientific values or map data were
+changed. Work remains uncommitted.

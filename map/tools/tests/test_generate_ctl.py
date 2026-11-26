@@ -5,10 +5,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from map.tools.code.generate_ctl import CtlError, generate_directory, missing_sentinel
+from map.tools.code.generate_ctl import CtlError, generate_directory, missing_sentinel, reference_rows
 
 FIELDS = [
-    "category_id", "workflow_stage", "category", "product_kind", "binary_filename",
+    "category_id", "workflow_stage", "category", "product_kind", "filename",
     "name", "long_name", "units", "dtype",
     "dimensions", "record_layout", "missing_value", "special_values", "record_index",
     "record_count",
@@ -337,14 +337,14 @@ class GenerateCtlTests(unittest.TestCase):
         with registry.open(newline="", encoding="utf-8") as stream:
             rows = list(csv.DictReader(stream))
         expected = {
-            "<HIRES>/<AREA>.catmz100.bin": (-9, "int8"),
-            "<HIRES>/<AREA>.catmzz.bin": (-9, "int8"),
-            "<HIRES>/<AREA>.flwdir.bin": (-9, "int8"),
-            "<HIRES>/<AREA>.visual.bin": (-9, "int8"),
-            "<HIRES>/<AREA>.downxy.bin": (-9999, "int16"),
+            "<HIRES>/<AREA>.catmz100.nc": (-9, "int8"),
+            "<HIRES>/<AREA>.catmzz.nc": (-9, "int8"),
+            "<HIRES>/<AREA>.flwdir.nc": (-9, "int8"),
+            "<HIRES>/<AREA>.visual.nc": (-9, "int8"),
+            "<HIRES>/<AREA>.downxy.nc": (-9999, "int16"),
         }
         for pattern, (sentinel, dtype) in expected.items():
-            row = next(row for row in rows if row["binary_filename"] == pattern)
+            row = next(row for row in rows if row["filename"] == pattern)
             with self.subTest(pattern=pattern):
                 self.assertEqual(missing_sentinel(row, dtype), (sentinel, False))
 
@@ -363,26 +363,36 @@ class GenerateCtlTests(unittest.TestCase):
         registry = Path(__file__).resolve().parents[3] / "variable_table" / "map_variables.csv"
         with registry.open(newline="", encoding="utf-8") as stream:
             nextx = next(row for row in csv.DictReader(stream)
-                         if row["binary_filename"] == "nextxy.bin" and row["name"] == "nextx")
+                         if row["filename"] == "nextxy.nc" and row["name"] == "nextx")
         self.assertEqual(missing_sentinel(nextx, "int32"), (-9999, False))
         self.assertIn("-9", nextx["special_values"])
         self.assertIn("-10", nextx["special_values"])
-
         expected = {
-            ("downxy.bin", "downx"): ("-9999", ("-1000",)),
-            ("downxy.bin", "downy"): ("-9999", ("-1000",)),
-            ("<HIRES>/<AREA>.downxy.bin", "downx"): ("-9999", ("-999", "-1000")),
-            ("<HIRES>/<AREA>.downxy.bin", "downy"): ("-9999", ("-999", "-1000")),
-            ("<HIRES>/<AREA>.flwdir.bin", "flwdir"): ("-9", ("0", "-1")),
+            ("downxy.nc", "downx"): ("-9999", ("-1000",)),
+            ("downxy.nc", "downy"): ("-9999", ("-1000",)),
+            ("<HIRES>/<AREA>.downxy.nc", "downx"): ("-9999", ("-999", "-1000")),
+            ("<HIRES>/<AREA>.downxy.nc", "downy"): ("-9999", ("-999", "-1000")),
+            ("<HIRES>/<AREA>.flwdir.nc", "flwdir"): ("-9", ("0", "-1")),
         }
         with registry.open(newline="", encoding="utf-8") as stream:
             rows = list(csv.DictReader(stream))
         for (filename, name), (missing, special_codes) in expected.items():
-            item = next(row for row in rows if row["binary_filename"] == filename and row["name"] == name)
+            item = next(row for row in rows if row["filename"] == filename and row["name"] == name)
             self.assertEqual(item["missing_value"], missing)
             for code in special_codes:
                 with self.subTest(variable=name, code=code):
                     self.assertIn(code, item["special_values"])
+
+    def test_default_and_custom_input_matrix_tags_use_generic_template(self):
+        registry = Path(__file__).resolve().parents[3] / "variable_table" / "map_variables.csv"
+        with registry.open(newline="", encoding="utf-8") as stream:
+            registry_rows = list(csv.DictReader(stream))
+        standard = reference_rows(registry_rows, "inpmat_test-1deg.bin", None)
+        self.assertEqual({row["category_id"] for row in standard}, {"23"})
+        self.assertEqual([row["name"] for row in standard], ["inpx", "inpy", "inpa"])
+        configured = reference_rows(registry_rows, "inpmat_custom-runoff.bin", None)
+        self.assertEqual({row["category_id"] for row in configured}, {"23"})
+        self.assertEqual([row["name"] for row in configured], ["inpx", "inpy", "inpa"])
 
     def test_signed_int16_ctl_format_and_sentinel(self):
         write_registry(self.registry, [row("catmxy.bin", "catmxy", "int16", missing="-9999")])

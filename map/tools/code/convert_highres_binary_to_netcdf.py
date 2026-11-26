@@ -170,7 +170,8 @@ def rows_for_tile(rows: list[dict[str, str]], hires: str, carea: str, variable: 
     wanted = f"{hires}/{carea}.{variable}.bin"
     selected = []
     for row in rows:
-        filenames = [item.strip() for item in (row.get("binary_filename") or "").split(";")]
+        filenames = [item.strip() for item in (row.get("filename") or "").split(";")]
+        filenames = [item[:-3] + ".bin" if item.endswith(".nc") else item for item in filenames]
         if any(item.replace("<HIRES>", hires).replace("<AREA>", carea) == wanted for item in filenames):
             selected.append(row)
     if not selected:
@@ -341,10 +342,10 @@ def write_netcdf(
 
 
 def registered_variables(rows: list[dict[str, str]]) -> list[str]:
-    """Use canonical high-resolution filename templates, once per Binary product."""
-    prefix, suffix = "<HIRES>/<AREA>.", ".bin"
+    """Use canonical high-resolution NetCDF filename templates once per product."""
+    prefix, suffix = "<HIRES>/<AREA>.", ".nc"
     return sorted({name.strip()[len(prefix):-len(suffix)]
-                   for row in rows for name in (row.get("binary_filename") or "").split(";")
+                   for row in rows for name in (row.get("filename") or "").split(";")
                    if name.strip().startswith(prefix) and name.strip().endswith(suffix)})
 
 

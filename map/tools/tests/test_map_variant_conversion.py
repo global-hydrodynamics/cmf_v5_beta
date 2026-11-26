@@ -103,7 +103,7 @@ class VariantConversionTests(unittest.TestCase):
             args.input.write_bytes(values.tobytes())
             converter.convert(args)
             self.check_data(args.output, {name: values})
-            row = next(r for r in converter.registry_rows(REGISTRY) if r['binary_filename'] == f'{name}.bin')
+            row = next(r for r in converter.registry_rows(REGISTRY) if r['filename'] == f'{name}.nc')
             with netCDF4.Dataset(args.output) as ds:
                 self.assertEqual(ds[name].long_name, row['long_name'])
                 self.assertEqual(ds[name].units, row['units'])
@@ -116,8 +116,22 @@ class VariantConversionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'variables not registered'):
             converter.select_variables('custom.bin', rows, ['subcol'], 'nextxy.bin')
 
+    def test_generic_input_matrix_names_keep_binary_record_contract(self):
+        rows = converter.registry_rows(REGISTRY)
+        matrix = [row for row in rows if row['filename'] == 'inpmat_<ROFFTAG>.nc']
+        self.assertEqual([row['name'] for row in matrix], ['inpx', 'inpy', 'inpa'])
+        self.assertEqual([row['record_index'] for row in matrix], ['1', '2', '3'])
+        self.assertEqual([row['dtype'] for row in matrix], ['int32', 'int32', 'float32'])
+        self.assertTrue(all(converter.registered_binary_match('inpmat_test-runoff.bin', row)
+                            for row in matrix))
+        mapped = converter.registered_binary_rows('inpmat_test-1deg.bin', rows)
+        self.assertEqual({row['category_id'] for row in mapped}, {'23'})
+        self.assertEqual([row['name'] for row in mapped], ['inpx', 'inpy', 'inpa'])
+        generic = converter.registered_binary_rows('inpmat_custom-runoff.bin', rows)
+        self.assertEqual({row['category_id'] for row in generic}, {'23'})
+
     def test_invalid_record_definitions_are_rejected_before_partial_selection(self):
-        rows = [dict(r) for r in converter.registry_rows(REGISTRY) if r['binary_filename'] == 'nextxy.bin']
+        rows = [dict(r) for r in converter.registry_rows(REGISTRY) if r['filename'] == 'nextxy.nc']
         cases = [rows[:1], [rows[0], rows[0]], [rows[0], dict(rows[1], record_count='3')],
                  [rows[0], dict(rows[1], record_index='0')],
                  [rows[0], dict(rows[1], dimensions='NX,NY,INPN')],
@@ -125,14 +139,14 @@ class VariantConversionTests(unittest.TestCase):
         for case in cases:
             with self.subTest(case=case), self.assertRaises(ValueError):
                 converter.select_variables('anything.bin', case, ['nextx'], 'nextxy.bin')
-        other = [dict(r, binary_filename='pair.bin', name='same') for r in rows]
+        other = [dict(r, filename='pair.bin', name='same') for r in rows]
         with self.assertRaisesRegex(ValueError, 'duplicate'):
             converter.select_variables('anything.bin', other, None, 'pair.bin')
 
     def test_mixed_record_dtypes_and_registry_order(self):
-        rows = [dict(r) for r in converter.registry_rows(REGISTRY) if r['binary_filename'] == 'nextxy.bin']
-        rows[0].update(binary_filename='mixed.bin', name='code')
-        rows[1].update(binary_filename='mixed.bin', name='height', dtype='float32')
+        rows = [dict(r) for r in converter.registry_rows(REGISTRY) if r['filename'] == 'nextxy.nc']
+        rows[0].update(filename='mixed.bin', name='code')
+        rows[1].update(filename='mixed.bin', name='height', dtype='float32')
         registry = self.root/'mixed.csv'
         with registry.open('w', newline='') as f:
             writer = csv.DictWriter(f, fieldnames=rows[0].keys())

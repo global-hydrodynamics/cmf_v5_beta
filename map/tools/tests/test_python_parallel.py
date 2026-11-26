@@ -65,7 +65,7 @@ class ScientificContractTests(unittest.TestCase):
                                  ['downx', 'downy'])
                 hires_rows = mod_map_io._variable_rows('sample.downxy', highres=True)
                 self.assertEqual([row['name'] for row in hires_rows], ['downx', 'downy'])
-                self.assertTrue(all('<HIRES>' in row['binary_filename'] for row in hires_rows))
+                self.assertTrue(all('<HIRES>' in row['filename'] for row in hires_rows))
                 selected = mod_map_io._input_path(source_map/'nextxy.bin')
             finally:
                 mod_map_io._MAP_FORMAT, mod_map_io._MAP_ROOT = previous_format, previous_root

@@ -174,12 +174,12 @@ def _variable_rows(stem, highres=False):
         with registry.open(newline='', encoding='utf-8-sig') as stream:
             _REGISTRY = list(csv.DictReader(stream))
     base = _registry_stem(stem.rsplit('.', 1)[-1])
-    normalized = f'{base}.bin'
+    normalized = f'{base}.nc'
     if base.startswith('mpireg-'):
-        normalized = 'mpireg.bin'
+        normalized = 'mpireg.nc'
     rows = []
     for row in _REGISTRY:
-        filenames = [item.strip() for item in row.get('binary_filename', '').split(';')]
+        filenames = [item.strip() for item in row.get('filename', '').split(';')]
         is_highres = any('<HIRES>' in item or '<AREA>' in item for item in filenames)
         if is_highres != highres:
             continue

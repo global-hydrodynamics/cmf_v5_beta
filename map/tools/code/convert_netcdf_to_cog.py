@@ -130,10 +130,12 @@ def plan(map_dir, resolutions, variables, registry):
         if resolution == 'base':
             groups = {}
             for row in rows:
-                for filename in row['binary_filename'].split(';'):
+                if row.get('product_kind') not in {'binary_map', 'binary_mult'}:
+                    continue
+                for filename in row['filename'].split(';'):
                     filename = filename.strip()
                     if (not filename.startswith('inpmat_') and '/' not in filename
-                            and filename.endswith('.bin') and '<' not in filename):
+                            and filename.endswith('.nc') and '<' not in filename):
                         groups.setdefault(filename[:-4], []).append(row)
             directory = map_dir
             geometry = base_geometry(map_dir / 'params.txt')

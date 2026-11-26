@@ -173,7 +173,7 @@ def test_preflight_skips_missing_and_validates_all_resolutions_before_writing(tm
 
 def test_csv_new_variable_is_selected_without_changing_default_list():
     rows = converter.registry_rows(REGISTRY)
-    added = dict(rows[-1], binary_filename="<HIRES>/<AREA>.newfield.bin")
+    added = dict(rows[-1], filename="<HIRES>/<AREA>.newfield.nc")
     assert "newfield" in converter.registered_variables(rows + [added])
 
 

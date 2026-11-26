@@ -12,6 +12,7 @@ import array
 import ctypes
 import ctypes.util
 import csv
+import fnmatch
 import os
 import re
 from pathlib import Path
@@ -88,24 +89,41 @@ def registry_rows(path: Path) -> list[dict[str, str]]:
 
 
 def registered_base_filenames(row: dict[str, str]) -> list[str]:
-    """Return literal binary filenames that can occur in a map root."""
-    value = (row.get("binary_filename") or "").strip()
+    """Return Binary names or patterns derived from standard registry filenames."""
+    if row.get("product_kind") not in {"binary_map", "binary_mult"}:
+        return []
+    value = (row.get("filename") or "").strip()
     filenames = []
     for item in value.split(";"):
         item = item.strip()
-        if not item or Path(item).name != item or any(char in item for char in "*?<>[]"):
+        if not item or Path(item).name != item or any(char in item for char in "*?[]"):
             continue
+        item = item[:-3] + ".bin" if item.endswith(".nc") else item
         if item.endswith(".bin"):
             filenames.append(item)
     return filenames
 
 
-def standard_binary_filename(filename: str) -> str:
-    """Map only positive numbered MPI-region products to their standard row.
+def registered_binary_match(filename: str, row: dict[str, str]) -> bool:
+    """Match a Binary name against the registry's logical NetCDF filename."""
+    return any(fnmatch.fnmatchcase(filename, pattern.replace("<ROFFTAG>", "*"))
+               for pattern in registered_base_filenames(row))
 
-    Leading zeros are allowed; an all-zero count is not positive. This is a
-    filename convention only, never an inference about array size or values.
+
+def registered_binary_rows(filename: str, rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    """Prefer a concrete registry entry over a matching generic template."""
+    exact = [row for row in rows if filename in registered_base_filenames(row)]
+    return exact or [row for row in rows if registered_binary_match(filename, row)]
+
+
+def standard_binary_filename(filename: str) -> str:
+    """Resolve a NetCDF or numbered MPI filename to its Binary registry name.
+
+    Leading zeros are allowed; an all-zero count is not positive. NetCDF to
+    Binary extension mapping is a filename convention, not a data conversion.
     """
+    if filename.endswith(".nc"):
+        filename = filename[:-3] + ".bin"
     if re.fullmatch(r"mpireg-0*[1-9][0-9]*\.bin", filename):
         return "mpireg.bin"
     return filename
@@ -130,17 +148,14 @@ def conversion_support(rows: list[dict[str, str]]) -> tuple[bool, str]:
 def generate_conversion_list(map_dir: Path, registry_path: Path, list_path: Path) -> int:
     """Write supported registered base-map binaries in registry workflow order."""
     rows = registry_rows(registry_path)
-    rows_by_filename: dict[str, list[tuple[int, dict[str, str]]]] = {}
-    for row_index, row in enumerate(rows):
-        for filename in registered_base_filenames(row):
-            rows_by_filename.setdefault(filename, []).append((row_index, row))
-
     binary_root = map_dir / "binary"
     binary_root = binary_root if binary_root.is_dir() else map_dir
     binary_files = {path.name for path in binary_root.glob("*.bin") if path.is_file()}
     candidates = []
     for filename in sorted(binary_files):
-        file_rows = rows_by_filename.get(standard_binary_filename(filename), [])
+        definition = standard_binary_filename(filename)
+        registered = registered_binary_rows(definition, rows)
+        file_rows = [(row_index, row) for row_index, row in enumerate(rows) if row in registered]
         if not file_rows:
             print(f"WARNING: {filename} is not registered; it will not be listed.")
             continue
@@ -187,15 +202,19 @@ def select_variables(
     """
     definition = reference_binary if reference_binary is not None else standard_binary_filename(filename)
     if reference_binary is not None:
-        matches = [dict(row) for row in rows if reference_binary in registered_base_filenames(row)]
+        matches = [dict(row) for row in registered_binary_rows(reference_binary, rows)]
         if not matches:
             raise ValueError(f"reference Binary {reference_binary!r} is not registered as an exact base filename")
     else:
-        matches = [dict(row) for row in rows if Path(row.get("binary_filename", "")).name == definition]
+        matches = [dict(row) for row in registered_binary_rows(definition, rows)]
     if not matches and requested and reference_binary is None:
         # Keep legacy name selection, but validate companion records as well.
-        filenames = {row.get("binary_filename") for row in rows if row.get("name") in requested}
-        matches = [dict(row) for row in rows if row.get("binary_filename") in filenames]
+        filenames = {
+            filename for row in rows if row.get("name") in requested
+            for filename in registered_base_filenames(row)
+        }
+        matches = [dict(row) for row in rows
+                   if any(registered_binary_match(filename, row) for filename in filenames)]
     if not matches:
         raise ValueError(f"{filename} is not registered in variable_table/map_variables.csv; use --variables with a registered variable")
     if definition == "nextxy.bin":

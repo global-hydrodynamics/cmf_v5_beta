@@ -346,7 +346,7 @@ class MpiMapToolsTests(unittest.TestCase):
             with (ROOT / "variable_table" / "map_variables.csv").open(newline="", encoding="utf-8") as stream:
                 reader = csv.DictReader(stream)
                 fields = reader.fieldnames
-                color_rows = [row for row in reader if row["binary_filename"] in {"bsncol_mpi-*.bin", "bifcol_mpi.bin"}]
+                color_rows = [row for row in reader if row["filename"] in {"bsncol_mpi-*.nc", "bifcol_mpi.nc"}]
             registry = Path(tmp) / "color_registry.csv"
             with registry.open("w", newline="", encoding="utf-8") as stream:
                 writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
@@ -364,7 +364,7 @@ class MpiMapToolsTests(unittest.TestCase):
             self.assertIn("vars 1", ctl_text)
             self.assertIn("bsncol 1", ctl_text)
             self.assertTrue((root / "bifcol_mpi.ctl").is_file())
-            self.assertIn("bifcol_mpi 1", (root / "bifcol_mpi.ctl").read_text(encoding="utf-8"))
+            self.assertIn("bifcol 1", (root / "bifcol_mpi.ctl").read_text(encoding="utf-8"))
 
     def test_maxmpi_mode_creates_requested_region_maps(self):
         with tempfile.TemporaryDirectory(prefix="cmf-mpi-max-") as tmp:

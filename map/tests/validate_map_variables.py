@@ -19,7 +19,7 @@ def main() -> None:
         reader = csv.DictReader(stream)
         fields = set(reader.fieldnames or [])
         required = {
-            "binary_filename", "name", "product_kind", "dtype",
+            "filename", "name", "product_kind", "dtype",
             "missing_value", "special_values",
         }
         missing = required - fields
@@ -40,7 +40,11 @@ def main() -> None:
     binary_files: dict[str, list[dict[str, str]]] = {}
     for row in rows:
         if row["product_kind"] in {"binary_map", "binary_mult"}:
-            binary_files.setdefault(row["binary_filename"], []).append(row)
+            if not row["filename"].endswith(".nc"):
+                raise SystemExit(
+                    f"{row['filename']}: numerical map registry filenames must use the standard .nc suffix"
+                )
+            binary_files.setdefault(row["filename"], []).append(row)
     for filename, file_rows in binary_files.items():
         kinds = {row["product_kind"] for row in file_rows}
         if len(kinds) != 1:
@@ -62,18 +66,18 @@ def main() -> None:
     netcdf_files: dict[str, list[dict[str, str]]] = {}
     for row in rows:
         if row["product_kind"] == "netcdf":
-            netcdf_files.setdefault(row["binary_filename"], []).append(row)
+            netcdf_files.setdefault(row["filename"], []).append(row)
             # A single file-level row is used when its detailed schema lives in
             # the product documentation rather than in the common registry.
             if (row["dtype"] == "NetCDF" and row["dimensions"] == "N/A"
                     and row["netcdf_variable"] == "not_applicable"):
                 continue
             if not row["netcdf_variable"] or row["netcdf_variable"] != row["name"]:
-                raise SystemExit(f"{row['binary_filename']}/{row['name']}: netcdf_variable must match name")
+                raise SystemExit(f"{row['filename']}/{row['name']}: netcdf_variable must match name")
             if row["dtype"] not in {"int32", "float32"}:
-                raise SystemExit(f"{row['binary_filename']}/{row['name']}: unsupported NetCDF dtype {row['dtype']!r}")
+                raise SystemExit(f"{row['filename']}/{row['name']}: unsupported NetCDF dtype {row['dtype']!r}")
             if row["dimensions"] not in {"path", "layer,path"}:
-                raise SystemExit(f"{row['binary_filename']}/{row['name']}: unsupported NetCDF dimensions {row['dimensions']!r}")
+                raise SystemExit(f"{row['filename']}/{row['name']}: unsupported NetCDF dimensions {row['dimensions']!r}")
     for filename, file_rows in netcdf_files.items():
         file_level_rows = [
             row for row in file_rows
@@ -89,7 +93,7 @@ def main() -> None:
     blanks = 0
     seen = set()
     for line, row in enumerate(rows, start=2):
-        identity = (row["binary_filename"], row["name"])
+        identity = (row["filename"], row["name"])
         if identity in seen:
             raise SystemExit(f"line {line}: duplicate binary/name entry {identity}")
         seen.add(identity)
