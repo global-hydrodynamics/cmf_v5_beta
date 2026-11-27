@@ -38,7 +38,9 @@ AREA_CAMA=$4
 printf '\n--- Selected GRDC station ---\n'
 printf 'GRDC station ID: %s\nGrid cell (1-based, Fortran): IX=%s, IY=%s\nCaMa-Flood upstream area: %s km2\n' \
     "$GRDC_ID" "$IX" "$IY" "$AREA_CAMA"
+
 printf '\n--- River-point information ---\n'
 ./get_river_point_info.sh xy "$IX" "$IY"
+
 printf '\n--- Upstream-basin NetCDF output ---\n'
 ./calc_upbasin.sh xy "$IX" "$IY" "../upbasin-${GRDC_ID}.nc"

@@ -59,10 +59,13 @@ the corresponding Binary form under `binary/inpmat_<ROFFTAG>.bin`.
 | `s14-bin2nc_inpmat.sh` | Binary INPMAT → `inpmat_<ROFFTAG>.nc` |
 | `s18-sample_bin2nc.sh` | `binary/*-sample.bin` → a02 analysis sample NetCDF maps |
 | `s21-nc2cog.sh` | NetCDF → `COG/` GeoTIFFs |
+| `s31-txt2meta.sh` | Legacy map metadata TXT → standard v5 NML/CSV |
+| `s32-meta2txt.sh` | Standard v5 NML/CSV → legacy map metadata TXT |
 
-Numbering groups reflect direction: `s0X` covers NetCDF-based operations and
-Binary export, `s1X` covers Binary-to-NetCDF migration, and `s2X` covers
-NetCDF-to-COG conversion. Listing and conversion scripts use their matching
+Numbering groups reflect workflow: `s0X` covers NetCDF-based operations and
+Binary export, `s1X` covers Binary-to-NetCDF migration, `s2X` covers
+NetCDF-to-COG conversion, and `s3X` covers explicit legacy metadata
+interchange. Listing and conversion scripts use their matching
 numbered list file in the current `script_format_conv/` directory. Wrappers use
 the shared `CMF_V50_ROOT` initialization and `cmf_check_*` reporting functions;
 Python program paths come from `CODE_DIR` and required inputs are visible in
@@ -87,6 +90,36 @@ cd map/<MAPNAME>/script_format_conv
 
 ./s21-nc2cog.sh
 ```
+
+## Legacy metadata conversion (s31 and s32)
+
+Run either script from the target map's `script_format_conv/` directory. The
+scripts use that directory's parent as the map root and immediately convert all
+recognized metadata files whose source exists:
+
+```sh
+cd map/<MAPNAME>/script_format_conv
+./s31-txt2meta.sh
+./s32-meta2txt.sh
+```
+
+The converters cover `params`, `diminfo_<ROFFTAG>`, high-resolution
+`<resolution>/location`, bifurcation tables (`bifori` and `bifprm`), and the
+GRDC, GRanD, and MLIT allocation tables. Missing source files are skipped.
+Existing destinations are replaced after the source has passed format and
+value validation. Original source files are retained. Each run reports each
+converted file and its number of fields, tiles, paths, or records; invalid
+sources are reported and make the command fail after the other candidates have
+been checked. These tools only read and write the named metadata files; they do
+not inspect or modify numerical raster data. No options or confirmation
+prompts are used.
+
+Some legacy formats cannot represent every standard CSV field. Reverse
+conversion rejects populated extra fields, non-row-ordered bifurcation IDs,
+and bifprm outlet coordinates that cannot be stored in `bifprm.txt`, rather
+than silently discarding those values. For legacy bifprm output, the model's
+existing TXT reader can obtain end outlet coordinates from sibling `lonlat.bin`
+when available.
 
 `ROFFTAG` is set near the top of the INPMAT wrappers (default `test-1deg`);
 edit that setting to select another pair. For the default, source metadata is

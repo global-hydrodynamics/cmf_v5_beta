@@ -76,6 +76,11 @@ sentinel values. CSV quoting is required for string fields when names contain
 commas or quotes. The original allocated observation inventories are input
 files and are not part of this output-format migration.
 
+The map-local `s31-txt2meta.sh` and `s32-meta2txt.sh` scripts provide explicit
+legacy interchange for metadata tables. They preserve source files, validate
+before replacing destinations, and reject reverse conversions that would
+discard populated CSV columns not represented by the legacy format.
+
 | File | Header columns | Meaning and established special values |
 | --- | --- | --- |
 | `GRDC_alloc.csv` | `ID,lat,lon,area_Input,area_CaMa,error,diff,Type,ix1,iy1,ix2,iy2,area1,area2` | CaMa-Flood allocation of GRDC flow gauges. `Type=-9` denotes unallocated; `Type=0–2` is the number of substitute catchments. Unavailable result fields use `-999`. Coordinates are degrees, areas and `diff` are km², `error` is dimensionless, and indices are one-based. |
