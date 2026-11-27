@@ -10,6 +10,10 @@ reinterpretation of that sentinel is made in this parallel implementation.
 import numpy as np
 
 from mod_map_io import Grid, input_path, output_root, parser, read_array, write_raster
+try:
+    from .hires_metadata import read_location_csv, read_location_txt
+except ImportError:  # Direct execution from the map-local Shell wrappers.
+    from hires_metadata import read_location_csv, read_location_txt
 from region_combine_hires import PIXELS_PER_DEGREE
 
 
@@ -49,21 +53,18 @@ def main():
         raise ValueError('Invalid ctmare in river domain')
     result = np.where(valid, np.float32(0), np.float32(-9999))
     root = args.map_dir/args.hires_tag
-    lines = (root/'location.txt').read_text().splitlines()
-    count = int(lines[0].split()[0])
-    if count <= 0:
-        raise ValueError('Invalid high-resolution area count')
+    areas = (read_location_csv(root/'location.csv') if args.map_format == 'netcdf'
+             else read_location_txt(args.map_dir/'binary'/args.hires_tag/'location.txt'))
     selected_count = missing_count = 0
     used_fallback = False
     size = 1./PIXELS_PER_DEGREE[args.hires_tag]
-    for line in lines[2:2+count]:
-        fields = line.split()
-        name = fields[1]
+    for tile in areas:
+        name = tile.carea
         if name in ('.', '..') or '/' in name or chr(92) in name:
             raise ValueError('Unsafe area name')
-        west, east, south, north = map(float, fields[2:6])
-        nx, ny = map(int, fields[6:8])
-        if nx <= 0 or ny <= 0 or not np.isfinite([west, east, south, north, float(fields[8])]).all() or abs(float(fields[8])-size) > 1e-8:
+        west, east, south, north = tile.west, tile.east, tile.south, tile.north
+        nx, ny = tile.nx, tile.ny
+        if abs(tile.csize-size) > 1e-8:
             raise ValueError('Invalid high-resolution geometry or tag resolution')
         assignment = exact_array(root/(name+'.catmxy.bin'), '<i2', (2, ny, nx))
         width = exact_array(root/(name+'.rivwth.bin'), '<f4', (ny, nx))

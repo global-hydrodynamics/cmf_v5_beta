@@ -18,7 +18,7 @@ def main():
     p.add_argument('gauge_list', type=Path)
     p.add_argument('hires_tag')
     args = p.parse_args()
-    maps = AllocationMap(args.map_dir, args.hires_tag, extra=('elevtn',), elevation=True)
+    maps = AllocationMap(args.map_dir, args.hires_tag, extra=('elevtn',), elevation=True, map_format=args.map_format)
     out = args.output_dir or Path('.')
     out.mkdir(parents=True, exist_ok=True)
     with (out/'gauge_alloc.txt').open('w') as stream:

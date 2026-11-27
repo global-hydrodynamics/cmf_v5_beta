@@ -32,7 +32,7 @@ Maintained Shell preprocessing workflows are launched from their corresponding m
 The POSIX implementation at `tools/shell_functions/cmf_check_shell_error.sh` defines `cmf_check_init`, `cmf_check_step`, and `cmf_check_success`; the public entry point at `tools/cmf_shell_functions.sh` also loads `cmf_select_hires_tag` and the conversion-only multi-resolution selector `cmf_select_hires_for_conversion`. Each workflow checks that `CMF_V50_ROOT` is set before sourcing the public entry point. The channel-parameter workflow initializes reporting, marks each processing step, and prints success after all three programs finish.
 
 `cmf_select_hires_tag "$HIRES_TAG"` is the standard selector for workflows
-that allow multiple `location.txt` areas. Allocation wrappers use
+that allow multiple `location.csv` areas. Allocation wrappers use
 `cmf_select_hires_tag "$HIRES_TAG" --single-area`; this checks the one-area
 layout and `<TAG>.<VARIABLE>.nc` naming (or `.bin` for explicitly selected
 legacy maps). These Shell checks are structural only. Allocation Python
@@ -84,7 +84,7 @@ The sample-local script directory under `map/mekong_15min/` has a different oper
 
 ## GrADS CTL files
 
-CTL generation is a separate Binary-format support operation; `s01-regional_map.sh` does not call it. Copy `map/tools/script_format_conv/` into the target map and run `s09-write_ctl.sh` from that map-local directory. It scans Binary products and their available high-resolution directories. The generator reads base geometry from authoritative `params.nml` (or legacy `params.txt`), high-resolution geometry from `location.txt`, and registered layouts from [`variable_table/map_variables.csv`](../../variable_table/map_variables.csv). If both base geometry files exist, their values must agree.
+CTL generation is a separate Binary-format support operation; `s01-regional_map.sh` does not call it. Copy `map/tools/script_format_conv/` into the target map and run `s09-write_ctl.sh` from that map-local directory. It scans Binary products and their available high-resolution directories. The generator reads base geometry from authoritative `params.nml` (or a temporary legacy `params.txt`), high-resolution geometry from standard `location.csv` (or legacy Binary `location.txt`), and registered layouts from [`variable_table/map_variables.csv`](../../variable_table/map_variables.csv). If both base geometry files exist, their values must agree.
 
 ```sh
 cd map/<map-tag>/script_format_conv
@@ -126,7 +126,7 @@ The MPI utility test compiles the shared MPI tools into a temporary directory, r
 
 ## High-resolution area handling
 
-Different workflows have different `location.txt` contracts. Allocation tools intentionally accept one high-resolution river-network area; input-matrix generation, regional matrix generation, and permanent-water aggregation process multiple areas sequentially. See the [verified design rationale and validation boundary](../../docs/map_data_tools_plan.md#high-resolution-area-handling-contract).
+Different workflows have different tile-count contracts for `location.csv`. Allocation tools intentionally accept one high-resolution river-network area; input-matrix generation, regional matrix generation, and permanent-water aggregation process multiple areas sequentially. Explicit legacy Binary operations retain a `location.txt` boundary during migration. See the [verified design rationale and validation boundary](../../docs/map_data_tools_plan.md#high-resolution-area-handling-contract).
 
 ## NetCDF output compression
 

@@ -19,7 +19,7 @@ def main():
     p.add_argument('dam_list', type=Path)
     p.add_argument('hires_tag')
     args = p.parse_args()
-    maps = AllocationMap(args.map_dir, args.hires_tag, extra=('ctmare',))
+    maps = AllocationMap(args.map_dir, args.hires_tag, extra=('ctmare',), map_format=args.map_format)
     catchment_area = np.array(maps.base['ctmare'], copy=True)
     catchment_area[catchment_area > 0] *= np.float32(1e-6)
     out = args.output_dir or Path('.')

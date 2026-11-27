@@ -97,7 +97,11 @@ def test_default_s03_adds_missing_registered_products_losslessly(tmp_path, sourc
                 assert field.dtype == np.dtype(row["dtype"])
                 actual += field[:].astype(np.dtype(row["dtype"]).newbyteorder("<")).tobytes()
             assert actual == originals[variable]
-    assert (map_dir / "1min/location.txt").read_bytes() == (binary / "location.txt").read_bytes()
+    netcdf_areas = converter.read_location(map_dir / '1min/location.csv')
+    binary_areas = converter.read_location(binary / 'location.txt')
+    assert netcdf_areas == binary_areas
+    assert not (map_dir / '1min/location.txt').exists()
+    assert (binary / 'location.txt').is_file()
     assert all((binary / f"tile.{variable}.bin").read_bytes() == data
                for variable, data in originals.items())
     transcript = run_tty(
@@ -114,6 +118,27 @@ def test_default_s03_adds_missing_registered_products_losslessly(tmp_path, sourc
     assert result.returncode == 0, result.stdout + result.stderr
     assert "Skipped:   " in result.stdout
     assert all(path.read_bytes() == data for path, data in preserved.items())
+
+
+def test_bin2nc_prefers_standard_csv_and_rejects_conflicting_legacy_copy(tmp_path):
+    binary = tmp_path / 'binary' / '1min'
+    binary.mkdir(parents=True)
+    (binary / 'location.txt').write_text(
+        '1 narea\niarea carea west east south north nx ny csize\n1 tile 0 1 0 1 1 1 1\n'
+    )
+    standard = tmp_path / '1min'
+    standard.mkdir()
+    (standard / 'location.csv').write_text(
+        'iarea,carea,west,east,south,north,nx,ny,csize\n1,tile,0,1,0,1,1,1,1\n'
+    )
+
+    assert converter.location_source(tmp_path, '1min') == standard / 'location.csv'
+
+    (standard / 'location.csv').write_text(
+        'iarea,carea,west,east,south,north,nx,ny,csize\n1,tile,1,2,0,1,1,1,1\n'
+    )
+    with pytest.raises(ValueError, match='conflicts with standard tile inventory'):
+        converter.location_source(tmp_path, '1min')
 
 
 

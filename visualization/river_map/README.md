@@ -398,7 +398,7 @@ Thin gray guides connect a candidate headwater cell's unit-catchment centroid
 to that cell's river outlet. Candidates are river cells with no incoming valid
 main-channel `nextxy` link in the regional map. For each candidate, the script
 finds the high-resolution pixels assigned to its coarse cell by `catmxy`,
-computes the geographic center of each pixel from `location.txt`, then takes
+computes the geographic center of each pixel from `location.csv`, then takes
 the mean of those pixel-center coordinates. The complete nextxy map includes
 interior and boundary candidates. Some boundary cells may lack incoming links
 because connections lie outside this regional map, so the guides do not assert
@@ -425,7 +425,7 @@ observed flows.
 | `map/mekong_15min/bsncol.nc` | NetCDF `bsncol` (`lat × lon`); categorical indices | Pale basin-color background for f03b; it is display context, not connectivity. |
 | `map/mekong_15min/bifprm.nc` | NetCDF `ix`, `iy`, `jx`, `jy`, `width(layer, path)` | Defines bifurcation endpoints and channel width. Width is in metres; first-layer width distinguishes channel from overland paths. |
 | `map/mekong_15min/1min/1min.catmxy.nc` | NetCDF `catmx`, `catmy` variables on the `lat × lon` grid | Assigns each 1-minute pixel to a one-based coarse cell. `-999` and `-9999` sentinel indices are excluded from centroids. |
-| `map/mekong_15min/1min/location.txt` | Text grid metadata; 1-minute resolution and bounds | Converts high-resolution pixel row/column positions to geographic pixel-center coordinates. |
+| `map/mekong_15min/1min/location.csv` | Text grid metadata; 1-minute resolution and bounds | Converts high-resolution pixel row/column positions to geographic pixel-center coordinates. |
 | `map/mekong_15min/params.txt` | Text metadata; 80 × 120 grid at 0.25° | Checks the coarse grid geometry shared by the NetCDF products and catchment assignments. |
 
 All listed inputs are Git-tracked; no model output, station data, or map
@@ -527,7 +527,7 @@ without Channel Pixel or Overland entries.
 
 | Input | Use |
 | --- | --- |
-| `map/mekong_15min/1min/1min.catmxy.nc`, `1min/location.txt` | NetCDF assignment variables and 1-minute grid geometry; provide high-resolution pixels and their one-based coarse-cell assignment. |
+| `map/mekong_15min/1min/1min.catmxy.nc`, `1min/location.csv` | NetCDF assignment variables and 1-minute grid geometry; provide high-resolution pixels and their one-based coarse-cell assignment. |
 | `map/mekong_15min/1min/1min.visual.nc` | NetCDF signed-int8 visualization categories; f04b overlays value 10 (main stream) and value 7 (small stream) on assigned catchment pixels only. |
 | `map/mekong_15min/uparea.nc` | Coarse-grid upstream drainage area in m²; supplies pixel colors and main-link area classes. |
 | `map/mekong_15min/nextxy.nc` | Main-network downstream connectivity (`nextx`, `nexty`), with one-based grid indices. |
@@ -632,7 +632,7 @@ for each background field.
 | --- | --- |
 | `map/mekong_15min/1min/1min.elevtn.nc` | 1-minute elevation [m]; background for f05a, source for f05b, and land-validity mask for f05c. |
 | `map/mekong_15min/1min/1min.flddif.nc` | 1-minute floodplain height field [m] (`flddif`); background for f05c. Missing `flddif` where `elevtn` is valid is filled with 50% gray. |
-| `map/mekong_15min/1min/location.txt` | 1-minute grid bounds, dimensions, and resolution. |
+| `map/mekong_15min/1min/location.csv` | 1-minute grid bounds, dimensions, and resolution. |
 | `map/mekong_15min/1min/1min.catmxy.nc` | Coarse-cell assignments used to summarize headwater catchment pixel centroids. |
 | `map/mekong_15min/uparea.nc` | Coarse-grid upstream area [m²] for link color and width. |
 | `map/mekong_15min/nextxy.nc` | One-based main-network downstream connectivity. |

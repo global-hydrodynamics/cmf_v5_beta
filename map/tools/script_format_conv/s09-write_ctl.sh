@@ -23,21 +23,25 @@ cmf_check_init "Write CTLs for registered Binary products"
 [ -f ../params.nml ] || [ -f ../params.txt ] || { printf 'Map-root params.nml/params.txt is missing.\n' >&2; exit 1; }
 mkdir -p ../binary
 "$PYTHON_CMD" "$CODE_DIR/migrate_map_params.py" --map-dir .. --write-legacy binary/params.txt
-for SOURCE_LOCATION in ../*/location.txt; do
+for SOURCE_LOCATION in ../*/location.csv ../*/location.txt; do
     [ -f "$SOURCE_LOCATION" ] || continue
-    RESOLUTION_DIR=${SOURCE_LOCATION%/location.txt}
+    LOCATION_NAME=${SOURCE_LOCATION##*/}
+    [ "$LOCATION_NAME" != location.txt ] || [ ! -f "${SOURCE_LOCATION%/location.txt}/location.csv" ] || continue
+    RESOLUTION_DIR=${SOURCE_LOCATION%/"$LOCATION_NAME"}
     RESOLUTION=${RESOLUTION_DIR##*/}
     mkdir -p "../binary/$RESOLUTION"
-    cp "$SOURCE_LOCATION" "../binary/$RESOLUTION/location.txt"
+    cp "$SOURCE_LOCATION" "../binary/$RESOLUTION/$LOCATION_NAME"
 done
 
 cmf_check_step 1 1 "Generate CTLs for base, high-resolution and named sample Binary products"
 "$PYTHON_CMD" "$CODE_DIR/generate_ctl.py" --map-dir ../binary "$@"
-for LOCATION in ../binary/*/location.txt; do
+for LOCATION in ../binary/*/location.csv ../binary/*/location.txt; do
     [ -f "$LOCATION" ] || continue
-    GRID_DIR=${LOCATION%/location.txt}
+    LOCATION_NAME=${LOCATION##*/}
+    [ "$LOCATION_NAME" != location.txt ] || [ ! -f "${LOCATION%/location.txt}/location.csv" ] || continue
+    GRID_DIR=${LOCATION%/"$LOCATION_NAME"}
     RESOLUTION=${GRID_DIR##*/}
-    SOURCE_LOCATION="../$RESOLUTION/location.txt"
+    SOURCE_LOCATION="../$RESOLUTION/$LOCATION_NAME"
     [ -f "$SOURCE_LOCATION" ] && cp "$SOURCE_LOCATION" "$LOCATION"
     "$PYTHON_CMD" "$CODE_DIR/generate_ctl.py" --map-dir "$GRID_DIR" "$@"
 done

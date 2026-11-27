@@ -124,7 +124,7 @@ def _input_path(path):
     if _MAP_ROOT is None:
         return path
     if _relative_map_path(path).is_absolute():
-        if has_map_geometry(path.parent) or (path.parent / 'location.txt').is_file():
+        if has_map_geometry(path.parent) or (path.parent / 'location.csv').is_file() or (path.parent / 'location.txt').is_file():
             raise FileNotFoundError(f'NetCDF map input not found: {netcdf}; use --map-format binary for legacy Binary maps')
         return path
     raise FileNotFoundError(f'NetCDF map input not found: {netcdf}; use --map-format binary for legacy Binary maps')
@@ -159,11 +159,11 @@ def _binary_path(path):
         return path
     if _MAP_ROOT is not None and not relative.is_absolute():
         return _MAP_ROOT.joinpath('binary', *parts)
-    if path.is_absolute() and (path.parent / 'location.txt').is_file():
+    if path.is_absolute() and ((path.parent / 'location.txt').is_file() or (path.parent / 'location.csv').is_file()):
         return path.parent.parent / 'binary' / path.parent.name / path.name
     if path.is_absolute() and has_map_geometry(path.parent):
         return path.parent / 'binary' / path.name
-    if (path.parent / 'location.txt').is_file():
+    if (path.parent / 'location.txt').is_file() or (path.parent / 'location.csv').is_file():
         candidate = path.parent.parent / 'binary' / path.parent.name / path.name
         if candidate.is_file():
             return candidate
@@ -272,7 +272,8 @@ class RasterTile:
             Dataset = _netcdf_module()
             self.dataset = Dataset(self.path)
             self.variables = []
-            highres = (self.path.parent / 'location.txt').is_file()
+            highres = ((self.path.parent / 'location.csv').is_file() if _MAP_FORMAT == 'netcdf'
+                       else (self.path.parent / 'location.txt').is_file())
             for name, _ in _variable_definitions(self.path.stem, highres=highres):
                 if name in self.dataset.variables:
                     variable = self.dataset.variables[name]
@@ -350,7 +351,7 @@ def write_inpmat(path, inpx, inpy, inpa, metadata):
 
 def _read_netcdf_shape(path, dtype, records, ny, nx):
     Dataset = _netcdf_module()
-    highres = (Path(path).parent / 'location.txt').is_file()
+    highres = (Path(path).parent / 'location.csv').is_file()
     names = _variable_definitions(_registry_stem(Path(path).stem), highres=highres)
     target_dtype = np.dtype(dtype)
     with Dataset(path) as dataset:

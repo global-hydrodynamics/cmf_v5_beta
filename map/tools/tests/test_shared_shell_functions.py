@@ -27,9 +27,9 @@ class SharedShellFunctionsTests(unittest.TestCase):
     def make_single_area(self, tag: str) -> None:
         directory = self.map_root / tag
         directory.mkdir(exist_ok=True)
-        (directory / "location.txt").write_text(
-            f"1 narea\n iarea     carea      west      east     south     north      nx      ny               csize\n"
-            f"     1      {tag}     90.000   110.000     5.000    35.000     10      10   0.016666666666667\n",
+        (directory / "location.csv").write_text(
+            "iarea,carea,west,east,south,north,nx,ny,csize\n"
+            f"  1,{tag},90,110,5,35,10,10,2\n",
             encoding="ascii",
         )
         (directory / f"{tag}.uparea.nc").touch()
@@ -37,10 +37,10 @@ class SharedShellFunctionsTests(unittest.TestCase):
     def make_multi_area(self, tag: str) -> None:
         directory = self.map_root / tag
         directory.mkdir(exist_ok=True)
-        (directory / "location.txt").write_text(
-            f"2 narea\n iarea     carea      west      east     south     north      nx      ny               csize\n"
-            f"     1 n30e120     90.000   110.000     5.000    35.000     10      10   0.016666666666667\n"
-            f"     2 n35e120     90.000   110.000     5.000    35.000     10      10   0.016666666666667\n",
+        (directory / "location.csv").write_text(
+            "iarea,carea,west,east,south,north,nx,ny,csize\n"
+            "1,n30e120,90,110,5,35,10,10,2\n"
+            "2,n35e120,90,110,5,35,10,10,2\n",
             encoding="ascii",
         )
         (directory / "n30e120.uparea.nc").touch()

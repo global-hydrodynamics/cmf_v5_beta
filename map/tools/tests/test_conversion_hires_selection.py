@@ -23,7 +23,12 @@ class ConversionSelectionTests(unittest.TestCase):
     def source(self, tag, extension, standard=False, product="catmxy"):
         directory = self.map/"binary"/tag if standard else self.map/tag
         directory.mkdir(parents=True, exist_ok=True)
-        (directory/"location.txt").touch()
+        if extension == "nc":
+            (directory/"location.csv").write_text(
+                "iarea,carea,west,east,south,north,nx,ny,csize\n1,tile,0,1,0,1,1,1,1\n"
+            )
+        else:
+            (directory/"location.txt").touch()
         (directory/f"tile.{product}.{extension}").touch()
         return directory
 

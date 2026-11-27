@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 from map.tools.code import convert_highres_binary_to_netcdf as forward
 from map.tools.code import convert_highres_netcdf_to_binary as reverse
+from map.tools.code.hires_metadata import write_location_csv
 
 ROOT = Path(__file__).resolve().parents[3]
 REGISTRY = ROOT / 'variable_table/map_variables.csv'
@@ -34,8 +35,15 @@ class RestorationTests(unittest.TestCase):
         self.nx, self.ny = 259, 3
         text = ('2 narea\niarea carea west east south north nx ny csize\n'
                 '1 a 0 25.9 9.7 10 259 3 0.1\n2 b 30 55.9 9.7 10 259 3 0.1\n')
-        (self.nc / 'location.txt').write_text(text)
-        areas = forward.read_location(self.nc / 'location.txt')
+        legacy_path = self.map / 'source-location.txt'
+        legacy_path.write_text(text)
+        areas = forward.read_location(legacy_path)
+        write_location_csv(self.nc / 'location.csv', [
+            forward.LocationArea(int(area['iarea']), str(area['carea']), float(area['west']),
+                                 float(area['east']), float(area['south']), float(area['north']),
+                                 int(area['nx']), int(area['ny']), float(area['resolution']))
+            for area in areas
+        ])
         rows = forward.registry_rows(REGISTRY)
         self.variables = ['visual', 'catmxy', 'fixture_int32', 'elevtn']
         selected = []
@@ -96,7 +104,8 @@ class RestorationTests(unittest.TestCase):
         self.assertEqual((converted, skipped), (8, 0))
         for name, original in self.expected.items():
             self.assertEqual(sha((self.binary / name).read_bytes()), sha(original), name)
-        self.assertEqual((self.binary / 'location.txt').read_bytes(), (self.nc / 'location.txt').read_bytes())
+        self.assertEqual(reverse.forward.read_location(self.binary / 'location.txt'),
+                         reverse.forward.read_location(self.nc / 'location.csv'))
         modified = self.binary / 'a.visual.bin'
         modified.write_bytes(b'user-existing')
         self.assertEqual(reverse.restore(self.map, '1min', self.variables, self.registry, jobs=2, force=False), (0, 8))
@@ -144,13 +153,20 @@ class RestorationTests(unittest.TestCase):
             reverse.restore(self.map, '1min', ['fixture_int32'], self.registry)
         self.assertFalse(list(self.binary.glob('*.bin')))
         # Restore valid registry, then alter geometry while keeping a valid location file.
-        (self.nc / 'location.txt').write_text((self.nc / 'location.txt').read_text().replace('1 a 0 25.9', '1 a 1 26.9'))
-        with self.assertRaisesRegex(ValueError, 'conflicts with location.txt center'):
+        area = forward.read_location(self.nc / 'location.csv')[0]
+        area['west'] = 1.0
+        area['east'] = 26.9
+        forward.write_location_csv(self.nc / 'location.csv', [
+            forward.LocationArea(int(area['iarea']), str(area['carea']), float(area['west']),
+                                 float(area['east']), float(area['south']), float(area['north']),
+                                 int(area['nx']), int(area['ny']), float(area['resolution']))
+        ])
+        with self.assertRaisesRegex(ValueError, 'conflicts with location metadata center'):
             reverse.restore(self.map, '1min', ['visual'], self.registry)
         self.assertFalse(list(self.binary.glob('*.bin')))
 
     def test_failed_chunk_preserves_existing_output_and_removes_temporary(self):
-        area = forward.read_location(self.nc / 'location.txt')[0]
+        area = forward.read_location(self.nc / 'location.csv')[0]
         rows = reverse.tile_rows(forward.registry_rows(self.registry), '1min', area, 'catmxy')
         source, output = self.nc / 'a.catmxy.nc', self.binary / 'a.catmxy.bin'
         output.write_bytes(b'previous-complete-output')
@@ -174,7 +190,7 @@ class RestorationTests(unittest.TestCase):
         self.assertFalse(list(self.binary.glob('.*.tmp')))
 
     def test_conflicting_location_is_preserved_even_with_force(self):
-        text = (self.nc / 'location.txt').read_text().replace('1 a 0 25.9', '1 a 1 26.9')
+        text = '1 narea\niarea carea west east south north nx ny csize\n1 a 1 26.9 9.7 10 259 3 0.1\n2 b 30 55.9 9.7 10 259 3 0.1\n'
         target = self.binary / 'location.txt'
         target.write_text(text)
         with self.assertRaisesRegex(ValueError, 'conflicts with NetCDF geometry'):

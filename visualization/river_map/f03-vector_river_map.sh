@@ -20,7 +20,7 @@ BSNCOL_FILE="$MAP_DIR/bsncol.nc"                 # Categorical basin display col
 BIFPRM_FILE="$MAP_DIR/bifprm.nc"                 # Bifurcation paths and layer widths.
 PARAMS_FILE="$MAP_DIR/params.txt"                # Coarse grid dimensions and bounds.
 CATMXY_FILE="$MAP_DIR/1min/1min.catmxy.nc"        # 1-minute to coarse-cell assignment.
-LOCATION_FILE="$MAP_DIR/1min/location.txt"       # High-resolution grid bounds and size.
+LOCATION_FILE="$MAP_DIR/1min/location.csv"       # High-resolution grid bounds and size.
 
 # User settings: independent extents for the three vector-map panels.
 A_WEST=99

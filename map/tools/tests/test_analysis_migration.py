@@ -92,8 +92,15 @@ class AnalysisMigrationTests(unittest.TestCase):
             shutil.copy2(source, map_dir / name)
         hires = map_dir / "1min"
         hires.mkdir()
+        shutil.copy2(SAMPLE / "1min" / "location.csv", hires / "location.csv")
+        binary_hires = map_dir / "binary" / "1min"
+        binary_hires.mkdir(parents=True)
+        shutil.copy2(SAMPLE / "binary" / "1min" / "location.txt", hires / "location.txt")
+        shutil.copy2(SAMPLE / "binary" / "1min" / "1min.catmxy.bin",
+                     hires / "1min.catmxy.bin")
         for name in ("location.txt", "1min.catmxy.bin"):
-            shutil.copy2(SAMPLE / "binary" / "1min" / name, hires / name)
+            shutil.copy2(SAMPLE / "binary" / "1min" / name,
+                         binary_hires / name)
         return map_dir, script_params
 
     def test_legacy_and_v5_binary_outputs_match_and_ctl_generation_works(self) -> None:
@@ -106,7 +113,7 @@ class AnalysisMigrationTests(unittest.TestCase):
         legacy_hires = legacy_map / "1min"
         legacy_hires.mkdir()
         for name in ("location.txt", "1min.catmxy.bin"):
-            shutil.copy2(v5_map / "1min" / name, legacy_hires / name)
+            shutil.copy2(v5_map / "binary" / "1min" / name, legacy_hires / name)
 
         for label, executable_dir, workdir in (
             ("v5", self.v5_dir, v5_params), ("legacy", self.legacy_dir, legacy_params),
@@ -317,7 +324,7 @@ class AnalysisMigrationTests(unittest.TestCase):
     def test_river_point_cli_netcdf_modes_match_binary_reference_and_fallback(self) -> None:
         map_dir, _ = self.make_map("river-point-netcdf")
         binary_dir = map_dir / "binary"
-        binary_dir.mkdir()
+        binary_dir.mkdir(exist_ok=True)
         for name in MAP_NETCDF_FILES:
             shutil.copy2(SAMPLE / name, map_dir / name)
             shutil.copy2(SAMPLE / "binary" / name.replace(".nc", ".bin"),
@@ -326,8 +333,10 @@ class AnalysisMigrationTests(unittest.TestCase):
         hires = map_dir / "1min"
         shutil.copy2(SAMPLE / "1min" / "1min.catmxy.nc", hires / "1min.catmxy.nc")
         binary_hires = binary_dir / "1min"
-        binary_hires.mkdir()
-        shutil.copy2(SAMPLE / "1min" / "location.txt", hires / "location.txt")
+        binary_hires.mkdir(exist_ok=True)
+        shutil.copy2(SAMPLE / "1min" / "location.csv", hires / "location.csv")
+        shutil.copy2(SAMPLE / "binary" / "1min" / "location.txt", hires / "location.txt")
+        shutil.copy2(SAMPLE / "binary" / "1min" / "1min.catmxy.bin", hires / "1min.catmxy.bin")
         shutil.copy2(SAMPLE / "binary" / "1min" / "location.txt", binary_hires / "location.txt")
         shutil.copy2(SAMPLE / "binary" / "1min" / "1min.catmxy.bin", binary_hires / "1min.catmxy.bin")
 
@@ -341,8 +350,9 @@ class AnalysisMigrationTests(unittest.TestCase):
             self.assertEqual(netcdf.stdout, binary.stdout)
 
         latitude, longitude = np.float32(11.579), np.float32(104.946)
-        location_fields = (hires / "location.txt").read_text().splitlines()[2].split()
-        nx, ny, size = int(location_fields[6]), int(location_fields[7]), np.float32(location_fields[8])
+        from map.tools.code.hires_metadata import read_location_csv
+        location, = read_location_csv(hires / 'location.csv')
+        nx, ny, size = location.nx, location.ny, np.float32(location.csize)
         grid = Grid.from_file(map_dir / "params.txt")
         x = int(np.float32((longitude - grid.west) / size))
         y = int(np.float32((grid.north - latitude) / size))
@@ -375,12 +385,12 @@ class AnalysisMigrationTests(unittest.TestCase):
 
         fallback_map, _ = self.make_map("river-point-fallback")
         fallback_binary = fallback_map / "binary"
-        fallback_binary.mkdir()
+        fallback_binary.mkdir(exist_ok=True)
         for name in MAP_NETCDF_FILES:
             shutil.copy2(SAMPLE / name, fallback_map / name)
             shutil.copy2(SAMPLE / "binary" / name.replace(".nc", ".bin"),
                          fallback_binary / name.replace(".nc", ".bin"))
-        (fallback_map / "1min" / "location.txt").unlink()
+        (fallback_map / "1min" / "location.csv").unlink()
         (fallback_map / "1min" / "1min.catmxy.bin").unlink()
         fallback_analysis = fallback_map / "script_params"
         netcdf = run([sys.executable, str(point_info), "latlon", "11.579", "104.946"], fallback_analysis)
@@ -490,7 +500,7 @@ class AnalysisMigrationTests(unittest.TestCase):
     def test_direct_cli_runs_from_map_local_script_params(self) -> None:
         map_dir, params = self.make_map("portable-cli")
         binary_dir = map_dir / "binary"
-        binary_dir.mkdir()
+        binary_dir.mkdir(exist_ok=True)
         for name in MAP_FILES:
             if name.endswith(".bin"):
                 shutil.copy2(SAMPLE / "binary" / name, binary_dir / name)

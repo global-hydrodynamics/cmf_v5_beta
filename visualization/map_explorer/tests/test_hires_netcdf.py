@@ -1,12 +1,14 @@
 """Native NetCDF contracts: orientation, raw assignments, lazy reads and Binary parity."""
 
 from pathlib import Path
+import csv
 
 import numpy as np
 import pytest
 from netCDF4 import Dataset
 
 from hires import discover_tiles
+from map.tools.code.hires_metadata import LocationArea, write_location_csv
 from map_reader import MapReader
 from selection import CatchmentIndex
 from test_v2 import products
@@ -38,15 +40,31 @@ def write_product(directory, name, values, g, units, *, flip_y=False, flip_x=Fal
 
 def nc_products(root, **orientation):
     tile = discover_tiles(root, [])["fine/tile"]
-    directory = root / "fine_nc"
-    directory.mkdir()
-    (directory / "location.txt").write_text((root / "fine/location.txt").read_text())
+    directory = root / "fine"
+    write_location_csv(directory / "location.csv", [
+        LocationArea(1, "tile", 10, 14, 20, 23, 8, 6, 0.5)
+    ])
     for name in tile.files:
         shape = (2 if name == "catmxy" else 1, tile.geometry.ny, tile.geometry.nx)
         raw = np.asarray(tile.mmap(name)).copy().reshape(shape)
         write_product(directory, name, raw if name == "catmxy" else raw[0], tile.geometry,
                       "code" if name == "visual" else "1" if raw.dtype.kind == "i" else "m", **orientation)
     return tile
+
+
+def test_standard_location_csv_is_discovered_without_legacy_text(products):
+    location = products / 'fine' / 'location.txt'
+    fields = location.read_text().splitlines()[2].split()
+    with (location.with_suffix('.csv')).open('w', newline='') as stream:
+        writer = csv.writer(stream, lineterminator='\n')
+        writer.writerow(('iarea', 'carea', 'west', 'east', 'south', 'north', 'nx', 'ny', 'csize'))
+        writer.writerow(fields)
+    location.unlink()
+
+    messages = []
+    tiles = discover_tiles(products, messages)
+    assert "fine/tile" in tiles
+    assert not messages
 
 
 @pytest.mark.parametrize("flip_y,flip_x,transpose", [(False, False, False), (True, False, False),
@@ -91,7 +109,7 @@ def test_native_uparea_units_and_fill_are_not_inherited(products):
     binary = nc_products(products)
     values = np.arange(48, dtype="<f4").reshape(6, 8) * 1e6
     values[0, 0] = -9999
-    write_product(products / "fine_nc", "uparea", values, binary.geometry, "m2")
+    write_product(products / "fine", "uparea", values, binary.geometry, "m2")
     nc = discover_tiles(products, [])["fine/tile"]
     actual = nc.sample("uparea", np.array([0, 1]), np.array([0, 2]))
     assert np.isnan(actual[0, 0])
@@ -100,7 +118,7 @@ def test_native_uparea_units_and_fill_are_not_inherited(products):
 
 def test_invalid_netcdf_metadata_never_silently_uses_binary(products):
     binary = nc_products(products)
-    write_product(products / "fine_nc", "elevtn", np.ones((6, 8), dtype="<f4"), binary.geometry, "feet")
+    write_product(products / "fine", "elevtn", np.ones((6, 8), dtype="<f4"), binary.geometry, "feet")
     messages = []
     tile = discover_tiles(products, messages)["fine/tile"]
     assert "elevtn" not in tile.files
@@ -109,7 +127,7 @@ def test_invalid_netcdf_metadata_never_silently_uses_binary(products):
 
 def test_binary_fallback_only_for_absent_optional_netcdf(products):
     nc_products(products)
-    (products / "fine_nc/tile.visual.nc").unlink()
+    (products / "fine/tile.visual.nc").unlink()
     tile = discover_tiles(products, [])["fine/tile"]
     assert tile.files["catmxy"].suffix == ".nc"
     assert tile.files["visual"].suffix == ".bin"
@@ -118,7 +136,7 @@ def test_binary_fallback_only_for_absent_optional_netcdf(products):
 
 def test_all_invalid_netcdf_fields_remove_the_unavailable_tile(products):
     nc_products(products)
-    for path in (products / "fine_nc").glob("*.nc"):
+    for path in (products / "fine").glob("*.nc"):
         with Dataset(path, "a") as ds:
             for name, variable in ds.variables.items():
                 if name not in ("lat", "lon"):
@@ -133,7 +151,7 @@ def test_visual_categorical_units_follow_registry_and_keep_legacy_support(produc
     binary = nc_products(products)
     values = np.array([[0, 1, 2, 3, 5, 7, 10, 25]] * 6, dtype="i1")
     values[0, 0] = -9
-    write_product(products / "fine_nc", "visual", values, binary.geometry, units)
+    write_product(products / "fine", "visual", values, binary.geometry, units)
     messages = []
     tile = discover_tiles(products, messages)["fine/tile"]
     assert ("visual" in tile.files) == available
@@ -152,7 +170,7 @@ def test_visual_categorical_units_follow_registry_and_keep_legacy_support(produc
 
 def test_categorical_code_units_do_not_relax_catmxy_assignment_contract(products):
     nc_products(products)
-    with Dataset(products / "fine_nc/tile.catmxy.nc", "a") as ds:
+    with Dataset(products / "fine/tile.catmxy.nc", "a") as ds:
         ds["catmxx"].units = "code"
     messages = []
     tile = discover_tiles(products, messages)["fine/tile"]

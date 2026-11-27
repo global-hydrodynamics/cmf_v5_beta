@@ -76,7 +76,7 @@ def validate_netcdf(lib, ncid, area, rows):
     ]:
         varid, dtype, dims, lengths = variable_info(lib, ncid, name)
         if dtype not in (forward.NC_DOUBLE, forward.NC_FLOAT) or lengths != (size,):
-            raise ConversionError(f'{name}: wrong coordinate type or length; location.txt requires {size}')
+            raise ConversionError(f'{name}: wrong coordinate type or length; location metadata requires {size}')
         # The forward writer uses float64 axes; accept float32 centers within their storage precision.
         tolerance = 2e-5 if dtype == forward.NC_FLOAT else max(abs(step) * 1e-8, 1e-9)
         for first in range(0, size, CHUNK_EDGE):
@@ -87,7 +87,7 @@ def validate_netcdf(lib, ncid, area, rows):
             for index, actual in enumerate(data):
                 expected = origin + (first + index + .5) * step
                 if not math.isclose(actual, expected, rel_tol=0, abs_tol=tolerance):
-                    raise ConversionError(f'{name}[{first+index}]={actual} conflicts with location.txt center {expected}')
+                    raise ConversionError(f'{name}[{first+index}]={actual} conflicts with location metadata center {expected}')
         dim_name = ctypes.create_string_buffer(257)
         forward.check(lib, lib.nc_inq_dimname(ncid, dims[0], dim_name), f'inspect {name} dimension name')
         if dim_name.value.decode() != name:
@@ -105,7 +105,7 @@ def validate_netcdf(lib, ncid, area, rows):
         varid, dtype, dims, lengths = variable_info(lib, ncid, name)
         expected_type = forward.TYPE_INFO[row['dtype'].strip().lower()][3]
         if dtype != expected_type or dims != (axes['lat'], axes['lon']) or lengths != (int(area['ny']), int(area['nx'])):
-            raise ConversionError(f'{name}: NetCDF type, dimensions or order differs from registry/location.txt')
+            raise ConversionError(f'{name}: NetCDF type, dimensions or order differs from registry/location metadata')
         result.append(varid)
     nvars = ctypes.c_int()
     forward.check(lib, lib.nc_inq_nvars(ncid, ctypes.byref(nvars)), 'inspect variable count')
@@ -198,31 +198,30 @@ def same_geometry(left, right):
     return True
 
 
-def restore_location(source, target, areas):
+def restore_location(target, areas):
     if target.exists():
         if not same_geometry(areas, forward.read_location(target)):
             raise ConversionError(f'{target}: conflicting geometry; review it explicitly before restoring')
         return  # Preserve an existing geometrically equivalent metadata file verbatim.
-    fd, name = tempfile.mkstemp(prefix='.location.', suffix='.tmp', dir=target.parent)
-    temporary = Path(name)
-    try:
-        with os.fdopen(fd, 'wb') as stream:
-            stream.write(source.read_bytes())
-        os.link(temporary, target)
-    finally:
-        temporary.unlink(missing_ok=True)
+    forward.write_location(target, areas, 'txt')
 
 
 def restore(map_dir, hires, variables, registry, jobs=1, force=True, areas_filter=None):
     if jobs < 1 or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*', hires) or hires in ('.', '..'):
         raise ConversionError('jobs must be positive and hires must be a single directory tag')
     source_dir = map_dir / hires
-    if not (source_dir / 'location.txt').is_file():
-        source_dir = map_dir / f'{hires}_nc'  # legacy layout
+    location_path = source_dir/'location.csv'
+    if not location_path.is_file():
+        location_path = source_dir/'location.txt'
+    if not location_path.is_file():
+        source_dir = map_dir / f'{hires}_nc'  # legacy directory layout
+        location_path = source_dir/'location.csv'
+        if not location_path.is_file():
+            location_path = source_dir/'location.txt'
     output_dir = map_dir / 'binary' / hires
-    areas = forward.read_location(source_dir / 'location.txt')
+    areas = forward.read_location(location_path)
     if not areas or not variables:
-        raise ConversionError('location.txt and variable selection must be nonempty')
+        raise ConversionError('location metadata and variable selection must be nonempty')
     # Keep names as single path components; location metadata must never redirect writes.
     for name in [hires, *variables, *(str(area['carea']) for area in areas)]:
         if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*', name) or name in ('.', '..'):
@@ -230,14 +229,20 @@ def restore(map_dir, hires, variables, registry, jobs=1, force=True, areas_filte
     if source_dir.resolve() == output_dir.resolve() or output_dir.is_symlink():
         raise ConversionError('source and output must be distinct directories; output symlinks are not supported')
     if (output_dir / 'location.txt').exists():
-        if not same_geometry(areas, forward.read_location(output_dir / 'location.txt')):
+        try:
+            existing_areas = forward.read_location(output_dir / 'location.txt')
+        except (OSError, ValueError, RuntimeError) as exc:
+            raise ConversionError(
+                'existing Binary location.txt is invalid or conflicts with NetCDF geometry'
+            ) from exc
+        if not same_geometry(areas, existing_areas):
             raise ConversionError('existing Binary location.txt conflicts with NetCDF geometry (even with --force)')
     selected_areas = areas
     if areas_filter:
         wanted = set(areas_filter)
         selected_areas = [area for area in areas if area['carea'] in wanted]
         if len(selected_areas) != len(wanted):
-            raise ConversionError('one or more --areas names are absent from location.txt')
+            raise ConversionError('one or more --areas names are absent from the tile inventory')
     rows = forward.registry_rows(registry)
     all_variables = variables == ['all']
     if all_variables:
@@ -294,7 +299,7 @@ def restore(map_dir, hires, variables, registry, jobs=1, force=True, areas_filte
     if failed:
         raise ConversionError('; '.join(failed))
     # All selected coordinates were preflighted; preserve existing equivalent geometry verbatim.
-    restore_location(source_dir / 'location.txt', output_dir / 'location.txt', areas)
+    restore_location(output_dir / 'location.txt', areas)
     print(f'SUCCESS: restored {done}, skipped {skipped}; {output_dir}', flush=True)
     return done, skipped
 
@@ -304,7 +309,7 @@ def main():
     parser.add_argument('--map-dir', type=Path, required=True)
     parser.add_argument('--hires', required=True, help='space-separated high-resolution directory tags, e.g. 1min 3sec')
     parser.add_argument('--variables', required=True, help='all available registered products, or space-separated registered Binary file stems')
-    parser.add_argument('--areas', help='optional space-separated carea names; default all location.txt areas')
+    parser.add_argument('--areas', help='optional space-separated carea names; default all location metadata areas')
     parser.add_argument('--registry', type=Path, default=Path(__file__).resolve().parents[3] / 'variable_table/map_variables.csv')
     parser.add_argument('--jobs', type=int, default=1)
     parser.add_argument('--force', action='store_true', default=True, help=argparse.SUPPRESS)

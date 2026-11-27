@@ -38,12 +38,15 @@ def plan(map_dir: Path) -> list[tuple[Path, Path]]:
             resolution = directory.name[:-3]
             for source in sorted(directory.iterdir()):
                 target_dir = map_dir / resolution
-                if source.suffix == '.nc' or source.name == 'location.txt':
+                if source.suffix == '.nc' or source.name in ('location.csv', 'location.txt'):
                     moves.append((source, target_dir / source.name))
-        if not directory.name.endswith('_nc') and (directory / 'location.txt').is_file():
+        if not directory.name.endswith('_nc') and any((directory / name).is_file()
+                                                       for name in ('location.csv', 'location.txt')):
             for source in sorted(directory.glob('*.bin')) + sorted(directory.glob('*.ctl')):
                 moves.append((source, map_dir / 'binary' / directory.name / source.name))
-            moves.append((directory / 'location.txt', map_dir / 'binary' / directory.name / 'location.txt'))
+            for name in ('location.csv', 'location.txt'):
+                if (directory / name).is_file():
+                    moves.append((directory / name, map_dir / 'binary' / directory.name / name))
     for source in (map_dir / 'params.nml', map_dir / 'params.txt', *sorted(map_dir.glob('diminfo_*.nml'))):
         if source.is_file():
             moves.append((source, map_dir / 'binary' / source.name))

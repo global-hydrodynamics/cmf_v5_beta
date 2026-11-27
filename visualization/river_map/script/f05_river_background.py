@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import importlib.util
 from pathlib import Path
 
@@ -43,16 +44,17 @@ BIFURCATION_COLORS = ("#F4A582", "#D6604D", "#B2182B", "#FF0000")
 
 
 def read_high_resolution_grid(location_path: Path, geometry):
-    """Read and validate the 1-minute grid geometry from location.txt."""
-    lines = location_path.read_text().splitlines()
-    if len(lines) < 3:
-        raise ValueError(f"{location_path} does not contain a 1-minute grid descriptor")
-    fields = lines[2].split()
-    if len(fields) < 9 or fields[1] != "1min":
+    """Read and validate the 1-minute grid geometry from location.csv."""
+    with location_path.open(newline='', encoding='utf-8-sig') as stream:
+        reader = csv.DictReader(stream)
+        fields = [{key.strip(): (value or '').strip() for key, value in row.items() if key is not None}
+                  for row in reader]
+    if len(fields) != 1 or fields[0].get('carea') != '1min':
         raise ValueError(f"{location_path} does not describe a 1-minute grid")
-    west, east, south, north = map(float, fields[2:6])
-    nx, ny = map(int, fields[6:8])
-    resolution = float(fields[8])
+    area = fields[0]
+    west, east, south, north = (float(area[key]) for key in ('west', 'east', 'south', 'north'))
+    nx, ny = int(area['nx']), int(area['ny'])
+    resolution = float(area['csize'])
     coarse_nx, coarse_ny, coarse_res, cw, ce, cs, cn = geometry
     if (not np.isclose(resolution, 1 / 60) or nx != coarse_nx * 15 or
             ny != coarse_ny * 15 or not np.isclose(east - west, nx * resolution) or

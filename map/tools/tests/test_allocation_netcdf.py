@@ -21,6 +21,7 @@ sys.path.insert(0, str(TOOLS / "code"))
 from test_allocation_regression import assert_output_equivalent, GOLDEN  # noqa: E402
 from mod_map_io import Grid, parser  # noqa: E402
 from mod_allocation_map_io import read_allocation_hires  # noqa: E402
+from hires_metadata import LocationArea, read_location_csv, write_location_csv  # noqa: E402
 
 
 class AllocationNetCDFTests(unittest.TestCase):
@@ -29,16 +30,16 @@ class AllocationNetCDFTests(unittest.TestCase):
             root = Path(temp_name)
             directory = root / "1min"
             directory.mkdir()
-            (directory / "location.txt").write_text(
-                "2 narea\niarea carea west east south north nx ny csize\n"
-                "1 n30e120 90 110 5 35 10 10 .0166667\n"
-                "2 n35e120 90 110 5 35 10 10 .0166667\n", encoding="ascii")
+            write_location_csv(directory / 'location.csv', [
+                LocationArea(1, 'tile-a', 0, .1, 0, .1, 1, 1, .1),
+                LocationArea(2, 'tile-b', .1, .2, 0, .1, 1, 1, .1),
+            ])
             with self.assertRaisesRegex(ValueError, "exactly one high-resolution area"):
                 read_allocation_hires(root, "1min")
 
     def test_standard_netcdf_layout_and_allocation_outputs(self) -> None:
         self.assertTrue((SAMPLE / "params.txt").is_file())
-        self.assertTrue((SAMPLE / "1min/location.txt").is_file())
+        self.assertTrue((SAMPLE / "1min/location.csv").is_file())
         cli = parser("allocation NetCDF contract check")
         cli.parse_args(["--map-dir", str(SAMPLE)])
 
@@ -57,9 +58,9 @@ class AllocationNetCDFTests(unittest.TestCase):
                 dataset.variables[name].set_auto_maskandscale(False)
                 np.testing.assert_array_equal(base_nextxy[index], dataset.variables[name][:])
 
-        location = (SAMPLE / "1min/location.txt").read_text().splitlines()[2].split()
-        nx, ny = map(int, location[6:8])
-        west, east, south, north = map(float, location[2:6])
+        location, = read_location_csv(SAMPLE / '1min/location.csv')
+        nx, ny = location.nx, location.ny
+        west, east, south, north = location.west, location.east, location.south, location.north
         hires_grid = Grid(nx, ny, 0, np.float32((east-west)/nx), west, east, south, north)
         hires_uparea = hires_grid.raster(SAMPLE / "1min/1min.uparea.bin", "<f4")
         hires_catmxy = hires_grid.raster(SAMPLE / "1min/1min.catmxy.bin", "<i2", 2)

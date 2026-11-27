@@ -83,7 +83,7 @@ def resolve_resolutions(map_dir, requested):
     """Choose the first available standard NetCDF directory, coarse to fine."""
     if requested == ['auto']:
         selected = next((tag for tag in ('1min', '30sec', '15sec')
-                         if (map_dir / tag / 'location.txt').is_file()), None)
+                         if (map_dir / tag / 'location.csv').is_file()), None)
         resolutions = ['base', selected] if selected else ['base']
         print('AUTO resolutions: ' + ' '.join(resolutions))
         return resolutions
@@ -174,9 +174,9 @@ def plan(map_dir, resolutions, variables, registry):
             products = hires.registered_variables(rows)
             selected_products = products if requested is None else [x for x in products if x in requested]
             found.update(selected_products)
-            for area in hires.read_location(directory / 'location.txt'):
+            for area in hires.read_location(directory / 'location.csv'):
                 if Path(str(area['carea'])).name != area['carea'] or area['carea'] in ('.', '..'):
-                    raise ValueError('location.txt carea must be a filename component')
+                    raise ValueError('location.csv carea must be a filename component')
                 for product in selected_products:
                     source = directory / f'{area["carea"]}.{product}.nc'
                     if not source.is_file():
@@ -223,7 +223,7 @@ def axis(ds, candidates, size, origin, step):
         expected = origin + (logical + .5) * step
         regular = (last if reverse else first) + logical * actual_step
         if not np.all(np.isfinite(values)) or not np.allclose(values, expected, rtol=0, atol=tolerance):
-            raise Unsupported(f'{name}: coordinates conflict with params.txt/location.txt')
+            raise Unsupported(f'{name}: coordinates conflict with map/location metadata')
         if not np.allclose(values, regular, rtol=0, atol=max(abs(step) * 1e-6, tolerance / 4)):
             raise Unsupported(f'{name}: irregular coordinate grid cannot use an affine GeoTIFF')
     edge = (last if reverse else first) - actual_step / 2
@@ -261,7 +261,7 @@ def inspect(ds, task):
     transform = from_origin(west, north, dx, -dy)
     tolerance = max(2e-5, g['resolution'] * 1e-3)
     if abs((west + g['nx'] * dx) - g['east']) > tolerance or abs((north + g['ny'] * dy) - g['south']) > tolerance:
-        raise Unsupported('NetCDF edges conflict with params.txt/location.txt bounds')
+        raise Unsupported('NetCDF edges conflict with map/location metadata bounds')
     rows = sorted(task.rows, key=lambda r: int(r['record_index'] or 1))
     bands, dtypes, fills, names = [], set(), [], set()
     for row in rows:

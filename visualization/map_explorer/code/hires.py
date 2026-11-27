@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import csv
 from pathlib import Path
 import tempfile
 import hashlib
@@ -294,21 +295,35 @@ class Tile:
 
 
 def discover_tiles(map_dir, messages):
-    """Discover named records in map-local location.txt files; no 1min constant."""
+    """Discover standard CSV inventories and explicit legacy tile descriptors."""
     root = Path(map_dir)
     tiles = {}
     cog_cache = RasterCache()
-    for location in sorted(root.rglob("location.txt"), key=lambda p: (p.parent.name.endswith("_nc"), str(p))):
+    locations = list(root.rglob('location.csv'))
+    locations.extend(path for path in root.rglob('location.txt')
+                     if not (path.parent / 'location.csv').is_file())
+    for location in sorted(locations, key=lambda p: (p.parent.name.endswith("_nc"), str(p))):
         try:
-            lines = location.read_text().splitlines()
-            count = int(lines[0].split()[0])
-            records = [line.split() for line in lines[2:] if line.strip()]
-            if len(records) != count:
-                raise ValueError("area count disagrees with location records")
-            for fields in records:
-                _, name, w, e, s, n, nx, ny, step = fields[:9]
-                nx, ny, step = int(nx), int(ny), float(step)
-                w, e, s, n = map(float, (w, e, s, n))
+            if location.suffix.lower() == '.csv':
+                with location.open(newline='', encoding='utf-8-sig') as stream:
+                    reader = csv.DictReader(stream)
+                    if tuple(field.strip() for field in (reader.fieldnames or ())) != (
+                        'iarea', 'carea', 'west', 'east', 'south', 'north', 'nx', 'ny', 'csize'
+                    ):
+                        raise ValueError('invalid location.csv header')
+                    records = [{key.strip(): (value or '').strip() for key, value in row.items()
+                                if key is not None} for row in reader]
+            else:
+                lines = [line.split() for line in location.read_text().splitlines() if line.strip()]
+                count = int(lines[0][0])
+                records = [dict(zip(('iarea', 'carea', 'west', 'east', 'south', 'north', 'nx', 'ny', 'csize'), row))
+                           for row in lines[2:]]
+                if len(records) != count:
+                    raise ValueError('legacy area count disagrees with location records')
+            for record in records:
+                name = record['carea']
+                w, e, s, n = (float(record[field]) for field in ('west', 'east', 'south', 'north'))
+                nx, ny, step = int(record['nx']), int(record['ny']), float(record['csize'])
                 if (
                     nx <= 0
                     or ny <= 0

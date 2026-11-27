@@ -4,22 +4,28 @@
 cmf_hires_single_area_check() (
     tag=$1
     directory="../$tag"
-    location="$directory/location.txt"
+    location="$directory/location.csv"
 
     if [ ! -d "$directory" ]; then
         printf 'The resolution directory is missing: %s\n' "$directory" >&2
         return 1
     fi
     if [ ! -r "$location" ]; then
-        printf 'The resolution has no readable location.txt: %s\n' "$location" >&2
-        return 1
+        location="$directory/location.txt"  # Temporary support for unmigrated legacy maps.
+        if [ ! -r "$location" ]; then
+            printf 'The resolution has no readable location.csv: ../%s/location.csv\n' "$tag" >&2
+            return 1
+        fi
     fi
 
-    area_count=$(awk 'NR == 1 { print $1; exit }' "$location")
+    case "$location" in
+        *.csv) area_count=$(awk -F, 'NR > 1 && NF { count++ } END { print count+0 }' "$location") ;;
+        *) area_count=$(awk 'NR == 1 { print $1; exit }' "$location") ;;
+    esac
     case "$area_count" in
         1) ;;
         ''|*[!0-9]*)
-            printf 'location.txt does not declare a valid area count.\n' >&2
+            printf 'Location metadata does not declare a valid area count.\n' >&2
             return 1
             ;;
         *)
@@ -29,10 +35,18 @@ cmf_hires_single_area_check() (
             ;;
     esac
 
-    area_index=$(awk 'NR == 3 { print $1; exit }' "$location")
-    area_tag=$(awk 'NR == 3 { print $2; exit }' "$location")
+    case "$location" in
+        *.csv)
+            area_index=$(awk -F, 'NR == 2 { gsub(/^[ \t]+|[ \t]+$/, "", $1); print $1 }' "$location")
+            area_tag=$(awk -F, 'NR == 2 { gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2 }' "$location")
+            ;;
+        *)
+            area_index=$(awk 'NR == 3 { print $1; exit }' "$location")
+            area_tag=$(awk 'NR == 3 { print $2; exit }' "$location")
+            ;;
+    esac
     if [ "$area_index" != 1 ] || [ "$area_tag" != "$tag" ]; then
-        printf 'location.txt area identifier does not match the single-area %s naming convention.\n' \
+            printf 'Location metadata area identifier does not match the single-area %s naming convention.\n' \
             "$tag" >&2
         return 1
     fi
@@ -82,7 +96,7 @@ cmf_select_hires_tag() (
 
     if [ -z "$available" ]; then
         if [ "$mode" = --single-area ]; then
-            printf 'No compatible single-area high-resolution map was found. Check location.txt and the <TAG>.<VARIABLE> filenames.\n' >&2
+            printf 'No compatible single-area high-resolution map was found. Check location.csv and the <TAG>.<VARIABLE> filenames.\n' >&2
         else
             printf 'No supported high-resolution map directory was found above this script directory.\n' >&2
         fi

@@ -112,7 +112,7 @@ class COGSource:
             if (ds.width != g.nx or ds.height != g.ny or t.b != 0 or t.d != 0 or t.a <= 0 or t.e >= 0
                     or abs(t.c-g.west) > tolerance or abs(t.f-g.north) > tolerance
                     or abs(t.a-g.resolution) > tolerance/g.nx or abs(t.e+g.resolution) > tolerance/g.ny):
-                raise ValueError('COG dimensions/edges/spacing disagree with location.txt')
+                raise ValueError('COG dimensions/edges/spacing disagree with location.csv geometry')
             if self.netcdf_path and ds.tags().get('source_file') != self.netcdf_path.name:
                 raise ValueError('COG provenance source_file disagrees with selected tile/product')
             names = [ds.tags(i).get('source_variable', '') for i in range(1,ds.count+1)]

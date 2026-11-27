@@ -118,7 +118,7 @@ class GenerateCtlTests(unittest.TestCase):
         scripts.mkdir(parents=True)
         common.mkdir(parents=True)
         (work/'variable_table').mkdir()
-        for name in ('generate_ctl.py', 'map_metadata.py', 'migrate_map_params.py'):
+        for name in ('generate_ctl.py', 'map_metadata.py', 'hires_metadata.py', 'migrate_map_params.py'):
             shutil.copy2(root/'map/tools/code'/name, code/name)
         shutil.copy2(root/'map/tools/script_format_conv/s09-write_ctl.sh', scripts/'s09-write_ctl.sh')
         (common/'cmf_shell_functions.sh').write_text(
@@ -220,10 +220,10 @@ class GenerateCtlTests(unittest.TestCase):
     def test_high_resolution_uses_location_geometry_and_area_name(self):
         hires = self.map_dir / "1min"
         hires.mkdir()
-        (hires / "location.txt").write_text(
-            "2 narea\niarea carea west east south north nx ny csize\n"
-            "1 otherarea 0 1 0 1 2 2 0.5\n"
-            "2 testarea 10 12 20 21 4 2 0.5\n", encoding="ascii")
+        (hires / "location.csv").write_text(
+            "iarea,carea,west,east,south,north,nx,ny,csize\n"
+            "1,otherarea,0,1,0,1,2,2,0.5\n"
+            "2,testarea,10,12,20,21,4,2,0.5\n", encoding="ascii")
         filename = "1min/testarea.elevtn.bin"
         write_registry(self.registry, [row("<HIRES>/<AREA>.elevtn.bin", "elevtn_hires", "float32",
                                            "NX_HIRES,NY_HIRES (or NX_TILE,NY_TILE)")])

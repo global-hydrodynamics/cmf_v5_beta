@@ -13,8 +13,10 @@ from pathlib import Path
 
 try:
     from .map_metadata import has_map_geometry, read_diminfo_nml, read_map_geometry
+    from .hires_metadata import read_location_csv, read_location_txt
 except ImportError:  # Direct execution from the map-local Shell workflows.
     from map_metadata import has_map_geometry, read_diminfo_nml, read_map_geometry
+    from hires_metadata import read_location_csv, read_location_txt
 
 
 class CtlError(ValueError):
@@ -122,38 +124,13 @@ def validate_grid(grid: Grid) -> Grid:
 
 def read_location(path: Path) -> list[Area]:
     try:
-        lines = [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
-    except OSError as exc:
+        tiles = read_location_csv(path) if path.suffix.lower() == ".csv" else read_location_txt(path)
+        return [Area(tile.iarea, tile.carea,
+                     validate_grid(Grid(tile.nx, tile.ny, tile.west, tile.east, tile.south,
+                                        tile.north, tile.csize, str(path), high_resolution=True)))
+                for tile in tiles]
+    except (OSError, ValueError, RuntimeError) as exc:
         raise CtlError(f"Cannot read high-resolution geometry {path}: {exc}") from exc
-    if len(lines) < 2:
-        raise CtlError(f"{path} must contain an area count, a header, and area records")
-    try:
-        narea = int(lines[0].split()[0])
-    except (ValueError, IndexError) as exc:
-        raise CtlError(f"Invalid area count in {path}") from exc
-    header = [item.lower() for item in lines[1].split()]
-    required = ["iarea", "carea", "west", "east", "south", "north", "nx", "ny", "csize"]
-    if header != required:
-        raise CtlError(f"{path} header must contain: {' '.join(required)}")
-    if len(lines) != narea + 2:
-        raise CtlError(f"{path} declares {narea} areas but contains {len(lines)-2} records")
-    areas: list[Area] = []
-    for line_no, line in enumerate(lines[2:], 3):
-        fields = line.split()
-        if len(fields) != len(required):
-            raise CtlError(f"{path}:{line_no}: expected {len(required)} fields, found {len(fields)}")
-        try:
-            iarea = int(fields[0])
-            west, east, south, north = map(float, fields[2:6])
-            nx, ny = int(fields[6]), int(fields[7])
-            spacing = float(fields[8])
-        except ValueError as exc:
-            raise CtlError(f"{path}:{line_no}: invalid numeric location field") from exc
-        grid = validate_grid(Grid(nx, ny, west, east, south, north, spacing, str(path), True))
-        areas.append(Area(iarea, fields[1], grid))
-    if len({area.carea for area in areas}) != len(areas):
-        raise CtlError(f"{path} contains duplicate carea names")
-    return areas
 
 
 def registry_patterns(row: dict[str, str]) -> list[str]:
@@ -233,7 +210,7 @@ def select_area(relpath: str, target: Path, rows: list[dict[str, str]], areas: l
     if not matches and len(areas) == 1:
         return areas[0]
     if len(matches) != 1:
-        raise CtlError("cannot select one location.txt area matching this binary filename")
+        raise CtlError("cannot select one location.csv/TXT area matching this Binary filename")
     return next(area for area in areas if area.carea in matches)
 
 
@@ -547,14 +524,16 @@ def generate_directory(map_dir: Path, registry_path: Path, *, dry_run: bool = Fa
             summary.failed += 1
         return summary
 
-    location_path = target / "location.txt"
+    location_path = target / "location.csv"
+    if not location_path.is_file():
+        location_path = target / "location.txt"  # Retained for explicit legacy Binary maps.
     has_params = has_map_geometry(target)
     areas: list[Area] = []
     base_grid: Grid | None = None
     dataset_root = target
     if not location_path.is_file() and not has_params:
         for path in files:
-            print(f"SKIP {path.name}: target directory has neither params.nml/params.txt nor location.txt")
+            print(f"SKIP {path.name}: target directory has neither params.nml/params.txt nor location.csv/legacy location.txt")
             summary.skipped += 1
         return summary
     try:
@@ -564,7 +543,7 @@ def generate_directory(map_dir: Path, registry_path: Path, *, dry_run: bool = Fa
             areas = read_location(location_path)
             dataset_root = target.parent
         else:
-            raise CtlError("no params.nml, params.txt, or location.txt in target directory")
+            raise CtlError("no params.nml, params.txt, or location metadata in target directory")
     except CtlError as exc:
         for path in files:
             print(f"FAILED {path.name}: {exc}")
@@ -601,7 +580,7 @@ def generate_directory(map_dir: Path, registry_path: Path, *, dry_run: bool = Fa
                     declared_dims = (matches[0].get("dimensions") or "").replace(" ", "").upper()
                     if not declared_dims.startswith("NX_HIRES,NY_HIRES"):
                         raise CtlError("registry dimensions are not a supported high-resolution grid")
-                    raise CtlValidationError("registry dimensions do not match high-resolution location.txt geometry")
+                    raise CtlValidationError("registry dimensions do not match high-resolution location.csv geometry")
                 variables, records, sentinel, used_fallback = record_variables(matches, grid)
             expected_size = sum(
                 grid.nx * grid.ny * variable.levels * SUPPORTED_TYPES[variable.dtype][0]

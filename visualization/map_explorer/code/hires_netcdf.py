@@ -44,7 +44,7 @@ class NetCDFSource:
                 elif np.allclose(values[::-1], expected, atol=tol, rtol=0):
                     reverse = True
                 else:
-                    raise ValueError(f"{path.name}: {key} disagrees with native location.txt pixel centers")
+                    raise ValueError(f"{path.name}: {key} disagrees with native location.csv pixel centers")
                 axes.append((var.dimensions[0], reverse))
             if name == "catmxy":
                 names = next((pair for pair in (("catmxx", "catmyy"), ("catmx", "catmy"))

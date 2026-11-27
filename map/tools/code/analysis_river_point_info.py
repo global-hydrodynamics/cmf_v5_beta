@@ -9,6 +9,10 @@ All reported IX/IY are explicitly one-based; Python indices are also printed.
 import numpy as np
 
 from mod_map_io import Grid, parser, read_array
+try:
+    from .hires_metadata import read_location_csv, read_location_txt
+except ImportError:  # Direct execution from the map-local Shell workflows.
+    from hires_metadata import read_location_csv, read_location_txt
 
 
 def main():
@@ -34,15 +38,18 @@ def main():
         lat, lon = args.first, args.second
         ix = iy = None
         for tag in ('15sec', '1min'):
-            location = args.map_dir / tag / 'location.txt'
-            if not location.exists():
+            if args.map_format == 'netcdf':
+                location = args.map_dir / tag / 'location.csv'
+                areas = read_location_csv(location) if location.is_file() else []
+            else:
                 location = args.map_dir / 'binary' / tag / 'location.txt'
-            if not location.exists():
+                areas = read_location_txt(location) if location.is_file() else []
+            if not areas:
                 continue
-            row = location.read_text().splitlines()[2].split()
-            if row[1] != tag:
+            area = areas[0]
+            if area.carea != tag:
                 continue
-            nx, ny, size = int(row[6]), int(row[7]), np.float32(row[8])
+            nx, ny, size = area.nx, area.ny, np.float32(area.csize)
             x = int(np.float32((lon - grid.west) / size))
             y = int(np.float32((grid.north - lat) / size))
             if not (0 <= x < nx and 0 <= y < ny):

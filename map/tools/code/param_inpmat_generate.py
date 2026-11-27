@@ -13,8 +13,10 @@ import numpy as np
 
 try:
     from .map_metadata import DimInfo, write_diminfo_nml
+    from .hires_metadata import read_location_csv
 except ImportError:  # Direct execution from the map-local Shell wrappers.
     from map_metadata import DimInfo, write_diminfo_nml
+    from hires_metadata import read_location_csv
 from mod_map_io import Grid, output_root, parser, read_array, write_inpmat
 
 
@@ -49,13 +51,11 @@ def generate(grid, source, out, size, west, east, north, south, order,
     yslots = np.zeros_like(xslots)
     areas = np.zeros(xslots.shape, dtype='f4')
     slots = {}
-    lines = (source/'location.txt').read_text().splitlines()
-    for line in lines[2:2+int(lines[0].split()[0])]:
-        fields = line.split()
-        name = fields[1]
-        origin_x, origin_y = np.float32(fields[2]), np.float32(fields[5])
-        nx, ny = int(fields[6]), int(fields[7])
-        resolution = np.float32(fields[8])
+    for area in read_location_csv(source/'location.csv'):
+        name = area.carea
+        origin_x, origin_y = np.float32(area.west), np.float32(area.north)
+        nx, ny = area.nx, area.ny
+        resolution = np.float32(area.csize)
         path = source/(name+'.catmxy.bin')
         nc_path = path.with_suffix('.nc')
         if not (nc_path.is_file() if map_format == 'netcdf' else path.is_file()):

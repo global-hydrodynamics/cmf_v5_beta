@@ -12,6 +12,12 @@ from pathlib import Path
 import numpy as np
 
 from mod_map_io import RasterTile, output_root, parser, write_highres_raster
+try:
+    from .hires_metadata import (LocationArea, read_location_csv, read_location_txt,
+                                 write_location_csv, write_location_txt)
+except ImportError:  # Direct execution from the map-local Shell wrappers.
+    from hires_metadata import (LocationArea, read_location_csv, read_location_txt,
+                                write_location_csv, write_location_txt)
 
 
 PIXELS_PER_DEGREE = {'1min': 60, '30sec': 120, '15sec': 240, '5sec': 720, '3sec': 1200, '1sec': 3600}
@@ -173,8 +179,10 @@ def main():
     lines = args.change_info.read_text().splitlines()
     tag = args.hires_tag
     source = Path(lines[0].strip())/tag
-    if args.map_format == 'binary' and not (source/'location.txt').is_file():
+    if args.map_format == 'binary':
         source = Path(lines[0].strip())/'binary'/tag
+    location_path = source/('location.csv' if args.map_format == 'netcdf' else 'location.txt')
+    areas = read_location_csv(location_path) if args.map_format == 'netcdf' else read_location_txt(location_path)
     mx, my, dx, dy = (int(lines[i].split()[0]) for i in (9, 10, 11, 12))
     west, east, south, north = (float(lines[i].split()[0]) for i in (13, 14, 15, 16))
     cnum = PIXELS_PER_DEGREE[tag]
@@ -184,17 +192,15 @@ def main():
     tiled = tag != '1min' and (nx > 16000 or ny > 16000)
     locations = []
     if not tiled:
-        text = (source/'location.txt').read_text().splitlines()
         regions = []
-        for line in text[2:2+int(text[0].split()[0])]:
-            f = line.split()
-            w, e, s, n = map(float, f[2:6])
+        for area in areas:
+            w, e, s, n = area.west, area.east, area.south, area.north
             if w > east or e < west or n < south or s > north:
                 continue
-            regions.append((f[1], w, e, s, n, int(f[6]), int(f[7])))
+            regions.append((area.carea, w, e, s, n, area.nx, area.ny))
         copy_region(source, out, tag, regions, (west, east, south, north), (ny, nx), (dx, dy), (mx, my),
                     netcdf=args.map_format == 'netcdf')
-        locations.append((tag, west, east, south, north, nx, ny))
+        locations.append(LocationArea(1, tag, west, east, south, north, nx, ny, 1./cnum))
     else:
         width = 30 if tag in ('30sec', '15sec') else 10 if tag in ('5sec', '3sec') else 5
         for latitude in range(90-width, -91, -width):
@@ -213,12 +219,12 @@ def main():
                 for product in temporary.iterdir():
                     product.rename(out/(name+product.name[len(tag):]))
                 temporary.rmdir()
-                locations.append(region)
-    with (out/'location.txt').open('w') as stream:
-        stream.write(f'{len(locations):6d}  narea\n')
-        stream.write(f'{"iarea":>6}{"carea":>10}{"west":>10}{"east":>10}{"south":>10}{"north":>10}{"nx":>8}{"ny":>8}{"csize":>20}\n')
-        for i, (name, w, e, s, n, sx, sy) in enumerate(locations, 1):
-            stream.write(f'{i:6d}{name:>10}{w:10.3f}{e:10.3f}{s:10.3f}{n:10.3f}{sx:8d}{sy:8d}{1./cnum:20.15f}\n')
+                locations.append(LocationArea(len(locations)+1, name, longitude, longitude+width,
+                                              latitude, latitude+width, width*cnum, width*cnum, 1./cnum))
+    if args.map_format == 'netcdf':
+        write_location_csv(out/'location.csv', locations)
+    else:
+        write_location_txt(out/'location.txt', locations)
 
 
 if __name__ == '__main__':

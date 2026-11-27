@@ -20,7 +20,7 @@ def main():
     p.add_argument('mode', choices=['multi', 'single'])
     p.add_argument('hires_tag')
     args = p.parse_args()
-    maps = AllocationMap(args.map_dir, args.hires_tag)
+    maps = AllocationMap(args.map_dir, args.hires_tag, map_format=args.map_format)
     out = args.output_dir or Path('.')
     out.mkdir(parents=True, exist_ok=True)
     with (out/'gauge_alloc.txt').open('w') as stream:

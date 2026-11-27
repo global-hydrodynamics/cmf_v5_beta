@@ -8,7 +8,7 @@ For model setup and example runs, see the [v5 developer execution guide](../gosh
 
 ## Standard map layout (NetCDF-first)
 
-NetCDF4 is the standard format for v5 model maps and preprocessing products. Base files such as `nextxy.nc` and `inpmat_<ROFFTAG>.nc` live at the map root; high-resolution NetCDF tiles live under their resolution directory (for example `1min/`). Optional GrADS-compatible files and `.ctl` metadata live under `binary/`, preserving the same relative layout. COGs are optional visualization derivatives under `COG/`. Keep authoritative `params.nml`, `diminfo_<ROFFTAG>.nml`, and `location.txt` in primary map directories. Retain `params.txt` only as a legacy compatibility copy where older tools require it; do not edit both geometry files independently. Do not create new `netcdf/` or `<resolution>_nc/` directories. See the [approved architecture](../docs/map_data_tools_plan.md#approved-v5-map-data-architecture) and the safe, dry-run-first [legacy layout migrator](tools/code/migrate_map_layout.py).
+NetCDF4 is the standard format for v5 model maps and preprocessing products. Base files such as `nextxy.nc` and `inpmat_<ROFFTAG>.nc` live at the map root; high-resolution NetCDF tiles live under their resolution directory (for example `1min/`). Optional GrADS-compatible files and `.ctl` metadata live under `binary/`, preserving the same relative layout. COGs are optional visualization derivatives under `COG/`. Keep authoritative `params.nml`, `diminfo_<ROFFTAG>.nml`, and high-resolution tile inventory `location.csv` in primary map directories. Retain `params.txt` and Binary-side `location.txt` only where a legacy consumer still requires them; do not edit both metadata formats independently. Do not create new `netcdf/` or `<resolution>_nc/` directories. See the [approved architecture](../docs/map_data_tools_plan.md#approved-v5-map-data-architecture) and the safe, dry-run-first [legacy layout migrator](tools/code/migrate_map_layout.py).
 
 ## Global additional data
 
@@ -31,7 +31,7 @@ source `cmf_v5_package_data/map/TE-Japan_01min/`. Its model grid is 1-minute
 (1500 × 1320 cells, 123–148°E, 24–46°N); supporting high-resolution maps are
 15-second. Package selection includes root-level NetCDF model products,
 standard parameters and auxiliary text, plus NetCDF tiles under `15sec/`,
-`location.txt`, optional `COG/` visualization inputs and stored generation
+`location.csv`, optional `COG/` visualization inputs and stored generation
 scripts/source as provenance. `binary/` is optional compatibility data. The
 entire local `map/TE-Japan_01min/` directory, including
 map-specific script copies and README files, is ignored. Shared maintained

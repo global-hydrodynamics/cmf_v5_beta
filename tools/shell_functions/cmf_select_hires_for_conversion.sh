@@ -14,12 +14,12 @@ cmf_select_hires_for_conversion() (
         return 1
     fi
 
-    # Only inspect names and location.txt presence, never raster contents.
+    # Only inspect names and location metadata presence, never raster contents.
     variables=$(awk '
         { line=$0
-          while (match(line, /<HIRES>\/<AREA>\.[[:alnum:]_-]+\.bin/)) {
+          while (match(line, /<HIRES>\/<AREA>\.[[:alnum:]_-]+\.(nc|bin)/)) {
               name=substr(line, RSTART, RLENGTH)
-              sub(/^<HIRES>\/<AREA>\./, "", name); sub(/\.bin$/, "", name)
+              sub(/^<HIRES>\/<AREA>\./, "", name); sub(/\.(nc|bin)$/, "", name)
               print name
               line=substr(line, RSTART+RLENGTH)
           }
@@ -30,9 +30,10 @@ cmf_select_hires_for_conversion() (
         if [ "$direction" = bin2nc ]; then
             # Match the Python planner: standard Binary directory takes precedence.
             [ ! -d "../binary/$tag" ] || directory="../binary/$tag"
-            [ -f "../$tag/location.txt" ] || [ -f "../binary/$tag/location.txt" ] || continue
+            [ -f "../$tag/location.txt" ] || [ -f "../binary/$tag/location.txt" ] || \
+                [ -f "../$tag/location.csv" ] || [ -f "../binary/$tag/location.csv" ] || continue
         else
-            [ -f "$directory/location.txt" ] || continue
+            [ -f "$directory/location.csv" ] || [ -f "$directory/location.txt" ] || continue
         fi
         found=false
         for variable in $variables; do

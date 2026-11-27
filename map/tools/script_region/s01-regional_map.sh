@@ -36,9 +36,9 @@ cmf_check_step 3 6 "Retain bifurcation pathways inside the regional domain"
 cmf_check_step 4 6 "Derive regional river and basin maps"
 "$PYTHON_CMD" "$CODE_DIR/region_set_map.py"
 
-# Process each supported high-resolution source when its location metadata exists.
+# Process each supported high-resolution source when its standard CSV inventory exists.
 for HIRES in 1min 30sec 15sec 5sec 3sec 1sec; do
-    if [ -f "$SOURCE/$HIRES/location.txt" ]; then
+    if [ -f "$SOURCE/$HIRES/location.csv" ]; then
 
         cmf_check_step 5 6 "Crop the $HIRES high-resolution data"
         mkdir -p "../$HIRES"
@@ -49,7 +49,7 @@ done
 # Create the standard climatology matrix from the first available resolution.
 INPMAT_HIRES=""
 for HIRES in 1min 30sec 15sec 5sec 3sec 1sec; do
-    if [ -f "../$HIRES/location.txt" ]; then
+    if [ -f "../$HIRES/location.csv" ]; then
         INPMAT_HIRES=$HIRES
         break
     fi

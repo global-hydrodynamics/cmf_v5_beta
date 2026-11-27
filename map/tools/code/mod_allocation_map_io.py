@@ -12,6 +12,10 @@ import shlex
 import numpy as np
 
 from mod_map_io import Grid
+try:
+    from .hires_metadata import read_location_csv, read_location_txt
+except ImportError:  # Direct execution from the map-local Shell wrappers.
+    from hires_metadata import read_location_csv, read_location_txt
 
 
 def read_allocation_base(root, extra=()):
@@ -24,14 +28,19 @@ def read_allocation_base(root, extra=()):
     return grid, fields
 
 
-def read_allocation_hires(root, tag, elevation=False):
+def read_allocation_hires(root, tag, elevation=False, map_format='netcdf'):
     directory = root/tag
-    lines = (directory/'location.txt').read_text().splitlines()
-    if int(lines[0].split()[0]) != 1:
+    if map_format == 'netcdf':
+        areas = read_location_csv(directory/'location.csv')
+    else:
+        directory = root/'binary'/tag
+        areas = read_location_txt(directory/'location.txt')
+    if len(areas) != 1:
         raise ValueError('Allocation supports exactly one high-resolution area')
-    f = lines[2].split()
-    west, east, south, north = (np.float32(x) for x in f[2:6])
-    nx, ny = map(int, f[6:8])
+    area = areas[0]
+    west, east, south, north = (np.float32(value) for value in
+                                (area.west, area.east, area.south, area.north))
+    nx, ny = area.nx, area.ny
     grid = Grid(nx, ny, 0, np.float32(float(east-west)/nx), west, east, south, north)
     fields = {'uparea': grid.raster(directory/(tag+'.uparea.bin')),
               'catmxy': grid.raster(directory/(tag+'.catmxy.bin'), '<i2', 2),
@@ -59,9 +68,9 @@ def link_distance(lon1, lat1, lon2, lat2):
 
 class AllocationMap:
     """Read one network and derive ranked upstream cells and native outlets."""
-    def __init__(self, root, tag, extra=(), elevation=False):
+    def __init__(self, root, tag, extra=(), elevation=False, map_format='netcdf'):
         self.grid, self.base = read_allocation_base(root, extra)
-        self.hgrid, self.hires = read_allocation_hires(root, tag, elevation)
+        self.hgrid, self.hires = read_allocation_hires(root, tag, elevation, map_format)
         nx, ny = self.grid.nx, self.grid.ny
         hx, hy = self.hgrid.nx, self.hgrid.ny
         self.assignment = self.hires['catmxy']

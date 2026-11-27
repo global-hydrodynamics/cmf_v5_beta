@@ -20,7 +20,7 @@ map/<MAPNAME>/
   diminfo_<ROFFTAG>.nml        # paired Fortran Namelist metadata
   params.nml                 # authoritative base-map geometry
   params.txt                  # legacy compatibility copy when required
-  <resolution>/*.nc            # high-resolution products and location.txt
+  <resolution>/*.nc            # high-resolution products and location.csv
   binary/*.bin, *.ctl          # optional legacy products
   binary/<resolution>/*.bin, *.ctl
   COG/*.tif
@@ -98,8 +98,8 @@ Run the list script before its conversion script. The lists are editable and
 can be used to limit conversions. Existing outputs are replaced by default;
 `--no-overwrite` is available where supported by the individual wrapper.
 `s09-write_ctl.sh` generates a legacy `binary/params.txt` compatibility copy
-from root `params.nml` (or verifies the existing root TXT), copies high-resolution
-`location.txt` files, and uses the matching root or Binary `diminfo_*.nml` when
+from root `params.nml` (or verifies the existing root TXT), copies standard high-resolution
+`location.csv` inventories, and uses the matching root or Binary `diminfo_*.nml` when
 generating INPMAT CTLs. Binary-side descriptors are created by the INPMAT
 converter for the converted matrix; other registered CTLs use the map-root
 descriptor as needed.
@@ -128,19 +128,20 @@ nonempty tags and never prompt (e.g. run the configured script with stdin from
 `/dev/null`). The empty default exits with a configuration message.
 
 - **s03 NetCDF→Binary:** discovers registered `*.<stem>.nc` products with
-  `location.txt` in `../<tag>/`; writes `../binary/<tag>/`.
+  `location.csv` in `../<tag>/`; writes Binary products and legacy
+  `location.txt` under `../binary/<tag>/`.
 - **s13 Binary→NetCDF:** discovers registered `*.<stem>.bin` products in
   `../binary/<tag>/`, or legacy `../<tag>/` if the standard Binary directory
-  does not exist. `location.txt` may be in either layout; the converter prefers
-  the canonical map-root copy. An existing standard Binary directory takes
+  does not exist. The converter reads Binary-side `location.txt` at this explicit
+  conversion boundary and writes standard `location.csv` under `../<tag>/`. An existing standard Binary directory takes
   precedence even if empty: sources are not silently mixed between layouts.
-  Outputs and any needed location copy go to `../<tag>/`, not `<tag>_nc/`.
+  Outputs go to `../<tag>/`, not `<tag>_nc/`.
 
 Discovery inspects filenames and metadata presence only; empty directories or
 unregistered-only products are not offered. Python validates tile metadata,
 geometry and data. The shared `cmf_select_hires_for_conversion` helper is loaded
 through `$CMF_V50_ROOT/tools/cmf_shell_functions.sh`; the preprocessing selector
-`cmf_select_hires_tag` remains separate and unchanged.
+`cmf_select_hires_tag` reads standard `location.csv` inventories.
 
 Each wrapper starts Python once with the complete tag list, `VARS` and `JOBS`.
 The NetCDF→Binary CLI dispatches tags to its unchanged per-resolution converter;
@@ -153,7 +154,7 @@ For external map packages, copy `script_format_conv/` into the target map and
 run s13 there with `CMF_V50_ROOT` pointing to the shared repository. The former
 t03 external wrapper is retired: no separate external converter or multi-map
 batch orchestrator is needed. Its redundant `<tag>_nc/location.txt` side copy
-is not reproduced; conversion itself already writes to `<tag>/`.
+is not reproduced; conversion writes standard `location.csv` to `<tag>/`.
 
 ## Subbasin sample map conversions
 

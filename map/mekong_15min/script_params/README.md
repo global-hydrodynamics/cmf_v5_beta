@@ -131,12 +131,12 @@ The selected NetCDF directory must contain the required registered products.
 Use `--map-format binary` only when processing a legacy Binary map.
 
 Directory discovery is not input validation: the selected Python program checks the selected
-tag, `location.txt` geometry and required NetCDF files. No resampling or change
+tag, standard `location.csv` geometry and required NetCDF files. No resampling or change
 to classification, area aggregation, missing-value handling or output format is
 introduced. The script does not run preceding parameterization steps. Existing
 map-local copies must be refreshed from the template to get this selection UI.
 
-The source layout must use the non-tiled `location.txt` format. Inputs are `params.txt`, `nextxy.nc`, and `ctmare.nc` in the map root, plus `<HIRES_TAG>/location.txt` and per-area `catmxy.nc`, `rivwth.nc`, and `flddif.nc` NetCDF files; `grdare.nc` is optional. The output is one float32 `NX x NY` record in m2. Non-network cells are `-9999`; network cells with no selected water pixels are zero. For valid catchment assignments, selected pixels satisfy `(rivwth > 0 OR rivwth == -1) AND flddif <= 5 m`; `rivwth == -1` denotes water surface outside the channel centerline. Their pixel areas are summed and capped by `ctmare`. The legacy `flddif <= 5` condition also accepts `flddif=-9999`; the migrated program warns and preserves that behavior rather than silently adding a new scientific filter.
+The standard source layout uses the non-tiled `location.csv` inventory. Inputs are `params.nml`, `nextxy.nc`, and `ctmare.nc` in the map root, plus `<HIRES_TAG>/location.csv` and per-area `catmxy.nc`, `rivwth.nc`, and `flddif.nc` NetCDF files; `grdare.nc` is optional. Explicit legacy Binary runs continue to read Binary-side `location.txt`. The output is one float32 `NX x NY` record in m2. Non-network cells are `-9999`; network cells with no selected water pixels are zero. For valid catchment assignments, selected pixels satisfy `(rivwth > 0 OR rivwth == -1) AND flddif <= 5 m`; `rivwth == -1` denotes water surface outside the channel centerline. Their pixel areas are summed and capped by `ctmare`. The legacy `flddif <= 5` condition also accepts `flddif=-9999`; the migrated program warns and preserves that behavior rather than silently adding a new scientific filter.
 
 The elevation cutoff limits `prmwat` to permanent water within the flood area CaMa-Flood can reproduce. A permanent lake isolated high on a hill is outside the model's expected inundation domain, so its area must not be subtracted as pre-existing simulated floodwater. The maintainer described the intended criterion as `flddif < 5 m`. The legacy v4 and migrated v5 source use `flddif <= 5 m`, which includes pixels exactly at 5 m; this boundary difference is documented but has not been changed. The numerical derivation of the 5 m value remains unverified.
 
@@ -197,8 +197,8 @@ only for forcing with identical coordinates/order and the same model map;
 generate a separate matrix for every other model map. Other regular runoff
 grids remain configurable by editing the wrapper settings.
 
-The target map must provide `params.nml` (or legacy `params.txt`), a selected high-resolution
-directory with `location.txt`, and each area's `catmxy.nc`; `grdare.nc` is
+The target map must provide `params.nml`, a selected high-resolution
+directory with `location.csv`, and each area's `catmxy.nc`; `grdare.nc` is
 optional. The runoff values themselves are not read while constructing the
 matrix. Set `HIRES_TAG` independently when the default high-resolution map
 selection is unsuitable.
@@ -211,7 +211,7 @@ The Python dam-parameter estimation workflow under legacy `map/src/src_dam/` is 
 
 ## Allocation workflows
 
-The three optional wrappers use shared `allocate_*.py` programs in `map/tools/code/`. Copy the wrappers into a map-local `script_params/` directory, configure the input path, then run them from that directory. They call `cmf_select_hires_tag "$HIRES_TAG" --single-area`, which recommends the coarsest compatible resolution in `1min`, `30sec`, `15sec`, `5sec`, `3sec`, `1sec` order and allows an interactive alternative. It checks the structural single-area `location.txt` and `<TAG>.<VARIABLE>.nc`/`.bin` naming convention; the Python reader validates the scientific layers and independently rejects any map declaring multiple areas. Use `--map-format binary` on the Python invocation only for a legacy Binary map. This single-network topology/catchment contract is not a universal limit on map resolution.
+The three optional wrappers use shared `allocate_*.py` programs in `map/tools/code/`. Copy the wrappers into a map-local `script_params/` directory, configure the input path, then run them from that directory. They call `cmf_select_hires_tag "$HIRES_TAG" --single-area`, which recommends the coarsest compatible resolution in `1min`, `30sec`, `15sec`, `5sec`, `3sec`, `1sec` order and allows an interactive alternative. It checks the structural single-area `location.csv` and `<TAG>.<VARIABLE>.nc` naming convention; the Python reader validates the scientific layers and independently rejects any map declaring multiple areas. Use `--map-format binary` on the Python invocation only for a legacy Binary map, which uses Binary-side `location.txt`. This single-network topology/catchment contract is not a universal limit on map resolution.
 
 The maintainer-confirmed map convention is that the coarsest high-resolution layer is a single-area, non-tiled river-network representation; finer layers may be tiled. Single-area files use `<TAG>.<VARIABLE>.nc`; tiled files use geographic area identifiers such as `n30e120.<VARIABLE>.nc`. Legacy Binary maps use the same basename with `.bin`. The v4.30 distribution package includes a single-area global `glb_15min/1min` layer and a single-area Japan `tej_01min/15sec` layer, which the maintainer identifies as intended CaMa-Flood allocation inputs. These are distinct from the global 30-arcsec MERIT Hydro and Japan 5-arcsec J-FlwDir maps used for the first-stage allocation. See the [area-handling rationale and validation plan](../../../docs/map_data_tools_plan.md#high-resolution-area-handling-contract).
 
@@ -219,7 +219,7 @@ The input tables are expected to have already been matched and reviewed on the h
 
 | Wrapper | Default input | Required map files | Outputs in the map root |
 | --- | --- | --- | --- |
-| [`t01-alloc_flow_gauge.sh`](t01-alloc_flow_gauge.sh) | `../../data/GRDC_allocated.csv` | `params.nml` (or legacy `params.txt`), `uparea.nc`, `nextxy.nc`; `<HIRES_TAG>/location.txt`, `.uparea.nc`, `.catmxy.nc`, `.downxy.nc` | `GRDC_alloc.txt` |
+| [`t01-alloc_flow_gauge.sh`](t01-alloc_flow_gauge.sh) | `../../data/GRDC_allocated.csv` | `params.nml`, `uparea.nc`, `nextxy.nc`; `<HIRES_TAG>/location.csv`, `.uparea.nc`, `.catmxy.nc`, `.downxy.nc` | `GRDC_alloc.txt` |
 | [`t02-alloc_dams.sh`](t02-alloc_dams.sh) | `../../data/GRanD_allocated.csv` | Flow-gauge files plus `ctmare.nc` | `GRanD_river.txt`, `GRanD_small.txt`, `GRanD_error.txt` |
 | [`t03-alloc_level_gauge.sh`](t03-alloc_level_gauge.sh) | `../../data/MLIT_LevelGauge_allocated.csv` | Flow-gauge files plus `elevtn.nc` and `<HIRES_TAG>/<HIRES_TAG>.elevtn.nc` | `MLIT_levelgauge.txt` |
 
@@ -243,7 +243,7 @@ It compiles v4 and v5 programs in temporary directories, compares all six output
 
 ## High-resolution areas in aggregation workflows
 
-The general parameter input-matrix generator (`s01-inpmat_default.sh`) and permanent-water aggregator (`s04-permanent_water.sh`) read all rows in the selected `HIRES_TAG/location.txt` and accumulate across areas. This multi-area behavior is distinct from the intentional single-area allocation contract above. Source inspection confirms the loops; the Mekong sample and current focused fixtures do not validate full-package multi-area behavior. The [map-tools plan](../../../docs/map_data_tools_plan.md#high-resolution-area-handling-contract) gives the maintainer-operated large-data integration procedure.
+The general parameter input-matrix generator (`s01-inpmat_default.sh`) and permanent-water aggregator (`s04-permanent_water.sh`) read all rows in the selected `HIRES_TAG/location.csv` and accumulate across areas. This multi-area behavior is distinct from the intentional single-area allocation contract above. Source inspection confirms the loops; the Mekong sample and current focused fixtures do not validate full-package multi-area behavior. The [map-tools plan](../../../docs/map_data_tools_plan.md#high-resolution-area-handling-contract) gives the maintainer-operated large-data integration procedure.
 
 ## River-network analysis
 
@@ -304,7 +304,7 @@ the wrapper, which passes it to the existing Python program.
 
 `t01-alloc_flow_gauge.sh`, `t02-alloc_dams.sh` and `t03-alloc_level_gauge.sh`
 use the same resolution order with the selector's `--single-area` filter.
-Only layouts whose `location.txt` declares one area and whose layer filenames
+Only layouts whose `location.csv` declares one area and whose layer filenames
 use the resolution tag are offered. Python validates the required data and
 retains the single-area restriction. Legacy Binary maps remain usable when
 Binary is explicitly selected for the Python command. No allocation algorithm

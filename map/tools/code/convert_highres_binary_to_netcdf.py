@@ -11,6 +11,13 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import math
 import os
 from pathlib import Path
+
+try:
+    from .hires_metadata import (LocationArea, read_location_csv, read_location_txt,
+                                 write_location_csv, write_location_txt)
+except ImportError:
+    from hires_metadata import (LocationArea, read_location_csv, read_location_txt,
+                                write_location_csv, write_location_txt)
 import shutil
 import subprocess
 import sys
@@ -110,52 +117,49 @@ def configure_variable_storage(
 
 
 def read_location(path: Path) -> list[dict[str, int | float | str]]:
+    """Read standard CSV or explicit legacy TXT at this conversion boundary."""
     try:
-        lines = [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
-    except OSError as exc:
-        raise ConversionError(f"cannot read {path}: {exc}") from exc
-    if len(lines) < 2:
-        raise ConversionError(f"{path} must contain an area count, header, and area records")
-    try:
-        area_count = int(lines[0].split()[0])
-    except (ValueError, IndexError) as exc:
-        raise ConversionError(f"invalid area count in {path}") from exc
-    expected_header = ["iarea", "carea", "west", "east", "south", "north", "nx", "ny", "csize"]
-    if [item.lower() for item in lines[1].split()] != expected_header:
-        raise ConversionError(f"{path} header must contain: {' '.join(expected_header)}")
-    if len(lines) != area_count + 2:
-        raise ConversionError(f"{path} declares {area_count} areas but contains {len(lines) - 2} records")
-
+        tiles = read_location_csv(path) if path.suffix.lower() == '.csv' else read_location_txt(path)
+    except ValueError as exc:
+        raise ConversionError(str(exc)) from exc
     areas = []
-    for line_number, line in enumerate(lines[2:], 3):
-        fields = line.split()
-        if len(fields) != 9:
-            raise ConversionError(f"{path}:{line_number}: expected 9 fields, found {len(fields)}")
-        try:
-            area = {
-                "iarea": int(fields[0]), "carea": fields[1],
-                "west": float(fields[2]), "east": float(fields[3]),
-                "south": float(fields[4]), "north": float(fields[5]),
-                "nx": int(fields[6]), "ny": int(fields[7]), "resolution": float(fields[8]),
-            }
-        except ValueError as exc:
-            raise ConversionError(f"{path}:{line_number}: invalid numeric field") from exc
-        nx, ny = int(area["nx"]), int(area["ny"])
-        west, east = float(area["west"]), float(area["east"])
-        south, north = float(area["south"]), float(area["north"])
-        resolution = float(area["resolution"])
-        if not area["carea"] or nx < 1 or ny < 1 or resolution <= 0:
-            raise ConversionError(f"{path}:{line_number}: invalid area name, dimensions, or resolution")
-        if east <= west or north <= south:
-            raise ConversionError(f"{path}:{line_number}: invalid geographic extent")
-        if not math.isclose((east - west) / nx, resolution, rel_tol=1e-6, abs_tol=1e-8):
-            raise ConversionError(f"{path}:{line_number}: nx does not match extent and resolution")
-        if not math.isclose((north - south) / ny, resolution, rel_tol=1e-6, abs_tol=1e-8):
-            raise ConversionError(f"{path}:{line_number}: ny does not match extent and resolution")
+    for tile in tiles:
+        area = tile.as_dict()
+        area['resolution'] = area.pop('csize')
         areas.append(area)
-    if len({str(area["carea"]) for area in areas}) != len(areas):
-        raise ConversionError(f"{path} contains duplicate carea names")
     return areas
+
+
+def same_geometry(left, right):
+    """Compare tile inventories without making formatted decimal output significant."""
+    if len(left) != len(right):
+        return False
+    for first, second in zip(left, right):
+        for key in first:
+            if isinstance(first[key], float):
+                if not math.isclose(first[key], second[key], rel_tol=1e-10, abs_tol=1e-10):
+                    return False
+            elif first[key] != second[key]:
+                return False
+    return True
+
+
+def write_location(path: Path, areas, file_format: str) -> None:
+    """Write standard NetCDF-side CSV or legacy Binary-side TXT metadata."""
+    tiles = [LocationArea(int(area['iarea']), str(area['carea']), float(area['west']),
+                          float(area['east']), float(area['south']), float(area['north']),
+                          int(area['nx']), int(area['ny']), float(area.get('csize', area.get('resolution'))))
+             for area in areas]
+    if file_format == 'csv':
+        write_location_csv(path, tiles)
+    elif file_format == 'txt':
+        try:
+            from .hires_metadata import write_location_txt
+        except ImportError:  # Direct execution from the map-local Shell workflows.
+            from hires_metadata import write_location_txt
+        write_location_txt(path, tiles)
+    else:
+        raise ValueError(f'unsupported location metadata format: {file_format}')
 
 
 def registry_rows(path: Path) -> list[dict[str, str]]:
@@ -349,16 +353,35 @@ def registered_variables(rows: list[dict[str, str]]) -> list[str]:
                    if name.strip().startswith(prefix) and name.strip().endswith(suffix)})
 
 
+def location_source(map_dir: Path, hires: str) -> Path:
+    """Prefer standard CSV inventories; consult legacy TXT only at this boundary."""
+    csv_paths = (map_dir / 'binary' / hires / 'location.csv', map_dir / hires / 'location.csv')
+    txt_paths = (map_dir / 'binary' / hires / 'location.txt', map_dir / hires / 'location.txt')
+    available_csv = [path for path in csv_paths if path.is_file()]
+    available_txt = [path for path in txt_paths if path.is_file()]
+    if available_csv:
+        selected = available_csv[0]
+        reference = read_location(selected)
+        for other in available_csv[1:] + available_txt:
+            if not same_geometry(reference, read_location(other)):
+                raise ConversionError(f'{other} conflicts with standard tile inventory {selected}')
+        return selected
+    if available_txt:
+        return available_txt[0]
+    raise ConversionError(f'{map_dir}: no location.csv or legacy Binary location.txt for {hires}')
+
+
 def plan_conversion(map_dir, hires_tags, variables, registry_path, compression_level):
     """Validate all present files before prompting or creating any output."""
     rows = registry_rows(registry_path)
     variables = registered_variables(rows) if variables == ["all"] else variables
     planned, missing = [], []
     for hires in hires_tags:
-        location = map_dir / hires / "location.txt"
-        if not location.is_file():
-            location = map_dir / "binary" / hires / "location.txt"
+        location = location_source(map_dir, hires)
         areas = read_location(location)
+        csv_output = map_dir / hires / 'location.csv'
+        if csv_output.exists() and not same_geometry(areas, read_location(csv_output)):
+            raise ConversionError(f'{csv_output} conflicts with Binary source geometry')
         for variable in variables:
             for area in areas:
                 binary_dir = map_dir / 'binary' / hires
@@ -537,16 +560,13 @@ def main() -> int:
         print(f"Preflight: present inputs: {len(planned)}; missing inputs: {len(missing)}; "
               f"existing outputs: {existing}; new outputs: {len(planned) - existing}", flush=True)
         tasks, skipped_tasks = select_tasks(planned, args.force, args.interactive_overwrite)
-        # Geometry is copied only after all resolutions have passed validation.
-        for hires in hires_tags:
-            output_dir = args.map_dir / hires
-            output_dir.mkdir(parents=True, exist_ok=True)
-            binary_location = args.map_dir / "binary" / hires / "location.txt"
-            if not binary_location.is_file():
-                binary_location = args.map_dir / hires / "location.txt"
-            if not (output_dir / "location.txt").is_file():
-                shutil.copyfile(binary_location, output_dir / "location.txt")
+        # Standard geometry is written only after conversion preflight succeeds.
         converted, skipped = execute_tasks(tasks, skipped_tasks, args.jobs)
+        for hires in hires_tags:
+            location = location_source(args.map_dir, hires)
+            output_location = args.map_dir / hires / 'location.csv'
+            if not output_location.exists():
+                write_location(output_location, read_location(location), 'csv')
     except KeyboardInterrupt:
         print("ERROR: interrupted; active conversion workers have been stopped and collected", file=sys.stderr)
         return 130

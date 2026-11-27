@@ -17,7 +17,7 @@ LONLAT_FILE="$MAP_DIR/lonlat.nc"                 # Coarse-cell outlet coordinate
 BIFPRM_FILE="$MAP_DIR/bifprm.nc"                 # Bifurcation endpoints and widths [m].
 CATMXY_FILE="$MAP_DIR/1min/1min.catmxy.nc"        # 1-minute pixel to coarse-cell assignment.
 VISUAL_FILE="$MAP_DIR/1min/1min.visual.nc"        # Signed int8 channel-pixel categories.
-LOCATION_FILE="$MAP_DIR/1min/location.txt"       # 1-minute grid geometry.
+LOCATION_FILE="$MAP_DIR/1min/location.csv"       # 1-minute grid geometry.
 PARAMS_FILE="$MAP_DIR/params.txt"                # Coarse grid dimensions and bounds.
 
 # User settings: line widths [points], ordered from smallest to largest class.

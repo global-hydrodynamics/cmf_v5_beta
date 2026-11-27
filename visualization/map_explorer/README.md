@@ -560,7 +560,7 @@ are white. The new menu always uses uparea for this option. Loading older JSON
 that intentionally inherited another field preserves that exact rendering under
 an explicit **Unit-Catchment (legacy inherited VARIABLE)** compatibility choice.
 
-**High-resolution source** uses existing location.txt discovery, with no Mekong
+**High-resolution source** uses standard location.csv discovery, with no Mekong
 or 1min path hardcoding. It also remains accessible when independent native
 assignment inspection/overlays need it, including Coarse Raster or No Background.
 Changing source retains a supported variable; otherwise it selects a named valid
@@ -1181,8 +1181,7 @@ certification remain future work.
 
 ### High-resolution and vector input details
 
-`location.txt` uses an area count, one header row, then records of area ID,
-filename prefix, W/E/S/N, NX/NY and spacing in degrees. Each supported named
+`location.csv` uses ordered fields `iarea,carea,west,east,south,north,nx,ny,csize`; each row describes a tile, and readers strip aligned field padding. Each supported named
 prefix may have `.catmxy.bin` (two little-endian Int16 assignment planes),
 `.visual.bin` (one signed Int8 plane; missing -9), `.elevtn.bin` and `.flddif.bin`
 (one little-endian Float32 plane each; missing -9999). All use X-fastest,
