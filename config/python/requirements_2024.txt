@@ -1,0 +1,21 @@
+# Historical direct-dependency snapshot available by 2024-12-31.
+# Target interpreter: CPython 3.12. These are exact top-level pins, not a full lock.
+numpy==1.26.4
+netCDF4==1.7.2
+f90nml==1.4.4
+pandas==2.2.3
+xarray==2024.11.0
+scipy==1.14.1
+cftime==1.6.4
+matplotlib==3.9.2
+rasterio==1.4.1
+tifffile==2024.9.20
+tqdm==4.67.1
+lmoments3==1.0.8
+PyYAML==6.0.2
+cdsapi==0.7.5
+panel==1.5.5
+bokeh==3.6.2
+Pillow==11.0.0
+requests==2.32.3
+param==2.1.1
