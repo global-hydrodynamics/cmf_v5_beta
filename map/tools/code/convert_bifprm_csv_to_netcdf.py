@@ -6,6 +6,7 @@ import argparse
 import csv
 import os
 from pathlib import Path
+import re
 import tempfile
 
 import numpy as np
@@ -13,20 +14,23 @@ import numpy as np
 
 REQUIRED_COLUMNS = (
     "pth_id", "ix", "iy", "jx", "jy", "length", "elevtn", "depth",
-    "start_lat", "start_lon", "end_lat", "end_lon", "ibsn", "jbsn",
+    "riv_width", "start_lat", "start_lon", "end_lat", "end_lon", "ibsn", "jbsn",
 )
 INT_COLUMNS = ("pth_id", "ix", "iy", "jx", "jy", "ibsn", "jbsn")
 FLOAT_COLUMNS = (
-    "start_lat", "start_lon", "end_lat", "end_lon", "length", "elevtn", "depth",
+    "start_lat", "start_lon", "end_lat", "end_lon", "length", "elevtn", "depth", "riv_width",
 )
+OVERLAND_PATTERN = re.compile(r"^ovl_width_(\d+)$")
 
 
 def load_table(path: Path) -> tuple[list[str], list[dict[str, str]], int]:
     with path.open("r", newline="", encoding="utf-8") as stream:
         reader = csv.DictReader(stream)
-        columns = reader.fieldnames
-        if not columns:
+        raw_columns = reader.fieldnames
+        if not raw_columns:
             raise ValueError(f"{path}: missing CSV header")
+        columns = [name.strip() for name in raw_columns]
+        reader.fieldnames = columns
         if len(columns) != len(set(columns)):
             raise ValueError(f"{path}: duplicate CSV column names")
         missing = [name for name in REQUIRED_COLUMNS if name not in columns]
@@ -34,20 +38,24 @@ def load_table(path: Path) -> tuple[list[str], list[dict[str, str]], int]:
             raise ValueError(f"{path}: missing required columns: {', '.join(missing)}")
         widths = []
         for name in columns:
-            if not name.startswith("width_"):
+            match = OVERLAND_PATTERN.fullmatch(name)
+            if not match:
+                if name.startswith("ovl_width_"):
+                    raise ValueError(f"{path}: invalid overland width column {name!r}")
                 continue
-            try:
-                index = int(name.removeprefix("width_"))
-            except ValueError as exc:
-                raise ValueError(f"{path}: invalid width column {name!r}") from exc
+            index = int(match.group(1))
+            if str(index) != match.group(1):
+                raise ValueError(f"{path}: invalid overland width column {name!r}")
             widths.append((index, name))
         widths.sort()
-        if not widths or [index for index, _ in widths] != list(range(1, len(widths) + 1)):
-            raise ValueError(f"{path}: width columns must be consecutive from width_1")
-        rows = list(reader)
-        for line_number, row in enumerate(rows, 2):
-            if None in row or any(row.get(name) is None for name in columns):
+        if [index for index, _ in widths] != list(range(1, len(widths) + 1)):
+            raise ValueError(f"{path}: overland columns must be consecutive from ovl_width_1")
+        rows = []
+        for line_number, raw_row in enumerate(reader, 2):
+            if None in raw_row:
                 raise ValueError(f"{path}: malformed field count on CSV line {line_number}")
+            rows.append({key.strip(): (value.strip() if value is not None else None)
+                         for key, value in raw_row.items()})
     return columns, rows, len(widths)
 
 
@@ -71,18 +79,24 @@ def convert(csv_path: Path, output_path: Path) -> None:
             raise ValueError(f"{csv_path}: invalid numeric values in {name}") from exc
         if not np.isfinite(values).all():
             raise ValueError(f"{csv_path}: non-finite values in {name}")
-        data[name] = values.astype(np.float32)
+        converted = values.astype(np.float32)
+        if not np.isfinite(converted).all():
+            raise ValueError(f"{csv_path}: values in {name} exceed the float32 range")
+        data[name] = converted
 
     widths = np.empty((nlayer, npath), dtype=np.float32)
     for layer in range(1, nlayer + 1):
-        name = f"width_{layer}"
+        name = f"ovl_width_{layer}"
         try:
             values = np.asarray([float(row[name]) for row in rows], dtype=np.float64)
         except (TypeError, ValueError) as exc:
             raise ValueError(f"{csv_path}: invalid numeric values in {name}") from exc
         if not np.isfinite(values).all():
             raise ValueError(f"{csv_path}: non-finite values in {name}")
-        widths[layer - 1, :] = values.astype(np.float32)
+        converted = values.astype(np.float32)
+        if not np.isfinite(converted).all():
+            raise ValueError(f"{csv_path}: values in {name} exceed the float32 range")
+        widths[layer - 1, :] = converted
 
     ids = data["pth_id"]
     if not np.array_equal(ids, np.arange(1, npath + 1, dtype=np.int32)):
@@ -114,15 +128,16 @@ def convert(csv_path: Path, output_path: Path) -> None:
     try:
         with Dataset(temporary_path, "w", format="NETCDF4") as dataset:
             dataset.createDimension("path", npath if npath else None)
-            dataset.createDimension("layer", nlayer)
+            if nlayer:
+                dataset.createDimension("layer", nlayer)
             dataset.title = "Static CaMa-Flood bifurcation-path parameters"
             dataset.summary = "Converted without filtering, reordering, or recalculating values from bifprm.csv."
             dataset.format_version = "1.0"
-            dataset.source_bifori = "bifori.txt"
-            dataset.path_selection_layer_count = np.int32(nlayer)
+            dataset.source_bifori = "bifori.csv"
+            dataset.overland_layer_count = np.int32(nlayer)
             dataset.pth_id_semantics = "One-based row index assigned after path filtering; map-configuration-specific."
             dataset.endpoint_coordinate_definition = (
-                "Start coordinates retain bifori.txt values; end coordinates are unit-catchment outlet coordinates "
+                "Start coordinates retain bifori.csv values; end coordinates are unit-catchment outlet coordinates "
                 "from lonlat.bin records 1 (longitude) and 2 (latitude) at (jx,jy)."
             )
             dataset.basin_id_definition = "ibsn and jbsn are endpoint basin IDs stored in ascending numeric order."
@@ -134,18 +149,19 @@ def convert(csv_path: Path, output_path: Path) -> None:
                 "iy": ("Starting y grid index", "1", "Fortran-style one-based map row index."),
                 "jx": ("Ending x grid index", "1", "Fortran-style one-based map column index."),
                 "jy": ("Ending y grid index", "1", "Fortran-style one-based map row index."),
-                "start_lat": ("Starting latitude from bifori.txt", "degrees_north", None),
-                "start_lon": ("Starting longitude from bifori.txt", "degrees_east", None),
+                "start_lat": ("Starting latitude from bifori.csv", "degrees_north", None),
+                "start_lon": ("Starting longitude from bifori.csv", "degrees_east", None),
                 "end_lat": ("Unit-catchment outlet latitude at (jx,jy)", "degrees_north", None),
                 "end_lon": ("Unit-catchment outlet longitude at (jx,jy)", "degrees_east", None),
                 "length": ("Bifurcation-path length", "m", None),
                 "elevtn": ("Bifurcation-path elevation", "m", None),
                 "depth": ("Estimated bifurcation-channel depth", "m", None),
+                "riv_width": ("River-channel bifurcation width", "m", "Distinct from overland bifurcation layers."),
                 "ibsn": ("Smaller numeric endpoint basin identifier", "1", "Stored in ascending order with jbsn; not a directional endpoint label."),
                 "jbsn": ("Larger or equal numeric endpoint basin identifier", "1", "Stored in ascending order with ibsn; not a directional endpoint label."),
             }
             for name in ("pth_id", "ix", "iy", "jx", "jy", "start_lat", "start_lon",
-                         "end_lat", "end_lon", "length", "elevtn", "depth", "ibsn", "jbsn"):
+                         "end_lat", "end_lon", "length", "elevtn", "depth", "riv_width", "ibsn", "jbsn"):
                 long_name, units, description = descriptions[name]
                 variable = dataset.createVariable(
                     name, "i4" if name in INT_COLUMNS else "f4", ("path",),
@@ -159,14 +175,15 @@ def convert(csv_path: Path, output_path: Path) -> None:
                     variable.missing_value = np.float32(-9999.0)
                 variable[:] = data[name]
 
-            width_variable = dataset.createVariable(
-                "width", "f4", ("layer", "path"),
-                zlib=True, complevel=3, shuffle=True, fill_value=False,
-            )
-            width_variable.long_name = "Bifurcation-path width by floodplain layer"
-            width_variable.units = "m"
-            width_variable.description = "Layer index k corresponds to CSV column width_k."
-            width_variable[:] = widths
+            if nlayer:
+                width_variable = dataset.createVariable(
+                    "ovl_width", "f4", ("layer", "path"),
+                    zlib=True, complevel=3, shuffle=True, fill_value=False,
+                )
+                width_variable.long_name = "Overland bifurcation width by overland layer"
+                width_variable.units = "m"
+                width_variable.description = "Layer index k corresponds to CSV column ovl_width_k; layer indexing starts at 1."
+                width_variable[:] = widths
         os.replace(temporary_path, output_path)
     except Exception:
         temporary_path.unlink(missing_ok=True)

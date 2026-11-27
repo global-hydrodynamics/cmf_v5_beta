@@ -116,7 +116,7 @@ peeling; cycle nodes share component totals excluding themselves. Nonrecursive,
 linear time/space; retain cycle diagnostics and regional external uncertainty.
 Bifurcation incidence reuses Products.bifurcations first-valid directed-pair
  deduplication and valid outlet/width filters. Incoming/outgoing counts per kind
-are explicit; positive first-layer width is Channel, zero is Overland.
+are explicit; positive `riv_width` is Channel, zero is Overland-only.
 
 Native boundary becomes3px#FF7F00 solid; coarse rectangle1px#888888 dashed at.65
 alpha without casing. Selected outlet/link/endpoint head stay yellow. Browser
@@ -496,7 +496,9 @@ Continuous selected-scale mapping and legacy fixed Log1..1e6km² remain separate
 Thin links precede thick links. Direction heads follow stored downstream,
 suppressed above 600 visible segments to avoid crowding (legend reports it).
 
-Bifurcations read integer ix/iy/jx/jy and width(layer,path) in metres. Reject
+Bifurcations read integer ix/iy/jx/jy, `riv_width(path)`, and optional
+`ovl_width(layer,path)` in metres. Internal channel width is layer 1; overland
+widths follow in layers 2 onward. Reject
 invalid indices/nonfinite or negative widths; validate stored end coordinates
 when present. Unique directed endpoint pairs use the first valid record, as
 f04; duplicate/conflicting records are reported, not rewritten. width[0]>0

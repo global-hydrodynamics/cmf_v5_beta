@@ -1,7 +1,7 @@
 #!/bin/sh
 # Generate bifurcation parameters and basin-connectivity maps.
 # Run from this map's script_params/ directory after channel parameters exist.
-# Inputs: ../params.nml, ../nextxy.nc, ../basin.nc, ../bifori.nml, ../rivhgt.nc.
+# Inputs: ../params.nml, ../nextxy.nc, ../basin.nc, ../bifori.csv, ../rivhgt.nc.
 # Outputs: bifprm.csv, bifprm.nc, bifbsn.nc, bifcol.nc in the map root.
 set -eu
 
@@ -13,7 +13,7 @@ PYTHON_CMD="python3"
 # ----------------------------------------------------------------------
 # User settings
 # ----------------------------------------------------------------------
-BIFLAYER=5                       # Number of bifori.nml layers (1-10).
+BIFLAYER=5                       # Total width fields including channel width (1-10).
 ROFFTAG="test-1deg"             # Must match the runoff grid used for the paired diminfo file.
 DIMINFO="../diminfo_${ROFFTAG}.nml"
 RIVHGT="../rivhgt.nc"           # Channel-depth map for bifurcation-depth estimates.

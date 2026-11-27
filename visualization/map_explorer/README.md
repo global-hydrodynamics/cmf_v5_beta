@@ -787,14 +787,14 @@ Each overlay remains independent of the background and main-network style:
   solid boundaries. It never changes the selected catchment's orange solid
   outline, selected computational rectangle, network or bifurcations. Native
   geometry and sampling/performance limits remain as documented above.
-- **Bifurcation Channel** draws **dashed** stored paths whose first-layer width
+- **Bifurcation Channel** draws **dashed** stored paths whose `riv_width`
   is positive. **Bifurcation Overland** draws **dotted** paths with first-layer
   width zero; its separate color and uniform base width remain. Neither style
   redefines endpoints, direction or scientific classification.
 - **Bifurcation Channel Width** replaces the ambiguous Bif Classes checkbox.
   **Uniform** applies **Base Bifurcation Width [px]** directly. **Channel Width**
   multiplies it by the existing four full-reference log-width quantile classes,
-  derived from positive stored first-layer width in metres. This represents
+  derived from positive stored channel width in metres. This represents
   channel geometry, **not discharge or upstream contributing area**. The selector
   is disabled when Channel is off. Overland never inherits these classes.
 - **Outlets** uses actual stored outlon/outlat hollow-circle positions.
@@ -1032,7 +1032,7 @@ These products are not added to the Background raster menu.
 - **Channel/Overland bifurcations**: separate **Incoming / Outgoing** counts of
   unique directed paths from Products.bifurcations, using the renderer's first-
   valid-endpoint-pair deduplication and outlet/width validity filters. Positive
-  first-layer width means Channel; zero means Overland. Counts are independent
+  positive `riv_width` means Channel; zero means Overland-only. Counts are independent
   of layer visibility and do not use line color/proximity.
 - **Basin ID** is actual basin. **Subbasin ID** is shown only with a readable
   subbsn or subbsn-sample product; positive integers identify prepared segments,
@@ -1190,7 +1190,8 @@ north-first layout. Sizes and geometry are validated without loading fields.
 `lonlat.nc` contains aligned Float32 `outlon/outlat` with geographic-degree
 units; `lonlat.bin` is also supported as two explicit Float32 planes. Bifurcation
 support currently requires NetCDF integer `ix/iy/jx/jy` path arrays and
-`width(layer,path)` in metres. Stored ending coordinates are checked when
+`riv_width(path)` and optional `ovl_width(layer,path)` in metres. Channel width
+is distinct from overland layers; stored ending coordinates are checked when
 present. CSV/TXT bifurcation parsing is deferred; a missing table does not
 prevent unrelated layers from operating.
 

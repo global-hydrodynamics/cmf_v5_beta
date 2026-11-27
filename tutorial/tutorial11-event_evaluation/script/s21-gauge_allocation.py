@@ -108,12 +108,13 @@ def parse_grdc_outputs(data_path: Path, output_path: Path) -> dict[str, dict[str
     source_by_name = {row["Station Name"].strip().casefold(): row
                       for row in read_csv(data_path)}
     output_by_id: dict[str, dict[str, str]] = {}
-    with output_path.open(encoding="utf-8") as stream:
-        for line in stream:
-            fields = line.split()
-            if len(fields) >= 10 and fields[0].isdigit():
-                output_by_id[fields[0]] = {
-                    "ix1": fields[8], "iy1": fields[9], "area_CaMa_km2": fields[4],
+    with output_path.open(encoding="utf-8-sig", newline="") as stream:
+        for row in csv.DictReader(stream):
+            identifier = row.get("ID", "").strip()
+            if identifier.isdigit():
+                output_by_id[identifier] = {
+                    "ix1": row["ix1"].strip(), "iy1": row["iy1"].strip(),
+                    "area_CaMa_km2": row["area_CaMa"].strip(),
                 }
     result = {}
     for name, source in source_by_name.items():
@@ -627,7 +628,7 @@ def main() -> None:
     if not np.allclose(np.diff(lon), map_resolution) or not np.allclose(-np.diff(lat), map_resolution):
         raise ValueError("Map grid is not a regular square degree grid")
     grdc = parse_grdc_outputs(map_dir.parent / "data/GRDC_allocated.csv",
-                              map_dir / "GRDC_alloc.txt")
+                              map_dir / "GRDC_alloc.csv")
 
     #*** 2. Crosswalk supplied global cells and check retained gauge correspondence
     prepared = []

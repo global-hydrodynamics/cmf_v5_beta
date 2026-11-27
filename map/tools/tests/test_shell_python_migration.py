@@ -147,19 +147,20 @@ class PythonShellMigrationTests(unittest.TestCase):
                 shutil.copy2(PARAM_SCRIPTS / name, script_dir / name)
                 (script_dir / name).chmod(0o755)
 
-            header = "ID lat lon area_Input area_CaMa error diff Type ix1 iy1 ix2 iy2 area1 area2\n"
+            header = "ID,lat,lon,area_Input,area_CaMa,error,diff,Type,ix1,iy1,ix2,iy2,area1,area2\n"
             rows = (
-                "unallocated 10 100 900 900 0 0 -9 62 93 -999 -999 -999 -999\n"
-                "smaller 10 100 200 250 0 0 1 61 92 -999 -999 200 -999\n"
-                "winner 11 101 120 500 0 0 1 62 93 -999 -999 120 -999\n"
-                "tie-later 12 102 130 500 0 0 1 63 94 -999 -999 130 -999\n"
+                "unallocated,10,100,900,900,0,0,-9,62,93,-999,-999,-999,-999\n"
+                "smaller,10,100,200,250,0,0,1,61,92,-999,-999,200,-999\n"
+                "winner,11,101,120,500,0,0,1,62,93,-999,-999,120,-999\n"
+                "tie-later,12,102,130,500,0,0,1,63,94,-999,-999,130,-999\n"
             )
-            (map_root / "GRDC_alloc.txt").write_text(header + rows)
+            (map_root / "GRDC_alloc.csv").write_text(header + rows)
             fake_bin = root / "bin"
             fake_bin.mkdir()
             python = fake_bin / "python3"
             python.write_text(
                 "#!/bin/sh\ncase \"$1\" in\n"
+                "*analysis_select_grdc_allocation.py) printf 'winner 62 93 500\\n' ;;\n"
                 "*analysis_river_point_info.py) printf 'Point Information\\nFortran IX,IY: %s %s\\n' \"$3\" \"$4\" ;;\n"
                 "*analysis_upbasin.py) printf '%s\\n' \"$*\" >> \"$CAPTURE\"; : > \"$4\"; printf 'Upstream Grid #: 10\\nUpstream Area [km2]: 12\\n' ;;\nesac\n",
                 encoding="utf-8",

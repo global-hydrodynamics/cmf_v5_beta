@@ -61,8 +61,24 @@ def compile_program(compiler, source, output, extra_sources=()):
 
 
 def output_rows(path):
+    if path.suffix == ".csv":
+        with path.open(encoding="utf-8-sig", newline="") as stream:
+            reader = csv.reader(stream)
+            rows = list(reader)
+        return rows[0], rows[1:]
     lines = path.read_text().splitlines()
-    return lines[0], [line.split() for line in lines[1:]]
+    header = lines[0].split()
+    values = []
+    for line in lines[1:]:
+        if not line.strip():
+            continue
+        if len(header) == 13:
+            row = line[:112].split()
+            row.extend((line[114:144].strip(), line[146:].strip()))
+            values.append(row)
+        else:
+            values.append(line.split())
+    return header, values
 
 
 def assert_output_equivalent(test, expected_path, actual_path):
@@ -145,7 +161,8 @@ class AllocationRegressionTest(unittest.TestCase):
             level = FIXTURES / "level_synthetic_mekong.csv"
 
             def run(program, executable, arguments, produced):
-                for old in ("gauge_alloc.txt", "dam_alloc_river.txt", "dam_alloc_small.txt", "dam_alloc_error.txt"):
+                for old in ("GRDC_alloc.csv", "MLIT_levelgauge.csv", "GRanD_river.csv",
+                            "GRanD_small.csv", "GRanD_error.csv"):
                     (script_dir / old).unlink(missing_ok=True)
                 result = subprocess.run([str(executable), *map(str, arguments)], cwd=script_dir,
                                         capture_output=True, text=True, errors="replace")
@@ -206,11 +223,11 @@ class AllocationRegressionTest(unittest.TestCase):
                 "t03-alloc_level_gauge.sh": ('MLIT_LevelGauge_allocated.csv', 'testlevel.csv'),
             }
             wrapper_outputs = {
-                "t01-alloc_flow_gauge.sh": (("flow_multi.txt", "gauge_alloc.txt"),),
-                "t02-alloc_dams.sh": (("dam_river.txt", "dam_alloc_river.txt"),
-                                      ("dam_small.txt", "dam_alloc_small.txt"),
-                                      ("dam_error.txt", "dam_alloc_error.txt")),
-                "t03-alloc_level_gauge.sh": (("level_gauge.txt", "gauge_alloc.txt"),),
+                "t01-alloc_flow_gauge.sh": (("flow_multi.txt", "GRDC_alloc.csv"),),
+                "t02-alloc_dams.sh": (("dam_river.txt", "GRanD_river.csv"),
+                                      ("dam_small.txt", "GRanD_small.csv"),
+                                      ("dam_error.txt", "GRanD_error.csv")),
+                "t03-alloc_level_gauge.sh": (("level_gauge.txt", "MLIT_levelgauge.csv"),),
             }
             for script_name, (default_name, fixture_name) in wrapper_inputs.items():
                 script = TOOLS / "script_params" / script_name

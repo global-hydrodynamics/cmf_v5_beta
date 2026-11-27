@@ -252,17 +252,28 @@ def read_outlets(path: Path, network):
 
 def read_bifurcations(path: Path, outlon, outlat):
     """Read valid directed paths; first-layer width classifies Channel/Overland."""
-    required = ("ix", "iy", "jx", "jy", "width", "end_lon", "end_lat")
+    required = ("ix", "iy", "jx", "jy", "riv_width", "end_lon", "end_lat")
     with Dataset(path) as source:
         for name in required:
             if name not in source.variables:
                 raise ValueError(f"{path} is missing required variable {name!r}")
         indices = {name: np.asarray(source.variables[name][:], dtype=np.int64)
                    for name in ("ix", "iy", "jx", "jy")}
-        widths_var = source.variables["width"]
-        if widths_var.dimensions != ("layer", "path") or getattr(widths_var, "units", "") != "m":
-            raise ValueError(f"{path}:width must use (layer, path) dimensions and metres")
-        widths = np.ma.asarray(widths_var[:], dtype=np.float64).filled(np.nan)
+        widths_var = source.variables["riv_width"]
+        if widths_var.dimensions != ("path",) or getattr(widths_var, "units", "") != "m":
+            raise ValueError(f"{path}:riv_width must use path dimension and metres")
+        widths = np.ma.asarray(widths_var[:], dtype=np.float64).filled(np.nan)[np.newaxis, :]
+        if "ovl_width" in source.variables:
+            overland_var = source.variables["ovl_width"]
+            if (overland_var.dimensions != ("layer", "path") or
+                    getattr(overland_var, "units", "") != "m"):
+                raise ValueError(f"{path}:ovl_width must use (layer, path) dimensions and metres")
+            overland = np.ma.asarray(overland_var[:], dtype=np.float64).filled(np.nan)
+            if overland.ndim != 2 or overland.shape[1] != widths.shape[1] or not overland.shape[0]:
+                raise ValueError(f"{path}:ovl_width dimensions do not match bifurcation paths")
+            widths = np.concatenate((widths, overland), axis=0)
+        elif "layer" in source.dimensions:
+            raise ValueError(f"{path}:layer dimension requires ovl_width")
         end_lon = np.ma.asarray(source.variables["end_lon"][:], dtype=np.float64).filled(np.nan)
         end_lat = np.ma.asarray(source.variables["end_lat"][:], dtype=np.float64).filled(np.nan)
 

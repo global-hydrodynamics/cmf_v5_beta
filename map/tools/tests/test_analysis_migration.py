@@ -28,7 +28,7 @@ LEGACY = ROOT / "map" / "src" / "src_param"
 PARAM_SCRIPTS = ROOT / "map" / "tools" / "script_params"
 MAP_FILES = (
     "params.txt", "nextxy.bin", "basin.bin", "upgrid.bin", "uparea.bin",
-    "ctmare.bin", "elevtn.bin", "lonlat.bin", "GRDC_alloc.txt",
+    "ctmare.bin", "elevtn.bin", "lonlat.bin", "GRDC_alloc.csv",
 )
 MAP_NETCDF_FILES = (
     "nextxy.nc", "basin.nc", "upgrid.nc", "uparea.nc", "ctmare.nc", "elevtn.nc", "lonlat.nc",
@@ -532,7 +532,7 @@ class AnalysisMigrationTests(unittest.TestCase):
         script = params / "a04-advanced_calc_upbasin.sh"
         shutil.copy2(PARAM_SCRIPTS / "a04-advanced_calc_upbasin.sh", script)
         script.chmod(0o755)
-        (map_dir / "GRDC_alloc.txt").write_text("ID lat lon\n", encoding="ascii")
+        (map_dir / "GRDC_alloc.csv").write_text("ID,lat,lon\n", encoding="ascii")
         result = run([str(script)], self.root)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("contains no valid allocated station", result.stderr)
@@ -546,15 +546,15 @@ class AnalysisMigrationTests(unittest.TestCase):
             wrapper = params / name
             wrapper.write_text("#!/bin/sh\necho stub\n", encoding="ascii")
             wrapper.chmod(0o755)
-        header = "ID lat lon area_Input area_CaMa error diff Type ix1 iy1 ix2 iy2 area1 area2\n"
+        header = "ID,lat,lon,area_Input,area_CaMa,error,diff,Type,ix1,iy1,ix2,iy2,area1,area2\n"
         rows = (
-            "unallocated 10 100 900 900 0 0 -9 62 93 -999 -999 -999 -999\n"
-            "bad-area 10 100 -1 200 0 0 1 62 93 -999 -999 -999 -999\n"
-            "bad-cell 10 100 200 300 0 0 1 999 93 -999 -999 -999 -999\n"
-            "first-tie 11 101 120 500 0 0 1 62 93 -999 -999 120 -999\n"
-            "second-tie 12 102 130 500 0 0 1 62 93 -999 -999 130 -999\n"
+            "unallocated,10,100,900,900,0,0,-9,62,93,-999,-999,-999,-999\n"
+            "bad-area,10,100,-1,200,0,0,1,62,93,-999,-999,-999,-999\n"
+            "bad-cell,10,100,200,300,0,0,1,999,93,-999,-999,-999,-999\n"
+            "first-tie,11,101,120,500,0,0,1,62,93,-999,-999,120,-999\n"
+            "second-tie,12,102,130,500,0,0,1,62,93,-999,-999,130,-999\n"
         )
-        (map_dir / "GRDC_alloc.txt").write_text(header + rows, encoding="ascii")
+        (map_dir / "GRDC_alloc.csv").write_text(header + rows, encoding="ascii")
         result = run([str(script)], self.root)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("GRDC station ID: first-tie", result.stdout)
@@ -566,7 +566,7 @@ class AnalysisMigrationTests(unittest.TestCase):
 
     def test_missing_grdc_allocation_fails_with_manual_next_step(self) -> None:
         map_dir, params = self.make_map("missing-grdc")
-        (map_dir / "GRDC_alloc.txt").unlink()
+        (map_dir / "GRDC_alloc.csv").unlink()
         script = params / "a04-advanced_calc_upbasin.sh"
         shutil.copy2(PARAM_SCRIPTS / "a04-advanced_calc_upbasin.sh", script)
         script.chmod(0o755)

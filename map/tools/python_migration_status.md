@@ -43,9 +43,9 @@ recommendation to replace the current production implementation automatically.
 
 | Fortran / Python stem | Purpose | I/O contract | Evidence / readiness |
 | --- | --- | --- | --- |
-| [`allocate_dam.F90`](code/allocate_dam.F90) / [`.py`](code/allocate_dam.py) | Dam/main-river/subgrid allocation | Station CSV + base/native maps → three allocation tables | PASS; A |
-| [`allocate_flow_gauge.F90`](code/allocate_flow_gauge.F90) / [`.py`](code/allocate_flow_gauge.py) | One/two-cell discharge station allocation | Station CSV + base/native maps → gauge_alloc.txt | PASS; A |
-| [`allocate_level_gauge.F90`](code/allocate_level_gauge.F90) / [`.py`](code/allocate_level_gauge.py) | Level station/channel-position allocation | Station CSV + elevations/topology → gauge_alloc.txt | PASS; A |
+| [`allocate_dam.F90`](code/allocate_dam.F90) / [`.py`](code/allocate_dam.py) | Dam/main-river/subgrid allocation | Station CSV + base/native maps → `GRanD_river.csv`, `GRanD_small.csv`, `GRanD_error.csv` | PASS; A |
+| [`allocate_flow_gauge.F90`](code/allocate_flow_gauge.F90) / [`.py`](code/allocate_flow_gauge.py) | One/two-cell discharge station allocation | Station CSV + base/native maps → `GRDC_alloc.csv` | PASS; A |
+| [`allocate_level_gauge.F90`](code/allocate_level_gauge.F90) / [`.py`](code/allocate_level_gauge.py) | Level station/channel-position allocation | Station CSV + elevations/topology → `MLIT_levelgauge.csv` | PASS; A |
 | [`analysis_check_mpi_bifurcation.F90`](code/legacy_fortran/analysis_check_mpi_bifurcation.F90) / [`analysis_mpi_dropped_bifurcation.py`](code/analysis_mpi_dropped_bifurcation.py) | Reconstruct local-vector pathway retention | MPI regions + nextxy + bifprm.csv → counts/dropped CSV | PASS; A |
 | [`analysis_mpi_region_color.F90`](code/analysis_mpi_region_color.F90) / [`.py`](code/analysis_mpi_region_color.py) | MPI region display colors | MPI region IDs → bsncol_mpi-N.bin | PASS; A |
 | [`analysis_river_node_latlon.F90`](code/analysis_river_node_latlon.F90) / [`.py`](code/analysis_river_node_latlon.py) | List directed river links | Binary topology/outlets + bounding box → text | PASS; A |
@@ -53,7 +53,7 @@ recommendation to replace the current production implementation automatically.
 | [`analysis_subbasin.F90`](code/analysis_subbasin.F90) / [`.py`](code/analysis_subbasin.py) | Two-stage upstream-area jump segmentation | nextxy/uparea + thresholds → segment/color int32 maps | PASS; A |
 | [`analysis_upbasin.F90`](code/analysis_upbasin.F90) / [`.py`](code/analysis_upbasin.py) | Selected cell upstream mask | nextxy + 1-based target → int32 mask | PASS; A |
 | [`param_bif_set_basin.F90`](code/param_bif_set_basin.F90) / [`.py`](code/param_bif_set_basin.py) | Channel/overland basin merging | basin + bifprm.csv → bifbsn/bifcol + optional diagnostic | PASS; A |
-| [`param_bif_set_params.F90`](code/param_bif_set_params.F90) / [`.py`](code/param_bif_set_params.py) | Filter widths and estimate bifurcation depth | bifori + depth/outlets/basin → bifprm.csv + optional diagnostic | PASS; A |
+| [`param_bif_set_params.F90`](code/param_bif_set_params.F90) / [`.py`](code/param_bif_set_params.py) | Filter widths and estimate bifurcation depth | bifori.csv + depth/outlets/basin → bifprm.csv + optional diagnostic | PASS; A |
 | [`param_channel_calc_outclm.F90`](code/param_channel_calc_outclm.F90) / [`.py`](code/param_channel_calc_outclm.py) | Route annual-mean runoff | DIMINFO/INPMAT + Binary or NetCDF runoff → outclm.bin | PASS; A |
 | [`param_channel_calc_rivwth.F90`](code/param_channel_calc_rivwth.F90) / [`.py`](code/param_channel_calc_rivwth.py) | Discharge-based width/depth/roughness | outclm + topology + coefficients → four Binary maps; optional rivpar.nc | PASS; A |
 | [`param_channel_set_merit_width.F90`](code/param_channel_set_merit_width.F90) / [`.py`](code/param_channel_set_merit_width.py) | MERIT/power-law width combination | width/rivwth/nextxy → rivwth_merit.bin | PASS; A |
@@ -62,7 +62,7 @@ recommendation to replace the current production implementation automatically.
 | [`param_mpi_set_region.F90`](code/param_mpi_set_region.F90) / [`.py`](code/param_mpi_set_region.py) | Greedy basin-to-MPI-region assignment | temporary basin IDs + process count → mpireg-N.bin | PASS; A |
 | [`param_water_calc_prmwat.F90`](code/param_water_calc_prmwat.F90) / [`.py`](code/param_water_calc_prmwat.py) | Permanent-water area aggregation | catmxy/rivwth/flddif/pixel area → capped prmwat.bin [m2] | PASS; A |
 | [`region_combine_hires.F90`](code/region_combine_hires.F90) / [`.py`](code/region_combine_hires.py) | Native-tile crop/combine/copy | dim_change + binary high-resolution areas → regional native products | PASS; B |
-| [`region_cut_bifway.F90`](code/region_cut_bifway.F90) / [`.py`](code/region_cut_bifway.py) | Crop original bifurcation paths | dim_change + bifori + edge-masked topology → regional bifori.txt | PASS; A |
+| [`region_cut_bifway.F90`](code/region_cut_bifway.F90) / [`.py`](code/region_cut_bifway.py) | Crop original bifurcation paths from named-column bifori.csv | dim_change + bifori.csv + edge-masked topology → regional bifori.csv | PASS; A |
 | [`region_cut_domain.F90`](code/region_cut_domain.F90) / [`.py`](code/region_cut_domain.py) | Crop coarse river domain | region_info + source Binary maps → regional maps + dim_change | PASS; B |
 | [`region_default_inpmat.F90`](code/region_default_inpmat.F90) / [`.py`](code/region_default_inpmat.py) | Fixed global 1-degree default matrix | native catmxy/pixel areas → default diminfo/INPMAT | PASS; A |
 | [`region_set_map.F90`](code/region_set_map.F90) / [`.py`](code/region_set_map.py) | Derived coarse-grid network properties | nextxy/grdare → sequence/area/count/distance/basin/color maps | PASS; A |

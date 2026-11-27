@@ -262,7 +262,7 @@ class MekongSampleTests(unittest.TestCase):
                 validate_registered_binary_size(registered, rows, dims, sample_dir)
 
     def test_required_metadata_files_exist(self) -> None:
-        for name in ("params.txt", "bifori.txt", "diminfo_test-1deg.nml"):
+        for name in ("params.txt", "bifori.txt", "bifori.csv", "diminfo_test-1deg.nml"):
             with self.subTest(path=name):
                 self.assertTrue((MAP / name).is_file())
 

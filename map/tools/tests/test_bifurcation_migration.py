@@ -28,7 +28,7 @@ LEGACY_SOURCE = ROOT / "map" / "src" / "src_param"
 S02_TEMPLATE = ROOT / "map" / "tools" / "script_params" / "s03-bifurcation.sh"
 S01_TEMPLATE = ROOT / "map" / "tools" / "script_params" / "s02-channel_params.sh"
 MAP_INPUTS = (
-    "params.txt", "nextxy.bin", "basin.bin", "bifori.txt",
+    "params.txt", "nextxy.bin", "basin.bin", "bifori.txt", "bifori.csv",
     "lonlat.bin", "diminfo_test-1deg.nml",
 )
 CHANNEL_INPUTS = (
@@ -48,7 +48,11 @@ def install_shell_library(root: Path) -> None:
     functions_dir = tools_dir / "shell_functions"
     functions_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy2(ROOT / "tools" / "cmf_shell_functions.sh", tools_dir / "cmf_shell_functions.sh")
-    for name in ("cmf_check_shell_error.sh", "cmf_select_hires_tag.sh"):
+    for name in (
+        "cmf_check_shell_error.sh",
+        "cmf_select_hires_tag.sh",
+        "cmf_select_hires_for_conversion.sh",
+    ):
         shutil.copy2(ROOT / "tools" / "shell_functions" / name, functions_dir / name)
 
 
@@ -200,7 +204,8 @@ class BifurcationMigrationTests(unittest.TestCase):
         (map_root / "src_param").mkdir()
         names = CHANNEL_INPUTS if channel_inputs else MAP_INPUTS
         for name in names:
-            shutil.copy2(SAMPLE / name, map_root / name)
+            source = SAMPLE / "binary" / name if (SAMPLE / "binary" / name).is_file() else SAMPLE / name
+            shutil.copy2(source, map_root / name)
         from map.tools.code.map_metadata import read_diminfo_nml
         info = read_diminfo_nml(map_root / "diminfo_test-1deg.nml")
         (map_root / "diminfo_test-1deg.txt").write_text(
@@ -405,11 +410,12 @@ class BifurcationMigrationTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             with Dataset(map_root / nc_name) as dataset:
                 self.assertEqual(len(dataset.dimensions["path"]), expected_count)
-                self.assertEqual(len(dataset.dimensions["layer"]), layers)
-                self.assertEqual(dataset["width"].dimensions, ("layer", "path"))
-                self.assertEqual(dataset["width"].shape, (layers, expected_count))
+                self.assertEqual(len(dataset.dimensions["layer"]), layers - 1)
+                self.assertEqual(dataset["riv_width"].dimensions, ("path",))
+                self.assertEqual(dataset["riv_width"].shape, (expected_count,))
+                self.assertEqual(dataset["riv_width"].dtype, np.dtype("float32"))
+                self.assertEqual(dataset["riv_width"].units, "m")
                 self.assertEqual(dataset["pth_id"].dtype, np.dtype("int32"))
-                self.assertEqual(dataset["width"].dtype, np.dtype("float32"))
                 self.assertEqual(dataset["depth"].units, "m")
                 self.assertEqual(dataset["pth_id"].units, "1")
                 self.assertEqual(dataset["end_lon"].units, "degrees_east")
@@ -419,14 +425,18 @@ class BifurcationMigrationTests(unittest.TestCase):
                 self.assertEqual(dataset["pth_id"][:].tolist(), [int(row["pth_id"]) for row in rows])
                 np.testing.assert_array_equal(dataset["ix"][:], [int(row["ix"]) for row in rows])
                 np.testing.assert_array_equal(dataset["end_lon"][:], [float(row["end_lon"]) for row in rows])
-                for layer in range(1, layers + 1):
+                np.testing.assert_array_equal(
+                    dataset["riv_width"][:],
+                    np.asarray([row["riv_width"] for row in rows], dtype=np.float32),
+                )
+                for layer in range(1, layers):
                     np.testing.assert_array_equal(
-                        dataset["width"][layer - 1, :],
-                        np.asarray([row[f"width_{layer}"] for row in rows], dtype=np.float32),
+                        dataset["ovl_width"][layer - 1, :],
+                        np.asarray([row[f"ovl_width_{layer}"] for row in rows], dtype=np.float32),
                     )
-                self.assertEqual(dataset["width"].filters()["complevel"], 3)
-                self.assertTrue(dataset["width"].filters()["zlib"])
-                self.assertTrue(dataset["width"].filters()["shuffle"])
+                self.assertEqual(dataset["ovl_width"].filters()["complevel"], 3)
+                self.assertTrue(dataset["ovl_width"].filters()["zlib"])
+                self.assertTrue(dataset["ovl_width"].filters()["shuffle"])
                 self.assertEqual(dataset["depth"].filters()["complevel"], 3)
                 self.assertEqual(dataset["depth"].getncattr("missing_value"), -9999.0)
 
@@ -478,7 +488,9 @@ class BifurcationMigrationTests(unittest.TestCase):
             self.assertEqual(int(row["pth_id"]), index)
             for column, value in zip(("ix", "iy", "jx", "jy"), old[:4]):
                 self.assertEqual(int(row[column]), int(value))
-            numeric_fields = ["length", "elevtn", "depth"] + [f"width_{layer}" for layer in range(1, nlayer + 1)]
+            numeric_fields = ["length", "elevtn", "depth", "riv_width"] + [
+                f"ovl_width_{layer}" for layer in range(1, nlayer)
+            ]
             old_numeric = old[4 : 7 + nlayer]
             for column, value in zip(numeric_fields, old_numeric):
                 self.assertEqual(float(row[column]), float(value), column)
@@ -496,16 +508,16 @@ class BifurcationMigrationTests(unittest.TestCase):
 
         with csv_path.open(newline="", encoding="ascii") as stream:
             rows = list(csv.DictReader(stream))
-        nlayer = sum(name.startswith("width_") for name in rows[0])
+        nlayer = sum(name.startswith("ovl_width_") for name in rows[0])
         with Dataset(nc_path) as dataset:
             self.assertEqual(len(dataset.dimensions["path"]), len(rows))
             self.assertEqual(len(dataset.dimensions["layer"]), nlayer)
             for name in ("pth_id", "ix", "iy", "jx", "jy", "ibsn", "jbsn"):
                 np.testing.assert_array_equal(dataset[name][:], [int(row[name]) for row in rows])
-            for name in ("start_lat", "start_lon", "end_lat", "end_lon", "length", "elevtn", "depth"):
+            for name in ("start_lat", "start_lon", "end_lat", "end_lon", "length", "elevtn", "depth", "riv_width"):
                 np.testing.assert_array_equal(dataset[name][:], [np.float32(row[name]) for row in rows])
             for layer in range(1, nlayer + 1):
-                np.testing.assert_array_equal(dataset["width"][layer - 1, :], [np.float32(row[f"width_{layer}"]) for row in rows])
+                np.testing.assert_array_equal(dataset["ovl_width"][layer - 1, :], [np.float32(row[f"ovl_width_{layer}"]) for row in rows])
 
 
 if __name__ == "__main__":

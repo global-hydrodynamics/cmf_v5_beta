@@ -109,10 +109,21 @@ class Products:
                 if v.dimensions != ("path",) or v.dtype.kind not in "iu":
                     raise ValueError(f"bifprm:{name} must contain integer path indices")
                 index.append(np.ma.asarray(v[:]).astype("i8").filled(-9999))
-            var = ds.variables["width"]
-            if var.dimensions != ("layer", "path") or getattr(var, "units", "") != "m" or not var.shape[0]:
-                raise ValueError("bifprm:width requires (layer,path), units m")
-            widths = np.ma.asarray(var[:]).astype(float).filled(np.nan)
+            river_var = ds.variables["riv_width"]
+            if river_var.dimensions != ("path",) or getattr(river_var, "units", "") != "m":
+                raise ValueError("bifprm:riv_width requires (path), units m")
+            widths = np.ma.asarray(river_var[:]).astype(float).filled(np.nan)[np.newaxis, :]
+            if "ovl_width" in ds.variables:
+                overland_var = ds.variables["ovl_width"]
+                if (overland_var.dimensions != ("layer", "path") or
+                        getattr(overland_var, "units", "") != "m" or not overland_var.shape[0]):
+                    raise ValueError("bifprm:ovl_width requires non-empty (layer,path), units m")
+                overland = np.ma.asarray(overland_var[:]).astype(float).filled(np.nan)
+                if overland.shape[1] != widths.shape[1]:
+                    raise ValueError("Bifurcation overland layer/path dimensions disagree")
+                widths = np.concatenate((widths, overland), axis=0)
+            elif "layer" in ds.dimensions:
+                raise ValueError("bifprm:layer dimension requires ovl_width")
             endpoints = {
                 name: np.ma.asarray(ds.variables[name][:]).astype(float).filled(np.nan)
                 for name in ("end_lon", "end_lat")

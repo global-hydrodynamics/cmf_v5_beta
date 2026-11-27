@@ -3,9 +3,10 @@
 """Allocate level gauges and describe native channel position and distances.
 
 Match the reference 7x7 area/location window, trace the selected outlet and
-ranked upstream channels, and write gauge_alloc.txt with elevations and km.
+ranked upstream channels, and write MLIT_levelgauge.csv with elevations and km.
 """
 from pathlib import Path
+import csv
 
 import numpy as np
 
@@ -21,8 +22,11 @@ def main():
     maps = AllocationMap(args.map_dir, args.hires_tag, extra=('elevtn',), elevation=True, map_format=args.map_format)
     out = args.output_dir or Path('.')
     out.mkdir(parents=True, exist_ok=True)
-    with (out/'gauge_alloc.txt').open('w') as stream:
-        stream.write('        ID       lat       lon        area    Type     ix1   iy1     ix2   iy2  elv_outlet   elv_gauge    elv_upst  dst_outlet    dst_upst     upa_outlet\n')
+    with (out/'MLIT_levelgauge.csv').open('w', newline='', encoding='utf-8') as stream:
+        writer = csv.writer(stream, lineterminator='\n')
+        writer.writerow(('ID', 'lat', 'lon', 'area', 'Type', 'ix1', 'iy1', 'ix2', 'iy2',
+                         'elv_outlet', 'elv_gauge', 'elv_upst', 'dst_outlet',
+                         'dst_upst', 'upa_outlet'))
         for f in station_rows(args.gauge_list):
             if not f:
                 continue
@@ -65,9 +69,9 @@ def main():
                         values[2], values[4] = maps.base['elevtn'][upstream], distance
                         break
                 upstream_area = maps.base['uparea'][cell]
-            stream.write(f'{identifier:10d}{lat:10.3f}{lon:10.3f}{area:12.1f}{kind:8d}'
-                         + f'{indices[0]:8d}{indices[1]:6d}{indices[2]:8d}{indices[3]:6d}'
-                         + ''.join(f'{v:12.2f}' for v in values)+f'{upstream_area:15.2f}\n')
+            writer.writerow([identifier, f'{lat:.3f}', f'{lon:.3f}', f'{area:.1f}', kind,
+                             *indices, *(f'{value:.2f}' for value in values),
+                             f'{upstream_area:.2f}'])
 
 
 if __name__ == '__main__':

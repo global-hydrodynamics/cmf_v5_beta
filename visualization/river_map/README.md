@@ -380,7 +380,7 @@ This panel keeps the outlet-based main-channel network and its four upstream
 area classes, then adds two kinds of bifurcation from `bifprm.nc`. The table's
 one-based `(ix, iy)` and `(jx, jy)` indices select the start and end map cells;
 those cells' `outlon`/`outlat` values provide the plotted endpoints. A positive
-`width` in the first floodplain layer identifies a channel bifurcation. These
+`riv_width` identifies a channel bifurcation. These
 connections use four colors grouped by quartiles of channel width in metres;
 the widest class is vivid red (`#FF0000`) for visibility where links overlap.
 Remaining valid paths are shown in subdued green as overland
@@ -423,7 +423,7 @@ observed flows.
 | `map/mekong_15min/uparea.nc` | NetCDF `uparea` (`lat × lon`); m² | Provides main-channel source-cell area classes and identifies valid river cells. |
 | `map/mekong_15min/subcol-sample.nc` | Binary little-endian int32; one 80 × 120 Fortran-order record | Categorical background for f03a and f03c. f03a uses pastel display colors; f03c uses discrete grays. Zero is gray and `-9999` is white in both. |
 | `map/mekong_15min/bsncol.nc` | NetCDF `bsncol` (`lat × lon`); categorical indices | Pale basin-color background for f03b; it is display context, not connectivity. |
-| `map/mekong_15min/bifprm.nc` | NetCDF `ix`, `iy`, `jx`, `jy`, `width(layer, path)` | Defines bifurcation endpoints and channel width. Width is in metres; first-layer width distinguishes channel from overland paths. |
+| `map/mekong_15min/bifprm.nc` | NetCDF `ix`, `iy`, `jx`, `jy`, `riv_width(path)`, optional `ovl_width(layer, path)` | Defines bifurcation endpoints. `riv_width` is channel width; `ovl_width` contains overland layers only. Channel width alone distinguishes Channel from Overland-only paths. |
 | `map/mekong_15min/1min/1min.catmxy.nc` | NetCDF `catmx`, `catmy` variables on the `lat × lon` grid | Assigns each 1-minute pixel to a one-based coarse cell. `-999` and `-9999` sentinel indices are excluded from centroids. |
 | `map/mekong_15min/1min/location.csv` | Text grid metadata; 1-minute resolution and bounds | Converts high-resolution pixel row/column positions to geographic pixel-center coordinates. |
 | `map/mekong_15min/params.txt` | Text metadata; 80 × 120 grid at 0.25° | Checks the coarse grid geometry shared by the NetCDF products and catchment assignments. |
@@ -532,7 +532,7 @@ without Channel Pixel or Overland entries.
 | `map/mekong_15min/uparea.nc` | Coarse-grid upstream drainage area in m²; supplies pixel colors and main-link area classes. |
 | `map/mekong_15min/nextxy.nc` | Main-network downstream connectivity (`nextx`, `nexty`), with one-based grid indices. |
 | `map/mekong_15min/lonlat.nc` | Coarse-cell outlet coordinates (`outlon`, `outlat`) in degrees east/north. |
-| `map/mekong_15min/bifprm.nc` | Bifurcation endpoint indices and layer widths; panel a draws positive-first-layer-width Channel paths; panel b also draws zero-first-layer-width Overland paths. |
+| `map/mekong_15min/bifprm.nc` | Bifurcation endpoints with `riv_width(path)` and optional `ovl_width(layer,path)`; panel a draws positive-`riv_width` Channel paths; panel b also draws zero-`riv_width` Overland-only paths. |
 | `map/mekong_15min/params.txt` | Coarse-grid dimensions, resolution, and bounds used to validate map alignment. |
 
 Run the Figure script after the standard Python setup. It renders both
@@ -637,7 +637,7 @@ for each background field.
 | `map/mekong_15min/uparea.nc` | Coarse-grid upstream area [m²] for link color and width. |
 | `map/mekong_15min/nextxy.nc` | One-based main-network downstream connectivity. |
 | `map/mekong_15min/lonlat.nc` | Geographic grid and outlet coordinates (`outlon`, `outlat`). |
-| `map/mekong_15min/bifprm.nc` | Stored bifurcation paths and layer widths; positive first-layer width selects channel paths. |
+| `map/mekong_15min/bifprm.nc` | Stored bifurcation paths with separate channel `riv_width` and overland `ovl_width`; positive `riv_width` selects channel paths. |
 | `map/mekong_15min/params.txt` | Coarse-grid geometry used to validate alignment. |
 
 Run `./visualization/river_map/f05-hires_background.sh` after the standard

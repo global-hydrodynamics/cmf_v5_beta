@@ -25,7 +25,7 @@ OVERLAND_COLOR = "#76B77B"
 
 def read_bifurcations(path: Path, outlon: np.ndarray, outlat: np.ndarray):
     """Resolve bifprm endpoint indices to valid geographic outlet coordinates."""
-    required = ("ix", "iy", "jx", "jy", "width", "end_lon", "end_lat")
+    required = ("ix", "iy", "jx", "jy", "riv_width", "end_lon", "end_lat")
     with Dataset(path) as source:
         for name in required:
             if name not in source.variables:
@@ -38,13 +38,27 @@ def read_bifurcations(path: Path, outlon: np.ndarray, outlat: np.ndarray):
                 raise ValueError(f"{path}:{name} must be an integer path variable")
             endpoints[name] = np.asarray(variable[:], dtype=np.int64)
 
-        width_variable = source.variables["width"]
-        if (width_variable.dimensions != ("layer", "path") or
-                getattr(width_variable, "units", "") != "m"):
-            raise ValueError(f"{path}:width must have (layer, path) dimensions and units m")
-        widths = np.ma.asarray(width_variable[:], dtype=np.float64).filled(np.nan)
-        if widths.ndim != 2 or widths.shape[1] != len(endpoints["ix"]):
-            raise ValueError(f"{path}:width dimensions do not match bifurcation paths")
+        river_width_variable = source.variables["riv_width"]
+        if (river_width_variable.dimensions != ("path",) or
+                getattr(river_width_variable, "units", "") != "m"):
+            raise ValueError(f"{path}:riv_width must have (path) dimensions and units m")
+        river_width = np.ma.asarray(river_width_variable[:], dtype=np.float64).filled(np.nan)
+        if river_width.shape != (len(endpoints["ix"]),):
+            raise ValueError(f"{path}:riv_width dimensions do not match bifurcation paths")
+        widths = river_width[np.newaxis, :]
+        if "ovl_width" in source.variables:
+            overland_variable = source.variables["ovl_width"]
+            if (overland_variable.dimensions != ("layer", "path") or
+                    getattr(overland_variable, "units", "") != "m"):
+                raise ValueError(f"{path}:ovl_width must have (layer, path) dimensions and units m")
+            overland_width = np.ma.asarray(overland_variable[:], dtype=np.float64).filled(np.nan)
+            if overland_width.ndim != 2 or overland_width.shape[1] != len(river_width):
+                raise ValueError(f"{path}:ovl_width dimensions do not match bifurcation paths")
+            if overland_width.shape[0] == 0:
+                raise ValueError(f"{path}:ovl_width cannot have zero layers; omit it instead")
+            widths = np.concatenate((widths, overland_width), axis=0)
+        elif "layer" in source.dimensions:
+            raise ValueError(f"{path}:layer dimension requires ovl_width")
 
         end_lon = np.ma.asarray(source.variables["end_lon"][:]).filled(np.nan)
         end_lat = np.ma.asarray(source.variables["end_lat"][:]).filled(np.nan)

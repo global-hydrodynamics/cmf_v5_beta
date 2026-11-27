@@ -26,12 +26,15 @@ def paths(tmp_path):
     file = tmp_path / "bif.nc"
     with Dataset(file, "w") as d:
         d.createDimension("path", len(ix))
-        d.createDimension("layer", 2)
+        d.createDimension("layer", 1)
         for key, values in [("ix", ix), ("jx", jx), ("iy", np.ones(len(ix))), ("jy", np.ones(len(ix)))]:
             d.createVariable(key, "i4", ("path",))[:] = values
-        w = d.createVariable("width", "f4", ("layer", "path"))
+        w = d.createVariable("riv_width", "f4", ("path",))
         w.units = "m"
-        w[:] = np.stack([first, np.full(len(ix), 30.0)])
+        w[:] = first
+        w = d.createVariable("ovl_width", "f4", ("layer", "path"))
+        w.units = "m"
+        w[:] = np.full((1, len(ix)), 30.0)
         d.createVariable("end_lon", "f8", ("path",))[:] = lon[0, jx - 1]
         d.createVariable("end_lat", "f8", ("path",))[:] = lat[0, jx - 1]
     return file, lon, lat
@@ -79,13 +82,15 @@ def test_mismatched_stored_outlet_is_rejected(paths):
 
 
 def test_mekong_native_path_oracle_and_published_gallery():
-    base = ROOT / "map/mekong_15min/netcdf"
+    base = ROOT / "map/mekong_15min"
     with Dataset(base / "lonlat.nc") as d:
         lon = np.asarray(d.variables["outlon"][:])
         lat = np.asarray(d.variables["outlat"][:])
     with Dataset(base / "bifprm.nc") as d:
         columns = [np.asarray(d.variables[k][:]) for k in ["ix", "iy", "jx", "jy"]]
-        widths = np.ma.asarray(d.variables["width"][:]).filled(np.nan)
+        river_width = np.ma.asarray(d.variables["riv_width"][:]).filled(np.nan)
+        overland_width = np.ma.asarray(d.variables["ovl_width"][:]).filled(np.nan)
+        widths = np.concatenate((river_width[np.newaxis, :], overland_width), axis=0)
     expected = []
     expected_width = []
     seen = set()

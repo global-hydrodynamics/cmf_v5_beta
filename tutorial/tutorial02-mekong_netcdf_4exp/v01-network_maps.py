@@ -61,8 +61,16 @@ def read_map_data():
         bsncol = np.ma.asarray(data.variables["bsncol"][:])
     with Dataset(NETCDF_DIR / "bifprm.nc") as data:
         bif = {name: np.asarray(data.variables[name][:]) for name in
-               ("pth_id", "ix", "iy", "jx", "jy", "width",
+               ("pth_id", "ix", "iy", "jx", "jy", "riv_width",
                 "start_lon", "start_lat", "end_lon", "end_lat")}
+        channel_width = bif.pop("riv_width")
+        widths = channel_width[np.newaxis, :]
+        if "ovl_width" in data.variables:
+            overland_width = np.asarray(data.variables["ovl_width"][:])
+            widths = np.concatenate((widths, overland_width), axis=0)
+        elif "layer" in data.dimensions:
+            raise ValueError("bifprm.nc layer dimension requires ovl_width")
+        bif["width"] = widths
 
     shape = (len(lat), len(lon))
     if uparea.shape != shape or nextx.shape != shape or nexty.shape != shape:

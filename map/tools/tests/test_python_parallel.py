@@ -4,6 +4,7 @@ The opt-in benchmark covers the 23 CLI pairs. These small tests isolate native
 masking, branching, mixed-precision fallbacks and binary layout edge cases.
 """
 from pathlib import Path
+import csv
 import shutil
 import subprocess
 import sys
@@ -175,6 +176,33 @@ class FallbackParityTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):cls.temp.cleanup()
 
+    @staticmethod
+    def write_legacy_bifprm_csv(path):
+        """Adapt the v5 sample schema for the preserved legacy Fortran reader."""
+        with path.open(newline='', encoding='utf-8') as stream:
+            reader = csv.DictReader(stream)
+            rows = list(reader)
+            fields = reader.fieldnames
+        overland_fields = []
+        index = 1
+        while f'ovl_width_{index}' in fields:
+            overland_fields.append(f'ovl_width_{index}')
+            index += 1
+        width_fields = ['riv_width', *overland_fields]
+        trailing_fields = fields[fields.index(width_fields[-1]) + 1:]
+        legacy_fields = [*fields[:fields.index('riv_width')],
+                         *(f'width_{index}' for index in range(1, len(width_fields) + 1)),
+                         *trailing_fields]
+        with path.open('w', newline='', encoding='utf-8') as stream:
+            writer = csv.DictWriter(stream, fieldnames=legacy_fields, lineterminator='\n')
+            writer.writeheader()
+            for row in rows:
+                legacy_row = {name: row[name] for name in fields[:fields.index('riv_width')]}
+                legacy_row.update({f'width_{index}': row[name]
+                                   for index, name in enumerate(width_fields, 1)})
+                legacy_row.update({name: row[name] for name in trailing_fields})
+                writer.writerow(legacy_row)
+
     def test_area_fallbacks_and_selected_missing_height(self):
         for name in ('param_water_calc_prmwat','param_inpmat_generate','region_default_inpmat'):
             with self.subTest(program=name), tempfile.TemporaryDirectory(prefix='cmf-port-fixture-') as temp:
@@ -262,11 +290,15 @@ class FallbackParityTests(unittest.TestCase):
                 root=Path(temp);work=root/'work';work.mkdir();out=root/'binary'
                 for name in ('params.txt','bifprm.csv'):
                     shutil.copyfile(sample/'binary'/name if name.endswith('.bin') else sample/name,root/name)
+                self.write_legacy_bifprm_csv(root/'bifprm.csv')
                 for name in ('basin.bin','nextxy.bin'):
                     binary_root=root/'binary';binary_root.mkdir(exist_ok=True)
                     shutil.copyfile(sample/'binary'/name,binary_root/name)
                     shutil.copyfile(sample/'binary'/name,root/name)
                 a=subprocess.run([str(self.executables['param_mpi_set_basin']),legacy_mode,'check_map'],cwd=work,capture_output=True,text=True)
+                # The current Python implementation reads the standardized v5 CSV;
+                # restore it after exercising the independent legacy reference.
+                shutil.copyfile(sample/'bifprm.csv', root/'bifprm.csv')
                 b=subprocess.run([sys.executable,str(CODE/'param_mpi_set_basin.py'),'--mode',mode,'--check-map','--map-format','binary','--map-dir',str(root),'--output-dir',str(out)],cwd=work,capture_output=True,text=True)
                 self.assertEqual(a.returncode,0,a.stdout+a.stderr)
                 self.assertEqual(b.returncode,0,b.stdout+b.stderr)

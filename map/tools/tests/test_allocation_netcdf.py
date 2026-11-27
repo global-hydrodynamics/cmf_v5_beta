@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import csv
 from pathlib import Path
 
 import numpy as np
@@ -25,6 +26,30 @@ from hires_metadata import LocationArea, read_location_csv, write_location_csv  
 
 
 class AllocationNetCDFTests(unittest.TestCase):
+    def test_mekong_allocation_csv_products_have_headers_and_expected_records(self) -> None:
+        schemas = {
+            "GRDC_alloc.csv": (175, ["ID", "lat", "lon", "area_Input", "area_CaMa", "error",
+                                    "diff", "Type", "ix1", "iy1", "ix2", "iy2", "area1", "area2"]),
+            "GRanD_error.csv": (2, ["ID", "lat", "lon", "area_CaMa", "area_Input", "error", "diff",
+                                    "ix", "iy", "cap_mcm", "year", "damname", "rivname"]),
+            "GRanD_river.csv": (244, ["ID", "lat", "lon", "area_CaMa", "area_Input", "error", "diff",
+                                      "ix", "iy", "cap_mcm", "year", "damname", "rivname"]),
+            "GRanD_small.csv": (127, ["ID", "lat", "lon", "area_CaMa", "area_Input", "error", "diff",
+                                      "ix", "iy", "cap_mcm", "year", "damname", "rivname"]),
+            "MLIT_levelgauge.csv": (0, ["ID", "lat", "lon", "area", "Type", "ix1", "iy1", "ix2", "iy2",
+                                        "elv_outlet", "elv_gauge", "elv_upst", "dst_outlet", "dst_upst",
+                                        "upa_outlet"]),
+        }
+        for filename, (count, header) in schemas.items():
+            with (SAMPLE / filename).open(encoding="utf-8-sig", newline="") as stream:
+                reader = csv.DictReader(stream)
+                self.assertEqual(reader.fieldnames, header, filename)
+                rows = list(reader)
+            self.assertEqual(len(rows), count, filename)
+        with (SAMPLE / "GRanD_river.csv").open(encoding="utf-8", newline="") as stream:
+            names = {row["damname"] for row in csv.DictReader(stream)}
+        self.assertIn("Gongzui", names)
+
     def test_python_allocation_reader_keeps_single_area_restriction(self) -> None:
         with tempfile.TemporaryDirectory(prefix="cmf-allocation-multiarea-") as temp_name:
             root = Path(temp_name)
@@ -84,13 +109,13 @@ class AllocationNetCDFTests(unittest.TestCase):
             temp = Path(temp_name)
             commands = (
                 ("allocate_flow_gauge.py", (DATA / "GRDC_allocated.csv", "multi", "1min"),
-                 (("flow_multi.txt", "gauge_alloc.txt"),)),
+                 (("flow_multi.txt", "GRDC_alloc.csv"),)),
                 ("allocate_dam.py", (DATA / "GRanD_allocated.csv", "1min"),
-                 (("dam_river.txt", "dam_alloc_river.txt"),
-                  ("dam_small.txt", "dam_alloc_small.txt"),
-                  ("dam_error.txt", "dam_alloc_error.txt"))),
+                 (("dam_river.txt", "GRanD_river.csv"),
+                  ("dam_small.txt", "GRanD_small.csv"),
+                  ("dam_error.txt", "GRanD_error.csv"))),
                 ("allocate_level_gauge.py", (FIXTURES / "level_synthetic_mekong.csv", "1min"),
-                 (("level_gauge.txt", "gauge_alloc.txt"),)),
+                 (("level_gauge.txt", "MLIT_levelgauge.csv"),)),
             )
             for name, arguments, comparisons in commands:
                 output = temp / Path(name).stem
@@ -113,7 +138,7 @@ class AllocationNetCDFTests(unittest.TestCase):
                  "--map-format", "binary", "--output-dir", str(output)],
                 cwd=REPO, check=True, capture_output=True, text=True,
             )
-            assert_output_equivalent(self, GOLDEN / "flow_multi.txt", output / "gauge_alloc.txt")
+            assert_output_equivalent(self, GOLDEN / "flow_multi.txt", output / "GRDC_alloc.csv")
 
 
 if __name__ == "__main__":

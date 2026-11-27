@@ -30,7 +30,7 @@ Binary fields; `bifprm.csv`, `bifbsn.bin`, and `bifcol.bin`; channel parameter
 files including `outclm.bin`, `rivwth.bin`, `rivhgt.bin`, `rivman.bin`,
 `rivhgt_inf.bin`, and `rivwth_merit.bin`; `prmwat.bin`; runoff mapping and
 matching diminfo files for both `test-1deg` and `ERA5land_global`;
-`subbsn-sample.bin`/`subcol-sample.bin`; `GRDC_alloc.txt`; base NetCDF files;
+`subbsn-sample.bin`/`subcol-sample.bin`; `GRDC_alloc.csv`; base NetCDF files;
 high-resolution NetCDF/COG products; and 1-minute auxiliary Binary data.
 
 The two matrix tags were not merged: `test-1deg` refers to the global
@@ -38,7 +38,7 @@ ELSE_GPCC climatology grid and its `map/data/ELSE_GPCC_clm-1981-2010.one`
 channel input; `ERA5land_global` is the separate ERA5-Land runoff-grid
 mapping. The retained channel script uses `test-1deg`, and the bifurcation
 script uses five layers. The subbasin example thresholds are 30,000 and
-5,000 km². `GRDC_alloc.txt` is not ECMWF gauge correspondence validation.
+5,000 km². `GRDC_alloc.csv` is not ECMWF gauge correspondence validation.
 
 The existing map-local `s01-regional_map.sh` matches the current shared
 regionalization workflow apart from its map-specific source and bounds. The

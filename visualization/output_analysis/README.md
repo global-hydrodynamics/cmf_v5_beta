@@ -201,11 +201,11 @@ network figure. The default extent is 103–108°E and 9–14°N. Main connectio
 follow `nextxy_noedge` and use outlet coordinates from `lonlat.nc`; their line
 widths increase by source-cell upstream-area quartile. Small-area connections
 are drawn first so larger downstream channels remain visible. Both panels
-sum signed `pthflw` across all five pathway layers for each path, without
+sum signed `pthflw` across the channel layer and four overland pathway layers for each path, without
 reversing signs before summation. They include paths with positive width in at
-least one `bifprm.nc` layer, including channel and overland-only bifurcations.
-Dashed paths have positive width in layer 1; dotted paths have no layer-1
-width and are overland-only.
+least one `bifprm.nc` width field, including channel and overland-only bifurcations.
+Dashed paths have positive `riv_width`; dotted paths have zero `riv_width` and
+at least one positive overland width.
 
 The panels demonstrate two ways to present complex signed flow. Panel (a),
 `discharge-vector_default`, colors signed `outflw` and the signed sum of

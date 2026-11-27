@@ -21,7 +21,7 @@ generates `ERA5land_Rhine2021Jul` for its 111 × 91 regional ERA5-Land subset;
 that matrix is distinct from the 3600 × 1801 global grid and the two cannot be
 interchanged. Reproduce the regional pair with
 `script_params/s03-generate_inpmat-rhine.sh`; the generated matrix and diminfo
-remain local and ignored. `GRDC_alloc.txt` is the
+remain local and ignored. `GRDC_alloc.csv` is the
 standard GRDC allocation product; it does not verify correspondence for the
 ECMWF-provided Tutorial 11 gauges.
 

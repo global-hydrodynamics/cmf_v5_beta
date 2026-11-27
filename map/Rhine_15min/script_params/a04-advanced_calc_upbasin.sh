@@ -9,12 +9,13 @@ PYTHON_CMD="python3"
 # ----------------------------------------------------------------------
 # User settings
 # ----------------------------------------------------------------------
-GRDC_ALLOC="../GRDC_alloc.txt"  # Allocation from t01-alloc_flow_gauge.sh or a supplied table.
+GRDC_ALLOC="../GRDC_alloc.csv"  # Allocation from t01-alloc_flow_gauge.sh or a supplied table.
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
 # ----------------------------------------------------------------------
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 cd "$SCRIPT_DIR"
+CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 
 printf '%s\n' "Example: Select a GRDC station allocated to this map, then calculate its upstream basin."
 printf '%s\n' "Different map grids can assign the same location to different cells; use the map-specific allocation instead of fixed coordinates."
@@ -25,7 +26,7 @@ fi
 
 # Preserve the established selection: valid type, positive mapped area and primary indices;
 # the first row wins if multiple stations share the maximum area_CaMa.
-if ! SELECTED=$(awk 'NR > 1 && $8 != -9 && $9 > 0 && $10 > 0 && $5 > max {max=$5; id=$1; ix=$9; iy=$10} END {if (id == "") exit 1; print id, ix, iy, max}' "$GRDC_ALLOC"); then
+if ! SELECTED=$("$PYTHON_CMD" "$CODE_DIR/analysis_select_grdc_allocation.py" "$GRDC_ALLOC"); then
     printf 'GRDC allocation contains no valid allocated station: %s\n' "$GRDC_ALLOC" >&2
     exit 1
 fi

@@ -9,7 +9,7 @@ PYTHON_CMD="python3"
 # ----------------------------------------------------------------------
 # User settings
 # ----------------------------------------------------------------------
-GRDC_ALLOC="../GRDC_alloc.txt"  # Create with t01-alloc_flow_gauge.sh or provide this table.
+GRDC_ALLOC="../GRDC_alloc.csv"  # Create with t01-alloc_flow_gauge.sh or provide this table.
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
 # ----------------------------------------------------------------------
@@ -18,7 +18,7 @@ CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 cmf_check_init "Create an upstream-basin example from the largest valid GRDC station"
 
 cmf_check_step 1 3 "Select the valid allocated station with the largest CaMa area"
-SELECTED=$(awk 'NR > 1 && $8 != -9 && $9 > 0 && $10 > 0 && $5 > max {max=$5; id=$1; ix=$9; iy=$10} END {if (id == "") exit 1; print id, ix, iy, max}' "$GRDC_ALLOC")
+SELECTED=$("$PYTHON_CMD" "$CODE_DIR/analysis_select_grdc_allocation.py" "$GRDC_ALLOC")
 set -- $SELECTED
 GRDC_ID=$1
 IX=$2

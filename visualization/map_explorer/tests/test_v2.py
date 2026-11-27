@@ -64,9 +64,12 @@ def products(map_dir):
             ("jy", [1, 3, 1, 1, 1]),
         ]:
             ds.createVariable(name, "i4", ("path",))[:] = values
-        v = ds.createVariable("width", "f4", ("layer", "path"))
+        v = ds.createVariable("riv_width", "f4", ("path",))
         v.units = "m"
-        v[:] = [[10, 0, 20, 3, -9999], [12, 8, 21, 4, 4]]
+        v[:] = [10, 0, 20, 3, -9999]
+        v = ds.createVariable("ovl_width", "f4", ("layer", "path"))
+        v.units = "m"
+        v[:] = [[12, 8, 21, 4, 4]]
     return map_dir
 
 
@@ -259,14 +262,14 @@ def test_mekong_gallery_numerical_and_multilayer_integration(tmp_path, monkeypat
     a.set_extent((104.5, 107, 9.5, 12))
     a.representation.value = "outlet_vector"
     reference = f03.read_network(
-        root / "netcdf/uparea.nc", root / "netcdf/nextxy.nc", root / "netcdf/lonlat.nc", root / "params.txt"
+        root / "uparea.nc", root / "nextxy.nc", root / "lonlat.nc", root / "params.txt"
     )
     np.testing.assert_array_equal(a.network.x0, reference[1])
     np.testing.assert_array_equal(a.network.y1, reference[4])
     area = a.reader.read("uparea")[a.network.rows, a.network.cols].astype(float).filled(np.nan) * 1e-6
     np.testing.assert_array_equal(np.digitize(np.log10(area), reference[7]), reference[6])
     actual = a.scene.products.bifurcations
-    segments, widths, invalid = f03b.read_bifurcations(root / "netcdf/bifprm.nc", *a.scene.products.outlets)
+    segments, widths, invalid = f03b.read_bifurcations(root / "bifprm.nc", *a.scene.products.outlets)
     np.testing.assert_array_equal(actual["segments"], segments)
     np.testing.assert_array_equal(actual["first_width"], widths)
     a.background.value = "catchment"

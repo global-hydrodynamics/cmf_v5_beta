@@ -672,7 +672,7 @@ IF (TRIM(VAROUT(JF)%CVNAME)=='pthflw') THEN
     CALL NCERROR(NF90_PUT_ATT(VAROUT(JF)%NCID,VARID,'long_name','bifurcation path width by layer'))
     CALL NCERROR(NF90_PUT_ATT(VAROUT(JF)%NCID,VARID,'units','m'))
     CALL NCERROR(NF90_PUT_ATT(VAROUT(JF)%NCID,VARID,'description', &
-      'Fortran dimensions (path,layer); file dimensions (layer,path); layer k equals width_k in bifprm.csv.'))
+      'Internal layer 1 is riv_width; layers 2 onward are ovl_width_1 onward in bifprm.csv.'))
 ENDIF
 
 !=== define variables ===

@@ -90,13 +90,17 @@ class MpiMapToolsTests(unittest.TestCase):
         return root
 
     @staticmethod
-    def write_csv_from_legacy(root: Path) -> None:
+    def write_csv_from_legacy(root: Path, *, v5: bool = False) -> None:
         lines = (root / "bifprm.txt").read_text(encoding="ascii").splitlines()
         npath, nlayer = map(int, lines[0].split()[:2])
         nx, ny = (int(line.split()[0]) for line in (root / "params.txt").read_text().splitlines()[:2])
         outlet_values = struct.unpack(f"<{2 * nx * ny}f", (root / "lonlat.bin").read_bytes())
         header = ["pth_id", "ix", "iy", "jx", "jy", "length", "elevtn", "depth"]
-        header.extend(f"width_{layer}" for layer in range(1, nlayer + 1))
+        if v5:
+            header.append("riv_width")
+            header.extend(f"ovl_width_{layer}" for layer in range(1, nlayer))
+        else:
+            header.extend(f"width_{layer}" for layer in range(1, nlayer + 1))
         header.extend(("start_lat", "start_lon", "end_lat", "end_lon", "ibsn", "jbsn"))
         with (root / "bifprm.csv").open("w", newline="", encoding="ascii") as stream:
             writer = csv.writer(stream, lineterminator="\n")
@@ -394,7 +398,7 @@ class MpiMapToolsTests(unittest.TestCase):
                 source = MAP / "binary" / name if (MAP / "binary" / name).is_file() else MAP / name
                 shutil.copy2(source, map_root / name)
             shutil.copy2(MAP / "binary" / "nextxy.bin", binary_dir / "nextxy.bin")
-            self.write_csv_from_legacy(map_root)
+            self.write_csv_from_legacy(map_root, v5=True)
             region_map = binary_dir / "mpireg-1.bin"
             region_map.write_bytes(struct.pack("<9600i", *([1] * 9600)))
             region_map_before = region_map.read_bytes()

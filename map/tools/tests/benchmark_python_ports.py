@@ -94,16 +94,37 @@ def compare_file(reference, actual, integer=False):
         relative = difference/np.maximum(abs(a[finite]), np.finfo('f4').tiny)
         return {'equivalent': bool(np.allclose(a, b, rtol=FLOAT_RTOL, atol=0, equal_nan=True)),
                 'bitwise': False, 'max_abs': float(difference.max(initial=0)), 'max_rel': float(relative.max(initial=0))}
-    # CSV and list-directed tables: lexical padding/exponent spelling may differ.
-    left, right = reference.read_text().splitlines(), actual.read_text().splitlines()
-    if len(left) != len(right):
-        return {'equivalent': False, 'reason': f'line count {len(left)} vs {len(right)}'}
+    # CSV and fixed-width allocation tables: compare named fields and ignore
+    # padding while preserving record order and source precision.
+    def table_rows(path):
+        lines = path.read_text(encoding='utf-8-sig').splitlines()
+        if path.suffix == '.csv':
+            with path.open(encoding='utf-8-sig', newline='') as stream:
+                rows = list(csv.reader(stream))
+            return rows[0], rows[1:]
+        header = lines[0].split()
+        rows = []
+        for line in lines[1:]:
+            if not line.strip():
+                continue
+            if len(header) == 13:
+                row = line[:112].split()
+                row.extend((line[114:144].strip(), line[146:].rstrip()))
+                rows.append(row)
+            else:
+                rows.append(line.split())
+        return header, rows
+
+    left_header, left_rows = table_rows(reference)
+    right_header, right_rows = table_rows(actual)
+    if left_header != right_header:
+        return {'equivalent': False, 'reason': 'table header mismatch'}
+    if len(left_rows) != len(right_rows):
+        return {'equivalent': False, 'reason': f'row count {len(left_rows)} vs {len(right_rows)}'}
     differences = []
-    for x, y in zip(left, right):
-        ax = next(csv.reader([x])) if ',' in x else x.split()
-        by = next(csv.reader([y])) if ',' in y else y.split()
+    for row_number, (ax, by) in enumerate(zip(left_rows, right_rows), start=1):
         if len(ax) != len(by):
-            return {'equivalent': False, 'reason': f'table field count {len(ax)} vs {len(by)}'}
+            return {'equivalent': False, 'reason': f'row {row_number} field count {len(ax)} vs {len(by)}'}
         for a, b in zip(ax, by):
             if a.strip() == b.strip():
                 continue
@@ -229,6 +250,47 @@ def prepare(case, name):
     return f, p, fcwd, args, products
 
 
+def python_product(name, fortran_product):
+    outputs = {
+        'allocate_flow_gauge': 'GRDC_alloc.csv',
+        'allocate_level_gauge': 'MLIT_levelgauge.csv',
+        'allocate_dam': {
+            'dam_alloc_river.txt': 'GRanD_river.csv',
+            'dam_alloc_small.txt': 'GRanD_small.csv',
+            'dam_alloc_error.txt': 'GRanD_error.csv',
+        },
+    }
+    output = outputs.get(name)
+    return output.get(fortran_product, fortran_product) if isinstance(output, dict) else output or fortran_product
+
+
+def compare_bifori_tables(legacy_path, csv_path):
+    """Compare legacy formatted rows with named CSV output at file precision."""
+    with legacy_path.open(encoding='utf-8') as stream:
+        lines = stream.read().splitlines()
+    try:
+        expected_count, width_count = (int(value) for value in lines[0].split()[:2])
+        expected_rows = [[float(value) for value in line.split()] for line in lines[1:]]
+        with csv_path.open(newline='', encoding='utf-8') as stream:
+            reader = csv.DictReader(stream, skipinitialspace=True)
+            reader.fieldnames = [name.strip() for name in (reader.fieldnames or [])]
+            actual_rows = list(reader)
+        actual_values = []
+        for row in actual_rows:
+            widths = [row['riv_width']]
+            widths.extend(row[f'ovl_width_{index}'] for index in range(1, width_count))
+            actual_values.append([row['ix'], row['iy'], row['jx'], row['jy'], row['length'],
+                                  row['elevtn'], *widths, row['start_lat'], row['start_lon']])
+        actual_rows_as_values = [[float(value) for value in row] for row in actual_values]
+        equivalent = (len(expected_rows) == len(actual_rows_as_values) == expected_count
+                      and all(len(row) == 6 + width_count + 2 for row in expected_rows)
+                      and all(np.allclose(reference, actual, rtol=5e-7, atol=0.0051)
+                              for reference, actual in zip(expected_rows, actual_rows_as_values)))
+    except (OSError, ValueError, KeyError, IndexError):
+        equivalent = False
+    return {'equivalent': equivalent}
+
+
 def run_case(index, name, work, build, repeats):
     case = work/f'c{index:02d}'
     case.mkdir()
@@ -241,7 +303,7 @@ def run_case(index, name, work, build, repeats):
             if repetition:
                 if location.is_dir(): shutil.rmtree(location)
                 else: location.unlink(missing_ok=True)
-            destination = p/product
+            destination = p/python_product(name, product)
             if destination.is_dir(): shutil.rmtree(destination)
             else: destination.unlink(missing_ok=True)
         if name == 'region_combine_hires': (f/'1min').mkdir(exist_ok=True)
@@ -267,7 +329,10 @@ def run_case(index, name, work, build, repeats):
             if '1min/' in product:
                 # int8/int16 binary products can be compared as raw bytes first.
                 integer = any(k in product for k in ('catm','downxy','flwdir','visual'))
-            checks[product] = compare_file(location, p/product, integer)
+            if name == 'region_cut_bifway':
+                checks[product] = compare_bifori_tables(location, p/'bifori.csv')
+            else:
+                checks[product] = compare_file(location, p/python_product(name, product), integer)
         if not products:
             if name == 'analysis_river_node_latlon':
                 checks['stdout'] = {'equivalent': a.stdout.strip().splitlines() == b.stdout.strip().splitlines()}

@@ -57,7 +57,7 @@ uses 30,000 and 5,000 km² thresholds. These are inspected workflow settings,
 not independently validated Rhine scientific choices.
 
 A 1-minute auxiliary map is present and is used by the permanent-water
-workflow. `GRDC_alloc.txt` is also present, produced by the standard GRDC
+workflow. `GRDC_alloc.csv` is also present, produced by the standard GRDC
 allocation workflow. It does not establish station-to-model-cell
 correspondence for the ECMWF-supplied Tutorial 11 gauges; that check remains a
 later observation-matching task.

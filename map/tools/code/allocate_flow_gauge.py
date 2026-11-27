@@ -2,10 +2,11 @@
 # Parallel port of allocate_flow_gauge.F90; original Fortran authors and license retained.
 """Allocate flow gauges to one or two reference river-map cells.
 
-Load the selected binary map, rank upstream candidates, match the native
-7x7 area/location window, then write gauge_alloc.txt. Preserve the reference
+Load the selected map, rank upstream candidates, match the native 7x7
+area/location window, then write GRDC_alloc.csv. Preserve the reference
 5%/10% area rules and the maximum two-cell representation.
 """
+import csv
 from pathlib import Path
 
 import numpy as np
@@ -23,8 +24,10 @@ def main():
     maps = AllocationMap(args.map_dir, args.hires_tag, map_format=args.map_format)
     out = args.output_dir or Path('.')
     out.mkdir(parents=True, exist_ok=True)
-    with (out/'gauge_alloc.txt').open('w') as stream:
-        stream.write('        ID       lat       lon  area_Input   area_CaMa       error        diff    Type     ix1   iy1     ix2   iy2       area1       area2\n')
+    with (out/'GRDC_alloc.csv').open('w', newline='', encoding='utf-8') as stream:
+        writer = csv.writer(stream, lineterminator='\n')
+        writer.writerow(('ID', 'lat', 'lon', 'area_Input', 'area_CaMa', 'error', 'diff',
+                         'Type', 'ix1', 'iy1', 'ix2', 'iy2', 'area1', 'area2'))
         for f in station_rows(args.gauge_list):
             if not f:
                 continue
@@ -72,10 +75,9 @@ def main():
                 if len(selected) == 2:
                     indices[2:] = [selected[1][1]+1, selected[1][0]+1]
                     areas[1] = maps.base['uparea'][selected[1]]
-            stream.write(f'{identifier:10d}{lat:10.3f}{lon:10.3f}'
-                         + ''.join(f'{v:12.2f}' for v in [area, *values])+f'{snum:8d}'
-                         + f'{indices[0]:8d}{indices[1]:6d}{indices[2]:8d}{indices[3]:6d}'
-                         + ''.join(f'{v:12.1f}' for v in areas)+'\n')
+            writer.writerow([identifier, f'{lat:.3f}', f'{lon:.3f}',
+                             *(f'{value:.2f}' for value in [area, *values]), snum,
+                             *indices, *(f'{value:.1f}' for value in areas)])
 
 
 if __name__ == '__main__':

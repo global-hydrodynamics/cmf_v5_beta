@@ -5,6 +5,7 @@
 Use native high-resolution matching, upstream single-cell substitution, and
 the original 0.3*ctmare small-dam rule. Write separate river/small/error lists.
 """
+import csv
 from contextlib import ExitStack
 from pathlib import Path
 
@@ -25,9 +26,14 @@ def main():
     out = args.output_dir or Path('.')
     out.mkdir(parents=True, exist_ok=True)
     with ExitStack() as stack:
-        streams = {kind: stack.enter_context((out/f'dam_alloc_{kind}.txt').open('w')) for kind in ('river', 'small', 'error')}
-        for stream in streams.values():
-            stream.write('        ID       lat       lon   area_CaMa  area_Input       error        diff      ix      iy     cap_mcm  year  damname                         rivname\n')
+        writers = {}
+        for kind in ('river', 'small', 'error'):
+            stream = stack.enter_context((out/f'GRanD_{kind}.csv').open(
+                'w', newline='', encoding='utf-8'))
+            writer = csv.writer(stream, lineterminator='\n')
+            writer.writerow(('ID', 'lat', 'lon', 'area_CaMa', 'area_Input', 'error', 'diff',
+                             'ix', 'iy', 'cap_mcm', 'year', 'damname', 'rivname'))
+            writers[kind] = writer
         for f in station_rows(args.dam_list):
             if not f:
                 continue
@@ -62,9 +68,11 @@ def main():
                 if area < catchment_area[cell]*np.float32(.3) or error > 1:
                     kind, total, difference, error = 'small', -888., -888., -8.
                     ix, iy = cell[1]+1, cell[0]+1
-            streams[kind].write(f'{identifier:10d}{lat:10.3f}{lon:10.3f}'
-                                + ''.join(f'{v:12.1f}' for v in [total, area, error, difference])
-                                + f'{ix:8d}{iy:8d}{capacity:12.1f}{year:6d}  {damname[:30]:<30}  {rivname[:30]:<30}\n')
+            writers[kind].writerow([identifier, f'{lat:.3f}', f'{lon:.3f}',
+                                    *(f'{value:.1f}' for value in
+                                      [total, area, error, difference]), ix, iy,
+                                    f'{capacity:.1f}', year, damname[:30].strip(),
+                                    rivname[:30].strip()])
 
 
 if __name__ == '__main__':
