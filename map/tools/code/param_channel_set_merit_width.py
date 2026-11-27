@@ -9,7 +9,7 @@ from pathlib import Path
 
 import numpy as np
 
-from mod_map_io import Grid, output_root, parser, write_raster
+from mod_map_io import Grid, input_path, output_root, parser, write_raster
 try:
     from .map_metadata import read_diminfo_nml
 except ImportError:  # Direct execution from map-local Shell workflows.
@@ -33,14 +33,28 @@ def main():
     p = parser(__doc__, '.', map_binary_flag=True)
     p.add_argument('diminfo', type=Path)
     args = p.parse_args()
-    info = read_diminfo_nml(args.diminfo)
+    #*** 1. Read geometry and width inputs
+    diminfo_path = args.diminfo.resolve()
+    info = read_diminfo_nml(diminfo_path)
     grid = Grid(info.nx, info.ny, 0, *[np.float32(0)] * 5)
-    nextxy = grid.raster(args.map_dir / 'nextxy.bin', '<i4', 2)
-    width = grid.raster(args.map_dir / 'rivwth.bin')
-    merit = grid.raster(args.map_dir / 'width.bin')
+    paths = {name: input_path(args.map_dir / f'{name}.bin')
+             for name in ('nextxy', 'rivwth', 'width')}
+    nextxy = grid.raster(paths['nextxy'], '<i4', 2)
+    width = grid.raster(paths['rivwth'])
+    merit = grid.raster(paths['width'])
+    print('Inputs:')
+    print(f'  DIMINFO: {diminfo_path}')
+    for name, path in paths.items():
+        print(f'  {name}: {path.resolve()}')
+
+    #*** 2. Merge MERIT Hydro and power-law channel width
+    print('Calculation: if MERIT width < 50 m, use max(MERIT width, power-law width); else use 0.5*power-law width when MERIT width < 0.5*power-law width; otherwise cap MERIT width at min(5*power-law width, 10,000 m).')
     result = merge_widths(nextxy[0], width, merit)
+
+    #*** 3. Write merged channel width
     output_grid = Grid.from_file(args.map_dir)
-    write_raster(output_root(args) / 'rivwth_merit.bin', result, '<f4', grid=output_grid)
+    destination = write_raster(output_root(args) / 'rivwth_merit.bin', result, '<f4', grid=output_grid)
+    print(f'Output: {destination.resolve()}')
 
 
 if __name__ == '__main__':

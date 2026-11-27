@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 
 from mod_allocation_map_io import AllocationMap, station_rows
-from mod_map_io import parser
+from mod_map_io import input_path, parser
 
 
 def main():
@@ -20,15 +20,32 @@ def main():
     p.add_argument('dam_list', type=Path)
     p.add_argument('hires_tag')
     args = p.parse_args()
+    #*** 1. Read dam records and reference/high-resolution map data
+    input_path_resolved = args.dam_list.resolve()
     maps = AllocationMap(args.map_dir, args.hires_tag, extra=('ctmare',), map_format=args.map_format)
+    print('Inputs:')
+    print(f'  Dam records: {input_path_resolved}')
+    names = ('nextxy', 'uparea', 'ctmare')
+    for name in names:
+        print(f'  Base {name}: {input_path(args.map_dir/(name + ".bin")).resolve()}')
+    highres_dir = args.map_dir/'binary'/args.hires_tag if args.map_format == 'binary' else args.map_dir/args.hires_tag
+    location = highres_dir/('location.txt' if args.map_format == 'binary' else 'location.csv')
+    print(f'  High-resolution metadata: {location.resolve()}')
+    for name in ('uparea', 'catmxy', 'downxy'):
+        source = highres_dir/(args.hires_tag+'.'+name+'.bin')
+        print(f'  High-resolution {name}: {input_path(source).resolve()}')
+    print(f'Parameters: high-resolution map={args.hires_tag}; native match window=7x7; small-dam threshold=0.3*unit-catchment area; area tolerance=20%.')
+
+    #*** 2. Allocate dams to river, small-dam, or error records
     catchment_area = np.array(maps.base['ctmare'], copy=True)
     catchment_area[catchment_area > 0] *= np.float32(1e-6)
     out = args.output_dir or Path('.')
     out.mkdir(parents=True, exist_ok=True)
+    destinations = [out/f'GRanD_{kind}.csv' for kind in ('river', 'small', 'error')]
     with ExitStack() as stack:
         writers = {}
-        for kind in ('river', 'small', 'error'):
-            stream = stack.enter_context((out/f'GRanD_{kind}.csv').open(
+        for kind, destination in zip(('river', 'small', 'error'), destinations):
+            stream = stack.enter_context(destination.open(
                 'w', newline='', encoding='utf-8'))
             writer = csv.writer(stream, lineterminator='\n')
             writer.writerow(('ID', 'lat', 'lon', 'area_CaMa', 'area_Input', 'error', 'diff',
@@ -73,6 +90,9 @@ def main():
                                       [total, area, error, difference]), ix, iy,
                                     f'{capacity:.1f}', year, damname[:30].strip(),
                                     rivname[:30].strip()])
+    print('Output files:')
+    for destination in destinations:
+        print(f'  {destination.resolve()}')
 
 
 if __name__ == '__main__':

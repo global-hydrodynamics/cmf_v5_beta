@@ -49,6 +49,7 @@ def translated(assignments, dx, dy, mx, my, tiled=False):
 
 def copy_native_tile(source, out, tag, region, offsets, coarse_shape, netcdf=False):
     """Copy contiguous whole-tile blocks; only catmxy requires a transform."""
+    written = []
     name, _, _, _, _, nx, ny = region
     dx, dy = offsets
     mx, my = coarse_shape
@@ -79,13 +80,15 @@ def copy_native_tile(source, out, tag, region, offsets, coarse_shape, netcdf=Fal
             write_highres_raster(destination, mapped, dtype, region[1:5])
             del mapped
             scratch.unlink()
+        written.append(destination)
+    return written
 
 
 def copy_region(source, out, tag, regions, bounds, shape, offsets, coarse_shape, tiled=False, netcdf=False):
     """Copy one layer at a time; first assignment wins, other fields last win."""
     if tiled:
-        copy_native_tile(source, out, tag, regions[0], offsets, coarse_shape, netcdf)
-        return
+        return copy_native_tile(source, out, tag, regions[0], offsets, coarse_shape, netcdf)
+    written = []
     west, east, south, north = bounds
     ny, nx = shape
     dx, dy = offsets
@@ -169,6 +172,8 @@ def copy_region(source, out, tag, regions, bounds, shape, offsets, coarse_shape,
             write_highres_raster(destination, mapped, dtype, bounds)
             del mapped
             scratch.unlink()
+        written.append(destination)
+    return written
 
 
 def main():
@@ -176,7 +181,9 @@ def main():
     p.add_argument('hires_tag', choices=list(PIXELS_PER_DEGREE))
     p.add_argument('--change-info', type=Path, default=Path('dim_change.txt'))
     args = p.parse_args()
-    lines = args.change_info.read_text().splitlines()
+    #*** 1. Read crop metadata and high-resolution tile inventory
+    change_path = args.change_info.resolve()
+    lines = change_path.read_text().splitlines()
     tag = args.hires_tag
     source = Path(lines[0].strip())/tag
     if args.map_format == 'binary':
@@ -191,6 +198,11 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     tiled = tag != '1min' and (nx > 16000 or ny > 16000)
     locations = []
+    written = []
+    print(f'Inputs: crop metadata={change_path}; high-resolution metadata={location_path.resolve()}')
+    print(f'Parameters: tag={tag}; crop bounds=({west:g}, {east:g}, {south:g}, {north:g}); output grid={nx} x {ny}; copy mode={"tiled" if tiled else "combined"}.')
+
+    #*** 2. Copy and transform selected high-resolution layers
     if not tiled:
         regions = []
         for area in areas:
@@ -198,8 +210,8 @@ def main():
             if w > east or e < west or n < south or s > north:
                 continue
             regions.append((area.carea, w, e, s, n, area.nx, area.ny))
-        copy_region(source, out, tag, regions, (west, east, south, north), (ny, nx), (dx, dy), (mx, my),
-                    netcdf=args.map_format == 'netcdf')
+        written.extend(copy_region(source, out, tag, regions, (west, east, south, north), (ny, nx), (dx, dy), (mx, my),
+                                   netcdf=args.map_format == 'netcdf'))
         locations.append(LocationArea(1, tag, west, east, south, north, nx, ny, 1./cnum))
     else:
         width = 30 if tag in ('30sec', '15sec') else 10 if tag in ('5sec', '3sec') else 5
@@ -217,14 +229,31 @@ def main():
                 copy_region(source, temporary, tag, [region], region[1:5], (width*cnum, width*cnum),
                             (dx, dy), (mx, my), True, args.map_format == 'netcdf')
                 for product in temporary.iterdir():
-                    product.rename(out/(name+product.name[len(tag):]))
+                    destination = out/(name+product.name[len(tag):])
+                    product.rename(destination)
+                    written.append(destination)
                 temporary.rmdir()
                 locations.append(LocationArea(len(locations)+1, name, longitude, longitude+width,
                                               latitude, latitude+width, width*cnum, width*cnum, 1./cnum))
     if args.map_format == 'netcdf':
-        write_location_csv(out/'location.csv', locations)
+        location_output = out/'location.csv'
+        write_location_csv(location_output, locations)
     else:
-        write_location_txt(out/'location.txt', locations)
+        location_output = out/'location.txt'
+        write_location_txt(location_output, locations)
+    written.append(location_output)
+    print(f'High-resolution areas written: {len(locations)}')
+    raster_outputs = [path for path in written if path != location_output]
+    print(f'Output: {len(raster_outputs)} raster files under {out.resolve()}')
+    if len(raster_outputs) <= 24:
+        for path in raster_outputs:
+            print(f'  {path.resolve()}')
+    elif raster_outputs:
+        print(f'  First {min(8, len(raster_outputs))} files:')
+        for path in raster_outputs[:8]:
+            print(f'    {path.resolve()}')
+        print(f'  ... {len(raster_outputs) - 8} additional raster files')
+    print(f'Location metadata: {location_output.resolve()}')
 
 
 if __name__ == '__main__':

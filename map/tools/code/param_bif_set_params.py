@@ -11,7 +11,7 @@ import sys
 
 import numpy as np
 
-from mod_map_io import Grid, output_root, parser, write_raster
+from mod_map_io import Grid, input_path, output_root, parser, write_raster
 try:
     from .mod_bifori_csv import read_bifori_csv
 except ImportError:  # Direct execution from map-local Shell workflows.
@@ -36,18 +36,36 @@ def main():
     args = p.parse_args()
     if not 1 <= args.layers <= 10:
         p.error('BIFLAYER must be 1..10')
-    info = read_diminfo_nml(args.diminfo)
-    grid=Grid(info.nx, info.ny, 0, *[np.float32(0)]*5)
-    grid.raster(args.map_dir/'nextxy.bin','<i4',2)
-    depth=grid.raster(args.river_depth)
-    basin=grid.raster(args.map_dir/'basin.bin','<i4')
-    lonlat=grid.raster(args.map_dir/'lonlat.bin','<f4',2)
-    bifori = read_bifori_csv(args.map_dir/'bifori.csv')
+    #*** 1. Read bifurcation metadata and map fields
+    diminfo_path = args.diminfo.resolve()
+    input_paths = {
+        name: input_path(args.map_dir/(name+'.bin'))
+        for name in ('nextxy', 'basin', 'lonlat')
+    }
+    depth_path = input_path(args.river_depth)
+    bifori_path = (args.map_dir/'bifori.csv').resolve()
+    info = read_diminfo_nml(diminfo_path)
+    grid = Grid(info.nx, info.ny, 0, *[np.float32(0)]*5)
+    grid.raster(input_paths['nextxy'], '<i4', 2)
+    depth = grid.raster(depth_path)
+    basin = grid.raster(input_paths['basin'], '<i4')
+    lonlat = grid.raster(input_paths['lonlat'], '<f4', 2)
+    bifori = read_bifori_csv(bifori_path)
     selected_width_count = min(bifori.width_count, args.layers)
     if args.layers > bifori.width_count:
         print(f'WARNING: BIFLAYER={args.layers} exceeds {bifori.width_count} stored widths; using available widths.',
               file=sys.stderr)
     selected_overland_fields = bifori.overland_fields[:selected_width_count - 1]
+    print('Inputs:')
+    print(f'  DIMINFO: {diminfo_path}')
+    print(f'  River depth: {depth_path.resolve()}')
+    for name, path in input_paths.items():
+        print(f'  {name}: {path.resolve()}')
+    print(f'  Bifurcation pathways: {bifori_path}')
+    print(f'Parameters: BIFLAYER={args.layers}; selected stored width layers={selected_width_count}; diagnostic maps={"enabled" if args.check_map else "disabled"}.')
+
+    #*** 2. Filter pathways and estimate bifurcation depths
+    print('Calculation: retain rows with at least one positive selected width; for positive channel width use clipped depth 2.5*log10(width)-4, limited by 0.5 m and endpoint river depths.')
     diagnostic=np.full((2,grid.ny,grid.nx),-9999,dtype=np.float32)
     overland_count = len(selected_overland_fields)
     fields = ['pth_id', 'ix', 'iy', 'jx', 'jy', 'length', 'elevtn', 'depth', 'riv_width']
@@ -83,9 +101,14 @@ def main():
                      format_geo_coordinate(float(row['start_lon'])),
                      format_geo_coordinate(end[1]),format_geo_coordinate(end[0]),ibsn,jbsn])
     write_aligned_csv(output, fields, rows)
+    written = [output]
     if args.check_map:
-        write_raster(output_root(args)/'check_bif_dphwth.bin',diagnostic,'<f4',
-                     grid=Grid.from_file(args.map_dir))
+        written.append(write_raster(output_root(args)/'check_bif_dphwth.bin', diagnostic, '<f4',
+                                    grid=Grid.from_file(args.map_dir)))
+    print(f'Bifurcation pathways written: {len(rows)}')
+    print('Output files:')
+    for path in written:
+        print(f'  {path.resolve()}')
 
 
 def write_aligned_csv(path, fields, rows):

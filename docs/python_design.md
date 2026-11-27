@@ -15,6 +15,14 @@ The goal is **human-configurable, AI-executable, and AI-independent** research: 
 - Separate responsibilities where beneficial: I/O, scientific transforms, plotting, and orchestration. Do not build a generic framework for a single tutorial step.
 - Keep import-time side effects minimal. Parsing arguments, writing files, downloading data, and executing a model belong in the explicit entry path, not at module import.
 
+### Standalone CLI output
+
+A standalone scientific program should make its own execution understandable when run without its Shell wrapper. Report the main inputs actually read, calculation-affecting parameters, the principal calculation or transformation, and outputs after their writes succeed, as relevant. Include resolved paths so NetCDF/Binary selection and output-directory overrides are unambiguous. For a simple equation, show the implemented expression with the actual runtime values; for a complex algorithm, give a short method description. Do not dump the argument namespace, repeat paths, or print incidental implementation files. Report only optional outputs that were enabled and successfully written.
+
+Use concise ordinary `print()` messages and major-stage progress only when useful, especially for long-running work. Do not add a logging framework, verbosity mode, per-cell messages, or duplicate Shell `[STEP]`/success banners. Shell remains responsible for user settings, workflow ordering, step headings and final workflow status; Python remains responsible for data I/O, scientific parameters, calculations and program-level progress. Keep stdout useful when the CLI is invoked directly.
+
+When displaying a formula, preserve all terms and conditions. For example, print `rivhgt = max(1.0, 0.1 * Q^0.5 + 0.0)` using the invocation's actual values; do not omit offsets, thresholds or masks.
+
 ## 2. Human-facing configuration and ownership
 
 - For Tutorial and visualization workflows with a Shell entry point, put **commonly changed** experiment, dataset, temporal, geographic, and figure settings in a clearly labeled `User settings` section in the Shell script. Each setting requires a useful inline comment describing meaning, units, valid options, and important special behavior when applicable.

@@ -135,6 +135,7 @@ def generate(grid, source, out, size, west, east, north, south, order,
             DimInfo(grid.nx, grid.ny, grid.nlfp, nxin, nyin, maximum, matrix_name,
                     float(grid.west), float(grid.east), float(grid.north), float(grid.south)),
         )
+    return out/inpmat_path, sorted(descriptor_paths)
 
 
 def main():
@@ -147,9 +148,22 @@ def main():
     p.add_argument('diminfo', type=Path)
     p.add_argument('inpmat', type=Path)
     args = p.parse_args()
-    generate(Grid.read(args.map_dir), args.map_dir/args.hires_tag,
-             output_root(args), args.size, args.west, args.east, args.north, args.south,
-             args.order, args.diminfo, args.inpmat, map_format=args.map_format)
+    #*** 1. Resolve map and high-resolution source
+    grid = Grid.read(args.map_dir)
+    source = args.map_dir/args.hires_tag
+    location_path = source/'location.csv'
+    print(f'Inputs: map geometry and products from {args.map_dir.resolve()}; high-resolution metadata: {location_path.resolve()}')
+    print(f'Parameters: tag={args.hires_tag}; runoff-grid resolution={args.size:g} degrees; bounds=({args.west:g}, {args.east:g}, {args.south:g}, {args.north:g}); latitude order={args.order}.')
+    print('Calculation: map valid catmxy pixels to unique runoff-grid cells; use native grdare where available, otherwise the configured reference area calculation.')
+
+    #*** 2. Generate the input matrix and paired dimension metadata
+    matrix_path, descriptors = generate(grid, source, output_root(args), args.size,
+                                        args.west, args.east, args.north, args.south,
+                                        args.order, args.diminfo, args.inpmat,
+                                        map_format=args.map_format)
+    print('Output files:')
+    for path in [matrix_path, *descriptors]:
+        print(f'  {path.resolve()}')
 
 
 if __name__ == '__main__':

@@ -10,7 +10,7 @@ import numpy as np
 
 from mod_bifprm_csv import read_bifprm_csv
 from mod_map_color import color_map
-from mod_map_io import Grid, output_root, parser, write_raster
+from mod_map_io import Grid, input_path, output_root, parser, write_raster
 
 
 def merge_basins(original, paths, rate, sort_paths=True):
@@ -89,20 +89,34 @@ def main():
     p.add_argument('--check-map', action='store_true',
                    help='Write the optional basin aggregation diagnostic map.')
     args = p.parse_args()
+    #*** 1. Read basin map and bifurcation pathways
     grid = Grid.read(args.map_dir)
-    original = grid.raster(args.map_dir / 'basin.bin','<i4')
-    paths = read_bifprm_csv(args.map_dir / 'bifprm.csv')
+    basin_path = input_path(args.map_dir/'basin.bin')
+    bifprm_path = (args.map_dir/'bifprm.csv').resolve()
+    original = grid.raster(basin_path, '<i4')
+    paths = read_bifprm_csv(bifprm_path)
     for row in paths:
         if not (1<=row['ix']<=grid.nx and 1<=row['jx']<=grid.nx and 1<=row['iy']<=grid.ny and 1<=row['jy']<=grid.ny):
             p.error('path endpoint outside map')
     rate = .03 if args.mode in ('small_basins', 'MaxMPI') else .06
+    print('Inputs:')
+    print(f'  Basin IDs: {basin_path.resolve()}')
+    print(f'  Bifurcation parameters: {bifprm_path}')
+    print(f'Parameters: mode={args.mode}; combined-basin threshold={rate:.0%}; diagnostic map={"enabled" if args.check_map else "disabled"}.')
+    print('Calculation: iteratively merge channel and overland pathways; retain the legacy 0.1% small-basin exception.')
+
+    #*** 2. Merge basins using channel and overland pathways
     basin = merge_basins(original,paths,rate)
     out = output_root(args)
-    write_raster(out/'bifcol_mpi.bin',color_map(basin,grid.west,grid.east),'<i4',grid=grid)
+    #*** 3. Write MPI basin products
+    written = [write_raster(out/'bifcol_mpi.bin',color_map(basin,grid.west,grid.east),'<i4',grid=grid)]
     if args.check_map:
-        write_raster(out/'check_bif_bsnmod_mpi.bin',diagnostic(original,basin,paths),'<i4',grid=grid)
+        written.append(write_raster(out/'check_bif_bsnmod_mpi.bin',diagnostic(original,basin,paths),'<i4',grid=grid))
     intermediate = out/'bifbsn_mpi.bin' if args.map_format == 'netcdf' else out/'bifbsn_mpi.tmp'
-    write_raster(intermediate,basin,'<i4',grid=grid)
+    written.append(write_raster(intermediate,basin,'<i4',grid=grid))
+    print('Output files:')
+    for path in written:
+        print(f'  {path.resolve()}')
 
 
 if __name__ == '__main__':

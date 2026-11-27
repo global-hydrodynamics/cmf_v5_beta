@@ -77,7 +77,8 @@ class ScientificContractTests(unittest.TestCase):
     def test_netcdf_writer_uses_explicit_output_grid_without_global_initialization(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            output = root/'separate-output'/'outclm.nc'
+            output = root/'separate-output'/'outclm.bin'
+            expected_output = output.with_suffix('.nc')
             values = np.arange(6, dtype='f4').reshape(2, 3)
             grid = Grid(3, 2, 1, np.float32(.25), np.float32(3), np.float32(3.75),
                         np.float32(49.5), np.float32(50))
@@ -85,10 +86,11 @@ class ScientificContractTests(unittest.TestCase):
             try:
                 mod_map_io._MAP_FORMAT = 'netcdf'
                 mod_map_io._MAP_ROOT = root/'input-map'
-                write_raster(output, values, '<f4', grid=grid)
+                written = write_raster(output, values, '<f4', grid=grid)
             finally:
                 mod_map_io._MAP_FORMAT, mod_map_io._MAP_ROOT = previous_format, previous_root
-            with Dataset(output) as dataset:
+            self.assertEqual(written.resolve(), expected_output.resolve())
+            with Dataset(expected_output) as dataset:
                 variable = dataset.variables['outclm']
                 variable.set_auto_maskandscale(False)
                 np.testing.assert_array_equal(variable[:], values)

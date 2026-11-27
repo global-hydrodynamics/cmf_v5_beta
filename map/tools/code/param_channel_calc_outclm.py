@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 
-from mod_map_io import Grid, output_root, parser, read_inpmat, write_raster
+from mod_map_io import Grid, input_path, output_root, parser, read_inpmat, write_raster
 try:
     from .map_metadata import read_diminfo_nml
 except ImportError:  # Direct execution from map-local Shell workflows.
@@ -95,11 +95,16 @@ def main():
         p.error('--runoff-binary cannot be used with a NetCDF (.nc) input path')
     if not args.runoff_binary and args.runoff.suffix.lower() in {'.one', '.bin'}:
         p.error('Binary runoff input requires --runoff-binary')
-    info = read_diminfo_nml(args.diminfo)
+    #*** 1. Read runoff grid metadata and map inputs
+    diminfo_path = args.diminfo.resolve()
+    runoff_path = args.runoff.resolve()
+    info = read_diminfo_nml(diminfo_path)
     nx, ny, nlfp, sx, sy, slots = info.nx, info.ny, info.nlfp, info.nxin, info.nyin, info.inpn
     grid = Grid(nx, ny, nlfp, *[np.float32(0)]*5)
-    nextxy = grid.raster(args.map_dir/'nextxy.bin', '<i4', 2)
-    area = grid.raster(args.map_dir/'ctmare.bin')
+    nextxy_path = input_path(args.map_dir/'nextxy.bin')
+    area_path = input_path(args.map_dir/'ctmare.bin')
+    nextxy = grid.raster(nextxy_path, '<i4', 2)
+    area = grid.raster(area_path)
     if args.runoff_binary:
         source = np.memmap(args.runoff, mode='r', dtype='<f4', shape=(sy, sx))
     else:
@@ -114,12 +119,32 @@ def main():
                 raise ValueError('Runoff dimensions do not match DIMINFO')
     matrix = None
     if not args.interp_near:
-        path = Path(info.inpmat_file)
-        if not path.is_absolute():
-            path = args.map_dir/path
-        matrix = read_inpmat(path, nx, ny, slots)
+        matrix_path = Path(info.inpmat_file)
+        if not matrix_path.is_absolute():
+            matrix_path = args.map_dir/matrix_path
+        matrix_path = matrix_path.resolve()
+        matrix = read_inpmat(matrix_path, nx, ny, slots)
+    print('Inputs:')
+    print(f'  DIMINFO: {diminfo_path}')
+    print(f'  River topology: {nextxy_path.resolve()}')
+    print(f'  Catchment area: {area_path.resolve()}')
+    print(f'  Annual-mean runoff: {runoff_path}')
+    print(f'Grid sizes: river map={nx} x {ny}; runoff input={sx} x {sy}; input-matrix slots={slots}.')
+    if matrix is not None:
+        print(f'  Input matrix: {matrix_path}')
+
+    #*** 2. Map local runoff and route discharge downstream
+    if matrix is not None:
+        print('Calculation: local discharge contribution = max(runoff, 0) [mm/s] * INPMAT area weight [m2] * 0.001; then accumulate downstream in network order.')
+    else:
+        print('Calculation: apply the reference integer-ratio nearest-grid mapping, multiply mapped runoff [mm/s] by ctmare [m2] and 0.001, then accumulate downstream.')
+    print('Missing runoff values are excluded; negative runoff is clipped to zero.')
     output_grid = Grid.from_file(args.map_dir)
-    write_raster(output_root(args)/'outclm.bin', route(nextxy, local_runoff(nextxy[0], area, source, matrix)), '<f4', grid=output_grid)
+    discharge = route(nextxy, local_runoff(nextxy[0], area, source, matrix))
+
+    #*** 3. Write annual-mean discharge
+    destination = write_raster(output_root(args)/'outclm.bin', discharge, '<f4', grid=output_grid)
+    print(f'Output: annual-mean discharge [m3/s]: {destination.resolve()}')
 
 
 if __name__ == '__main__':

@@ -11,7 +11,7 @@ import csv
 import numpy as np
 
 from mod_allocation_map_io import AllocationMap, station_rows
-from mod_map_io import parser
+from mod_map_io import input_path, parser
 
 
 def main():
@@ -19,10 +19,26 @@ def main():
     p.add_argument('gauge_list', type=Path)
     p.add_argument('hires_tag')
     args = p.parse_args()
+    #*** 1. Read level-gauge records and reference/high-resolution map data
+    input_path_resolved = args.gauge_list.resolve()
     maps = AllocationMap(args.map_dir, args.hires_tag, extra=('elevtn',), elevation=True, map_format=args.map_format)
+    print('Inputs:')
+    print(f'  Gauge records: {input_path_resolved}')
+    for name in ('nextxy', 'uparea', 'elevtn'):
+        print(f'  Base {name}: {input_path(args.map_dir/(name + ".bin")).resolve()}')
+    highres_dir = args.map_dir/'binary'/args.hires_tag if args.map_format == 'binary' else args.map_dir/args.hires_tag
+    location = highres_dir/('location.txt' if args.map_format == 'binary' else 'location.csv')
+    print(f'  High-resolution metadata: {location.resolve()}')
+    for name in ('uparea', 'catmxy', 'downxy', 'elevtn'):
+        source = highres_dir/(args.hires_tag+'.'+name+'.bin')
+        print(f'  High-resolution {name}: {input_path(source).resolve()}')
+    print(f'Parameters: high-resolution map={args.hires_tag}; native matching window=7x7; ranked upstream channel search.')
+
+    #*** 2. Match gauges and derive outlet/channel positions and distances
     out = args.output_dir or Path('.')
     out.mkdir(parents=True, exist_ok=True)
-    with (out/'MLIT_levelgauge.csv').open('w', newline='', encoding='utf-8') as stream:
+    destination = out/'MLIT_levelgauge.csv'
+    with destination.open('w', newline='', encoding='utf-8') as stream:
         writer = csv.writer(stream, lineterminator='\n')
         writer.writerow(('ID', 'lat', 'lon', 'area', 'Type', 'ix1', 'iy1', 'ix2', 'iy2',
                          'elv_outlet', 'elv_gauge', 'elv_upst', 'dst_outlet',
@@ -72,6 +88,7 @@ def main():
             writer.writerow([identifier, f'{lat:.3f}', f'{lon:.3f}', f'{area:.1f}', kind,
                              *indices, *(f'{value:.2f}' for value in values),
                              f'{upstream_area:.2f}'])
+    print(f'Output: {destination.resolve()}')
 
 
 if __name__ == '__main__':

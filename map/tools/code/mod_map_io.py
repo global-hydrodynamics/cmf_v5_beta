@@ -76,12 +76,13 @@ def write_raster(path, values, dtype, grid=None):
         if grid is None:
             grid = _output_grid(path)
         _write_netcdf(path, np.asarray(values), dtype, grid=grid)
-        return
+        return path
     if _MAP_FORMAT == 'binary' and _MAP_ROOT is not None and path.suffix == '.bin':
         path = _binary_path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open('wb') as stream:
         np.asarray(values, dtype=dtype).tofile(stream)
+    return path
 
 
 def parser(description, map_default='..', *, map_binary_flag=False):

@@ -100,6 +100,10 @@ missing-value behavior and ownership of I/O. Document automatic masking/scaling
 or raw-bit handling where it affects the tool contract; do not change that
 behavior during readability work. Avoid trivial helpers, duplicate
 transformations and framework-like abstractions that obscure the data path.
+For standalone CLI stdout, follow the input/parameter/calculation/output
+conventions in [Python Design](python_design.md#standalone-cli-output). Keep
+Shell step messages in Shell, and report map files at their resolved paths only
+after successful reads or writes.
 
 For preprocessing CLIs, normally use positional arguments for required core
 inputs and essential parameters that are always supplied; keep their order

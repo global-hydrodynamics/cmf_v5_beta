@@ -55,6 +55,8 @@ Do not claim that a workflow performs a conversion or validation that is not in 
 - Avoid documenting obvious Python types at length when type hints already convey them. Prefer explaining physical and scientific meaning.
 - Use type hints where they clarify inputs, results or data roles; annotating every trivial helper or constructing type hierarchies is not required.
 - Present `main()` as a readable sequence of meaningful steps; use [Design section 1](python_design.md#1-workflow-first-organization) for decisions about decomposition.
+- In a standalone CLI, use concise `Inputs`, `Parameters`, `Calculation`, and `Output` labels only when they help. Print resolved paths and actual runtime equation values; report a product only after its write succeeds. Keep program output independent of its Shell wrapper and follow [Design section 1](python_design.md#1-workflow-first-organization) for responsibility boundaries. Do not duplicate Shell step banners or add a logging/verbosity framework.
+- Separate argument parsing, input reads, calculation, and writes with blank lines; use numbered `#*** N.` headings only when a program's length or stages benefit from them. Do not add headings to short linear CLIs.
 - New helper names should express their effect (`load_classification`, `select_station_series`, `render_panels`) rather than generic terms such as `process_data`.
 
 ## 4. Comments and visual hierarchy

@@ -46,6 +46,9 @@ def main():
         raise ValueError('Invalid map geometry')
     if not np.isfinite([grid.west, grid.east, grid.south, grid.north]).all():
         raise ValueError('Nonfinite map bounds')
+    #*** 1. Read map and high-resolution inputs
+    next_path = input_path(args.map_dir/'nextxy.bin')
+    catchment_path = input_path(args.map_dir/'ctmare.bin')
     nextx = exact_array(args.map_dir/'nextxy.bin', '<i4', (2, grid.ny, grid.nx))[0]
     area = exact_array(args.map_dir/'ctmare.bin', '<f4', (grid.ny, grid.nx))
     valid = nextx != -9999
@@ -55,6 +58,11 @@ def main():
     root = args.map_dir/args.hires_tag
     areas = (read_location_csv(root/'location.csv') if args.map_format == 'netcdf'
              else read_location_txt(args.map_dir/'binary'/args.hires_tag/'location.txt'))
+    print('Inputs:')
+    print(f'  River topology: {next_path.resolve()}')
+    print(f'  Catchment area: {catchment_path.resolve()}')
+    location_path = root/'location.csv' if args.map_format == 'netcdf' else args.map_dir/'binary'/args.hires_tag/'location.txt'
+    print(f'  High-resolution areas: {location_path.resolve()}')
     selected_count = missing_count = 0
     used_fallback = False
     size = 1./PIXELS_PER_DEGREE[args.hires_tag]
@@ -75,7 +83,7 @@ def main():
         fallback = fallback_area(north, ny, size) if pixel is None else None
         if pixel is None:
             used_fallback = True
-            print(f'WARNING: missing {pixel_path}; using the legacy scaled rgetarea fallback.')
+            print(f'WARNING: missing {resolved_pixel}; using the legacy scaled rgetarea fallback.')
         for start in range(0, ny, 64):
             mx, my = assignment[:, start:start+64]
             assigned = mx > 0
@@ -101,16 +109,17 @@ def main():
             missing_count += int(np.count_nonzero(selected & (h == -9999)))
     capped = valid & (result > area)
     result[capped] = area[capped]
+    print('Calculation: select assigned pixels where (rivwth > 0 or rivwth == -1) and flddif <= 5 m; aggregate grdare by catmxy and cap each catchment at ctmare.')
     if missing_count:
         print(f'WARNING: {missing_count} selected pixels have flddif=-9999; legacy flddif<=5 selection is preserved.')
-    write_raster(output_root(args)/'prmwat.bin', result, '<f4', grid=grid)
+    #*** 2. Write permanent-water area by unit catchment
+    destination = write_raster(output_root(args)/'prmwat.bin', result, '<f4', grid=grid)
     print(f'Processed high-resolution areas: {len(areas)}')
     print(f'Valid unit catchments: {np.count_nonzero(valid)}')
     print(f'Selected permanent-water pixels: {selected_count}')
     print(f'Catchments capped at ctmare: {np.count_nonzero(capped)}')
     print(f'Used grdare fallback: {"T" if used_fallback else "F"}')
-    filename = 'prmwat.nc' if args.map_format == 'netcdf' else 'prmwat.bin'
-    print(f'Wrote {filename} (float32, one NX x NY record, units m2).')
+    print(f'Wrote {destination.resolve()} (float32, one NX x NY record, units m2).')
 
 
 if __name__ == '__main__':

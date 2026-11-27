@@ -7,7 +7,7 @@ assign each to the lowest-index least-loaded partition, and write mpireg-N.bin.
 """
 import numpy as np
 
-from mod_map_io import Grid, output_root, parser, write_raster
+from mod_map_io import Grid, input_path, output_root, parser, write_raster
 
 
 def assign_regions(basin, count):
@@ -34,14 +34,21 @@ def main():
     p = parser(__doc__)
     p.add_argument('count', type=int)
     args = p.parse_args()
+    #*** 1. Read aggregated basin assignments
     grid = Grid.read(args.map_dir)
     basin_path = (args.map_dir/'bifbsn_mpi.bin' if args.map_format == 'netcdf'
                   else output_root(args)/'bifbsn_mpi.tmp')
+    if args.map_format == 'netcdf':
+        basin_path = input_path(basin_path)
     basin = grid.raster(basin_path, '<i4')
+    print(f'Input: aggregated basin IDs: {basin_path.resolve()}')
+    print(f'Parameters: requested MPI regions={args.count}; basins are assigned in ascending ID order to the currently least-loaded region.')
+
+    #*** 2. Assign basins and write region map
     regions, loads = assign_regions(basin, args.count)
     path = output_root(args) / f'mpireg-{args.count}.bin'
-    write_raster(path, regions, '<i4', grid=grid)
-    print(f'Created {path}')
+    path = write_raster(path, regions, '<i4', grid=grid)
+    print(f'Output: {path.resolve()}')
     for region, load in enumerate(loads, 1):
         print(f'  region {region}: {load} river cells')
 

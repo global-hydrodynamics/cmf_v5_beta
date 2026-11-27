@@ -14,7 +14,7 @@ try:
     from .map_metadata import MapGeometry, read_map_geometry, write_nml
 except ImportError:  # Direct execution from the map-local Shell workflows.
     from map_metadata import MapGeometry, read_map_geometry, write_nml
-from mod_map_io import Grid, output_root, parser, write_raster
+from mod_map_io import Grid, input_path, output_root, parser, write_raster
 
 
 def snap_bounds(requested, nx, ny, size, west, north):
@@ -75,6 +75,8 @@ def main():
     p.add_argument('--region-info', type=Path, default=Path('region_info.txt'))
     p.add_argument('--change-info', type=Path, default=Path('dim_change.txt'))
     args = p.parse_args()
+    #*** 1. Read requested region and source geometry
+    region_info_path = args.region_info.resolve()
     lines = args.region_info.read_text().splitlines()
     source = Path(lines[0].strip())
     source_geometry = read_map_geometry(source)
@@ -89,8 +91,18 @@ def main():
         raise ValueError('Regional crop outside source dimensions')
     out = output_root(args)
     out.mkdir(parents=True, exist_ok=True)
-    write_nml(out/'params.nml', MapGeometry(mx, my, nlfp, size, west, east, south, north))
-    with args.change_info.open('w') as stream:
+    print(f'Input region description: {region_info_path}')
+    print(f'Source map geometry: {source.resolve()} ({nx} x {ny}, {size:g} degrees)')
+    print(f'Requested bounds (west, east, south, north): {requested}')
+    print(f'Snapped crop bounds: ({west:g}, {east:g}, {south:g}, {north:g}); size={mx} x {my}, source offset=({dx}, {dy}).')
+
+    #*** 2. Crop map fields and translate river connectivity
+    written = []
+    geometry_path = out/'params.nml'
+    write_nml(geometry_path, MapGeometry(mx, my, nlfp, size, west, east, south, north))
+    written.append(geometry_path)
+    change_path = args.change_info.resolve()
+    with change_path.open('w') as stream:
         stream.write(str(source.resolve())+'/\n')
         for value in (nx, ny, size, sw, se, ss, sn):
             stream.write(str(value)+'\n')
@@ -99,6 +111,7 @@ def main():
             stream.write(str(value)+'\n')
     # Register source geometry and I/O roots for NetCDF reads and output writes.
     grid = Grid.read(source)
+    print(f'Source topology: {input_path(source/"nextxy.bin").resolve()}')
     output_grid = Grid.from_file(out)
     crop = (slice(dy, dy+my), slice(dx, dx+mx))
     nextxy = np.array(grid.raster(source/'nextxy.bin', '<i4', 2)[:, crop[0], crop[1]])
@@ -111,18 +124,22 @@ def main():
     downxy[:, outside] = -1000
     valid = nextxy[0] != -9999
     downxy[:, ~valid] = -9999
-    write_raster(out/'nextxy.bin', nextxy, '<i4', grid=output_grid)
-    write_raster(out/'downxy.bin', downxy, '<i4', grid=output_grid)
+    written.append(write_raster(out/'nextxy.bin', nextxy, '<i4', grid=output_grid))
+    written.append(write_raster(out/'downxy.bin', downxy, '<i4', grid=output_grid))
     for name, records in [('elevtn', 1), ('fldhgt', nlfp), ('ctmare', 1), ('grdare', 1),
                            ('uparea', 1), ('lonlat', 2), ('nxtdst', 1), ('rivlen', 1), ('width', 1)]:
         data = grid.raster(source/(name+'.bin'), '<f4', records)
         clipped = data[..., crop[0], crop[1]]
-        write_raster(out/(name+'.bin'), np.where(valid, clipped, np.float32(-9999)), '<f4', grid=output_grid)
-    write_raster(out/'lsmask.bin', valid, '<i4', grid=output_grid)
+        written.append(write_raster(out/(name+'.bin'), np.where(valid, clipped, np.float32(-9999)), '<f4', grid=output_grid))
+    written.append(write_raster(out/'lsmask.bin', valid, '<i4', grid=output_grid))
     for name in ('catmpx', 'class'):
         if (source/(name+'.bin')).is_file():
-            write_raster(out/(name+'.bin'), grid.raster(source/(name+'.bin'), '<i4')[crop], '<i4', grid=output_grid)
-    write_raster(out/'nextxy_noedge.bin', edge_mask(nextxy), '<i4', grid=output_grid)
+            written.append(write_raster(out/(name+'.bin'), grid.raster(source/(name+'.bin'), '<i4')[crop], '<i4', grid=output_grid))
+    written.append(write_raster(out/'nextxy_noedge.bin', edge_mask(nextxy), '<i4', grid=output_grid))
+    written.extend((change_path,))
+    print('Output files:')
+    for path in written:
+        print(f'  {path.resolve()}')
 
 
 if __name__ == '__main__':

@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 
 from mod_allocation_map_io import AllocationMap, station_rows
-from mod_map_io import parser
+from mod_map_io import input_path, parser
 
 
 def main():
@@ -21,10 +21,26 @@ def main():
     p.add_argument('mode', choices=['multi', 'single'])
     p.add_argument('hires_tag')
     args = p.parse_args()
+    #*** 1. Read gauge records and reference/high-resolution map data
+    input_path_resolved = args.gauge_list.resolve()
     maps = AllocationMap(args.map_dir, args.hires_tag, map_format=args.map_format)
+    print('Inputs:')
+    print(f'  Gauge records: {input_path_resolved}')
+    for name in ('nextxy', 'uparea'):
+        print(f'  Base {name}: {input_path(args.map_dir/(name + ".bin")).resolve()}')
+    highres_dir = args.map_dir/'binary'/args.hires_tag if args.map_format == 'binary' else args.map_dir/args.hires_tag
+    location = highres_dir/('location.txt' if args.map_format == 'binary' else 'location.csv')
+    print(f'  High-resolution metadata: {location.resolve()}')
+    for name in ('uparea', 'catmxy', 'downxy'):
+        source = highres_dir/(args.hires_tag+'.'+name+'.bin')
+        print(f'  High-resolution {name}: {input_path(source).resolve()}')
+    print(f'Parameters: high-resolution map={args.hires_tag}; matching mode={args.mode}; native search window=7x7; at most two upstream cells.')
+
+    #*** 2. Match gauges to reference river cells
     out = args.output_dir or Path('.')
     out.mkdir(parents=True, exist_ok=True)
-    with (out/'GRDC_alloc.csv').open('w', newline='', encoding='utf-8') as stream:
+    destination = out/'GRDC_alloc.csv'
+    with destination.open('w', newline='', encoding='utf-8') as stream:
         writer = csv.writer(stream, lineterminator='\n')
         writer.writerow(('ID', 'lat', 'lon', 'area_Input', 'area_CaMa', 'error', 'diff',
                          'Type', 'ix1', 'iy1', 'ix2', 'iy2', 'area1', 'area2'))
@@ -78,6 +94,7 @@ def main():
             writer.writerow([identifier, f'{lat:.3f}', f'{lon:.3f}',
                              *(f'{value:.2f}' for value in [area, *values]), snum,
                              *indices, *(f'{value:.1f}' for value in areas)])
+    print(f'Output: {destination.resolve()}')
 
 
 if __name__ == '__main__':

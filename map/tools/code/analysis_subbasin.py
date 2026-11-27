@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 
 from mod_map_color import color_map
-from mod_map_io import Grid, output_root, parser, write_raster
+from mod_map_io import Grid, input_path, output_root, parser, write_raster
 
 
 def propagate_labels(nextxy, labels):
@@ -69,9 +69,19 @@ def main():
     thresholds = [np.float32(x) for x in args.values[:count]]
     if any(not np.isfinite(x) or x <= 0 for x in thresholds) or count == 2 and thresholds[1] >= thresholds[0]:
         p.error('positive finite thresholds required; second must be smaller')
+    #*** 1. Read topology and upstream area
     grid = Grid.read(args.map_dir)
-    nextxy = grid.raster(args.map_dir / 'nextxy.bin', '<i4', 2)
-    area = grid.raster(args.map_dir / 'uparea.bin')
+    topology_path = input_path(args.map_dir/'nextxy.bin')
+    area_path = input_path(args.map_dir/'uparea.bin')
+    nextxy = grid.raster(topology_path, '<i4', 2)
+    area = grid.raster(area_path)
+    print('Inputs:')
+    print(f'  River topology: {topology_path.resolve()}')
+    print(f'  Upstream area: {area_path.resolve()}')
+    threshold_text = ', '.join(f'{float(value):g}' for value in thresholds)
+    print(f'Parameters: drainage-area jump thresholds=[{threshold_text}] km2; second-stage threshold applies only to remaining stage-one zero cells.')
+
+    #*** 2. Segment drainage areas and derive display colors
     basin = subbasins(nextxy, area, thresholds)
     colors = color_map(basin, grid.west, grid.east)
     colors[basin == 0] = 0
@@ -80,8 +90,12 @@ def main():
     else:
         label = '_'.join(args.values[:count])
         outputs = [output_root(args) / f'analysis_{tag}_{label}.bin' for tag in ('subbsn', 'subcol')]
-    write_raster(outputs[0], basin, '<i4', grid=grid)
-    write_raster(outputs[1], colors, '<i4', grid=grid)
+    #*** 3. Write segmentation and color maps
+    written = [write_raster(outputs[0], basin, '<i4', grid=grid),
+               write_raster(outputs[1], colors, '<i4', grid=grid)]
+    print('Output files:')
+    for path in written:
+        print(f'  {path.resolve()}')
 
 
 if __name__ == '__main__':

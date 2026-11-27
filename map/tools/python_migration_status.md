@@ -1,5 +1,27 @@
 # Experimental parallel Python map tools
 
+## CLI readability and standard output (2026-11-28)
+
+Standalone map-tool CLIs now follow the stdout and readable-`main()` guidance
+in `docs/python_design.md` and `docs/python_style.md`. The guidance is linked
+from `docs/preprocessing_code_conventions.md`. Twenty-two maintained CLI
+programs report the inputs, settings or calculation details, and actual
+successful output paths needed to understand a run; output reporting avoids
+duplicating Shell headings. `mod_map_io.write_raster()` now returns the resolved
+destination path so NetCDF-backed outputs are reported accurately. Existing
+scientific calculations, data formats, and Shell workflows were not changed.
+
+The complete `s02-channel_params.sh` workflow passed on an isolated Mekong
+sample map using the repository `.venv`; all seven expected channel products
+were created in a temporary output directory. Additional read-only Mekong CLI
+smoke runs passed for allocation, subbasin, and MPI-basin tools. Seven focused
+unit tests passed, including a regression check for the actual NetCDF output
+path. A broader, legacy-heavy test invocation had 11 failures and 4 errors:
+the current test fixtures reference removed helpers or legacy `params.txt` and
+`location.txt` files, and one runoff-grid overlap case remains unresolved. The
+broad suite therefore is not claimed as passing; see [VR-0272](../../research/records/validation_runs/VR-0272.md)
+for the exact checks and limitations.
+
 Date: 2026-11-25 · Task DT-0184 · branch `feature/package-builder`.
 
 ## Workflow follow-up on `feature/package-builder`

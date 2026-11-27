@@ -11,7 +11,7 @@ import numpy as np
 
 from mod_allocation_map_io import link_distance
 from mod_map_color import color_map
-from mod_map_io import Grid, output_root, parser, write_raster
+from mod_map_io import Grid, input_path, output_root, parser, write_raster
 
 
 def heap_order(values):
@@ -111,9 +111,17 @@ def derive(grid, nextxy, area):
 def main():
     p = parser(__doc__)
     args = p.parse_args()
+    #*** 1. Read river topology and grid-cell areas
     grid = Grid.read(args.map_dir)
-    nextxy = grid.raster(args.map_dir/'nextxy.bin', '<i4', 2)
-    area = grid.raster(args.map_dir/'grdare.bin')
+    topology_path = input_path(args.map_dir/'nextxy.bin')
+    area_path = input_path(args.map_dir/'grdare.bin')
+    nextxy = grid.raster(topology_path, '<i4', 2)
+    area = grid.raster(area_path)
+    print('Inputs:')
+    print(f'  River topology: {topology_path.resolve()}')
+    print(f'  Grid-cell area: {area_path.resolve()}')
+
+    #*** 2. Derive directed-network sequence, upstream summaries, and basin colors
     sequence, upstream, counts, basin = derive(grid, nextxy, area)
     longitude = grid.west+(np.arange(grid.nx, dtype='f4')+np.float32(.5))*grid.size
     latitude = grid.north-(np.arange(grid.ny, dtype='f4')+np.float32(.5))*grid.size
@@ -128,8 +136,12 @@ def main():
               ('upgrid', counts, '<i4'), ('basin', basin, '<i4'),
               ('nxtdst_grid', distance, '<f4'), ('rivlen_grid', distance, '<f4'),
               ('bsncol', color_map(basin, grid.west, grid.east), '<i4')]
-    for name, values, dtype in fields:
-        write_raster(output_root(args)/(name+'.bin'), values, dtype, grid=grid)
+    #*** 3. Write derived map fields
+    written = [write_raster(output_root(args)/(name+'.bin'), values, dtype, grid=grid)
+               for name, values, dtype in fields]
+    print('Output files:')
+    for path in written:
+        print(f'  {path.resolve()}')
 
 
 if __name__ == '__main__':

@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 
 from mod_bifprm_csv import read_bifprm_csv
-from mod_map_io import Grid, parser
+from mod_map_io import Grid, input_path, parser
 
 
 def classify_paths(regions,nextxy,paths):
@@ -51,28 +51,48 @@ def classify_paths(regions,nextxy,paths):
 
 
 def main():
-    p=parser(__doc__,'.');p.add_argument('region_file',type=Path);p.add_argument('--csv',type=Path)
-    args=p.parse_args();grid=Grid.read(args.map_dir)
-    regions=grid.raster(args.region_file,'<i4');nextxy=grid.raster(args.map_dir/'nextxy.bin','<i4',2)
-    paths=read_bifprm_csv(args.map_dir/'bifprm.csv');classes,ids=classify_paths(regions,nextxy,paths)
+    p = parser(__doc__, '.')
+    p.add_argument('region_file', type=Path)
+    p.add_argument('--csv', type=Path)
+    args = p.parse_args()
+
+    #*** 1. Read MPI regions, river topology, and bifurcation pathways
+    grid = Grid.read(args.map_dir)
+    region_path = args.region_file.resolve()
+    nextxy_path = input_path(args.map_dir/'nextxy.bin')
+    bifprm_path = (args.map_dir/'bifprm.csv').resolve()
+    regions = grid.raster(region_path, '<i4')
+    nextxy = grid.raster(nextxy_path, '<i4', 2)
+    paths = read_bifprm_csv(bifprm_path)
+    print('Inputs:')
+    print(f'  MPI regions: {region_path}')
+    print(f'  River topology: {nextxy_path.resolve()}')
+    print(f'  Bifurcation pathways: {bifprm_path}')
+
+    #*** 2. Reconstruct model-local vector membership and classify pathways
+    classes, ids = classify_paths(regions, nextxy, paths)
     channel=np.array([row['widths'][0]>0 for row in paths]);totals=np.bincount(classes,minlength=4)[1:]
-    print('MPI regions:',max(0,int(regions.max())));print('Bifurcation pathways:',len(paths))
+    print('MPI regions:', max(0, int(regions.max())))
+    print('Bifurcation pathways:', len(paths))
     print('Retained by a model-local vector:',totals[0])
     print('  including endpoints in different assigned regions via downstream vector extension:',np.count_nonzero((classes==1)&(ids[:,0]!=ids[:,1])))
     print('Dropped (both endpoints have a vector, but never on the same rank):',totals[1])
     print('Invalid/unassigned (an endpoint has no model vector):',totals[2])
-    if len(paths):print(f'Dropped fraction of all pathways: {np.float32(np.float32(totals[1])/np.float32(len(paths))*np.float32(100)):8.4f} %')
+    if len(paths):
+        print(f'Dropped fraction of all pathways: {np.float32(np.float32(totals[1])/np.float32(len(paths))*np.float32(100)):8.4f} %')
     for label,mask in [('Channel',channel),('Floodplain-only',~channel)]:
         print(label+' retained/dropped/invalid:',*(np.count_nonzero(mask&(classes==k)) for k in (1,2,3)))
     print('The dropped fraction measures connectivity exclusion, not simulation error.')
     if args.csv:
-        with args.csv.open('w') as out:
+        #*** 3. Write optional dropped-path diagnostic table
+        destination = args.csv
+        with destination.open('w') as out:
             out.write('ix,iy,jx,jy,region_up,region_down,elevation,latitude,longitude,type,width1\n')
             for row,kind,regions_pair in zip(paths,classes,ids):
                 if kind!=2:continue
                 label='channel' if row['widths'][0]>0 else 'floodplain_only'
                 out.write(','.join(str(row[k]) for k in ['ix','iy','jx','jy'])+f",{regions_pair[0]},{regions_pair[1]},{row['elevtn']:.3f},{row['start_lat']:.6f},{row['start_lon']:.6f},{label},{row['widths'][0]:.3f}\n")
-        print('Dropped-path CSV:',args.csv)
+        print('Dropped-path CSV:', destination.resolve())
 
 
 if __name__ == '__main__':

@@ -10,10 +10,10 @@ exclusion is intentional reference behavior.
 from pathlib import Path
 
 try:
-    from .mod_map_io import Grid, output_root, parser
+    from .mod_map_io import Grid, input_path, output_root, parser
     from .mod_bifori_csv import crop_bifori_records, read_bifori_csv, write_bifori_csv
 except ImportError:  # Direct execution from maintained Shell workflows.
-    from mod_map_io import Grid, output_root, parser
+    from mod_map_io import Grid, input_path, output_root, parser
     from mod_bifori_csv import crop_bifori_records, read_bifori_csv, write_bifori_csv
 
 
@@ -21,14 +21,29 @@ def main():
     p = parser(__doc__)
     p.add_argument('--change-info', type=Path, default=Path('dim_change.txt'))
     args = p.parse_args()
-    lines = args.change_info.read_text().splitlines()
+    #*** 1. Read regional crop contract and source bifurcation pathways
+    change_path = args.change_info.resolve()
+    lines = change_path.read_text().splitlines()
     source = Path(lines[0].strip())
     nx, ny, dx, dy = (int(lines[i].split()[0]) for i in (9, 10, 11, 12))
-    nextx = Grid.read(args.map_dir).raster(args.map_dir/'nextxy_noedge.bin', '<i4', 2)[0]
-    bifori = read_bifori_csv(source/'bifori.csv')
+    grid = Grid.read(args.map_dir)
+    nextxy_path = input_path(args.map_dir/'nextxy_noedge.bin')
+    source_path = source/'bifori.csv'
+    nextx = grid.raster(nextxy_path, '<i4', 2)[0]
+    bifori = read_bifori_csv(source_path)
+    print('Inputs:')
+    print(f'  Regional crop contract: {change_path}')
+    print(f'  Edge-masked topology: {nextxy_path.resolve()}')
+    print(f'  Source bifurcation pathways: {source_path.resolve()}')
+    print(f'Parameters: crop offset=({dx}, {dy}); dimensions={nx} x {ny}; endpoints on the strict outer boundary are excluded by the reference rule.')
+
+    #*** 2. Filter and translate pathways for the regional map
     selected = crop_bifori_records(bifori.rows, nextx, nx, ny, dx, dy)
     out = output_root(args)
-    write_bifori_csv(out/'bifori.csv', bifori.fields, selected)
+    destination = out/'bifori.csv'
+    write_bifori_csv(destination, bifori.fields, selected)
+    print(f'Bifurcation pathways retained: {len(selected)} of {len(bifori.rows)}')
+    print(f'Output: {destination.resolve()}')
 
 
 if __name__ == '__main__':

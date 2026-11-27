@@ -22,6 +22,8 @@ def main():
     p.add_argument('second', type=np.float32)
     args = p.parse_args()
     grid = Grid.read(args.map_dir)
+    print(f'Map input: {args.map_dir.resolve()} ({args.map_format}; resolution {grid.size:g} degrees)')
+    print(f'Point selection: {args.mode} with values {args.first:g}, {args.second:g}')
     suffix = '.nc' if args.map_format == 'netcdf' else '.bin'
     nextxy = grid.raster(args.map_dir / f'nextxy{suffix}', '<i4', 2)
     basin = grid.raster(args.map_dir / f'basin{suffix}', '<i4')
