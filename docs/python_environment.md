@@ -14,11 +14,26 @@ From the repository root, run the interactive setup:
 ./s02-python_setup.sh
 ```
 
-The script creates or reuses `.venv`, installs `requirements.txt`, and installs
-the bundled `cmf_colormap` package there. It does not install packages into
-system Python. The script asks before making changes. Without an interactive
-terminal it only diagnoses the setup and exits; rerun it from a terminal to
-create or update `.venv`.
+The script creates or reuses `.venv`, tries `requirements.txt` first, and
+installs the bundled `cmf_colormap` package in the same pip resolution. It
+validates the installed dependencies and required imports. If installation or
+validation fails, it makes one automatic attempt with
+`config/python/requirements_2024.txt`; the selected profile and Python version
+are reported on success. Rasterio is installed from a compatible wheel rather
+than built from source. The script does not install packages into system
+Python. It asks before making changes. Without an interactive terminal it only
+diagnoses the setup and exits; rerun it from a terminal to create or update
+`.venv`.
+
+The 2024 profile can improve compatibility with older supported Python
+environments, but does not guarantee support for every operating system,
+processor, Python version, or package index. If both attempts fail, review the
+pip and validation diagnostics; network/DNS errors require package-index
+access, while missing wheels or platform prerequisites require a compatible
+runtime. The setup does not recreate `.venv` or remove unrelated installed
+packages. If an extra package conflicts with the selected profile, `pip check`
+reports that conflict and setup stops for review. The 2022 profile remains
+experimental and is never selected automatically.
 
 Activate the environment and run a tutorial:
 

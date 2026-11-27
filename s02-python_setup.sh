@@ -5,6 +5,7 @@ set -eu
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 VENV_DIR="$SCRIPT_DIR/.venv"
 REQUIREMENTS="$SCRIPT_DIR/requirements.txt"
+COMPAT_REQUIREMENTS="$SCRIPT_DIR/config/python/requirements_2024.txt"
 CMF_COLORMAP_DIR="$SCRIPT_DIR/visualization/cmf_colormap"
 
 fail() {
@@ -19,6 +20,57 @@ check_python() {
 
 check_venv_tools() {
     "$1" -c 'import ensurepip, venv' >/dev/null 2>&1
+}
+
+validate_environment() {
+    printf '\n[INFO] Check installed dependency consistency.\n'
+    if ! "$VENV_PYTHON" -m pip check; then
+        return 1
+    fi
+
+    printf '\n[INFO] Check required Python imports and CMF Colormaps.\n'
+    if ! "$VENV_PYTHON" - <<'PY'
+import importlib
+import traceback
+
+modules = (
+    "numpy", "pandas", "xarray", "netCDF4", "scipy", "matplotlib",
+    "rasterio", "tifffile", "f90nml", "PIL", "requests", "param",
+)
+
+for module in modules:
+    try:
+        importlib.import_module(module)
+    except Exception:
+        print(f"[ERROR] Python import failed: {module}")
+        traceback.print_exc()
+        raise SystemExit(1)
+
+try:
+    from cmf_colormap import get_cmap
+    cmap = get_cmap("shade_rainbow")
+    if cmap.name != "shade_rainbow":
+        raise RuntimeError(f"unexpected colormap name: {cmap.name}")
+except Exception:
+    print("[ERROR] CMF Colormaps shade_rainbow validation failed")
+    traceback.print_exc()
+    raise SystemExit(1)
+
+print("[INFO] Principal dependency imports and shade_rainbow: PASS")
+PY
+    then
+        return 1
+    fi
+
+    return 0
+}
+
+install_requirements() {
+    local profile="$1"
+    shift
+
+    "$VENV_PYTHON" -m pip install "$@" --only-binary=rasterio \
+        -r "$profile" -e "$CMF_COLORMAP_DIR"
 }
 
 describe_origin() {
@@ -177,6 +229,9 @@ fi
 if [[ ! -f "$REQUIREMENTS" ]]; then
     fail "requirements.txt was not found beside this script."
 fi
+if [[ ! -f "$COMPAT_REQUIREMENTS" ]]; then
+    fail "2024 Compatibility profile was not found at $COMPAT_REQUIREMENTS."
+fi
 if [[ ! -f "$CMF_COLORMAP_DIR/pyproject.toml" ]]; then
     fail "CMF Colormaps package was not found at $CMF_COLORMAP_DIR."
 fi
@@ -244,23 +299,34 @@ if ! "$VENV_PYTHON" -m pip --version >/dev/null 2>&1; then
     fail "pip is unavailable in .venv; recreate it with a Python that includes ensurepip."
 fi
 
-printf '\n[STEP 2/3] Install requirements into .venv.\n'
-if ! "$VENV_PYTHON" -m pip install -r "$REQUIREMENTS"; then
-    fail "dependency installation failed. Check network access and platform package prerequisites, then rerun."
+SELECTED_PROFILE="Standard"
+printf '\n[STEP 2/3] Install standard requirements and CMF Colormaps in one pip resolution.\n'
+if ! install_requirements "$REQUIREMENTS"; then
+    printf '\n[WARNING] Standard dependency installation failed; attempting the 2024 Compatibility profile once.\n' >&2
+    SELECTED_PROFILE="2024 Compatibility"
+elif ! validate_environment; then
+    printf '\n[WARNING] Standard dependency validation failed; attempting the 2024 Compatibility profile once.\n' >&2
+    SELECTED_PROFILE="2024 Compatibility"
 fi
 
-printf '\n[STEP 3/3] Install CMF Colormaps into .venv in editable mode.\n'
-if ! "$VENV_PYTHON" -m pip install -e "$CMF_COLORMAP_DIR"; then
-    fail "CMF Colormaps installation failed from $CMF_COLORMAP_DIR. Check the pip output and rerun."
+if [[ "$SELECTED_PROFILE" == "2024 Compatibility" ]]; then
+    printf '\n[STEP 3/3] Resolve the 2024 Compatibility profile and CMF Colormaps together.\n'
+    if ! install_requirements "$COMPAT_REQUIREMENTS" --upgrade --upgrade-strategy eager; then
+        printf '\n[ERROR] Standard setup and 2024 Compatibility installation both failed.\n' >&2
+        printf 'Review the pip output above. If it reports DNS or connection errors, confirm network/PyPI access; otherwise check wheel and platform requirements.\n' >&2
+        exit 1
+    fi
+    if ! validate_environment; then
+        printf '\n[ERROR] The 2024 Compatibility profile installed but did not pass validation.\n' >&2
+        printf 'Review the pip/import diagnostics above. Network errors and unsupported package/platform combinations require different remedies.\n' >&2
+        exit 1
+    fi
+else
+    printf '\n[STEP 3/3] Standard dependency validation completed.\n'
 fi
 
-if ! "$VENV_PYTHON" -c 'import pandas, xarray, netCDF4, matplotlib' >/dev/null 2>&1; then
-    fail "required imports pandas, xarray, netCDF4, and matplotlib are unavailable after installation."
-fi
-
-if ! "$VENV_PYTHON" -c 'from cmf_colormap import get_cmap; cmap = get_cmap("shade_rainbow"); assert cmap.name == "shade_rainbow"' >/dev/null 2>&1; then
-    fail "CMF Colormaps was installed but its shade_rainbow import/registry check failed. Review the installation output and package files."
-fi
+printf '\n[INFO] Selected Python version: %s\n' "$("$VENV_PYTHON" --version 2>&1)"
+printf '[INFO] Dependency profile: %s\n' "$SELECTED_PROFILE"
 
 printf '\n[SUCCESS] Python environment ready.\n\n'
 

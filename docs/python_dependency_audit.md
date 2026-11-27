@@ -73,7 +73,7 @@ The existing root `.venv` results are modern-environment checks and are not subs
 1. Keep current minimums unchanged pending actual lowest-version tests.
 2. Declare `Pillow`, `requests`, and `param` explicitly because maintained code imports them directly. `Pillow` and `param` are added to the Explorer-specific requirements too.
 3. Do not remove the currently declared `scipy`, `tifffile`, `tqdm`, `lmoments3`, `PyYAML`, or `cftime` in this audit; scope search did not prove their absence from all user workflows, and root comments identify some as optional/maintained features.
-4. Do not add automatic fallback to `requirements_2024.txt` in `s02-python_setup.sh`. A profile whose installation and representative workflow have not been tested is not a validated fallback, and a failed pip run may leave a partially updated environment.
-5. Before enabling fallback, perform clean-install tests for current and 2024 profiles on each supported OS/CPU combination and record resolution, `pip check`, runtime, and recovery behavior. A separate GDAL-capable platform is needed to complete the 2022 Rasterio checks.
+4. `s02-python_setup.sh` now tries the standard requirements and, after installation or validation failure, makes one resolver-based attempt with the 2024 profile. This is a compatibility fallback, not an OS support guarantee. The 2022 profile remains excluded.
+5. Before claiming compatibility on additional OS/CPU combinations, perform clean-install tests there and record resolution, `pip check`, runtime and recovery behavior. A separate GDAL-capable platform is needed to complete the 2022 Rasterio checks.
 
 Historical profiles constrain direct dependencies, not all transitives. The tested 2024 paths have focused evidence on this macOS arm64 host; the partial 2022 results are not full profile certification. Neither profile establishes general cross-platform support.
