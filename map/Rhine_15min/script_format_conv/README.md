@@ -8,6 +8,9 @@ repository; map products stay with the target map.
 
 ## Directory layout
 
+`params.toml` is the authoritative base-map geometry. Retain `params.txt` only
+as a legacy compatibility copy where older consumers still require it.
+
 ```text
 map/<MAPNAME>/
   *.nc                         # standard NetCDF maps

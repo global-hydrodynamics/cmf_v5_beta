@@ -47,7 +47,7 @@ def main():
     p.add_argument('iy', type=int)
     p.add_argument('output', nargs='?', type=Path)
     args = p.parse_args()
-    grid = Grid.read(args.map_dir / 'params.txt')
+    grid = Grid.read(args.map_dir)
     nextxy = grid.raster(args.map_dir / 'nextxy.bin', '<i4', 2)
     # The reference requires these inputs even though only nextxy determines labels.
     upgrid = grid.raster(args.map_dir / 'upgrid.bin', '<i4')

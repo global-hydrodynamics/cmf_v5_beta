@@ -34,7 +34,7 @@ def main():
     p = parser(__doc__)
     p.add_argument('count', type=int)
     args = p.parse_args()
-    grid = Grid.read(args.map_dir / 'params.txt')
+    grid = Grid.read(args.map_dir)
     basin_path = (args.map_dir/'bifbsn_mpi.bin' if args.map_format == 'netcdf'
                   else output_root(args)/'bifbsn_mpi.tmp')
     basin = grid.raster(basin_path, '<i4')

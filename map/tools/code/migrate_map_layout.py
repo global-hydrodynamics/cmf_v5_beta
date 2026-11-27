@@ -11,6 +11,11 @@ import hashlib
 import shutil
 from pathlib import Path
 
+try:
+    from .map_metadata import has_map_geometry
+except ImportError:  # Direct execution from the map-local Shell workflows.
+    from map_metadata import has_map_geometry
+
 
 def digest(path: Path) -> str:
     value = hashlib.sha256()
@@ -39,7 +44,7 @@ def plan(map_dir: Path) -> list[tuple[Path, Path]]:
             for source in sorted(directory.glob('*.bin')) + sorted(directory.glob('*.ctl')):
                 moves.append((source, map_dir / 'binary' / directory.name / source.name))
             moves.append((directory / 'location.txt', map_dir / 'binary' / directory.name / 'location.txt'))
-    for source in (map_dir / 'params.txt', *sorted(map_dir.glob('diminfo_*.txt'))):
+    for source in (map_dir / 'params.toml', map_dir / 'params.txt', *sorted(map_dir.glob('diminfo_*.txt'))):
         if source.is_file():
             moves.append((source, map_dir / 'binary' / source.name))
     return moves
@@ -77,12 +82,12 @@ def execute(map_dir: Path, apply: bool) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--map-dir', type=Path, required=True, help='map root containing params.txt')
+    parser.add_argument('--map-dir', type=Path, required=True, help='map root containing params.toml or legacy params.txt')
     parser.add_argument('--apply', action='store_true', help='copy products after collision preflight; default only reports')
     args = parser.parse_args()
     map_dir = args.map_dir.expanduser().resolve()
-    if not (map_dir / 'params.txt').is_file():
-        parser.error(f'not a map root (params.txt missing): {map_dir}')
+    if not has_map_geometry(map_dir):
+        parser.error(f'not a map root (params.toml/params.txt missing): {map_dir}')
     return execute(map_dir, args.apply)
 
 

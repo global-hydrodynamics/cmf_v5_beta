@@ -21,6 +21,11 @@ import subprocess
 import sys
 import tempfile
 
+try:
+    from .map_metadata import read_map_geometry
+except ImportError:  # Direct execution from the map-local Shell workflows.
+    from map_metadata import read_map_geometry
+
 
 NC_CLOBBER = 0
 NC_NETCDF4 = 0x1000
@@ -76,11 +81,7 @@ def check(lib: ctypes.CDLL, status: int, operation: str) -> None:
 
 
 def read_params(path: Path) -> tuple[int, int, int, float, float, float, float, float]:
-    lines = path.read_text(encoding="utf-8").splitlines()
-    if len(lines) < 8:
-        raise ValueError(f"{path} must contain NX, NY, NLFP, resolution, west, east, south, north")
-    values = [line.split()[0] for line in lines[:8]]
-    return (int(values[0]), int(values[1]), int(values[2]), *(float(v) for v in values[3:8]))
+    return read_map_geometry(path).values()
 
 
 def registry_rows(path: Path) -> list[dict[str, str]]:
@@ -279,7 +280,7 @@ def put_text(lib: ctypes.CDLL, ncid: int, varid: int, name: str, value: str) -> 
 
 
 def convert(args: argparse.Namespace) -> None:
-    params = read_params(args.map_dir / "params.txt")
+    params = read_params(args.map_dir)
     nx, ny, nlfp, *_ = params
     # select_variables validates the complete definition before output filtering.
     rows = select_variables(
@@ -291,7 +292,7 @@ def convert(args: argparse.Namespace) -> None:
     expected_bytes = nx * ny * records * 4
     actual_bytes = args.input.stat().st_size
     if actual_bytes != expected_bytes:
-        raise ValueError(f"{args.input} has {actual_bytes} bytes; registry and params.txt require {expected_bytes}")
+        raise ValueError(f"{args.input} has {actual_bytes} bytes; registry and map geometry require {expected_bytes}")
     if args.output.resolve() == args.input.resolve():
         raise ValueError("output path must not be the input Binary file")
     no_overwrite = getattr(args, "no_overwrite", False)
@@ -490,7 +491,7 @@ def write_netcdf(args: argparse.Namespace, rows: list[dict[str, str]], params: t
 def main() -> int:
     root = Path(__file__).resolve().parents[3]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--map-dir", type=Path, required=True, help="map directory containing params.txt")
+    parser.add_argument("--map-dir", type=Path, required=True, help="map directory containing params.toml or legacy params.txt")
     parser.add_argument("--input", type=Path, help="registered Binary map file")
     parser.add_argument("--reference-binary", help="exact registered base Binary filename whose full definition describes the input")
     parser.add_argument("--output", type=Path, help="destination NetCDF file")

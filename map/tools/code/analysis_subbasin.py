@@ -69,7 +69,7 @@ def main():
     thresholds = [np.float32(x) for x in args.values[:count]]
     if any(not np.isfinite(x) or x <= 0 for x in thresholds) or count == 2 and thresholds[1] >= thresholds[0]:
         p.error('positive finite thresholds required; second must be smaller')
-    grid = Grid.read(args.map_dir / 'params.txt')
+    grid = Grid.read(args.map_dir)
     nextxy = grid.raster(args.map_dir / 'nextxy.bin', '<i4', 2)
     area = grid.raster(args.map_dir / 'uparea.bin')
     basin = subbasins(nextxy, area, thresholds)

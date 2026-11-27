@@ -14,6 +14,11 @@ import subprocess
 import sys
 import tempfile
 
+try:
+    from .map_metadata import read_map_geometry
+except ImportError:  # Direct execution from the map-local Shell workflows.
+    from map_metadata import read_map_geometry
+
 
 NC_NOWRITE = 0
 NC_CLOBBER = 0
@@ -74,13 +79,8 @@ def check(lib: ctypes.CDLL, status: int, action: str) -> None:
 
 
 def read_map_shape(path: Path) -> tuple[int, int, int]:
-    lines = path.read_text(encoding="utf-8").splitlines()
-    if len(lines) < 3:
-        raise ValueError(f"{path} must contain NX, NY, and NLFP on its first three lines")
-    try:
-        return tuple(int(lines[index].split()[0]) for index in range(3))
-    except (IndexError, ValueError) as exc:
-        raise ValueError(f"could not read NX, NY, NLFP from {path}") from exc
+    geometry = read_map_geometry(path)
+    return geometry.nx, geometry.ny, geometry.nlfp
 
 
 def cstring(value: str) -> ctypes.Array:
@@ -233,7 +233,7 @@ def assemble(args: argparse.Namespace) -> bool:
         raise ValueError("--rivwth must be rivwth.nc or rivwth_merit.nc")
     map_dir = args.map_dir.resolve()
     netcdf_dir = map_dir
-    nx, ny, nlfp = read_map_shape(map_dir / "params.txt")
+    nx, ny, nlfp = read_map_shape(map_dir)
     inputs = {
         "network": netcdf_dir / args.nextxy,
         "coordinates": netcdf_dir / "lonlat.nc",
@@ -254,7 +254,7 @@ def assemble(args: argparse.Namespace) -> bool:
     coordinates = [read_var(lib, inputs["coordinates"], name) for name in ("lon", "lat")]
     coord_map = {item["name"]: item for item in coordinates}
     if coordinates[0]["dimensions"] != [("lon", nx)] or coordinates[1]["dimensions"] != [("lat", ny)]:
-        raise ValueError(f"lonlat.nc coordinates do not match params.txt grid size ({nx}, {ny})")
+        raise ValueError(f"lonlat.nc coordinates do not match map geometry ({nx}, {ny})")
     network = [read_var(lib, inputs["network"], name) for name in ("nextx", "nexty")]
     topo = [read_var(lib, inputs[key], key) for key in ("ctmare", "elevtn", "nxtdst", "rivlen", "fldhgt")]
     params = [read_var(lib, inputs[key], key) for key in ("rivwth", "rivhgt", "rivman")]
@@ -310,7 +310,7 @@ def assemble(args: argparse.Namespace) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--map-dir", type=Path, required=True, help="map root containing params.txt and individual NetCDF maps")
+    parser.add_argument("--map-dir", type=Path, required=True, help="map root containing params.toml or legacy params.txt and individual NetCDF maps")
     parser.add_argument("--nextxy", default="nextxy_noedge.nc", help="network file: nextxy.nc or nextxy_noedge.nc")
     parser.add_argument("--rivwth", default="rivwth_merit.nc", help="width file: rivwth.nc or rivwth_merit.nc")
     parser.add_argument("--force", action="store_true", default=True, help=argparse.SUPPRESS)

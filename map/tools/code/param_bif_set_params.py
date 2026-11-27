@@ -66,7 +66,7 @@ def main():
             writer.writerow([number,ix,iy,jx,jy,*real_fields,f'{values[-2]:.3f}',f'{values[-1]:.3f}',f'{end[1]:.16e}',f'{end[0]:.16e}',ibsn,jbsn])
     if args.check_map:
         write_raster(output_root(args)/'check_bif_dphwth.bin',diagnostic,'<f4',
-                     grid=Grid.from_file(args.map_dir/'params.txt'))
+                     grid=Grid.from_file(args.map_dir))
 
 
 if __name__ == '__main__':

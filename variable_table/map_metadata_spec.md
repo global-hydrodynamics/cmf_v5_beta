@@ -12,6 +12,32 @@ The registry's `filename` is the canonical standard NetCDF filename for numerica
 
 This document defines the CSV columns, records the design choices, and explains how the shared variable definitions relate to metadata files distributed with a map. The CSV is the primary source for variable short names, proposed long names, units, data types, symbolic dimensions, binary record positions, missing conventions, distribution roles, and model-reader/NetCDF variable mappings. Do not copy its full variable table into another README or manual.
 
+## Per-map geometry: `params.toml`
+
+The authoritative v5 base-map geometry file is `params.toml`, using Python's TOML reader and the following compact schema:
+
+```toml
+# CaMa-Flood map geometry
+
+[grid]
+nx = 80
+ny = 120
+nlfp = 10
+resolution = 0.25
+
+[domain]
+west = 90.0
+east = 110.0
+south = 5.0
+north = 35.0
+```
+
+`nx`/`ny` are east-west/north-south cell counts; `nlfp` is the floodplain layer count; `resolution` is regular cell spacing in degrees; and `west`, `east`, `south`, and `north` are map-edge coordinates in degrees. The established coordinates and north-to-south raster-row convention are unchanged. These are dataset-specific geometry values, not runoff-grid or simulation-time settings.
+
+`params.txt` is a legacy eight-record representation. Existing TXT-only maps remain readable. When both files exist, readers use TOML and reject the pair if any numeric value disagrees. During migration, retained `params.txt` files are compatibility mirrors, not a second editable source. The converter `map/tools/code/migrate_map_params.py --map-root map` scans on-disk directories, including Git-ignored local maps; it creates only missing TOML files and refuses conflicting metadata. Legacy TXT remains where historical Fortran utilities, existing local scripts, or Binary/CTL compatibility still use it. The v5 runtime under `src_main/` does not read either geometry file.
+
+Regionalization writes cropped map geometry as `params.toml`. Older tools that need a TXT compatibility file can create it from authoritative TOML using `migrate_map_params.py --map-dir MAP --write-legacy PATH`; an existing conflicting file is never replaced.
+
 Dataset-specific dimensions, bounds, and spacing remain in each map dataset's metadata. Simulation dimensions belong in `diminfo_<ROFFTAG>.txt`, while the standard input-to-model mapping is `inpmat_<ROFFTAG>.nc` (`binary/inpmat_<ROFFTAG>.bin` is the optional Binary compatibility form). The descriptor includes both model-grid and runoff/input-grid dimensions; the matrix stores their correspondence. Neither dataset-specific dimensions nor runoff-grid settings belong in the common variable definition.
 
 The `filename` column is the canonical filename for the standard NetCDF product. For registered numerical raster products (`binary_map` and `binary_mult`), Binary conversion tools derive the compatibility basename by changing `.nc` to `.bin`; they do not change the recorded dtype, dimensions, variable names, missing/special values, record indexes, or record layout. These record fields describe the existing Binary representation and are retained to generate compatible Binary files and CTLs. Non-raster metadata such as `diminfo_<ROFFTAG>.txt` keeps its real filename and is not converted by this extension rule. The rule describes naming and format choice, not a scientific or numerical change.
@@ -177,7 +203,7 @@ Byte order and row orientation are dataset properties, not properties of a varia
 
 ## Current map tools and model reader contract
 
-The current shared map utilities are under `map/tools/`. `map/tools/code/generate_ctl.py` reads registered binary products from this CSV and combines their variable-level metadata with map geometry from `params.txt` or high-resolution `location.txt`. The category-11 core runtime products are `nextxy.bin`, `ctmare.bin`, `elevtn.bin`, `nxtdst.bin`, `rivlen.bin`, and `fldhgt.bin`; category IDs describe workflow order and are not a file-selection API for every utility.
+The current shared map utilities are under `map/tools/`. `map/tools/code/generate_ctl.py` reads registered binary products from this CSV and combines their variable-level metadata with authoritative `params.toml` (or legacy `params.txt`) or high-resolution `location.txt`. The category-11 core runtime products are `nextxy.bin`, `ctmare.bin`, `elevtn.bin`, `nxtdst.bin`, `rivlen.bin`, and `fldhgt.bin`; category IDs describe workflow order and are not a file-selection API for every utility.
 
 The CaMa-Flood v4 reader contract is verified in `src/cmf_ctrl_maps_mod.F90`:
 
@@ -204,7 +230,7 @@ The model names in the CSV are established variable names. English `long_name` t
 
 These file types have different scopes. Their structures below are verified from the v4.30 reference examples and repository readers/writers; numeric example values in a particular map must not be mistaken for common definitions.
 
-### `params.txt` — map-dataset geometry
+### Legacy `params.txt` — map-dataset geometry
 
 The inspected format has one formatted value per record, often followed by a comment:
 
@@ -219,9 +245,9 @@ The inspected format has one formatted value per record, often followed by a com
 | 7 | `SOUTH` | Southern map edge | degrees in inspected geographic maps |
 | 8 | `NORTH` | Northern map edge | degrees in inspected geographic maps |
 
-This is map-dataset metadata, not a simulation namelist. Programs such as `generate_inpmat.F90`, regional `set_map.F90`, and `cut_domain.F90` read it; `cut_domain` writes a regional version. The standard model map reader does not open `params.txt`; model array dimensions come from its configured dimensions/`diminfo`.
+This eight-record format is the legacy representation of map-dataset geometry, not a simulation namelist. Current v5 tools use the `params.toml` schema documented above and retain TXT-only input compatibility. If both files exist, they must agree numerically. Older Fortran and map-local workflows still read TXT, so the compatibility copy remains in affected datasets; `s09-write_ctl.sh` can generate `binary/params.txt` from the authoritative root metadata. The standard model map reader does not open either geometry file; model array dimensions come from configured dimensions/`diminfo`.
 
-For a regular geographic grid, source code calculates cell-center coordinates as longitude = `WEST + (i - 0.5) × GSIZE` and latitude = `NORTH - (j - 0.5) × GSIZE`. The inspected `glb_15min` file is 1440 × 720, 10 layers, 0.25°, and global, but those values belong only to that reference dataset.
+For a regular geographic grid, cell-center coordinates are longitude = `WEST + (i - 0.5) × GSIZE` and latitude = `NORTH - (j - 0.5) × GSIZE`. The inspected `glb_15min` values are 1440 × 720, 10 layers, 0.25°, and global; those values belong only to that reference dataset.
 
 ### `mapdim.txt` — external map-generation parameter
 
@@ -278,7 +304,7 @@ CTL files are read by GrADS to describe a binary dataset. The CaMa-Flood binary 
 - `undef` tells GrADS which value to treat as missing. The generator reads the numeric `missing_value` column. For a blank field it uses a type-specific provisional fallback and reports the affected file; this does not update the registry or confirm that fallback scientifically.
 - `title`, variable names, and comments/descriptions are descriptive. They do not establish correct physical meaning or units. The inspected package uses the generic title `Flow Direction` even for scalar variables, and has `rivman.bin` without a same-directory `rivman.ctl`.
 
-The CSV supplies variable names, proposed long names/units, data types, symbolic dimensions, the numeric stored `missing_value`, descriptive `special_values`, and binary record layouts. `special_values` remain in the registry; the generator does not append them to CTL variable descriptions. Dataset geometry is read from `params.txt` for base-map files and from the selected high-resolution directory's `location.txt` for its files. Neither geometry file is duplicated in the CSV.
+The CSV supplies variable names, proposed long names/units, data types, symbolic dimensions, the numeric stored `missing_value`, descriptive `special_values`, and binary record layouts. `special_values` remain in the registry; the generator does not append them to CTL variable descriptions. Dataset geometry is read from `params.toml` (or a TXT-only legacy `params.txt`) for base-map files and from the selected high-resolution directory's `location.txt` for its files. Neither geometry file is duplicated in the CSV.
 
 The legacy `wrte_ctl_map.F90` and `wrte_ctl_hires.F90` writers both emit `options yrev little_endian`; both start `xdef` and `ydef` at the southwest cell center (`west + spacing/2`, `south + spacing/2`). `yrev` accounts for the north-to-south row order of the Fortran direct-access arrays. The v5 generator follows this established convention for current CaMa-Flood workflow products and does not detect other byte orders or row conventions.
 
@@ -300,7 +326,7 @@ The repository provides tools for deriving channel geometry for a target map. Th
 
 ### Permanent-water area
 
-The v5 `script_params/s04-permanent_water.sh` migrates `map/src/src_param/calc_prmwat.F90` to the shared `map/tools/code/param_water_calc_prmwat.F90` program. It reads base-map `params.txt`, `nextxy.bin`, and `ctmare.bin`, then processes the non-tiled high-resolution areas listed in `<HIRES_TAG>/location.txt` using `catmxy`, `rivwth`, and `flddif`; `grdare` is optional. The generated `prmwat.bin` is one float32 `NX x NY` direct-access record in m2. It represents estimated permanent-water surface area aggregated per unit catchment, not a high-resolution mask. Outside-network cells contain `-9999`; valid network cells with no selected pixels contain 0. The present CaMa-Flood simulation core does not read this product; it is intended for post-processing such as excluding permanent water when estimating newly inundated area.
+The v5 `script_params/s04-permanent_water.sh` migrates `map/src/src_param/calc_prmwat.F90` to the shared `map/tools/code/param_water_calc_prmwat.py` program. It reads base-map `params.toml` (or legacy `params.txt`), `nextxy.nc`, and `ctmare.nc`, then processes the non-tiled high-resolution areas listed in `<HIRES_TAG>/location.txt` using `catmxy`, `rivwth`, and `flddif`; `grdare` is optional. The generated `prmwat.nc` is one float32 `NX x NY` product in m2. It represents estimated permanent-water surface area aggregated per unit catchment, not a high-resolution mask. Outside-network cells contain `-9999`; valid network cells with no selected pixels contain 0. The present CaMa-Flood simulation core does not read this product; it is intended for post-processing such as excluding permanent water when estimating newly inundated area.
 
 The `flddif` cutoff keeps `prmwat` within terrain where CaMa-Flood can reproduce inundation. A permanent lake isolated high on a hill is outside the modeled flood extent; counting it would incorrectly subtract it as pre-existing simulated floodwater during post-processing. The maintainer described the intended criterion as `flddif < 5 m`. Positive `rivwth` marks channel-centerline width and `rivwth == -1` marks water-surface pixels outside the centerline. The legacy v4 and migrated v5 implementations select valid catchment pixels with `(rivwth > 0 OR rivwth == -1) AND flddif <= 5 m`, so exactly-5 m pixels remain included in the current code. This strict-versus-inclusive boundary is unresolved and the code was not changed. The numerical derivation of the 5 m value also remains undocumented. The legacy comparison accepts `flddif=-9999`; the v5 program warns but preserves that behavior. Selected high-resolution pixel areas (km2) are converted to m2, accumulated by catchment, and capped at the corresponding `ctmare` value. When `grdare` is absent, the legacy `rgetarea` fallback remains: it estimates a pixel's area from a rectangle 10 times larger in both dimensions and divides by 100. The maintainer identified this scaling as a way to reduce round-off fluctuations at very fine resolutions; its numerical accuracy has not been independently quantified. This migration does not claim scientific validation from successful generation or sample regression. See [`script_params/README.md`](../map/tools/script_params/README.md#permanent-water-area) and the `prmwat` row in [`map_variables.csv`](map_variables.csv).
 
@@ -316,7 +342,7 @@ The maintainer confirmed that the module-level files were previously generated a
 
 ### GrADS CTL generation
 
-The v5 generator is implemented at `map/tools/code/generate_ctl.py`. It combines variable metadata from `map_variables.csv` with dataset-specific geometry read from `params.txt` or `location.txt`. The CSV describes reusable products and record layouts, not sample-map dimensions. It accepts explicit independent-record layouts (including one row per variable with record indices), the documented `NLFP` layered-variable layout, and the regionalization input matrix paired with its dimension description. In a v5 input-matrix filename pair, the shared suffix (for example `_test-1deg`) identifies the runoff-data/configuration variant: `inpmat_<ROFFTAG>.nc` pairs with `diminfo_<ROFFTAG>.txt`. The description supplies `NX`, `NY`, `INPN`, bounds, and the paired binary filename; map dimensions and bounds are checked against `params.txt`. A same-basename `.txt` is also accepted. Unknown dimensions/types and unrecognized record descriptions are skipped; blank missing values use the per-type fallback with a warning; invalid values, conflicting declarations, and binary size/layout mismatches are rejected. It scans one selected directory at a time and does not recurse.
+The v5 generator is implemented at `map/tools/code/generate_ctl.py`. It combines variable metadata from `map_variables.csv` with dataset-specific geometry read from `params.toml` (or legacy `params.txt`) or `location.txt`. The CSV describes reusable products and record layouts, not sample-map dimensions. It accepts explicit independent-record layouts (including one row per variable with record indices), the documented `NLFP` layered-variable layout, and the regionalization input matrix paired with its dimension description. In a v5 input-matrix filename pair, the shared suffix (for example `_test-1deg`) identifies the runoff-data/configuration variant: `inpmat_<ROFFTAG>.nc` pairs with `diminfo_<ROFFTAG>.txt`. The description supplies `NX`, `NY`, `INPN`, bounds, and the paired binary filename; map dimensions and bounds are checked against the selected map geometry. A same-basename `.txt` is also accepted. Unknown dimensions/types and unrecognized record descriptions are skipped; blank missing values use the per-type fallback with a warning; invalid values, conflicting declarations, and binary size/layout mismatches are rejected. It scans one selected directory at a time and does not recurse.
 
 The tool follows the existing legacy CTL convention `yrev little_endian` and cell-center coordinates. The standard regional input matrix has three logical variables (`inpx`, `inpy`, `inpa`) with `INPN` levels, matching the two integer-index blocks and one floating-point overlap-area block written by `region_default_inpmat.F90`; unused slots initialized to zero are represented by `undef 0`. This is the distributed mapping for the standard annual runoff climatology used in channel cross-section parameter estimation. It is distinct from the general-purpose `generate_inpmat.F90` utility for user-selected runoff grids. The generator does not read the runoff dataset itself. The CTL tool does not infer or validate alternative endianness or row order.
 

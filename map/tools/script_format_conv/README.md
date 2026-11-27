@@ -10,12 +10,16 @@ with the target map.
 
 ## Directory layout
 
+`params.toml` is the authoritative base-map geometry. `params.txt` is retained
+only where a legacy consumer requires a compatibility copy.
+
 ```text
 map/<MAPNAME>/
   *.nc                         # standard NetCDF maps
   inpmat_<ROFFTAG>.nc
   diminfo_<ROFFTAG>.txt        # paired text metadata
-  params.txt
+  params.toml                 # authoritative base-map geometry
+  params.txt                  # legacy compatibility copy when required
   <resolution>/*.nc            # high-resolution products and location.txt
   binary/*.bin, *.ctl          # optional legacy products
   binary/<resolution>/*.bin, *.ctl
@@ -93,8 +97,9 @@ grid metadata remain paired with that format's file.
 Run the list script before its conversion script. The lists are editable and
 can be used to limit conversions. Existing outputs are replaced by default;
 `--no-overwrite` is available where supported by the individual wrapper.
-`s09-write_ctl.sh` copies `params.txt`, high-resolution `location.txt`, and
-missing diminfo files into `binary/` while retaining a format-specific INPMAT
+`s09-write_ctl.sh` generates a legacy `binary/params.txt` compatibility copy
+from root `params.toml` (or verifies the existing root TXT), copies high-resolution
+`location.txt` and missing diminfo files into `binary/`, and retains a format-specific INPMAT
 descriptor already present there.
 
 ## High-resolution selection (s03 and s13)

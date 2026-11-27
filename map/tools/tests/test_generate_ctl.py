@@ -112,33 +112,49 @@ class GenerateCtlTests(unittest.TestCase):
         work = self.root/'workflow'
         code = work/'map/tools/code'
         scripts = work/'map/testmap/script_format_conv'
+        common = work/'tools'
         code.mkdir(parents=True)
         scripts.mkdir(parents=True)
+        common.mkdir(parents=True)
         (work/'variable_table').mkdir()
-        shutil.copy2(root/'map/tools/code/generate_ctl.py', code/'generate_ctl.py')
+        for name in ('generate_ctl.py', 'map_metadata.py', 'migrate_map_params.py'):
+            shutil.copy2(root/'map/tools/code'/name, code/name)
         shutil.copy2(root/'map/tools/script_format_conv/s09-write_ctl.sh', scripts/'s09-write_ctl.sh')
+        (common/'cmf_shell_functions.sh').write_text(
+            'cmf_check_init(){ :; }\ncmf_check_step(){ :; }\ncmf_check_success(){ :; }\n',
+            encoding='utf-8',
+        )
         write_registry(work/'variable_table/map_variables.csv', [
             row('mpireg.bin','mpireg','int32'), row('subbsn.bin','subbsn','int32'),
             row('subcol.bin','subcol','int32'), row('upbasin.bin','upbasin','int32')])
         target = scripts.parent
-        write_params(target/'params.txt')
+        (target/'params.toml').write_text(
+            '[grid]\nnx=3\nny=2\nnlfp=2\nresolution=1.0\n'
+            '[domain]\nwest=-1.5\neast=1.5\nsouth=-1.0\nnorth=1.0\n',
+            encoding='utf-8',
+        )
         binary = target/'binary'
         binary.mkdir()
         filenames = ['mpireg-4','mpireg-8','mpireg-16','subbsn-sample','subcol-sample','upbasin-2587100']
         for name in filenames:
             (binary/f'{name}.bin').write_bytes(b'\0'*24)
         script = scripts/'s09-write_ctl.sh'
-        result = subprocess.run(['sh',str(script), '--map-dir', str(target)], cwd=self.root,
-                                capture_output=True, text=True)
+        import os
+        environment = os.environ.copy()
+        environment['CMF_V50_ROOT'] = str(work)
+        result = subprocess.run(['sh',str(script)], cwd=scripts,
+                                capture_output=True, text=True, env=environment)
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assertTrue((binary/'params.txt').is_file())
+        self.assertEqual((binary/'params.txt').read_text().split()[0], '3')
         for name in filenames:
             text = (binary/f'{name}.ctl').read_text()
             self.assertIn(f'dset ^{name}.bin',text)
             self.assertEqual((binary/f'{name}.bin').read_bytes(),b'\0'*24)
         output=binary/'subcol-sample.ctl'
         output.write_text('preserve existing')
-        result = subprocess.run(['sh',str(script),'--map-dir',str(target),'--no-overwrite'],
-                                capture_output=True,text=True)
+        result = subprocess.run(['sh',str(script),'--no-overwrite'], cwd=scripts,
+                                capture_output=True,text=True,env=environment)
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
         self.assertEqual(output.read_text(),'preserve existing')
 

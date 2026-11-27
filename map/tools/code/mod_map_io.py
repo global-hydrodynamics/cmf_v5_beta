@@ -16,6 +16,11 @@ from pathlib import Path
 
 import numpy as np
 
+try:
+    from .map_metadata import has_map_geometry, read_map_geometry
+except ImportError:  # Direct execution from the map-local Shell workflows.
+    from map_metadata import has_map_geometry, read_map_geometry
+
 # Direct helper calls retain the old Binary behavior. Maintained CLIs set this
 # explicitly through --map-format, whose production default is NetCDF.
 _MAP_FORMAT = 'binary'
@@ -36,17 +41,19 @@ class Grid:
 
     @classmethod
     def read(cls, path):
-        """Read the eight leading scalar records of params.txt, without comments."""
+        """Read authoritative map geometry and initialize shared map I/O state."""
         grid = cls.from_file(path)
         global _MAP_ROOT
-        _MAP_ROOT = Path(path).resolve().parent
+        target = Path(path).resolve()
+        _MAP_ROOT = target if target.is_dir() else target.parent
         return grid
 
     @classmethod
     def from_file(cls, path):
         """Read map geometry without changing shared I/O state."""
-        values = [line.split()[0] for line in Path(path).read_text().splitlines() if line.strip()][:8]
-        return cls(*(int(x) for x in values[:3]), *(np.float32(x) for x in values[3:]))
+        geometry = read_map_geometry(path)
+        return cls(geometry.nx, geometry.ny, geometry.nlfp,
+                   *(np.float32(value) for value in geometry.values()[3:]))
 
     def raster(self, path, dtype='<f4', records=1):
         """Map complete records without loading another full-array copy."""
@@ -117,7 +124,7 @@ def _input_path(path):
     if _MAP_ROOT is None:
         return path
     if _relative_map_path(path).is_absolute():
-        if (path.parent / 'params.txt').is_file() or (path.parent / 'location.txt').is_file():
+        if has_map_geometry(path.parent) or (path.parent / 'location.txt').is_file():
             raise FileNotFoundError(f'NetCDF map input not found: {netcdf}; use --map-format binary for legacy Binary maps')
         return path
     raise FileNotFoundError(f'NetCDF map input not found: {netcdf}; use --map-format binary for legacy Binary maps')
@@ -154,13 +161,13 @@ def _binary_path(path):
         return _MAP_ROOT.joinpath('binary', *parts)
     if path.is_absolute() and (path.parent / 'location.txt').is_file():
         return path.parent.parent / 'binary' / path.parent.name / path.name
-    if path.is_absolute() and (path.parent / 'params.txt').is_file():
+    if path.is_absolute() and has_map_geometry(path.parent):
         return path.parent / 'binary' / path.name
     if (path.parent / 'location.txt').is_file():
         candidate = path.parent.parent / 'binary' / path.parent.name / path.name
         if candidate.is_file():
             return candidate
-    if (path.parent / 'params.txt').is_file():
+    if has_map_geometry(path.parent):
         candidate = path.parent / 'binary' / path.name
         if candidate.is_file():
             return candidate
@@ -474,7 +481,6 @@ def write_highres_raster(path, values, dtype, bounds, chunk_rows=64):
 
 
 def _output_grid(path):
-    params = path.parent / 'params.txt'
-    if params.is_file():
-        return Grid.from_file(params)
-    raise FileNotFoundError(f'{path}: NetCDF output grid requires params.txt beside the output or an explicit grid argument to write_raster')
+    if has_map_geometry(path.parent):
+        return Grid.from_file(path.parent)
+    raise FileNotFoundError(f'{path}: NetCDF output grid requires params.toml or params.txt beside the output, or an explicit grid argument to write_raster')

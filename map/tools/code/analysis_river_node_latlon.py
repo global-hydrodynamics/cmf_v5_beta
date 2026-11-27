@@ -16,7 +16,7 @@ def main():
     for name in ('west', 'east', 'south', 'north'):
         p.add_argument(name, type=np.float32)
     args = p.parse_args()
-    grid = Grid.read(args.map_dir / 'params.txt')
+    grid = Grid.read(args.map_dir)
     nextxy = grid.raster(args.map_dir / 'nextxy.bin', '<i4', 2)
     uparea = grid.raster(args.map_dir / 'uparea.bin')
     elevtn = grid.raster(args.map_dir / 'elevtn.bin')

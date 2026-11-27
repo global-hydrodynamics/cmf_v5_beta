@@ -11,6 +11,11 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+try:
+    from .map_metadata import has_map_geometry, read_map_geometry
+except ImportError:  # Direct execution from the map-local Shell workflows.
+    from map_metadata import has_map_geometry, read_map_geometry
+
 
 class CtlError(ValueError):
     """Invalid or incomplete metadata for CTL generation."""
@@ -31,6 +36,7 @@ class Grid:
     spacing: float
     source: str
     high_resolution: bool = False
+    nlfp: int | None = None
 
 
 @dataclass(frozen=True)
@@ -94,24 +100,12 @@ def read_registry(path: Path) -> list[dict[str, str]]:
 
 def read_params(path: Path) -> Grid:
     try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except OSError as exc:
+        geometry = read_map_geometry(path)
+    except (OSError, ValueError, RuntimeError) as exc:
         raise CtlError(f"Cannot read base-map geometry {path}: {exc}") from exc
-    values: list[float] = []
-    for line in lines:
-        value = line.split("!!", 1)[0].split("#", 1)[0].strip()
-        if not value:
-            continue
-        try:
-            values.append(float(value.split()[0]))
-        except ValueError as exc:
-            raise CtlError(f"Invalid numeric record in {path}: {line!r}") from exc
-    if len(values) < 8:
-        raise CtlError(f"{path} must provide NX, NY, NLFP, GSIZE, WEST, EAST, SOUTH, NORTH")
-    nx, ny, nlfp = values[:3]
-    if any(not value.is_integer() for value in (nx, ny, nlfp)) or min(nx, ny, nlfp) < 1:
-        raise CtlError(f"NX, NY, and NLFP in {path} must be positive integers")
-    return validate_grid(Grid(int(nx), int(ny), values[4], values[5], values[6], values[7], values[3], str(path)))
+    return validate_grid(Grid(geometry.nx, geometry.ny, geometry.west, geometry.east,
+                              geometry.south, geometry.north, geometry.resolution,
+                              str(path), nlfp=geometry.nlfp))
 
 
 def validate_grid(grid: Grid) -> Grid:
@@ -250,15 +244,8 @@ def parse_count(value: str, grid: Grid) -> int | None:
     if value.isdigit():
         return int(value)
     if value.upper() == "NLFP" and not grid.high_resolution:
-        # NLFP is record 3 of params.txt; read it directly from that file.
-        try:
-            tokens = [
-                line.split("!!", 1)[0].split("#", 1)[0].split()[0]
-                for line in Path(grid.source).read_text().splitlines()
-                if line.split("!!", 1)[0].split("#", 1)[0].strip()
-            ]
-            count = int(float(tokens[2]))
-        except (OSError, ValueError, IndexError):
+        count = grid.nlfp
+        if count is None:
             raise CtlError(f"Cannot resolve NLFP from {grid.source}")
         if count < 1:
             raise CtlError(f"NLFP in {grid.source} must be positive")
@@ -564,23 +551,23 @@ def generate_directory(map_dir: Path, registry_path: Path, *, dry_run: bool = Fa
         return summary
 
     location_path = target / "location.txt"
-    params_path = target / "params.txt"
+    has_params = has_map_geometry(target)
     areas: list[Area] = []
     base_grid: Grid | None = None
     dataset_root = target
-    if not location_path.is_file() and not params_path.is_file():
+    if not location_path.is_file() and not has_params:
         for path in files:
-            print(f"SKIP {path.name}: target directory has neither params.txt nor location.txt")
+            print(f"SKIP {path.name}: target directory has neither params.toml/params.txt nor location.txt")
             summary.skipped += 1
         return summary
     try:
-        if params_path.is_file():
-            base_grid = read_params(params_path)
+        if has_params:
+            base_grid = read_params(target)
         elif location_path.is_file():
             areas = read_location(location_path)
             dataset_root = target.parent
         else:
-            raise CtlError("no params.txt or location.txt in target directory")
+            raise CtlError("no params.toml, params.txt, or location.txt in target directory")
     except CtlError as exc:
         for path in files:
             print(f"FAILED {path.name}: {exc}")

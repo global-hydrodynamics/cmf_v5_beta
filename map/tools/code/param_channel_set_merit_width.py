@@ -35,7 +35,7 @@ def main():
     width = grid.raster(args.map_dir / 'rivwth.bin')
     merit = grid.raster(args.map_dir / 'width.bin')
     result = merge_widths(nextxy[0], width, merit)
-    output_grid = Grid.from_file(args.map_dir/'params.txt')
+    output_grid = Grid.from_file(args.map_dir)
     write_raster(output_root(args) / 'rivwth_merit.bin', result, '<f4', grid=output_grid)
 
 

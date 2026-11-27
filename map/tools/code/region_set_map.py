@@ -111,7 +111,7 @@ def derive(grid, nextxy, area):
 def main():
     p = parser(__doc__)
     args = p.parse_args()
-    grid = Grid.read(args.map_dir/'params.txt')
+    grid = Grid.read(args.map_dir)
     nextxy = grid.raster(args.map_dir/'nextxy.bin', '<i4', 2)
     area = grid.raster(args.map_dir/'grdare.bin')
     sequence, upstream, counts, basin = derive(grid, nextxy, area)

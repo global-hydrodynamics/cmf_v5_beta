@@ -15,7 +15,7 @@ from mod_map_io import Grid
 
 
 def read_allocation_base(root, extra=()):
-    grid = Grid.read(root/'params.txt')
+    grid = Grid.read(root)
     fields = {'uparea': np.array(grid.raster(root/'uparea.bin'), copy=True),
               'nextxy': grid.raster(root/'nextxy.bin', '<i4', 2)}
     fields['uparea'][fields['uparea'] > 0] *= np.float32(1e-6)

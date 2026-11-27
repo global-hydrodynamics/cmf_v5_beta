@@ -138,7 +138,7 @@ def plan(map_dir, resolutions, variables, registry):
                             and filename.endswith('.nc') and '<' not in filename):
                         groups.setdefault(filename[:-4], []).append(row)
             directory = map_dir
-            geometry = base_geometry(map_dir / 'params.txt')
+            geometry = base_geometry(map_dir)
             matched = set()
             for stem, selected in groups.items():
                 if requested is not None and stem not in requested:

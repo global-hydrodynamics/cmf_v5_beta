@@ -1,5 +1,10 @@
 # Regional map preparation
 
+Base-map geometry is read from authoritative `params.toml`; legacy TXT-only
+source maps remain supported through `params.txt`. The maintained Python
+regionalizer writes cropped geometry to `params.toml`; `params.txt` references
+below describe the compatibility interface used by older tools.
+
 This guide documents the reusable v5 regional-map preparation template under `map/tools/`. It prepares a regional map from a compatible source map. The legacy v4 workflow remains under `map/src/src_region/` and is not modified here. Configure and execute `s01-regional_map.sh` for a target map; the Python programs under `map/tools/code/` perform each processing stage and should not be run separately for the standard workflow.
 
 The scripts under `map/mekong_15min/` are maintained separately to create or update the official GitHub sample using the original global map distributed with CaMa-Flood packages. They are sample-preparation tools, not test scripts. GitHub CI does not run them. The reusable template documented here can be used to prepare other regional maps.

@@ -20,7 +20,7 @@ def main():
     lines = args.change_info.read_text().splitlines()
     source = Path(lines[0].strip())
     nx, ny, dx, dy = (int(lines[i].split()[0]) for i in (9, 10, 11, 12))
-    nextx = Grid.read(args.map_dir/'params.txt').raster(args.map_dir/'nextxy_noedge.bin', '<i4', 2)[0]
+    nextx = Grid.read(args.map_dir).raster(args.map_dir/'nextxy_noedge.bin', '<i4', 2)[0]
     records = (source/'bifori.txt').read_text().splitlines()
     npath, nlev = map(int, records[0].split()[:2])
     selected = []

@@ -1,5 +1,10 @@
 # Map parameterization and preparation workflows
 
+Base-map geometry is read from authoritative `params.toml`. TXT-only legacy
+maps remain supported; when both files exist, their eight numeric values must
+match. References to `params.txt` below describe compatibility inputs retained
+for existing map-local tools.
+
 `script_params/` contains reusable map-local recipes for parameterization and map preparation. Run wrappers from the map-local `script_params/` directory; they keep that working directory and resolve map-root paths with `../`. Each wrapper uses the shared shell error checker and Python programs under `map/tools/code/`. Set `PYTHON_CMD` only when a non-default interpreter is needed. Outputs owned by a workflow are overwritten by default; supported tools accept `--no-overwrite`. Inputs and unrelated files are preserved. See the [shell-script convention](../../../AGENTS.md#shell-script-design-principles).
 
 The channel Python programs use NetCDF map input/output by default. The Rhine s01 sample keeps its legacy Binary runoff input by passing `--runoff-binary`; its input-matrix interpolation remains the default. Use `--map-binary` directly on a Python invocation only for a legacy Binary map. High-resolution NetCDF products are expected under `<map>/<tag>/`, and allocation inputs remain the external CSVs configured by each tXX wrapper.

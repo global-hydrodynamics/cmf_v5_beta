@@ -1,5 +1,10 @@
 # Map parameterization and preparation workflows
 
+Base-map geometry is read from authoritative `params.toml`. TXT-only legacy
+maps remain supported; when both files exist, their eight numeric values must
+match. References to `params.txt` below describe compatibility inputs retained
+for existing map-local tools.
+
 `script_params/` contains reusable map-local recipes for parameterization and related map preparation. Run each maintained wrapper from its map-local `script_params/` directory and keep that directory as CWD; Python programs use `../` for map-root products and direct relative paths for script-local files. The wrappers use the common `python3`/`CMF_V50_ROOT` initialization and shared `cmf_check_*` progress/error reporting. Existing outputs owned by a workflow are replaced by default; use `--no-overwrite` where supported to preserve them. Inputs and unrelated files are not removed. See the [preprocessing conventions](../../../docs/preprocessing_code_conventions.md#shell).
 
 The maintained wrappers use NetCDF map input/output by default. In s02, annual runoff is NetCDF and runoff interpolation uses the input matrix by default. Legacy modes are selected with `--map-binary`, `--runoff-binary`, and `--interp-near` on the relevant Python command. High-resolution NetCDF products are expected under `<map>/<tag>/`, and allocation inputs remain the external CSVs configured by each tXX wrapper.

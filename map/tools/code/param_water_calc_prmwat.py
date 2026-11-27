@@ -37,7 +37,7 @@ def main():
     p = parser(__doc__, map_default='.')
     p.add_argument('hires_tag', choices=list(PIXELS_PER_DEGREE))
     args = p.parse_args()
-    grid = Grid.read(args.map_dir/'params.txt')
+    grid = Grid.read(args.map_dir)
     if grid.nx <= 0 or grid.ny <= 0 or grid.nlfp < 0 or not np.isfinite(grid.size) or grid.size <= 0:
         raise ValueError('Invalid map geometry')
     if not np.isfinite([grid.west, grid.east, grid.south, grid.north]).all():

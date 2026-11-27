@@ -89,7 +89,7 @@ def main():
     p.add_argument('--check-map', action='store_true',
                    help='Write the optional basin aggregation diagnostic map.')
     args = p.parse_args()
-    grid = Grid.read(args.map_dir / 'params.txt')
+    grid = Grid.read(args.map_dir)
     original = grid.raster(args.map_dir / 'basin.bin','<i4')
     paths = read_bifprm_csv(args.map_dir / 'bifprm.csv')
     for row in paths:

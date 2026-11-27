@@ -146,7 +146,7 @@ def main():
     p.add_argument('diminfo', type=Path)
     p.add_argument('inpmat', type=Path)
     args = p.parse_args()
-    generate(Grid.read(args.map_dir/'params.txt'), args.map_dir/args.hires_tag,
+    generate(Grid.read(args.map_dir), args.map_dir/args.hires_tag,
              output_root(args), args.size, args.west, args.east, args.north, args.south,
              args.order, args.diminfo, args.inpmat, map_format=args.map_format)
 

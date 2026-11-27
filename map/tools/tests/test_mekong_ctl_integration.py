@@ -1,6 +1,7 @@
 """Run the map-local CTL wrapper against a temporary copy of Mekong binaries."""
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import subprocess
@@ -19,6 +20,7 @@ class MekongCtlWrapperIntegrationTests(unittest.TestCase):
             map_root = temp_root / "map"
             fixture = map_root / "mekong_15min"
             (map_root / "tools" / "code").mkdir(parents=True)
+            (temp_root / "tools").mkdir(parents=True)
             (fixture / "script_format_conv").mkdir(parents=True)
             (fixture / "1min").mkdir(parents=True)
             (fixture / "binary" / "1min").mkdir(parents=True)
@@ -27,13 +29,19 @@ class MekongCtlWrapperIntegrationTests(unittest.TestCase):
             registry_dir.mkdir()
             shutil.copy2(ROOT / "variable_table" / "map_variables.csv",
                           registry_dir / "map_variables.csv")
-            shutil.copy2(ROOT / "map" / "tools" / "code" / "generate_ctl.py",
-                         map_root / "tools" / "code" / "generate_ctl.py")
+            for name in ("generate_ctl.py", "map_metadata.py", "migrate_map_params.py"):
+                shutil.copy2(ROOT / "map" / "tools" / "code" / name,
+                             map_root / "tools" / "code" / name)
+            (temp_root / "tools" / "cmf_shell_functions.sh").write_text(
+                "cmf_check_init(){ :; }\ncmf_check_step(){ :; }\ncmf_check_success(){ :; }\n",
+                encoding="utf-8",
+            )
             shutil.copy2(ROOT / "map" / "tools" / "script_format_conv" / "s09-write_ctl.sh",
                          fixture / "script_format_conv" / "s09-write_ctl.sh")
             for name in ("params.txt", "diminfo_test-1deg.txt"):
                 shutil.copy2(SAMPLE / "binary" / name, fixture / "binary" / name)
             shutil.copy2(SAMPLE / "params.txt", fixture / "params.txt")
+            shutil.copy2(SAMPLE / "params.toml", fixture / "params.toml")
             shutil.copy2(SAMPLE / "diminfo_test-1deg.txt", fixture / "diminfo_test-1deg.txt")
             shutil.copy2(SAMPLE / "1min" / "location.txt", fixture / "1min" / "location.txt")
             for path in (SAMPLE / "binary").glob("*.bin"):
@@ -46,6 +54,7 @@ class MekongCtlWrapperIntegrationTests(unittest.TestCase):
             process = subprocess.run(
                 ["sh", "s09-write_ctl.sh"], cwd=fixture / "script_format_conv",
                 text=True, capture_output=True, check=False,
+                env={**os.environ, "CMF_V50_ROOT": str(temp_root)},
             )
             self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
             summaries = [tuple(map(int, match)) for match in re.findall(

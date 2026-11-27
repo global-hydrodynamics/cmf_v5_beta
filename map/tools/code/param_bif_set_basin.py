@@ -20,7 +20,7 @@ def main():
         help='Generate optional diagnostic maps.',
     )
     args = p.parse_args()
-    grid = Grid.read(args.map_dir / 'params.txt')
+    grid = Grid.read(args.map_dir)
     # The reference also requires nextxy, even though merging uses path endpoints.
     grid.raster(args.map_dir / 'nextxy.bin','<i4',2)
     original = grid.raster(args.map_dir / 'basin.bin','<i4')

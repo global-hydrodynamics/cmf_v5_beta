@@ -114,7 +114,7 @@ def main():
         if not path.is_absolute():
             path = args.map_dir/path
         matrix = read_inpmat(path, nx, ny, slots)
-    output_grid = Grid.from_file(args.map_dir/'params.txt')
+    output_grid = Grid.from_file(args.map_dir)
     write_raster(output_root(args)/'outclm.bin', route(nextxy, local_runoff(nextxy[0], area, source, matrix)), '<f4', grid=output_grid)
 
 

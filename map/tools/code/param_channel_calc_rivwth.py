@@ -32,7 +32,7 @@ def main():
         'rivhgt_inf': np.full((ny, nx), 100000, dtype='<f4'),
     }
     out = output_root(args)
-    output_grid = Grid.from_file(args.map_dir/'params.txt')
+    output_grid = Grid.from_file(args.map_dir)
     # Import before producing outputs so an unavailable NetCDF interface fails cleanly.
     if not args.no_rivpar_netcdf:
         from netCDF4 import Dataset

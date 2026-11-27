@@ -14,6 +14,11 @@ cd map/<MAPNAME>/script_params
 
 `map/src/` is preserved as the historical v4 tree; v5 migrations belong under `map/tools/` and do not rewrite those legacy workflows. The `diminfo_` naming convention is shared with v4; the v5 workflows derive both descriptor and matrix names from `ROFFTAG` without changing their formats.
 
+Base-map geometry is read from authoritative `params.toml`. TXT-only legacy
+maps remain supported; when both files are present, their eight numeric values
+must match. References to `params.txt` in older workflow descriptions identify
+the compatibility input expected by those legacy paths.
+
 ## Implemented workflow organization
 
 After regionalization, run the standard map preparation workflows (`s01`–`s05`)

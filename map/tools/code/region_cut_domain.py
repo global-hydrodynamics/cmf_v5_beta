@@ -10,6 +10,10 @@ from pathlib import Path
 
 import numpy as np
 
+try:
+    from .map_metadata import MapGeometry, read_map_geometry, write_toml
+except ImportError:  # Direct execution from the map-local Shell workflows.
+    from map_metadata import MapGeometry, read_map_geometry, write_toml
 from mod_map_io import Grid, output_root, parser, write_raster
 
 
@@ -73,9 +77,10 @@ def main():
     args = p.parse_args()
     lines = args.region_info.read_text().splitlines()
     source = Path(lines[0].strip())
-    values = [(source/'params.txt').read_text().splitlines()[i].split()[0] for i in range(8)]
-    nx, ny, nlfp = map(int, values[:3])
-    size, sw, se, ss, sn = map(float, values[3:])
+    source_geometry = read_map_geometry(source)
+    nx, ny, nlfp = source_geometry.nx, source_geometry.ny, source_geometry.nlfp
+    size = source_geometry.resolution
+    sw, se, ss, sn = source_geometry.west, source_geometry.east, source_geometry.south, source_geometry.north
     requested = [float(line.split()[0]) for line in lines[1:5]]
     west, east, south, north = snap_bounds(requested, nx, ny, size, sw, sn)
     mx, my, dx, dy = [int(np.floor(v+.5)) for v in
@@ -84,12 +89,7 @@ def main():
         raise ValueError('Regional crop outside source dimensions')
     out = output_root(args)
     out.mkdir(parents=True, exist_ok=True)
-    with (out/'params.txt').open('w') as stream:
-        for value, label in zip((mx, my, nlfp), ('grid number (east-west)', 'grid number (north-south)', 'floodplain layers')):
-            stream.write(f'{value:12d}{label:>35}\n')
-        stream.write(f'{size:12.8f}{"grid size  [deg]":>35}\n')
-        for value, label in zip((west, east, south, north), ('west  edge [deg]', 'east  edge [deg]', 'south  edge [deg]', 'north edge [deg]')):
-            stream.write(f'{value:12.3f}{label:>35}\n')
+    write_toml(out/'params.toml', MapGeometry(mx, my, nlfp, size, west, east, south, north))
     with args.change_info.open('w') as stream:
         stream.write(str(source.resolve())+'/\n')
         for value in (nx, ny, size, sw, se, ss, sn):
@@ -98,8 +98,8 @@ def main():
         for value in (mx, my, dx, dy, west, east, south, north):
             stream.write(str(value)+'\n')
     # Register source geometry and I/O roots for NetCDF reads and output writes.
-    grid = Grid.read(source/'params.txt')
-    output_grid = Grid.from_file(out/'params.txt')
+    grid = Grid.read(source)
+    output_grid = Grid.from_file(out)
     crop = (slice(dy, dy+my), slice(dx, dx+mx))
     nextxy = np.array(grid.raster(source/'nextxy.bin', '<i4', 2)[:, crop[0], crop[1]])
     downxy = np.array(grid.raster(source/'downxy.bin', '<i4', 2)[:, crop[0], crop[1]])

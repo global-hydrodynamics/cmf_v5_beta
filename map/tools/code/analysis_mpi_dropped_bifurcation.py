@@ -52,7 +52,7 @@ def classify_paths(regions,nextxy,paths):
 
 def main():
     p=parser(__doc__,'.');p.add_argument('region_file',type=Path);p.add_argument('--csv',type=Path)
-    args=p.parse_args();grid=Grid.read(args.map_dir/'params.txt')
+    args=p.parse_args();grid=Grid.read(args.map_dir)
     regions=grid.raster(args.region_file,'<i4');nextxy=grid.raster(args.map_dir/'nextxy.bin','<i4',2)
     paths=read_bifprm_csv(args.map_dir/'bifprm.csv');classes,ids=classify_paths(regions,nextxy,paths)
     channel=np.array([row['widths'][0]>0 for row in paths]);totals=np.bincount(classes,minlength=4)[1:]

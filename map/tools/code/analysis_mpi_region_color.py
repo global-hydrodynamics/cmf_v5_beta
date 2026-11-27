@@ -21,7 +21,7 @@ def main():
     match = re.fullmatch(r'mpireg-([1-9][0-9]*)\.(?:nc|bin)', args.region_file.name)
     if match is None:
         args_parser.error('input filename must be mpireg-N.nc or mpireg-N.bin with positive N')
-    grid = Grid.read(args.map_dir / 'params.txt')
+    grid = Grid.read(args.map_dir)
     regions = grid.raster(args.region_file, '<i4')
     if not 1 <= regions.max() <= int(match[1]):
         args_parser.error('region IDs do not match MPI count')
