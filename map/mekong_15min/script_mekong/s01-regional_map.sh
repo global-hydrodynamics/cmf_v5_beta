@@ -36,7 +36,7 @@ cmf_check_step 3 6 "Retain bifurcation pathways inside the regional domain"
 cmf_check_step 4 6 "Derive regional river and basin maps"
 "$PYTHON_CMD" "$CODE_DIR/region_set_map.py"
 
-# Process each supported high-resolution source when its location metadata exists.
+# Process each supported high-resolution source when its standard CSV inventory exists.
 for HIRES in 1min 30sec 15sec 5sec 3sec 1sec; do
     if [ -f "$SOURCE/$HIRES/location.csv" ]; then
 

@@ -2,22 +2,25 @@
 
 These map-local Shell workflows implement the NetCDF-first map layout. Copy the
 required wrappers from this directory to a map's `script_format_conv/` folder,
-then run them there. `--map-dir PATH` can be used when running from elsewhere.
-The shared converters and `variable_table/map_variables.csv` remain in the
-repository; map products stay with the target map.
+then run them from that directory. The Shell and Python programs keep it as
+CWD; map-root products use `../` paths, and list files remain local to
+`script_format_conv/`. The shared converters and
+`variable_table/map_variables.csv` remain in the repository; map products stay
+with the target map.
 
 ## Directory layout
 
-`params.nml` is the authoritative base-map geometry. Retain `params.txt` only
-as a legacy compatibility copy where older consumers still require it.
+`params.nml` is the authoritative base-map geometry. `params.txt` is retained
+only where a legacy consumer requires a compatibility copy.
 
 ```text
 map/<MAPNAME>/
   *.nc                         # standard NetCDF maps
   inpmat_<ROFFTAG>.nc
-  diminfo_<ROFFTAG>.nml        # paired text metadata
-  params.txt
-  <resolution>/*.nc            # high-resolution products and location.txt
+  diminfo_<ROFFTAG>.nml        # paired Fortran Namelist metadata
+  params.nml                 # authoritative base-map geometry
+  params.txt                  # legacy compatibility copy when required
+  <resolution>/*.nc            # high-resolution products and location.csv
   binary/*.bin, *.ctl          # optional legacy products
   binary/<resolution>/*.bin, *.ctl
   COG/*.tif
@@ -29,27 +32,51 @@ outputs live in their own directories. The workflow does not create a redundant
 `netcdf/` directory. Conversion outputs are overwritten by default; source
 files and unrelated files are preserved.
 
+The `filename` column in `variable_table/map_variables.csv` records standard
+NetCDF filenames for numerical map products. The conversion tools derive the
+optional Binary compatibility name by changing `.nc` to `.bin`; record order,
+types, dimensions, and special values remain governed by the same registry
+metadata. Non-raster metadata such as `diminfo_<ROFFTAG>.nml` retains its actual
+name. Input matrices use the category-23 generic name
+`inpmat_<ROFFTAG>.nc`, which also covers the existing `test-1deg` pair, with
+the corresponding Binary form under `binary/inpmat_<ROFFTAG>.bin`.
+
+The INPMAT converters always regenerate the destination-side
+`diminfo_<ROFFTAG>.nml` from the source-side descriptor, changing only its
+`INPMAT_FILE` value to the destination matrix filename. An existing destination
+descriptor is atomically replaced; the source descriptor and source matrix are
+left unchanged. This applies to both `s14-bin2nc_inpmat.sh` and
+`s04-nc2bin_inpmat.sh`.
+
 ## Workflow scripts
 
 | Script | Operation |
 | --- | --- |
+| `conv_nc2bin.sh INPUT.nc REFERENCE` | Custom map NetCDF → registered Binary layout |
+| `conv_bin2nc.sh INPUT.bin REFERENCE` | Custom Binary map → registered NetCDF layout |
 | `s01-list_nc.sh` | List registered NetCDF products for Binary export |
 | `s02-nc2bin.sh` | Standard map NetCDF → `binary/*.bin` |
 | `s03-nc2bin_highres.sh` | High-resolution NetCDF → `binary/<resolution>/*.bin` |
 | `s04-nc2bin_inpmat.sh` | `inpmat_<ROFFTAG>.nc` → `binary/inpmat_<ROFFTAG>.bin` |
-| `s08-sample_nc2bin.sh` | s06 sample NetCDF maps → `binary/*-sample.bin` |
+| `s08-sample_nc2bin.sh` | a02 analysis sample NetCDF maps → `binary/*-sample.bin` |
 | `s09-write_ctl.sh` | Generate registered CTLs beside Binary files |
 | `s11-list_bin.sh` | List registered Binary products for NetCDF migration |
 | `s12-bin2nc.sh` | Standard `binary/*.bin` → map-root NetCDF |
 | `s13-bin2nc_highres.sh` | High-resolution Binary → resolution-directory NetCDF |
 | `s14-bin2nc_inpmat.sh` | Binary INPMAT → `inpmat_<ROFFTAG>.nc` |
-| `s18-sample_bin2nc.sh` | `binary/*-sample.bin` → s06 sample NetCDF maps |
+| `s18-sample_bin2nc.sh` | `binary/*-sample.bin` → a02 analysis sample NetCDF maps |
 | `s21-nc2cog.sh` | NetCDF → `COG/` GeoTIFFs |
+| `s31-txt2meta.sh` | Legacy map metadata TXT → standard v5 NML/CSV |
+| `s32-meta2txt.sh` | Standard v5 NML/CSV → legacy map metadata TXT |
 
-Numbering groups reflect direction: `s0X` covers NetCDF-based operations and
-Binary export, `s1X` covers Binary-to-NetCDF migration, and `s2X` covers
-NetCDF-to-COG conversion. Listing and conversion scripts use their matching
-numbered list file in the current `script_format_conv/` directory.
+Numbering groups reflect workflow: `s0X` covers NetCDF-based operations and
+Binary export, `s1X` covers Binary-to-NetCDF migration, `s2X` covers
+NetCDF-to-COG conversion, and `s3X` covers explicit legacy metadata
+interchange. Listing and conversion scripts use their matching
+numbered list file in the current `script_format_conv/` directory. Wrappers use
+the shared `CMF_V50_ROOT` initialization and `cmf_check_*` reporting functions;
+Python program paths come from `CODE_DIR` and required inputs are visible in
+the direct command calls.
 
 ## Typical use
 
@@ -71,6 +98,37 @@ cd map/<MAPNAME>/script_format_conv
 ./s21-nc2cog.sh
 ```
 
+## Legacy metadata conversion (s31 and s32)
+
+Run either script from the target map's `script_format_conv/` directory. The
+scripts use that directory's parent as the map root and immediately convert all
+recognized metadata files whose source exists:
+
+```sh
+cd map/<MAPNAME>/script_format_conv
+./s31-txt2meta.sh
+./s32-meta2txt.sh
+```
+
+The converters cover `params`, `diminfo_<ROFFTAG>`, high-resolution
+`<resolution>/location`, bifurcation tables (`bifori` and `bifprm`), and the
+GRDC, GRanD, and MLIT allocation tables. Missing source files are skipped.
+Existing destinations are replaced after the source has passed format and
+value validation. Original source files are retained. Each run reports each
+converted file and its number of fields, tiles, paths, or records; invalid
+sources are reported and make the command fail after the other candidates have
+been checked. These tools only read and write the named metadata files; they do
+not inspect or modify numerical raster data. No options or confirmation
+prompts are used.
+
+Some legacy formats cannot represent every standard CSV field. Reverse
+conversion rejects populated extra fields and non-row-ordered bifurcation IDs.
+For `bifprm.txt`, the v5-only supplementary outlet-coordinate columns
+`end_lat` and `end_lon` are omitted because the v4 reader does not use them;
+the conversion report names the omitted columns. The v4 record's channel width
+remains the first width layer, followed by the overland widths in order. Where
+outlet coordinates are needed, they can be read from the map's `lonlat.bin`.
+
 `ROFFTAG` is set near the top of the INPMAT wrappers (default `test-1deg`);
 edit that setting to select another pair. For the default, source metadata is
 `diminfo_test-1deg.nml`. The NetCDF-side descriptor names the `.nc` product;
@@ -80,9 +138,12 @@ grid metadata remain paired with that format's file.
 Run the list script before its conversion script. The lists are editable and
 can be used to limit conversions. Existing outputs are replaced by default;
 `--no-overwrite` is available where supported by the individual wrapper.
-`s09-write_ctl.sh` copies `params.txt`, high-resolution `location.txt`, and
-missing diminfo files into `binary/` while retaining a format-specific INPMAT
-descriptor already present there.
+`s09-write_ctl.sh` generates a legacy `binary/params.txt` compatibility copy
+from root `params.nml` (or verifies the existing root TXT), copies standard high-resolution
+`location.csv` inventories, and uses the matching root or Binary `diminfo_*.nml` when
+generating INPMAT CTLs. Binary-side descriptors are created by the INPMAT
+converter for the converted matrix; other registered CTLs use the map-root
+descriptor as needed.
 
 ## High-resolution selection (s03 and s13)
 
@@ -108,19 +169,20 @@ nonempty tags and never prompt (e.g. run the configured script with stdin from
 `/dev/null`). The empty default exits with a configuration message.
 
 - **s03 NetCDF→Binary:** discovers registered `*.<stem>.nc` products with
-  `location.txt` in `../<tag>/`; writes `../binary/<tag>/`.
+  `location.csv` in `../<tag>/`; writes Binary products and legacy
+  `location.txt` under `../binary/<tag>/`.
 - **s13 Binary→NetCDF:** discovers registered `*.<stem>.bin` products in
   `../binary/<tag>/`, or legacy `../<tag>/` if the standard Binary directory
-  does not exist. `location.txt` may be in either layout; the converter prefers
-  the canonical map-root copy. An existing standard Binary directory takes
+  does not exist. The converter reads Binary-side `location.txt` at this explicit
+  conversion boundary and writes standard `location.csv` under `../<tag>/`. An existing standard Binary directory takes
   precedence even if empty: sources are not silently mixed between layouts.
-  Outputs and any needed location copy go to `../<tag>/`, not `<tag>_nc/`.
+  Outputs go to `../<tag>/`, not `<tag>_nc/`.
 
 Discovery inspects filenames and metadata presence only; empty directories or
 unregistered-only products are not offered. Python validates tile metadata,
 geometry and data. The shared `cmf_select_hires_for_conversion` helper is loaded
 through `$CMF_V50_ROOT/tools/cmf_shell_functions.sh`; the preprocessing selector
-`cmf_select_hires_tag` remains separate and unchanged.
+`cmf_select_hires_tag` reads standard `location.csv` inventories.
 
 Each wrapper starts Python once with the complete tag list, `VARS` and `JOBS`.
 The NetCDF→Binary CLI dispatches tags to its unchanged per-resolution converter;
@@ -133,9 +195,9 @@ For external map packages, copy `script_format_conv/` into the target map and
 run s13 there with `CMF_V50_ROOT` pointing to the shared repository. The former
 t03 external wrapper is retired: no separate external converter or multi-map
 batch orchestrator is needed. Its redundant `<tag>_nc/location.txt` side copy
-is not reproduced; conversion itself already writes to `<tag>/`.
+is not reproduced; conversion writes standard `location.csv` to `<tag>/`.
 
-## Sample maps and generic converters
+## Subbasin sample map conversions
 
 The optional analysis example `script_params/a02-sample_subbasin.sh` creates `subbsn-sample.nc` and
 `subcol-sample.nc`; their NetCDF variables use the registered names `subbsn`
@@ -143,19 +205,51 @@ and `subcol`. Use `s08-sample_nc2bin.sh` and `s18-sample_bin2nc.sh` for the
 two educational round-trip examples. They print the generic command syntax
 and run those examples without a separate conversion implementation.
 
-Run `conv_nc2bin.sh INPUT.nc REFERENCE` and
-`conv_bin2nc.sh INPUT.bin REFERENCE` from this directory for other registered
-base-map rasters. The actual input filename is independent of the standard
-registry reference stem. The shared guide documents product support, directory
-placement, and overwrite behavior:
-[`map/tools/script_format_conv/README.md`](../../tools/script_format_conv/README.md).
+## Generic user-map converters
+
+Run `conv_nc2bin.sh` and `conv_bin2nc.sh` from a map's
+`script_format_conv/` directory. The wrappers accept exactly two positional
+arguments: the actual input filename and the standard registry reference
+stem. The reference selects the complete registered layout independently of
+the custom filename. For example, `nextxy` selects both `nextx` and `nexty`
+records, and `fldhgt` retains all registered layers.
+
+```sh
+./conv_nc2bin.sh subbsn-sample.nc subbsn
+./conv_bin2nc.sh subbsn-sample.bin subbsn
+```
+
+NetCDF inputs are read from the parent map directory; Binary inputs are read
+from its `binary/` directory. NetCDF-to-Binary outputs go to `binary/` with the
+input stem preserved. Binary-to-NetCDF outputs go to the parent map directory,
+also preserving the input stem. Outputs are replaced by default. The converters
+write standard registry variable names regardless of filename, validate the
+registered dtype and dimensions, and publish complete outputs atomically.
+
+Supported products are registered base-map `binary_map` and `binary_mult`
+rasters that fit the existing converters: single-variable 2D maps, layered
+maps, and multi-variable products such as `nextxy`. INPMAT, high-resolution
+tiles, tables, metadata and incomplete/unsupported registry layouts remain
+with their dedicated workflows (`s04`/`s14`, `s03`/`s13`, or other tools).
+
+Older sample NetCDF files may contain filename-derived variables such as
+`subbsn-sample`. They are not modified in place; regenerate them with the optional
+`script_params/a02-sample_subbasin.sh` analysis example before using the generic conversion examples.
 
 `t01-legacy_netcdf_map.sh` remains a separate legacy-container workflow;
 it is not a replacement for the numbered map conversion sequence. `s90-sample_netCDF_conversion.sh` remains as a deprecated
 compatibility alias for s18; use the directional s08/s18 scripts for new work.
 
-The conversion tools preserve registered dimensions, record/layer order,
-storage types, missing values, coordinate orientation, and map-local paths.
+The COG planner uses each registered `filename` to locate the source NetCDF and
+the registry's NetCDF variable/name fields to identify its data. For older
+single-variable files whose internal variable matches the exact registered
+filename stem (for example, `nxtdst_grid.nc` containing `nxtdst_grid`), the
+source variable is retained separately from the canonical registry name in COG
+tags. Missing concrete files and unmatched filename patterns are reported
+separately from present files that have no valid registry mapping. Intentional
+non-raster inputs such as `bifprm.nc` remain excluded. Conversion preserves
+registered dimensions, record/layer order, storage types, missing values,
+coordinate orientation, and map-local paths.
 For COG options and supported variables, consult the wrapper's `--help` and
 `map/tools/code/convert_netcdf_to_cog.py` documentation.
 

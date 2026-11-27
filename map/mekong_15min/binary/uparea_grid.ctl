@@ -7,5 +7,5 @@ ydef 120 linear 5.125 0.25
 tdef 1 linear 00Z01jan2000 1yr
 zdef 1 linear 1 1
 vars 1
-uparea_grid 1 99 Accumulated upstream map-grid area [m2]
+uparea 1 99 Accumulated upstream map-grid area [m2]
 ENDVARS

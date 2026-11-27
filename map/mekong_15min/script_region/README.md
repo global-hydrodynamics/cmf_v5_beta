@@ -1,19 +1,21 @@
 # Regional map preparation
 
-Base-map geometry is read from authoritative `params.nml`; legacy TXT-only
-source maps remain supported through `params.txt`. The maintained Python
-regionalizer writes cropped geometry to `params.nml`; `params.txt` references
-below describe the compatibility interface used by older tools.
-
 This guide documents the reusable v5 regional-map preparation template under `map/tools/`. It prepares a regional map from a compatible source map. The legacy v4 workflow remains under `map/src/src_region/` and is not modified here. Configure and execute `s01-regional_map.sh` for a target map; the Python programs under `map/tools/code/` perform each processing stage and should not be run separately for the standard workflow.
 
 The scripts under `map/mekong_15min/` are maintained separately to create or update the official GitHub sample using the original global map distributed with CaMa-Flood packages. They are sample-preparation tools, not test scripts. GitHub CI does not run them. The reusable template documented here can be used to prepare other regional maps.
 
 ## Inputs and settings
 
+Base-map geometry is read from authoritative `params.nml`; legacy TXT-only
+source maps remain supported through `params.txt`.
+
+The input and output tables below use `params.txt` where they describe the
+existing legacy wrapper interface. The maintained Python regionalizer accepts
+either root metadata file and writes cropped geometry to `params.nml`.
+
 The source directory must contain authoritative `params.nml` (or legacy `params.txt` for TXT-only maps), `nextxy.bin`, `downxy.bin`, `elevtn.bin`, `fldhgt.bin`, `ctmare.bin`, `grdare.bin`, `uparea.bin`, `lonlat.bin`, `nxtdst.bin`, `rivlen.bin`, `width.bin`, and `bifori.csv`. `catmpx.bin` and `class.bin` are optional supplementary int32 rasters; when present, `region_cut_domain` crops their values over the full selected grid, including non-river cells. `cut_bifway` filters `bifori.csv` using the crop metadata and regional network. Confirm the binary formats and dimensions match the selected source map.
 
-High-resolution cropping is optional. For each supported tag (`1min`, `30sec`, `15sec`, or `3sec`), the source needs that directory's standard `location.csv`, which lists area names, bounds, dimensions, and cell size, plus the corresponding source layer files read by the combiner. Some layers, including `flwdir.bin`, are optional; when one is absent, the v5 combiner reports a `WARNING` and fills the corresponding output with its missing-value initialization. Missing required catchment lookup tiles (`catmxy.bin`) remain errors and are skipped. If present, the workflow crops the first available high-resolution tag in the order `1min`, `30sec`, `15sec`, `3sec` and creates the standard climatology input mapping matrix. Matrix generation uses map geometry and high-resolution lookup/area layers; it does not read runoff data. A compatible annual runoff climatology is needed later to use this matrix for channel cross-section parameter estimation. These are external/source datasets; the repository's workflow code does not supply a replacement global map or runoff archive.
+High-resolution cropping is optional. For each supported tag (`1min`, `30sec`, `15sec`, or `3sec`), the NetCDF source needs that directory's standard `location.csv`, which lists area names, bounds, dimensions, and cell size, plus the corresponding source layer files read by the combiner. Legacy Binary-only source maps may still have `location.txt`; migrate them to the standard inventory before using this NetCDF workflow. Some layers, including `flwdir`, are optional; when one is absent, the v5 combiner reports a `WARNING` and fills the corresponding output with its missing-value initialization. Missing required catchment lookup tiles (`catmxy`) remain errors and are skipped. If present, the workflow crops the first available high-resolution tag in the order `1min`, `30sec`, `15sec`, `3sec` and creates the standard climatology input mapping matrix. Matrix generation uses map geometry and high-resolution lookup/area layers; it does not read runoff data. A compatible annual runoff climatology is needed later to use this matrix for channel cross-section parameter estimation. These are external/source datasets; the repository's workflow code does not supply a replacement global map or runoff archive.
 
 Copy the template into a map directory and edit the settings at the top of `s01-regional_map.sh`:
 
@@ -46,9 +48,9 @@ No build is required. Run from the copied map-local `script_region/` directory a
 | `cut_domain` | Parent map: `params.nml` or legacy `params.txt`; cropped `nextxy.bin`, `downxy.bin`, `elevtn.bin`, `fldhgt.bin`, `ctmare.bin`, `grdare.bin`, `uparea.bin`, `lonlat.bin`, `nxtdst.bin`, `rivlen.bin`, `width.bin`, `lsmask.bin`; optional `catmpx.bin` and `class.bin` when supplied by the source; `nextxy_noedge.bin` | Cropped base-resolution map fields and bifurcation-filter input. The optional supplementary rasters retain their source int32 values across every cell in the selected rectangle. `nextxy_noedge.bin` is in the parent map directory. |
 | `cut_bifway` | Parent map: `bifori.csv` | Source bifurcation paths that remain within the regional network. |
 | `set_map` | Parent map: `rivseq.bin`, `basin.bin`, `bsncol.bin`, `upgrid.bin`, `uparea_grid.bin`, `nxtdst_grid.bin`, `rivlen_grid.bin` | Derived river ordering, basin/visualization, and grid-based analysis products. `rivlen_grid.bin` intentionally contains the same downstream-distance array as `nxtdst_grid.bin` for rectangular-grid simulations. |
-| `combine_hires` | Regional high-resolution tag directory, including layers and its `location.csv` | Cropped high-resolution layers and geometry metadata, when corresponding source data are available. |
+| `combine_hires` | Regional high-resolution tag directory, including layers and its `location.csv` | Cropped high-resolution layers and standard geometry metadata, when corresponding source data are available. |
 | `region_default_inpmat` | Parent map: `inpmat_test-1deg.nc` and `diminfo_test-1deg.nml` | Standard runoff-climatology mapping product for channel cross-section parameter estimation; distributed with prepared v5 maps when generated. |
-| Separate CTL step | `.ctl` files beside eligible binaries | GrADS descriptors based on base `params.nml` (or legacy `params.txt`) or standard high-resolution `location.csv`; not written by `s01`. |
+| Separate CTL step | `.ctl` files beside eligible binaries | GrADS descriptors based on base `params.nml` (or legacy `params.txt`) or high-resolution `location.txt`; not written by `s01`. |
 
 Consult [`variable_table/map_variables.csv`](../../../variable_table/map_variables.csv) for per-product type, dimensions, record layout, numeric missing value, special codes, and model/runtime role. Core model inputs and preprocessing/analysis products are distinguished there; the table above names outputs without duplicating every variable definition.
 
@@ -56,7 +58,7 @@ Consult [`variable_table/map_variables.csv`](../../../variable_table/map_variabl
 
 In high-resolution `downxy` files, record 1 (`downx`) and record 2 (`downy`) are signed 16-bit offsets on that same high-resolution grid. For a source pixel `(ix, iy)` with 1-based indices, add the two offsets to recover its downstream pixel: `(ix + downx, iy + downy)`. These are relative offsets, not absolute indices. FLOW adjusts the x offset for periodic wrapping at the global longitude seam. The paired sentinel values are `-999` for a river mouth and `-1000` for an inland termination. The output array starts at `-9999`; source inspection shows this remains when no downstream offset is assigned. The maintainer confirms `-9999` means sea in the low-resolution layer, but the high-resolution layer may use a different value for land pixels without an assigned unit catchment; that encoding remains unconfirmed. Consumers treat `downx <= -900` as a stop condition. The regional combiner preserves the offsets as-is. The common registry distinguishes the resolutions and records the unresolved high-resolution sentinel.
 
-Review terminal output after each internal program. The shell stops on the first failed processing command and reports the current step. Confirm expected outputs exist, dimensions agree with the generated `params.nml` / `location.csv`, and binary sizes match the declared record layout. These checks establish file consistency only; they do not validate network correctness or scientific suitability. If GrADS descriptors are needed, run the separate Binary-format wrapper from the map-local `script_format_conv/` directory after reviewing map outputs:
+Review terminal output after each internal program. The shell stops on the first failed processing command and reports the current step. Confirm expected outputs exist, dimensions agree with the generated `params.nml` / `location.csv`, and data sizes match the declared record layout. These checks establish file consistency only; they do not validate network correctness or scientific suitability. If GrADS descriptors are needed, run the separate Binary-format wrapper from the map-local `script_format_conv/` directory after reviewing map outputs:
 
 ```sh
 cd ../script_format_conv
@@ -64,7 +66,7 @@ cd ../script_format_conv
 ./s09-write_ctl.sh
 ```
 
-The format-conversion wrapper uses map metadata to generate registered descriptors; existing CTLs are overwritten by default. High-resolution `location.csv` uses the ordered fields `iarea,carea,west,east,south,north,nx,ny,csize`; each data row describes one tile, with aligned whitespace stripped by readers. Binary-only compatibility workflows may retain `location.txt`.
+The format-conversion wrapper uses map metadata to generate registered descriptors; existing CTLs are overwritten by default. The standard high-resolution `location.csv` has ordered fields `iarea,carea,west,east,south,north,nx,ny,csize`, with one data row per area. The explicit legacy Binary conversion boundary reads or writes `location.txt` as needed.
 
 ## Automated checks and scientific validation
 

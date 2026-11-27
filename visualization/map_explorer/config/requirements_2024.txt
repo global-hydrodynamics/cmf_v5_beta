@@ -1,0 +1,14 @@
+# Experimental compatibility snapshot available by 2024-12-31.
+# Minimal direct dependencies for Map Explorer; CPython 3.10–3.12.
+# On macOS, the launcher requires binary wheels for every package.
+numpy==1.26.4
+# netCDF4 1.7.2 arm64 wheels require newer macOS; retain the compatible 1.6.5
+# wheel for older macOS while keeping the verified 2024 pin elsewhere.
+netCDF4==1.7.2; sys_platform != "darwin" or platform_machine != "arm64" or python_version >= "3.13"
+netCDF4==1.6.5; sys_platform == "darwin" and platform_machine == "arm64" and python_version < "3.13"
+matplotlib==3.9.2
+rasterio==1.4.1
+panel==1.5.5
+bokeh==3.6.2
+Pillow==11.0.0
+param==2.1.1

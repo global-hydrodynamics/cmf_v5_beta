@@ -1,0 +1,11 @@
+# Experimental historical compatibility snapshot verified on CPython 3.10.
+# Minimal direct dependencies for Map Explorer; transitive dependencies are resolved by pip.
+# On macOS, the launcher requires binary wheels for every package.
+numpy==1.23.5
+netCDF4==1.6.2
+matplotlib==3.6.2
+rasterio==1.3.4
+panel==0.14.2
+bokeh==2.4.3
+Pillow==9.3.0
+param==1.12.3

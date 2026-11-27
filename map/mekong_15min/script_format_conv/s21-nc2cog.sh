@@ -11,8 +11,8 @@ PYTHON_CMD="python3"
 # ----------------------------------------------------------------------
 # User settings
 # ----------------------------------------------------------------------
-RESOLUTIONS="auto"        # Base map plus the first available 1min, 30sec or 15sec map.
-VARS="all"                # All registered products, or selected file stems.
+RESOLUTIONS="1min"       # High-resolution maps only; exclude base-resolution products.
+VARS="catmxy visual elevtn flddif catmz100 uparea rivwth hand"  # Explorer COG products.
 BLOCKSIZE=512             # TIFF tile edge [pixels], 128..4096 and divisible by 16.
 COMPRESSION="DEFLATE"     # Lossless DEFLATE, LZW, ZSTD or NONE.
 OVERVIEWS="2 4 8 16 32"   # Display-only reduction factors.
@@ -26,7 +26,7 @@ REGISTRY="$CMF_V50_ROOT/variable_table/map_variables.csv"
 
 cmf_check_init "Generate registered numeric COG caches"
 
-cmf_check_step 1 1 "Convert the selected NetCDF map products to COG"
+cmf_check_step 1 1 "Convert selected high-resolution NetCDF products to COG"
 "$PYTHON_CMD" "$CODE_DIR/convert_netcdf_to_cog.py" --map-dir .. \
     --resolutions "$RESOLUTIONS" --variables "$VARS" \
     --blocksize "$BLOCKSIZE" --compression "$COMPRESSION" \

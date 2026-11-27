@@ -19,7 +19,7 @@ echo ""
 
 IX=62
 IY=93
-OUTPUT="./upbasin-sample.nc"         # Sample output in script_params/.
+OUTPUT="../upbasin-sample.nc"         # Sample output in script_params/.
 #OUTPUT="../upbasin-${IX}-${IY}.nc"  # Alternative: map root.
 
 echo "Example: Calculate the upstream basin for grid ($IX, $IY)"

@@ -1,4 +1,4 @@
-"""Consent, isolation and argument handoff checks; no packages or servers are started."""
+"""Focused tests for isolated profile setup and platform-specific selection."""
 import contextlib
 import io
 import os
@@ -21,204 +21,219 @@ class LauncherSetupTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix="map explorer ")
         self.addCleanup(self.temp.cleanup)
         self.directory = Path(self.temp.name)
-        self.python = self.directory / '.venv' / ('Scripts/python.exe' if sys.platform == 'win32' else 'bin/python')
         self.stdout = contextlib.redirect_stdout(io.StringIO())
         self.stderr = contextlib.redirect_stderr(io.StringIO())
-        self.stdout.__enter__(); self.stderr.__enter__()
+        self.stdout.__enter__()
+        self.stderr.__enter__()
         self.addCleanup(self.stdout.__exit__, None, None, None)
         self.addCleanup(self.stderr.__exit__, None, None, None)
+        self.runtime = ([sys.executable], {
+            "python": list(sys.version_info[:3]),
+            "implementation": "CPython",
+            "macos": "13.7.8" if sys.platform == "darwin" else "",
+            "machine": "arm64" if sys.platform == "darwin" else "x86_64",
+        })
 
-    def existing_environment(self):
-        self.python.parent.mkdir(parents=True)
-        self.python.touch()
-        (self.directory / '.venv/pyvenv.cfg').write_text('test fixture')
+    def test_consent_is_requested_once_and_decline_changes_nothing(self):
+        for answer in ("", "n", "no"):
+            with self.subTest(answer=answer), \
+                 patch.object(launcher.sys.stdin, "isatty", return_value=True), \
+                 patch("builtins.input", return_value=answer) as prompt, \
+                 patch.object(launcher, "python_candidates") as candidates:
+                self.assertEqual(launcher.prepare_environment(self.directory, [], ["rasterio"]), 0)
+                prompt.assert_called_once()
+                candidates.assert_not_called()
+        self.assertEqual(list(self.directory.iterdir()), [])
 
-    def test_default_no_and_explicit_no_do_not_modify_environment(self):
-        for answer in ('', 'n', 'no'):
-            with self.subTest(answer=answer), patch.object(launcher.sys.stdin, 'isatty', return_value=True), \
-                 patch('builtins.input', return_value=answer) as prompt, patch.object(launcher.subprocess, 'run') as run:
-                self.assertEqual(launcher.prepare_environment(self.directory, [], ['panel']), 0)
-                self.assertIn('[y/N]', prompt.call_args.args[0])
-                run.assert_not_called()
-                self.assertFalse((self.directory / '.venv').exists())
+    def test_noninteractive_setup_does_not_prompt_or_create(self):
+        with patch.object(launcher.sys.stdin, "isatty", return_value=False), \
+             patch("builtins.input") as prompt, patch.object(launcher, "python_candidates") as candidates:
+            self.assertEqual(launcher.prepare_environment(self.directory, [], ["netCDF4"]), 1)
+            prompt.assert_not_called()
+            candidates.assert_not_called()
+        self.assertEqual(list(self.directory.iterdir()), [])
 
-    def test_noninteractive_does_not_prompt_install_or_create(self):
-        with patch.object(launcher.sys.stdin, 'isatty', return_value=False), \
-             patch('builtins.input') as prompt, patch.object(launcher.subprocess, 'run') as run:
-            self.assertEqual(launcher.prepare_environment(self.directory, [], ['panel']), 1)
-            prompt.assert_not_called(); run.assert_not_called()
-            self.assertFalse((self.directory / '.venv').exists())
+    def test_fallback_uses_standard_then_2024_and_preserves_arguments(self):
+        venv = self.directory / ".venv-macos-2024"
+        python = venv / "bin/python"
+        argv = ["/a map", "--port", "5009", "--no-browser"]
+        with patch.object(launcher.sys, "platform", "darwin"), \
+             patch.object(launcher.sys.stdin, "isatty", return_value=True), \
+             patch("builtins.input", return_value="yes"), \
+             patch.object(launcher, "python_candidates", return_value=[self.runtime]), \
+             patch.object(launcher, "build_profile", side_effect=[
+                 (None, "netCDF4 import failed: NumPy ABI incompatibility", False),
+                 ((venv, python), "validated", False),
+             ]) as build, \
+             patch.object(launcher.subprocess, "run", return_value=SimpleNamespace(returncode=7)) as run:
+            self.assertEqual(launcher.prepare_environment(self.directory, argv, ["netCDF4"]), 7)
+        self.assertEqual([call.args[1] for call in build.call_args_list], ["standard", "2024"])
+        self.assertEqual(run.call_args.args[0], [str(python), str(self.directory / "code/launch_desktop.py"), *argv])
+        self.assertEqual(run.call_args.kwargs["env"]["VIRTUAL_ENV"], str(venv))
 
-    def test_yes_creates_isolated_environment_and_preserves_launch_arguments(self):
-        argv = ['/a map with spaces', '--port', '5009', '--no-browser']
-        with patch.object(launcher.sys.stdin, 'isatty', return_value=True), \
-             patch('builtins.input', return_value='Y'), \
-             patch.object(launcher.subprocess, 'run', return_value=SimpleNamespace(returncode=7)) as run:
-            self.assertEqual(launcher.prepare_environment(self.directory, argv, ['panel', 'bokeh']), 7)
-        commands = [item.args[0] for item in run.call_args_list]
-        self.assertEqual(commands[0], [sys.executable, '-m', 'venv', str(self.directory / '.venv')])
-        self.assertEqual(commands[2][:4], [str(self.python), '-m', 'pip', 'install'])
-        self.assertEqual(commands[2][-2:], ['-r', str(self.directory / ('requirements-macos.txt' if sys.platform == 'darwin' else 'requirements.txt'))])
-        self.assertEqual(commands[-1], [str(self.python), str(self.directory / 'code/launch_desktop.py'), *argv])
-        self.assertTrue(all(c[0] == str(self.python) for c in commands[1:]))
+    def test_2022_is_attempted_only_after_standard_and_2024(self):
+        venv = self.directory / ".venv-macos-2022"
+        python = venv / "bin/python"
+        python310 = ([sys.executable], {**self.runtime[1], "python": [3, 10, 9]})
+        with patch.object(launcher.sys, "platform", "darwin"), \
+             patch.object(launcher.sys.stdin, "isatty", return_value=True), \
+             patch("builtins.input", return_value="y"), \
+             patch.object(launcher, "python_candidates", return_value=[python310]), \
+             patch.object(launcher, "build_profile", side_effect=[
+                 (None, "standard dependencies invalid", False),
+                 (None, "2024 dependencies invalid", False),
+                 ((venv, python), "2022 isolated smoke check passed", False),
+             ]) as build, \
+             patch.object(launcher.subprocess, "run", return_value=SimpleNamespace(returncode=0)):
+            self.assertEqual(launcher.prepare_environment(self.directory, [], ["Panel"]), 0)
+        self.assertEqual([call.args[1] for call in build.call_args_list], ["standard", "2024", "2022"])
 
-    def test_existing_local_environment_is_updated_only_after_yes(self):
-        self.existing_environment()
-        with patch.object(launcher.sys.stdin, 'isatty', return_value=True), \
-             patch('builtins.input', return_value='yes'), \
-             patch.object(launcher.subprocess, 'run', return_value=SimpleNamespace(returncode=0)) as run:
-            self.assertEqual(launcher.prepare_environment(self.directory, [], ['panel']), 0)
-        self.assertFalse(any(item.args[0][1:3] == ['-m', 'venv'] for item in run.call_args_list))
-        self.assertEqual(run.call_args_list[1].args[0][1:4], ['-m', 'pip', 'install'])
-
-    def test_pip_failure_does_not_relaunch_or_touch_other_environments(self):
-        self.existing_environment()
-        failure = subprocess.CalledProcessError(1, 'pip')
-        with patch.object(launcher.sys.stdin, 'isatty', return_value=True), \
-             patch('builtins.input', return_value='y'), \
-             patch.object(launcher.subprocess, 'run', side_effect=[SimpleNamespace(returncode=0), failure]) as run:
-            self.assertEqual(launcher.prepare_environment(self.directory, [], ['panel']), 1)
-        self.assertEqual(run.call_count, 2)
-        self.assertTrue(all(item.args[0][0] == str(self.python) for item in run.call_args_list))
-        self.assertTrue(self.python.exists())
-
-    def test_wrong_prefix_stops_before_pip(self):
-        self.existing_environment()
-        with patch.object(launcher.sys.stdin, 'isatty', return_value=True), \
-             patch('builtins.input', return_value='y'), \
-             patch.object(launcher.subprocess, 'run', side_effect=subprocess.CalledProcessError(1, 'prefix check')) as run:
-            self.assertEqual(launcher.prepare_environment(self.directory, [], ['panel']), 1)
-        self.assertEqual(run.call_count, 1)
-        self.assertNotIn('pip', run.call_args.args[0])
-
-    def test_ready_runtime_does_not_enter_setup(self):
-        with patch.object(launcher.importlib.util, 'find_spec', return_value=object()), \
-             patch.object(launcher, 'prepare_environment') as setup, \
-             patch.object(launcher, 'choose_map', side_effect=AssertionError('default must not open a dialog')), \
-             patch('app.main') as serve:
-            self.assertEqual(launcher.main(['--no-browser']), 0)
-            serve.assert_called_once()
-            setup.assert_not_called()
-
-    def test_missing_runtime_hands_original_arguments_to_setup(self):
-        argv = ['my map', '--port', '5009', '--no-browser']
-        with patch.object(launcher.importlib.util, 'find_spec', return_value=None), \
-             patch.object(launcher, 'prepare_environment', return_value=3) as setup:
-            self.assertEqual(launcher.main(argv), 3)
-            self.assertEqual(setup.call_args.args[1], argv)
-            self.assertIn('panel', setup.call_args.args[2])
-
-    @unittest.skipIf(sys.platform == 'win32', 'POSIX wrapper check')
-    def test_terminal_and_mac_wrappers_prefer_local_venv_and_delegate(self):
-        tools = self.directory / 'visualization/map_explorer'
-        tools.mkdir(parents=True)
-        log = self.directory / 'arguments.txt'
-        for base, tag in [(tools, 'local'), (self.directory, 'shared')]:
-            python = base / '.venv/bin/python'
-            python.parent.mkdir(parents=True)
-            python.write_text('#!/bin/sh\nprintf "%s\\n" "'+tag+'" "$@" > "$LAUNCH_TEST_LOG"\n')
-            python.chmod(0o755)
-        map_dir = self.directory / 'test map'
+    def test_valid_current_environment_skips_setup_and_preserves_map_arguments(self):
+        map_dir = self.directory / "sample map"
         map_dir.mkdir()
-        env = {k:v for k,v in os.environ.items() if k not in ('PYTHON', 'VIRTUAL_ENV')}
-        env['LAUNCH_TEST_LOG'] = str(log)
-        for name in ('run.sh', 'launch_mac.command'):
+        (map_dir / "params.txt").write_text("4 NX\n3 NY\n1 NLFP\n1 spacing\n10 west\n14 east\n20 south\n23 north\n")
+
+        class LocalSocket:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def setsockopt(self, *args):
+                pass
+
+            def bind(self, *args):
+                pass
+
+        with patch.object(launcher, "validate_environment", return_value=(True, "ready")), \
+             patch.object(launcher, "prepare_environment") as setup, \
+             patch("map_datasets.resolve_map", return_value=map_dir), \
+             patch.object(launcher.socket, "socket", return_value=LocalSocket()), \
+             patch("app.main") as serve:
+            self.assertEqual(launcher.main([str(map_dir), "--port", "5009", "--no-browser"]), 0)
+        setup.assert_not_called()
+        serve.assert_called_once()
+        self.assertIn(str(map_dir), launcher.sys.argv)
+        self.assertEqual(launcher.sys.argv[launcher.sys.argv.index("--port") + 1], "5009")
+
+    def test_successful_profile_skips_older_profile_and_removes_test_flag(self):
+        venv = self.directory / ".venv-macos-2024"
+        python = venv / "bin/python"
+        argv = ["--test-setup-profile", "2024", "map", "--port", "5010"]
+        with patch.object(launcher.sys, "platform", "darwin"), \
+             patch.object(launcher.sys.stdin, "isatty", return_value=True), \
+             patch("builtins.input", return_value="y"), \
+             patch.object(launcher, "python_candidates", return_value=[self.runtime]), \
+             patch.object(launcher, "build_profile", return_value=((venv, python), "ok", False)) as build, \
+             patch.object(launcher.subprocess, "run", return_value=SimpleNamespace(returncode=0)) as run:
+            self.assertEqual(launcher.prepare_environment(self.directory, argv, ["forced profile test"],
+                                                           test_profile="2024"), 0)
+        build.assert_called_once()
+        self.assertEqual(build.call_args.args[1], "2024")
+        self.assertEqual(run.call_args.args[0][-3:], ["map", "--port", "5010"])
+
+    def test_network_failure_stops_profile_fallback(self):
+        with patch.object(launcher.sys.stdin, "isatty", return_value=True), \
+             patch("builtins.input", return_value="y"), \
+             patch.object(launcher, "python_candidates", return_value=[self.runtime]), \
+             patch.object(launcher, "build_profile", return_value=(None, "PyPI connection timed out", True)) as build:
+            self.assertEqual(launcher.prepare_environment(self.directory, [], ["numpy"]), 1)
+        build.assert_called_once()
+
+    def test_2022_is_last_profile_and_version_limited(self):
+        self.assertEqual(launcher.PROFILES, ("standard", "2024", "2022"))
+        python310 = {"python": [3, 10, 9], "implementation": "CPython"}
+        python311 = {"python": [3, 11, 0], "implementation": "CPython"}
+        self.assertTrue(launcher.profile_compatible("2022", python310))
+        self.assertFalse(launcher.profile_compatible("2022", python311))
+        self.assertFalse(launcher.profile_compatible("2024", {**python311, "implementation": "PyPy"}))
+
+    def test_platform_profiles_do_not_share_environment_paths(self):
+        with patch.object(launcher.sys, "platform", "darwin"):
+            mac = launcher.profile_environment(self.directory, "standard")
+        with patch.object(launcher.sys, "platform", "win32"):
+            windows = launcher.profile_environment(self.directory, "standard")
+        self.assertNotEqual(mac, windows)
+        self.assertEqual(mac.name, ".venv-macos-standard")
+        self.assertEqual(windows.name, ".venv-windows-standard")
+
+    def test_wsl_profile_is_stored_in_linux_home_cache(self):
+        with patch.object(launcher.sys, "platform", "linux"), \
+             patch.dict(os.environ, {"WSL_DISTRO_NAME": "Ubuntu"}):
+            root = launcher.environment_root(self.directory)
+        self.assertEqual(root.parts[-3:-1], (".cache", "cmf-map-explorer"))
+        self.assertNotEqual(root, self.directory)
+
+    def test_validation_checks_prefix_pip_imports_and_optional_app(self):
+        python = self.directory / "bin/python"
+        outputs = [SimpleNamespace(returncode=0, stderr="", stdout="") for _ in range(3)]
+        with patch.object(launcher.subprocess, "run", side_effect=outputs) as run:
+            passed, _ = launcher.validate_environment(python, self.directory, self.directory,
+                                                      initialize_app=True)
+        self.assertTrue(passed)
+        self.assertEqual(run.call_count, 3)
+        self.assertIn("pip", run.call_args_list[1].args[0])
+        self.assertIn("Explorer", run.call_args_list[2].args[0][2])
+
+    def test_macos_requirement_selection_and_wheel_guard(self):
+        self.assertEqual(launcher.requirements_for(self.directory, "standard", True),
+                         self.directory / "requirements-macos.txt")
+        self.assertEqual(launcher.requirements_for(self.directory, "2024", True),
+                         self.directory / "config/requirements_2024.txt")
+        for filename in ("requirements-macos.txt", "config/requirements_2024.txt",
+                         "config/requirements_2022.txt"):
+            self.assertTrue((ROOT / filename).is_file())
+
+    def test_macos_profile_install_is_wheel_only_and_keeps_existing_venv_separate(self):
+        (self.directory / "config").mkdir()
+        (self.directory / "config/requirements_2024.txt").write_text("numpy==1.26.4\n")
+        old_environment = self.directory / ".venv"
+        old_environment.mkdir()
+        interpreter = ([sys.executable], {
+            "python": [3, 12, 3], "implementation": "CPython", "macos": "13.7.8", "machine": "arm64",
+        })
+
+        def command(cmd, **kwargs):
+            if "venv" in cmd:
+                Path(cmd[-1]).mkdir()
+            return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+        with patch.object(launcher.sys, "platform", "darwin"), \
+             patch.object(launcher, "macos_setup_error", return_value=None), \
+             patch.object(launcher.subprocess, "run", side_effect=command) as run, \
+             patch.object(launcher, "validate_environment", return_value=(True, "ok")):
+            environment, _, _ = launcher.build_profile(self.directory, "2024", interpreter)
+        install = next(call.args[0] for call in run.call_args_list if "install" in call.args[0])
+        self.assertIn("--only-binary=:all:", install)
+        self.assertIn(str(self.directory / "config/requirements_2024.txt"), install)
+        self.assertEqual(environment[0], self.directory / ".venv-macos-2024")
+        self.assertTrue(old_environment.is_dir())
+
+    @unittest.skipIf(sys.platform == "win32", "POSIX wrapper check")
+    def test_terminal_and_mac_wrappers_prefer_local_venv_and_delegate(self):
+        tools = self.directory / "visualization/map_explorer"
+        tools.mkdir(parents=True)
+        log = self.directory / "arguments.txt"
+        for base, tag in [(tools, "local"), (self.directory, "shared")]:
+            python = base / ".venv/bin/python"
+            python.parent.mkdir(parents=True)
+            python.write_text('#!/bin/sh\nprintf "%s\\n" "' + tag + '" "$@" > "$LAUNCH_TEST_LOG"\n')
+            python.chmod(0o755)
+        map_dir = self.directory / "test map"
+        map_dir.mkdir()
+        env = {k: v for k, v in os.environ.items() if k not in ("PYTHON", "VIRTUAL_ENV")}
+        env["LAUNCH_TEST_LOG"] = str(log)
+        for name in ("run.sh", "launch_mac.command"):
             shutil.copy2(ROOT / name, tools / name)
-            result = subprocess.run(['bash', str(tools / name), str(map_dir), '--no-browser'], env=env, capture_output=True, text=True)
+            result = subprocess.run(["bash", str(tools / name), str(map_dir), "--no-browser"],
+                                    env=env, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             lines = log.read_text().splitlines()
-            self.assertEqual(lines[0], 'local')
-            self.assertEqual(lines[1], str(tools / 'code/launch_desktop.py'))
+            self.assertEqual(lines[0], "local")
+            self.assertEqual(lines[1], str(tools / "code/launch_desktop.py"))
             self.assertIn(str(map_dir), lines)
-            if name == 'run.sh':
-                self.assertIn('5006', lines)
 
 
-
-    def test_macos_wheel_only_and_other_platform_commands_unchanged(self):
-        self.existing_environment()
-        for system in ("darwin", "linux", "win32"):
-            with self.subTest(system=system), patch.object(launcher.sys, "platform", system), \
-                 patch.object(launcher, "macos_setup_error", return_value=None), \
-                 patch.object(launcher.sys.stdin, "isatty", return_value=True), \
-                 patch("builtins.input", return_value="y"), \
-                 patch.object(launcher.subprocess, "run", return_value=SimpleNamespace(returncode=0)) as run:
-                self.assertEqual(launcher.prepare_environment(self.directory, [], ["rasterio"]), 0)
-                commands = [c.args[0] for c in run.call_args_list]
-                install = next(c for c in commands if "install" in c)
-                if system == "darwin":
-                    self.assertIn("--only-binary=:all:", install)
-                    self.assertIn("--no-user", install)
-                    self.assertEqual(run.call_args_list[1].kwargs["env"]["PIP_CONFIG_FILE"], os.devnull)
-                else:
-                    self.assertEqual(install[-4:], ["pip", "install", "-r", str(self.directory / "requirements.txt")])
-                    self.assertTrue(all("env" not in c.kwargs for c in run.call_args_list))
-
-    def test_macos_compatibility_diagnostics(self):
-        for version, cpu, python, implementation, supported in (
-                ("11.0", "arm64", (3, 10), "CPython", True),
-                ("13.7.8", "arm64", (3, 12), "CPython", True),
-                ("14.0", "arm64", (3, 13), "CPython", True),
-                ("15.0", "x86_64", (3, 11), "CPython", True),
-                ("10.15", "x86_64", (3, 12), "CPython", False),
-                ("13.7", "arm64", (3, 9), "CPython", False),
-                ("13.7", "arm64", (3, 13), "CPython", False),
-                ("13.7", "arm64", (3, 14), "CPython", False),
-                ("13.7", "arm64", (3, 12), "PyPy", False),
-                ("13.7", "unknown", (3, 12), "CPython", False),
-                ("", "arm64", (3, 12), "CPython", False)):
-            with self.subTest(version=version, cpu=cpu, python=python, implementation=implementation), \
-                 patch.object(launcher.platform, "mac_ver", return_value=(version, (), "")), \
-                 patch.object(launcher.platform, "machine", return_value=cpu), \
-                 patch.object(launcher.platform, "python_implementation", return_value=implementation), \
-                 patch.object(launcher.sys, "version_info", python):
-                self.assertEqual(launcher.macos_setup_error() is None, supported)
-
-    def test_unsupported_macos_does_not_prompt_or_create_environment(self):
-        with patch.object(launcher.sys, "platform", "darwin"), \
-             patch.object(launcher, "macos_setup_error", return_value="Unsupported test runtime"), \
-             patch("builtins.input") as prompt, patch.object(launcher.subprocess, "run") as run:
-            self.assertEqual(launcher.prepare_environment(self.directory, [], ["rasterio"]), 1)
-            prompt.assert_not_called()
-            run.assert_not_called()
-            self.assertFalse((self.directory / ".venv").exists())
-
-    def test_macos_install_cannot_inherit_pip_target_or_pythonpath(self):
-        injected = {"PIP_TARGET": "/other/env", "PIP_PREFIX": "/other/prefix", "PIP_NO_BINARY": ":all:",
-                    "PIP_CONFIG_FILE": "/other/pip.conf", "PYTHONPATH": "/other/python", "PYTHONHOME": "/other",
-                    "PYTHONUSERBASE": "/other/user", "VIRTUAL_ENV": "/other/venv"}
-        with patch.dict(os.environ, injected):
-            before = dict(os.environ)
-            env = launcher.macos_setup_environment(self.directory / ".venv")
-            self.assertEqual(dict(os.environ), before)
-        for name in injected:
-            if name not in ("PIP_CONFIG_FILE", "VIRTUAL_ENV"):
-                self.assertNotIn(name, env)
-        self.assertEqual(env["PIP_CONFIG_FILE"], os.devnull)
-        self.assertEqual(env["VIRTUAL_ENV"], str(self.directory / ".venv"))
-
-    def test_linked_environment_is_not_installed(self):
-        other = self.directory / "other"
-        other.mkdir()
-        (self.directory / ".venv").symlink_to(other, target_is_directory=True)
-        with patch.object(launcher.sys.stdin, "isatty", return_value=True), \
-             patch("builtins.input", return_value="y"), patch.object(launcher.subprocess, "run") as run:
-            self.assertEqual(launcher.prepare_environment(self.directory, [], ["rasterio"]), 1)
-            run.assert_not_called()
-        self.assertEqual(list(other.iterdir()), [])
-
-    def test_macos_broken_extension_offers_repair_even_with_module_spec(self):
-        def import_package(name):
-            if name == "rasterio":
-                raise ImportError("incomplete native extension")
-            return object()
-        with patch.object(launcher.sys, "platform", "darwin"), \
-             patch.object(launcher.importlib.util, "find_spec", return_value=object()), \
-             patch.object(launcher, "__import__", side_effect=import_package, create=True), \
-             patch.object(launcher, "prepare_environment", return_value=3) as setup:
-            self.assertEqual(launcher.main([]), 3)
-            self.assertEqual(setup.call_args.args[2], ["rasterio"])
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

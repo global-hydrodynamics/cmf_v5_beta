@@ -29,22 +29,29 @@ class MapGeometry:
 
 @dataclass(frozen=True)
 class DimInfo:
-    """Model dimensions, runoff-grid mapping shape, paired matrix name, and bounds."""
+    """CaMa-Flood model geometry and paired runoff-grid mapping metadata."""
     nx: int
     ny: int
     nlfp: int
-    nxin: int
-    nyin: int
-    inpn: int
-    inpmat_file: str
     west: float
     east: float
     north: float
     south: float
+    inpmat_file: str
+    nxin: int
+    nyin: int
+    inpn: int
+    westin: float
+    eastin: float
+    northin: float
+    southin: float
+    olatin: str
 
     def values(self) -> tuple[int | str | float, ...]:
-        return (self.nx, self.ny, self.nlfp, self.nxin, self.nyin, self.inpn,
-                self.inpmat_file, self.west, self.east, self.north, self.south)
+        """Return fields in DIMINFO group order followed by INPUTDIM group order."""
+        return (self.nx, self.ny, self.nlfp, self.west, self.east, self.north,
+                self.south, self.inpmat_file, self.nxin, self.nyin, self.inpn,
+                self.westin, self.eastin, self.northin, self.southin, self.olatin)
 
 
 def geometry_paths(path: str | Path) -> tuple[Path, Path]:

@@ -1,10 +1,5 @@
 # Map parameterization and preparation workflows
 
-Base-map geometry is read from authoritative `params.nml`. TXT-only legacy
-maps remain supported; when both files exist, their eight numeric values must
-match. References to `params.txt` below describe compatibility inputs retained
-for existing map-local tools.
-
 `script_params/` contains reusable map-local recipes for parameterization and related map preparation. Run each maintained wrapper from its map-local `script_params/` directory and keep that directory as CWD; Python programs use `../` for map-root products and direct relative paths for script-local files. The wrappers use the common `python3`/`CMF_V50_ROOT` initialization and shared `cmf_check_*` progress/error reporting. Existing outputs owned by a workflow are replaced by default; use `--no-overwrite` where supported to preserve them. Inputs and unrelated files are not removed. See the [preprocessing conventions](../../../docs/preprocessing_code_conventions.md#shell).
 
 The maintained wrappers use NetCDF map input/output by default. In s02, annual runoff is NetCDF and runoff interpolation uses the input matrix by default. Legacy modes are selected with `--map-binary`, `--runoff-binary`, and `--interp-near` on the relevant Python command. High-resolution NetCDF products are expected under `<map>/<tag>/`, and allocation inputs remain the external CSVs configured by each tXX wrapper.
@@ -17,7 +12,11 @@ cd map/<MAPNAME>/script_params
 "$PYTHON_CMD" "$CODE_DIR/param_channel_set_merit_width.py" "../$DIMINFO"
 ```
 
-`map/src/` is preserved as the historical v4 tree; v5 migrations belong under `map/tools/` and do not rewrite those legacy workflows. The `diminfo_` naming convention is shared with v4; the v5 workflows derive both descriptor and matrix names from `ROFFTAG` without changing their formats.
+`map/src/` is preserved as the historical v4 tree; v5 migrations belong under `map/tools/` and do not rewrite those legacy workflows. The `diminfo_` naming convention is shared with v4, while the maintained v5 descriptor now uses native Fortran Namelist (`.nml`) instead of positional TXT records. v5 workflows derive the descriptor and matrix names from `ROFFTAG`.
+
+Base-map geometry is read from authoritative `params.nml`. TXT-only legacy
+maps remain supported; when both files are present, their eight numeric values
+must match. Python map workflows read `params.nml` first and accept TXT-only maps for compatibility.
 
 ## Implemented workflow organization
 
@@ -72,13 +71,13 @@ This diagram is conceptual; it is not a workflow runner.
 | Standard | `s02-channel_params.sh` | Calculate annual mean discharge and channel parameters using the selected runoff matrix. | Implemented |
 | Standard | `s03-bifurcation.sh` | Generate non-MPI bifurcation parameters and basin-connectivity products. | Implemented |
 | Standard | `s04-permanent_water.sh` | Aggregate high-resolution permanent-water area by unit catchment. | Implemented |
-| Analysis | `a01-sample_get_river_point_info.sh` | Inspect sample river-point information. | Implemented |
-| Analysis | `a02-sample_subbasin.sh` | Generate optional subbasin IDs and display colors with configured upstream-area thresholds. | Implemented |
-| Analysis | `a03-sample_calc_upbasin.sh` | Extract an upstream-basin mask for the sample grid cell. | Implemented |
-| Analysis | `a04-advanced_calc_upbasin.sh` | Select a valid GRDC allocation, print station/river information, and write its upstream mask. | Implemented |
 | Alternative input | `i01-inpmat_ERA5land.sh` | Generate an ERA5-Land global 0.1-degree runoff-grid matrix; select its tag in the downstream channel workflow as appropriate. | Implemented |
 | Allocation | `t01-alloc_flow_gauge.sh`, `t02-alloc_dams.sh`, `t03-alloc_level_gauge.sh` | Optional flow-gauge, reservoir, and water-level-gauge allocation from MERIT Hydro to CaMa-Flood catchments. | Implemented |
 | Extra | `x01-mpi_map_setup.sh` | Prepare MPI basin aggregation, coloring, and region products. | Implemented |
+| Analysis | `a01-sample_get_river_point_info.sh` | Inspect sample river-point information. | Implemented |
+| Analysis | `a02-sample_subbasin.sh` | Generate optional subbasin IDs and display colors with configured upstream-area thresholds. | Implemented |
+| Analysis | `a03-sample_calc_upbasin.sh` | Extract an upstream-basin mask for the sample grid cell. | Implemented |
+| Analysis | `a04-advanced_calc_upbasin.sh` | Select the largest valid GRDC allocation, print station/river information, and write its upstream mask. | Implemented |
 
 Reusable river-network commands (`get_river_point_info.sh`, `calc_upbasin.sh`) and examples (`a01`–`a04`) are kept with map parameter workflows. No `script_analysis/` workflow directory is maintained; Python analysis programs remain under `map/tools/code/`. No `script_allocate/` directory is part of the approved design.
 
@@ -88,11 +87,12 @@ The principal dependency chain is `s01 → s02 → s03`: the standard INPMAT
 supports channel parameterization, and s03 uses channel-height products from
 s02. The map can proceed to the next standard preparation stage even when some
 recommended products are not simulation-core requirements. s04 requires the
-base map and selected high-resolution inputs; a01–a04 are optional map analyses, separate from parameter preparation.
+base map and selected high-resolution inputs. The optional a01–a04 analyses are
+separate from standard parameter preparation.
 The i01 matrix is an alternative runoff grid, not a replacement for the
 standard s01 configuration; downstream scripts select it through the matching
 runoff tag. x01 requires the relevant bifurcation/basin products. The
-optional a03 GRDC example requires a valid `GRDC_alloc.csv`, normally created
+optional a04 GRDC example requires a valid `GRDC_alloc.csv`, normally created
 by t01, but an existing suitable allocation does not need to be regenerated.
 t01–t03 are optional and each uses its configured external allocation CSV.
 
@@ -131,12 +131,12 @@ The selected NetCDF directory must contain the required registered products.
 Use `--map-format binary` only when processing a legacy Binary map.
 
 Directory discovery is not input validation: the selected Python program checks the selected
-tag, standard `location.csv` geometry and required NetCDF files. No resampling or change
+tag, `location.csv` geometry and required NetCDF files. No resampling or change
 to classification, area aggregation, missing-value handling or output format is
 introduced. The script does not run preceding parameterization steps. Existing
 map-local copies must be refreshed from the template to get this selection UI.
 
-The standard source layout uses the non-tiled `location.csv` inventory. Inputs are `params.nml`, `nextxy.nc`, and `ctmare.nc` in the map root, plus `<HIRES_TAG>/location.csv` and per-area `catmxy.nc`, `rivwth.nc`, and `flddif.nc` NetCDF files; `grdare.nc` is optional. Explicit legacy Binary runs continue to read Binary-side `location.txt`. The output is one float32 `NX x NY` record in m2. Non-network cells are `-9999`; network cells with no selected water pixels are zero. For valid catchment assignments, selected pixels satisfy `(rivwth > 0 OR rivwth == -1) AND flddif <= 5 m`; `rivwth == -1` denotes water surface outside the channel centerline. Their pixel areas are summed and capped by `ctmare`. The legacy `flddif <= 5` condition also accepts `flddif=-9999`; the migrated program warns and preserves that behavior rather than silently adding a new scientific filter.
+The source layout must use the non-tiled `location.csv` format. Inputs are `params.nml`, `nextxy.nc`, and `ctmare.nc` in the map root, plus `<HIRES_TAG>/location.csv` and per-area `catmxy.nc`, `rivwth.nc`, and `flddif.nc` NetCDF files; `grdare.nc` is optional. The output is one float32 `NX x NY` record in m2. Non-network cells are `-9999`; network cells with no selected water pixels are zero. For valid catchment assignments, selected pixels satisfy `(rivwth > 0 OR rivwth == -1) AND flddif <= 5 m`; `rivwth == -1` denotes water surface outside the channel centerline. Their pixel areas are summed and capped by `ctmare`. The legacy `flddif <= 5` condition also accepts `flddif=-9999`; the migrated program warns and preserves that behavior rather than silently adding a new scientific filter.
 
 The elevation cutoff limits `prmwat` to permanent water within the flood area CaMa-Flood can reproduce. A permanent lake isolated high on a hill is outside the model's expected inundation domain, so its area must not be subtracted as pre-existing simulated floodwater. The maintainer described the intended criterion as `flddif < 5 m`. The legacy v4 and migrated v5 source use `flddif <= 5 m`, which includes pixels exactly at 5 m; this boundary difference is documented but has not been changed. The numerical derivation of the 5 m value remains unverified.
 
@@ -146,11 +146,11 @@ The elevation cutoff limits `prmwat` to permanent water within the flood area Ca
 
 The Python `param_bif_set_params.py` validates `BIFLAYER` as an integer from 1 through 10; invalid values are rejected there rather than prechecked in the shell wrapper.
 
-The Python generator writes only the finalized CSV; `riv_width` stores river-channel width and consecutive `ovl_width_1...ovl_width_N` columns store overland widths only. The channel is distinct from overland layer 1. The standalone `map/tools/code/convert_bifprm_csv_to_netcdf.py` converts that same table to static NetCDF-4 using `riv_width(path)` and, when present, `ovl_width(layer,path)` with shuffle/deflate level 3. If there are no overland columns, NetCDF omits both `layer` and `ovl_width` while retaining `riv_width`. It requires Python NumPy and netCDF4. Run it directly as `python3 map/tools/code/convert_bifprm_csv_to_netcdf.py map/<tag>/bifprm.csv`; omit the output argument to write `bifprm.nc` beside the CSV. The map-local s02 wrapper passes `bifprm.nc` explicitly, keeping the authoritative CSV at the map root. The s02 wrapper performs these steps in order and fails if conversion fails. `start_lat/start_lon` retain the pathway-source values; `end_lat/end_lon` are the unit-catchment outlet coordinates at `(jx,jy)` from `lonlat.nc` variables `lon`/`lat` respectively. Basin identifiers `ibsn/jbsn` remain numerically ascending, not directional. See the [map-product registry](../../../variable_table/map_variables.csv) and [metadata specification](../../../variable_table/map_metadata_spec.md#bifurcation-parameter-tables).
+The Python generator writes only the finalized CSV; its `riv_width` column stores river-channel width and its consecutive `ovl_width_1...ovl_width_N` columns store overland widths. The channel width is not overland layer zero. The standalone `map/tools/code/convert_bifprm_csv_to_netcdf.py` converts that same table to static NetCDF-4 (`riv_width(path)` and, when N > 0, `ovl_width(layer,path)`) with shuffle/deflate level 3. With no overland columns, the NetCDF omits both `layer` and `ovl_width` while retaining `riv_width`. It requires Python NumPy and netCDF4. Run it directly as `python3 map/tools/code/convert_bifprm_csv_to_netcdf.py map/<tag>/bifprm.csv`; omit the output argument to write `bifprm.nc` beside the CSV. The map-local s02 wrapper passes `bifprm.nc` explicitly, keeping the authoritative CSV at the map root. The s02 wrapper performs these steps in order and fails if conversion fails. `start_lat/start_lon` retain the pathway-source values; `end_lat/end_lon` are the unit-catchment outlet coordinates at `(jx,jy)` from `lonlat.nc` variables `lon`/`lat` respectively. Basin identifiers `ibsn/jbsn` remain numerically ascending, not directional. See the [map-product registry](../../../variable_table/map_variables.csv) and [metadata specification](../../../variable_table/map_metadata_spec.md#bifurcation-parameter-tables).
 
 [`s03-bifurcation.sh`](s03-bifurcation.sh) is intended to follow `s02-channel_params.sh`, which produces the required channel-depth map `rivhgt.nc`. It generates ordinary bifurcation parameters and basin-connectivity products using map-root `nextxy.nc`, `basin.nc`, `bifori.csv`, `params.nml` (or legacy `params.txt`), and `diminfo_<ROFFTAG>.nml` (default `diminfo_test-1deg.nml`). `BIFLAYER` defaults to `5` total width fields including channel width, selecting `riv_width` and the first four overland widths. If `bifori.csv` has fewer width fields, the Python program warns and uses the available fields.
 
-The workflow runs both Python programs from the unchanged map-local `script_params/` CWD. It writes or replaces `bifprm.csv`, converts that finalized table to `bifprm.nc`, then writes `bifbsn.nc` and `bifcol.nc`. `bifcol.nc` remains unconditional because it is routinely used to visualize the merged basin map. The display palette has colors 2–10 and falls back to color 10 if no candidate is free among neighboring basins; adjacent regions can consequently share a color, without changing simulation products. To create the optional diagnostics, add `--check-map` directly to both corresponding Python commands in the wrapper. `param_bif_set_params` writes `check_bif_dphwth.nc` with two float32 records (`bifdph` depth, then `bifwth` width), and `param_bif_set_basin` writes `check_bif_bsnmod.nc` with two int32 records (`bifmod`, then `bpoint`). These are inspection-only products, not model inputs. Without the flag, neither diagnostic is created or overwritten; pre-existing check files can therefore reflect an earlier run. The v5 program no longer creates the legacy separate `bifmod.bin` and `bpoint.bin`; pre-existing files are left untouched. Older v4 `bifdph.bin` files are also left untouched. `bifprm.csv` preserves the filtered `bifori.csv` row order; `pth_id` is a consecutive, configuration-specific row ID and `(ix,iy,jx,jy)` identifies a path across configurations. The CSV-to-NetCDF converter does no path filtering or recalculation. The model simulation reader accepts the generated `bifprm.csv` directly, or the equivalent `bifprm.nc` in a NetCDF-enabled build; legacy `bifprm.txt` remains supported. The CSV is authoritative and the NetCDF converter preserves its finalized row order and values.
+The workflow runs both Python programs from the unchanged map-local `script_params/` CWD. It writes or replaces `bifprm.csv`, converts that finalized table to `bifprm.nc`, then writes `bifbsn.nc` and `bifcol.nc`. `bifcol.nc` remains unconditional because it is routinely used to visualize the merged basin map. The display palette has colors 2–10 and falls back to color 10 if no candidate is free among neighboring basins; adjacent regions can consequently share a color, without changing simulation products. To create the optional diagnostics, add `--check-map` directly to both corresponding Python commands in the wrapper. `param_bif_set_params` writes `check_bif_dphwth.nc` with two float32 records (`bifdph` depth, then `bifwth` width), and `param_bif_set_basin` writes `check_bif_bsnmod.nc` with two int32 records (`bifmod`, then `bpoint`). These are inspection-only products, not model inputs. Without the flag, neither diagnostic is created or overwritten; pre-existing check files can therefore reflect an earlier run. The v5 program no longer creates the legacy separate `bifmod.bin` and `bpoint.bin`; pre-existing files are left untouched. Older v4 `bifdph.bin` files are also left untouched. `bifprm.csv` preserves the filtered `bifori.csv` row order; `pth_id` is a consecutive, configuration-specific row ID and `(ix,iy,jx,jy)` identifies a path across configurations. The CSV-to-NetCDF converter does no path filtering or recalculation. The model maps channel width to internal layer 1 and overland widths to internal layers 2 onward. Current simulations continue using all overland layers supplied in the file; no independent runtime subset setting is introduced here. The model simulation reader accepts the generated `bifprm.csv` directly, or the equivalent `bifprm.nc` in a NetCDF-enabled build; legacy `bifprm.txt` remains supported. The CSV is authoritative and the NetCDF converter preserves its finalized row order and values.
 
 This wrapper retains the established non-MPI filtered pathway order written by `param_bif_set_params`. The v5 MPI workflow is separate and described below. The preserved Fortran calculations and `gosh/` workflows are not invoked by these Shell workflows. Regression tests compare standard outputs and consolidated diagnostic records with the legacy products on temporary Mekong copies; this demonstrates compatibility for that case, not independent scientific validation.
 
@@ -197,7 +197,7 @@ only for forcing with identical coordinates/order and the same model map;
 generate a separate matrix for every other model map. Other regular runoff
 grids remain configurable by editing the wrapper settings.
 
-The target map must provide `params.nml`, a selected high-resolution
+The target map must provide `params.nml` (or legacy `params.txt`), a selected high-resolution
 directory with `location.csv`, and each area's `catmxy.nc`; `grdare.nc` is
 optional. The runoff values themselves are not read while constructing the
 matrix. Set `HIRES_TAG` independently when the default high-resolution map
@@ -211,7 +211,7 @@ The Python dam-parameter estimation workflow under legacy `map/src/src_dam/` is 
 
 ## Allocation workflows
 
-The three optional wrappers use shared `allocate_*.py` programs in `map/tools/code/`. Copy the wrappers into a map-local `script_params/` directory, configure the input path, then run them from that directory. They call `cmf_select_hires_tag "$HIRES_TAG" --single-area`, which recommends the coarsest compatible resolution in `1min`, `30sec`, `15sec`, `5sec`, `3sec`, `1sec` order and allows an interactive alternative. It checks the structural single-area `location.csv` and `<TAG>.<VARIABLE>.nc` naming convention; the Python reader validates the scientific layers and independently rejects any map declaring multiple areas. Use `--map-format binary` on the Python invocation only for a legacy Binary map, which uses Binary-side `location.txt`. This single-network topology/catchment contract is not a universal limit on map resolution.
+The three optional wrappers use shared `allocate_*.py` programs in `map/tools/code/`. Copy the wrappers into a map-local `script_params/` directory, configure the input path, then run them from that directory. They call `cmf_select_hires_tag "$HIRES_TAG" --single-area`, which recommends the coarsest compatible resolution in `1min`, `30sec`, `15sec`, `5sec`, `3sec`, `1sec` order and allows an interactive alternative. It checks the standard single-area `location.csv` and `<TAG>.<VARIABLE>.nc`/`.bin` naming convention; the Python reader validates the scientific layers and independently rejects any map declaring multiple areas. Use `--map-format binary` on the Python invocation only for a legacy Binary map. This single-network topology/catchment contract is not a universal limit on map resolution.
 
 The maintainer-confirmed map convention is that the coarsest high-resolution layer is a single-area, non-tiled river-network representation; finer layers may be tiled. Single-area files use `<TAG>.<VARIABLE>.nc`; tiled files use geographic area identifiers such as `n30e120.<VARIABLE>.nc`. Legacy Binary maps use the same basename with `.bin`. The v4.30 distribution package includes a single-area global `glb_15min/1min` layer and a single-area Japan `tej_01min/15sec` layer, which the maintainer identifies as intended CaMa-Flood allocation inputs. These are distinct from the global 30-arcsec MERIT Hydro and Japan 5-arcsec J-FlwDir maps used for the first-stage allocation. See the [area-handling rationale and validation plan](../../../docs/map_data_tools_plan.md#high-resolution-area-handling-contract).
 
@@ -219,7 +219,7 @@ The input tables are expected to have already been matched and reviewed on the h
 
 | Wrapper | Default input | Required map files | Outputs in the map root |
 | --- | --- | --- | --- |
-| [`t01-alloc_flow_gauge.sh`](t01-alloc_flow_gauge.sh) | `../../data/GRDC_allocated.csv` | `params.nml`, `uparea.nc`, `nextxy.nc`; `<HIRES_TAG>/location.csv`, `.uparea.nc`, `.catmxy.nc`, `.downxy.nc` | `GRDC_alloc.csv` |
+| [`t01-alloc_flow_gauge.sh`](t01-alloc_flow_gauge.sh) | `../../data/GRDC_allocated.csv` | `params.nml` (or legacy `params.txt`), `uparea.nc`, `nextxy.nc`; `<HIRES_TAG>/location.csv`, `.uparea.nc`, `.catmxy.nc`, `.downxy.nc` | `GRDC_alloc.csv` |
 | [`t02-alloc_dams.sh`](t02-alloc_dams.sh) | `../../data/GRanD_allocated.csv` | Flow-gauge files plus `ctmare.nc` | `GRanD_river.csv`, `GRanD_small.csv`, `GRanD_error.csv` |
 | [`t03-alloc_level_gauge.sh`](t03-alloc_level_gauge.sh) | `../../data/MLIT_LevelGauge_allocated.csv` | Flow-gauge files plus `elevtn.nc` and `<HIRES_TAG>/<HIRES_TAG>.elevtn.nc` | `MLIT_levelgauge.csv` |
 
@@ -269,7 +269,7 @@ The shell layer sets locations and parameters; `analysis_river_point_info`, `ana
 
 `a02-sample_subbasin.sh` writes `subbsn-sample.nc` and `subcol-sample.nc` directly in the map root, using the registered internal NetCDF variable names `subbsn` and `subcol` respectively. The editable example settings are `AREA_SUBBSN=30000` and `AREA_SMLBSN=5000`; set the second value empty for single-stage operation. These are example defaults, not universal scientific parameters. Stage 1 uses the existing upstream-area-increase rule; Stage 2 applies the smaller threshold only to previously unassigned river-network regions, preserves all positive Stage 1 IDs and boundaries, and assigns new IDs after them. Links into Stage 1 segments are terminal boundaries. In each stage, a link is cut when the current upstream area exceeds its threshold and the valid downstream area exceeds the current area by more than that threshold. Neither threshold guarantees a minimum segment area. Positive `subbsn` values are segment IDs, 0 marks remaining unassigned network cells, and -9999 marks outside-network cells. `subcol` uses the same spatial mask convention: positive IDs receive display colors 1–10, 0 marks unassigned network cells, and -9999 marks cells outside the network. These optional products are not simulation inputs.
 
-[`a04-advanced_calc_upbasin.sh`](a04-advanced_calc_upbasin.sh) requires map-local `GRDC_alloc.csv` (normally produced by `t01-alloc_flow_gauge.sh`). It filters unallocated/invalid records, chooses the largest positive `area_CaMa` (first file row wins a tie), and uses that row's primary `ix1,iy1` cell. It prints the selected station fields and river-point information to stdout, and writes only `upbasin-<GRDC_ID>.nc` as a scientific output. Repeated execution replaces that map-root mask. The Mekong sample is `upbasin-2569002.nc`. The primary-cell upstream mask is not guaranteed to represent the complete aggregate drainage area of a gauge mapped to multiple catchments, so do not treat its cell count/area as equal to `area_CaMa` or observed drainage area.
+[`a04-advanced_calc_upbasin.sh`](a04-advanced_calc_upbasin.sh) requires map-local `GRDC_alloc.csv` (normally produced by `t01-alloc_flow_gauge.sh`). It filters unallocated/invalid records, chooses the largest positive `area_CaMa` (first file row wins a tie), and uses that row's primary `ix1,iy1` cell. It prints the selected station and river-point information to stdout, and writes only `upbasin-<GRDC_ID>.nc` as a scientific output. Repeated execution replaces that map-root mask. The Mekong sample is `upbasin-2569002.nc`. The primary-cell upstream mask is not guaranteed to represent the complete aggregate drainage area of a gauge mapped to multiple catchments, so do not treat its cell count/area as equal to `area_CaMa` or observed drainage area.
 
 The generic commands and a01–a04 examples are optional map-specific inspection workflows. The sample point coordinates in a01 and a03 are for the Mekong map; use the allocated-point a04 example where a fixed coordinate may fall outside another map or on an unrelated cell.
 
@@ -304,7 +304,7 @@ the wrapper, which passes it to the existing Python program.
 
 `t01-alloc_flow_gauge.sh`, `t02-alloc_dams.sh` and `t03-alloc_level_gauge.sh`
 use the same resolution order with the selector's `--single-area` filter.
-Only layouts whose `location.csv` declares one area and whose layer filenames
+Only layouts whose `location.csv` lists one area and whose layer filenames
 use the resolution tag are offered. Python validates the required data and
 retains the single-area restriction. Legacy Binary maps remain usable when
 Binary is explicitly selected for the Python command. No allocation algorithm

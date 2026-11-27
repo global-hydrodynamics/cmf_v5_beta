@@ -336,18 +336,43 @@ executed checks and current limits; no model simulation equivalence is claimed.
 
 ## Install and launch
 
-Python 3.10+ with NumPy, netCDF4, Matplotlib, Panel, Bokeh and rasterio is required.
-macOS automatic setup has the narrower supported combinations below.
-Activate the usual CaMa-Flood Python environment if it already contains them.
-If dependencies are missing, an interactive launcher asks **[y/N]** before
-creating/updating the isolated `visualization/map_explorer/.venv/` and installing
-its requirements. Enter `y` or `yes` to continue; Enter, `n`, or no terminal
-means no environment changes. Downloads require network access. After successful
-installation, the launcher restarts using that environment with the same map,
-port and browser options. Failed setup stops with an error and can be retried.
-Conda, system Python and the shared repository `.venv/` are not modified.
-For macOS use the dedicated instructions below. An independent Linux installation,
-run from the repository root, is:
+Map Explorer requires CPython 3.10 or later and its NumPy, netCDF4, Matplotlib,
+Panel, Bokeh, rasterio, Pillow and param dependencies. Launchers validate the
+selected environment with `pip check`, compiled-package imports and the Panel /
+Bokeh model APIs; checking only whether a package can be found is insufficient.
+An already working environment is used directly and is not upgraded.
+
+If the selected environment fails validation, an interactive launcher asks once
+before creating a **separate** environment for the current platform. It attempts
+the standard requirements first, then the verified 2024 compatibility profile,
+then the experimental 2022 profile, stopping at the first profile that passes
+validation. Enter `y` or `yes` to allow setup; Enter, `n`, or no interactive
+terminal leaves environments unchanged. Installation requires network access to
+PyPI. The new environment is validated before it becomes selectable; an existing
+valid environment is preserved if setup fails. The launcher retries with the
+same map, port and browser arguments. It does not change system Python, Conda,
+the repository `.venv`, or another platform's environment.
+
+Profile environments are named `.venv-<platform>-<profile>` beside this
+application (`macos`, `windows`, or `linux`). WSL keeps its Linux virtual
+environment in `~/.cache/cmf-map-explorer/<application-id>/`, never in a Windows
+or macOS environment. `visualization/map_explorer/.venv/` remains usable as an
+existing manually managed environment, but is not overwritten by automatic
+setup.
+
+**Profile scope:** the standard profile follows the current `requirements.txt`.
+The 2024 profile uses `config/requirements_2024.txt` and is supported on
+CPython 3.10–3.12. The 2022 profile uses `config/requirements_2022.txt` and is
+an experimental dependency snapshot limited to CPython 3.10; full GUI behavior
+with this older stack is not claimed. The 2022 profile is tried only after the
+2024 profile and is never an automatic default when the standard profile works.
+Automatic profiles support CPython 3.10–3.13 where their profile's Python range
+allows it. On macOS, every profile is installed wheel-only, preventing accidental
+Rasterio/GDAL source builds. For macOS arm64 with Python 3.10–3.12, the 2024
+profile uses netCDF4 1.6.5 because the 1.7.2 wheel does not cover the supported
+older macOS range; other platforms use the historical 1.7.2 pin.
+
+For an independent Linux installation, run from the repository root:
 
 ```sh
 python3 -m venv visualization/map_explorer/.venv
@@ -412,12 +437,12 @@ The Windows batch wrapper is supplied but has not been executed on Windows
 in this macOS development session.
 
 
-### macOS first installation and recovery (β05b01 follow-up)
+### macOS first installation and recovery
 
 Install CPython from [python.org](https://www.python.org/downloads/macos/) if it
 is not already installed. Extract the package into a writable local folder, then
 double-click `launch_mac.command`. Answer `y` at the **one setup confirmation**.
-The launcher creates/repairs only this Explorer's `.venv`, installs binary wheels,
+The launcher creates a platform/profile environment, installs binary wheels,
 checks native imports, and starts the bundled Mekong map. Keep Terminal open.
 No Homebrew, GDAL installation, `gdal-config`, compiler, or Tk is required.
 A working Python installation and network access to PyPI/files.pythonhosted.org
@@ -445,27 +470,25 @@ wheels. Rasterio's [binary wheels include GDAL](https://rasterio.readthedocs.io/
 The reported user's exact macOS version was not supplied; the failure was
 reproduced on macOS 13.7.8 arm64 with CPython 3.12.3.
 
-The macOS installer uses **`requirements-macos.txt`**: it includes the shared
-requirements and requires **wheels for every dependency**. Pip can select an
-older compatible release without pinning all platforms to it. For Python before
-3.13 it also requires NumPy <2: macOS 11–13 may select netCDF4 1.6.5 wheels built
-for the NumPy 1.x ABI, which otherwise fail during import with NumPy 2. Newer
-macOS/CPython 3.13 uses newer wheels. Windows/Linux requirements and installer
-commands are unchanged. Installation settings apply only to the child process:
+The macOS standard profile uses **`requirements-macos.txt`**: it includes the
+shared requirements and requires **wheels for every dependency**. The 2024 and
+2022 profiles have pinned requirements of their own and are also wheel-only.
+For standard-profile Python before 3.13, the requirements constrain NumPy <2:
+macOS 11–13 may select netCDF4 wheels built for the NumPy 1.x ABI. Installation
+settings apply only to the child process:
 pip config files and inherited `PIP_*`/Python-path redirections are ignored, using
 the default PyPI index. They are never rewritten. A private-index-only or
 custom-pip-certificate deployment needs a separately managed environment; normal
 system HTTPS proxy/certificate settings remain in effect.
 
-**Restart:** an intact local environment launches without another installation
-prompt. **Failed installation:** correct the reported network/disk problem and
-run the same launcher again, approving the same local setup prompt. A partial
-`.venv` is reused; a module whose native extension cannot import also triggers
-repair. Setup failures keep their pip diagnostic and print Python/macOS/CPU
-information. No source-build retry is attempted and no GDAL installation is
-suggested. If no complete wheel set exists, choose a supported interpreter/OS;
-the launcher cannot make an incompatible wheel run. Symlinked `.venv` targets
-and interpreter-prefix mismatches are refused to protect other environments.
+**Restart:** a validated platform/profile environment launches without another
+installation prompt. **Failed installation:** correct the reported network or
+package issue and run the same launcher again. Incomplete staging environments
+are removed; existing environments remain available. Setup failures retain their
+diagnostic and print Python/macOS/CPU information. No source-build retry is
+attempted and no GDAL installation is suggested. If no compatible profile and
+complete wheel set is available, install a supported CPython interpreter or use
+a manually managed compatible environment.
 
 For a manual **macOS-only** installation from the repository/package root:
 
@@ -475,12 +498,20 @@ visualization/map_explorer/.venv/bin/python -m pip install --only-binary=:all: -
 ./visualization/map_explorer/launch_mac.command
 ```
 
-Validation distinguishes runtime execution from wheel availability: actual clean
-venv installation, server/document startup, restart and failed-install recovery
-are checked on macOS 13.7.8 arm64 / CPython 3.12.3 with `gdal-config` absent from
-PATH. Other supported OS/Python/CPU combinations are checked through pip's
-cross-target wheel resolution, not claimed as runtime or Finder tests on those
-machines. This workstation is not a freshly provisioned macOS installation.
+On macOS, select the standard, 2024, or 2022 profile through the same consent
+flow. A safe profile-specific setup check is available for maintainers:
+
+```sh
+./visualization/map_explorer/launch_mac.command --test-setup-profile 2024 --no-browser
+```
+
+It builds and validates a clean `.venv-macos-2024` environment. If that profile
+already exists, it is preserved as a timestamped `.previous-*` directory after
+the replacement passes validation. Other operating systems use their own tagged
+environment directories. See [VR-0273](../../research/records/validation_runs/VR-0273.md)
+for the local result and limits. Windows/WSL runtime verification must be
+performed on those platforms; repository tests on macOS do not claim native
+Windows/WSL GUI verification.
 
 
 ## Operation and independent layers
@@ -1155,9 +1186,11 @@ and [View/palette/preset evidence](../../research/records/validation_runs/VR-016
 and [scientific Inspector evidence](../../research/records/validation_runs/VR-0163.md)
 for scientific conventions, executed checks and limits.
 
-- **Missing GUI dependencies**: check `PYTHON`; install requirements into a
-  chosen virtual environment. Some systems need NetCDF-C/HDF5 headers if pip
-  cannot obtain a netCDF4 wheel. The launcher performs no installation.
+- **Missing GUI dependencies**: approve the launcher's isolated profile setup or
+  prepare a compatible CPython environment manually. Check PyPI/network access
+  and the reported Python version. The macOS automatic profiles require binary
+  wheels and do not request a GDAL/compiler installation. Use `--no-setup` to
+  disable automatic installation where that launcher exposes the option.
 - **Cannot open map / no supported rasters**: check params.txt and the source
   diagnostics. A missing optional file is harmless; a known file with wrong
   geometry, units, type or record count is rejected, never guessed.
@@ -1209,17 +1242,21 @@ integration is evidence for this sample, not a global performance guarantee.
 
 Use `launch_windows.bat` for **native Windows Python**, or double-click
 `launch_windows_wsl.cmd` for **Linux Python/Panel inside WSL + Windows default browser**.
-`launch_mac.command` and `run.sh` retain their existing behavior. WSL is optional;
-the launcher does not install WSL, distributions, Python or packages automatically.
+WSL is optional; the launcher does not install WSL, distributions, or Linux Python.
 
 Prerequisites: configured WSL distribution (`wsl --list --verbose`), Linux Python
-3.10+, the Explorer requirements installed in a Linux environment, and Windows/WSL
+3.10+, network access when automatic package setup is needed, and Windows/WSL
 executable interop + localhost forwarding enabled. Follow the official
 [WSL commands](https://learn.microsoft.com/en-us/windows/wsl/basic-commands) and
 [localhost networking](https://learn.microsoft.com/en-us/windows/wsl/networking)
 guides if WSL is not ready. No administrator/firewall changes are made by this launcher.
 
-Manual setup, **inside the selected WSL distribution**, from the repository root:
+Normal launch uses the Linux Python in WSL and, when dependencies are missing or
+invalid, offers the same standard → 2024 → 2022 one-confirmation setup sequence.
+The Linux environment is stored under the WSL user's home cache and cannot reuse
+native Windows/macOS environments. To disable automatic installation, pass
+`-NoSetup` to `launch_windows_wsl.ps1`. Manual setup, **inside the selected WSL
+distribution**, from the repository root:
 
 ```sh
 python3 -m venv "$HOME/.venvs/cmf-map-explorer"
@@ -1230,9 +1267,9 @@ Set `CMF_WSL_PYTHON` in **Windows** to that Linux executable path (for example
 `/home/your-name/.venvs/cmf-map-explorer/bin/python`). This is a Linux path, not a
 Windows `Scripts/python.exe`. Without an override the launcher probes, in order,
 repository `.venv/bin/python`, Explorer `.venv/bin/python`, then Linux `python3`.
-A Windows/macOS venv fails the Linux-platform probe and is skipped. The selected
-runtime reports missing packages without installing anything; install requirements
-manually there or set the override to a prepared environment.
+A Windows/macOS venv fails the Linux-platform probe and is skipped. With
+`-NoSetup`, missing or invalid dependencies are reported without installing;
+otherwise the selected Linux interpreter can prepare the isolated WSL profile.
 
 Optional Windows `CMF_WSL_DISTRO` selects an installed distribution; otherwise WSL's
 default is used. A repository/map accessed through `\\wsl.localhost\Distro\...` or

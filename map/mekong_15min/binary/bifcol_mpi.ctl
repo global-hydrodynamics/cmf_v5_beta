@@ -7,5 +7,5 @@ ydef 120 linear 5.125 0.25
 tdef 1 linear 00Z01jan2000 1yr
 zdef 1 linear 1 1
 vars 1
-bifcol_mpi 1 -1,40,4 MPI-aggregated basin display colors
+bifcol 1 -1,40,4 MPI-aggregated basin display colors
 ENDVARS

@@ -401,6 +401,19 @@ unverified. 14pre-existing research-link errors are preserved. See
 [VR-0198](../research/records/validation_runs/VR-0198.md) for diagnosis, harness
 iterations, exact supported setup envelope and validation limits.
 
+#### Cross-platform profile setup extension (DT-0226, 2026-11-28)
+
+The current branch extends this scope to native Windows and WSL and adds ordered
+standard → 2024 → 2022 isolated fallback profiles. WSL now uses a Linux-home
+environment and offers consent-based setup by default, with an explicit no-setup
+option. Full 2022 GUI compatibility remains deferred to Cloud. Local macOS
+CPython 3.12.3 / 13.7.8 arm64 completed a clean 2024 wheel-only installation,
+`pip check`, compiled imports, synthetic-map GUI initialization, and loopback HTTP
+startup. The checkout's Mekong map now has `params.nml`, while this Explorer code
+expects `params.txt`; therefore the default-map launch could not be verified in
+this task. Native Windows/WSL execution was not available. See [DT-0226](../research/records/DT-0226.md)
+and [VR-0273](../research/records/validation_runs/VR-0273.md).
+
 
 ### CTL standard references and s99 variants (DT-0151, 2026-11-19)
 

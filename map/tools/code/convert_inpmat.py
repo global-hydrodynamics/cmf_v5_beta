@@ -4,15 +4,18 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import replace
+import os
 from pathlib import Path
+import stat
+import tempfile
 
 import numpy as np
 
 from mod_map_io import read_inpmat, write_inpmat
 try:
-    from .map_metadata import read_diminfo_nml, write_diminfo_nml
+    from .map_metadata import DimInfo, read_diminfo_nml, write_diminfo_nml
 except ImportError:  # Direct execution from map-local wrappers.
-    from map_metadata import read_diminfo_nml, write_diminfo_nml
+    from map_metadata import DimInfo, read_diminfo_nml, write_diminfo_nml
 
 
 def read_diminfo(path: Path) -> tuple[dict[str, float | int], str]:
@@ -25,15 +28,34 @@ def read_diminfo(path: Path) -> tuple[dict[str, float | int], str]:
     return metadata, info.inpmat_file
 
 
+def write_paired_diminfo(path: Path, info: DimInfo, source: Path) -> bool:
+    """Atomically replace the regenerable paired descriptor; return whether it existed."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    overwritten = path.exists()
+    mode_source = path if overwritten else source
+    fd, temporary_name = tempfile.mkstemp(prefix=f'.{path.name}.', suffix='.tmp', dir=path.parent)
+    os.close(fd)
+    temporary = Path(temporary_name)
+    try:
+        write_diminfo_nml(temporary, info)
+        os.chmod(temporary, stat.S_IMODE(mode_source.stat().st_mode))
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+    return overwritten
+
+
 def convert(source: Path, destination: Path, diminfo: Path, direction: str) -> None:
+    if source.resolve() == destination.resolve():
+        raise ValueError('Source and destination INPMAT paths must be different')
     info = read_diminfo_nml(diminfo)
     metadata, paired_name = read_diminfo(diminfo)
     if source.name != paired_name:
         raise ValueError(f'{diminfo} describes {paired_name}, not {source.name}')
     paired_info = replace(info, inpmat_file=destination.name)
     descriptor_output = destination.parent / diminfo.name
-    if descriptor_output.exists() and read_diminfo_nml(descriptor_output) != paired_info:
-        raise ValueError(f'Conflicting paired metadata already exists: {descriptor_output}')
+    if descriptor_output.resolve() == diminfo.resolve():
+        raise ValueError('Destination DIMINFO path is the source DIMINFO; refusing to overwrite source metadata')
     nx, ny, slots = (metadata[key] for key in ('nx', 'ny', 'inpn'))
     if direction == 'binary-to-netcdf':
         raw = np.memmap(source, dtype='<i4', mode='r', shape=(3, slots, ny, nx))
@@ -49,8 +71,9 @@ def convert(source: Path, destination: Path, diminfo: Path, direction: str) -> N
             temporary.replace(destination)
         finally:
             temporary.unlink(missing_ok=True)
-    if not descriptor_output.exists():
-        write_diminfo_nml(descriptor_output, paired_info)
+    overwritten = write_paired_diminfo(descriptor_output, paired_info, diminfo)
+    action = 'Overwrote' if overwritten else 'Generated'
+    print(f'{action} paired DIMINFO: {descriptor_output}')
     print(f'Converted {direction}: {source} -> {destination}')
 
 

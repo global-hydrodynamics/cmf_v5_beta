@@ -1,5 +1,5 @@
 # Additive WSL entry point. All user paths are native argument-array values, never shell code.
-param([string]$MapDirectory = "")
+param([string]$MapDirectory = "", [switch]$NoSetup)
 $ErrorActionPreference = 'Stop'
 $originalEncoding = [Console]::OutputEncoding
 try {
@@ -54,8 +54,10 @@ try {
     $powershell = Convert-LinuxPath ([System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName)
     $python = $env:CMF_WSL_PYTHON
     if (-not $python) { $python = '-' }
+    $launchArguments = @($helper, $map, $python, $powershell)
+    if ($NoSetup) { $launchArguments += '--no-setup' }
     Write-Host 'Starting Linux Panel server in WSL; keep this terminal open. Ctrl-C stops it.'
-    & $wsl.Source @prefix --exec sh $helper $map $python $powershell
+    & $wsl.Source @prefix --exec sh @launchArguments
     exit $LASTEXITCODE
 } catch {
     Write-Host ('[ERROR] ' + $_.Exception.Message) -ForegroundColor Red

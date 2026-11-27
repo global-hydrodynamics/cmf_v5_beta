@@ -41,6 +41,13 @@ name. Input matrices use the category-23 generic name
 `inpmat_<ROFFTAG>.nc`, which also covers the existing `test-1deg` pair, with
 the corresponding Binary form under `binary/inpmat_<ROFFTAG>.bin`.
 
+The INPMAT converters always regenerate the destination-side
+`diminfo_<ROFFTAG>.nml` from the source-side descriptor, changing only its
+`INPMAT_FILE` value to the destination matrix filename. An existing destination
+descriptor is atomically replaced; the source descriptor and source matrix are
+left unchanged. This applies to both `s14-bin2nc_inpmat.sh` and
+`s04-nc2bin_inpmat.sh`.
+
 ## Workflow scripts
 
 | Script | Operation |

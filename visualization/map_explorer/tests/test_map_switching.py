@@ -220,7 +220,7 @@ def test_bokeh_view_replacement_detaches_old_plot_and_cancels_callbacks(maps):
 def test_no_dialog_desktop_defaults_and_explicit_map(maps, monkeypatch):
     import app
     import launch_desktop as launcher
-    monkeypatch.setattr(launcher.importlib.util, "find_spec", lambda name: True)
+    monkeypatch.setattr(launcher, "validate_environment", lambda *args, **kwargs: (True, "ready"))
     monkeypatch.setattr(launcher, "choose_map", Mock(side_effect=AssertionError("no automatic dialog")))
     seen = []
     monkeypatch.setattr(app, "main", lambda: seen.append(list(launcher.sys.argv)))

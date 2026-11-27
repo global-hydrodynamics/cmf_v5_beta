@@ -48,16 +48,16 @@ def test_browser_waits_for_http_and_can_cancel(monkeypatch):
 
 
 def test_no_setup_reports_dependencies_without_pip(monkeypatch, capsys):
-    monkeypatch.setattr(desktop.importlib.util, "find_spec", lambda name: None)
+    monkeypatch.setattr(desktop, "validate_environment", lambda *args, **kwargs: (False, "missing panel"))
     prepare = Mock()
     monkeypatch.setattr(desktop, "prepare_environment", prepare)
     assert desktop.main(["--no-setup"]) == 1
     prepare.assert_not_called()
-    assert "Missing WSL Python packages" in capsys.readouterr().err
+    assert "setup is disabled by --no-setup" in capsys.readouterr().err
 
 
 def test_busy_port_does_not_stop_other_process(map_dir, monkeypatch, capsys):
-    monkeypatch.setattr(desktop.importlib.util, "find_spec", lambda name: True)
+    monkeypatch.setattr(desktop, "validate_environment", lambda *args, **kwargs: (True, "ready"))
     with socket.socket() as listener:
         listener.bind(("127.0.0.1", 0))
         listener.listen()
@@ -69,7 +69,7 @@ def test_busy_port_does_not_stop_other_process(map_dir, monkeypatch, capsys):
 def test_shared_wsl_lifecycle_dynamic_port_and_stop(map_dir, monkeypatch):
     import app
 
-    monkeypatch.setattr(desktop.importlib.util, "find_spec", lambda name: True)
+    monkeypatch.setattr(desktop, "validate_environment", lambda *args, **kwargs: (True, "ready"))
     stop = Mock()
     worker = Mock()
     start = Mock(return_value=(stop, worker))
@@ -88,7 +88,7 @@ def test_shared_wsl_lifecycle_dynamic_port_and_stop(map_dir, monkeypatch):
 
 
 def test_invalid_map_reports_before_browser(tmp_path, monkeypatch, capsys):
-    monkeypatch.setattr(desktop.importlib.util, "find_spec", lambda name: True)
+    monkeypatch.setattr(desktop, "validate_environment", lambda *args, **kwargs: (True, "ready"))
     (tmp_path / "params.txt").write_text("not a map")
     assert desktop.main([str(tmp_path), "--windows-browser", "/mnt/c/powershell.exe", "--no-setup"]) == 2
     assert "Invalid map" in capsys.readouterr().err
@@ -117,7 +117,8 @@ def test_linux_shell_handoff_paths_unicode_and_wrong_platform(tmp_path):
     assert result.returncode == 0, result.stderr
     args = log.read_text().splitlines()
     assert args[1] == "/mnt/d/map 日本語 with spaces"
-    assert args[-3:] == ["--windows-browser", "/mnt/d/Program Files/powershell.exe", "--no-setup"]
+    assert args[-2:] == ["--windows-browser", "/mnt/d/Program Files/powershell.exe"]
+    assert "--no-setup" not in args
     bad = tmp_path / "windows python.exe"
     bad.write_text("#!/bin/sh\nexit 1\n")
     bad.chmod(0o755)
@@ -127,13 +128,33 @@ def test_linux_shell_handoff_paths_unicode_and_wrong_platform(tmp_path):
     assert result.returncode != 0 and "CMF_WSL_PYTHON" in result.stderr
 
 
+def test_linux_shell_handoff_retains_explicit_no_setup(tmp_path):
+    repo = tmp_path / "repo"
+    appdir = repo / "visualization/map_explorer"
+    appdir.mkdir(parents=True)
+    script = appdir / "launch_wsl.sh"
+    script.write_text((ROOT / "launch_wsl.sh").read_text())
+    runtime = repo / ".venv/bin/python"
+    runtime.parent.mkdir(parents=True)
+    log = tmp_path / "args"
+    runtime.write_text('#!/bin/sh\nif [ "$1" = "-c" ]; then exit 0; fi\nprintf "%s\\n" "$@" > "$CMF_TEST_LOG"\n')
+    runtime.chmod(0o755)
+    import os
+
+    env = dict(os.environ, CMF_TEST_LOG=str(log))
+    result = subprocess.run(["sh", str(script), "/map", "-", "powershell.exe", "--no-setup"],
+                            env=env, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert log.read_text().splitlines()[-1] == "--no-setup"
+
+
 def test_windows_wrapper_static_contract():
     cmd = (ROOT / "launch_windows_wsl.cmd").read_text()
     ps = (ROOT / "launch_windows_wsl.ps1").read_text()
     assert "DisableDelayedExpansion" in cmd and "pause" in cmd
     assert "--list --quiet" in ps and "CMF_WSL_DISTRO" in ps
     assert "System.Text.UTF8Encoding" in ps and "[System.Text.Encoding]::Unicode" in ps
-    assert "wslpath -u $absolute" in ps and "@prefix --exec sh $helper $map $python $powershell" in ps
+    assert "wslpath -u $absolute" in ps and "@prefix --exec sh @launchArguments" in ps
     assert r"wsl\.localhost" in ps and "UNC path belongs" in ps
     assert "Set-ExecutionPolicy" not in ps and "--install" not in ps
     assert "Start-Process" not in ps  # only readiness-gated shared browser helper opens it

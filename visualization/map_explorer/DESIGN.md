@@ -741,6 +741,35 @@ existing documented attributes, masks, graph/bifurcation conventions and assignm
 geometry. Windows runtime execution is a validation limitation, not a claimed result.
 
 
+## DT-0152 follow-up — Cross-platform Python profile setup (2026-11-28)
+
+This implementation extends the earlier macOS setup work to macOS, native Windows,
+and WSL. On launch, the selected environment is checked with `pip check`, compiled
+imports, and Panel/Bokeh model construction. A missing or incompatible environment
+prompts once, then tries standard requirements, the minimal 2024 Explorer profile,
+and the experimental 2022 profile in that order. A candidate is selected only after
+the dependency/API smoke checks and synthetic-map `Explorer` initialization pass.
+
+Profile environments are isolated by operating system and profile. Native Windows
+uses `Scripts/python.exe`; macOS/Linux use `bin/python`. WSL environments are stored
+under the WSL user's Linux home cache, not alongside or inside Windows/macOS virtual
+environments. WSL retains an explicit no-setup option; its ordinary launcher now
+allows the same consent-based automatic setup as the native launchers. Existing
+working environments, system Python, Conda environments, and the repository root
+`.venv` are not altered. macOS requires binary wheels for every profile and keeps
+the historical NumPy ABI constraint. For 2024 on macOS arm64 with Python <3.13,
+netCDF4 1.6.5 is selected because the 1.7.2 arm64 wheel is not available for the
+supported older macOS range; other platforms retain the historical 1.7.2 pin.
+
+The hidden `--test-setup-profile 2024` launcher option safely exercises the
+standalone 2024 profile without replacing other environments. The full 2022 GUI
+compatibility exercise is deferred to Cloud. On this local checkout, a synthetic
+map successfully initializes and serves through the 2024 profile. The bundled
+Mekong directory currently contains `params.nml` rather than the Explorer's
+expected `params.txt`, so the default-map launch cannot be used as evidence for
+this setup task. Native Windows/WSL execution remains unverified on this macOS host.
+
+
 ## DT-0122 — All-background Auto P5/P95 (2026-11-17)
 
 Maintainer requests investigation of disappearing assigned-pixel P3/P97 behavior,

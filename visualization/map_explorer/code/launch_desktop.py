@@ -2,13 +2,16 @@
 from __future__ import annotations
 
 import argparse
-import importlib.util
+import hashlib
+import json
 import os
 import platform
 from pathlib import Path
+import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 
 
 def choose_map(default):
@@ -42,66 +45,268 @@ def choose_map(default):
     return Path(value.strip('"')) if value else default
 
 
-def macos_setup_error():
-    """Bound automatic setup to CPython/OS/CPU combinations with wheel support.
+PROFILES = ("standard", "2024", "2022")
+PROFILE_PYTHON = {
+    "standard": ((3, 10), (3, 13)),
+    "2024": ((3, 10), (3, 12)),
+    "2022": ((3, 10), (3, 10)),
+}
+PACKAGE_IMPORTS = """
+import sys
+assert sys.version_info >= (3, 10), 'Map Explorer requires Python 3.10 or later'
+import numpy, netCDF4, matplotlib, panel, bokeh, rasterio, param
+from PIL import Image
+from bokeh.document import Document
+panel.extension()
+root = panel.pane.Markdown('Map Explorer dependency check').get_root(Document())
+assert root is not None
+import app
+"""
+APP_INITIALIZATION = PACKAGE_IMPORTS + """
+import sys
+assert sys.version_info >= (3, 10), 'Map Explorer requires Python 3.10 or later'
+import tempfile
+from pathlib import Path
+import numpy as np
+from app import Explorer
+with tempfile.TemporaryDirectory(prefix='cmf-explorer-check-') as temporary:
+    root = Path(temporary)
+    map_dir = root / 'map'
+    map_dir.mkdir()
+    (map_dir / 'params.txt').write_text('4 NX\\n3 NY\\n1 NLFP\\n1 spacing\\n10 west\\n14 east\\n20 south\\n23 north\\n')
+    np.arange(1, 13, dtype='<f4').tofile(map_dir / 'uparea.bin')
+    explorer = Explorer(map_dir, output_dir=root / 'output')
+    try:
+        assert explorer.reader.sources
+        assert explorer.layer is not None
+    finally:
+        explorer.close()
+"""
 
-    pip remains the authority on the complete dependency wheel intersection;
-    these checks provide an actionable message before creating a venv.
-    """
-    version = platform.mac_ver()[0]
+
+def macos_setup_error(info):
+    """Return a diagnostic for interpreter/OS combinations without supported wheels."""
+    version = info["macos"]
     try:
         major = int(version.split(".")[0])
     except ValueError:
         major = 0
-    if (platform.python_implementation() != "CPython" or
-            not (3, 10) <= sys.version_info[:2] <= (3, 13) or
-            major < 11 or platform.machine() not in ("arm64", "x86_64")):
+    python = tuple(info["python"][:2])
+    if (info["implementation"] != "CPython" or
+            not (3, 10) <= python <= (3, 13) or
+            major < 11 or info["machine"] not in ("arm64", "x86_64")):
         return ("Automatic macOS setup requires CPython 3.10–3.13 on macOS 11+ "
                 "(arm64 or x86_64). Install a matching Python from python.org, "
                 "then retry. Homebrew/GDAL are not required. "
                 "The selected interpreter determines the wheel architecture.")
-    if major < 14 and sys.version_info[:2] >= (3, 13):
+    if major < 14 and python >= (3, 13):
         return ("macOS 11–13 automatic setup requires CPython 3.10–3.12; "
                 "CPython 3.13 needs macOS 14+ dependency wheels. "
                 "Install Python 3.12 from python.org and retry; no GDAL installation is needed.")
     return None
 
 
-def macos_setup_environment(environment):
-    """Keep inherited Python/pip settings from redirecting the local install.
-
-    Use pip's default PyPI index and disable config files for this subprocess
-    only. Do not alter the user's pip config, active environment or shell.
-    """
+def setup_environment(environment, macos):
+    """Isolate package installation from ambient Python and pip target overrides."""
     env = {key: value for key, value in os.environ.items()
-           if not key.startswith("PIP_") and
-           key not in ("PYTHONPATH", "PYTHONHOME", "PYTHONUSERBASE")}
-    env["PIP_CONFIG_FILE"] = os.devnull
+           if key not in ("PYTHONPATH", "PYTHONHOME", "PYTHONUSERBASE",
+                          "PIP_TARGET", "PIP_PREFIX", "PIP_USER", "VIRTUAL_ENV")}
+    if macos:
+        env = {key: value for key, value in env.items() if not key.startswith("PIP_")}
+        env["PIP_CONFIG_FILE"] = os.devnull
     env["VIRTUAL_ENV"] = str(environment)
     return env
 
 
-def prepare_environment(directory, argv, missing):
-    """Install only after explicit terminal consent, in the Explorer-local venv.
+def platform_environment_tag():
+    if sys.platform == "darwin":
+        return "macos"
+    if sys.platform == "win32":
+        return "windows"
+    if sys.platform.startswith("linux"):
+        release = Path("/proc/sys/kernel/osrelease")
+        is_wsl = "WSL_DISTRO_NAME" in os.environ or (
+            release.is_file() and "microsoft" in release.read_text(errors="ignore").lower()
+        )
+        return "wsl" if is_wsl else "linux"
+    return sys.platform.replace("/", "-")
 
-    Keep Conda, system Python and the repository's shared environment unchanged.
-    Re-launch with the original arguments so folder selection/server startup use
-    the newly installed runtime rather than this process's import state.
-    """
-    environment = directory / ".venv"
-    python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+
+def environment_root(directory):
+    """Keep WSL venvs on the Linux filesystem, distinct from Windows and macOS."""
+    if platform_environment_tag() == "wsl":
+        identity = hashlib.sha256(str(directory.resolve()).encode()).hexdigest()[:16]
+        return Path.home() / ".cache" / "cmf-map-explorer" / identity
+    return directory
+
+
+def profile_environment(directory, profile):
+    return environment_root(directory) / f".venv-{platform_environment_tag()}-{profile}"
+
+
+def python_candidates():
+    """Return safe interpreter command candidates, preferring the selected runtime."""
+    commands = [[sys.executable]]
+    if sys.platform == "win32":
+        launcher = shutil.which("py")
+        if launcher:
+            commands.extend([[launcher, f"-3.{minor}"] for minor in (13, 12, 11, 10)])
+    else:
+        commands.extend([[path] for name in ("python3.13", "python3.12", "python3.11", "python3.10")
+                         if (path := shutil.which(name))])
+
+    found = []
+    seen = set()
+    probe = ("import json,platform,sys; "
+             "print(json.dumps({'python':list(sys.version_info[:3]),"
+             "'implementation':platform.python_implementation(),"
+             "'macos':platform.mac_ver()[0],'machine':platform.machine()}))")
+    for command in commands:
+        try:
+            result = subprocess.run(command + ["-c", probe], check=True, capture_output=True,
+                                    text=True, timeout=10)
+            info = json.loads(result.stdout.strip().splitlines()[-1])
+        except (OSError, subprocess.SubprocessError, ValueError, IndexError):
+            continue
+        key = (tuple(info["python"][:2]), info["implementation"], info["machine"])
+        if key not in seen:
+            seen.add(key)
+            found.append((command, info))
+    return found
+
+
+def profile_compatible(profile, info):
+    low, high = PROFILE_PYTHON[profile]
+    version = tuple(info["python"][:2])
+    return info["implementation"] == "CPython" and low <= version <= high
+
+
+def requirements_for(directory, profile, macos):
+    if profile == "standard":
+        return directory / ("requirements-macos.txt" if macos else "requirements.txt")
+    return directory / "config" / f"requirements_{profile}.txt"
+
+
+def validate_environment(python, code_dir, expected_prefix=None, *, initialize_app=False, env=None):
+    """Check pip consistency, compiled imports, Panel/Bokeh model creation and optional app init."""
+    options = {"capture_output": True, "text": True, "timeout": 180}
+    if env is not None:
+        options["env"] = env
+    if expected_prefix is not None:
+        prefix_check = subprocess.run(
+            [str(python), "-c",
+             "import sys; from pathlib import Path; "
+             "assert sys.prefix != sys.base_prefix and "
+             "Path(sys.prefix).resolve() == Path(sys.argv[1]).resolve(), 'Not the requested isolated venv'",
+             str(expected_prefix)], **options)
+        if prefix_check.returncode:
+            return False, prefix_check.stderr.strip() or prefix_check.stdout.strip() or "venv isolation check failed"
+    checked = subprocess.run([str(python), "-m", "pip", "check"], **options)
+    if checked.returncode:
+        return False, checked.stdout.strip() or checked.stderr.strip() or "pip check failed"
+    script = APP_INITIALIZATION if initialize_app else PACKAGE_IMPORTS
+    smoke = subprocess.run([str(python), "-c", script], cwd=code_dir, **options)
+    if smoke.returncode:
+        return False, smoke.stderr.strip() or smoke.stdout.strip() or "GUI/API initialization failed"
+    return True, "pip check, compiled imports and Panel/Bokeh APIs passed" + (
+        "; bundled-map app initialization passed" if initialize_app else ""
+    )
+
+
+def short_diagnostic(result):
+    text = (result.stderr or "") + "\n" + (result.stdout or "")
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    return " | ".join(lines[-6:]) or f"process exited with status {result.returncode}"
+
+
+def network_failure(result):
+    text = ((result.stderr or "") + "\n" + (result.stdout or "")).lower()
+    return any(term in text for term in (
+        "temporary failure in name resolution", "name or service not known", "connection refused",
+        "connection reset", "network is unreachable", "connection timed out", "read timed out",
+        "ssl: certificate_verify_failed", "no space left on device", "permission denied",
+    ))
+
+
+def build_profile(directory, profile, interpreter):
+    """Build, validate, and adopt one profile without editing another venv."""
+    command, python_info = interpreter
     macos = sys.platform == "darwin"
-    if macos:
+    if not profile_compatible(profile, python_info):
+        return None, f"Python {'.'.join(map(str, python_info['python'][:2]))} is incompatible with {profile}", False
+    if macos and (error := macos_setup_error(python_info)):
+        return None, error, False
+
+    root = environment_root(directory)
+    target = profile_environment(directory, profile)
+    if target.is_symlink():
+        return None, f"Refusing linked profile environment: {target}", True
+    try:
+        root.mkdir(parents=True, exist_ok=True)
+        work = Path(tempfile.mkdtemp(prefix=f".map-explorer-{profile}-", dir=root))
+    except OSError as exc:
+        return None, f"Cannot create isolated environment staging directory: {exc}", True
+    candidate = work / "venv"
+    python = candidate / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+    env = setup_environment(candidate, macos)
+    print(f"[TRY] {profile.capitalize()} requirements with Python {'.'.join(map(str, python_info['python'][:3]))}", flush=True)
+    try:
+        created = subprocess.run(command + ["-m", "venv", str(candidate)], capture_output=True, text=True,
+                                 timeout=180, env=env)
+        if created.returncode:
+            return None, short_diagnostic(created), True
+        install = [str(python), "-m", "pip", "install", "--no-user"]
+        if macos:
+            install.append("--only-binary=:all:")
+        install += ["-r", str(requirements_for(directory, profile, macos))]
+        installed = subprocess.run(install, capture_output=True, text=True, timeout=1800, env=env)
+        if installed.returncode:
+            return None, short_diagnostic(installed), network_failure(installed)
+        valid, reason = validate_environment(python, directory / "code", candidate,
+                                             initialize_app=True, env=env)
+        if not valid:
+            return None, reason, False
+
+        backup = None
+        if target.exists():
+            from datetime import datetime
+            backup = target.with_name(target.name + ".previous-" + datetime.now().strftime("%Y%m%d-%H%M%S"))
+            os.replace(target, backup)
+        try:
+            os.replace(candidate, target)
+            target_python = target / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+            final_env = setup_environment(target, macos)
+            valid, reason = validate_environment(target_python, directory / "code", target,
+                                                 initialize_app=True, env=final_env)
+            if not valid:
+                raise RuntimeError(f"adopted environment validation failed: {reason}")
+        except Exception:
+            if target.exists():
+                shutil.rmtree(target, ignore_errors=True)
+            if backup is not None and backup.exists():
+                os.replace(backup, target)
+            raise
+        print(f"[PASS] {profile.capitalize()} installation and GUI validation", flush=True)
+        if backup:
+            print(f"[INFO] Previous profile preserved at {backup}", flush=True)
+        return (target, target_python), reason, False
+    except (OSError, subprocess.SubprocessError, RuntimeError) as exc:
+        return None, str(exc), True
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def prepare_environment(directory, argv, missing, *, test_profile=None):
+    """Ask once, then prepare the first clean, fully validated platform profile."""
+    if sys.platform == "darwin":
         print(f"Runtime: Python {platform.python_version()} ({platform.python_implementation()}); "
               f"macOS {platform.mac_ver()[0]}; CPU {platform.machine()}", flush=True)
-        error = macos_setup_error()
-        if error:
-            print(f"[ERROR] {error}", file=sys.stderr)
-            return 1
+    print("[INFO] Preparing Map Explorer environment", flush=True)
+    if missing:
+        print("[INFO] Environment check: " + "; ".join(missing), file=sys.stderr)
     print("Missing dependencies: " + ", ".join(missing), file=sys.stderr)
     print(f"Selected Python: {sys.executable}", file=sys.stderr)
-    print(f"Explorer environment to create/update: {environment}", flush=True)
-    print("Required packages will be downloaded and installed there; other environments are unchanged.", flush=True)
+    print("A separate platform/profile environment will be prepared; existing environments are preserved.", flush=True)
     if not sys.stdin.isatty():
         print(f"[INFO] No interactive terminal; no changes made. See {directory / 'README.md'}", file=sys.stderr)
         return 1
@@ -112,44 +317,42 @@ def prepare_environment(directory, argv, missing):
     if answer not in ("y", "yes"):
         print("[INFO] Setup cancelled; no environment changes made.")
         return 0
-
-    run_options = {"env": macos_setup_environment(environment)} if macos else {}
-    try:
-        if environment.is_symlink():
-            raise OSError(f"Refusing to install into a linked environment: {environment}")
-        if not python.is_file() or not (environment / "pyvenv.cfg").is_file():
-            print(f"[STEP] Creating {environment}", flush=True)
-            subprocess.run([sys.executable, "-m", "venv", str(environment)], check=True, **run_options)
-        # A stale or malformed .venv must not redirect pip into Conda/system Python.
-        subprocess.run([str(python), "-c",
-                        "import sys; from pathlib import Path; "
-                        "assert sys.prefix != sys.base_prefix and "
-                        "Path(sys.prefix).resolve() == Path(sys.argv[1]).resolve(), 'Not the requested isolated venv'",
-                        str(environment)], check=True, **run_options)
-        print("[STEP] Installing Map Explorer requirements", flush=True)
-        # Source releases can outrank older compatible wheels. On macOS require
-        # wheels for every dependency: pip can select rasterio 1.4.1 on macOS
-        # 11–13 rather than trying to compile newer GDAL-dependent releases.
-        install = [str(python), "-m", "pip", "install"]
-        if macos:
-            install += ["--only-binary=:all:", "--no-user"]
-        requirements = "requirements-macos.txt" if macos else "requirements.txt"
-        install += ["-r", str(directory / requirements)]
-        subprocess.run(install, check=True, **run_options)
-        subprocess.run([str(python), "-c", "import numpy, netCDF4, matplotlib, panel, bokeh, rasterio"],
-                       check=True, **run_options)
-    except (OSError, subprocess.CalledProcessError) as exc:
-        print(f"[ERROR] Environment setup failed: {exc}", file=sys.stderr)
-        if macos:
-            print("macOS setup uses binary wheels only; no source/GDAL build was attempted. "
-                  "Check the pip error above for unavailable wheels, network/TLS or disk errors. "
-                  "Retry the same launcher and approve setup again; completed downloads/packages "
-                  "in this local .venv can be reused. Do not install GDAL to fix this setup.",
-                  file=sys.stderr)
-        print("Existing data and other environments were not changed. Re-run the launcher to retry.", file=sys.stderr)
-        return 1
-    print("[SUCCESS] Explorer environment ready; launching.", flush=True)
-    return subprocess.run([str(python), str(directory / "code" / "launch_desktop.py"), *argv], **run_options).returncode
+    runtimes = python_candidates()
+    profiles = (test_profile,) if test_profile else PROFILES
+    failures = []
+    stop_fallback = False
+    for profile in profiles:
+        compatible = [(cmd, info) for cmd, info in runtimes if profile_compatible(profile, info)]
+        if not compatible:
+            failures.append(f"{profile}: no compatible CPython interpreter found")
+            print(f"[SKIP] {profile.capitalize()} profile: no compatible CPython interpreter found", flush=True)
+            continue
+        for interpreter in compatible:
+            environment, reason, fatal = build_profile(directory, profile, interpreter)
+            if environment:
+                target, python = environment
+                print("[SUCCESS] Map Explorer environment ready", flush=True)
+                child_argv = list(argv)
+                if test_profile:
+                    index = child_argv.index("--test-setup-profile")
+                    del child_argv[index:index + 2]
+                return subprocess.run([str(python), str(directory / "code" / "launch_desktop.py"), *child_argv],
+                                      env=setup_environment(target, sys.platform == "darwin")).returncode
+            failures.append(f"{profile}/Python {'.'.join(map(str, interpreter[1]['python'][:2]))}: {reason}")
+            print(f"[WARN] {profile.capitalize()} profile failed: {reason}", flush=True)
+            if fatal:
+                print("[ERROR] Environment setup infrastructure failed; later profiles were not attempted.",
+                      file=sys.stderr)
+                stop_fallback = True
+                break
+        if stop_fallback:
+            break
+    print("[ERROR] No available Map Explorer profile passed validation.", file=sys.stderr)
+    for failure in failures:
+        print(f"  - {failure}", file=sys.stderr)
+    print("Check the interpreter, internet access to PyPI, and the reported package error; "
+          "then retry. Existing Python environments were preserved.", file=sys.stderr)
+    return 1
 
 
 def main(argv=None):
@@ -160,28 +363,44 @@ def main(argv=None):
                         help="Local port; 0 chooses an available port")
     parser.add_argument("--no-browser", action="store_true")
     parser.add_argument("--no-setup", action="store_true", help="Report missing packages without installation")
+    parser.add_argument("--test-setup-profile", choices=("2024", "2022"), help=argparse.SUPPRESS)
     parser.add_argument("--windows-browser", type=Path, help="WSL Windows PowerShell executable for browser interop")
     argv = sys.argv[1:] if argv is None else argv
     args = parser.parse_args(argv)
     directory = Path(__file__).resolve().parent.parent
-    missing = [name for name in ("numpy", "netCDF4", "matplotlib", "panel", "bokeh", "rasterio")
-               if importlib.util.find_spec(name) is None]
-    if sys.platform == "darwin":
-        # A partial installation can have a module spec but an unloadable native
-        # extension. Offer the same local repair prompt rather than crashing.
-        for name in ("numpy", "netCDF4", "matplotlib", "panel", "bokeh", "rasterio"):
-            if name not in missing:
-                try:
-                    __import__(name)
-                except (ImportError, OSError, ValueError) as exc:
-                    print(f"[INFO] Cannot import {name}: {exc}", file=sys.stderr)
-                    missing.append(name)
-    if missing and args.no_setup:
-        print("[ERROR] Missing WSL Python packages: " + ", ".join(missing), file=sys.stderr)
-        print("Create a Linux venv and install requirements manually; see README Windows Launcher (WSL).", file=sys.stderr)
-        return 1
-    if missing:
-        return prepare_environment(directory, argv, missing)
+    code_dir = directory / "code"
+    if args.test_setup_profile:
+        return prepare_environment(directory, argv, ["forced profile test"],
+                                   test_profile=args.test_setup_profile)
+
+    current_is_valid, reason = validate_environment(
+        Path(sys.executable), code_dir, os.environ.get("VIRTUAL_ENV")
+    )
+    if not current_is_valid:
+        print(f"[WARN] Selected Python environment is not ready: {reason}", file=sys.stderr)
+
+    # Reuse a previously validated profile for this OS without touching a venv
+    # belonging to another platform or profile.
+    if not current_is_valid:
+        for profile in PROFILES:
+            candidate = profile_environment(directory, profile)
+            python = candidate / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+            if not python.is_file():
+                continue
+            valid, profile_reason = validate_environment(python, code_dir, candidate)
+            if valid:
+                print(f"[INFO] Using existing {profile} Map Explorer environment: {candidate}")
+                return subprocess.run(
+                    [str(python), str(Path(__file__).resolve()), *argv],
+                    env=setup_environment(candidate, sys.platform == "darwin"),
+                ).returncode
+            print(f"[WARN] Existing {profile} profile is invalid: {profile_reason}", file=sys.stderr)
+
+    if not current_is_valid:
+        if args.no_setup:
+            print("[ERROR] Dependency validation failed; setup is disabled by --no-setup.", file=sys.stderr)
+            return 1
+        return prepare_environment(directory, argv, [reason])
     from map_datasets import resolve_map
     selected = resolve_map(args.map_dir)
     if selected is None:
