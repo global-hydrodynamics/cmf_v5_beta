@@ -1,8 +1,8 @@
 # Regional map preparation
 
-Base-map geometry is read from authoritative `params.toml`; legacy TXT-only
+Base-map geometry is read from authoritative `params.nml`; legacy TXT-only
 source maps remain supported through `params.txt`. The maintained Python
-regionalizer writes cropped geometry to `params.toml`; `params.txt` references
+regionalizer writes cropped geometry to `params.nml`; `params.txt` references
 below describe the compatibility interface used by older tools.
 
 This guide documents the reusable v5 regional-map preparation template under `map/tools/`. It prepares a regional map from a compatible source map. The legacy v4 workflow remains under `map/src/src_region/` and is not modified here. Configure and execute `s01-regional_map.sh` for a target map; the Python programs under `map/tools/code/` perform each processing stage and should not be run separately for the standard workflow.
@@ -36,7 +36,7 @@ NORTH="35.0"
 
 No build is required. Run from the copied map-local `script_region/` directory so relative map inputs resolve as configured. Set `PYTHON_CMD` only when a non-default interpreter is needed. Each wrapper uses `CMF_V50_ROOT` to locate the shared shell checker and Python program under `map/tools/code/`, keeps the current directory, and reports failures through the shared checker.
 
-`s01-regional_map.sh` runs the following sequence internally: `region_cut_domain`, `region_cut_bifway`, `region_set_map`, `region_combine_hires` for available source tags, and `region_default_inpmat` when a suitable high-resolution map exists. `region_default_inpmat` creates the standard input mapping matrix for the annual runoff climatology used to estimate river channel cross-sections. The `test-1deg` tag denotes the global 360 × 180 ELSE_GPCC 1-degree grid used by `inp/ELSE_GPCC/runoffYYYY.nc` (daily, mm/day) and `map/data/ELSE_GPCC_clm-1981-2010.one` (annual mean, mm/s). A distinct matrix is required for each model map. The matrix (`inpmat_test-1deg.nc`) and paired `diminfo_test-1deg.txt` (`ROFFTAG=test-1deg`) are standard map products and should be distributed with prepared v5 regional maps. `HIRES_TAG` selects the high-resolution data used to construct this matrix; it is not the runoff-grid tag. The program reads high-resolution `grdare` in km2 and converts positive values to m2 for the overlap matrix; FLOW generates `grdare` from land-pixel areas, so coastal cells contribute only their land area. This fixed-grid product is distinct from the simulation-specific runoff input matrix generated later by the general-purpose `param_inpmat_generate` workflow in `script_params/`.
+`s01-regional_map.sh` runs the following sequence internally: `region_cut_domain`, `region_cut_bifway`, `region_set_map`, `region_combine_hires` for available source tags, and `region_default_inpmat` when a suitable high-resolution map exists. `region_default_inpmat` creates the standard input mapping matrix for the annual runoff climatology used to estimate river channel cross-sections. The `test-1deg` tag denotes the global 360 × 180 ELSE_GPCC 1-degree grid used by `inp/ELSE_GPCC/runoffYYYY.nc` (daily, mm/day) and `map/data/ELSE_GPCC_clm-1981-2010.one` (annual mean, mm/s). A distinct matrix is required for each model map. The matrix (`inpmat_test-1deg.nc`) and paired `diminfo_test-1deg.nml` (`ROFFTAG=test-1deg`) are standard map products and should be distributed with prepared v5 regional maps. `HIRES_TAG` selects the high-resolution data used to construct this matrix; it is not the runoff-grid tag. The program reads high-resolution `grdare` in km2 and converts positive values to m2 for the overlap matrix; FLOW generates `grdare` from land-pixel areas, so coastal cells contribute only their land area. This fixed-grid product is distinct from the simulation-specific runoff input matrix generated later by the general-purpose `param_inpmat_generate` workflow in `script_params/`.
 
 ## Outputs and checks
 
@@ -47,7 +47,7 @@ No build is required. Run from the copied map-local `script_region/` directory s
 | `cut_bifway` | Parent map: `bifori.txt` | Source bifurcation paths that remain within the regional network. |
 | `set_map` | Parent map: `rivseq.bin`, `basin.bin`, `bsncol.bin`, `upgrid.bin`, `uparea_grid.bin`, `nxtdst_grid.bin`, `rivlen_grid.bin` | Derived river ordering, basin/visualization, and grid-based analysis products. `rivlen_grid.bin` intentionally contains the same downstream-distance array as `nxtdst_grid.bin` for rectangular-grid simulations. |
 | `combine_hires` | Regional high-resolution tag directory, including layers and its `location.txt` | Cropped high-resolution layers and geometry metadata, when corresponding source data are available. |
-| `region_default_inpmat` | Parent map: `inpmat_test-1deg.nc` and `diminfo_test-1deg.txt` | Standard runoff-climatology mapping product for channel cross-section parameter estimation; distributed with prepared v5 maps when generated. |
+| `region_default_inpmat` | Parent map: `inpmat_test-1deg.nc` and `diminfo_test-1deg.nml` | Standard runoff-climatology mapping product for channel cross-section parameter estimation; distributed with prepared v5 maps when generated. |
 | Separate CTL step | `.ctl` files beside eligible binaries | GrADS descriptors based on the base `params.txt` or high-resolution `location.txt`; not written by `s01`. |
 
 Consult [`variable_table/map_variables.csv`](../../../variable_table/map_variables.csv) for per-product type, dimensions, record layout, numeric missing value, special codes, and model/runtime role. Core model inputs and preprocessing/analysis products are distinguished there; the table above names outputs without duplicating every variable definition.

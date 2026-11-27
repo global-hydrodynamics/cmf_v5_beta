@@ -29,7 +29,7 @@ S02_TEMPLATE = ROOT / "map" / "tools" / "script_params" / "s03-bifurcation.sh"
 S01_TEMPLATE = ROOT / "map" / "tools" / "script_params" / "s02-channel_params.sh"
 MAP_INPUTS = (
     "params.txt", "nextxy.bin", "basin.bin", "bifori.txt",
-    "lonlat.bin", "diminfo_test-1deg.txt",
+    "lonlat.bin", "diminfo_test-1deg.nml",
 )
 CHANNEL_INPUTS = (
     *MAP_INPUTS, "ctmare.bin", "width.bin", "inpmat_test-1deg.bin",
@@ -201,6 +201,15 @@ class BifurcationMigrationTests(unittest.TestCase):
         names = CHANNEL_INPUTS if channel_inputs else MAP_INPUTS
         for name in names:
             shutil.copy2(SAMPLE / name, map_root / name)
+        from map.tools.code.map_metadata import read_diminfo_nml
+        info = read_diminfo_nml(map_root / "diminfo_test-1deg.nml")
+        (map_root / "diminfo_test-1deg.txt").write_text(
+            "\n".join(map(str, (
+                info.nx, info.ny, info.nlfp, info.nxin, info.nyin, info.inpn,
+                info.inpmat_file, info.west, info.east, info.north, info.south,
+            ))) + "\n",
+            encoding="ascii",
+        )
         if include_depth:
             shutil.copy2(SAMPLE / "rivhgt.bin", map_root / "rivhgt.bin")
         shutil.copy2(S02_TEMPLATE, map_root / "script_params" / "s03-bifurcation.sh")
@@ -235,7 +244,7 @@ class BifurcationMigrationTests(unittest.TestCase):
             with self.subTest(biflayer=biflayer):
                 result = run(
                     [str(self.code_dir / "param_bif_set_params"), "rivhgt.bin", "bifprm.txt",
-                     biflayer, "diminfo_test-1deg.txt"],
+                     biflayer, "diminfo_test-1deg.nml"],
                     cwd=self.root,
                 )
                 self.assertNotEqual(result.returncode, 0)
@@ -360,14 +369,14 @@ class BifurcationMigrationTests(unittest.TestCase):
             nc_name = f"bifprm-{layers}.nc"
             result = run(
                 [str(self.code_dir / "param_bif_set_params"), "rivhgt.bin", csv_name,
-                 str(layers), "diminfo_test-1deg.txt"],
+                 str(layers), "diminfo_test-1deg.nml"],
                 cwd=map_root,
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             first_csv = (map_root / csv_name).read_bytes()
             repeat = run(
                 [str(self.code_dir / "param_bif_set_params"), "rivhgt.bin", csv_name,
-                 str(layers), "diminfo_test-1deg.txt"],
+                 str(layers), "diminfo_test-1deg.nml"],
                 cwd=map_root,
             )
             self.assertEqual(repeat.returncode, 0, repeat.stdout + repeat.stderr)
@@ -426,7 +435,7 @@ class BifurcationMigrationTests(unittest.TestCase):
         map_root = self.create_map("duplicate_path")
         generated = run(
             [str(self.code_dir / "param_bif_set_params"), "rivhgt.bin", "bifprm.csv",
-             "5", "diminfo_test-1deg.txt"],
+             "5", "diminfo_test-1deg.nml"],
             cwd=map_root,
         )
         self.assertEqual(generated.returncode, 0, generated.stdout + generated.stderr)

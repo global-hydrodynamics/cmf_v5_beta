@@ -33,11 +33,12 @@ def run(cmd, cwd):
 
 
 def fixtures(path, mode):
-    info = "2\n1\n1\n2\n2\n2\nignored_embedded_filename.bin\n0\n2\n2\n0\n"
-    (path / "a.info").write_text(info)
-    (path / "b.info").write_text(info)
+    info = "&DIMINFO\n NX=2, NY=1, NLFP=1, NXIN=2, NYIN=2, INPN=2,\n"
+    info += " INPMAT_FILE='ignored_embedded_filename.bin', WEST=0, EAST=2, NORTH=2, SOUTH=0\n/\n"
+    (path / "a.nml").write_text(info)
+    (path / "b.nml").write_text(info)
     (path / "other").mkdir()
-    (path / "other/c.info").write_text(info)
+    (path / "other/c.nml").write_text(info)
     x = [1, 2, 2, 0]
     y = [1, 1, 1, 0]
     weights = [1., 2., 3., 0.]
@@ -52,12 +53,12 @@ def fixtures(path, mode):
     (path / "a.bin").write_bytes(binary)
     (path / "b.bin").write_bytes(struct.pack("=8i4f", 1,1,0,2, 1,1,0,1, 1.,1.,0.,1.))
     (path / "alias.bin").symlink_to("a.bin")
-    (path / "info-alias").symlink_to("a.info")
+    (path / "nml-alias").symlink_to("a.nml")
     (path / "forcing.bin").write_bytes(struct.pack("=8f", 0.,0.,0.,0.,10.,20.,30.,40.))
     (path / "catm.bin").write_bytes(struct.pack("=2f", 10.,20.))
-    mapping = ", diminfo_file='a.info', inpmat_file='a.bin'"
+    mapping = ", diminfo_file='a.nml', inpmat_file='a.bin'"
     if mode in ("no-mapping", "catm"): mapping = ""
-    if mode == "partial": mapping = ", diminfo_file='a.info'"
+    if mode == "partial": mapping = ", diminfo_file='a.nml'"
     if mode == "partial-binary": mapping = ", inpmat_file='a.bin'"
     if mode == "catm-files": mapping += ", is_catm=.true."
     item = f"&input_item item='TEST', fmt='bin', path='forcing.bin', slice_index=2{mapping} /\n"
@@ -71,14 +72,14 @@ def fixtures(path, mode):
     nml += "&input_tres item='TEST', dt=1, dt_unit='hour' /\n"
     (path / "input.nml").write_text(nml)
     if mode == "missing": (path / "a.bin").unlink()
-    if mode == "missing-info": (path / "a.info").unlink()
+    if mode == "missing-info": (path / "a.nml").unlink()
     if mode == "size": (path / "a.bin").write_bytes(binary[:-4])
-    if mode == "destination": (path / "a.info").write_text(info.replace("2\n1\n1", "3\n1\n1", 1))
-    if mode == "nonpositive": (path / "a.info").write_text(info.replace("2\n1\n1", "0\n1\n1", 1))
-    if mode == "bounds": (path / "a.info").write_text(info.rsplit("0\n", 1)[0] + "NaN\n")
-    if mode == "metadata": (path / "a.info").write_text("2\n")
+    if mode == "destination": (path / "a.nml").write_text(info.replace("NX=2", "NX=3", 1))
+    if mode == "nonpositive": (path / "a.nml").write_text(info.replace("NX=2", "NX=0", 1))
+    if mode == "bounds": (path / "a.nml").write_text(info.replace("EAST=2", "EAST=NaN", 1))
+    if mode == "metadata": (path / "a.nml").write_text("&DIMINFO\n NX=2\n/\n")
     if mode == "trailing":
-        (path / "a.info").write_text(info.replace("2\nignored", "3\nignored"))
+        (path / "a.nml").write_text(info.replace("INPN=2", "INPN=3", 1))
         (path / "a.bin").write_bytes(struct.pack("=12i6f", *x,0,0,*y,0,0,*weights,0.,0.))
 
 
@@ -100,8 +101,8 @@ def main():
         "size": "incorrect file size", "destination": "destination shape mismatch",
         "source-shape": "source shape mismatch", "cache-shape": "source shape mismatch",
         "indices": "out of range", "weights": "finite and non-negative", "nonfinite": "finite and non-negative",
-        "padding": "inconsistent zero padding", "holes": "non-contiguous", "metadata": "invalid file",
-        "no-mapping": "gridded input requires diminfo_file and inpmat_file", "nonpositive": "non-positive dimension", "bounds": "non-finite domain bounds",
+        "padding": "inconsistent zero padding", "holes": "non-contiguous", "metadata": "missing or non-positive field",
+        "no-mapping": "gridded input requires diminfo_file and inpmat_file", "nonpositive": "non-positive field", "bounds": "non-finite or invalid model-grid bounds",
     }
     for single in (False, True):
         with tempfile.TemporaryDirectory(prefix="cama-input-mapping-") as temp:

@@ -75,7 +75,7 @@ def convert(map_dir: Path, source: Path, output: Path, registry: Path,
 def main() -> int:
     root = Path(__file__).resolve().parents[3]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--map-dir', type=Path, required=True, help='map root containing params.toml or legacy params.txt')
+    parser.add_argument('--map-dir', type=Path, required=True, help='map root containing params.nml or legacy params.txt')
     parser.add_argument('--input', type=Path, required=True, help='registered individual NetCDF map')
     parser.add_argument('--output', type=Path, help='Binary destination; default is binary/<input-stem>.bin')
     parser.add_argument('--registry', type=Path, default=root / 'variable_table/map_variables.csv')

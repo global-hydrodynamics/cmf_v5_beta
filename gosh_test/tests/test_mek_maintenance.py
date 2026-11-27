@@ -48,7 +48,7 @@ class MekMaintenance(unittest.TestCase):
                 text = b'\n'.join(baseline.values()).decode()
                 suffix = 'nextxy_noedge.nc' if script.startswith('mek01') else 'nextxy.nc'
                 self.assertIn(f'{self.root}/map/mekong_15min/{suffix}', text)
-                self.assertIn('diminfo_repo-mek_1deg.txt', text)
+                self.assertIn('diminfo_repo-mek_1deg.nml', text)
                 self.assertIn('inpmat_repo-mek_1deg.nc', text)
 
     def test_cleanup_exact_current_and_added_variables(self):

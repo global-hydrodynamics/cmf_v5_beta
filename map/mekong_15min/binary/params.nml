@@ -1,0 +1,16 @@
+! CaMa-Flood map geometry
+! params.nml
+
+&GRID
+  NX         = 80       ! Number of grid cells (east-west)
+  NY         = 120      ! Number of grid cells (north-south)
+  NLFP       = 10       ! Number of floodplain layers
+  RESOLUTION = 0.25 ! Grid resolution [degree]
+/
+
+&DOMAIN
+  WEST  = 90.0 ! Western edge [degree]
+  EAST  = 110.0 ! Eastern edge [degree]
+  SOUTH = 5.0 ! Southern edge [degree]
+  NORTH = 35.0 ! Northern edge [degree]
+/

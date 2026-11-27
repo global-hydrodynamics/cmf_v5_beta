@@ -8,14 +8,14 @@ repository; map products stay with the target map.
 
 ## Directory layout
 
-`params.toml` is the authoritative base-map geometry. Retain `params.txt` only
+`params.nml` is the authoritative base-map geometry. Retain `params.txt` only
 as a legacy compatibility copy where older consumers still require it.
 
 ```text
 map/<MAPNAME>/
   *.nc                         # standard NetCDF maps
   inpmat_<ROFFTAG>.nc
-  diminfo_<ROFFTAG>.txt        # paired text metadata
+  diminfo_<ROFFTAG>.nml        # paired text metadata
   params.txt
   <resolution>/*.nc            # high-resolution products and location.txt
   binary/*.bin, *.ctl          # optional legacy products
@@ -73,7 +73,7 @@ cd map/<MAPNAME>/script_format_conv
 
 `ROFFTAG` is set near the top of the INPMAT wrappers (default `test-1deg`);
 edit that setting to select another pair. For the default, source metadata is
-`diminfo_test-1deg.txt`. The NetCDF-side descriptor names the `.nc` product;
+`diminfo_test-1deg.nml`. The NetCDF-side descriptor names the `.nc` product;
 the Binary-side copy names the matching `.bin` product. Their dimensions and
 grid metadata remain paired with that format's file.
 
@@ -137,7 +137,7 @@ is not reproduced; conversion itself already writes to `<tag>/`.
 
 ## Sample maps and generic converters
 
-`script_params/s05-subbasin.sh` creates `subbsn-sample.nc` and
+The optional analysis example `script_params/a02-sample_subbasin.sh` creates `subbsn-sample.nc` and
 `subcol-sample.nc`; their NetCDF variables use the registered names `subbsn`
 and `subcol`. Use `s08-sample_nc2bin.sh` and `s18-sample_bin2nc.sh` for the
 two educational round-trip examples. They print the generic command syntax

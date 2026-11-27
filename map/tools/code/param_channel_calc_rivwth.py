@@ -10,6 +10,10 @@ from pathlib import Path
 import numpy as np
 
 from mod_map_io import Grid, output_root, parser, write_raster
+try:
+    from .map_metadata import read_diminfo_nml
+except ImportError:  # Direct execution from map-local Shell workflows.
+    from map_metadata import read_diminfo_nml
 
 
 def main():
@@ -19,9 +23,10 @@ def main():
         p.add_argument(name, type=np.float32)
     p.add_argument('--no-rivpar-netcdf', action='store_true', help='Do not write the supplementary rivpar.nc interface.')
     args = p.parse_args()
-    lines = args.diminfo.read_text().splitlines()
-    nx, ny = (int(lines[i].split()[0]) for i in (0, 1))
-    west, east, north, south = (np.float32(lines[i].split()[0]) for i in (7, 8, 9, 10))
+    info = read_diminfo_nml(args.diminfo)
+    nx, ny = info.nx, info.ny
+    west, east, north, south = (np.float32(info.west), np.float32(info.east),
+                                np.float32(info.north), np.float32(info.south))
     grid = Grid(nx, ny, 0, np.float32((east-west)/nx), west, east, south, north)
     valid = grid.raster(args.map_dir/'nextxy.bin', '<i4', 2)[0] != -9999
     discharge = grid.raster(args.map_dir/'outclm.bin')

@@ -1,0 +1,13 @@
+&diminfo
+    east = 110.0
+    inpmat_file = 'inpmat_test-1deg.nc'
+    inpn = 4
+    nlfp = 10
+    north = 35.0
+    nx = 80
+    nxin = 360
+    ny = 120
+    nyin = 180
+    south = 5.0
+    west = 90.0
+/

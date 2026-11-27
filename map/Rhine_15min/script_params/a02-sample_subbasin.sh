@@ -17,16 +17,16 @@ AREA_THRESHOLD2_KM2=5000  # Set empty for the single-stage segmentation.
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 
-cmf_check_init "Generate sample subbasin segmentation"
+cmf_check_init "Analyze sample subbasin segmentation"
 
 if [ -n "$AREA_THRESHOLD2_KM2" ]; then
 
-    cmf_check_step 1 1 "Segment the river network at the ${AREA_THRESHOLD1_KM2}/${AREA_THRESHOLD2_KM2} km2 thresholds"
+    cmf_check_step 1 1 "Analyze river-network segmentation at the ${AREA_THRESHOLD1_KM2}/${AREA_THRESHOLD2_KM2} km2 thresholds"
     "$PYTHON_CMD" "$CODE_DIR/analysis_subbasin.py" "$AREA_THRESHOLD1_KM2" \
         "$AREA_THRESHOLD2_KM2" ../subbsn-sample.nc ../subcol-sample.nc --map-dir ..
 else
 
-    cmf_check_step 1 1 "Segment the river network at the ${AREA_THRESHOLD1_KM2} km2 threshold"
+    cmf_check_step 1 1 "Analyze river-network segmentation at the ${AREA_THRESHOLD1_KM2} km2 threshold"
     "$PYTHON_CMD" "$CODE_DIR/analysis_subbasin.py" "$AREA_THRESHOLD1_KM2" \
         ../subbsn-sample.nc ../subcol-sample.nc --map-dir ..
 fi

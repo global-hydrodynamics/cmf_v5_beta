@@ -132,7 +132,7 @@ verified settings include `LKINE=.FALSE.` (Local Inertial routing),
 handling. It reads individual map NetCDF files under
 `map/mekong_15min/`, the 2000 annual runoff file
 `inp/repo-mek_1deg/runoff2000.nc`, and the existing
-`inpmat_repo-mek_1deg.bin` / `diminfo_repo-mek_1deg.txt` pair. Its forcing setup
+`inpmat_repo-mek_1deg.bin` / `diminfo_repo-mek_1deg.nml` pair. Its forcing setup
 uses `CROFFREQ="YEAR"`, `IFRQ_INP=24`, `CVNROF="runoff"`, and
 `DROFUNIT=86400000` for the sample's daily `mm day-1` values.
 

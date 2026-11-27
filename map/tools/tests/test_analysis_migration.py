@@ -260,16 +260,16 @@ class AnalysisMigrationTests(unittest.TestCase):
         for filename in MAP_NETCDF_FILES:
             shutil.copy2(SAMPLE / filename, map_dir / filename)
         for name in (
-            "s05-subbasin.sh", "get_river_point_info.sh", "calc_upbasin.sh",
-            "a01-sample_get_river_point_info.sh", "a02-sample_calc_upbasin.sh",
-            "a03-advanced_calc_upbasin.sh",
+            "a02-sample_subbasin.sh", "get_river_point_info.sh", "calc_upbasin.sh",
+            "a01-sample_get_river_point_info.sh", "a03-sample_calc_upbasin.sh",
+            "a04-advanced_calc_upbasin.sh",
         ):
             shutil.copy2(PARAM_SCRIPTS / name, params / name)
             (params / name).chmod(0o755)
             syntax = run(["sh", "-n", str(params / name)], self.root)
             self.assertEqual(syntax.returncode, 0, syntax.stderr)
 
-        result = run([str(params / "s05-subbasin.sh")], params)
+        result = run([str(params / "a02-sample_subbasin.sh")], params)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         for filename, variable_name in (("subbsn-sample.nc", "subbsn"), ("subcol-sample.nc", "subcol")):
             with netCDF4.Dataset(map_dir / filename) as dataset:
@@ -278,12 +278,13 @@ class AnalysisMigrationTests(unittest.TestCase):
                 self.assertEqual(dataset[variable_name].shape, (120, 80))
                 self.assertEqual(np.dtype(dataset[variable_name].dtype), np.dtype("int32"))
 
-        result = run([str(params / "a03-advanced_calc_upbasin.sh")], self.root)
+        result = run([str(params / "a04-advanced_calc_upbasin.sh")], self.root)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("Selected GRDC station: 2569002", result.stdout)
+        self.assertIn("GRDC station ID: 2569002", result.stdout)
         self.assertIn("IX=62, IY=93", result.stdout)
-        self.assertTrue((map_dir / "grdc_station_selection.txt").is_file())
-        self.assertTrue((map_dir / "grdc_river_info.txt").is_file())
+        self.assertIn("River-point information", result.stdout)
+        self.assertFalse((map_dir / "grdc_station_selection.txt").exists())
+        self.assertFalse((map_dir / "grdc_river_info.txt").exists())
         station_mask = map_dir / "upbasin-2569002.nc"
         self.assertTrue(station_mask.is_file())
         with netCDF4.Dataset(station_mask) as dataset:
@@ -302,7 +303,7 @@ class AnalysisMigrationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertTrue(custom_mask.is_file())
 
-        result = run([str(params / "a02-sample_calc_upbasin.sh")], params)
+        result = run([str(params / "a03-sample_calc_upbasin.sh")], params)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("Mekong sample map", result.stdout)
         sample_mask = params / "upbasin-sample.nc"
@@ -391,8 +392,8 @@ class AnalysisMigrationTests(unittest.TestCase):
 
     def test_mekong_sample_subbasin_wrapper_uses_stable_output_names(self) -> None:
         map_dir, params = self.make_map("sample-script")
-        script = params / "s05-subbasin.sh"
-        shutil.copy2(SAMPLE / "script_params" / "s05-subbasin.sh", script)
+        script = params / "a02-sample_subbasin.sh"
+        shutil.copy2(SAMPLE / "script_params" / "a02-sample_subbasin.sh", script)
         script.chmod(0o755)
         for filename in MAP_NETCDF_FILES:
             shutil.copy2(SAMPLE / filename, map_dir / filename)
@@ -403,7 +404,7 @@ class AnalysisMigrationTests(unittest.TestCase):
                 self.assertIn(variable_name, dataset.variables)
                 self.assertNotIn(f"{variable_name}-sample", dataset.variables)
                 self.assertEqual(dataset[variable_name].shape, (120, 80))
-        script.write_text(script.read_text().replace("AREA_THRESHOLD2_KM2=5000", "AREA_THRESHOLD2_KM2="))
+        script.write_text(script.read_text().replace("AREA_SMLBSN=5000", 'AREA_SMLBSN=""'))
         result = run([str(script)], params)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         with netCDF4.Dataset(map_dir / "subbsn-sample.nc") as dataset:
@@ -518,8 +519,8 @@ class AnalysisMigrationTests(unittest.TestCase):
 
     def test_missing_or_headerless_grdc_allocation_fails_clearly(self) -> None:
         map_dir, params = self.make_map("invalid-grdc")
-        script = params / "a03-advanced_calc_upbasin.sh"
-        shutil.copy2(PARAM_SCRIPTS / "a03-advanced_calc_upbasin.sh", script)
+        script = params / "a04-advanced_calc_upbasin.sh"
+        shutil.copy2(PARAM_SCRIPTS / "a04-advanced_calc_upbasin.sh", script)
         script.chmod(0o755)
         (map_dir / "GRDC_alloc.txt").write_text("ID lat lon\n", encoding="ascii")
         result = run([str(script)], self.root)
@@ -528,8 +529,8 @@ class AnalysisMigrationTests(unittest.TestCase):
 
     def test_grdc_selection_filters_invalid_rows_and_keeps_first_tie(self) -> None:
         map_dir, params = self.make_map("grdc-tie")
-        script = params / "a03-advanced_calc_upbasin.sh"
-        shutil.copy2(PARAM_SCRIPTS / "a03-advanced_calc_upbasin.sh", script)
+        script = params / "a04-advanced_calc_upbasin.sh"
+        shutil.copy2(PARAM_SCRIPTS / "a04-advanced_calc_upbasin.sh", script)
         script.chmod(0o755)
         for name in ("get_river_point_info.sh", "calc_upbasin.sh"):
             wrapper = params / name
@@ -546,16 +547,18 @@ class AnalysisMigrationTests(unittest.TestCase):
         (map_dir / "GRDC_alloc.txt").write_text(header + rows, encoding="ascii")
         result = run([str(script)], self.root)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        selection = (map_dir / "grdc_station_selection.txt").read_text(encoding="utf-8")
-        self.assertIn("first-tie", selection)
-        self.assertNotIn("second-tie", selection)
-        self.assertIn("\t62\t93", selection)
+        self.assertIn("GRDC station ID: first-tie", result.stdout)
+        self.assertNotIn("second-tie", result.stdout)
+        self.assertIn("IX=62, IY=93", result.stdout)
+        self.assertIn("River-point information", result.stdout)
+        self.assertFalse((map_dir / "grdc_station_selection.txt").exists())
+        self.assertFalse((map_dir / "grdc_river_info.txt").exists())
 
     def test_missing_grdc_allocation_fails_with_manual_next_step(self) -> None:
         map_dir, params = self.make_map("missing-grdc")
         (map_dir / "GRDC_alloc.txt").unlink()
-        script = params / "a03-advanced_calc_upbasin.sh"
-        shutil.copy2(PARAM_SCRIPTS / "a03-advanced_calc_upbasin.sh", script)
+        script = params / "a04-advanced_calc_upbasin.sh"
+        shutil.copy2(PARAM_SCRIPTS / "a04-advanced_calc_upbasin.sh", script)
         script.chmod(0o755)
         result = run([str(script)], self.root)
         self.assertNotEqual(result.returncode, 0)

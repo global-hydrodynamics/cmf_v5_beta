@@ -79,7 +79,7 @@
   "outputs": {
     "input_matrix": "map/Rhine_15min/inpmat_ERA5land_Rhine2021Jul.bin",
     "input_matrix_bytes": 460800,
-    "dimension_info": "map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.txt",
+    "dimension_info": "map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.nml",
     "dimension_info_bytes": 322,
     "dimension_info_contents_copied_to": "AI_survey_report/13_runoff_input_matrix.md",
     "input_matrix_ignored_by_git": true,
@@ -208,7 +208,7 @@
   "step14_handoff": {
     "files": [
       "map/Rhine_15min/inpmat_ERA5land_Rhine2021Jul.bin",
-      "map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.txt",
+      "map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.nml",
       "tutorial/tutorial11-event_evaluation/runoff_dataset.csv",
       "tutorial/tutorial11-event_evaluation/metadata/12_era5land_runoff.json"
     ],

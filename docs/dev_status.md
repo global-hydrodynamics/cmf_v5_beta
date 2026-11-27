@@ -1563,3 +1563,7 @@ exclusion of `_noedge` and `_grid` from variable names was preserved. Registry
 and sample validations plus five focused tests pass (VR-0247); tests requiring
 `netCDF4` or `pytest` were unavailable. No scientific values or map data were
 changed. Work remains uncommitted.
+
+### Current map metadata update — `diminfo.nml` (2026-11-27)
+
+The maintained v5 input-dimension descriptor is now `diminfo_<ROFFTAG>.nml` with one `&DIMINFO` Namelist group. Python reads/writes it through the shared `f90nml` interface; model initialization (`CDIMINFO`) and each input's independent `diminfo_file` use native Fortran Namelist readers. Current v5 producers and model configurations no longer generate or reference positional diminfo TXT. A safe explicit migrator verifies legacy files before optional removal. Twelve local descriptors were converted and compared exactly; eight obsolete files were removed after checking current v5 consumers, while four remain for ignored Global/Japan Binary legacy map-local scripts. See [DT-0210](../research/records/DT-0210.md) and [the metadata contract](../variable_table/map_metadata_spec.md#diminfo_rofftag-nml-simulation-dimension-information). Work remains uncommitted.

@@ -231,10 +231,13 @@ reader/writer boundary:
 - MPI partition/ordering and parallel task/output ownership; formatting must
   not change reductions, scheduling, shared state or numerical reproducibility.
 
-`diminfo_*.txt` is simulation dimension information for both model and input
-grids; `inpmat_*.bin` is their correspondence matrix. Metadata role, storage
-format and distribution role are separate concerns. Registry maintenance and
-maintainer-controlled fields remain governed by the root metadata policy.
+`diminfo_*.nml` is simulation dimension information for both model and input
+grids; `inpmat_*.nc` is their correspondence matrix (with optional Binary
+compatibility form). The descriptor is a native `&DIMINFO` Fortran Namelist,
+read and written by Python through `f90nml`; legacy positional TXT files use
+the explicit migration tool. Metadata role, storage format and distribution
+role are separate concerns. Registry maintenance and maintainer-controlled
+fields remain governed by the root metadata policy.
 
 ### Runoff inputs
 

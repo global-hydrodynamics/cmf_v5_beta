@@ -27,6 +27,7 @@ from analysis_upbasin import upstream_mask
 from mod_map_color import color_map
 import mod_map_io
 from mod_map_io import Grid, write_raster
+from map_metadata import read_diminfo_nml
 from param_channel_calc_outclm import local_runoff, route
 from param_mpi_set_region import assign_regions
 from region_combine_hires import translated
@@ -188,13 +189,15 @@ class FallbackParityTests(unittest.TestCase):
                 hires_binary.mkdir()
                 for path in (source/'1min').glob('*.bin'):
                     shutil.copy2(path, hires_binary/path.name)
-                args=['1min'];cwd=source
+                args=['1min'];python_args=args.copy();cwd=source
                 product='prmwat.bin'
                 if name=='param_inpmat_generate':
-                    args += ['1','-180','180','90','-90','NtoS','diminfo_trial.txt','inpmat_trial.bin'];product='inpmat_trial.bin'
+                    args += ['1','-180','180','90','-90','NtoS','diminfo_trial.txt','inpmat_trial.bin']
+                    python_args += ['1','-180','180','90','-90','NtoS','diminfo_trial.nml','inpmat_trial.bin']
+                    product='inpmat_trial.bin'
                 elif name=='region_default_inpmat':cwd=work;product='inpmat_test-1deg.bin'
                 a=subprocess.run([str(self.executables[name]),*args],cwd=cwd,capture_output=True,text=True)
-                b=subprocess.run([sys.executable,str(CODE/(name+'.py')),*args,'--map-format','binary','--map-dir',str(source),'--output-dir',str(out)],cwd=root,capture_output=True,text=True)
+                b=subprocess.run([sys.executable,str(CODE/(name+'.py')),*python_args,'--map-format','binary','--map-dir',str(source),'--output-dir',str(out)],cwd=root,capture_output=True,text=True)
                 self.assertEqual(a.returncode,0,a.stdout+a.stderr)
                 self.assertEqual(b.returncode,0,b.stdout+b.stderr)
                 reference=np.fromfile(source/product,dtype='<f4');actual=np.fromfile(out/product,dtype='<f4')
@@ -277,12 +280,16 @@ class FallbackParityTests(unittest.TestCase):
             shutil.copyfile(sample/'binary'/'params.txt',root/'params.txt')
             (root/'1min').symlink_to(sample/'1min')
             options=['1min','.5','-180','180','90','-90','StoN','diminfo_trial.txt','inpmat_trial.bin']
+            python_options=['1min','.5','-180','180','90','-90','StoN','diminfo_trial.nml','inpmat_trial.bin']
             a=subprocess.run([str(self.executables['param_inpmat_generate']),*options],cwd=root,capture_output=True,text=True)
-            b=subprocess.run([sys.executable,str(CODE/'param_inpmat_generate.py'),*options,'--map-format','binary','--map-dir',str(root),'--output-dir',str(out)],cwd=root,capture_output=True,text=True)
+            b=subprocess.run([sys.executable,str(CODE/'param_inpmat_generate.py'),*python_options,'--map-format','binary','--map-dir',str(root),'--output-dir',str(out)],cwd=root,capture_output=True,text=True)
             self.assertEqual(a.returncode,0,a.stdout+a.stderr)
             self.assertEqual(b.returncode,0,b.stdout+b.stderr)
             self.assertEqual((root/'inpmat_trial.bin').read_bytes(),(out/'inpmat_trial.bin').read_bytes())
-            self.assertEqual((root/'diminfo_trial.txt').read_bytes(),(out/'diminfo_trial.txt').read_bytes())
+            info = read_diminfo_nml(out/'diminfo_trial.nml')
+            self.assertEqual((info.nx, info.ny, info.nlfp, info.nxin, info.nyin, info.inpn),
+                             (80, 120, 10, 720, 360, 1))
+            self.assertEqual(info.inpmat_file, 'inpmat_trial.bin')
 
 
 if __name__=='__main__':unittest.main(verbosity=2)

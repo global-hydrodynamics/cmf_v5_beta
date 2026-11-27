@@ -31,7 +31,7 @@ class InputMatrixNamingTests(unittest.TestCase):
                 "#!/bin/sh\n"
                 "hires=$1; diminfo=$8; inpmat=$9\n"
                 "printf '%s\\n%s\\n%s\\n' \"$hires\" \"$diminfo\" \"$inpmat\" > ../called.args\n"
-                "printf '3\\n2\\n2\\n360\\n180\\n1\\n%s\\n-1.5\\n1.5\\n1\\n-1\\n' \"$inpmat\" > ../\"$diminfo\"\n"
+                "printf '&DIMINFO\\n NX=3, NY=2, NLFP=2, NXIN=360, NYIN=180, INPN=1,\\n INPMAT_FILE=\\\'%s\\\', WEST=-1.5, EAST=1.5, NORTH=1, SOUTH=-1\\n/\\n' \"$inpmat\" > ../\"$diminfo\"\n"
                 "printf x > ../\"$inpmat\"\n",
                 encoding="ascii",
             )
@@ -67,13 +67,13 @@ class InputMatrixNamingTests(unittest.TestCase):
                 input="\n", text=True, capture_output=True, check=False,
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertTrue((map_root / "diminfo_rainfall-025.txt").is_file(),
+            self.assertTrue((map_root / "diminfo_rainfall-025.nml").is_file(),
                             result.stdout + result.stderr)
             self.assertTrue((map_root / "inpmat_rainfall-025.nc").is_file())
-            self.assertEqual((map_root / "diminfo_rainfall-025.txt").read_text().splitlines()[6],
-                             "inpmat_rainfall-025.nc")
+            self.assertIn("inpmat_rainfall-025.nc",
+                          (map_root / "diminfo_rainfall-025.nml").read_text())
             self.assertEqual((map_root / "called.args").read_text().splitlines(), [
-                "15sec", "diminfo_rainfall-025.txt", "inpmat_rainfall-025.nc"
+                "15sec", "diminfo_rainfall-025.nml", "inpmat_rainfall-025.nc"
             ])
             self.assertIn("[STEP 1/1] Map river cells to the configured runoff grid", result.stdout)
             self.assertEqual(result.stdout.count("[SUCCESS]"), 1)

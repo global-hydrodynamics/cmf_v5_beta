@@ -12,6 +12,10 @@ from pathlib import Path
 import numpy as np
 
 from mod_map_io import Grid, output_root, parser, write_raster
+try:
+    from .map_metadata import read_diminfo_nml
+except ImportError:  # Direct execution from map-local Shell workflows.
+    from map_metadata import read_diminfo_nml
 
 
 def main():
@@ -19,7 +23,7 @@ def main():
     p.add_argument('river_depth',type=Path)
     p.add_argument('output',type=Path)
     p.add_argument('layers',type=int)
-    p.add_argument('diminfo',nargs='?',type=Path,default=Path('diminfo_test-1deg.txt'))
+    p.add_argument('diminfo',nargs='?',type=Path,default=Path('diminfo_test-1deg.nml'))
     p.add_argument(
         '--check-map',
         action='store_true',
@@ -28,8 +32,8 @@ def main():
     args = p.parse_args()
     if not 1 <= args.layers <= 10:
         p.error('BIFLAYER must be 1..10')
-    dims=[int(s.split()[0]) for s in args.diminfo.read_text().splitlines()[:2]]
-    grid=Grid(*dims,0,*[np.float32(0)]*5)
+    info = read_diminfo_nml(args.diminfo)
+    grid=Grid(info.nx, info.ny, 0, *[np.float32(0)]*5)
     grid.raster(args.map_dir/'nextxy.bin','<i4',2)
     depth=grid.raster(args.river_depth)
     basin=grid.raster(args.map_dir/'basin.bin','<i4')

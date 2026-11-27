@@ -10,7 +10,7 @@ MAPDIR="$CMF_BASE/map/mekong_15min"
 MAP_NC="$MAPDIR/netcdf"
 RUNOFF_DIR="$CMF_BASE/inp/repo-mek_1deg"
 INPMAT="$MAPDIR/inpmat_repo-mek_1deg.bin"
-DIMINFO="$MAPDIR/diminfo_repo-mek_1deg.txt"
+DIMINFO="$MAPDIR/diminfo_repo-mek_1deg.nml"
 OMP_NUM_THREADS=4
 DT=600
 YEAR=2000
@@ -56,8 +56,8 @@ if [ "$FORCE" -eq 1 ]; then
     rm -f "$RUNDIR"/o_outflw2000.nc "$RUNDIR"/o_rivdph2000.nc \
           "$RUNDIR"/o_sfcelv2000.nc "$RUNDIR"/o_fldfrc2000.nc \
           "$RUNDIR"/restart*.nc "$RUNDIR"/input_cmf*.nam \
-          "$RUNDIR"/console_2000.log "$RUNDIR"/log_CaMa*.txt \
-          "$RUNDIR"/run_time_2000.log "$RUNDIR"/MAIN_cmf "$RUNDIR"/mapdata.txt
+          "$RUNDIR"/console_2000.log "$RUNDIR"/log_CaMa*.nml \
+          "$RUNDIR"/run_time_2000.log "$RUNDIR"/MAIN_cmf "$RUNDIR"/mapdata.nml
 fi
 cp "$MODEL" "$RUNDIR/MAIN_cmf"
 cat > "$RUNDIR/input_cmf.nam" <<EOF
@@ -153,7 +153,7 @@ if [ "$STATUS" -ne 0 ]; then
     exit "$STATUS"
 fi
 cp "$RUNDIR/input_cmf.nam" "$RUNDIR/input_cmf_2000.nam"
-cp "$RUNDIR/log_CaMa.txt" "$RUNDIR/log_CaMa_2000.txt"
+cp "$RUNDIR/log_CaMa.nml" "$RUNDIR/log_CaMa_2000.nml"
 for var in outflw rivdph sfcelv fldfrc; do
     [ -s "$RUNDIR/o_${var}2000.nc" ] || { echo "[ERROR] Missing model output: $RUNDIR/o_${var}2000.nc" >&2; exit 1; }
 done

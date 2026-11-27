@@ -491,7 +491,7 @@ def write_netcdf(args: argparse.Namespace, rows: list[dict[str, str]], params: t
 def main() -> int:
     root = Path(__file__).resolve().parents[3]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--map-dir", type=Path, required=True, help="map directory containing params.toml or legacy params.txt")
+    parser.add_argument("--map-dir", type=Path, required=True, help="map directory containing params.nml or legacy params.txt")
     parser.add_argument("--input", type=Path, help="registered Binary map file")
     parser.add_argument("--reference-binary", help="exact registered base Binary filename whose full definition describes the input")
     parser.add_argument("--output", type=Path, help="destination NetCDF file")

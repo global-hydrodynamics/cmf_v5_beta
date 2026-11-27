@@ -9,6 +9,9 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / "map" / "tools" / "code"))
+from map_metadata import read_map_geometry
+
 PROGRAM = ROOT / "map" / "tools" / "code" / "region_cut_domain.py"
 
 
@@ -64,6 +67,8 @@ class OptionalRegionalMapTests(unittest.TestCase):
                     cwd=work, text=True, capture_output=True, check=False
                 )
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                geometry = read_map_geometry(regional)
+                self.assertEqual(geometry.values(), (2, 2, 2, 1.0, 1.0, 3.0, 1.0, 3.0))
                 if include_optional:
                     actual_catmpx = struct.unpack("<4i", (regional / "catmpx.bin").read_bytes())
                     actual_class = struct.unpack("<4i", (regional / "class.bin").read_bytes())

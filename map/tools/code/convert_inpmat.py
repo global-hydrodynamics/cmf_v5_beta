@@ -3,26 +3,37 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
 
 from mod_map_io import read_inpmat, write_inpmat
+try:
+    from .map_metadata import read_diminfo_nml, write_diminfo_nml
+except ImportError:  # Direct execution from map-local wrappers.
+    from map_metadata import read_diminfo_nml, write_diminfo_nml
 
 
 def read_diminfo(path: Path) -> tuple[dict[str, float | int], str]:
-    lines = path.read_text().splitlines()
-    if len(lines) < 11:
-        raise ValueError(f'{path}: expected the 11-line diminfo contract')
-    values = [line.split()[0] for line in lines[:6]]
-    names = ('nx', 'ny', 'nlfp', 'nxin', 'nyin', 'inpn')
-    metadata = dict(zip(names, map(int, values)))
-    metadata.update(zip(('west', 'east', 'north', 'south'), map(float, (lines[i].split()[0] for i in range(7, 11)))))
-    return metadata, lines[6].strip()
+    info = read_diminfo_nml(path)
+    metadata = {
+        'nx': info.nx, 'ny': info.ny, 'nlfp': info.nlfp,
+        'nxin': info.nxin, 'nyin': info.nyin, 'inpn': info.inpn,
+        'west': info.west, 'east': info.east, 'north': info.north, 'south': info.south,
+    }
+    return metadata, info.inpmat_file
 
 
 def convert(source: Path, destination: Path, diminfo: Path, direction: str) -> None:
-    metadata, _ = read_diminfo(diminfo)
+    info = read_diminfo_nml(diminfo)
+    metadata, paired_name = read_diminfo(diminfo)
+    if source.name != paired_name:
+        raise ValueError(f'{diminfo} describes {paired_name}, not {source.name}')
+    paired_info = replace(info, inpmat_file=destination.name)
+    descriptor_output = destination.parent / diminfo.name
+    if descriptor_output.exists() and read_diminfo_nml(descriptor_output) != paired_info:
+        raise ValueError(f'Conflicting paired metadata already exists: {descriptor_output}')
     nx, ny, slots = (metadata[key] for key in ('nx', 'ny', 'inpn'))
     if direction == 'binary-to-netcdf':
         raw = np.memmap(source, dtype='<i4', mode='r', shape=(3, slots, ny, nx))
@@ -38,6 +49,8 @@ def convert(source: Path, destination: Path, diminfo: Path, direction: str) -> N
             temporary.replace(destination)
         finally:
             temporary.unlink(missing_ok=True)
+    if not descriptor_output.exists():
+        write_diminfo_nml(descriptor_output, paired_info)
     print(f'Converted {direction}: {source} -> {destination}')
 
 

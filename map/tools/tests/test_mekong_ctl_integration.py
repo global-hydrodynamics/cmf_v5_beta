@@ -38,11 +38,11 @@ class MekongCtlWrapperIntegrationTests(unittest.TestCase):
             )
             shutil.copy2(ROOT / "map" / "tools" / "script_format_conv" / "s09-write_ctl.sh",
                          fixture / "script_format_conv" / "s09-write_ctl.sh")
-            for name in ("params.txt", "diminfo_test-1deg.txt"):
+            for name in ("params.txt", "diminfo_test-1deg.nml"):
                 shutil.copy2(SAMPLE / "binary" / name, fixture / "binary" / name)
             shutil.copy2(SAMPLE / "params.txt", fixture / "params.txt")
-            shutil.copy2(SAMPLE / "params.toml", fixture / "params.toml")
-            shutil.copy2(SAMPLE / "diminfo_test-1deg.txt", fixture / "diminfo_test-1deg.txt")
+            shutil.copy2(SAMPLE / "params.nml", fixture / "params.nml")
+            shutil.copy2(SAMPLE / "diminfo_test-1deg.nml", fixture / "diminfo_test-1deg.nml")
             shutil.copy2(SAMPLE / "1min" / "location.txt", fixture / "1min" / "location.txt")
             for path in (SAMPLE / "binary").glob("*.bin"):
                 shutil.copy2(path, fixture / "binary" / path.name)
@@ -78,7 +78,7 @@ class MekongCtlWrapperIntegrationTests(unittest.TestCase):
                  (1, 0, 0), (1, 0, 0), (1, 0, 0)],
                 process.stdout + process.stderr,
             )
-            self.assertIn("SKIP inpmat_repo-mek_1deg.bin: input matrix needs its paired dimension description", process.stdout)
+            self.assertIn("SKIP inpmat_repo-mek_1deg.bin: input matrix needs its paired diminfo_*.nml Namelist", process.stdout)
 
             for variant in ("subbsn-sample.bin", "subcol-sample.bin"):
                 self.assertIn(f"SKIP {variant}: not registered", process.stdout)

@@ -206,7 +206,7 @@ the external `cmf_v5_package_data/` root, never the local checkout's map copy.
 [high-resolution restoration tool](../map/tools/script_format_conv/README.md#restore-high-resolution-binary-working-files-s04)
 when legacy processing needs Binary. The package catalog excludes `binary/` by
 default. Input matrices are distributed as `inpmat_<ROFFTAG>.nc`, with their
-paired `diminfo_<ROFFTAG>.txt` retained at the map root.
+paired `diminfo_<ROFFTAG>.nml` retained at the map root.
 
 ### Visualization inputs and generation provenance
 

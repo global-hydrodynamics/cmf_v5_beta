@@ -30,7 +30,7 @@ cmf_check_init "Generate Mekong regional runoff input matrix"
 cmf_check_step 1 1 "Map river cells to the regional 1-degree runoff grid"
 "$PYTHON_CMD" "$CODE_DIR/param_inpmat_generate.py" "$HIRES_TAG" "$GRSIZEIN" \
     "$WESTIN" "$EASTIN" "$NORTHIN" "$SOUTHIN" "$OLAT" \
-    "diminfo_${ROFFTAG}.txt" "inpmat_${ROFFTAG}.bin" --map-dir .. --map-format binary
+    "diminfo_${ROFFTAG}.nml" "inpmat_${ROFFTAG}.bin" --map-dir .. --map-format binary
 
 cmf_check_success
 

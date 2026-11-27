@@ -1,7 +1,8 @@
 module inpmat_mod
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
     use PARKIND1, only: &
     &   JPRM, JPRB, JPIM, JPIB
-    use YOS_CMF_INPUT, only: LOGNAM, NX, NY, NLFP
+    use YOS_CMF_INPUT, only: LOGNAM, MODEL_NX => NX, MODEL_NY => NY, MODEL_NLFP => NLFP
     use funit_mod, only: INQUIRE_FID
     use YOS_CMF_MAP, only: &
     &   NSEQMAX, I1SEQX, I1SEQY
@@ -66,7 +67,7 @@ subroutine load_inpmat_files(obj, diminfo_file, inpmat_file)
     real(kind=JPRB) :: bounds(4)
 
     call read_inpmat_diminfo(diminfo_file, nx_dst, ny_dst, nlfp_dst, nxin, nyin, obj%inpn, bounds)
-    if (nx_dst /= NX .or. ny_dst /= NY .or. nlfp_dst /= NLFP) then
+    if (nx_dst /= MODEL_NX .or. ny_dst /= MODEL_NY .or. nlfp_dst /= MODEL_NLFP) then
         write(LOGNAM, '(a)') '[load_inpmat_files ERROR] destination shape mismatch'
         stop 1
     endif
@@ -80,12 +81,17 @@ subroutine load_inpmat_files(obj, diminfo_file, inpmat_file)
     call validate_inpmat(obj)
 end subroutine load_inpmat_files
 
-subroutine read_inpmat_diminfo(path, nx_dst, ny_dst, nlfp_dst, nxin, nyin, inpn, bounds)
+subroutine read_inpmat_diminfo(path, nx_dst, ny_dst, nlfp_dst, nxin_out, nyin_out, inpn_out, bounds)
     character(len=*), intent(in) :: path
-    integer(kind=JPIM), intent(out) :: nx_dst, ny_dst, nlfp_dst, nxin, nyin, inpn
+    integer(kind=JPIM), intent(out) :: nx_dst, ny_dst, nlfp_dst, nxin_out, nyin_out, inpn_out
     real(kind=JPRB), intent(out) :: bounds(4)
-    character(len=512) :: binary_name
+    integer(kind=JPIM) :: NX, NY, NLFP, NXIN, NYIN, INPN
+    real(kind=JPRB) :: WEST, EAST, NORTH, SOUTH
+    character(len=512) :: INPMAT_FILE
     integer :: unit, ios
+
+    namelist /DIMINFO/ NX, NY, NLFP, NXIN, NYIN, INPN, INPMAT_FILE, &
+        WEST, EAST, NORTH, SOUTH
 
     unit = INQUIRE_FID()
     open(unit, file=trim(path), form='formatted', status='old', action='read', iostat=ios)
@@ -93,27 +99,39 @@ subroutine read_inpmat_diminfo(path, nx_dst, ny_dst, nlfp_dst, nxin, nyin, inpn,
         write(LOGNAM, '(2a)') '[inpmat_mod/read_inpmat_diminfo ERROR] cannot open: ', trim(path)
         stop 1
     endif
-    read(unit, *, iostat=ios) nx_dst
-    if (ios == 0) read(unit, *, iostat=ios) ny_dst
-    if (ios == 0) read(unit, *, iostat=ios) nlfp_dst
-    if (ios == 0) read(unit, *, iostat=ios) nxin
-    if (ios == 0) read(unit, *, iostat=ios) nyin
-    if (ios == 0) read(unit, *, iostat=ios) inpn
-    ! The embedded name is descriptive; the caller supplies the binary path.
-    if (ios == 0) read(unit, '(a)', iostat=ios) binary_name
-    if (ios == 0) read(unit, *, iostat=ios) bounds(1)
-    if (ios == 0) read(unit, *, iostat=ios) bounds(2)
-    if (ios == 0) read(unit, *, iostat=ios) bounds(3)
-    if (ios == 0) read(unit, *, iostat=ios) bounds(4)
+    NX = -1
+    NY = -1
+    NLFP = -1
+    NXIN = -1
+    NYIN = -1
+    INPN = -1
+    INPMAT_FILE = ''
+    WEST = 1.0E30_JPRB
+    EAST = -1.0E30_JPRB
+    NORTH = -1.0E30_JPRB
+    SOUTH = 1.0E30_JPRB
+    read(unit, nml=DIMINFO, iostat=ios)
     close(unit)
     if (ios /= 0) then
-        write(LOGNAM, '(2a)') '[inpmat_mod/read_inpmat_diminfo ERROR] invalid file: ', trim(path)
+        write(LOGNAM, '(2a)') '[inpmat_mod/read_inpmat_diminfo ERROR] invalid DIMINFO Namelist: ', trim(path)
         stop 1
     endif
-    if (nx_dst < 1 .or. ny_dst < 1 .or. nlfp_dst < 1 .or. nxin < 1 .or. nyin < 1 .or. inpn < 1) then
-        write(LOGNAM, '(2a)') '[inpmat_mod/read_inpmat_diminfo ERROR] non-positive dimension: ', trim(path)
+    if (min(NX, NY, NLFP, NXIN, NYIN, INPN) < 1 .or. len_trim(INPMAT_FILE) == 0) then
+        write(LOGNAM, '(2a)') '[inpmat_mod/read_inpmat_diminfo ERROR] missing or non-positive field: ', trim(path)
         stop 1
     endif
+    if (.not. all(ieee_is_finite([WEST, EAST, NORTH, SOUTH])) .or. &
+        EAST <= WEST .or. NORTH <= SOUTH) then
+        write(LOGNAM, '(2a)') '[inpmat_mod/read_inpmat_diminfo ERROR] non-finite or invalid model-grid bounds: ', trim(path)
+        stop 1
+    endif
+    nx_dst = NX
+    ny_dst = NY
+    nlfp_dst = NLFP
+    nxin_out = NXIN
+    nyin_out = NYIN
+    inpn_out = INPN
+    bounds = [WEST, EAST, NORTH, SOUTH]
 end subroutine read_inpmat_diminfo
 
 
@@ -133,7 +151,7 @@ subroutine read_inpmat_file(path, inpx, inpy, inpa, inpn)
         write(LOGNAM, '(2a)') '[inpmat_mod/read_inpmat_file ERROR] cannot stat: ', trim(path)
         stop 1
     endif
-    expected_size = 3_JPIB * int(NX, JPIB) * int(NY, JPIB) * int(inpn, JPIB) * byte_recl
+    expected_size = 3_JPIB * int(MODEL_NX, JPIB) * int(MODEL_NY, JPIB) * int(inpn, JPIB) * byte_recl
     if (file_size /= expected_size) then
         write(LOGNAM, '(2a)') '[inpmat_mod/read_inpmat_file ERROR] incorrect file size: ', trim(path)
         write(LOGNAM, '(a,i0)') '    actual:   ', file_size
@@ -141,7 +159,8 @@ subroutine read_inpmat_file(path, inpx, inpy, inpa, inpn)
         stop 1
     endif
 
-    allocate(inpx(NX,NY,inpn), inpy(NX,NY,inpn), inpa(NX,NY,inpn), rinp(NX,NY,inpn))
+    allocate(inpx(MODEL_NX,MODEL_NY,inpn), inpy(MODEL_NX,MODEL_NY,inpn), &
+        inpa(MODEL_NX,MODEL_NY,inpn), rinp(MODEL_NX,MODEL_NY,inpn))
     unit = INQUIRE_FID()
     open(unit, file=trim(path), form='unformatted', access='stream', status='old', action='read', iostat=ios)
     if (ios /= 0) then

@@ -483,4 +483,4 @@ def write_highres_raster(path, values, dtype, bounds, chunk_rows=64):
 def _output_grid(path):
     if has_map_geometry(path.parent):
         return Grid.from_file(path.parent)
-    raise FileNotFoundError(f'{path}: NetCDF output grid requires params.toml or params.txt beside the output, or an explicit grid argument to write_raster')
+    raise FileNotFoundError(f'{path}: NetCDF output grid requires params.nml or params.txt beside the output, or an explicit grid argument to write_raster')

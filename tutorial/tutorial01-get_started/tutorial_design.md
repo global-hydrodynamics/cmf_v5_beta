@@ -60,7 +60,7 @@ cmf_v5_beta/
 ├── src_main/                        # v5 Fortran source and MAIN_cmf after build
 ├── map/mekong_15min/                # Bundled 80 x 120 river map
 │   ├── params.txt                   # Map dimensions, grid, and geographic bounds
-│   ├── diminfo_repo-mek_1deg.txt     # Runoff-grid dimensions and mapping metadata
+│   ├── diminfo_repo-mek_1deg.nml     # Runoff-grid dimensions and mapping metadata
 │   └── inpmat_repo-mek_1deg.bin     # Runoff-to-map input matrix
 ├── inp/repo-mek_1deg_bin/runoff/        # Bundled daily Binary runoff
 ├── gosh_test/                        # Developer GOSH workflows and operational checks
@@ -85,7 +85,7 @@ The repository also contains root setup scripts and shared tools; include them i
 
 - Map: `map/mekong_15min/`, Binary format, 80 × 120 cells, 0.25-degree grid, and 10 floodplain layers.
 - Runoff: `inp/repo-mek_1deg_bin/runoff/`, daily Binary `mm/day` records in monthly files named `Roff____YYYYMM.one`; the sample grid is 20 × 30.
-- Runoff-to-map files: `map/mekong_15min/diminfo_repo-mek_1deg.txt` and `inpmat_repo-mek_1deg.bin`, generated for this map/runoff grid pairing.
+- Runoff-to-map files: `map/mekong_15min/diminfo_repo-mek_1deg.nml` and `inpmat_repo-mek_1deg.bin`, generated for this map/runoff grid pairing.
 - Simulation: 2000-01-01 00:00 to 2000-02-10 00:00 exclusive (40 days), non-MPI, base timestep 3600 seconds, adaptive timestep and bifurcation enabled, reservoir operation disabled, one OpenMP thread.
 - Preserve the scientific and I/O settings of `gosh_test/mek01-default_run.sh`. The tutorial's complete standalone script changes only repository-relative context, output isolation under `tutorial/tutorial01-get_started/out/${PROJ}/`, the project name, and OpenMP thread count to one. The maintained `gosh_test/` script remains unchanged.
 - Define `PROJ="tutorial01-get_started"` using the established experiment-name convention. Construct `RUNDIR` as the Tutorial01 script directory's `out/${PROJ}/`. Generated executable copy, Namelist, logs, model outputs, CTLs, and Restart files all belong there.

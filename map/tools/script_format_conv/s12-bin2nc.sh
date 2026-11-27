@@ -31,7 +31,7 @@ BINARY_DIR="../binary"
 NETCDF_DIR=".."
 
 cmf_check_init "Convert selected base-map Binary files to NetCDF"
-[ -f ../params.toml ] || [ -f ../params.txt ] || { printf 'Map-root params.toml/params.txt is missing.\n' >&2; exit 1; }
+[ -f ../params.nml ] || [ -f ../params.txt ] || { printf 'Map-root params.nml/params.txt is missing.\n' >&2; exit 1; }
 [ -f "$LIST_FILE" ] || { printf 'Conversion list missing; run s11-list_bin.sh first.\n' >&2; exit 1; }
 
 FILE_COUNT=0

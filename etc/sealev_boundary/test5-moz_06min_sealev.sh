@@ -138,9 +138,9 @@ SHOURIN=0
 #*** 1f. river map & topography
 #FMAP="${BASE}/map/moz_06min"                 # map directory
 FMAP="${BASE}/etc/sealev_boundary/moz_06min"
-#CDIMINFO="${FMAP}/diminfo_test-1deg.txt"    # dimention information file
+#CDIMINFO="${FMAP}/diminfo_test-1deg.nml"    # dimention information file
 #CINPMAT=${FMAP}/inpmat_test-1deg.bin        # runoff input matrix for interporlation
-CDIMINFO="${FMAP}/diminfo_ERA5_ro_moz.txt" # dimention information file
+CDIMINFO="${FMAP}/diminfo_ERA5_ro_moz.nml" # dimention information file
 CINPMAT=${FMAP}/inpmat_ERA5_ro_moz.bin     # runoff input matrix for interporlation
 
 #----- for plain binary map input

@@ -11,6 +11,10 @@ from pathlib import Path
 import numpy as np
 
 from mod_map_io import Grid, output_root, parser, read_inpmat, write_raster
+try:
+    from .map_metadata import read_diminfo_nml
+except ImportError:  # Direct execution from map-local Shell workflows.
+    from map_metadata import read_diminfo_nml
 
 
 def local_runoff(nextx, area, source, matrix=None):
@@ -91,8 +95,8 @@ def main():
         p.error('--runoff-binary cannot be used with a NetCDF (.nc) input path')
     if not args.runoff_binary and args.runoff.suffix.lower() in {'.one', '.bin'}:
         p.error('Binary runoff input requires --runoff-binary')
-    lines = args.diminfo.read_text().splitlines()
-    nx, ny, nlfp, sx, sy, slots = (int(lines[i].split()[0]) for i in range(6))
+    info = read_diminfo_nml(args.diminfo)
+    nx, ny, nlfp, sx, sy, slots = info.nx, info.ny, info.nlfp, info.nxin, info.nyin, info.inpn
     grid = Grid(nx, ny, nlfp, *[np.float32(0)]*5)
     nextxy = grid.raster(args.map_dir/'nextxy.bin', '<i4', 2)
     area = grid.raster(args.map_dir/'ctmare.bin')
@@ -110,7 +114,7 @@ def main():
                 raise ValueError('Runoff dimensions do not match DIMINFO')
     matrix = None
     if not args.interp_near:
-        path = Path(lines[6].strip())
+        path = Path(info.inpmat_file)
         if not path.is_absolute():
             path = args.map_dir/path
         matrix = read_inpmat(path, nx, ny, slots)

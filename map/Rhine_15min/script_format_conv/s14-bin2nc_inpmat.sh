@@ -19,7 +19,7 @@ ROFFTAG="test-1deg"  # Select the paired Binary inpmat and diminfo files.
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 REGISTRY="$CMF_V50_ROOT/variable_table/map_variables.csv"
 SOURCE="../binary/inpmat_${ROFFTAG}.bin"
-DIMINFO="../binary/diminfo_${ROFFTAG}.txt"
+DIMINFO="../binary/diminfo_${ROFFTAG}.nml"
 OUTPUT="../inpmat_${ROFFTAG}.nc"
 
 cmf_check_init "Convert runoff input matrix to NetCDF"

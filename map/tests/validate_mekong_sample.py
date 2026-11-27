@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import fnmatch
 import struct
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -13,6 +14,8 @@ ROOT = Path(__file__).resolve().parents[2]
 MAP = ROOT / "map" / "mekong_15min"
 REGISTRY = ROOT / "variable_table" / "map_variables.csv"
 DTYPE_BYTES = {"int8": 1, "int16": 2, "int32": 4, "float32": 4}
+sys.path.insert(0, str(ROOT / "map" / "tools" / "code"))
+from map_metadata import read_diminfo_nml
 
 
 def read_map_dimensions() -> dict[str, int]:
@@ -23,11 +26,11 @@ def read_map_dimensions() -> dict[str, int]:
 
 def read_input_dimensions(path: Path) -> dict[str, int]:
     """Read runoff-grid dimensions and INPN from a v5 diminfo descriptor."""
-    lines = path.read_text().splitlines()
+    info = read_diminfo_nml(path)
     return {
-        "INPNX": int(lines[3].split()[0]),
-        "INPNY": int(lines[4].split()[0]),
-        "INPN": int(lines[5].split()[0]),
+        "INPNX": info.nxin,
+        "INPNY": info.nyin,
+        "INPN": info.inpn,
     }
 
 
@@ -88,7 +91,7 @@ def validate_registered_binary_size(
         product = 1
         for variable in variables:
             if variable == "INPN":
-                descriptor = map_root / path.name.replace("inpmat_", "diminfo_").replace(".bin", ".txt")
+                descriptor = map_root / path.name.replace("inpmat_", "diminfo_").replace(".bin", ".nml")
                 if not descriptor.is_file():
                     raise AssertionError(f"paired input descriptor missing: {descriptor.name}")
                 variable_size = read_input_dimensions(descriptor)["INPN"]
@@ -110,22 +113,22 @@ class MekongSampleTests(unittest.TestCase):
 
     def test_standard_runoff_pair_uses_diminfo_name_and_matching_geometry(self) -> None:
         dims = read_map_dimensions()
-        descriptor = MAP / "diminfo_test-1deg.txt"
-        lines = descriptor.read_text().splitlines()
+        descriptor = MAP / "diminfo_test-1deg.nml"
+        info = read_diminfo_nml(descriptor)
         input_dims = read_input_dimensions(descriptor)
 
         self.assertEqual(dims, {"NX": 80, "NY": 120, "NLFP": 10})
         self.assertEqual(input_dims, {"INPNX": 360, "INPNY": 180, "INPN": 4})
-        self.assertEqual([float(lines[i].split()[0]) for i in (7, 8, 9, 10)], [90.0, 110.0, 35.0, 5.0])
-        self.assertEqual(lines[6].strip(), "inpmat_test-1deg.nc")
-        self.assertGreater((MAP / lines[6].strip()).stat().st_size, 0)
+        self.assertEqual([info.west, info.east, info.north, info.south], [90.0, 110.0, 35.0, 5.0])
+        self.assertEqual(info.inpmat_file, "inpmat_test-1deg.nc")
+        self.assertGreater((MAP / info.inpmat_file).stat().st_size, 0)
 
     def test_era5land_registry_pair_uses_same_diminfo_convention(self) -> None:
         rows = registry_rows()
         descriptor_rows = [r for r in rows if r["category_id"] == "23" and r["name"] == "diminfo_<ROFFTAG>"]
         matrix_rows = [r for r in rows if r["category_id"] == "23" and r["filename"] == "inpmat_<ROFFTAG>.nc"]
         self.assertEqual(len(descriptor_rows), 1)
-        self.assertEqual(descriptor_rows[0]["filename"], "diminfo_<ROFFTAG>.txt")
+        self.assertEqual(descriptor_rows[0]["filename"], "diminfo_<ROFFTAG>.nml")
         self.assertEqual([r["name"] for r in matrix_rows], ["inpx", "inpy", "inpa"])
         self.assertEqual([r["dtype"] for r in matrix_rows], ["int32", "int32", "float32"])
         self.assertEqual([r["record_index"] for r in matrix_rows], ["1", "2", "3"])
@@ -137,8 +140,10 @@ class MekongSampleTests(unittest.TestCase):
         # Validate the layout in a temporary tiny model map; no real ERA5 matrix is claimed.
         with tempfile.TemporaryDirectory(prefix="cmf-era5-matrix-") as temporary:
             fixture = Path(temporary)
-            descriptor = fixture / "diminfo_test-runoff.txt"
-            descriptor.write_text("2\n3\n10\n3600\n1801\n1\ninpmat_test-runoff.bin\n-1\n1\n1.5\n-1.5\n")
+            from map_metadata import DimInfo, write_diminfo_nml
+            descriptor = fixture / "diminfo_test-runoff.nml"
+            write_diminfo_nml(descriptor, DimInfo(2, 3, 10, 3600, 1801, 1,
+                                                   "inpmat_test-runoff.bin", -1, 1, 1.5, -1.5))
             binary = fixture / "inpmat_test-runoff.bin"
             binary.write_bytes(bytes(2 * 3 * (4 + 4 + 4)))
             self.assertEqual(read_input_dimensions(descriptor), {"INPNX": 3600, "INPNY": 1801, "INPN": 1})
@@ -165,7 +170,7 @@ class MekongSampleTests(unittest.TestCase):
         required_base = {
             "nextxy.nc", "ctmare.nc", "elevtn.nc", "nxtdst.nc", "rivlen.nc", "fldhgt.nc",
             "basin.nc", "width.nc", "rivwth.nc", "rivhgt.nc", "rivman.nc",
-            "inpmat_test-1deg.nc", "diminfo_test-1deg.txt",
+            "inpmat_test-1deg.nc", "diminfo_test-1deg.nml",
         }
         actual_base = {path.name for path in MAP.iterdir() if path.is_file()}
         self.assertTrue(required_base <= actual_base, f"missing base-map products: {sorted(required_base - actual_base)}")
@@ -256,8 +261,8 @@ class MekongSampleTests(unittest.TestCase):
             with self.assertRaisesRegex(AssertionError, "registry size mismatch"):
                 validate_registered_binary_size(registered, rows, dims, sample_dir)
 
-    def test_required_text_metadata_files_exist(self) -> None:
-        for name in ("params.txt", "bifori.txt", "diminfo_test-1deg.txt"):
+    def test_required_metadata_files_exist(self) -> None:
+        for name in ("params.txt", "bifori.txt", "diminfo_test-1deg.nml"):
             with self.subTest(path=name):
                 self.assertTrue((MAP / name).is_file())
 

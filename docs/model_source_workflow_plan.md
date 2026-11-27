@@ -1,6 +1,6 @@
 # CaMa-Flood v5 model source and simulation workflow modernization
 
-> Current naming: simulation dimension descriptors are `diminfo_<TAG>.txt`, paired with `inpmat_<TAG>.bin`; historical milestone/inventory spellings below are preserved. See [the maintained metadata specification](../variable_table/map_metadata_spec.md#diminfo_rofftagtxt--simulation-dimension-information).
+> Current naming: simulation dimension descriptors are `diminfo_<TAG>.nml`, paired with `inpmat_<TAG>.bin`; historical milestone/inventory spellings below are preserved. See [the maintained metadata specification](../variable_table/map_metadata_spec.md#diminfo_rofftagtxt--simulation-dimension-information).
 
 > Migration note (2026-11-15): Historical branch names, v4 Issue/PR references and dated approvals below are preserved evidence, not current branch assignments. Current v5 development uses cmf_v5_beta/main, src_main/, config/, gosh_test/ and tools/; old root model/build/run files are under legacy/. See [current status](dev_status.md) and [the migration audit](migration_consistency_audit.md).
 
@@ -9,7 +9,7 @@
 Current repository forcing is `inp/repo-mek_1deg_bin/` (January–February 2000,
 monthly files containing daily records) and `inp/repo-mek_1deg/` (annual NetCDF,
 1979–2010). Both use the current `repo-mek_1deg` Input Matrix tag:
-`map/mekong_15min/diminfo_repo-mek_1deg.txt` and
+`map/mekong_15min/diminfo_repo-mek_1deg.nml` and
 `map/mekong_15min/inpmat_repo-mek_1deg.bin`. The pair was renamed from the old
 tag without changing the runoff grid or matrix values. Current workflows use
 the shared `src_main/MAIN_cmf` executable, with NetCDF enabled when required.

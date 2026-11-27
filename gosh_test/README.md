@@ -44,7 +44,7 @@ Both scripts keep their existing sample-rerun policy: they replace only their kn
 The river-network choices intentionally differ: mek01 uses
 `map/mekong_15min/nextxy_noedge.bin`, while mek02 uses
 `map/mekong_15min/nextxy.nc` (including boundary-affected networks).
-Both retain `INPMAT_TAG="repo-mek_1deg"`, `diminfo_repo-mek_1deg.txt` and
+Both retain `INPMAT_TAG="repo-mek_1deg"`, `diminfo_repo-mek_1deg.nml` and
 `inpmat_repo-mek_1deg.nc`: the repository runoff datasets `repo-mek_1deg_bin`
 and `repo-mek_1deg` use the same 20 × 30 regional grid and share this mapping.
 The former `test-mek_1deg` mapping pair was renamed without changing its values;

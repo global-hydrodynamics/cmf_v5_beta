@@ -14,7 +14,7 @@ PYTHON_CMD="python3"
 # User settings
 # ----------------------------------------------------------------------
 ROFFTAG="test-1deg"                         # Runoff grid identifier in the paired matrix filenames.
-DIMINFO="../diminfo_${ROFFTAG}.txt"         # Simulation and runoff grid dimensions.
+DIMINFO="../diminfo_${ROFFTAG}.nml"         # Simulation and runoff grid dimensions.
 CROFNC="$CMF_V50_ROOT/map/data/ELSE_GPCC_clm-1981-2010.nc"  # Annual-mean runoff [mm/s].
 # Source: Kim et al. (2009), https://doi.org/10.1029/2009GL039006
 

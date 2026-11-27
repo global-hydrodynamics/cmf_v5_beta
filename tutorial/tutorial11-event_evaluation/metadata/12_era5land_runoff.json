@@ -81,7 +81,7 @@
   "input_matrix_handoff": {
     "step11_map": "map/Rhine_15min/",
     "grid_tag": "ERA5land_global",
-    "existing_diminfo": "map/Rhine_15min/diminfo_ERA5land_global.txt",
+    "existing_diminfo": "map/Rhine_15min/diminfo_ERA5land_global.nml",
     "existing_input_matrix": "map/Rhine_15min/inpmat_ERA5land_global.bin",
     "step12_validation_status": "Not validated for this forcing in Step 12.",
     "next_step": "13 — Input Matrix Preparation and Validation",

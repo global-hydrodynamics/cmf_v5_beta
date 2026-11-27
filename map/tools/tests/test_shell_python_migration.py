@@ -19,8 +19,8 @@ class PythonShellMigrationTests(unittest.TestCase):
         folders = ("script_params", "script_region", "script_format_conv")
         wrappers = [script for folder in folders for script in (TOOLS / folder).glob("*.sh")
                     if script.name not in {"a01-sample_get_river_point_info.sh",
-                                           "a02-sample_calc_upbasin.sh",
-                                           "a03-advanced_calc_upbasin.sh"}
+                                           "a03-sample_calc_upbasin.sh",
+                                           "a04-advanced_calc_upbasin.sh"}
                     and not script.name.endswith("write_ctl.sh")
                     and "sample" not in script.name]
         self.assertTrue(wrappers)
@@ -78,7 +78,7 @@ class PythonShellMigrationTests(unittest.TestCase):
             root = Path(temporary)
             script_dir = root / "map" / "mekong_15min" / "script_params"
             script_dir.mkdir(parents=True)
-            for name in ("calc_upbasin.sh", "a02-sample_calc_upbasin.sh"):
+            for name in ("calc_upbasin.sh", "a03-sample_calc_upbasin.sh"):
                 shutil.copy2(TOOLS / "script_params" / name, script_dir / name)
 
             fake_bin = root / "bin"
@@ -125,7 +125,7 @@ class PythonShellMigrationTests(unittest.TestCase):
             self.assertFalse(capture.exists())
 
             before = set(script_dir.iterdir())
-            result = subprocess.run([str(script_dir / "a02-sample_calc_upbasin.sh")],
+            result = subprocess.run([str(script_dir / "a03-sample_calc_upbasin.sh")],
                                     cwd=script_dir, env=env, text=True, capture_output=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("One-based CaMa-Flood grid indices", result.stdout)
@@ -143,7 +143,7 @@ class PythonShellMigrationTests(unittest.TestCase):
             map_root = root / "map" / "mekong_15min"
             script_dir = map_root / "script_params"
             script_dir.mkdir(parents=True)
-            for name in ("get_river_point_info.sh", "calc_upbasin.sh", "a03-advanced_calc_upbasin.sh"):
+            for name in ("get_river_point_info.sh", "calc_upbasin.sh", "a04-advanced_calc_upbasin.sh"):
                 shutil.copy2(PARAM_SCRIPTS / name, script_dir / name)
                 (script_dir / name).chmod(0o755)
 
@@ -168,13 +168,15 @@ class PythonShellMigrationTests(unittest.TestCase):
             capture = root / "arguments.txt"
             env = dict(os.environ, CMF_V50_ROOT=str(ROOT), CAPTURE=str(capture),
                        PATH=f"{fake_bin}:{os.environ['PATH']}")
-            result = subprocess.run([str(script_dir / "a03-advanced_calc_upbasin.sh")],
+            result = subprocess.run([str(script_dir / "a04-advanced_calc_upbasin.sh")],
                                     cwd=root, env=env, text=True, capture_output=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            selection = (map_root / "grdc_station_selection.txt").read_text()
-            self.assertIn("winner", selection)
-            self.assertNotIn("tie-later", selection)
+            self.assertIn("GRDC station ID: winner", result.stdout)
+            self.assertNotIn("tie-later", result.stdout)
             self.assertIn("IX=62, IY=93", result.stdout)
+            self.assertIn("River-point information", result.stdout)
+            self.assertFalse((map_root / "grdc_station_selection.txt").exists())
+            self.assertFalse((map_root / "grdc_river_info.txt").exists())
             self.assertIn("../upbasin-winner.nc", capture.read_text())
             self.assertTrue((map_root / "upbasin-winner.nc").is_file())
 

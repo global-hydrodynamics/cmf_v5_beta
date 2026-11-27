@@ -130,8 +130,11 @@ def prepare(case, *, index=1, count=4, dim='member', explicit=None, order=None,
     if old_count and not binary:
         nml += "&input_shape item='TEST', nx=3, ny=2, nz=4 /\n"
     if mapped:
-        nml = nml.replace('is_catm=.true.', "diminfo_file='mapping.info', inpmat_file='mapping.bin'")
-        (case / 'mapping.info').write_text('3\n2\n1\n3\n2\n2\nmapping.bin\n0\n3\n2\n0\n')
+        nml = nml.replace('is_catm=.true.', "diminfo_file='mapping.nml', inpmat_file='mapping.bin'")
+        (case / 'mapping.nml').write_text(
+            "&DIMINFO\n NX=3, NY=2, NLFP=1, NXIN=3, NYIN=2, INPN=2,\n"
+            " INPMAT_FILE='mapping.bin', WEST=0, EAST=3, NORTH=2, SOUTH=0\n/\n"
+        )
         x = np.array([[1, 2, 3, 1, 2, 3], [2, 0, 0, 0, 0, 0]], dtype='i4')
         y = np.array([[1, 1, 1, 2, 2, 2], [1, 0, 0, 0, 0, 0]], dtype='i4')
         weights = np.array([[1, 1, 1, 1, 1, 1], [3, 0, 0, 0, 0, 0]], dtype='f4')

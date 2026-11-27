@@ -110,13 +110,13 @@ trap 'exit 143' TERM
 RUNOFF_DIR="${CMF_BASE}/inp/${ROFFTAG}/runoff"
 
 # The dimension descriptor and matrix were generated for this map/runoff pair.
-DIMINFO="${MAPDIR}/diminfo_${INPMAT_TAG}.txt"
+DIMINFO="${MAPDIR}/diminfo_${INPMAT_TAG}.nml"
 INPMAT="${MAPDIR}/inpmat_${INPMAT_TAG}.nc"
 
 # Source executable; a copy is placed in RUNDIR and executed there.
 EXEC_CMF="${CMF_BASE}/src_main/MAIN_cmf"
 NAMELIST="${RUNDIR}/input_cmf.nam"
-MODEL_LOG="${RUNDIR}/log_CaMa.txt"
+MODEL_LOG="${RUNDIR}/log_CaMa.nml"
 CONSOLE_LOG="${RUNDIR}/run.stdout.log"
 RUN_TIME_LOG="${RUNDIR}/run_time.log"
 
@@ -130,8 +130,8 @@ printf 'Overwriting previous sample results in: %s\n' "${RUNDIR}"
 
 mkdir -p "${RUNDIR}"
 rm -f "${RUNDIR}/MAIN_cmf" \
-    "${RUNDIR}/input_cmf.nam" "${RUNDIR}/log_CaMa.txt" \
-    "${RUNDIR}/mapdata.txt" "${RUNDIR}/run.stdout.log" "${RUNDIR}/run_time.log"
+    "${RUNDIR}/input_cmf.nam" "${RUNDIR}/log_CaMa.nml" \
+    "${RUNDIR}/mapdata.nml" "${RUNDIR}/run.stdout.log" "${RUNDIR}/run_time.log"
 
 # Remove this sample's output variables, including old tags and the former pthflw output.
 rm -f "${RUNDIR}/outflw"* "${RUNDIR}/storge"* "${RUNDIR}/sfcelv"* \

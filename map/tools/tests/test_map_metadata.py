@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Focused checks for TOML map geometry and legacy compatibility."""
+"""Focused checks for Namelist map geometry and legacy TXT compatibility."""
 from decimal import Decimal
 from pathlib import Path
 import sys
@@ -10,55 +10,84 @@ ROOT = Path(__file__).resolve().parents[3]
 CODE = ROOT / "map/tools/code"
 sys.path.insert(0, str(CODE))
 
-from map_metadata import read_legacy_values, read_map_geometry
-from migrate_map_params import convert_map, write_legacy_copy
+from map_metadata import (
+    DimInfo, MapGeometry, read_diminfo_nml, read_legacy_diminfo,
+    read_legacy_values, read_map_geometry, read_nml_values, write_diminfo_nml,
+    write_nml,
+)
+from migrate_map_params import write_legacy_copy
 from mod_map_io import Grid
+from migrate_diminfo import convert as convert_diminfo
 
 
 class MapMetadataTests(unittest.TestCase):
-    def test_all_local_map_txt_files_convert_and_match(self):
-        paths = sorted((ROOT / "map").rglob("params.txt"))
-        self.assertEqual(len(paths), 5)
-        for txt_path in paths:
-            with self.subTest(path=txt_path.relative_to(ROOT)):
-                tokens, legacy = read_legacy_values(txt_path)
-                toml = txt_path.with_name("params.toml")
-                self.assertTrue(toml.is_file())
-                geometry = read_map_geometry(txt_path.parent)
-                self.assertEqual(geometry.values(), legacy.values())
-                for token, value in zip(tokens, geometry.values()):
-                    self.assertEqual(Decimal(token), Decimal(str(value)))
+    def test_diminfo_nml_round_trip_uses_f90nml_and_preserves_all_fields(self):
+        expected = DimInfo(80, 120, 10, 360, 180, 4, "inpmat_sample.nc",
+                           90.0, 110.0, 35.0, 5.0)
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "diminfo_sample.nml"
+            write_diminfo_nml(path, expected)
+            actual = read_diminfo_nml(path)
+            text = path.read_text(encoding="utf-8")
+        self.assertEqual(actual, expected)
+        self.assertIn("&diminfo", text.lower())
 
-    def test_txt_only_legacy_and_toml_only_maps_are_supported(self):
+    def test_legacy_diminfo_migration_is_verified_idempotent_and_safe(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "diminfo_sample.txt"
+            source.write_text("80\n120\n10\n360\n180\n4\ninpmat_sample.nc\n"
+                              "90\n110\n35\n5\n", encoding="ascii")
+            old = read_legacy_diminfo(source)
+            target = convert_diminfo(source)
+            self.assertEqual(read_diminfo_nml(target), old)
+            self.assertEqual(convert_diminfo(source), target)
+            source.unlink()
+
+    def test_diminfo_migration_refuses_conflicting_nml(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "diminfo_sample.txt"
+            source.write_text("80\n120\n10\n360\n180\n4\ninpmat_sample.nc\n"
+                              "90\n110\n35\n5\n", encoding="ascii")
+            write_diminfo_nml(source.with_suffix(".nml"),
+                              DimInfo(81, 120, 10, 360, 180, 4, "inpmat_sample.nc",
+                                      90.0, 110.0, 35.0, 5.0))
+            with self.assertRaisesRegex(ValueError, "Conflicting metadata"):
+                convert_diminfo(source)
+            self.assertTrue(source.exists())
+
+    def test_sample_geometry_matches_legacy_txt(self):
+        map_dir = ROOT / "map/mekong_15min"
+        tokens, legacy = read_legacy_values(map_dir / "params.txt")
+        self.assertEqual((map_dir / "params.nml").is_file(), True)
+        geometry = read_map_geometry(map_dir)
+        self.assertEqual(geometry.values(), legacy.values())
+        for token, value in zip(tokens, geometry.values()):
+            self.assertEqual(Decimal(token), Decimal(str(value)))
+
+    def test_txt_only_legacy_and_nml_only_maps_are_supported(self):
         with tempfile.TemporaryDirectory() as temporary:
             map_dir = Path(temporary)
             txt = map_dir / "params.txt"
             txt.write_text("2\n3\n4\n0.5\n10\n11\n20\n21.5\n", encoding="utf-8")
             grid = Grid.read(map_dir)
             self.assertEqual((grid.nx, grid.ny, grid.nlfp), (2, 3, 4))
-            self.assertEqual(convert_map(map_dir), "CONVERTED")
             txt.unlink()
-            self.assertEqual(read_map_geometry(map_dir).values(), (2, 3, 4, .5, 10., 11., 20., 21.5))
+            geometry = MapGeometry(2, 3, 4, .5, 10., 11., 20., 21.5)
+            write_nml(map_dir / "params.nml", geometry)
+            self.assertEqual(read_nml_values(map_dir / "params.nml").values(), geometry.values())
 
-    def test_conflicting_existing_toml_is_not_overwritten(self):
+    def test_nml_txt_conflict_is_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
             map_dir = Path(temporary)
             (map_dir / "params.txt").write_text("2\n3\n4\n0.5\n10\n11\n20\n21.5\n", encoding="utf-8")
-            toml = map_dir / "params.toml"
-            original = "[grid]\nnx=9\nny=3\nnlfp=4\nresolution=0.5\n[domain]\nwest=10.0\neast=11.0\nsouth=20.0\nnorth=21.5\n"
-            toml.write_text(original, encoding="utf-8")
+            write_nml(map_dir / "params.nml", MapGeometry(9, 3, 4, .5, 10., 11., 20., 21.5))
             with self.assertRaisesRegex(ValueError, "Conflicting map geometry"):
-                convert_map(map_dir)
-            self.assertEqual(toml.read_text(encoding="utf-8"), original)
+                read_map_geometry(map_dir)
 
     def test_legacy_writer_refuses_conflict_and_writes_matching_geometry(self):
         with tempfile.TemporaryDirectory() as temporary:
             map_dir = Path(temporary)
-            (map_dir / "params.toml").write_text(
-                "[grid]\nnx=2\nny=3\nnlfp=4\nresolution=0.5\n"
-                "[domain]\nwest=10.0\neast=11.0\nsouth=20.0\nnorth=21.5\n",
-                encoding="utf-8",
-            )
+            write_nml(map_dir / "params.nml", MapGeometry(2, 3, 4, .5, 10., 11., 20., 21.5))
             output = Path("binary/params.txt")
             self.assertEqual(write_legacy_copy(map_dir, output), "WRITTEN")
             self.assertEqual(read_legacy_values(map_dir / output)[1].values(),

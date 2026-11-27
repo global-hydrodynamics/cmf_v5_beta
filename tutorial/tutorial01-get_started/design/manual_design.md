@@ -60,6 +60,6 @@ results; learners perform the build themselves.
 
 ## Experiment facts that the manual may summarize
 
-The settings table should state: project `tutorial01-get_started`; map `map/mekong_15min`; runoff `inp/repo-mek_1deg_bin/runoff/`; mapping descriptor `diminfo_repo-mek_1deg.txt` and matrix `inpmat_repo-mek_1deg.bin`; 2000-01-01 00:00 through 2000-02-10 00:00 exclusive; `DT=3600` seconds with adaptive stepping; non-MPI and one OpenMP thread; daily Binary outputs `outflw`, `storge`, `sfcelv`, `flddph`, and `fldfrc`; project output under `tutorial/tutorial01-get_started/out/${PROJ}/`.
+The settings table should state: project `tutorial01-get_started`; map `map/mekong_15min`; runoff `inp/repo-mek_1deg_bin/runoff/`; mapping descriptor `diminfo_repo-mek_1deg.nml` and matrix `inpmat_repo-mek_1deg.bin`; 2000-01-01 00:00 through 2000-02-10 00:00 exclusive; `DT=3600` seconds with adaptive stepping; non-MPI and one OpenMP thread; daily Binary outputs `outflw`, `storge`, `sfcelv`, `flddph`, and `fldfrc`; project output under `tutorial/tutorial01-get_started/out/${PROJ}/`.
 
 The manual should not repeat the complete experiment specification, reproduce the whole shell script, introduce visualization or observational comparison, or claim that the simulated values are scientifically validated.

@@ -20,9 +20,9 @@ TAG="-sample"  # Output filename suffix; empty for subbsn.nc and subcol.nc.
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 
-cmf_check_init "Generate subbasin segmentation"
+cmf_check_init "Analyze sample subbasin segmentation"
 
-cmf_check_step 1 1 "Segment river network (primary threshold: ${AREA_SUBBSN} km2)"
+cmf_check_step 1 1 "Segment river network for analysis (primary threshold: ${AREA_SUBBSN} km2)"
 "$PYTHON_CMD" "$CODE_DIR/analysis_subbasin.py" \
     "$AREA_SUBBSN" ${AREA_SMLBSN:+"$AREA_SMLBSN"} \
     "../subbsn${TAG}.nc" "../subcol${TAG}.nc" --map-dir ..

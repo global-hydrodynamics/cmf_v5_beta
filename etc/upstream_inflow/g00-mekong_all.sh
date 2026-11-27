@@ -107,7 +107,7 @@ CPTHOUT="${FMAP}/bifprm.txt"                #   bifurcation channel list
 
 #============================
 #*** 1f. forcing setting
-CDIMINFO="${FMAP}/diminfo_test-1deg.txt"    # dimention information file
+CDIMINFO="${FMAP}/diminfo_test-1deg.nml"    # dimention information file
 CINPMAT=${FMAP}/inpmat_test-1deg.bin        # runoff input matrix for interporlation
 
 IFRQ_INP="24"                               # input forcing frequency: [1,2,3,...,24] hour

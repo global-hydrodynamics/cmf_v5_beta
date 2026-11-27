@@ -125,9 +125,9 @@ LROSPLIT=".FALSE."                          # .TRUE. for sub-surface runoff
 #============================
 #*** 1f. river map & topography
 FMAP="${BASE}/map/glb_15min"                # map directory
-CDIMINFO="${FMAP}/diminfo_test-1deg.txt"    # dimention information file
+CDIMINFO="${FMAP}/diminfo_test-1deg.nml"    # dimention information file
 CINPMAT=${FMAP}/inpmat_test-1deg.bin        # runoff input matrix for interporlation
-#CDIMINFO="${FMAP}/diminfo_test-15min_nc.txt" # dimention information file
+#CDIMINFO="${FMAP}/diminfo_test-15min_nc.nml" # dimention information file
 #CINPMAT=${FMAP}/inpmat_test-15min_nc.bin     # runoff input matrix for interporlation
 
 #----- for plain binary map input

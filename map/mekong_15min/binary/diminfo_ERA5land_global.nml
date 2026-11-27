@@ -1,0 +1,13 @@
+&diminfo
+    east = 110.0
+    inpmat_file = 'inpmat_ERA5land_global.nc'
+    inpn = 31
+    nlfp = 10
+    north = 35.0
+    nx = 80
+    nxin = 3600
+    ny = 120
+    nyin = 1801
+    south = 5.0
+    west = 90.0
+/

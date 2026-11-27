@@ -11,9 +11,9 @@ from pathlib import Path
 import numpy as np
 
 try:
-    from .map_metadata import MapGeometry, read_map_geometry, write_toml
+    from .map_metadata import MapGeometry, read_map_geometry, write_nml
 except ImportError:  # Direct execution from the map-local Shell workflows.
-    from map_metadata import MapGeometry, read_map_geometry, write_toml
+    from map_metadata import MapGeometry, read_map_geometry, write_nml
 from mod_map_io import Grid, output_root, parser, write_raster
 
 
@@ -89,7 +89,7 @@ def main():
         raise ValueError('Regional crop outside source dimensions')
     out = output_root(args)
     out.mkdir(parents=True, exist_ok=True)
-    write_toml(out/'params.toml', MapGeometry(mx, my, nlfp, size, west, east, south, north))
+    write_nml(out/'params.nml', MapGeometry(mx, my, nlfp, size, west, east, south, north))
     with args.change_info.open('w') as stream:
         stream.write(str(source.resolve())+'/\n')
         for value in (nx, ny, size, sw, se, ss, sn):

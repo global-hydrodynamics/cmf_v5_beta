@@ -1,6 +1,6 @@
 # CaMa-Flood v5 Runoff Input Data Tools: Phase A Inventory
 
-> Current naming: simulation dimension descriptors are `diminfo_<TAG>.txt`, paired with `inpmat_<TAG>.bin`; historical milestone/inventory spellings below are preserved. See [the maintained metadata specification](../variable_table/map_metadata_spec.md#diminfo_rofftagtxt--simulation-dimension-information).
+> Current naming: simulation dimension descriptors are `diminfo_<TAG>.nml`, paired with `inpmat_<TAG>.bin`; historical milestone/inventory spellings below are preserved. See [the maintained metadata specification](../variable_table/map_metadata_spec.md#diminfo_rofftagtxt--simulation-dimension-information).
 
 > Current workflow: [ERA5-Land NetCDF tools](../inp/download_ERA5-Land/README.md). The former `ERA5-Land_download/` tool layout and Binary conversion below describe historical inventory evidence; Binary conversion is retired, and current data live in dataset directories under `inp/`.
 

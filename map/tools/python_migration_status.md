@@ -89,7 +89,7 @@ choose a new destination when rerunning. Console banners/spacing can differ.
 python3 map/tools/code/analysis_upbasin.py 62 93 \
   --map-dir map/mekong_15min --output-dir /tmp/cmf-python-upbasin
 python3 map/tools/code/param_inpmat_generate.py \
-  1min 1 -180 180 90 -90 NtoS diminfo_trial.txt inpmat_trial.bin \
+  1min 1 -180 180 90 -90 NtoS diminfo_trial.nml inpmat_trial.nc \
   --map-dir map/mekong_15min --output-dir /tmp/cmf-python-inpmat
 ```
 

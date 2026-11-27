@@ -207,7 +207,7 @@ ELAPSED_SECONDS=$(($(date +%s) - START_SECONDS))
 if [ "$RUN_STATUS" -ne 0 ]; then
     STEP="Run the Rhine 2021 simulation"
     printf '[ERROR] CaMa-Flood failed; inspect %s and %s\n' \
-        "$CONSOLE_LOG" "${RUNDIR}/log_CaMa.txt" >&2
+        "$CONSOLE_LOG" "${RUNDIR}/log_CaMa.nml" >&2
     exit "$RUN_STATUS"
 fi
 
@@ -217,6 +217,6 @@ printf '==================================================\n\n'
 printf '[SUCCESS] %s completed\n' "$SCRIPT_NAME"
 printf 'Results: %s\n' "$RUNDIR"
 printf 'Namelist: %s\n' "$NAMELIST"
-printf 'Model log: %s\n' "${RUNDIR}/log_CaMa.txt"
+printf 'Model log: %s\n' "${RUNDIR}/log_CaMa.nml"
 printf 'Console log: %s\n' "$CONSOLE_LOG"
 printf 'Runtime log: %s\n' "$RUNTIME_LOG"

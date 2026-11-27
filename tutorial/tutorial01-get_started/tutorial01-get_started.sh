@@ -115,7 +115,7 @@ trap 'exit 143' TERM
 RUNOFF_DIR="${CMF_BASE}/inp/${ROFFTAG}/runoff"
 
 # The dimension descriptor and matrix were generated for this map/runoff pair.
-DIMINFO="${MAPDIR}/diminfo_${INPMAT_TAG}.txt"
+DIMINFO="${MAPDIR}/diminfo_${INPMAT_TAG}.nml"
 INPMAT="${MAPDIR}/inpmat_${INPMAT_TAG}.nc"
 
 # Source executable; a copy is placed in RUNDIR and executed there.

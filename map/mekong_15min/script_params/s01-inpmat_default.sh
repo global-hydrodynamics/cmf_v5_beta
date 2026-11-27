@@ -30,7 +30,7 @@ HIRES_TAG=$(cmf_select_hires_tag "$HIRES_TAG")  # Select high-res map (e.g., 1mi
 cmf_check_step 1 1 "Map river cells to the configured runoff grid"
 "$PYTHON_CMD" "$CODE_DIR/param_inpmat_generate.py" "$HIRES_TAG" "$GRSIZEIN" \
     "$WESTIN" "$EASTIN" "$NORTHIN" "$SOUTHIN" "$OLAT" \
-    "diminfo_${ROFFTAG}.txt" "inpmat_${ROFFTAG}.nc" --map-dir ..
+    "diminfo_${ROFFTAG}.nml" "inpmat_${ROFFTAG}.nc" --map-dir ..
 
 cmf_check_success
 

@@ -33,10 +33,7 @@ class ChannelParamsWrapperTests(unittest.TestCase):
         for name in ("params.txt", "nextxy.bin", "ctmare.bin", "width.bin",
                      "inpmat_test-1deg.bin"):
             (self.map_root / name).write_bytes(b"input")
-        (self.map_root / "diminfo_test-1deg.txt").write_text(
-            "80\n120\n10\n360\n180\n4\ninpmat_test-1deg.bin\n"
-            "90\n110\n35\n5\n", encoding="ascii"
-        )
+        (self.map_root / "diminfo_test-1deg.nml").write_text("fixture", encoding="ascii")
         self.calls = self.root / "calls.txt"
         for name, outputs in (
             ("param_channel_calc_outclm", ("outclm.nc",)),
@@ -73,12 +70,12 @@ class ChannelParamsWrapperTests(unittest.TestCase):
             "param_channel_calc_outclm.py", "param_channel_calc_rivwth.py",
             "param_channel_set_merit_width.py",
         ])
-        self.assertEqual(records[0][2:], ["../diminfo_test-1deg.txt",
+        self.assertEqual(records[0][2:], ["../diminfo_test-1deg.nml",
                                           str(self.root / "map" / "data" / "ELSE_GPCC_clm-1981-2010.nc"),
                                           "--map-dir", "..", ""])
-        self.assertEqual(records[1][2:], ["../diminfo_test-1deg.txt", "0.1", "0.50", "0.00", "1.0",
+        self.assertEqual(records[1][2:], ["../diminfo_test-1deg.nml", "0.1", "0.50", "0.00", "1.0",
                                           "2.50", "0.60", "0.00", "5.0", "--map-dir", "..", ""])
-        self.assertEqual(records[2][2:], ["../diminfo_test-1deg.txt", "--map-dir", "..", ""])
+        self.assertEqual(records[2][2:], ["../diminfo_test-1deg.nml", "--map-dir", "..", ""])
         wrapper_text = self.script.read_text()
         self.assertIn('PYTHON_CMD="python3"', wrapper_text)
         self.assertIn('# CaMa-Flood general setting (check CMF root, import shell error checker)', wrapper_text)

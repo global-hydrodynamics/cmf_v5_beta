@@ -14,8 +14,9 @@ In `map_variables.csv`, the `filename` column names the standard NetCDF product
 for raster records (`.nc`). Binary compatibility filenames are derived by
 changing `.nc` to `.bin` and placing the result under `binary/`; the Binary
 record order and metadata remain unchanged. Text metadata keeps its actual
-`.txt` filename. Input matrices use one generic registry definition:
-`diminfo_<ROFFTAG>.txt` and `inpmat_<ROFFTAG>.nc`. This template also covers
+actual filename and format, including Fortran Namelist files. Input matrices
+use one generic registry definition:
+`diminfo_<ROFFTAG>.nml` and `inpmat_<ROFFTAG>.nc`. This template also covers
 the existing Mekong `test-1deg` map configuration without a tag-specific
 registry row. Conversion wrappers derive `binary/inpmat_<ROFFTAG>.bin` without
 changing the three-record `inpx`, `inpy`, `inpa` layout.
@@ -24,7 +25,7 @@ For `output_variables.csv`, `alias_of` is the authoritative relationship between
 
 ## Current input-grid examples
 
-Input matrices use `diminfo_<ROFFTAG>.txt` and
+Input matrices use `diminfo_<ROFFTAG>.nml` and
 `inpmat_<ROFFTAG>.nc`; the existing `test-1deg` map pair is an instance of
 this generic convention, not a separate registry definition. The configurable
 example is `ERA5land_global`, matching `script_params/s01-inpmat_default.sh`

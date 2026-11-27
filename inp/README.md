@@ -18,7 +18,7 @@ cells, longitude centers −179.5…179.5° and latitude centers 89.5…−89.5�
 - `map/data/ELSE_GPCC_clm-1981-2010.one`: annual-mean runoff climatology,
   `mm/s`, for mean discharge and channel-parameter estimation.
 
-Each CaMa-Flood model map needs its own `diminfo_test-1deg.txt` and
+Each CaMa-Flood model map needs its own `diminfo_test-1deg.nml` and
 `inpmat_test-1deg.bin`; matching tags do not make matrices interchangeable
 between model maps. The tag is independent of period, units and file format;
 keep the corresponding unit conversion appropriate to each input. See the
@@ -119,9 +119,9 @@ NetCDF coordinates. No ERA5-Land matrix is generated or model-tested by this
 settings update. Global-map matrix data are intended for the external
 `cmf_v5_package_data/map/glb_15min/` store, which is unchanged here.
 
-Copy the workflow into the target map's `script_params/` directory, edit the settings, then run it there (or invoke the copied script by path). It writes `diminfo_<ROFFTAG>.txt` and `inpmat_<ROFFTAG>.bin` in the map root. Set `CINPMAT` in the simulation's `NFORCE` group to the map-root path for `inpmat_<ROFFTAG>.bin`. Keep the dataset's actual coordinates and longitude convention consistent between the forcing file and matrix; the model does not compare NetCDF coordinate values against the matrix.
+Copy the workflow into the target map's `script_params/` directory, edit the settings, then run it there (or invoke the copied script by path). It writes `diminfo_<ROFFTAG>.nml` and `inpmat_<ROFFTAG>.bin` in the map root. Set `CINPMAT` in the simulation's `NFORCE` group to the map-root path for `inpmat_<ROFFTAG>.bin`. Keep the dataset's actual coordinates and longitude convention consistent between the forcing file and matrix; the model does not compare NetCDF coordinate values against the matrix.
 
-The generated pair is linked: set `CDIMINFO` in `NDIMTIME` to `diminfo_<ROFFTAG>.txt` and `CINPMAT` in `NFORCE` to `inpmat_<ROFFTAG>.bin`. The descriptor supplies the map/input dimensions and geographic bounds used with the matrix. Both files are map-specific and must be regenerated for another target map. See the [Map Tools guide](../map/tools/README.md) and [parameter workflow guide](../map/tools/script_params/README.md) for build and map-local setup details. If you optionally add a registry row, check its CSV structure and grid arithmetic with the standard-library-only checker:
+The generated pair is linked: set `CDIMINFO` in `NDIMTIME` to `diminfo_<ROFFTAG>.nml` and `CINPMAT` in `NFORCE` to `inpmat_<ROFFTAG>.bin`. The descriptor supplies the map/input dimensions and geographic bounds used with the matrix. Both files are map-specific and must be regenerated for another target map. See the [Map Tools guide](../map/tools/README.md) and [parameter workflow guide](../map/tools/script_params/README.md) for build and map-local setup details. If you optionally add a registry row, check its CSV structure and grid arithmetic with the standard-library-only checker:
 
 ```sh
 python3 inp/tools/validate_runoff_datasets.py
@@ -217,7 +217,7 @@ For NetCDF `SEQ`, set `CROFCDF` to the file containing the series. When `SYEARIN
 
 | Setting | Group | Role |
 | --- | --- | --- |
-| `CDIMINFO` | `NDIMTIME` | Path to `diminfo_<ROFFTAG>.txt`, the map and input-grid dimensions/bounds for the matrix. |
+| `CDIMINFO` | `NDIMTIME` | Path to `diminfo_<ROFFTAG>.nml`, the map and input-grid dimensions/bounds for the matrix. |
 | `IFRQ_INP` | `NDIMTIME` | Runoff record interval in hours; independent of file grouping and units. |
 | `LINPCDF` | `NFORCE` | `.FALSE.` selects Binary; `.TRUE.` selects NetCDF and requires a NetCDF-enabled executable. |
 | `CROFFREQ` | `NFORCE` | Required: `DAY`, `MON`, `YEAR`, or advanced `SEQ`. |
@@ -234,7 +234,7 @@ For NetCDF `SEQ`, set `CROFCDF` to the file containing the series. When `SYEARIN
 
 ```text
 &NDIMTIME
-  CDIMINFO = "/data/map/diminfo_my-runoff.txt"
+  CDIMINFO = "/data/map/diminfo_my-runoff.nml"
   IFRQ_INP = 24
 /
 &NFORCE

@@ -21,7 +21,7 @@ ROFFTAG="repo-mek_1deg"     # Selects inp/repo-mek_1deg/ with one NetCDF file pe
 INPMAT_TAG="repo-mek_1deg"     # Selects the existing input matrix for the same 1-degree grid.
 
 # Map input files; LMAPCDF=.FALSE. reads individual NetCDF products by extension.
-MAPDIR="${CMF_BASE}/map/mekong_15min"  # Mekong river-map root containing params.txt and bifprm.csv.
+MAPDIR="${CMF_BASE}/map/mekong_15min"  # Mekong river-map root containing params.nml and bifprm.csv.
 MAP_NETCDF_DIR="${MAPDIR}"             # Standard individual NetCDF map products.
 NEXTXY="${MAP_NETCDF_DIR}/nextxy.nc"       # Includes boundary-affected river networks (mek02 default).
 #NEXTXY="${MAP_NETCDF_DIR}/nextxy_noedge.nc" # Excludes boundary-affected networks (mek01 uses this choice).
@@ -59,7 +59,7 @@ LRESTCDF=".TRUE."               # TRUE: NetCDF restart; FALSE: Binary restart.
 
 NAMELIST="${RUNDIR}/input_cmf.nam"
 RUNOFF_DIR="${CMF_BASE}/inp/${ROFFTAG}"
-DIMINFO="${MAPDIR}/diminfo_${INPMAT_TAG}.txt"
+DIMINFO="${MAPDIR}/diminfo_${INPMAT_TAG}.nml"
 INPMAT="${MAPDIR}/inpmat_${INPMAT_TAG}.nc"
 
 EXEC_CMF="${CMF_BASE}/src_main/MAIN_cmf"
@@ -87,8 +87,8 @@ done
 rm -f "$RUNDIR"/restart*.bin* \
       "$RUNDIR"/restart*.nc \
       "$RUNDIR"/input_cmf*.nam "$RUNDIR"/console_*.log \
-      "$RUNDIR"/log_CaMa*.txt "$RUNDIR"/run_time_*.log \
-      "$RUNDIR"/MAIN_cmf "$RUNDIR"/mapdata.txt \
+      "$RUNDIR"/log_CaMa*.nml "$RUNDIR"/run_time_*.log \
+      "$RUNDIR"/MAIN_cmf "$RUNDIR"/mapdata.nml \
       "$RUNDIR"/year*.complete "$RUNDIR"/signature_*.tmp \
       "$RUNDIR"/summary.tsv
 cp "$EXEC_CMF" "$RUNDIR/MAIN_cmf"
@@ -216,7 +216,7 @@ EOF
         exit "$RUN_STATUS"
     fi
 
-    cp "${RUNDIR}/log_CaMa.txt" "${RUNDIR}/log_CaMa_${YEAR}.txt"
+    cp "${RUNDIR}/log_CaMa.nml" "${RUNDIR}/log_CaMa_${YEAR}.nml"
     printf '[SUCCESS] Year %s completed.\n' "$YEAR"
     YEAR=$NEXT_YEAR
 done

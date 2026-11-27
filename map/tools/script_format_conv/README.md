@@ -10,15 +10,15 @@ with the target map.
 
 ## Directory layout
 
-`params.toml` is the authoritative base-map geometry. `params.txt` is retained
+`params.nml` is the authoritative base-map geometry. `params.txt` is retained
 only where a legacy consumer requires a compatibility copy.
 
 ```text
 map/<MAPNAME>/
   *.nc                         # standard NetCDF maps
   inpmat_<ROFFTAG>.nc
-  diminfo_<ROFFTAG>.txt        # paired text metadata
-  params.toml                 # authoritative base-map geometry
+  diminfo_<ROFFTAG>.nml        # paired Fortran Namelist metadata
+  params.nml                 # authoritative base-map geometry
   params.txt                  # legacy compatibility copy when required
   <resolution>/*.nc            # high-resolution products and location.txt
   binary/*.bin, *.ctl          # optional legacy products
@@ -36,8 +36,8 @@ The `filename` column in `variable_table/map_variables.csv` records standard
 NetCDF filenames for numerical map products. The conversion tools derive the
 optional Binary compatibility name by changing `.nc` to `.bin`; record order,
 types, dimensions, and special values remain governed by the same registry
-metadata. Text descriptors such as `diminfo_<ROFFTAG>.txt` retain their actual
-names. Input matrices use the category-23 generic name
+metadata. Non-raster metadata such as `diminfo_<ROFFTAG>.nml` retains its actual
+name. Input matrices use the category-23 generic name
 `inpmat_<ROFFTAG>.nc`, which also covers the existing `test-1deg` pair, with
 the corresponding Binary form under `binary/inpmat_<ROFFTAG>.bin`.
 
@@ -51,13 +51,13 @@ the corresponding Binary form under `binary/inpmat_<ROFFTAG>.bin`.
 | `s02-nc2bin.sh` | Standard map NetCDF → `binary/*.bin` |
 | `s03-nc2bin_highres.sh` | High-resolution NetCDF → `binary/<resolution>/*.bin` |
 | `s04-nc2bin_inpmat.sh` | `inpmat_<ROFFTAG>.nc` → `binary/inpmat_<ROFFTAG>.bin` |
-| `s08-sample_nc2bin.sh` | s05 sample NetCDF maps → `binary/*-sample.bin` |
+| `s08-sample_nc2bin.sh` | a02 analysis sample NetCDF maps → `binary/*-sample.bin` |
 | `s09-write_ctl.sh` | Generate registered CTLs beside Binary files |
 | `s11-list_bin.sh` | List registered Binary products for NetCDF migration |
 | `s12-bin2nc.sh` | Standard `binary/*.bin` → map-root NetCDF |
 | `s13-bin2nc_highres.sh` | High-resolution Binary → resolution-directory NetCDF |
 | `s14-bin2nc_inpmat.sh` | Binary INPMAT → `inpmat_<ROFFTAG>.nc` |
-| `s18-sample_bin2nc.sh` | `binary/*-sample.bin` → s05 sample NetCDF maps |
+| `s18-sample_bin2nc.sh` | `binary/*-sample.bin` → a02 analysis sample NetCDF maps |
 | `s21-nc2cog.sh` | NetCDF → `COG/` GeoTIFFs |
 
 Numbering groups reflect direction: `s0X` covers NetCDF-based operations and
@@ -90,7 +90,7 @@ cd map/<MAPNAME>/script_format_conv
 
 `ROFFTAG` is set near the top of the INPMAT wrappers (default `test-1deg`);
 edit that setting to select another pair. For the default, source metadata is
-`diminfo_test-1deg.txt`. The NetCDF-side descriptor names the `.nc` product;
+`diminfo_test-1deg.nml`. The NetCDF-side descriptor names the `.nc` product;
 the Binary-side copy names the matching `.bin` product. Their dimensions and
 grid metadata remain paired with that format's file.
 
@@ -98,9 +98,11 @@ Run the list script before its conversion script. The lists are editable and
 can be used to limit conversions. Existing outputs are replaced by default;
 `--no-overwrite` is available where supported by the individual wrapper.
 `s09-write_ctl.sh` generates a legacy `binary/params.txt` compatibility copy
-from root `params.toml` (or verifies the existing root TXT), copies high-resolution
-`location.txt` and missing diminfo files into `binary/`, and retains a format-specific INPMAT
-descriptor already present there.
+from root `params.nml` (or verifies the existing root TXT), copies high-resolution
+`location.txt` files, and uses the matching root or Binary `diminfo_*.nml` when
+generating INPMAT CTLs. Binary-side descriptors are created by the INPMAT
+converter for the converted matrix; other registered CTLs use the map-root
+descriptor as needed.
 
 ## High-resolution selection (s03 and s13)
 
@@ -153,9 +155,9 @@ t03 external wrapper is retired: no separate external converter or multi-map
 batch orchestrator is needed. Its redundant `<tag>_nc/location.txt` side copy
 is not reproduced; conversion itself already writes to `<tag>/`.
 
-## s05 sample map conversions
+## Subbasin sample map conversions
 
-`script_params/s05-subbasin.sh` creates `subbsn-sample.nc` and
+The optional analysis example `script_params/a02-sample_subbasin.sh` creates `subbsn-sample.nc` and
 `subcol-sample.nc`; their NetCDF variables use the registered names `subbsn`
 and `subcol`. Use `s08-sample_nc2bin.sh` and `s18-sample_bin2nc.sh` for the
 two educational round-trip examples. They print the generic command syntax
@@ -189,8 +191,8 @@ tiles, tables, metadata and incomplete/unsupported registry layouts remain
 with their dedicated workflows (`s04`/`s14`, `s03`/`s13`, or other tools).
 
 Older sample NetCDF files may contain filename-derived variables such as
-`subbsn-sample`. They are not modified in place; regenerate them with
-`script_params/s05-subbasin.sh` before using the generic conversion examples.
+`subbsn-sample`. They are not modified in place; regenerate them with the optional
+`script_params/a02-sample_subbasin.sh` analysis example before using the generic conversion examples.
 
 `t01-legacy_netcdf_map.sh` remains a separate legacy-container workflow;
 it is not a replacement for the numbered map conversion sequence. `s90-sample_netCDF_conversion.sh` remains as a deprecated

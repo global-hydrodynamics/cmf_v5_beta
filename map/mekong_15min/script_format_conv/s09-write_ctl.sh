@@ -19,15 +19,10 @@ PYTHON_CMD="python3"
 
 cmf_check_init "Write CTLs for registered Binary products"
 
-# Preserve map-root parameters, Binary-side diminfo files and high-resolution locations.
-[ -f ../params.toml ] || [ -f ../params.txt ] || { printf 'Map-root params.toml/params.txt is missing.\n' >&2; exit 1; }
+# Preserve map-root parameters and high-resolution locations.
+[ -f ../params.nml ] || [ -f ../params.txt ] || { printf 'Map-root params.nml/params.txt is missing.\n' >&2; exit 1; }
 mkdir -p ../binary
 "$PYTHON_CMD" "$CODE_DIR/migrate_map_params.py" --map-dir .. --write-legacy binary/params.txt
-for DIMINFO in ../diminfo_*.txt; do
-    [ -f "$DIMINFO" ] || continue
-    # Keep Binary-side descriptors paired with the converted Binary filenames.
-    [ -f "../binary/${DIMINFO##*/}" ] || cp "$DIMINFO" "../binary/${DIMINFO##*/}"
-done
 for SOURCE_LOCATION in ../*/location.txt; do
     [ -f "$SOURCE_LOCATION" ] || continue
     RESOLUTION_DIR=${SOURCE_LOCATION%/location.txt}

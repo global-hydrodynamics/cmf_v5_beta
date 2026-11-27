@@ -12,9 +12,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 try:
-    from .map_metadata import has_map_geometry, read_map_geometry
+    from .map_metadata import has_map_geometry, read_diminfo_nml, read_map_geometry
 except ImportError:  # Direct execution from the map-local Shell workflows.
-    from map_metadata import has_map_geometry, read_map_geometry
+    from map_metadata import has_map_geometry, read_diminfo_nml, read_map_geometry
 
 
 class CtlError(ValueError):
@@ -395,41 +395,38 @@ def expected_dimensions(row: dict[str, str], grid: Grid) -> bool:
 
 def read_input_matrix_descriptor(binary_path: Path, grid: Grid,
                                  registry_rows: list[dict[str, str]]) -> tuple[list[Variable], int, int | float, bool]:
-    """Read the companion text file written by region_default_inpmat.F90."""
+    """Read the paired native Namelist description for an input matrix."""
     stem = binary_path.stem
-    candidates = [binary_path.with_suffix(".txt")]
+    candidates = [binary_path.with_suffix(".nml")]
     if stem.startswith("inpmat_"):
         tag = stem[len("inpmat_") :]
-        candidates.append(binary_path.with_name(f"diminfo_{tag}.txt"))
+        candidates.append(binary_path.with_name(f"diminfo_{tag}.nml"))
+        candidates.append(binary_path.parent.parent / f"diminfo_{tag}.nml")
     descriptor = next((path for path in candidates if path.is_file()), None)
     if descriptor is None:
-        raise CtlError("input matrix needs its paired dimension description (.txt or diminfo_*.txt)")
+        raise CtlError("input matrix needs its paired diminfo_*.nml Namelist")
     try:
-        lines = [line.strip() for line in descriptor.read_text(encoding="utf-8").splitlines() if line.strip()]
-    except OSError as exc:
-        raise CtlError(f"Cannot read input-matrix description {descriptor}: {exc}") from exc
-    if len(lines) < 11:
-        raise CtlError(f"{descriptor} must contain 6 dimensions, binary filename, and 4 bounds")
-    try:
-        nxx, nyy, nlfp, nxin, nyin, inpn = [int(line.split()[0]) for line in lines[:6]]
-        west, east, north, south = [float(line.split()[0]) for line in lines[7:11]]
-    except (ValueError, IndexError) as exc:
-        raise CtlError(f"{descriptor} has invalid dimension records") from exc
-    if min(nxx, nyy, nlfp, nxin, nyin, inpn) < 1:
-        raise CtlError(f"{descriptor} dimensions must be positive")
-    if (nxx, nyy) != (grid.nx, grid.ny):
+        info = read_diminfo_nml(descriptor)
+    except (OSError, ValueError, RuntimeError) as exc:
+        raise CtlError(f"Cannot read input-matrix Namelist {descriptor}: {exc}") from exc
+    if (info.nx, info.ny) != (grid.nx, grid.ny):
         raise CtlValidationError(
-            f"input-matrix description grid {nxx}x{nyy} does not match params.txt {grid.nx}x{grid.ny}"
+            f"input-matrix description grid {info.nx}x{info.ny} does not match params.nml {grid.nx}x{grid.ny}"
         )
-    if Path(lines[6]).name != binary_path.name:
+    for name, actual, expected in (
+        ("WEST", info.west, grid.west), ("EAST", info.east, grid.east),
+        ("NORTH", info.north, grid.north), ("SOUTH", info.south, grid.south),
+    ):
+        if not math.isclose(actual, expected, rel_tol=1e-9, abs_tol=1e-9):
+            raise CtlValidationError(
+                f"input-matrix {name}={actual:g} does not match params.nml {name}={expected:g}"
+            )
+    if Path(info.inpmat_file).name != binary_path.name:
         raise CtlValidationError(
-            f"{descriptor} describes {Path(lines[6]).name}, not {binary_path.name}"
+            f"{descriptor} describes {Path(info.inpmat_file).name}, not {binary_path.name}"
         )
-    # The last four diminfo values describe the *input* runoff grid, not the
-    # model grid.  The model-grid dimensions are checked above; CTL coordinates
-    # continue to come from params.txt.
-    if east <= west or north <= south:
-        raise CtlValidationError(f"{descriptor} has invalid input-grid bounds")
+    # DIMINFO bounds describe the model grid and are checked by the shared
+    # reader; CTL coordinates continue to come from params.nml.
     expected_types = {"inpx": "int32", "inpy": "int32", "inpa": "float32"}
     expected_indices = {"inpx": 1, "inpy": 2, "inpa": 3}
     if len(registry_rows) != 3 or {(row.get("name") or "").strip() for row in registry_rows} != set(expected_types):
@@ -458,9 +455,9 @@ def read_input_matrix_descriptor(binary_path: Path, grid: Grid,
         sentinel, fallback = missing_sentinel(row, dtype)
         sentinels.add(sentinel)
         fallbacks.append(fallback)
-        description = (row.get("long_name") or "").strip() or f"{name} (INPN={inpn})"
+        description = (row.get("long_name") or "").strip() or f"{name} (INPN={info.inpn})"
         units = (row.get("units") or "").strip()
-        variables.append(Variable(name, inpn, dtype, description, units, index))
+        variables.append(Variable(name, info.inpn, dtype, description, units, index))
     if len(sentinels) != 1:
         raise CtlValidationError("input-matrix variables must use one shared missing-value sentinel")
     variables.sort(key=lambda variable: variable.record_index)
@@ -557,7 +554,7 @@ def generate_directory(map_dir: Path, registry_path: Path, *, dry_run: bool = Fa
     dataset_root = target
     if not location_path.is_file() and not has_params:
         for path in files:
-            print(f"SKIP {path.name}: target directory has neither params.toml/params.txt nor location.txt")
+            print(f"SKIP {path.name}: target directory has neither params.nml/params.txt nor location.txt")
             summary.skipped += 1
         return summary
     try:
@@ -567,7 +564,7 @@ def generate_directory(map_dir: Path, registry_path: Path, *, dry_run: bool = Fa
             areas = read_location(location_path)
             dataset_root = target.parent
         else:
-            raise CtlError("no params.toml, params.txt, or location.txt in target directory")
+            raise CtlError("no params.nml, params.txt, or location.txt in target directory")
     except CtlError as exc:
         for path in files:
             print(f"FAILED {path.name}: {exc}")

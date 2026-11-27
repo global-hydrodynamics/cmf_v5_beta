@@ -78,7 +78,7 @@
   "input_matrix": {
     "runoff_tag": "ERA5land_Rhine2021Jul",
     "matrix": "map/Rhine_15min/inpmat_ERA5land_Rhine2021Jul.bin",
-    "dimension_info": "map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.txt",
+    "dimension_info": "map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.nml",
     "input_grid_nx_ny": [
       111,
       91

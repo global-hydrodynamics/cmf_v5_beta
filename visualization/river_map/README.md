@@ -154,11 +154,11 @@ conversion nor map generation.
 
 ### Subbasin preparation and threshold meaning
 
-The reusable [s05 subbasin workflow](../../map/tools/script_params/s05-subbasin.sh)
+The reusable [a02 subbasin analysis example](../../map/tools/script_params/a02-sample_subbasin.sh)
 calls [`analysis_subbasin.F90`](../../map/tools/code/analysis_subbasin.F90).
-The [Mekong example](../../map/mekong_15min/script_params/s05-subbasin.sh) uses
-editable defaults `AREA_THRESHOLD1_KM2=30000` and `AREA_THRESHOLD2_KM2=5000`,
-and writes stable `subbsn-sample.bin` / `subcol-sample.nc` filenames. Stage 1
+The [Mekong example](../../map/mekong_15min/script_params/a02-sample_subbasin.sh) uses
+editable defaults `AREA_SUBBSN=30000` and `AREA_SMLBSN=5000`,
+and writes `subbsn-sample.nc` / `subcol-sample.nc` NetCDF products. Stage 1
 retains the existing large-area segmentation; Stage 2 only assigns additional
 IDs to previously unassigned river-network regions and preserves all positive
 Stage 1 IDs and boundaries. The Mekong sample retains 64 Stage 1 IDs, adds 49,

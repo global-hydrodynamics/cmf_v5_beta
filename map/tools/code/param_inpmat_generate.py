@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 # Parallel port of param_inpmat_generate.F90; original Fortran authors and license retained.
-"""Generate sparse runoff-to-catchment overlap weights from binary catmxy.
+"""Generate sparse runoff-to-catchment overlap weights from catmxy.
 
 Read geometry, visit high-resolution tiles and pixels in source order, and
-write the established diminfo and X/Y/area binary records. Areas accumulate
+write the established Namelist descriptor and X/Y/area matrix. Areas accumulate
 in float32 pixel order; integer slots retain first encounter order. No change
 to the current Fortran workflow is made by this independent implementation.
 """
@@ -11,6 +11,10 @@ from pathlib import Path
 
 import numpy as np
 
+try:
+    from .map_metadata import DimInfo, write_diminfo_nml
+except ImportError:  # Direct execution from the map-local Shell wrappers.
+    from map_metadata import DimInfo, write_diminfo_nml
 from mod_map_io import Grid, output_root, parser, read_array, write_inpmat
 
 
@@ -126,14 +130,11 @@ def generate(grid, source, out, size, west, east, north, south, order,
         descriptor_paths.add(out/diminfo)
     matrix_name = inpmat_path.name
     for descriptor in descriptor_paths:
-        with descriptor.open('w') as stream:
-            for value, label in zip([grid.nx, grid.ny, grid.nlfp, nxin, nyin, maximum],
-                                    ['nXX', 'nYY', 'floodplain layer', 'input nXX ', 'input nYY ', 'input num']):
-                stream.write(f'{value:10d}     !! {label}\n')
-            stream.write(matrix_name+'\n')
-            for value, label in [(grid.west, 'west  edge'), (grid.east, 'east  edge'),
-                                 (grid.north, 'north edge'), (grid.south, 'south edge')]:
-                stream.write(f'{value:12.3f}     !! {label}\n')
+        write_diminfo_nml(
+            descriptor,
+            DimInfo(grid.nx, grid.ny, grid.nlfp, nxin, nyin, maximum, matrix_name,
+                    float(grid.west), float(grid.east), float(grid.north), float(grid.south)),
+        )
 
 
 def main():

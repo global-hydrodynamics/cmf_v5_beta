@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""Safely convert legacy params.txt geometry to authoritative params.toml."""
+"""Write a legacy params.txt compatibility copy from map geometry metadata."""
 from __future__ import annotations
 
 import argparse
@@ -9,55 +9,13 @@ from pathlib import Path
 import tempfile
 
 try:
-    from .map_metadata import (
-        geometry_paths,
-        read_legacy_values,
-        read_map_geometry,
-        read_toml_values,
-        render_legacy,
-        render_toml,
-    )
+    from .map_metadata import read_legacy_values, read_map_geometry, render_legacy
 except ImportError:  # Direct execution from repository and map-local workflows.
-    from map_metadata import (
-        geometry_paths,
-        read_legacy_values,
-        read_map_geometry,
-        read_toml_values,
-        render_legacy,
-        render_toml,
-    )
-
-
-def convert_map(map_dir: Path) -> str:
-    """Create params.toml when absent, or verify an existing pair without overwriting."""
-    toml_path, txt_path = geometry_paths(map_dir)
-    if not txt_path.is_file():
-        raise FileNotFoundError(f"legacy params.txt is missing: {txt_path}")
-    tokens, _ = read_legacy_values(txt_path)
-    if toml_path.exists():
-        read_map_geometry(map_dir)
-        return "UNCHANGED"
-    content = render_toml(tokens)
-    descriptor, temporary = tempfile.mkstemp(prefix=".params.", suffix=".toml.tmp", dir=map_dir)
-    try:
-        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as stream:
-            stream.write(content)
-        # Verify the temporary TOML and the source have the same eight values
-        # before publishing the new metadata file.
-        temporary_path = Path(temporary)
-        if temporary_path.read_text(encoding="utf-8") != content:
-            raise OSError(f"temporary TOML verification failed: {temporary_path}")
-        toml_geometry = read_toml_values(temporary_path)
-        if toml_geometry.values() != read_legacy_values(txt_path)[1].values():
-            raise ValueError(f"numeric geometry changed during conversion: {txt_path}")
-        os.link(temporary_path, toml_path)
-        return "CONVERTED"
-    finally:
-        Path(temporary).unlink(missing_ok=True)
+    from map_metadata import read_legacy_values, read_map_geometry, render_legacy
 
 
 def write_legacy_copy(map_dir: Path, output: Path) -> str:
-    """Create a legacy compatibility copy without replacing conflicting metadata."""
+    """Create a TXT compatibility copy without replacing conflicting metadata."""
     geometry = read_map_geometry(map_dir)
     output = output if output.is_absolute() else map_dir / output
     content = render_legacy(geometry)
@@ -79,38 +37,15 @@ def write_legacy_copy(map_dir: Path, output: Path) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    targets = parser.add_mutually_exclusive_group(required=True)
-    targets.add_argument("--map-dir", type=Path, help="one map directory")
-    targets.add_argument("--map-root", type=Path, help="recursively scan map directories on disk, including ignored files")
-    parser.add_argument("--write-legacy", type=Path, help="write a generated params.txt compatibility copy at this path")
+    parser.add_argument("--map-dir", type=Path, required=True)
+    parser.add_argument("--write-legacy", type=Path, required=True)
     args = parser.parse_args()
-    if args.write_legacy and args.map_root:
-        parser.error("--write-legacy can be used only with --map-dir")
-    if args.map_dir:
-        map_dirs = [args.map_dir.expanduser().resolve()]
-    else:
-        root = args.map_root.expanduser().resolve()
-        map_dirs = sorted(path.parent for path in root.rglob("params.txt") if path.is_file())
-    if args.write_legacy:
-        try:
-            print(f"{write_legacy_copy(map_dirs[0], args.write_legacy)} {args.write_legacy}")
-            return 0
-        except (OSError, ValueError, RuntimeError) as exc:
-            print(f"ERROR {map_dirs[0]}: {exc}")
-            return 1
-
-    converted = unchanged = failed = 0
-    for map_dir in map_dirs:
-        try:
-            result = convert_map(map_dir)
-            print(f"{result} {map_dir / 'params.toml'}")
-            converted += result == "CONVERTED"
-            unchanged += result == "UNCHANGED"
-        except (OSError, ValueError, RuntimeError) as exc:
-            print(f"ERROR {map_dir}: {exc}")
-            failed += 1
-    print(f"Discovered: {len(map_dirs)}; converted: {converted}; already matched: {unchanged}; failed/conflicting: {failed}")
-    return 1 if failed else 0
+    try:
+        print(f"{write_legacy_copy(args.map_dir.expanduser().resolve(), args.write_legacy)} {args.write_legacy}")
+    except (OSError, ValueError, RuntimeError) as exc:
+        print(f"ERROR {args.map_dir}: {exc}")
+        return 1
+    return 0
 
 
 if __name__ == "__main__":

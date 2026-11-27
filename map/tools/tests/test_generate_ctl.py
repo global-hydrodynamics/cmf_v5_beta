@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 from map.tools.code.generate_ctl import CtlError, generate_directory, missing_sentinel, reference_rows
+from map.tools.code.map_metadata import DimInfo, write_diminfo_nml
 
 FIELDS = [
     "category_id", "workflow_stage", "category", "product_kind", "filename",
@@ -128,9 +129,9 @@ class GenerateCtlTests(unittest.TestCase):
             row('mpireg.bin','mpireg','int32'), row('subbsn.bin','subbsn','int32'),
             row('subcol.bin','subcol','int32'), row('upbasin.bin','upbasin','int32')])
         target = scripts.parent
-        (target/'params.toml').write_text(
-            '[grid]\nnx=3\nny=2\nnlfp=2\nresolution=1.0\n'
-            '[domain]\nwest=-1.5\neast=1.5\nsouth=-1.0\nnorth=1.0\n',
+        (target/'params.nml').write_text(
+            '&GRID\n NX=3\n NY=2\n NLFP=2\n RESOLUTION=1.0\n/\n'
+            '&DOMAIN\n WEST=-1.5\n EAST=1.5\n SOUTH=-1.0\n NORTH=1.0\n/\n',
             encoding='utf-8',
         )
         binary = target/'binary'
@@ -262,11 +263,10 @@ class GenerateCtlTests(unittest.TestCase):
             item["units"] = units
             matrix_rows.append(item)
         write_registry(self.registry, matrix_rows)
-        (self.map_dir / "diminfo_test-1deg.txt").write_text(
-            "3 !! nXX\n2 !! nYY\n2 !! floodplain layers\n360 !! input nXX\n"
-            "180 !! input nYY\n4 !! input num\ninpmat_test-1deg.bin\n"
-            "90.0 !! west\n110.0 !! east\n35.0 !! north\n5.0 !! south\n",
-            encoding="ascii",
+        write_diminfo_nml(
+            self.map_dir / "diminfo_test-1deg.nml",
+            DimInfo(3, 2, 2, 360, 180, 4, "inpmat_test-1deg.bin",
+                    -1.5, 1.5, 1.0, -1.0),
         )
         (self.map_dir / "inpmat_test-1deg.bin").write_bytes(b"\0" * (3 * 2 * 4 * 3 * 4))
         result = self.run_generator()
@@ -288,7 +288,7 @@ class GenerateCtlTests(unittest.TestCase):
         self.assertEqual(self.run_generator().generated, 1)
         self.assertIn("undef -7", (self.map_dir / "inpmat_test-1deg.ctl").read_text())
 
-    def test_input_matrix_still_accepts_legacy_diminfo_descriptor(self):
+    def test_input_matrix_requires_native_diminfo_namelist(self):
         matrix_rows = []
         for name, index in (("inpx", "1"), ("inpy", "2"), ("inpa", "3")):
             item = row("inpmat_legacy.bin", name, "int32" if name != "inpa" else "float32",
@@ -303,7 +303,7 @@ class GenerateCtlTests(unittest.TestCase):
         )
         (self.map_dir / "inpmat_legacy.bin").write_bytes(b"\0" * (3 * 2 * 1 * 3 * 4))
         result = self.run_generator()
-        self.assertEqual((result.generated, result.skipped, result.failed), (1, 0, 0))
+        self.assertEqual((result.generated, result.skipped, result.failed), (0, 1, 0))
 
     def test_unknown_registry_dimensions_are_skipped_not_reported_as_grid_mismatch(self):
         write_registry(self.registry, [row("width.bin", "width", "float32", "dataset-dependent")])

@@ -310,7 +310,7 @@ def assemble(args: argparse.Namespace) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--map-dir", type=Path, required=True, help="map root containing params.toml or legacy params.txt and individual NetCDF maps")
+    parser.add_argument("--map-dir", type=Path, required=True, help="map root containing params.nml or legacy params.txt and individual NetCDF maps")
     parser.add_argument("--nextxy", default="nextxy_noedge.nc", help="network file: nextxy.nc or nextxy_noedge.nc")
     parser.add_argument("--rivwth", default="rivwth_merit.nc", help="width file: rivwth.nc or rivwth_merit.nc")
     parser.add_argument("--force", action="store_true", default=True, help=argparse.SUPPRESS)

@@ -17,7 +17,7 @@ def main():
     args = p.parse_args()
     generate(Grid.read(args.map_dir), args.map_dir/args.hires_tag,
              output_root(args), np.float32(1), np.float32(-180), np.float32(180),
-             np.float32(90), np.float32(-90), 'NtoS', 'diminfo_test-1deg.txt',
+             np.float32(90), np.float32(-90), 'NtoS', 'diminfo_test-1deg.nml',
              'inpmat_test-1deg.bin', legacy_default=True)
 
 

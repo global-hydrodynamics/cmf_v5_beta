@@ -32,27 +32,27 @@ program test_input_mapping
     source = reshape([10.0_JPRM,20.0_JPRM,30.0_JPRM,40.0_JPRM],[2,2])
     select case(trim(mode))
     case ('cache')
-        a = get_inpmat_index('a.info', 'a.bin', 2, 2)
-        b = get_inpmat_index('info-alias', './other/../alias.bin', 2, 2)
+        a = get_inpmat_index('a.nml', 'a.bin', 2, 2)
+        b = get_inpmat_index('nml-alias', './other/../alias.bin', 2, 2)
         call assert_true(a == b, 'alias cache reuse')
-        b = get_inpmat_index('a.info', 'b.bin', 2, 2)
+        b = get_inpmat_index('a.nml', 'b.bin', 2, 2)
         call assert_true(a /= b, 'same metadata, different binary')
-        c = get_inpmat_index('b.info', 'a.bin', 2, 2)
+        c = get_inpmat_index('b.nml', 'a.bin', 2, 2)
         call assert_true(a /= c, 'different metadata, same binary')
-        c = get_inpmat_index('other/c.info', 'b.bin', 2, 2)
+        c = get_inpmat_index('other/c.nml', 'b.bin', 2, 2)
         call map2vec(source, vec, inpmat_idx=a)
         call check(vec, [17.5_JPRB,20.0_JPRB])
         call map2vec(source, vec, inpmat_idx=b)
         call check(vec, [10.0_JPRB,15.0_JPRB])
         call map2vec(source, vec, inpmat_idx=c)
         call check(vec, [10.0_JPRB,15.0_JPRB])
-        call load_inpmat_files(mapping, 'a.info', 'a.bin')
+        call load_inpmat_files(mapping, 'a.nml', 'a.bin')
         call move_append_inpmat(mappings, mapping)
         call assert_true(.not. allocated(mapping%inpx), 'moved ownership')
         call mappings(1)%map2vec_intrp(source, vec)
         call check(vec, [17.5_JPRB,20.0_JPRB])
         call init_dim_converter()
-        a = get_inpmat_index('a.info', 'b.bin', 2, 2)
+        a = get_inpmat_index('a.nml', 'b.bin', 2, 2)
         call assert_true(a == 1, 'cache reset')
     case ('input', 'catm', 'netcdf')
 #ifdef UseCDF_CMF
@@ -68,12 +68,12 @@ program test_input_mapping
             call check(vec, [17.5_JPRB,20.0_JPRB])
         endif
     case ('cache-shape')
-        a = get_inpmat_index('a.info', 'a.bin', 2, 2)
-        a = get_inpmat_index('a.info', 'a.bin', 3, 2)
+        a = get_inpmat_index('a.nml', 'a.bin', 2, 2)
+        a = get_inpmat_index('a.nml', 'a.bin', 3, 2)
     case default
         nx_source = 2
         if (trim(mode) == 'source-shape') nx_source = 3
-        a = get_inpmat_index('a.info', 'a.bin', nx_source, 2)
+        a = get_inpmat_index('a.nml', 'a.bin', nx_source, 2)
     end select
     write(*,'(a)') 'INPUT_MAPPING_PASS'
 contains

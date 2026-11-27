@@ -10,6 +10,10 @@ from pathlib import Path
 import numpy as np
 
 from mod_map_io import Grid, output_root, parser, write_raster
+try:
+    from .map_metadata import read_diminfo_nml
+except ImportError:  # Direct execution from map-local Shell workflows.
+    from map_metadata import read_diminfo_nml
 
 
 def merge_widths(nextx, width, merit):
@@ -29,8 +33,8 @@ def main():
     p = parser(__doc__, '.', map_binary_flag=True)
     p.add_argument('diminfo', type=Path)
     args = p.parse_args()
-    dims = [int(line.split()[0]) for line in args.diminfo.read_text().splitlines()[:2]]
-    grid = Grid(*dims, 0, *[np.float32(0)] * 5)
+    info = read_diminfo_nml(args.diminfo)
+    grid = Grid(info.nx, info.ny, 0, *[np.float32(0)] * 5)
     nextxy = grid.raster(args.map_dir / 'nextxy.bin', '<i4', 2)
     width = grid.raster(args.map_dir / 'rivwth.bin')
     merit = grid.raster(args.map_dir / 'width.bin')

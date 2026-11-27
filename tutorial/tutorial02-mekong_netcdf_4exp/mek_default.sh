@@ -31,7 +31,7 @@ RUNOFF_DIR="${CMF_BASE}/inp/repo-mek_1deg"
 RUNDIR="${SCRIPT_DIR}/out/${PROJ}"
 # Reuse the NetCDF-enabled model already built in Tutorial01; do not compile here.
 EXEC_CMF="${CMF_BASE}/src_main/MAIN_cmf"
-DIMINFO="${MAPDIR}/diminfo_repo-mek_1deg.txt"
+DIMINFO="${MAPDIR}/diminfo_repo-mek_1deg.nml"
 INPMAT="${MAPDIR}/inpmat_repo-mek_1deg.nc"
 
 if [ ! -x "$EXEC_CMF" ]; then
@@ -43,8 +43,8 @@ fi
 mkdir -p "$RUNDIR"
 rm -f "$RUNDIR"/o_outflw*.nc "$RUNDIR"/o_pthflw*.nc "$RUNDIR"/restart*.nc \
       "$RUNDIR"/input_cmf*.nam "$RUNDIR"/console_*.log \
-      "$RUNDIR"/log_CaMa*.txt "$RUNDIR"/run_time_*.log \
-      "$RUNDIR"/MAIN_cmf "$RUNDIR"/mapdata.txt
+      "$RUNDIR"/log_CaMa*.nml "$RUNDIR"/run_time_*.log \
+      "$RUNDIR"/MAIN_cmf "$RUNDIR"/mapdata.nml
 cp "$EXEC_CMF" "$RUNDIR/MAIN_cmf"
 
 # Run one calendar year at a time and pass the previous year's final Restart.
@@ -168,7 +168,7 @@ EOF
             "$PROJ" "$YEAR" "$RUNDIR" "$YEAR" >&2
         exit "$RUN_STATUS"
     fi
-    cp "$RUNDIR/log_CaMa.txt" "$RUNDIR/log_CaMa_${YEAR}.txt"
+    cp "$RUNDIR/log_CaMa.nml" "$RUNDIR/log_CaMa_${YEAR}.nml"
     printf '[SUCCESS] %s %s complete: %s/o_outflw%s.nc and %s/o_pthflw%s.nc\n' \
         "$PROJ" "$YEAR" "$RUNDIR" "$YEAR" "$RUNDIR" "$YEAR"
     YEAR=$NEXT_YEAR

@@ -320,7 +320,7 @@ def main() -> int:
         lines.append(f"OLAT=\"{primary['olat']}\"        # north-south order of input data")
         lines.append("")
         lines.append("# Example:")
-        lines.append("# ./generate_inpmat $MAPTAG $GRSIZEIN $WESTIN $EASTIN $NORTHIN $SOUTHIN $OLAT diminfo.txt inpmat.bin")
+        lines.append("# ./generate_inpmat $MAPTAG $GRSIZEIN $WESTIN $EASTIN $NORTHIN $SOUTHIN $OLAT diminfo.nml inpmat.bin")
         lines.append("")
 
         lines.append("#----------------------------------------------------------")
