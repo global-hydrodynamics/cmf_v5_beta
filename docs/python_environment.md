@@ -30,10 +30,13 @@ environments, but does not guarantee support for every operating system,
 processor, Python version, or package index. If both attempts fail, review the
 pip and validation diagnostics; network/DNS errors require package-index
 access, while missing wheels or platform prerequisites require a compatible
-runtime. The setup does not recreate `.venv` or remove unrelated installed
-packages. If an extra package conflicts with the selected profile, `pip check`
-reports that conflict and setup stops for review. The 2022 profile remains
-experimental and is never selected automatically.
+runtime. If the 2024 fallback is needed, setup preserves the current `.venv` as a
+temporary backup, creates a clean environment at `.venv`, and validates the
+complete profile there. The old environment is removed only after the new one
+passes validation; if installation or validation fails, the old environment
+is restored. This prevents stale packages from a failed standard install from
+conflicting with the fallback. The 2022 profile remains experimental and is
+never selected automatically.
 
 Activate the environment and run a tutorial:
 

@@ -7,6 +7,9 @@ VENV_DIR="$SCRIPT_DIR/.venv"
 REQUIREMENTS="$SCRIPT_DIR/requirements.txt"
 COMPAT_REQUIREMENTS="$SCRIPT_DIR/config/python/requirements_2024.txt"
 CMF_COLORMAP_DIR="$SCRIPT_DIR/visualization/cmf_colormap"
+VENV_BASE_PYTHON=""
+FALLBACK_BACKUP_DIR=""
+FALLBACK_VALIDATED=0
 
 fail() {
     printf '[ERROR] %s\n' "$1" >&2
@@ -71,6 +74,60 @@ install_requirements() {
 
     "$VENV_PYTHON" -m pip install "$@" --only-binary=rasterio \
         -r "$profile" -e "$CMF_COLORMAP_DIR"
+}
+
+restore_previous_venv() {
+    local exit_status=$?
+    trap - EXIT INT TERM
+
+    if [[ "$FALLBACK_VALIDATED" -eq 0 && -n "$FALLBACK_BACKUP_DIR" && -d "$FALLBACK_BACKUP_DIR" ]]; then
+        if ! rm -rf "$VENV_DIR" || ! mv "$FALLBACK_BACKUP_DIR" "$VENV_DIR"; then
+            printf '\n[ERROR] The 2024 fallback failed and the previous environment could not be restored automatically.\n' >&2
+            printf 'Previous environment backup: %s\n' "$FALLBACK_BACKUP_DIR" >&2
+            exit 1
+        fi
+        printf '\n[INFO] The 2024 fallback did not validate; restored the previous .venv.\n' >&2
+    fi
+
+    exit "$exit_status"
+}
+
+prepare_clean_fallback_venv() {
+    if [[ -z "$VENV_BASE_PYTHON" ]]; then
+        VENV_BASE_PYTHON=$("$VENV_PYTHON" -c 'import sys; print(sys._base_executable)')
+    fi
+    if [[ ! -x "$VENV_BASE_PYTHON" ]]; then
+        fail "could not locate the base Python used by .venv; the existing environment was not replaced."
+    fi
+
+    FALLBACK_BACKUP_DIR="$SCRIPT_DIR/.venv.backup.$$"
+    if [[ -e "$FALLBACK_BACKUP_DIR" ]]; then
+        fail "fallback backup path already exists: $FALLBACK_BACKUP_DIR"
+    fi
+
+    printf '\n[INFO] Preparing a clean .venv for the 2024 profile; preserving the current environment until validation succeeds.\n'
+    trap restore_previous_venv EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    if ! mv "$VENV_DIR" "$FALLBACK_BACKUP_DIR"; then
+        fail "could not preserve the current .venv for fallback."
+    fi
+    if ! "$VENV_BASE_PYTHON" -m venv "$VENV_DIR"; then
+        fail "could not create a clean .venv for the 2024 profile."
+    fi
+    VENV_PYTHON="$VENV_DIR/bin/python"
+}
+
+finish_clean_fallback_venv() {
+    FALLBACK_VALIDATED=1
+    if rm -rf "$FALLBACK_BACKUP_DIR"; then
+        printf '[INFO] Removed the previous .venv after the replacement passed validation.\n'
+    else
+        printf '[WARNING] The validated .venv is ready, but the previous environment remains at %s\n' \
+            "$FALLBACK_BACKUP_DIR" >&2
+    fi
+    FALLBACK_BACKUP_DIR=""
+    trap - EXIT INT TERM
 }
 
 describe_origin() {
@@ -291,6 +348,7 @@ if [[ "$VENV_STATE" != "valid and reusable" ]]; then
         fail "could not create .venv with $SELECTED_PYTHON. Confirm its venv/ensurepip support."
     fi
     VENV_PYTHON="$VENV_DIR/bin/python"
+    VENV_BASE_PYTHON="$(command -v "$SELECTED_PYTHON")"
 else
     printf '\n[STEP 1/3] Reuse the validated repository-local virtual environment.\n'
 fi
@@ -310,6 +368,7 @@ elif ! validate_environment; then
 fi
 
 if [[ "$SELECTED_PROFILE" == "2024 Compatibility" ]]; then
+    prepare_clean_fallback_venv
     printf '\n[STEP 3/3] Resolve the 2024 Compatibility profile and CMF Colormaps together.\n'
     if ! install_requirements "$COMPAT_REQUIREMENTS" --upgrade --upgrade-strategy eager; then
         printf '\n[ERROR] Standard setup and 2024 Compatibility installation both failed.\n' >&2
@@ -321,6 +380,7 @@ if [[ "$SELECTED_PROFILE" == "2024 Compatibility" ]]; then
         printf 'Review the pip/import diagnostics above. Network errors and unsupported package/platform combinations require different remedies.\n' >&2
         exit 1
     fi
+    finish_clean_fallback_venv
 else
     printf '\n[STEP 3/3] Standard dependency validation completed.\n'
 fi

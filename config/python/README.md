@@ -4,7 +4,9 @@ These profiles provide historical **direct-dependency snapshots** for testing th
 
 The root `s02-python_setup.sh` tries standard requirements first and uses the
 2024 profile as one automatic compatibility fallback after installation or
-validation failure. The 2022 profile is experimental and is not used by setup.
+validation failure. The fallback is installed into a clean `.venv`; the
+previous environment is restored if the new profile does not validate. The
+2022 profile is experimental and is not used by setup.
 
 | File | Cutoff | Target interpreter | Notes |
 |---|---|---|---|
