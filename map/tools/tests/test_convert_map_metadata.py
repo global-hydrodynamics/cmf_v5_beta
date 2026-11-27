@@ -61,16 +61,31 @@ def test_bifori_round_trip_preserves_rows_and_source(tmp_path):
     assert (tmp_path / 'bifori.txt').read_text() != source  # output uses canonical spacing
 
 
-def test_bifprm_reverse_refuses_unrepresentable_outlet_coordinates(tmp_path):
+def test_bifprm_reverse_omits_v5_outlet_coordinates_and_preserves_v4_layers(
+        tmp_path, monkeypatch, capsys):
     path = tmp_path / 'bifprm.csv'
-    path.write_text('pth_id,ix,iy,jx,jy,length,elevtn,depth,riv_width,start_lat,start_lon,end_lat,end_lon,ibsn,jbsn\n'
-                    '1,1,2,3,4,5,6,0.5,7,8,9,10,11,12,13\n')
-    with pytest.raises(ValueError, match='cannot store end_lat/end_lon'):
-        converter._bifprm_txt_content(path)
-    path.write_text(path.read_text().replace(',10,11,12,13\n', ',-9999,-9999,12,13\n'))
-    content, count = converter._bifprm_txt_content(path)
-    assert count == 1
-    assert content.splitlines()[0].split() == ['1', '1']
+    path.write_text(
+        'pth_id,ix, iy,jx, jy, length, elevtn, depth, riv_width, ovl_width_1, ovl_width_2,'
+        ' start_lat, start_lon, end_lat, end_lon, ibsn, jbsn\n'
+        '1,1,2,3,4,5,6,0.5,7,8,9,10,11,12,13,14,15\n')
+    original = path.read_bytes()
+    monkeypatch.setattr(sys, 'argv', ['convert_map_metadata.py', 'meta2txt', str(tmp_path)])
+
+    assert converter.main() == 0
+
+    output = capsys.readouterr().out
+    lines = (tmp_path / 'bifprm.txt').read_text().splitlines()
+    assert 'omitted v5-only columns: end_lat, end_lon' in output
+    assert path.read_bytes() == original
+    assert lines[0].split() == ['1', '3']
+    values = lines[1].split()
+    assert len(values) == 14
+    assert values == ['1', '2', '3', '4', '5', '6', '0.5', '7', '8', '9',
+                      '10', '11', '14', '15']
+    # The v4 reader consumes indices, length/elevation/depth, then width layers;
+    # channel is first, overland layers follow in their numbered order.
+    v4_reader_fields = values[:4 + 3 + 3]
+    assert v4_reader_fields[-3:] == ['7', '8', '9']
 
 
 @pytest.mark.parametrize('kind', tuple(converter.ALLOCATION_SCHEMAS))

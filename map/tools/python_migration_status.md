@@ -32,6 +32,27 @@ calculation order and prioritizes concise, efficient code. Integer/categorical
 values, indexing, record layout, masks, thresholds and legacy scientific criteria
 remain reference contracts.
 
+## Permanent-water reporting fix (2026-11-27)
+
+`param_water_calc_prmwat.py` now reports the number of rows loaded from the
+selected high-resolution location metadata. The prior undefined `count`
+reference occurred after `write_raster()` had completed; an isolated Mekong
+1min wrapper run reproduced the nonzero exit while leaving a valid, complete
+`prmwat.nc`. After the fix, `s04-permanent_water.sh` succeeded, reported one
+processed area, and produced values identical to the pre-fix output. See
+[VR-0266](../../research/records/validation_runs/VR-0266.md) for the focused
+check and output validation.
+
+## Channel-parameter invalid-discharge handling (2026-11-27)
+
+`param_channel_calc_rivwth.py` now evaluates the unchanged depth and width
+power laws only on cells mapped by `nextxy`. Outside-network cells retain the
+`-9999` sentinel without participating in fractional powers; zero discharge
+remains valid and follows the existing minimum depth/width thresholds. A
+negative or non-finite discharge on a mapped river cell raises a diagnostic
+`ValueError`. Focused synthetic checks and the complete Mekong `s02` wrapper
+passed; see [VR-0271](../../research/records/validation_runs/VR-0271.md).
+
 ## Program inventory and evidence
 
 Every row has an independent `.py` executable, a successful reference build and
@@ -163,3 +184,14 @@ other arrays/dictionaries; sparse/block construction needs further work at that
 scale. Large arrays, per-basin structures, sequential merges,
 and edge-connected tracing are further scaling risks. Existing scientific
 inputs and format registries are deliberately unchanged.
+
+## Undefined grid handling for river-point queries (2026-11-27)
+
+`analysis_river_point_info.py` now recognizes a selected cell as undefined when
+its river-basin ID or paired `nextxy` indices use the map's `-9999` missing
+value. It prints an explanatory message and exits normally before converting
+missing attributes or following a downstream index. In-range ocean cells are
+therefore distinct from invalid coordinates outside the map extent. The shared
+`a01` usage example and its Mekong and Rhine map-local copies print an explicit
+notice that the sample coordinates are for `mekong_15min` only. Focused checks
+are recorded in [VR-0268](../../research/records/validation_runs/VR-0268.md).

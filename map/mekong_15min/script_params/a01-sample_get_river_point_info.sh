@@ -3,6 +3,8 @@ set -eu
 
 echo "=================================================="
 echo "Example: Get river information at a selected point"
+echo "NOTE: This usage example is designed for the mekong_15min map."
+echo "      The example coordinates are not intended for other maps."
 echo "=================================================="
 echo "These example coordinates are for the Mekong sample map, not arbitrary maps."
 echo "Usage:"

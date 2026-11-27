@@ -115,11 +115,12 @@ not inspect or modify numerical raster data. No options or confirmation
 prompts are used.
 
 Some legacy formats cannot represent every standard CSV field. Reverse
-conversion rejects populated extra fields, non-row-ordered bifurcation IDs,
-and bifprm outlet coordinates that cannot be stored in `bifprm.txt`, rather
-than silently discarding those values. For legacy bifprm output, the model's
-existing TXT reader can obtain end outlet coordinates from sibling `lonlat.bin`
-when available.
+conversion rejects populated extra fields and non-row-ordered bifurcation IDs.
+For `bifprm.txt`, the v5-only supplementary outlet-coordinate columns
+`end_lat` and `end_lon` are omitted because the v4 reader does not use them;
+the conversion report names the omitted columns. The v4 record's channel width
+remains the first width layer, followed by the overland widths in order. Where
+outlet coordinates are needed, they can be read from the map's `lonlat.bin`.
 
 `ROFFTAG` is set near the top of the INPMAT wrappers (default `test-1deg`);
 edit that setting to select another pair. For the default, source metadata is
@@ -232,8 +233,16 @@ Older sample NetCDF files may contain filename-derived variables such as
 it is not a replacement for the numbered map conversion sequence. `s90-sample_netCDF_conversion.sh` remains as a deprecated
 compatibility alias for s18; use the directional s08/s18 scripts for new work.
 
-The conversion tools preserve registered dimensions, record/layer order,
-storage types, missing values, coordinate orientation, and map-local paths.
+The COG planner uses each registered `filename` to locate the source NetCDF and
+the registry's NetCDF variable/name fields to identify its data. For older
+single-variable files whose internal variable matches the exact registered
+filename stem (for example, `nxtdst_grid.nc` containing `nxtdst_grid`), the
+source variable is retained separately from the canonical registry name in COG
+tags. Missing concrete files and unmatched filename patterns are reported
+separately from present files that have no valid registry mapping. Intentional
+non-raster inputs such as `bifprm.nc` remain excluded. Conversion preserves
+registered dimensions, record/layer order, storage types, missing values,
+coordinate orientation, and map-local paths.
 For COG options and supported variables, consult the wrapper's `--help` and
 `map/tools/code/convert_netcdf_to_cog.py` documentation.
 

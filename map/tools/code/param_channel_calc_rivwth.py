@@ -16,6 +16,33 @@ except ImportError:  # Direct execution from map-local Shell workflows.
     from map_metadata import read_diminfo_nml
 
 
+def calculate_channel_fields(discharge, valid, args):
+    """Apply the reference power laws only to mapped cells with valid discharge."""
+    valid_discharge = discharge[valid]
+    invalid_discharge = ~np.isfinite(valid_discharge) | (valid_discharge < 0)
+    if np.any(invalid_discharge):
+        invalid_values = valid_discharge[invalid_discharge]
+        examples = ', '.join(str(float(value)) for value in invalid_values[:5])
+        raise ValueError(
+            f'{invalid_values.size} mapped river cells have negative or non-finite '
+            f'annual-mean discharge; sample values: {examples}'
+        )
+
+    missing = np.float32(-9999)
+    rivhgt = np.full(discharge.shape, missing, dtype='f4')
+    rivwth = np.full(discharge.shape, missing, dtype='f4')
+    # Zero discharge is valid; the existing minimum depth/width then applies.
+    rivhgt[valid] = np.maximum(args.hmin, args.hc*valid_discharge**args.hp+args.ho)
+    rivwth[valid] = np.maximum(args.wmin, args.wc*valid_discharge**args.wp+args.wo)
+    rivman = np.where(valid, np.float32(.03), missing)
+    return {
+        'rivhgt': rivhgt,
+        'rivwth': rivwth,
+        'rivman': rivman,
+        'rivhgt_inf': np.full(discharge.shape, 100000, dtype='<f4'),
+    }
+
+
 def main():
     p = parser(__doc__, map_default='.', map_binary_flag=True)
     p.add_argument('diminfo', type=Path)
@@ -30,12 +57,7 @@ def main():
     grid = Grid(nx, ny, 0, np.float32((east-west)/nx), west, east, south, north)
     valid = grid.raster(args.map_dir/'nextxy.bin', '<i4', 2)[0] != -9999
     discharge = grid.raster(args.map_dir/'outclm.bin')
-    fields = {
-        'rivhgt': np.where(valid, np.maximum(args.hmin, args.hc*discharge**args.hp+args.ho), -9999),
-        'rivwth': np.where(valid, np.maximum(args.wmin, args.wc*discharge**args.wp+args.wo), -9999),
-        'rivman': np.where(valid, np.float32(.03), np.float32(-9999)),
-        'rivhgt_inf': np.full((ny, nx), 100000, dtype='<f4'),
-    }
+    fields = calculate_channel_fields(discharge, valid, args)
     out = output_root(args)
     output_grid = Grid.from_file(args.map_dir)
     # Import before producing outputs so an unavailable NetCDF interface fails cleanly.

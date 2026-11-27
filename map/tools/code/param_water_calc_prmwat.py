@@ -104,7 +104,7 @@ def main():
     if missing_count:
         print(f'WARNING: {missing_count} selected pixels have flddif=-9999; legacy flddif<=5 selection is preserved.')
     write_raster(output_root(args)/'prmwat.bin', result, '<f4', grid=grid)
-    print(f'Processed high-resolution areas: {count}')
+    print(f'Processed high-resolution areas: {len(areas)}')
     print(f'Valid unit catchments: {np.count_nonzero(valid)}')
     print(f'Selected permanent-water pixels: {selected_count}')
     print(f'Catchments capped at ctmare: {np.count_nonzero(capped)}')

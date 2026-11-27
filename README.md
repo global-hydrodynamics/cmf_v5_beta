@@ -70,16 +70,19 @@ echo "$CMF_V50_ROOT"
 
 For unsupported shells, use `--print` and translate the assignment to that shell's syntax manually. Existing workflow scripts will be migrated to `CMF_V50_ROOT` incrementally in separate tasks; this setup utility does not change their current variables.
 
-Prepare the repository-local Python environment, then build and run the basic experiment:
+Prepare the repository-local Python environment, register its activation alias, then build and run the basic experiment:
 
 ```bash
 ./s02-python_setup.sh
-source .venv/bin/activate
+./s03-activate_cmf_pyenv.sh
+# Open a new terminal or reload the shell configuration, then:
+cmfpy
 ./gosh_test/compile.sh
 (cd gosh_test && ./mek01-default_run.sh)
+deactivate
 ```
 
-The setup helpers ask before making local changes and only diagnose without an interactive terminal. Python setup tries `requirements.txt` first, then automatically tries the 2024 compatibility profile if installation or validation fails; fallback uses a clean `.venv` and restores the previous environment if installation or validation fails. See the [Python guide](docs/python_environment.md) for platform limits and external environment use.
+`s02-python_setup.sh` asks before changing the local environment and only diagnoses without an interactive terminal. It creates or reuses `.venv` with the `(cmf50)` prompt. Running `s03-activate_cmf_pyenv.sh` registers `cmfpy` in the detected Bash or Zsh configuration, using the active macOS Bash login file when applicable. Python setup tries `requirements.txt` first, then automatically tries the 2024 compatibility profile if installation or validation fails; fallback uses a clean `.venv` and restores the previous environment if installation or validation fails. See the [Python guide](docs/python_environment.md) for platform limits and external environment use.
 
 The basic experiment uses the tracked `map/mekong_15min/` map, daily Binary forcing in monthly files under `inp/repo-mek_1deg_bin/`, and their matching input matrix. It runs 40 days from 2000-01-01 to 2000-02-10 (end exclusive), without the large additional-data package. Results go to `gosh_test/out/mek01/` (override the project with `PROJ`, or the complete path with `RUNDIR`); reruns replace this sample's known generated outputs. The script must run from `gosh_test/`, as shown above.
 

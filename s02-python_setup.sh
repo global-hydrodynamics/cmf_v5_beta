@@ -112,10 +112,43 @@ prepare_clean_fallback_venv() {
     if ! mv "$VENV_DIR" "$FALLBACK_BACKUP_DIR"; then
         fail "could not preserve the current .venv for fallback."
     fi
-    if ! "$VENV_BASE_PYTHON" -m venv "$VENV_DIR"; then
+    if ! "$VENV_BASE_PYTHON" -m venv --prompt cmf50 "$VENV_DIR"; then
         fail "could not create a clean .venv for the 2024 profile."
     fi
     VENV_PYTHON="$VENV_DIR/bin/python"
+}
+
+set_existing_venv_prompt() {
+    printf '\n[INFO] Set the existing .venv display name to cmf50 without reinstalling dependencies.\n'
+    if ! "$VENV_PYTHON" - "$VENV_DIR" <<'PY'
+import sys
+import venv
+from pathlib import Path
+
+environment = sys.argv[1]
+builder = venv.EnvBuilder(with_pip=False, prompt="cmf50", upgrade=True)
+context = builder.ensure_directories(environment)
+builder.setup_scripts(context)
+
+config_path = Path(environment) / "pyvenv.cfg"
+with config_path.open("r", encoding="utf-8", newline="") as stream:
+    lines = stream.readlines()
+prompt_line = "prompt = 'cmf50'\n"
+for index, line in enumerate(lines):
+    if line.partition("=")[0].strip() == "prompt":
+        line_ending = "\r\n" if line.endswith("\r\n") else "\n" if line.endswith("\n") else ""
+        lines[index] = prompt_line.rstrip("\n") + line_ending
+        break
+else:
+    if lines and not lines[-1].endswith(("\n", "\r")):
+        lines[-1] += "\n"
+    lines.append(prompt_line)
+with config_path.open("w", encoding="utf-8", newline="") as stream:
+    stream.writelines(lines)
+PY
+    then
+        fail "could not update the existing .venv activation prompt."
+    fi
 }
 
 finish_clean_fallback_venv() {
@@ -344,13 +377,14 @@ esac
 
 if [[ "$VENV_STATE" != "valid and reusable" ]]; then
     printf '\n[STEP 1/3] Create the repository-local virtual environment.\n'
-    if ! "$SELECTED_PYTHON" -m venv "$VENV_DIR"; then
+    if ! "$SELECTED_PYTHON" -m venv --prompt cmf50 "$VENV_DIR"; then
         fail "could not create .venv with $SELECTED_PYTHON. Confirm its venv/ensurepip support."
     fi
     VENV_PYTHON="$VENV_DIR/bin/python"
     VENV_BASE_PYTHON="$(command -v "$SELECTED_PYTHON")"
 else
     printf '\n[STEP 1/3] Reuse the validated repository-local virtual environment.\n'
+    set_existing_venv_prompt
 fi
 
 if ! "$VENV_PYTHON" -m pip --version >/dev/null 2>&1; then
@@ -389,26 +423,5 @@ printf '\n[INFO] Selected Python version: %s\n' "$("$VENV_PYTHON" --version 2>&1
 printf '[INFO] Dependency profile: %s\n' "$SELECTED_PROFILE"
 
 printf '\n[SUCCESS] Python environment ready.\n\n'
-
-printf '############################################################'
-printf '\n'
-printf 'Alternatively, to use your own Python environment\n'
-printf '(e.g., an existing Miniforge/Conda environment):\n\n'
-printf '  1. Activate your preferred Python environment.\n'
-printf '     For Conda/Miniforge, for example:\n'
-printf '       conda activate YOUR_ENV_NAME\n\n'
-printf '  2. Install the CaMa-Flood Python dependencies:\n'
-printf '       cd "%s"\n' "$SCRIPT_DIR"
-printf '       python -m pip install -r requirements.txt\n'
-printf '       python -m pip install -e ./visualization/cmf_colormap\n\n'
-
-printf 'These commands install packages into your active environment.\n'
-printf 'They do not create or modify the CaMa-Flood .venv.\n'
-
-printf '\n'
-printf '%s\n' '###############################################'
-printf 'Activate the CaMa-Flood repository-local\n'
-printf 'Python environment (.venv):\n\n'
-printf '       cd "%s"\n' "$SCRIPT_DIR"
-printf '       source .venv/bin/activate\n'
-printf '%s\n' '###############################################'
+printf 'To configure convenient Python environment activation, run:\n\n'
+printf '    ./s03-activate_cmf_pyenv.sh\n'

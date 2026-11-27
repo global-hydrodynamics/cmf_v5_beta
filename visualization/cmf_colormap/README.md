@@ -122,6 +122,16 @@ Matplotlib is the only runtime dependency. NumPy, used for examples and tests,
 is already a Matplotlib dependency. The package is distributed under Apache
 License 2.0; see [`LICENSE`](LICENSE).
 
+### Python compatibility boundary
+
+The package metadata continues to require Python 3.9 or later and Matplotlib
+3.7 or later. The source uses `importlib.resources.files` when available and
+has a narrow fallback to `importlib_resources` for a Python 3.8 source-path
+experiment. That experiment requires `importlib-resources==4.1.1` to be
+installed explicitly; it does not change the package's supported installation
+range or declared dependencies. See the [legacy compatibility handoff](../../docs/python_legacy_compatibility_handoff.md)
+for the experimental profile and its limits.
+
 ## Use
 
 ```python

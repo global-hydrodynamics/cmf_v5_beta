@@ -170,7 +170,10 @@ def test_discovery_all_registry_files_highres_and_unknowns(tmp_path, capsys):
     plan = cog.plan(root, ['base','15sec'], ['all'], REGISTRY)
     assert [x.target.relative_to(root).as_posix() for x in plan] == ['COG/nextxy_noedge.tif','COG/15sec/a.catmxy.tif']
     for t in plan: assert cog.convert(t, blocksize=128).startswith('PASS')
-    assert 'SKIP missing registered NetCDF' in capsys.readouterr().out
+    messages = capsys.readouterr().out
+    assert 'SKIP missing registered NetCDF' in messages
+    assert 'SKIP no NetCDF files match registered pattern:' in messages
+    assert 'SKIP missing registered NetCDF: ' + str(root/'bsncol_mpi-*.nc') not in messages
     for task in plan:
         task.target.unlink()  # Exercise actual conversions in workers, not just existing-file skips.
     options = ['--map-dir',str(root),'--resolutions','base 15sec',
@@ -478,6 +481,33 @@ def test_consolidated_registry_names_convert_to_cog(tmp_path, stem, variable):
     assert cog.main(options) == 0
     assert task.target.read_bytes() == prior
     assert hashlib.sha256(task.source.read_bytes()).hexdigest() == before
+
+@pytest.mark.parametrize(('stem', 'dtype', 'names', 'registry_names'), [
+    ('ctmare', 'float32', ['ctmare'], ['ctmare']),
+    ('elevtn', 'float32', ['elevtn'], ['elevtn']),
+    ('nxtdst_grid', 'float32', ['nxtdst_grid'], ['nxtdst']),
+    ('rivlen_grid', 'float32', ['rivlen_grid'], ['rivlen']),
+    ('uparea_grid', 'float32', ['uparea_grid'], ['uparea']),
+    ('uparea', 'float32', ['uparea'], ['uparea']),
+    ('nextxy', 'int32', ['nextx', 'nexty'], ['nextx', 'nexty']),
+])
+def test_registry_filename_stems_and_internal_variable_names(
+        tmp_path, stem, dtype, names, registry_names):
+    fixture(tmp_path, stem, dtype, names=names)
+    root = tmp_path / 'map'
+
+    tasks = cog.plan(root, ['base'], [stem], REGISTRY)
+
+    assert len(tasks) == 1
+    task = tasks[0]
+    assert task.source.name == f'{stem}.nc'
+    assert [row['name'] for row in task.rows] == registry_names
+    assert [row['filename'] for row in task.rows] == [f'{stem}.nc'] * len(registry_names)
+    with nc.Dataset(task.source) as ds:
+        bands, source_dtype, *_ = cog.inspect(ds, task)
+    assert [band.name for band in bands] == names
+    assert [band.tags['registry_name'] for band in bands] == registry_names
+    assert source_dtype == task.rows[0]['dtype']
 
 
 def test_mpi_family_and_canonical_single_variable_variant_resolution(tmp_path):

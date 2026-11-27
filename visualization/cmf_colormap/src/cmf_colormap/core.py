@@ -8,8 +8,12 @@ import math
 import re
 from bisect import bisect_right
 from functools import lru_cache
-from importlib.resources import files
 from typing import Any
+
+try:
+    from importlib.resources import files
+except ImportError:  # Python 3.8
+    from importlib_resources import files
 
 from matplotlib.colors import LinearSegmentedColormap
 

@@ -12,6 +12,9 @@ From the repository root, run the interactive setup:
 
 ```bash
 ./s02-python_setup.sh
+./s03-activate_cmf_pyenv.sh
+# Open a new terminal or reload the shell configuration, then:
+cmfpy
 ```
 
 The script creates or reuses `.venv`, tries `requirements.txt` first, and
@@ -36,13 +39,29 @@ complete profile there. The old environment is removed only after the new one
 passes validation; if installation or validation fails, the old environment
 is restored. This prevents stale packages from a failed standard install from
 conflicting with the fallback. The 2022 profile remains experimental and is
-never selected automatically.
+never selected automatically. The environment directory is `.venv`, and its
+activation prompt is `(cmf50)`. Existing environments receive the prompt
+update without reinstalling packages.
 
-Activate the environment and run a tutorial:
+The separate `s03-activate_cmf_pyenv.sh` helper registers the `cmfpy` alias in
+the detected login shell configuration. It supports Bash and Zsh, uses
+the first existing macOS Bash login file in Bash's order (`~/.bash_profile`,
+`~/.bash_login`, `~/.profile`), creating `~/.bash_profile` if none exists;
+other Bash setups use `~/.bashrc`, and Zsh uses `~/.zshrc`. It preserves
+unrelated settings, updates its own managed alias when the repository moves,
+and reports a conflict without overwriting an unrelated `cmfpy` definition.
+On conflict, activate manually with the absolute command printed by the helper.
+
+After registering the alias, open a new terminal or reload the configuration
+file reported by the helper. Then type `cmfpy` to activate. Use `deactivate`
+to leave the environment.
+
+Run a tutorial after activation:
 
 ```bash
-source .venv/bin/activate
+cmfpy
 python tutorial/tutorial02-mekong_netcdf_4exp/v04-annual_max_discharge.py
+deactivate
 ```
 
 Activation is optional when you call the environment's interpreter directly:
@@ -109,8 +128,8 @@ Python installation owns that pip.
 - **Installed into the wrong Python:** compare `python -c "import sys;
   print(sys.executable)"` with `python -m pip --version`. Activate the intended
   environment or use its interpreter's full path for both commands.
-- **The intended venv is not active:** activate it with `source
-  .venv/bin/activate`, or call `.venv/bin/python` directly.
+- **The intended venv is not active:** run `cmfpy` after registering it and
+  reloading the shell configuration, or call `.venv/bin/python` directly.
 - **The existing `.venv` cannot be reused:** `s02-python_setup.sh` reports an
   invalid environment and does not delete it. Move or remove that directory
   manually only after deciding whether it contains anything you need, then

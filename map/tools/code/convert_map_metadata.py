@@ -61,6 +61,7 @@ class Conversion:
     source: Path
     destination: Path
     count: int
+    omitted_columns: tuple[str, ...] = ()
 
 
 def _atomic_write(path: Path, content: str) -> None:
@@ -141,12 +142,15 @@ def _bifori_txt_content(path: Path) -> tuple[str, int]:
     return ''.join(content), len(table.rows)
 
 
-def _bifprm_txt_content(path: Path) -> tuple[str, int]:
+def _bifprm_txt_content(path: Path) -> tuple[str, int, tuple[str, ...]]:
     rows = read_bifprm_csv(path)
     with path.open(newline='', encoding='utf-8-sig') as stream:
         reader = csv.DictReader(stream)
         fields = [name.strip() for name in (reader.fieldnames or [])]
-        raw_rows = list(reader)
+        raw_rows = [
+            {key.strip(): value for key, value in row.items() if key is not None}
+            for row in reader
+        ]
     widths = ['riv_width'] + sorted((name for name in fields if re.fullmatch(r'ovl_width_[1-9]\d*', name)),
                                     key=lambda name: int(name.rsplit('_', 1)[1]))
     extras = set(fields) - set(('pth_id', 'ix', 'iy', 'jx', 'jy', 'length', 'elevtn', 'depth',
@@ -156,9 +160,6 @@ def _bifprm_txt_content(path: Path) -> tuple[str, int]:
     for index, (parsed, row) in enumerate(zip(rows, raw_rows), 1):
         if parsed['pth_id'] != index:
             raise ValueError(f'{path}: legacy bifprm.txt requires row-ordered pth_id values')
-        if any((row.get(name) or '').strip() not in ('', '-9999', '-9999.0', '-9999.00')
-               for name in ('end_lat', 'end_lon')):
-            raise ValueError(f'{path}: legacy bifprm.txt cannot store end_lat/end_lon; refusing lossy conversion')
     nlev = len(widths)
     if nlev < 1:
         raise ValueError(f'{path}: at least riv_width is required')
@@ -167,7 +168,8 @@ def _bifprm_txt_content(path: Path) -> tuple[str, int]:
         names = ('ix', 'iy', 'jx', 'jy', 'length', 'elevtn', 'depth', *widths,
                  'start_lat', 'start_lon', 'ibsn', 'jbsn')
         content.append(' '.join((row.get(name) or '').strip() for name in names) + '\n')
-    return ''.join(content), len(rows)
+    omitted_columns = tuple(name for name in ('end_lat', 'end_lon') if name in fields)
+    return ''.join(content), len(rows), omitted_columns
 
 
 def _bifprm_csv_from_txt(source: Path, destination: Path) -> int:
@@ -323,8 +325,12 @@ def _convert_families(map_dir: Path, direction: str) -> list[Conversion]:
         if not source.is_file():
             return
         try:
-            count = convert(source, destination)
-            conversions.append(Conversion(source, destination, count))
+            result = convert(source, destination)
+            if isinstance(result, tuple):
+                count, omitted_columns = result
+            else:
+                count, omitted_columns = result, ()
+            conversions.append(Conversion(source, destination, count, omitted_columns))
         except (OSError, ValueError, csv.Error) as exc:
             failures.append(f'{source}: {exc}')
             print(f'ERROR: {source}: {exc}')
@@ -379,9 +385,9 @@ def _convert_families(map_dir: Path, direction: str) -> list[Conversion]:
         run(map_dir / 'bifori.csv', map_dir / 'bifori.txt', bifori_reverse)
 
         def bifprm_reverse(src, dst):
-            content, count = _bifprm_txt_content(src)
+            content, count, omitted_columns = _bifprm_txt_content(src)
             _atomic_write(dst, content)
-            return count
+            return count, omitted_columns
         run(map_dir / 'bifprm.csv', map_dir / 'bifprm.txt', bifprm_reverse)
 
     for kind in ALLOCATION_SCHEMAS:
@@ -427,6 +433,8 @@ def main() -> int:
     print(f'Converted {len(conversions)} metadata file(s):')
     for item in conversions:
         print(f'  {item.source.name} -> {item.destination.name}: {item.count} record(s)/field(s)')
+        if item.omitted_columns:
+            print(f'    omitted v5-only columns: {", ".join(item.omitted_columns)}')
     return 0
 
 

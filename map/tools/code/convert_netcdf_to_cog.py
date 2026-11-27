@@ -100,7 +100,7 @@ def rows_for_base_variant(source, groups):
     guess it from suffixes or infer a choice among multi-variable/alias groups.
     Metadata only is opened here. Full storage/geometry checks remain in inspect.
     """
-    standard = base.standard_binary_filename(source.stem + '.bin')[:-4]
+    standard = Path(base.standard_binary_filename(source.stem + '.bin')).stem
     if standard != source.stem:
         return groups.get(standard, [])
     if source.stem.startswith('mpireg-'):
@@ -136,7 +136,7 @@ def plan(map_dir, resolutions, variables, registry):
                     filename = filename.strip()
                     if (not filename.startswith('inpmat_') and '/' not in filename
                             and filename.endswith('.nc') and '<' not in filename):
-                        groups.setdefault(filename[:-4], []).append(row)
+                        groups.setdefault(Path(filename).stem, []).append(row)
             directory = map_dir
             geometry = base_geometry(map_dir)
             matched = set()
@@ -150,7 +150,11 @@ def plan(map_dir, resolutions, variables, registry):
                                    if base.standard_binary_filename(source.stem + '.bin') == 'mpireg.bin')
                 sources = sorted(sources)
                 if not sources:
-                    print(f'SKIP missing registered NetCDF: {directory / (stem + ".nc")}')
+                    registered_path = directory / (stem + '.nc')
+                    if any(char in stem for char in '*?[]'):
+                        print(f'SKIP no NetCDF files match registered pattern: {registered_path}')
+                    else:
+                        print(f'SKIP missing registered NetCDF: {registered_path}')
                 for source in sources:
                     if source in matched:
                         continue
@@ -251,6 +255,31 @@ def nodata_value(var, row):
     return cast[0].item()
 
 
+def registered_source_variable(ds, task, row):
+    """Resolve the stored NetCDF variable without confusing it with its file name."""
+    registered_name = (row.get('netcdf_variable') or '').strip()
+    if ':' in registered_name:
+        name = registered_name.rsplit(':', 1)[1].strip()
+    elif registered_name and registered_name not in ('not_applicable', 'optional MPI runtime'):
+        name = registered_name
+    else:
+        name = row['name']
+    if name in ds.variables:
+        return name
+
+    # Older map NetCDF files sometimes name a single raster after the file
+    # (for example, nxtdst_grid.nc contains nxtdst_grid), while the registry's
+    # canonical map variable is nxtdst. Accept only an exact registered file
+    # and a matching, unambiguous spatial variable.
+    filenames = {Path(value.strip()).name for value in (row.get('filename') or '').split(';')}
+    if (len(task.rows) == 1
+            and task.source.name in filenames and task.source.stem in ds.variables):
+        var = ds[task.source.stem]
+        if len(var.dimensions) >= 2:
+            return task.source.stem
+    return name
+
+
 def inspect(ds, task):
     """Resolve registered planes before allocating buffers; never silently drop a variable."""
     if not task.rows:
@@ -267,7 +296,7 @@ def inspect(ds, task):
     for row in rows:
         if row['dimensions'] not in ('NX,NY', 'NX,NY,NLFP', 'NX_HIRES,NY_HIRES'):
             raise Unsupported(f'{row["name"]}: unsupported registered dimensions {row["dimensions"]}')
-        name = row['name']
+        name = registered_source_variable(ds, task, row)
         if name not in ds.variables and name in ('nextx_noedge', 'nexty_noedge'):
             name = name.replace('_noedge', '')
         if name not in ds.variables and name in ('catmxx', 'catmyy'):

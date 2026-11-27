@@ -1576,3 +1576,19 @@ Direct requirements now explicitly name Pillow, requests, and param where mainta
 ### Python 2024 compatibility fallback — DT-0216 (2026-11-27)
 
 The root Python setup attempts standard requirements first and makes one resolver-based fallback to the 2024 profile after installation or validation failure. It validates `pip check`, principal imports, and CMF `shade_rainbow`, and reports the selected profile/Python version. Follow-up testing found that reusing a partially updated environment left `panel-material-ui` behind with incompatible Panel/Bokeh requirements. DT-0217 fixes this by installing the fallback in a clean `.venv`, preserving the old environment until validation and restoring it if the replacement fails. The 2024 profile is not a cross-platform guarantee. See [DT-0216](../research/records/DT-0216.md), [DT-0217](../research/records/DT-0217.md), and [VR-0263](../research/records/validation_runs/VR-0263.md).
+
+### Python environment activation — DT-0218 (2026-11-27)
+
+`s02-python_setup.sh` creates new `.venv` environments with the `(cmf50)` prompt and updates existing activation scripts/configuration without reinstalling packages. `s03-activate_cmf_pyenv.sh` independently registers the `cmfpy` alias in Bash or Zsh startup configuration. On macOS Bash it preserves and uses the first existing login file in Bash's priority order; elsewhere it uses `~/.bashrc` or `~/.zshrc`. It preserves unrelated shell settings and reports conflicting aliases without replacing them. Focused temporary-HOME and temporary-venv checks passed on macOS; see [DT-0218](../research/records/DT-0218.md) and [VR-0264](../research/records/validation_runs/VR-0264.md).
+
+### Legacy Python compatibility follow-up — DT-0219 (2026-11-27)
+
+CMF Colormaps now falls back to the separately installed `importlib_resources`
+backport when `importlib.resources.files` is unavailable in Python 3.8. The
+package support declaration is unchanged: Python >=3.9 and Matplotlib >=3.7.
+Cloud Codex's completed Linux Docker experiments are recorded separately from
+the local current/2024 regression checks. Python 2022 and 2020 remain
+experimental probes; β02's official setup fallback remains the 2024 profile.
+See the [compatibility handoff](python_legacy_compatibility_handoff.md),
+[dependency audit](python_dependency_audit.md), [DT-0219](../research/records/DT-0219.md),
+and [VR-0265](../research/records/validation_runs/VR-0265.md).

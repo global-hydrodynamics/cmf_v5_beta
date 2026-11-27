@@ -58,6 +58,9 @@ def main():
                 args.map_dir / tag / f'{tag}.catmxy{suffix}', '<i2', (2, ny, nx),
             )
             ix, iy = (int(v) for v in assignment[:, y, x])
+            if ix == -9999 and iy == -9999:
+                print('This grid cell is undefined (e.g., ocean or outside the river network).')
+                return
             break
         if ix is None:
             ix = int(np.float32((lon - grid.west) / grid.size)) + 1
@@ -65,6 +68,9 @@ def main():
     if not (1 <= ix <= grid.nx and 1 <= iy <= grid.ny):
         p.error('grid indices are outside map or unassigned')
     r, c = iy - 1, ix - 1
+    if basin[r, c] == -9999 or np.all(nextxy[:, r, c] == -9999):
+        print('This grid cell is undefined (e.g., ocean or outside the river network).')
+        return
     glon = np.float32(grid.west + grid.size * np.float32(ix - .5))
     glat = np.float32(grid.north - grid.size * np.float32(iy - .5))
     print('Point Information')

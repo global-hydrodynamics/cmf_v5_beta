@@ -8,7 +8,7 @@
 
 The root requirements cover the core numerical, NetCDF and visualization stack. The code directly imports three additional distributions that are not explicitly declared there: `Pillow` (as `PIL`), `requests`, and `param`. Pillow and requests currently arrive transitively in the inspected environments; relying on that is fragile. The Map Explorer has its own requirements file, so its direct `Pillow` and `param` dependencies should be declared there as well. The root requirements are amended to name these packages explicitly.
 
-No lowered minimum is supported by a runtime matrix. Current root lower bounds are therefore retained. The 2024 direct-pin profile installed and passed focused checks on macOS arm64/CPython 3.12.3. The 2022 profile was partially installed and checked on CPython 3.10.8; its Rasterio pin could not be built on this Apple Silicon host, so Rasterio-dependent compatibility remains unverified.
+No lowered minimum is supported by a runtime matrix. Current root lower bounds are therefore retained. The 2024 direct-pin profile installed and passed focused checks on macOS arm64/CPython 3.12.3. The local 2022 profile was partially installed and checked on CPython 3.10.8; its Rasterio pin could not be built on this Apple Silicon host. A later Cloud Codex experiment verified the exact 2022 direct pins on Debian 11 / CPython 3.10.9 / Linux amd64, including Rasterio and selected map workflows. Cloud also verified the 2020 profile on Debian 10 / CPython 3.8.7 / Linux amd64. Both remain experimental and outside official β02 support.
 
 ## Dependency survey
 
@@ -74,6 +74,50 @@ The existing root `.venv` results are modern-environment checks and are not subs
 2. Declare `Pillow`, `requests`, and `param` explicitly because maintained code imports them directly. `Pillow` and `param` are added to the Explorer-specific requirements too.
 3. Do not remove the currently declared `scipy`, `tifffile`, `tqdm`, `lmoments3`, `PyYAML`, or `cftime` in this audit; scope search did not prove their absence from all user workflows, and root comments identify some as optional/maintained features.
 4. `s02-python_setup.sh` now tries the standard requirements and, after installation or validation failure, makes one resolver-based attempt with the 2024 profile. This is a compatibility fallback, not an OS support guarantee. The 2022 profile remains excluded.
-5. Before claiming compatibility on additional OS/CPU combinations, perform clean-install tests there and record resolution, `pip check`, runtime and recovery behavior. A separate GDAL-capable platform is needed to complete the 2022 Rasterio checks.
+5. Before claiming compatibility on additional OS/CPU combinations, perform clean-install tests there and record resolution, `pip check`, runtime and recovery behavior. Cloud's Linux checks fill the scoped 2022 Rasterio gap for Linux amd64; macOS arm64 and broader cross-platform compatibility remain unverified.
 
-Historical profiles constrain direct dependencies, not all transitives. The tested 2024 paths have focused evidence on this macOS arm64 host; the partial 2022 results are not full profile certification. Neither profile establishes general cross-platform support.
+Historical profiles constrain direct dependencies, not all transitives. The 2024 profile is the only official β02 fallback and is automatically selected by `s02-python_setup.sh`. The 2022 and 2020 profiles are experimental, manual-only profiles and are never automatically selected. Cloud's scoped Linux checks passed for both; the local macOS 2022 run was partial. The evidence does not establish general cross-platform support.
+
+## Follow-up: isolated Linux legacy compatibility evidence (2026-11-27)
+
+Cloud Codex completed separate Linux amd64 Docker experiments for the 2022 and
+2020 release-cutoff profiles. These results supplement the macOS findings
+above; they do not replace them. The experiments were not rerun locally. The
+2022 CPython 3.10.9 / Debian 11 profile and the 2020 CPython 3.8.7 / Debian 10
+profile passed `pip check`, core NetCDF and ordinary GeoTIFF probes, and the
+selected Mekong map/runoff checks. The Linux Rasterio wheels resolved the
+missing macOS arm64 Rasterio 1.3.4 evidence for 2022. In the 2020 profile,
+PyYAML 5.3.1 required a pure-Python source build with `--without-libyaml`.
+
+The 2020 source-import experiment exposed the unsupported
+`importlib.resources.files` API on Python 3.8. The compatibility patch now
+tries the standard library first and falls back to the separately installed
+`importlib_resources` backport only when needed. Python 3.10.9 exercised the
+standard-library branch; Python 3.8.7 exercised the backport branch in Cloud.
+Cloud also compared six CMF palette RGBA samples and decoded `shade_rainbow`
+PNG pixels across the two profiles; the tested outputs matched. This is
+software/rendering evidence, not hydrological validation.
+
+The scope remains narrow. CMF Colormaps metadata still requires Python >=3.9
+and Matplotlib >=3.7; Python 3.8 was exercised only through the source path.
+The 2022 and 2020 profiles are experimental, manual compatibility probes, not
+β02 supported environments. The 2024 profile remains the oldest official
+β02 fallback. Historical Panel/Bokeh do not meet the current Explorer bounds,
+and Python 3.8's Matplotlib lacks the current global colormap registry API;
+the experiment does not establish Explorer compatibility. The 2020 GDAL
+build lacks the COG driver. Exact images, pins, commands, results and boundaries
+are in the [legacy compatibility handoff](python_legacy_compatibility_handoff.md).
+
+Local follow-up after the source patch used the repository `.venv` and the
+existing isolated 2024 profile without installing or updating packages. Both
+passed `pip check`, imported CMF Colormaps from the working source, and passed
+all 25 existing CMF Colormaps unit tests. The prior macOS 2024 environment
+results above remain separate evidence; the local run was a focused regression
+check and did not repeat the clean-install or scientific workflow probes.
+
+The 2022/2020 requirements files preserve the direct versions in the Cloud
+handoff. For 2020, PyYAML 5.3.1 must be installed separately using the
+documented no-LibYAML procedure before installing the profile; the optional
+`importlib-resources==4.1.1` source-path probe is not a profile requirement.
+These profiles are for manual, experimental use only. Standard setup continues
+to offer only the 2024 fallback.
