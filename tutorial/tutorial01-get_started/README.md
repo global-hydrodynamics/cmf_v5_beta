@@ -206,12 +206,14 @@ If available, you can inspect without saving using `nano tutorial01-get_started.
 |---|---|
 | Project | `PROJ="tutorial01-get_started"` |
 | River map | `map/mekong_15min/` |
-| Runoff | `inp/repo-mek_1deg_bin/`, daily Binary records grouped by month |
-| Runoff-to-map mapping | `diminfo_repo-mek_1deg.nml` and `inpmat_repo-mek_1deg.nc` in the map directory |
+| Runoff | `inp/repo-mek_1deg/runoff2000.nc`, annual NetCDF with daily `runoff` values in `mm day-1` |
+| Runoff time | CF `time` coordinate and `time_bounds`; `proleptic_gregorian`; 366 records in leap year 2000 |
+| Runoff-to-map mapping | `diminfo_repo-mek_1deg.nml` and NetCDF `inpmat_repo-mek_1deg.nc` in the map directory |
 | Period | 2000-01-01 00:00 to 2000-02-10 00:00; end time is exclusive (40 days) |
 | Time step | Base `DT=3600` seconds; adaptive time stepping enabled |
 | Execution | Non-MPI, one OpenMP thread; bifurcation enabled |
-| Output | Daily Binary: `outflw`, `storge`, `sfcelv`, `flddph`, `fldfrc` |
+| Output | Daily NetCDF: `outflw`, `storge`, `sfcelv`, `flddph`, `fldfrc` |
+| Restart | One NetCDF Restart at the exclusive end time; Tutorial01 does not read it |
 | Output directory | `tutorial/tutorial01-get_started/out/${PROJ}/` |
 
 The rest of the tutorial locates the real input files and shows how the GOSH settings select them.
@@ -220,9 +222,45 @@ The rest of the tutorial locates the real input files and shows how the GOSH set
 
 - [ ] I can find an experiment condition in `tutorial_design.md` and locate the corresponding setting in the script.
 
-## 5. Inspect the river map
+## 5. Inspect runoff forcing
 
-A river map describes the model grid, river connectivity, and physical properties used by the simulation. Return to the repository root, enter the Mekong map directory, and list a few representative files:
+The model input is one annual NetCDF file containing daily runoff. The file covers the complete Gregorian year, including February 29, while this 40-day experiment reads only the records needed from January 1 through February 9. The variable stores daily surface runoff depth in `mm day-1`; its CF `time` coordinate has interval bounds and uses the `proleptic_gregorian` calendar.
+
+```bash
+cd "${CMF_V50_ROOT}"
+cd inp/repo-mek_1deg
+pwd
+ls -lhF runoff2000.nc
+ncdump -h runoff2000.nc
+```
+
+### Expected output
+
+The NetCDF header identifies dimensions `time = 366`, `latitude = 30`, and `longitude = 20`. It lists `runoff(time, latitude, longitude)` with units `mm day-1`, and a `time` coordinate with `time_bounds` and `calendar = "proleptic_gregorian"`. The file size and listing details depend on the checkout.
+
+The Shell settings select the annual file and its variables:
+
+```sh
+ROFFTAG="repo-mek_1deg"
+RUNOFF_DIR="${CMF_V50_ROOT}/inp/${ROFFTAG}"
+CROFFREQ="YEAR"
+CROFPRE="runoff"
+CROFSUF=".nc"
+CVNROF="runoff"
+CVNTIME="time"
+DROFUNIT=86400000
+```
+
+The model resolves `runoff2000.nc` from the directory, frequency, prefix, and suffix. `IFRQ_INP=24` reads daily forcing. `DROFUNIT=86400000` converts daily `mm day-1` depth to the model's `m s-1` rate. The source file has 366 daily records because 2000 is a leap year; February 29 is after the Tutorial01 end time and is not part of this 40-day run.
+
+### Learning Check
+
+- [ ] I can locate the annual NetCDF runoff file and identify its runoff variable and time coordinate.
+- [ ] I can find the Shell settings that select the file and convert its units.
+
+## 6. Inspect the river map
+
+A river map describes the model grid, river connectivity, and physical properties used by the simulation. Return to the repository root, enter the Mekong map directory, and list representative current-format files:
 
 ```bash
 cd "${CMF_V50_ROOT}"
@@ -233,69 +271,21 @@ ls -lhF params.nml nextxy_noedge.nc ctmare.nc elevtn.nc rivwth_merit.nc bifprm.c
 
 ### Expected output
 
-These file names and representative sizes were observed in the bundled checkout. Permissions and timestamps can differ.
+The listing includes `params.nml`, the individual map-variable NetCDF files, and `bifprm.csv`; sizes, permissions, and timestamps may vary. `params.nml` describes the map grid and geographic bounds. NetCDF files contain the individual map variables, and `bifprm.csv` stores bifurcation parameters. The high-resolution tile inventory is in `1min/location.csv`.
 
-```text
--rw-r--r--@ 1 yamadai  staff    68K Nov 28 10:03 bifprm.csv
--rw-r--r--@ 1 yamadai  staff    34K Nov 28 07:09 ctmare.nc
--rw-r--r--@ 1 yamadai  staff    28K Nov 28 07:09 elevtn.nc
--rw-r--r--@ 1 yamadai  staff    23K Nov 28 07:09 nextxy_noedge.nc
--rw-r--r--@ 1 yamadai  staff   438B Nov 28 07:09 params.nml
--rw-r--r--@ 1 yamadai  staff    33K Nov 28 07:10 rivwth_merit.nc
-```
-
-`params.nml` describes the map grid and geographic bounds. The `.nc` files are individual NetCDF map variables; `bifprm.csv` stores bifurcation parameters. The high-resolution tile inventory is in `1min/location.csv`. The tutorial script selects connectivity and channel width with these settings:
+The tutorial script selects connectivity and channel width with these settings:
 
 ```sh
 MAPDIR="${CMF_V50_ROOT}/map/mekong_15min"
-#NEXTXY="${MAPDIR}/nextxy.nc"
 NEXTXY="${MAPDIR}/nextxy_noedge.nc"
-#RIVWTH="${MAPDIR}/rivwth.nc"
 RIVWTH="${MAPDIR}/rivwth_merit.nc"
 ```
 
-The commented lines show alternative map products; the uncommented assignments select the files used here.
+These assignments identify the files used in this experiment.
 
 ### Learning Check
 
 - [ ] I can find `MAPDIR` and identify the connectivity and width files selected by `NEXTXY` and `RIVWTH`.
-
-## 6. Inspect runoff forcing
-
-Runoff forcing is water input supplied to the model over time. The sample uses daily Binary records grouped into monthly files on a grid coarser than the river map. Inspect the two files covering the 40-day interval:
-
-```bash
-cd "${CMF_V50_ROOT}"
-cd inp/repo-mek_1deg_bin/runoff
-pwd
-ls -l Roff____200001.one Roff____200002.one
-```
-
-### Expected output
-
-The monthly files contain 31 and 29 daily fields respectively (60 records total).
-Their exact sizes are 74,400 and 69,600 bytes. Each daily field is 2,400 bytes;
-monthly grouping does not average the values.
-
-The corresponding GOSH settings identify the dataset, file naming rule, frequency, and unit conversion:
-
-```sh
-ROFFTAG="repo-mek_1deg_bin"
-INPMAT_TAG="repo-mek_1deg"
-RUNOFF_DIR="${CMF_V50_ROOT}/inp/${ROFFTAG}/runoff"
-IFRQ_INP=24
-CROFFREQ="MON"
-CROFPRE="Roff____"
-CROFSUF=".one"
-DROFUNIT=86400000
-```
-
-`Roff____` + a month in `YYYYMM` form + `.one` makes a monthly filename containing daily records. `IFRQ_INP=24` means the forcing interval is 24 hours. `DROFUNIT` converts the supplied `mm/day` runoff values to the model's `m/s` units. The 40-day interval ends at February 10 00:00, so February 9 is the final daily input date.
-
-### Learning Check
-
-- [ ] I can locate a monthly file containing daily runoff records in the listed directory.
-- [ ] I can find the GOSH settings that select the runoff directory and construct its filename.
 
 ## 7. Inspect runoff-to-map mapping
 
@@ -357,7 +347,24 @@ LINTERP=".TRUE."
 - [ ] I can locate the two mapping files and match them to `DIMINFO` and `INPMAT`.
 - [ ] I can find `LINTERP` in the same GOSH configuration.
 
-## 8. Run the experiment
+## 8. Inspect the NetCDF I/O settings
+
+After locating the input files, inspect how the Shell config selects each format. The map uses individual NetCDF variables with CSV bifurcation parameters; runoff and its mapping matrix are NetCDF; model outputs and the final Restart are also NetCDF. This section identifies the settings without requiring you to edit them.
+
+```bash
+cd "${CMF_V50_ROOT}"
+cd tutorial/tutorial01-get_started
+grep -nE 'LMAPCDF|CPTHOUT|LINPCDF|CROFFREQ|CROFPRE|CROFSUF|CVNROF|CVNTIME|CINPMAT|LOUTCDF|CVARSOUT|LRESTCDF|IFRQ_RST' tutorial01-get_started.sh
+```
+
+The important assignments are `LMAPCDF=.FALSE.` for individual map files, `LINPCDF=.TRUE.` and `CROFFREQ="YEAR"` for annual NetCDF runoff, `CINPMAT` with `LITRPCDF=.TRUE.` for the NetCDF matrix, `LOUTCDF=.TRUE.` for daily NetCDF output, and `LRESTCDF=.TRUE.` with `IFRQ_RST=0` for a NetCDF Restart at the end. `CPTHOUT` points to `bifprm.csv`. The script retains `CMF_BASE` as the model NAMELIST variable and fills it from `CMF_V50_ROOT`.
+
+### Learning Check
+
+- [ ] I can find the settings that select NetCDF runoff, matrix input, model output, and Restart.
+- [ ] I can identify `bifprm.csv` as the bifurcation-parameter file.
+
+## 9. Run the experiment
 
 The script defines the project as `PROJ="tutorial01-get_started"` and constructs `RUNDIR` as the Tutorial01 directory's `out/${PROJ}/`. Keeping each experiment under its own project name makes outputs easier to compare and prevents one experiment from replacing another. Tutorial02 uses the same naming convention for its multiple experiments.
 
@@ -374,63 +381,83 @@ pwd
 
 ### Expected output
 
-This abbreviated excerpt was captured from a 40-day run using the current workflow. The temporary validation output path is shortened; in your checkout `RUNDIR` is under the Tutorial01 directory.
+This abbreviated excerpt was captured from a 40-day NetCDF run. The temporary validation output path is shortened; in your checkout `RUNDIR` is under the Tutorial01 directory.
 
 ```text
 PROJ = tutorial01-get_started
 RUNDIR = .../tutorial/tutorial01-get_started/out/tutorial01-get_started
 Overwriting previous sample results in: .../out/tutorial01-get_started
 ...
-[STEP 3/5] Generate planned binary-output CTLs
-Expected output records: 40 (00Z02jan2000 to 00Z10feb2000)
+[STEP 1/3] Prepare the Tutorial01 Mekong experiment directory
 ...
-[STEP 4/5] Run CaMa-Flood v5 from 2000 to 2000-2-10
+[STEP 2/3] Configure the Tutorial01 Mekong simulation
+...
+[STEP 3/3] Run CaMa-Flood v5 from 2000 to 2000-2-10
+...
 Exit status: 0
-...
-[STEP 5/5] Generate GrADS CTLs for Binary Restart files
 ...
 [SUCCESS] tutorial01-get_started.sh
 Results: .../tutorial/tutorial01-get_started/out/tutorial01-get_started
 ```
 
-The script first writes the experiment Namelist and planned GrADS CTL files, then runs the model and prepares a Restart CTL. Shell messages go to the terminal; detailed model progress is in `log_CaMa.txt`. Exit status zero and the `[SUCCESS]` message mean the workflow completed without a reported command failure.
+The script writes the experiment Namelist and then runs the model. Shell progress appears in the terminal; detailed model progress is in `log_CaMa.txt`. Exit status zero and `[SUCCESS]` mean the workflow completed without a reported command failure. No GrADS CTL files are generated for this NetCDF workflow.
 
 ### Learning Check
 
 - [ ] I can find `PROJ` and the output directory shown in the script's startup messages.
 - [ ] I can run the script from its documented directory and recognize successful completion.
 
-## 9. Inspect the results
+## 10. Inspect the model outputs
 
-The GOSH run directory contains the copied executable, Namelist, model log, timing record, Restart, binary outputs, and CTL metadata. Inspect it from the repository root:
+The project directory contains the copied executable, Namelist, model log, timing record, five daily NetCDF outputs, and final Restart. List the directory, then inspect one output header:
 
 ```bash
 cd "${CMF_V50_ROOT}"
 cd tutorial/tutorial01-get_started
 pwd
 ls -lhF out/tutorial01-get_started
+ncdump -h out/tutorial01-get_started/o_outflw2000.nc
 ```
 
 ### Expected output
 
-Representative files and sizes from the checked run; this excerpt omits other entries. `*` is the `-F` marker for the executable copy:
+Representative names and sizes from the isolated validation run; the excerpt omits entries and sizes may vary by compiler and platform. `*` is the `-F` marker for the executable copy:
 
 ```text
 -rwxr-xr-x ... MAIN_cmf*                 600K
--rw-r--r-- ... flddph2000.bin            1.5M
--rw-r--r-- ... fldfrc2000.bin            1.5M
--rw-r--r-- ... input_cmf.nam             4.6K
+-rw-r--r-- ... o_flddph2000.nc           192K
+-rw-r--r-- ... o_fldfrc2000.nc           193K
+-rw-r--r-- ... input_cmf.nam             4.7K
 -rw-r--r-- ... log_CaMa.txt              1.6M
--rw-r--r-- ... outflw2000.bin            1.5M
--rw------- ... outflw2000.ctl            293B
--rw-r--r-- ... restart2000021000.bin     450K
--rw-r--r-- ... sfcelv2000.bin            1.5M
--rw-r--r-- ... storge2000.bin            1.5M
+-rw-r--r-- ... o_outflw2000.nc           587K
+-rw-r--r-- ... o_sfcelv2000.nc           558K
+-rw-r--r-- ... o_storge2000.nc           598K
+-rw-r--r-- ... restart2000021000.nc      129K
 ```
 
-All five daily output variables contain 40 records. The `outflw2000.ctl` file reports `TDEF 40 LINEAR 00Z02jan2000 1dy`; the model's output timestamps follow its output convention, while the simulation end time is exclusive. The model log ends with `CMF::===== CALCULATION END =====`. The generated Restart is accompanied by a GrADS CTL. These are workflow checks, not evidence that simulated values are scientifically correct.
+The five files are `o_outflw2000.nc`, `o_storge2000.nc`, `o_sfcelv2000.nc`, `o_flddph2000.nc`, and `o_fldfrc2000.nc`. Each contains 40 daily records on the 80 × 120 map grid. Output time bounds are January 2 through February 10, 2000; the final timestamp is the end of the last daily output interval, while the simulation end is exclusive. The NetCDF `outflw` variable has units `m3/s` and `cell_methods="time: mean"`. The model log ends with `CMF::===== CALCULATION END =====`. These are workflow checks, not evidence that simulated values are scientifically correct.
 
 ### Learning Check
 
-- [ ] I can locate the discharge output file `outflw2000.bin` and the model log `log_CaMa.txt`.
+- [ ] I can locate `o_outflw2000.nc` and identify the other four output files.
 - [ ] I can recognize the model's normal-completion message in `log_CaMa.txt`.
+
+## 11. Inspect the final Restart
+
+The model writes one NetCDF Restart at the experiment's exclusive end time. Tutorial01 creates this file so you can identify the saved model state; it does not read the Restart to begin another simulation. Restart chaining is introduced in Tutorial02.
+
+```bash
+cd "${CMF_V50_ROOT}"
+cd tutorial/tutorial01-get_started
+ls -lhF out/tutorial01-get_started/restart2000021000.nc
+ncdump -h out/tutorial01-get_started/restart2000021000.nc
+```
+
+### Expected output
+
+The file is `restart2000021000.nc`, with one `time` record and the 120 × 80 map grid. Its header includes model state variables such as river and floodplain storage. The output is written at 2000-02-10 00:00, the exclusive simulation end.
+
+### Learning Check
+
+- [ ] I can find the NetCDF Restart and distinguish it from the daily output files.
+- [ ] I know that Tutorial01 writes but does not read or chain this Restart.

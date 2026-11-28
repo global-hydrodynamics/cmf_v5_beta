@@ -1,6 +1,6 @@
 #!/bin/sh
 # Run a 40-day, non-MPI CaMa-Flood simulation on the Mekong sample.
-# Map: map/mekong_15min; forcing: inp/repo-mek_1deg_bin (daily mm/day, monthly files).
+# Map: map/mekong_15min; forcing: inp/repo-mek_1deg/runoff2000.nc (daily mm/day).
 # Outputs, executable, and namelist: out/${PROJ}/ under this tutorial directory.
 #
 # Execution requirement:
@@ -13,7 +13,6 @@
 set -eu
 
 # CaMa-Flood general setting (check CMF root, import CMF common shell functions)
-PYTHON_CMD="python3"
 : "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
 . "$CMF_V50_ROOT/tools/cmf_shell_functions.sh"
 
@@ -62,22 +61,26 @@ LDAMOUT=".FALSE."             # TRUE: enable reservoir operation; FALSE: disable
 LRESTART=".FALSE."            # TRUE: read restart initial conditions; FALSE: initialize without restart data.
 DT=3600                       # Base timestep [s], multiple of 60; adaptive stepping may adjust it.
 
-# Daily binary runoff in monthly files and its matching map-specific input matrix.
-ROFFTAG="repo-mek_1deg_bin"   # Dataset directory; daily fields in monthly files.
+# Annual NetCDF runoff and its matching map-specific input matrix.
+ROFFTAG="repo-mek_1deg"      # Runoff dataset/grid identifier.
 INPMAT_TAG="repo-mek_1deg"    # Unchanged matrix for the same 20 x 30 runoff grid.
 IFRQ_INP=24                   # Runoff update interval [hours]; examples: 1, 2, 3, 6, 12, 24.
 DROFUNIT=86400000             # Input runoff units / DROFUNIT -> m/s; 86400000 converts mm/day.
-LINPCDF=".FALSE."             # TRUE: read NetCDF runoff; FALSE: read binary runoff.
-CROFFREQ="MON"               # Daily records indexed from 00:00 at each month start.
+LINPCDF=".TRUE."              # TRUE: read NetCDF runoff; FALSE: read binary runoff.
+CROFFREQ="YEAR"              # One runoff file per calendar year.
 LINTERP=".TRUE."              # TRUE: map runoff with input matrix; FALSE: use nearest-grid conversion.
 LITRPCDF=".TRUE."             # TRUE: read the input-mapping matrix from NetCDF.
-CROFPRE="Roff____"            # Monthly filename prefix: Roff____YYYYMM.one.
-CROFSUF=".one"                # Binary filename suffix.
+CVNROF="runoff"               # Runoff variable name in the annual NetCDF file.
+CVNTIME="time"                # CF time-coordinate variable name.
+CROFPRE="runoff"              # Annual filename prefix: runoffYYYY.nc.
+CROFSUF=".nc"                 # NetCDF filename suffix.
+LLEAPYR=".TRUE."              # Use the Gregorian leap-year calendar.
 
-# Daily binary output settings.
-CVARSOUT="outflw,storge,sfcelv,flddph,fldfrc"  # Variables saved in binary output.
+# Daily NetCDF output settings.
+CVARSOUT="outflw,storge,sfcelv,flddph,fldfrc"  # Variables saved in NetCDF output.
 IFRQ_OUT=24                   # Output interval [hours]; examples: 1, 2, 3, 6, 12, 24.
-LOUTCDF=".FALSE."             # TRUE: write NetCDF; FALSE: write binary output.
+LOUTCDF=".TRUE."              # TRUE: write NetCDF; FALSE: write binary output.
+LRESTCDF=".TRUE."             # TRUE: write a NetCDF Restart; FALSE: write Binary Restart.
 
 # Model output directory, relative to the model execution directory.
 # "./" means outputs are saved in RUNDIR,
@@ -91,15 +94,11 @@ IFRQ_RST=0                    # 0=end only; 1-24=hour interval; 30=monthly (nonz
 # User settings end here. Paths, namelist generation, and execution follow.
 # ----------------------------------------------------------------------
 
-if [ "${LOUTCDF}" = ".FALSE." ]; then
-    TOTAL_STEPS=5
-else
-    TOTAL_STEPS=4
-fi
+TOTAL_STEPS=3
 cmf_check_init "Tutorial01 40-day Mekong simulation"
 
-# Reference input directory for daily runoff files.
-RUNOFF_DIR="${CMF_V50_ROOT}/inp/${ROFFTAG}/runoff"
+# Reference input directory for the annual runoff NetCDF file.
+RUNOFF_DIR="${CMF_V50_ROOT}/inp/${ROFFTAG}"
 
 # The dimension descriptor and matrix were generated for this map/runoff pair.
 DIMINFO="${MAPDIR}/diminfo_${INPMAT_TAG}.nml"
@@ -124,7 +123,8 @@ printf 'Overwriting previous sample results in: %s\n' "${RUNDIR}"
 mkdir -p "${RUNDIR}"
 rm -f "${RUNDIR}/MAIN_cmf" \
     "${RUNDIR}/input_cmf.nam" "${RUNDIR}/log_CaMa.txt" \
-    "${RUNDIR}/mapdata.txt" "${RUNDIR}/run.stdout.log" "${RUNDIR}/run_time.log"
+    "${RUNDIR}/mapdata.txt" "${RUNDIR}/mapdata.nml" \
+    "${RUNDIR}/run.stdout.log" "${RUNDIR}/run_time.log"
 
 # Remove this sample's output variables, including old tags and the former pthflw output.
 rm -f "${RUNDIR}/outflw"* "${RUNDIR}/storge"* "${RUNDIR}/sfcelv"* \
@@ -148,6 +148,7 @@ LADPSTP  = ${LADPSTP}        ! TRUE: use adaptive time stepping.
 LPTHOUT  = ${LPTHOUT}        ! TRUE: activate bifurcation routing.
 LDAMOUT  = ${LDAMOUT}        ! TRUE: enable reservoir operation; FALSE: disable.
 LRESTART = ${LRESTART}       ! TRUE: read restart initial conditions; FALSE: initialize without restart data.
+LLEAPYR = ${LLEAPYR}         ! TRUE: use Gregorian calendar including February 29.
 /
 &NDIMTIME
 CDIMINFO = "${DIMINFO}"       ! Map and runoff-grid dimensions and input-matrix metadata.
@@ -186,19 +187,21 @@ CPTHOUT = "${MAPDIR}/bifprm.csv"    ! Bifurcation channel parameters.
 &NRESTART
 CRESTDIR = "./"              ! Restart-output directory relative to the run directory.
 CVNREST  = "${CVNREST}"      ! Prefix for restart-output filenames.
-LRESTCDF = .FALSE.           ! TRUE: write NetCDF restart; FALSE: write binary restart.
+LRESTCDF = ${LRESTCDF}        ! TRUE: write NetCDF Restart; FALSE: write Binary Restart.
 IFRQ_RST = ${IFRQ_RST}       ! 0=end only; 1-24=hour interval; 30=monthly (nonzero also writes at end).
 /
 &NFORCE
 LINPCDF  = ${LINPCDF}         ! TRUE: read NetCDF runoff; FALSE: read binary runoff.
-CROFFREQ = "${CROFFREQ}"     ! Explicit grouping mode; DAY/MON/YEAR/SEQ.
+CROFFREQ = "${CROFFREQ}"     ! One annual NetCDF runoff file.
 LINTERP  = ${LINTERP}         ! TRUE: map runoff with input matrix; FALSE: use nearest-grid conversion.
 LITRPCDF  = ${LITRPCDF}        ! TRUE: read the input-mapping matrix from NetCDF.
 CINPMAT  = "${INPMAT}"        ! NetCDF runoff-to-river input-mapping matrix.
 DROFUNIT = ${DROFUNIT}        ! Input runoff units / DROFUNIT -> m/s; 86400000 converts mm/day.
 CROFDIR  = "${RUNOFF_DIR}"    ! Directory containing runoff input files.
-CROFPRE  = "${CROFPRE}"       ! Runoff filename prefix before the date.
-CROFSUF  = "${CROFSUF}"       ! Runoff filename suffix.
+CROFPRE  = "${CROFPRE}"      ! Annual filename prefix before the year.
+CROFSUF  = "${CROFSUF}"      ! NetCDF filename suffix.
+CVNROF   = "${CVNROF}"       ! Runoff variable in the NetCDF file.
+CVNTIME  = "${CVNTIME}"      ! Time-coordinate variable in the NetCDF file.
 /
 &NOUTPUT
 CMF_BASE = "${CMF_V50_ROOT}"   ! CaMa-Flood repository/package root.
@@ -212,27 +215,8 @@ IFRQ_OUT = ${IFRQ_OUT}        ! Output interval [hours]; examples: 1, 2, 3, 6, 1
 /
 EOF
 
-# Create descriptors before the model starts so GrADS can inspect written records during a run.
-if [ "${LOUTCDF}" = ".FALSE." ]; then
-    cmf_check_step 3 "${TOTAL_STEPS}" "Generate planned binary-output CTLs"
-    if "${PYTHON_CMD}" "${CMF_V50_ROOT}/tools/scripts/generate_output_ctl.py" \
-        --run-dir "${RUNDIR}" \
-        --mode planned; then
-        :
-    else
-        CTL_STATUS=$?
-        printf '[ERROR] CTL generation failed; the CaMa-Flood model was not started.\n' >&2
-        exit "${CTL_STATUS}"
-    fi
-fi
-
-# Run one continuous period so the model reads daily files across the month boundary.
-if [ "${LOUTCDF}" = ".FALSE." ]; then
-    MODEL_STEP=4
-else
-    MODEL_STEP=3
-fi
-cmf_check_step "${MODEL_STEP}" "${TOTAL_STEPS}" \
+# Run the 40-day NetCDF experiment as one continuous period.
+cmf_check_step 3 "${TOTAL_STEPS}" \
     "Run CaMa-Flood v5 from ${START_YEAR} to ${END_YEAR}-${END_MONTH}-${END_DAY}"
 
 # Measure only the model process; setup and executable-copy time are excluded.
@@ -258,9 +242,6 @@ ELAPSED_SECONDS=$((END_TIME - START_TIME))
 if [ "${RUN_STATUS}" -ne 0 ]; then
     exit "${RUN_STATUS}"
 fi
-
-cmf_check_step "${TOTAL_STEPS}" "${TOTAL_STEPS}" "Generate GrADS CTLs for Binary Restart files"
-"${PYTHON_CMD}" "${CMF_V50_ROOT}/tools/scripts/generate_restart_ctl.py" --run-dir "${RUNDIR}"
 
 cmf_check_success
 printf 'Results: %s\n' "${RUNDIR}"
