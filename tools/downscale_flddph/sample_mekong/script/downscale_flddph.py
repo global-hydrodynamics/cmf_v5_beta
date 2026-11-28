@@ -6,12 +6,20 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
 
 from netCDF4 import Dataset
 import numpy as np
 
 FILL_VALUE = np.float32(-9999.0)
 PERMANENT_WATER_DEPTH = np.float32(0.1)
+
+REPOSITORY = Path(__file__).resolve().parents[4]
+MAP_TOOLS_CODE = REPOSITORY / "map" / "tools" / "code"
+if str(MAP_TOOLS_CODE) not in sys.path:
+    sys.path.insert(0, str(MAP_TOOLS_CODE))
+from hires_metadata import read_location_csv, read_location_txt  # noqa: E402
+from map_metadata import read_map_geometry as read_standard_map_geometry  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:
@@ -32,20 +40,9 @@ def parse_args() -> argparse.Namespace:
 
 
 def read_map_geometry(path: Path) -> tuple[int, int, float, float, float, float, float]:
-    if not path.is_file():
-        raise FileNotFoundError(path)
-    values = path.read_text().splitlines()
-    if len(values) < 8:
-        raise ValueError(f"{path}: expected at least eight parameter lines")
-    try:
-        nx, ny = int(values[0].split()[0]), int(values[1].split()[0])
-        resolution = float(values[3].split()[0])
-        west, east, south, north = (float(values[i].split()[0]) for i in range(4, 8))
-    except (ValueError, IndexError) as exc:
-        raise ValueError(f"{path}: could not parse CaMa-Flood map geometry") from exc
-    if nx <= 0 or ny <= 0 or resolution <= 0 or west >= east or south >= north:
-        raise ValueError(f"{path}: invalid map dimensions or extent")
-    return nx, ny, resolution, west, east, south, north
+    geometry = read_standard_map_geometry(path)
+    return (geometry.nx, geometry.ny, geometry.resolution, geometry.west,
+            geometry.east, geometry.south, geometry.north)
 
 
 def read_records(path: Path, dtype: str, count: int, shape: tuple[int, int], records: int = 1) -> np.ndarray:
@@ -67,8 +64,12 @@ def read_base_map(map_dir: Path, map_format: str, nx: int, ny: int, west: float,
     expected_lon = west + (np.arange(nx, dtype=np.float64) + 0.5) * resolution
     expected_lat = north - (np.arange(ny, dtype=np.float64) + 0.5) * resolution
     for layer in ("nextxy", "uparea"):
-        netcdf_path = map_dir / "netcdf" / f"{layer}.nc"
-        binary_path = map_dir / f"{layer}.bin"
+        netcdf_path = map_dir / f"{layer}.nc"
+        if not netcdf_path.is_file():
+            netcdf_path = map_dir / "netcdf" / f"{layer}.nc"
+        binary_path = map_dir / "binary" / f"{layer}.bin"
+        if not binary_path.is_file():
+            binary_path = map_dir / f"{layer}.bin"
         selected = resolve_format(map_format, netcdf_path, binary_path, layer)
         formats[layer] = selected
         sources[layer] = str(netcdf_path if selected == "netcdf" else binary_path)
@@ -87,7 +88,7 @@ def read_base_map(map_dir: Path, map_format: str, nx: int, ny: int, west: float,
                     raise ValueError(f"{netcdf_path}: missing {coord} coordinate")
                 actual = np.asarray(source.variables[coord][:], dtype=np.float64)
                 if not np.allclose(actual, expected, rtol=0, atol=1e-5):
-                    raise ValueError(f"{netcdf_path}: {coord} does not match params.txt cell centers")
+                    raise ValueError(f"{netcdf_path}: {coord} does not match params.nml cell centers")
             names = ("nextx", "nexty") if layer == "nextxy" else ("uparea",)
             for name in names:
                 if name not in source.variables:
@@ -166,7 +167,7 @@ def read_snapshot(path: Path, nx: int, ny: int, west: float, resolution: float,
     expected_lon = west + (np.arange(nx, dtype=np.float64) + 0.5) * resolution
     expected_lat = north - (np.arange(ny, dtype=np.float64) + 0.5) * resolution
     if not np.allclose(lon, expected_lon, rtol=0, atol=1.0e-5) or not np.allclose(lat, expected_lat, rtol=0, atol=1.0e-5):
-        raise ValueError(f"{path}: coordinates do not match params.txt cell centers and north-first row order")
+        raise ValueError(f"{path}: coordinates do not match params.nml cell centers and north-first row order")
     raw = np.asarray(np.ma.filled(values, np.float32(fill)), dtype=np.float32)
     raw[(~np.isfinite(raw)) | (raw == np.float32(fill)) | (raw == np.float32(1.0e20))] = FILL_VALUE
     return raw, attrs, selected_format
@@ -183,6 +184,7 @@ def read_netcdf_tile(path: Path, tile: dict[str, object], layer: str) -> dict[st
     names = {
         "catmxy": ("catmxx", "catmyy"),
         "downxy": ("downx", "downy"),
+        "elevtn": ("elevtn",),
         "flwdir": ("flwdir",),
         "flddif": ("flddif",),
         "rivwth": ("rivwth",),
@@ -193,7 +195,7 @@ def read_netcdf_tile(path: Path, tile: dict[str, object], layer: str) -> dict[st
         lon = np.asarray(source.variables["lon"][:], dtype=np.float64)
         lat = np.asarray(source.variables["lat"][:], dtype=np.float64)
         if not np.allclose(lon, expected_lon, rtol=0, atol=1e-5) or not np.allclose(lat, expected_lat, rtol=0, atol=1e-5):
-            raise ValueError(f"{path}: NetCDF coordinates do not match location.txt cell centers")
+            raise ValueError(f"{path}: NetCDF coordinates do not match the high-resolution inventory cell centers")
         result = {}
         for name in names:
             if name not in source.variables:
@@ -213,39 +215,23 @@ def read_netcdf_tile(path: Path, tile: dict[str, object], layer: str) -> dict[st
 
 
 def read_locations(path: Path) -> list[dict[str, object]]:
-    if not path.is_file():
-        raise FileNotFoundError(path)
-    lines = path.read_text().splitlines()
-    if len(lines) < 2:
-        raise ValueError(f"{path}: incomplete location file")
-    try:
-        declared = int(lines[0].split()[0])
-    except ValueError as exc:
-        raise ValueError(f"{path}: first line must give tile count") from exc
-    tiles = []
-    for line_number, line in enumerate(lines[2:], start=3):
-        fields = line.split()
-        if not fields:
-            continue
-        if len(fields) < 9:
-            raise ValueError(f"{path}:{line_number}: expected tile id, area, bounds, dimensions and resolution")
-        tiles.append({
-            "id": fields[0], "area": fields[1], "west": float(fields[2]),
-            "east": float(fields[3]), "south": float(fields[4]), "north": float(fields[5]),
-            "nx": int(fields[6]), "ny": int(fields[7]), "resolution": float(fields[8]),
-        })
-    if len(tiles) != declared:
-        raise ValueError(f"{path}: declares {declared} tiles but contains {len(tiles)} rows")
-    return tiles
+    areas = read_location_csv(path) if path.name == "location.csv" else read_location_txt(path)
+    return [{
+        "id": str(area.iarea), "area": area.carea, "west": area.west,
+        "east": area.east, "south": area.south, "north": area.north,
+        "nx": area.nx, "ny": area.ny, "resolution": area.csize,
+    } for area in areas]
 
 
 def resolve_hires_layer(high_dir: Path, area: str, layer: str, requested: str) -> tuple[str, Path, str]:
     """Resolve one high-resolution layer, preferring NetCDF in auto mode."""
-    nc_dir = high_dir.parent / f"{high_dir.name}_nc"
     layers = ("downxy", "flwdir") if layer == "flow" else (layer,)
     candidates = []
     for layer_name in layers:
-        candidates.append(("netcdf", nc_dir / f"{area}.{layer_name}.nc", layer_name))
+        candidates.append(("netcdf", high_dir / f"{area}.{layer_name}.nc", layer_name))
+    legacy_nc_dir = high_dir.parent / f"{high_dir.name}_nc"
+    for layer_name in layers:
+        candidates.append(("netcdf", legacy_nc_dir / f"{area}.{layer_name}.nc", layer_name))
     for layer_name in layers:
         candidates.append(("binary", high_dir / f"{area}.{layer_name}.bin", layer_name))
     if requested == "netcdf":
@@ -281,7 +267,9 @@ def merge_high_resolution(map_dir: Path, resolution_tag: str, bounds: tuple[floa
     west, east, south, north = bounds
     height, width = shape
     high_dir = map_dir / resolution_tag
-    tiles = read_locations(high_dir / "location.txt")
+    location_csv = high_dir / "location.csv"
+    location_file = location_csv if location_csv.is_file() else high_dir / "location.txt"
+    tiles = read_locations(location_file)
     down_x = np.full(shape, -9999, dtype=np.int16)
     down_y = np.full(shape, -9999, dtype=np.int16)
     catch_x = np.full(shape, -9999, dtype=np.int16)
@@ -300,7 +288,7 @@ def merge_high_resolution(map_dir: Path, resolution_tag: str, bounds: tuple[floa
         if te < west or tw > east or tn < south or ts > north:
             continue
         if not np.isclose(tile_size, pixel_size, rtol=0, atol=1.0e-9):
-            raise ValueError(f"{high_dir}/location.txt: mixed high-resolution grid sizes")
+            raise ValueError(f"{location_file}: mixed high-resolution grid sizes")
         name = str(tile["area"])
         tile_data: dict[str, dict[str, np.ndarray]] = {}
         for layer in ("catmxy", "flow", "flddif", "rivwth"):
@@ -648,15 +636,18 @@ def main() -> None:
     if args.west >= args.east or args.south >= args.north:
         raise ValueError("Require WEST < EAST and SOUTH < NORTH")
     map_dir = args.map_dir.resolve()
-    nx_map, ny_map, grid_size, west_map, east_map, south_map, north_map = read_map_geometry(map_dir / "params.txt")
+    nx_map, ny_map, grid_size, west_map, east_map, south_map, north_map = read_map_geometry(map_dir)
     if args.west < west_map or args.east > east_map or args.south < south_map or args.north > north_map:
         raise ValueError("Requested domain must be contained by the coarse river map")
 
     highres_dir = map_dir / args.resolution
-    location_tiles = read_locations(highres_dir / "location.txt")
+    location_file = highres_dir / "location.csv"
+    if not location_file.is_file():
+        location_file = highres_dir / "location.txt"
+    location_tiles = read_locations(location_file)
     sizes = {float(tile["resolution"]) for tile in location_tiles}
     if len(sizes) != 1:
-        raise ValueError(f"{highres_dir}/location.txt: all tiles must use one resolution")
+        raise ValueError(f"{location_file}: all tiles must use one resolution")
     pixel_size = sizes.pop()
     width_float = (args.east - args.west) / pixel_size
     height_float = (args.north - args.south) / pixel_size

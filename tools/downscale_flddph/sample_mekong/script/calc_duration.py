@@ -31,7 +31,7 @@ def load_grid(args: argparse.Namespace):
     # Reuse the package's validated NetCDF/Binary map reader.
     import downscale_flddph as depth
 
-    nx, ny, resolution, west, east, south, north = depth.read_map_geometry(args.map_dir / "params.txt")
+    nx, ny, resolution, west, east, south, north = depth.read_map_geometry(args.map_dir)
     next_x, next_y, _, formats, sources = depth.read_base_map(
         args.map_dir, args.map_format, nx, ny, west, north, resolution
     )
@@ -102,7 +102,7 @@ def main() -> None:
         expected_lon = west + (np.arange(nx, dtype=np.float64) + 0.5) * resolution
         expected_lat = north - (np.arange(ny, dtype=np.float64) + 0.5) * resolution
         if not np.allclose(lon, expected_lon, rtol=0, atol=1e-5) or not np.allclose(lat, expected_lat, rtol=0, atol=1e-5):
-            raise ValueError(f"{args.input}: coordinates do not match map params.txt")
+            raise ValueError(f"{args.input}: coordinates do not match map geometry")
         times = decode_daily_times(source.variables["time"])
         selected = selected_daily_records(times, args.start_date, args.end_date)
         time_units = source.variables["time"].units

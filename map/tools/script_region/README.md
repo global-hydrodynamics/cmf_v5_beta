@@ -6,14 +6,18 @@ The scripts under `map/mekong_15min/` are maintained separately to create or upd
 
 ## Inputs and settings
 
-Base-map geometry is read from authoritative `params.nml`; legacy TXT-only
-source maps remain supported through `params.txt`.
+The standard workflow reads map geometry from authoritative `params.nml` and
+individual NetCDF products from the source map root. A TXT-only map may use
+`params.txt` when the workflow is explicitly configured for Binary mode.
 
-The input and output tables below use `params.txt` where they describe the
-existing legacy wrapper interface. The maintained Python regionalizer accepts
-either root metadata file and writes cropped geometry to `params.nml`.
-
-The source directory must contain authoritative `params.nml` (or legacy `params.txt` for TXT-only maps), `nextxy.bin`, `downxy.bin`, `elevtn.bin`, `fldhgt.bin`, `ctmare.bin`, `grdare.bin`, `uparea.bin`, `lonlat.bin`, `nxtdst.bin`, `rivlen.bin`, `width.bin`, and `bifori.csv`. `catmpx.bin` and `class.bin` are optional supplementary int32 rasters; when present, `region_cut_domain` crops their values over the full selected grid, including non-river cells. `cut_bifway` filters `bifori.csv` using the crop metadata and regional network. Confirm the binary formats and dimensions match the selected source map.
+For the default NetCDF workflow, the source map must contain `params.nml`,
+`nextxy.nc`, `downxy.nc`, `elevtn.nc`, `fldhgt.nc`, `ctmare.nc`, `grdare.nc`,
+`uparea.nc`, `lonlat.nc`, `nxtdst.nc`, `rivlen.nc`, `width.nc`, and `bifori.csv`.
+`catmpx.nc` and `class.nc` are optional supplementary int32 rasters; when
+present, `region_cut_domain` crops their values over the full selected grid,
+including non-river cells. `cut_bifway` filters `bifori.csv` using the crop
+metadata and regional network. Explicit `--map-format binary` mode reads the
+corresponding Binary products under `binary/`.
 
 High-resolution cropping is optional. For each supported tag (`1min`, `30sec`, `15sec`, or `3sec`), the NetCDF source needs that directory's standard `location.csv`, which lists area names, bounds, dimensions, and cell size, plus the corresponding source layer files read by the combiner. Legacy Binary-only source maps may still have `location.txt`; migrate them to the standard inventory before using this NetCDF workflow. Some layers, including `flwdir`, are optional; when one is absent, the v5 combiner reports a `WARNING` and fills the corresponding output with its missing-value initialization. Missing required catchment lookup tiles (`catmxy`) remain errors and are skipped. If present, the workflow crops supported high-resolution tags in the order `1min`, `30sec`, `15sec`, `5sec`, `3sec`, `1sec`. INPMAT/DIMINFO generation is a separate Parameter workflow using explicit runoff-grid settings. These are external/source datasets; the repository's workflow code does not supply a replacement global map or runoff archive.
 
@@ -45,10 +49,10 @@ No build is required. Run from the copied map-local `script_region/` directory a
 | Stage | Outputs | Role |
 | --- | --- | --- |
 | Script and crop metadata | `region_info.txt` and `dim_change.txt` in `script_region/` | Requested source/bounds and crop offsets/dimensions used by subsequent programs. |
-| `cut_domain` | Parent map: `params.nml` or legacy `params.txt`; cropped `nextxy.bin`, `downxy.bin`, `elevtn.bin`, `fldhgt.bin`, `ctmare.bin`, `grdare.bin`, `uparea.bin`, `lonlat.bin`, `nxtdst.bin`, `rivlen.bin`, `width.bin`, `lsmask.bin`; optional `catmpx.bin` and `class.bin` when supplied by the source; `nextxy_noedge.bin` | Cropped base-resolution map fields and bifurcation-filter input. The optional supplementary rasters retain their source int32 values across every cell in the selected rectangle. `nextxy_noedge.bin` is in the parent map directory. |
+| `cut_domain` | Parent map: authoritative `params.nml`; cropped `nextxy.nc`, `downxy.nc`, `elevtn.nc`, `fldhgt.nc`, `ctmare.nc`, `grdare.nc`, `uparea.nc`, `lonlat.nc`, `nxtdst.nc`, `rivlen.nc`, `width.nc`, `lsmask.nc`, and `nextxy_noedge.nc`; optional `catmpx.nc` and `class.nc` when supplied by the source | Cropped base-resolution NetCDF map fields and bifurcation-filter input. The optional supplementary rasters retain their source int32 values across every cell in the selected rectangle. |
 | `cut_bifway` | Parent map: `bifori.csv` | Source bifurcation paths that remain within the regional network. |
-| `set_map` | Parent map: `rivseq.bin`, `basin.bin`, `bsncol.bin`, `upgrid.bin`, `uparea_grid.bin`, `nxtdst_grid.bin`, `rivlen_grid.bin` | Derived river ordering, basin/visualization, and grid-based analysis products. `rivlen_grid.bin` intentionally contains the same downstream-distance array as `nxtdst_grid.bin` for rectangular-grid simulations. |
-| `combine_hires` | Regional high-resolution tag directory, including layers and its `location.csv` | Cropped high-resolution layers and standard geometry metadata, when corresponding source data are available. |
+| `set_map` | Parent map: `rivseq.nc`, `basin.nc`, `bsncol.nc`, `upgrid.nc`, `uparea_grid.nc`, `nxtdst_grid.nc`, `rivlen_grid.nc` | Derived river ordering, basin/visualization, and grid-based analysis products. `rivlen_grid.nc` intentionally contains the same downstream-distance array as `nxtdst_grid.nc` for rectangular-grid simulations. |
+| `combine_hires` | Regional high-resolution tag directory, including `<tag>.<layer>.nc` files and `location.csv` | Cropped high-resolution NetCDF layers and standard geometry metadata, when corresponding source data are available. |
 | Separate CTL step | `.ctl` files beside eligible binaries | GrADS descriptors based on base `params.nml` (or legacy `params.txt`) or high-resolution `location.txt`; not written by `s01`. |
 
 Consult [`variable_table/map_variables.csv`](../../../variable_table/map_variables.csv) for per-product type, dimensions, record layout, numeric missing value, special codes, and model/runtime role. Core model inputs and preprocessing/analysis products are distinguished there; the table above names outputs without duplicating every variable definition.
@@ -57,7 +61,7 @@ Consult [`variable_table/map_variables.csv`](../../../variable_table/map_variabl
 
 In high-resolution `downxy` files, record 1 (`downx`) and record 2 (`downy`) are signed 16-bit offsets on that same high-resolution grid. For a source pixel `(ix, iy)` with 1-based indices, add the two offsets to recover its downstream pixel: `(ix + downx, iy + downy)`. These are relative offsets, not absolute indices. FLOW adjusts the x offset for periodic wrapping at the global longitude seam. The paired sentinel values are `-999` for a river mouth and `-1000` for an inland termination. The output array starts at `-9999`; source inspection shows this remains when no downstream offset is assigned. The maintainer confirms `-9999` means sea in the low-resolution layer, but the high-resolution layer may use a different value for land pixels without an assigned unit catchment; that encoding remains unconfirmed. Consumers treat `downx <= -900` as a stop condition. The regional combiner preserves the offsets as-is. The common registry distinguishes the resolutions and records the unresolved high-resolution sentinel.
 
-Review terminal output after each internal program. The shell stops on the first failed processing command and reports the current step. Confirm expected outputs exist, dimensions agree with the generated `params.nml` / `location.csv`, and data sizes match the declared record layout. These checks establish file consistency only; they do not validate network correctness or scientific suitability. If GrADS descriptors are needed, run the separate Binary-format wrapper from the map-local `script_format_conv/` directory after reviewing map outputs:
+Review terminal output after each internal program. The shell stops on the first failed processing command and reports the current step. Confirm expected outputs exist, and NetCDF dimensions and coordinates agree with the generated `params.nml` / `location.csv` metadata. These checks establish file consistency only; they do not validate network correctness or scientific suitability. If GrADS descriptors are needed, run the separate Binary-format wrapper from the map-local `script_format_conv/` directory after reviewing map outputs:
 
 ```sh
 cd ../script_format_conv
@@ -77,6 +81,8 @@ Successful regional product generation, binary size checks, and CTL generation d
 
 `location.csv` may list multiple source areas. `region_combine_hires` and regional default input-matrix generation iterate over the listed areas and combine contributions for the regional target. This source-level capability is separate from the single-area allocation tools. Full package-scale multi-area integration has not yet been run; see the [area contract and manual validation procedure](../../../docs/map_data_tools_plan.md#high-resolution-area-handling-contract).
 
-The regional wrapper crops every available source resolution in
-`1min`, `30sec`, `15sec`, `5sec`, `3sec`, `1sec`. Its standard Input Matrix
-uses the first available regional grid in that same coarsest-first order.
+The regional wrapper crops every available NetCDF source resolution in
+`1min`, `30sec`, `15sec`, `5sec`, `3sec`, `1sec`. Explicit Binary mode reads
+Binary-only inventories and layers from the corresponding `binary/` paths. Its
+standard Input Matrix uses the first available regional grid in that same
+coarsest-first order.

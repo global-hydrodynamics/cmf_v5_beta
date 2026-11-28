@@ -40,7 +40,7 @@ not authoritative package inputs.
 
 The catalog includes root-level model-grid NetCDF, standard generated
 parameter data, observation/station information, bifurcation products and other
-auxiliary text. High-resolution NetCDF under `1min/` plus its `location.txt` is distributed;
+auxiliary text. High-resolution NetCDF under `1min/` plus its `location.csv` is distributed;
 optional Binary compatibility products under `binary/` are excluded by default and can be restored on demand
 with `cmf_v5_beta/map/tools/script_format_conv/s04-restore_highres_binary.sh`. Do not
 include both high-resolution formats. Include `COG/` for immediate visualization
@@ -60,10 +60,10 @@ package's contents alone do not establish redistribution permission.
 
 Japan 1-minute model maps are additional package data, with authoritative
 source `cmf_v5_package_data/map/TE-Japan_01min/`. The model grid has 1500 × 1320
-cells over 123–148°E, 24–46°N (`params.txt`). Root-level model-grid NetCDF,
+cells over 123–148°E, 24–46°N (`params.nml`). Root-level model-grid NetCDF,
 standard parameter products, station/bifurcation information and auxiliary
 text are included. High-resolution NetCDF resides in `15sec/` with
-`location.txt`; optional Binary compatibility files under `binary/` are excluded
+`location.csv`; optional Binary compatibility files under `binary/` are excluded
 and restored only when needed.
 `COG/` and stored generation scripts/source/settings are included for immediate
 visualization and generation provenance. Build/log/temporary files and caches

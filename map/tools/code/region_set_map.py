@@ -3,7 +3,7 @@
 """Derive regional river sequence, upstream grid properties and basin colors.
 
 Read nextxy and grdare, traverse the directed network, sort basins with the
-reference heap tie rules, and write the seven binary derived maps. Upstream
+reference heap tie rules, and write seven derived maps in the selected format. Upstream
 area reduction may differ by float32 rounding; basin IDs and colors retain
 reference ordering. Existing scientific input maps are never overwritten.
 """

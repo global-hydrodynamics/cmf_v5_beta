@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 # Parallel port of region_cut_domain.F90; original Fortran authors and license retained.
-"""Crop a regional binary map, retaining reference edge masking and snapping.
+"""Crop a regional map, retaining reference edge masking and snapping.
 
 Read region_info.txt, snap requested bounds using the Fortran search windows,
-translate connectivity and copy field records, then generate nextxy_noedge.
+translate connectivity and crop field records, then generate nextxy_noedge.
 Geometry uses double precision here, as in region_cut_domain.F90.
 """
 from pathlib import Path

@@ -2,8 +2,9 @@
 # Parallel port of region_default_inpmat.F90; original Fortran authors and license retained.
 """Build the reference regional default global 1-degree input matrix.
 
-Use the same sparse binary layout as param_inpmat_generate but retain this
-program's one-pixel area approximation and fixed filenames/grid settings.
+Use the same sparse matrix representation as param_inpmat_generate while
+retaining this program's one-pixel area approximation and fixed grid settings.
+NetCDF is the default; explicit Binary mode remains available.
 """
 import numpy as np
 

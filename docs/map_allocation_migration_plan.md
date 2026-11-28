@@ -157,7 +157,7 @@ The approved organization is implemented as follows:
 
 **Shared non-scientific I/O:** `mod_allocation_map_io.F90` centralizes `params.txt`, base-map and high-resolution binary reads, and one-area `location.txt` validation. Coordinate search, upstream candidate ordering, and downstream path traversal remain in the three separate programs, preserving their scientific logic and operation order. The three selection algorithms should remain separately readable. In particular, do not unify flow multi/single selection, dam area-to-catchment classification, or level-gauge outlet/upstream classification merely because the low-level map arrays are alike. Any module source placed in map/tools/code/ follows the local mod_ filename convention; that convention does not apply to legacy map/src/.
 
-The v4 tools accepted one selected area and automatically chose `1min` or `15sec`. The v5 programs require explicit `HIRES_TAG`, parse its `location.txt`, and fail when it declares more than one area. Supporting tiled high-resolution mosaics should be a separate decision and validation increment, because lookups across area boundaries can change selected pixels and path traversal.
+The v4 tools accepted one selected area and automatically chose `1min` or `15sec`. The v5 programs require explicit `HIRES_TAG`, parse `location.csv` for standard NetCDF operation, and fail when it declares more than one area. `location.txt` is used only by explicit legacy Binary mode. Supporting tiled high-resolution mosaics should be a separate decision and validation increment, because lookups across area boundaries can change selected pixels and path traversal.
 
 ## 7. Regression, structural, and scientific validation strategy
 

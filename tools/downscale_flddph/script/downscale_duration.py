@@ -55,13 +55,13 @@ def main() -> None:
     import downscale_flddph as depth
 
     table, thresholds, low_lat, low_lon, table_attrs = read_duration_table(args.table)
-    nx, ny, coarse, map_west, map_east, map_south, map_north = depth.read_map_geometry(args.map_dir / "params.txt")
+    nx, ny, coarse, map_west, map_east, map_south, map_north = depth.read_map_geometry(args.map_dir)
     if table.shape[1:] != (ny, nx):
         raise ValueError(f"{args.table}: table grid {table.shape[1:]} does not match map {(ny, nx)}")
     exp_lon = map_west + (np.arange(nx) + 0.5) * coarse
     exp_lat = map_north - (np.arange(ny) + 0.5) * coarse
     if not np.allclose(low_lon, exp_lon, rtol=0, atol=1e-5) or not np.allclose(low_lat, exp_lat, rtol=0, atol=1e-5):
-        raise ValueError(f"{args.table}: coordinates do not match map params.txt")
+        raise ValueError(f"{args.table}: coordinates do not match map geometry")
     if not np.isclose(float(table_attrs.get("depth_interval_m", np.nan)), args.depth_interval, rtol=0, atol=1e-7):
         raise ValueError("Configured depth interval does not match the duration table")
     expected_nlev = int(float(table_attrs["max_depth_m"]) / args.depth_interval) + 1
@@ -81,7 +81,10 @@ def main() -> None:
     flood_duration = np.full(shape, -9999, dtype=np.int16)
     permanent_water = np.full(shape, MASK_FILL, dtype=np.uint8)
     high_dir = args.map_dir / args.resolution
-    tiles = depth.read_locations(high_dir / "location.txt")
+    location_file = high_dir / "location.csv"
+    if not location_file.is_file():
+        location_file = high_dir / "location.txt"
+    tiles = depth.read_locations(location_file)
     selected_layers: dict[str, str] = {}
     selected_sources: dict[str, str] = {}
 

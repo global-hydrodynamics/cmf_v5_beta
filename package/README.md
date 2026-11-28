@@ -196,7 +196,7 @@ the external `cmf_v5_package_data/` root, never the local checkout's map copy.
 | Include | Exclude |
 | --- | --- |
 | Root-level NetCDF and standard parameter products | Optional legacy Binary products under `binary/` |
-| High-resolution NetCDF under `1min/`, including `location.txt` | Build products and temporary files |
+| High-resolution NetCDF under `1min/`, including `location.csv` | Build products and temporary files |
 | `COG/` for immediate visualization | Logs, caches and `.DS_Store` |
 | Generation script/source directories and Makefiles, as provenance snapshots | Git metadata |
 | Observation/station information, bifurcation products, CTL and auxiliary text | Build products, logs, temporary files, caches and `.DS_Store` |
@@ -268,12 +268,12 @@ under `map/tools/`; this tracking policy does not change catalog selection.
 `TE-Japan_01min` uses relative source and target `map/TE-Japan_01min`
 and candidate pattern `**/*`. The authoritative source is the external
 `cmf_v5_package_data/map/TE-Japan_01min/`, including when the store is a
-symbolic link. Its `params.txt` specifies 1500 × 1320 model cells, 1-minute
+symbolic link. Its `params.nml` specifies 1500 × 1320 model cells, 1-minute
 spacing, 123–148°E and 24–46°N. Supporting high-resolution data use 15 seconds,
 not 1 minute.
 
 Apply the same selection policy as the global map above. Include root-level
-NetCDF, `15sec/` NetCDF tiles and `location.txt`, standard parameter products,
+NetCDF, `15sec/` NetCDF tiles and `location.csv`, standard parameter products,
 station/bifurcation information and auxiliary text, `COG/`, and generation
 scripts/source snapshots. The catalog excludes optional `binary/` compatibility
 files and build products, logs, caches and temporary files. Restore Binary on

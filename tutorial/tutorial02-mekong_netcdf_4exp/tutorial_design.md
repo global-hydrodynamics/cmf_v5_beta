@@ -7,10 +7,9 @@ Tutorial02 assumes Tutorial01 has already compiled the shared
 Tutorial02 does not run a separate compiler script or use a second executable
 under `out/bin`. The experiment scripts require `CMF_V50_ROOT`, source the
 repository's common Shell functions, and copy the shared executable into each
-experiment's own `out/${PROJ}/` directory. Current high-resolution
-visualization products are NetCDF and COG, with tile geometry in
-`location.csv`. Learner-manual authoring and visualization-script migration
-are separate work.
+experiment's own `out/${PROJ}/` directory. Current high-resolution visualization products are NetCDF and COG, with tile
+geometry in `location.csv`. The supplied visualization scripts read the current
+v5 map metadata and products. Learner-manual authoring is separate work.
 
 ## 1. Purpose and learning outcomes
 
@@ -181,7 +180,7 @@ The Can Tho coordinate and Bassac River label are from the [MRC 2018 Lower Mekon
 
 ### 4.3 Four-panel spatial river-network visualization
 
-The four panels build from a grid attribute to the stored network topology and catchment geometry. Together they show how a regular computational grid represents river cells, downstream connectivity, geographically located unit-catchment outlets, additional bifurcation paths, and irregular high-resolution catchments. The supplied `v01-network_maps.py` script reconstructs the shown links from map products; it does not estimate river connections from geographic proximity. Its current reader still expects the retired `params.txt` and `location.txt` metadata names, so the visualization code needs a separate update before it can consume the current map layout. That reader migration is outside this experiment-script task.
+The four panels build from a grid attribute to the stored network topology and catchment geometry. Together they show how a regular computational grid represents river cells, downstream connectivity, geographically located unit-catchment outlets, additional bifurcation paths, and irregular high-resolution catchments. The supplied `v01-network_maps.py` script reconstructs the shown links from map products; it does not estimate river connections from geographic proximity. Its reader uses the current `params.nml`, `location.csv`, and NetCDF map products.
 
 #### Required Map Data
 
@@ -266,7 +265,7 @@ The Tutorial 02 README provides the Python setup and visualization quick start. 
 | Daily mean `outflw` and `pthflw` | Both registry entries select daily means and NetCDF Float32; `pthflw` is output only when `LPTHOUT` is enabled and carries static pathway IDs/endpoints. The Default 2001 output was regenerated from the existing year-start Restart; its path IDs/endpoints and daily time axis match `bifprm.nc` and `outflw`. | `variable_table/output_variables.csv`; `src_main/cmf_ctrl_output_mod.F90`; `out/mek_default/o_pthflw2001.nc`; `map/mekong_15min/bifprm.nc` | Code-, data-, and runtime-verified for the 2001 sample |
 | Annual maximum absolute discharge | Figure 4 computes `max_t |Q(t)|` for the grid and network rows, then adjacent-configuration differences (`Default − No Bifurcation`, `No Bifurcation − Kinematic Wave`, and `Kinematic Wave − No Floodplain`) for main-channel links. Their titles identify impact of bifurcation scheme, local inertial equation, and floodplain activation. The three difference maps are centered between the configuration panels they compare. The 1-minute elevation backdrop is cropped to the Figure 1c extent. Absolute rows share a logarithmic range; the difference row uses symmetric log-like bins and explicit end colors beyond ±10,000 m³/s. | `v04-annual_max_discharge.py`; generated figure; four 2001 `outflw` files, Default `pthflw`, and 1-minute `elevtn` | Implemented and output-verified for the 2001 sample |
 | Selected sampling locations | Four GRDC records supply allocated one-based cells; My Thuan is resolved from GRDC 2369005's original coordinate through `catmxy`, and Can Tho uses the MRC WQ station coordinate. Their cells and primary downstream links differ; configured bifurcation paths connect the delta reaches. | Section 4.2; GRDC allocation files; NetCDF map products; `bifprm.nc`; MRC 2018 WQ report | Geographic locations and model-grid/network mapping verified; scientific interpretation remains open |
-| Four-panel network visualization | Panels use `uparea`, `nextxy`, `lonlat`, `bifprm`, and 1-minute `catmxy` to show grid attributes, connectivity, outlets, bifurcations, and catchment assignment. Figure 1c additionally draws centroids of connectivity-defined headwater cells to their outlets. | `v01-network_maps.py`; products listed in Section 4.3; generated figures | Figure/map relationships are documented, but the current visualization reader still expects retired `params.txt` and `location.txt`; migrate that reader in a separate task before using the current map layout. Map-edge headwater candidates may be truncated by the regional domain; whole-map outlet/catmxy mismatches remain unexplained. |
+| Four-panel network visualization | Panels use `uparea`, `nextxy`, `lonlat`, `bifprm`, and 1-minute `catmxy` to show grid attributes, connectivity, outlets, bifurcations, and catchment assignment. Figure 1c additionally draws centroids of connectivity-defined headwater cells to their outlets. | `v01-network_maps.py`; products listed in Section 4.3; generated figures | The visualization reads current v5 map metadata and NetCDF products. Map-edge headwater candidates may be truncated by the regional domain; whole-map outlet/catmxy mismatches remain unexplained. |
 | Spin-up effect | The four years ran and the seasonal overlay was generated. Interannual runoff differs, preventing the plotted differences from isolating an initial-condition transient or establishing spin-up sufficiency. | `v02-spinup_comparison.py`; Default annual output | Runtime complete; scientific interpretation unresolved |
 
 ### A.2 Decisions and unresolved prerequisites

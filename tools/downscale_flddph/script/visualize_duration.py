@@ -51,10 +51,8 @@ def load_product(path: Path, variable_name: str, required: tuple[str, ...]):
 
 
 def read_map_geometry(path: Path):
-    lines = path.read_text().splitlines()
-    return (int(lines[0].split()[0]), int(lines[1].split()[0]), float(lines[3].split()[0]),
-            float(lines[4].split()[0]), float(lines[5].split()[0]), float(lines[6].split()[0]),
-            float(lines[7].split()[0]))
+    from visualize_flddph import read_map_geometry as read_depth_map_geometry
+    return read_depth_map_geometry(path)
 
 
 def read_map_layer(map_dir: Path, resolution: str, layer: str, lon: np.ndarray,
@@ -92,7 +90,7 @@ def main() -> None:
     if high_attrs.get("source_period_start_inclusive") != table_attrs.get("period_start_inclusive"):
         raise ValueError("High-resolution output was generated from a different duration-table period")
     map_dir = args.map_dir.resolve()
-    nx, ny, grid, map_west, map_east, map_south, map_north = read_map_geometry(map_dir / "params.txt")
+    nx, ny, grid, map_west, map_east, map_south, map_north = read_map_geometry(map_dir)
     expected_lon = map_west + (np.arange(nx) + 0.5) * grid
     expected_lat = map_north - (np.arange(ny) + 0.5) * grid
     if native.shape != (ny, nx) or not np.allclose(low_lon, expected_lon, atol=1e-5, rtol=0) or not np.allclose(low_lat, expected_lat, atol=1e-5, rtol=0):

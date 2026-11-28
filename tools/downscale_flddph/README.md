@@ -2,7 +2,7 @@
 
 This standalone package maps CaMa-Flood flood depth and flood duration to an existing higher-resolution CaMa-Flood map grid. Flood Depth ports `etc/downscale_flddph/src/downscale_flddph_trib.F90`; Flood Duration ports the threshold-count and high-resolution lookup behavior in `calc_depth-duration.F90` and `downscale_fldprd.F90`.
 
-The shared scripts use the maintained Map metadata readers in `map/tools/code/` for `params.nml` and high-resolution tile inventories. The Guide01 copy includes local copies of those reader modules so it does not import repository code at runtime. The map itself remains an external input. `sample_mekong/` is an independent copied example, including copies of the package scripts.
+The shared scripts use the maintained Map metadata readers in `map/tools/code/` for `params.nml` and `location.csv` on standard v5 maps. Legacy `params.txt` and Binary-side `location.txt` remain supported for explicit compatibility workflows. The Guide01 copy includes local copies of those reader modules so it does not import repository code at runtime. The map itself remains an external input. `sample_mekong/` is an independent copied example, including copies of the package scripts.
 
 ## Contents
 
