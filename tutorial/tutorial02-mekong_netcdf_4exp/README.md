@@ -15,8 +15,10 @@ That build must enable NetCDF input/output (`UseCDF_CMF`) for Tutorial02's map,
 runoff, output and Restart files. No separate `gosh_test/compile_netcdf.sh` step
 or `out/bin/MAIN_cmf_netcdf` executable is used. The Default and three reference
 configurations copy this shared executable into their experiment directories.
-The current visualization workflow continues to use high-resolution Binary data;
-no NetCDF/COG migration is required for these figures.
+The network-map figures read the current `params.nml`, high-resolution
+`location.csv`, and individual NetCDF map products, including `catmxx` and
+`catmyy` in the `catmxy` file. The comparison figures read NetCDF simulation
+outputs. No Binary high-resolution products are required.
 
 Tutorial 02 compares the four Mekong model configurations described in
 [`tutorial_design.md`](tutorial_design.md). Figure 4 uses the bundled

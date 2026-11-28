@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Create four map figures explaining the Tutorial 02 river network."""
 from pathlib import Path
+import sys
 
 import matplotlib
 matplotlib.use("Agg")
@@ -19,13 +20,17 @@ ROOT = Path(__file__).resolve().parents[2]
 MAP_ROOT = ROOT / "map" / "mekong_15min"
 NETCDF_DIR = MAP_ROOT
 HIRES_DIR = MAP_ROOT / "1min"
-BINARY_DIR = MAP_ROOT / "binary"
 FIGURE_DIR = Path(__file__).resolve().parent / "figure"
 FULL_EXTENT = (90.0, 110.0, 5.0, 35.0)
 BASIN_EXTENT = (99.5, 108.2, 8.5, 18.5)
 PANEL_C_EXTENT = (102.0, 108.0, 8.0, 15.0)
 DELTA_EXTENT = (104.5, 106.8, 9.4, 11.8)
 FIGURE_DPI = 240
+
+# Reuse the authoritative readers for current map geometry and tile metadata.
+sys.path.insert(0, str(ROOT / "map" / "tools" / "code"))
+from hires_metadata import read_location_csv
+from map_metadata import read_map_geometry
 
 STATIONS = [
     {"name": "Vientiane", "cell": (51, 69), "station": (102.613, 17.929)},
@@ -85,26 +90,27 @@ def read_map_data():
 
 def read_grid_geometry():
     """Read coarse and high-resolution grid bounds from map descriptors."""
-    values = [line.split()[0] for line in (MAP_ROOT / "params.txt").read_text().splitlines()]
-    nx, ny = int(values[0]), int(values[1])
-    resolution = float(values[3])
-    west, east, south, north = map(float, values[4:8])
-
-    fields = (HIRES_DIR / "location.txt").read_text().splitlines()[2].split()
-    hires_west, hires_east, hires_south, hires_north = map(float, fields[2:6])
-    hires_nx, hires_ny = map(int, fields[6:8])
-    hires_resolution = float(fields[8])
+    grid = read_map_geometry(MAP_ROOT)
+    nx, ny, _, resolution, west, east, south, north = grid.values()
+    areas = read_location_csv(HIRES_DIR / "location.csv")
+    matching_areas = [area for area in areas if area.carea == "1min"]
+    if len(matching_areas) != 1:
+        raise ValueError(
+            f"{HIRES_DIR / 'location.csv'}: expected one 1min tile, "
+            f"found {len(matching_areas)}"
+        )
+    hires = matching_areas[0]
     return (nx, ny, resolution, west, east, south, north,
-            hires_nx, hires_ny, hires_resolution,
-            hires_west, hires_east, hires_south, hires_north)
+            hires.nx, hires.ny, hires.csize,
+            hires.west, hires.east, hires.south, hires.north)
 
 
 def read_catchment_mapping(geometry, river_cells):
     """Read the two int16 catmxy records and their assigned coarse cell values."""
     nx, ny, _, _, _, _, _, nxhi, nyhi, _, _, _, _, _ = geometry
     with Dataset(HIRES_DIR / "1min.catmxy.nc") as dataset:
-        catmx = np.asarray(dataset["catmx"][:], dtype="i2")
-        catmy = np.asarray(dataset["catmy"][:], dtype="i2")
+        catmx = np.ma.filled(dataset["catmxx"][:], -9999).astype("i2")
+        catmy = np.ma.filled(dataset["catmyy"][:], -9999).astype("i2")
     if catmx.shape != (nyhi, nxhi) or catmy.shape != (nyhi, nxhi):
         raise ValueError("catmxy dimensions do not match the high-resolution geometry")
     valid = ((catmx >= 1) & (catmx <= nx) & (catmy >= 1) & (catmy <= ny))
@@ -857,26 +863,7 @@ def main():
           f"{bif['pth_id'][can_tho_paths].tolist()}; paths entering My Thuan: "
           f"{bif['pth_id'][my_thuan_incoming].tolist()}.")
 
-    # Ensure the displayed NetCDF connectivity matches the distributed Binary map.
     nx, ny = geometry[:2]
-    binary_nextxy = np.fromfile(BINARY_DIR / "nextxy_noedge.bin", dtype="<i4")
-    if binary_nextxy.size != 2 * nx * ny:
-        raise ValueError("nextxy_noedge.bin has an unexpected size")
-    if not (np.array_equal(binary_nextxy.reshape(2, ny, nx)[0], nextx) and
-            np.array_equal(binary_nextxy.reshape(2, ny, nx)[1], nexty)):
-        raise ValueError("NetCDF nextxy_noedge does not match the Binary map")
-    binary_uparea = np.fromfile(BINARY_DIR / "uparea.bin", dtype="<f4")
-    binary_lonlat = np.fromfile(BINARY_DIR / "lonlat.bin", dtype="<f4")
-    if binary_uparea.size != nx * ny or binary_lonlat.size != 2 * nx * ny:
-        raise ValueError("uparea.bin or lonlat.bin has an unexpected size")
-    if not np.array_equal(binary_uparea.reshape(ny, nx),
-                          np.nan_to_num(uparea, nan=-9999.0)):
-        raise ValueError("NetCDF uparea does not match the Binary map")
-    binary_lonlat = binary_lonlat.reshape(2, ny, nx)
-    if not (np.array_equal(binary_lonlat[0], outlon) and
-            np.array_equal(binary_lonlat[1], outlat)):
-        raise ValueError("NetCDF lonlat does not match the Binary map")
-
     print(f"Grid: {nx} x {ny}; valid river cells: {int(river.sum())}; "
           f"valid nextxy connections: {len(segments)}; nonlocal connections: "
           f"{int(nonlocal_mask.sum())}; invalid destinations: {invalid}.")
