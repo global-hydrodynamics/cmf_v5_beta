@@ -2,7 +2,7 @@
 
 This standalone package maps CaMa-Flood flood depth and flood duration to an existing higher-resolution CaMa-Flood map grid. Flood Depth ports `etc/downscale_flddph/src/downscale_flddph_trib.F90`; Flood Duration ports the threshold-count and high-resolution lookup behavior in `calc_depth-duration.F90` and `downscale_fldprd.F90`.
 
-Copy the complete `downscale_flddph/` directory into a research project. The Shell entry points resolve package files relative to their own location; edit their settings at the top to point to the project's map, input, output, extent, and Python environment. No Python module in the repository outside this directory is imported. The map itself remains an external input. `sample_mekong/` is an independent copied example, including copies of the package scripts.
+The shared scripts use the maintained Map metadata readers in `map/tools/code/` for `params.nml` and high-resolution tile inventories. The Guide01 copy includes local copies of those reader modules so it does not import repository code at runtime. The map itself remains an external input. `sample_mekong/` is an independent copied example, including copies of the package scripts.
 
 ## Contents
 
@@ -37,8 +37,8 @@ downscale_flddph/
 - Python 3 with NumPy and netCDF4 for snapshot/period selection and downscaling.
 - Matplotlib is additionally required to render the comparison figure.
 - The low-resolution input is normally a CaMa-Flood `flddph` NetCDF with `lat`, `lon`, and `flddph`; CF `time` metadata is preserved when present and selected by the separate aggregation utility. The downscaler accepts a 2-D field or exactly one time record. A headerless, little-endian Float32 Binary snapshot is also supported with exactly `nx × ny` values in x-fast, north-to-south order; Binary has no timestamp. Set `INPUT_FORMAT=auto|netcdf|binary` in the Shell. Auto identifies NetCDF by `.nc`, `.nc4`, or `.cdf`, and Binary by `.bin`, `.dat`, or `.raw`.
-- `MAPDIR` points to a matching CaMa-Flood map containing `params.txt` and the required low- and high-resolution layers. NetCDF map files are preferred by default, with the existing Binary map files retained as a compatibility format. Set `MAP_FORMAT=auto|netcdf|binary`. Auto resolves each required layer independently, preferring NetCDF and falling back to Binary only when the NetCDF file is absent. A present but invalid NetCDF file is reported as an error. Mixed formats are supported. The program records the actual source files and formats in output attributes and stdout; only high-resolution tiles intersecting the requested region are read.
-- Low-resolution inputs are `nextxy` and `uparea`; high-resolution inputs are `catmxy`, `flddif`, `rivwth`, and either `downxy` or `flwdir`. NetCDF layers are checked against their expected dimensions and map cell-centre coordinates. Binary record lengths are checked against dimensions from the map metadata.
+- `MAPDIR` points to a matching CaMa-Flood map containing `params.nml` and the required low- and high-resolution layers. NetCDF map files are preferred by default, with existing Binary map files retained as a compatibility format. Set `MAP_FORMAT=auto|netcdf|binary`. Auto resolves each required layer independently, preferring NetCDF and falling back to Binary only when the NetCDF file is absent. A present but invalid NetCDF file is reported as an error. Mixed formats are supported. The program records the actual source files and formats in output attributes and stdout; only high-resolution tiles intersecting the requested region are read. Legacy `params.txt` and Binary `location.txt` remain available through the metadata readers when present.
+- Low-resolution calculation inputs are `nextxy` and `uparea`; high-resolution calculation inputs are `catmxy`, `flddif`, `rivwth`, and either `downxy` or `flwdir`. The visualizer additionally reads `flddif`, `elevtn`, and `catmxy` for the high-resolution background and validity mask. NetCDF layers are checked against their expected dimensions and map cell-centre coordinates. Binary record lengths are checked against dimensions from the map metadata.
 - The current implementation expects a regular geographic map grid whose requested extent and five-coarse-cell buffer align to the selected high-resolution pixel size. It does not reproject or resample.
 
 ## Select or aggregate time separately
@@ -69,7 +69,7 @@ bash s01-downscale_flddph.sh
 
 The output is a compressed NetCDF4 file containing Float32 `flddph(lat,lon)` in metres, WGS84 cell-centre coordinates, and `_FillValue=-9999`. Attributes record the source input and format, map directory and actual layer files/formats (source-file paths are relative to `map_directory`), high-resolution map tag, selected options, spatial method, output extent, and temporal-selection attributes copied from a NetCDF input. Binary input does not receive an inferred timestamp. The five-coarse-cell buffer is used internally and cropped away from the output.
 
-Edit settings in `s02-visualize_flddph.sh` and run it separately to compare the native-grid input with the downscaled field over the same geographic extent. Visualization never reruns the downscaling calculation.
+Edit settings in `s02-visualize_flddph.sh` and run it separately to compare the native-grid input with the downscaled field over the same geographic extent. The visualizer reads map geometry from `params.nml` and listed high-resolution NetCDF layers from `<resolution>/location.csv` on the standard NetCDF-first path; it retains the legacy Binary path when only `params.txt`/`location.txt` map inputs are available. Visualization never reruns the downscaling calculation.
 
 ## Flood Duration workflow
 

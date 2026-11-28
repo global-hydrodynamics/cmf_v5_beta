@@ -13,6 +13,8 @@ from matplotlib.colors import Normalize
 from netCDF4 import Dataset
 import numpy as np
 
+import downscale_flddph as depth
+
 FILL_VALUE = np.float32(-9999.0)
 
 
@@ -59,43 +61,46 @@ def read_flddph(path: Path) -> tuple[np.ma.MaskedArray, np.ndarray, np.ndarray, 
 
 
 def read_map_geometry(path: Path) -> tuple[int, int, float, float, float, float, float]:
-    lines = path.read_text().splitlines()
-    if len(lines) < 8:
-        raise ValueError(f"{path}: incomplete params.txt")
-    return (int(lines[0].split()[0]), int(lines[1].split()[0]), float(lines[3].split()[0]),
-            float(lines[4].split()[0]), float(lines[5].split()[0]),
-            float(lines[6].split()[0]), float(lines[7].split()[0]))
+    """Read current model-grid geometry, retaining the metadata reader's legacy fallback."""
+    return depth.read_map_geometry(path)
 
 
 def read_map_layer(map_dir: Path, resolution: str, layer: str, lon: np.ndarray,
                    lat: np.ndarray, dtype: str = "<f4", records: int = 1) -> np.ndarray:
-    """Merge one tiled map layer onto the requested north-first cell centers."""
-    location_path = map_dir / resolution / "location.txt"
-    lines = location_path.read_text().splitlines()
-    tiles = []
-    for line_number, line in enumerate(lines[2:], start=3):
-        fields = line.split()
-        if not fields:
-            continue
-        if len(fields) < 9:
-            raise ValueError(f"{location_path}:{line_number}: malformed tile row")
-        tiles.append((fields[1], *(float(fields[index]) for index in (2, 3, 4, 5)),
-                      int(fields[6]), int(fields[7]), float(fields[8])))
-    resolution_values = {tile[-1] for tile in tiles}
+    """Merge one NetCDF or legacy Binary tile layer onto north-first cell centers."""
+    high_dir = map_dir / resolution
+    location_csv = high_dir / "location.csv"
+    location_path = location_csv if location_csv.is_file() else high_dir / "location.txt"
+    tiles = depth.read_locations(location_path)
+    resolution_values = {float(tile["resolution"]) for tile in tiles}
     if len(resolution_values) != 1:
         raise ValueError(f"{location_path}: tiles do not share one resolution")
     pixel = resolution_values.pop()
+    output_dtype = np.dtype(dtype)
+    fill_value = -9999 if np.issubdtype(output_dtype, np.integer) else FILL_VALUE
     shape = (records, lat.size, lon.size) if records > 1 else (lat.size, lon.size)
-    output = np.full(shape, -9999 if dtype == "<i2" else FILL_VALUE, dtype=np.dtype(dtype))
-    for name, west, east, south, north, nx, ny, tile_pixel in tiles:
+    output = np.full(shape, fill_value, dtype=output_dtype)
+    for tile in tiles:
+        west, east = float(tile["west"]), float(tile["east"])
+        south, north = float(tile["south"]), float(tile["north"])
         if east < lon[0] or west > lon[-1] or north < lat.min() or south > lat.max():
             continue
-        expected = nx * ny * records
-        path = map_dir / resolution / f"{name}.{layer}.bin"
-        raw = np.fromfile(path, dtype=dtype)
-        if raw.size != expected:
-            raise ValueError(f"{path}: expected {expected} values, found {raw.size}")
-        data = raw.reshape((records, ny, nx)) if records > 1 else raw.reshape((ny, nx))
+        area = str(tile["area"])
+        file_format, path, layer_name = depth.resolve_hires_layer(high_dir, area, layer, "auto")
+        if file_format == "netcdf":
+            values = depth.read_netcdf_tile(path, tile, layer_name)
+        else:
+            values = depth.read_binary_hires_tile(path, tile, layer_name)
+        if layer == "catmxy":
+            if records != 2:
+                raise ValueError("catmxy requires two records: catmxx and catmyy")
+            data = np.stack((values["catmxx"], values["catmyy"]))
+        else:
+            if records != 1:
+                raise ValueError(f"{layer} does not support {records} records")
+            data = values[layer]
+        nx, ny = int(tile["nx"]), int(tile["ny"])
+        tile_pixel = float(tile["resolution"])
         tile_lon = west + (np.arange(nx) + 0.5) * tile_pixel
         tile_lat = north - (np.arange(ny) + 0.5) * tile_pixel
         cols = np.rint((tile_lon - lon[0]) / pixel).astype(int)
@@ -105,10 +110,10 @@ def read_map_layer(map_dir: Path, resolution: str, layer: str, lon: np.ndarray,
         source_y, target_y = np.flatnonzero(good_y), rows[good_y]
         source_x, target_x = np.flatnonzero(good_x), cols[good_x]
         if source_x.size and source_y.size:
-            if records > 1:
+            if layer == "catmxy":
                 output[:, target_y[:, None], target_x] = data[:, source_y[:, None], source_x]
             else:
-                output[np.ix_(target_y, target_x)] = data[np.ix_(source_y, source_x)]
+                output[np.ix_(target_y, target_x)] = np.asarray(data, dtype=output_dtype)[np.ix_(source_y, source_x)]
     return output
 
 
@@ -119,7 +124,7 @@ def main() -> None:
     low, low_lat, low_lon, low_time = read_flddph(args.input)
     high, high_lat, high_lon, high_time = read_flddph(args.downscaled)
     map_dir = args.map_dir.resolve()
-    nx, ny, grid_size, map_west, map_east, map_south, map_north = read_map_geometry(map_dir / "params.txt")
+    nx, ny, grid_size, map_west, map_east, map_south, map_north = read_map_geometry(map_dir)
     expected_lon = map_west + (np.arange(nx) + 0.5) * grid_size
     expected_lat = map_north - (np.arange(ny) + 0.5) * grid_size
     if low.shape != (ny, nx) or not np.allclose(low_lon, expected_lon, rtol=0, atol=1e-5) or not np.allclose(low_lat, expected_lat, rtol=0, atol=1e-5):

@@ -184,6 +184,7 @@ def read_netcdf_tile(path: Path, tile: dict[str, object], layer: str) -> dict[st
     names = {
         "catmxy": ("catmxx", "catmyy"),
         "downxy": ("downx", "downy"),
+        "elevtn": ("elevtn",),
         "flwdir": ("flwdir",),
         "flddif": ("flddif",),
         "rivwth": ("rivwth",),
