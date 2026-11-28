@@ -92,7 +92,7 @@ observation-station data are required.
 All main and overlay rasters are Git-tracked and share an 80 × 120 grid at
 0.25°. Coordinates are cell centers, longitude increases eastward, latitude
 decreases southward, and the missing value is `-9999`. NetCDF coordinates are
-checked against `params.txt`; binary geometry comes directly from that file.
+checked against the authoritative `params.nml` map geometry.
 In f01d, `bsncol` validity distinguishes mapped network cells from the white
 background, while unassigned `subcol` cells within that coverage are gray.
 Valid basin IDs are retained exactly in f01b.
@@ -101,18 +101,17 @@ coloring or unique identifiers. Use the numeric raster to identify a basin.
 In f01c, neighboring regions with different display indices retain different
 colors after lightening; the plot does not recalculate boundaries or indices.
 
-The f01d binary has exactly one 38,400-byte record: 80 × 120 little-endian
-int32 values in Fortran array order, with x varying fastest. Its first row is
-the northern row, matching the existing map orientation. Positive values are
-display indices 1–10; this sample uses indices 1–6. Zero and `-9999` are
-unassigned/missing `subcol` cells. The paired `subbsn-sample.bin` records
-segment identity (113 positive IDs, 686 unassigned network cells, and `-9999`
-outside the network), but is not read by the f01d plotting script. Shared
-colors do not identify a segment; use `subbsn` when segment identity is
-needed.
+The f01d input is `subcol-sample.nc`, a categorical `subcol(lat, lon)` raster
+on the 80 × 120 map grid. Its first row is the northern row and longitude
+increases west to east. Positive values are display indices 1–10; this sample
+uses indices 1–6. Zero and `-9999` are unassigned/missing `subcol` cells. The
+paired `subbsn-sample.bin` records segment identity (113 positive IDs, 686
+unassigned network cells, and `-9999` outside the network), but is not read by
+the f01d plotting script. Shared colors do not identify a segment; use
+`subbsn` when segment identity is needed.
 
 For plotting, the two raster inputs are `subcol-sample.nc` and
-`bsncol.nc`; `params.txt` supplies grid geometry. `bsncol` must be a
+`bsncol.nc`; `params.nml` supplies grid geometry. `bsncol` must be a
 valid categorical index (1–10) for a cell to be treated as network-covered.
 Valid coverage with zero or missing `subcol` is gray, positive `subcol` is
 pastel-colored, and missing `bsncol` is white. White can include network-
@@ -255,7 +254,7 @@ station data, external download, or map preparation is needed.
 | `uparea.nc`: `uparea(lat, lon)`, m² | Convert to km²; read source-cell areas for network links and a faint logarithmic background in a/b. Missing, non-finite and non-positive areas are excluded. |
 | `nextxy.nc`: `nextx`, `nexty` | One-based destination indices; paired non-positive terminal/sentinel values do not define links. |
 | `subcol-sample.nc`: NetCDF `subcol(lat, lon)` raster | Categorical subbasin display indices for c's background. Zero maps to gray (0.50 brightness); positive classes 1–10 map to discrete grays from 0.45 to 0.10; `-9999` is white. The file has 80 × 120 values, with x varying fastest. |
-| `params.txt` | Grid dimensions, resolution and bounds, checked against NetCDF cell-center coordinates. |
+| `params.nml` | Grid dimensions, resolution and bounds, checked against NetCDF cell-center coordinates. |
 
 The complete nextxy map contains 6,152 valid links (5,919 local and 233 Flexible
 Downstream). Every valid link is passed to plotting; the axes clip the display
@@ -426,7 +425,7 @@ observed flows.
 | `map/mekong_15min/bifprm.nc` | NetCDF `ix`, `iy`, `jx`, `jy`, `riv_width(path)`, optional `ovl_width(layer, path)` | Defines bifurcation endpoints. `riv_width` is channel width; `ovl_width` contains overland layers only. Channel width alone distinguishes Channel from Overland-only paths. |
 | `map/mekong_15min/1min/1min.catmxy.nc` | NetCDF `catmx`, `catmy` variables on the `lat × lon` grid | Assigns each 1-minute pixel to a one-based coarse cell. `-999` and `-9999` sentinel indices are excluded from centroids. |
 | `map/mekong_15min/1min/location.csv` | Text grid metadata; 1-minute resolution and bounds | Converts high-resolution pixel row/column positions to geographic pixel-center coordinates. |
-| `map/mekong_15min/params.txt` | Text metadata; 80 × 120 grid at 0.25° | Checks the coarse grid geometry shared by the NetCDF products and catchment assignments. |
+| `map/mekong_15min/params.nml` | Text metadata; 80 × 120 grid at 0.25° | Checks the coarse grid geometry shared by the NetCDF products and catchment assignments. |
 
 All listed inputs are Git-tracked; no model output, station data, or map
 preparation is required. The panels reconstruct topology from stored
@@ -533,7 +532,7 @@ without Channel Pixel or Overland entries.
 | `map/mekong_15min/nextxy.nc` | Main-network downstream connectivity (`nextx`, `nexty`), with one-based grid indices. |
 | `map/mekong_15min/lonlat.nc` | Coarse-cell outlet coordinates (`outlon`, `outlat`) in degrees east/north. |
 | `map/mekong_15min/bifprm.nc` | Bifurcation endpoints with `riv_width(path)` and optional `ovl_width(layer,path)`; panel a draws positive-`riv_width` Channel paths; panel b also draws zero-`riv_width` Overland-only paths. |
-| `map/mekong_15min/params.txt` | Coarse-grid dimensions, resolution, and bounds used to validate map alignment. |
+| `map/mekong_15min/params.nml` | Coarse-grid dimensions, resolution, and bounds used to validate map alignment. |
 
 Run the Figure script after the standard Python setup. It renders both
 independent panels and combines them horizontally with
@@ -638,7 +637,7 @@ for each background field.
 | `map/mekong_15min/nextxy.nc` | One-based main-network downstream connectivity. |
 | `map/mekong_15min/lonlat.nc` | Geographic grid and outlet coordinates (`outlon`, `outlat`). |
 | `map/mekong_15min/bifprm.nc` | Stored bifurcation paths with separate channel `riv_width` and overland `ovl_width`; positive `riv_width` selects channel paths. |
-| `map/mekong_15min/params.txt` | Coarse-grid geometry used to validate alignment. |
+| `map/mekong_15min/params.nml` | Coarse-grid geometry used to validate alignment. |
 
 Run `./visualization/river_map/f05-hires_background.sh` after the standard
 Python setup. It writes panels a–f and combines them in a 3-column × 2-row
@@ -666,7 +665,7 @@ Halen has lower coordinate confidence and is marked `(?)`.
 
 | Input | Use and availability |
 | --- | --- |
-| `map/glb_15min/params.txt` | Global 15-minute map geometry; Package Additional Data. |
+| `map/glb_15min/params.nml` | Global 15-minute map geometry; Package Additional Data. |
 | `map/glb_15min/basin.nc` | Basin ID raster for f06a; Package Additional Data. |
 | `map/glb_15min/uparea.nc`, `nextxy.nc`, `lonlat.nc` | Upstream-area classes and routed river links for both panels; Package Additional Data. |
 | `data/f06_settings.json` | Panel extents, basin ID, labels, tick spacing, OSM/mask style, and locality-group appearance. |

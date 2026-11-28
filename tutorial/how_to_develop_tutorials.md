@@ -12,11 +12,13 @@ This guide is for researchers, students, and contributors developing tutorials w
 | [`agent_manual_authoring.md`](agent_manual_authoring.md) | Shared | AI instructions for researching and generating learner manuals. |
 | `<tutorial>/tutorial_design.md` | Tutorial-specific | Experiment, scientific and technical requirements, inputs, expected outputs, acceptance checks, and learning outcomes. |
 | `<tutorial>/design/manual_design.md` | Tutorial-specific | Audience, prior knowledge, educational sequence, useful examples, and section Learning Checks. |
-| `<tutorial>/manual_*.md` | Tutorial-specific | Learner-facing instructions for performing the experiment and checking the intended learning outcomes. |
+| `<tutorial>/README.md` | Tutorial-specific | The complete learner-facing manual for performing the experiment and checking the intended learning outcomes. |
 | `<tutorial>/design/manual_generation_log.md` | Tutorial-specific, when applicable | Developer-only evidence about the tested revision, environment, commands, results, and limitations. |
 | `tutorial_requirements.csv` | Shared | Evidence-based, one-row-per-tutorial registry of learner activities and design, manual, and package checks. |
 
-Keep experiment-specific scientific and educational decisions in each tutorial's specifications. Shared guides describe reusable procedures and quality expectations, not the details of an individual experiment. Generated manuals explain the workflow to learners; they are not independent scientific authorities.
+Each tutorial directory's `README.md` is its official learner manual, not merely a short overview. Do not create new `manual_*.md` learner manuals. Preserve `tutorial_design.md` and `design/manual_design.md` as developer specifications. The top-level `tutorial/README.md` remains the shared framework overview and tutorial index. When migrating an existing manual, preserve its content and integrate any existing directory README deliberately; do not overwrite a README without checking its role. If a learner manual has not yet been authored, do not invent one as part of an unrelated task.
+
+Keep experiment-specific scientific and educational decisions in each tutorial's specifications. Shared guides describe reusable procedures and quality expectations, not the details of an individual experiment. Learner manuals explain the workflow; they are not independent scientific authorities.
 
 ## What each specification decides
 
@@ -104,7 +106,7 @@ Generated manuals are maintained outputs of the framework. If code, data, settin
 
 ### Tutorial01 — beginner first run
 
-[Tutorial01's design](tutorial01-get_started/tutorial_design.md) defines a short Mekong experiment. Its standalone [GOSH script](tutorial01-get_started/tutorial01-get_started.sh) makes settings visible because locating and reading them is part of the learning goal. The [Manual Design Specification](tutorial01-get_started/design/manual_design.md) describes the introductory teaching sequence, and the [generated manual](tutorial01-get_started/manual_tutorial01-get_started.md) guides learners through building, running, and locating outputs. The developer `design/` materials preserve evidence and history. Other tutorials should reuse maintained workflows unless reading the configuration is itself an objective.
+[Tutorial01's design](tutorial01-get_started/tutorial_design.md) defines a short Mekong experiment. Its standalone [GOSH script](tutorial01-get_started/tutorial01-get_started.sh) makes settings visible because locating and reading them is part of the learning goal. The [Manual Design Specification](tutorial01-get_started/design/manual_design.md) describes the introductory teaching sequence, and the [learner manual](tutorial01-get_started/README.md) guides learners through building, running, and locating outputs. The developer `design/` materials preserve evidence and history. Other tutorials should reuse maintained workflows unless reading the configuration is itself an objective.
 
 ### Tutorial02 — comparative experiment
 

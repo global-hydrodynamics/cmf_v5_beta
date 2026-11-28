@@ -95,7 +95,7 @@ The default `CELV` is `−3,000, −1,000, −300, −100, −30, −10, 0, 10, 
 
 ### Input data and preparation
 
-The source is `out/mek02-2year_netcdf/o_outflw2001.nc`, produced by the
+The source is `gosh_test/out/mek02/o_outflw2001.nc`, produced by the
 `gosh_test/mek02-2year_netcdf` simulation. The Shell wrapper
 `s01-extract_output_variables.sh` calls
 `script/extract_output_variables.py`. It reads the CF time coordinate and
@@ -335,9 +335,10 @@ from 0 to 17.878 m on the native grid and 0 to 17.526 m among assigned
 downscaled pixels; 95,543 of 129,600 1-minute pixels are assigned. No values
 are outside the shared 0–20 m display scale.
 
-The Python package uses the existing 15-minute `nextxy.bin` and `uparea.bin`,
-plus 1-minute `catmxy`, `downxy`, `flddif`, and `rivwth` map files. Its domain and
-resolution are read from the existing map metadata. The project script does
+The Python package uses the existing 15-minute `nextxy.nc` and `uparea.nc`,
+plus 1-minute `catmxy`, `downxy`, `flddif`, and `rivwth` NetCDF map files. Its
+domain and resolution are read from `params.nml`, and high-resolution tile
+geometry is read from `1min/location.csv`. The project script does
 not change those maps or the downscaling algorithm.
 
 Run `./visualization/output_analysis/f04-flood_depth.sh` to regenerate the two

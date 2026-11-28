@@ -15,16 +15,20 @@ Do not copy repository policy into a prompt or this Skill. If a task conflicts w
 
 ## Select a development level
 
-Choose the level from the task's actual purpose, not from code size or the number of files. Ordinary feature work and refactoring default to L1.
+Choose a level by the guarantee the task is meant to establish, not by code size or test count. Ordinary feature development defaults to L1. Levels define investigation/modification scope and completion evidence; they are independent choices, not automatic stages.
 
-| Level | Stage | Proportionate default |
-| --- | --- | --- |
-| **L0** | Local fix / user validation | Smallest fix for a clearly identified problem. The user performs functional validation; follow the explicit no-functional-testing limits below. |
-| **L1** | Feature development | Focused functional checks plus a representative real-data case when data is available and the change consumes it. Check only directly affected interfaces and outputs. |
-| **L2** | Integration or stabilization | Relevant regression tests and cross-component consistency checks for the integrated scope. |
-| **L3** | Release or distribution | Comprehensive validation of reproducibility, compatibility, supported environments, and release contents. |
+| Level | Purpose | Investigation and modification scope | Validation | Completion |
+| --- | --- | --- | --- | --- |
+| **L0** | Local fix / exploration | The specified local issue and immediate dependencies. | Static/minimal checks. Runtime validation is not required; explicitly designated L0 tasks follow the stricter root `AGENTS.md` rule. | Local change is complete and unverified behavior is stated for user validation. |
+| **L1** | Functional completion | The target function and dependencies directly needed to make it work. | Exercise the target behavior. Use representative real data when available; inspect rendered output for GUI/visualization changes when possible. | The target function works; broader component effects are outside this level. |
+| **L2** | Integration / stabilization | The target plus related components plausibly affected through interfaces or data contracts. | Focused integration and regression checks across that impact boundary. | Intended behavior and relevant neighboring contracts are stable within scope. |
+| **L3** | Release / distribution | The distributed product, supported environments, and user-facing workflows. | Clean-environment setup, compatibility, package contents, reproducibility, and supported workflows as applicable. | The deliverable and documented supported workflows meet release acceptance. |
 
-A task may span levels, but do not silently promote a prototype or feature task to release assurance. Use the level needed for the requested deliverable and report what remains for a later milestone.
+**L1 validates the target functionality. L2 validates the impact on related components. L3 validates the distributed product and supported user workflows.** L1 is the functional boundary: do not add general neighboring-feature audits or regression suites automatically. Discoveries outside the target that do not block its completion should be reported and deferred to a later L2 task.
+
+Do not silently promote a prototype or feature task to release assurance. Choose the level needed for the requested deliverable and state what remains for a later milestone.
+
+Large refactorings may group work by purpose: use L0 for bounded local edits, L1 to establish key functions, L2 at a component-integration milestone, and L3 when preparing a release. A task may start or stop at any level; do not repeat L1–L3 after every L0 edit or require every project to pass through all four levels.
 
 ## Adjust for scientific risk
 
@@ -38,7 +42,7 @@ Estimate risk by asking whether the change can alter scientific interpretation o
 - parallel order, nondeterminism, and reproducibility;
 - public interfaces, input compatibility, and restart or output compatibility.
 
-Use targeted evidence for the risks actually touched. A color or layout change normally needs a focused visual review. A data-format conversion needs value/class, metadata, grid, and output checks. A change to equations or numerical schemes may need conservation, stability, and comparison against relevant trusted results even at L1. Do not add unrelated model-wide regression tests merely because scientific software is involved.
+Use targeted evidence for the risks actually touched. A color or layout change normally needs a focused visual review. A data-format conversion needs value/class, metadata, grid, and output checks. A change to equations or numerical schemes may need conservation, stability, or comparison against trusted results even at L1, but keep those checks on the target behavior. Do not add unrelated model-wide regression tests merely because scientific software is involved.
 
 As a quick guide, classify the affected contract rather than assigning risk from the task label:
 
@@ -46,13 +50,13 @@ As a quick guide, classify the affected contract rather than assigning risk from
 - **Moderate:** data conversion, classification, coordinate handling, or file interfaces; check representative values, metadata, and boundary cases.
 - **High:** equations, physical assumptions, numerical stability, conservation, or time semantics; identify domain-specific reference evidence and scientific acceptance criteria.
 
-These are prompts for judgment, not fixed test quotas. A high-risk change can justify deeper checks at L1; a low-risk L2 integration task still needs only the relevant integration checks.
+Scientific risk and Development Level are independent axes: level sets the scope of the guarantee; risk sets the depth needed to support it. High risk can require deeper validation of an L1 target, but does not by itself expand the task to unrelated components. A directly relevant safety or correctness concern must still be resolved at any level. These are prompts for judgment, not fixed test quotas.
 
 ## Match effort to the task
 
-Prefer the smallest check that demonstrates the requested behavior at its boundary. Reuse existing fixtures, validators, and representative inputs. Use synthetic data when it isolates a contract that is expensive or impossible to test with real data; do not treat synthetic success as real-data or scientific validation.
+Prefer the smallest check that demonstrates the requested level's guarantee. For L1, show that the target behavior works at its boundary; reuse a representative real input when available. Use synthetic data when it isolates a contract that is expensive or impossible to test with real data, and distinguish it from real-data or scientific evidence. L2 adds checks only for related components within the plausible impact boundary. L3 checks the actual distribution and supported workflows.
 
-Keep implementation scoped to the assigned component and direct dependencies. Do not add generic frameworks, defensive layers, performance benchmarks, broad refactors, or cross-component repairs unless they are needed for acceptance or the task authorizes them. Never weaken a known scientific or safety check to make a task pass.
+Keep implementation scoped to the assigned level: target and direct dependencies at L1, related affected components at L2, and the delivered product/user workflow at L3. Do not add generic frameworks, defensive layers, performance benchmarks, broad refactors, or cross-component repairs unless they are needed for acceptance or specifically authorized. Never weaken a known scientific or safety check to make a task pass.
 
 For unavailable data, runtimes, or tools, complete independent work, run feasible static or synthetic checks, and identify the missing evidence. Do not fabricate results or imply that a skipped test passed.
 
@@ -70,7 +74,7 @@ Leave routine implementation details to Codex. Do not prescribe a test suite, fu
 
 ## Use by Codex during direct implementation
 
-When assigned implementation directly, make the same level and risk decisions before changing files. Respect explicit scope and authorization. Inspect enough to understand the target and immediate dependencies; broaden investigation only when required to avoid a scientific, compatibility, data-loss, or security failure. For non-L0 tasks, convert acceptance evidence into focused checks and execute them against changed behavior rather than producing a broad audit.
+When assigned implementation directly, make the same level and risk decisions before changing files. Respect explicit scope and authorization. Inspect enough to understand the target and its level-defined dependencies. At L1, broaden beyond those dependencies only when a blocking correctness, compatibility, data-loss, or security issue prevents the target from working safely; report non-blocking neighboring issues for later L2 work. At L2, inspect the plausible related-component impact boundary. At L3, validate the distributed product and supported user workflows. Execute focused checks for the selected guarantee, not a general audit.
 
 For a task explicitly designated **L0**, follow the authoritative L0 policy in
 the repository-root [`AGENTS.md`](../../../AGENTS.md#explicit-l0--local-fix--user-validation):

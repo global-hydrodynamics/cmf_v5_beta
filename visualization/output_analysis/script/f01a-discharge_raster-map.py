@@ -162,7 +162,7 @@ def format_color_level(value: float) -> str:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--params", type=Path, required=True, help="Map params.txt")
+    parser.add_argument("--params", type=Path, required=True, help="Map params.nml")
     parser.add_argument("--sample", type=Path, required=True,
                         help="Extracted one-record NetCDF input")
     parser.add_argument("--stations", type=Path, required=True,
@@ -189,16 +189,16 @@ def _validate_grid(lon: np.ndarray, lat: np.ndarray, geometry) -> None:
     if lon.shape != (nx,) or lat.shape != (ny,):
         raise ValueError(
             f"Coordinate lengths lon={lon.size}, lat={lat.size} do not match "
-            f"params.txt grid {nx}x{ny}"
+            f"params.nml grid {nx}x{ny}"
         )
     if not (np.all(np.diff(lon) > 0) and np.all(np.diff(lat) < 0)):
         raise ValueError("Expected longitude ascending eastward and latitude north-first")
     if not (np.allclose(lon, expected_lon, rtol=0, atol=1e-5) and
             np.allclose(lat, expected_lat, rtol=0, atol=1e-5)):
-        raise ValueError("NetCDF cell centers do not match map/mekong_15min/params.txt")
+        raise ValueError("NetCDF cell centers do not match map/mekong_15min/params.nml")
     if (not np.isclose(east, west + nx * resolution) or
             not np.isclose(north, south + ny * resolution)):
-        raise ValueError("params.txt dimensions, resolution, and bounds are inconsistent")
+        raise ValueError("params.nml dimensions, resolution, and bounds are inconsistent")
 
 
 def read_display_stations(path: Path) -> list[dict[str, float | str]]:

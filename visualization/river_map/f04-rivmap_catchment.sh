@@ -18,7 +18,7 @@ BIFPRM_FILE="$MAP_DIR/bifprm.nc"                 # Bifurcation endpoints and wid
 CATMXY_FILE="$MAP_DIR/1min/1min.catmxy.nc"        # 1-minute pixel to coarse-cell assignment.
 VISUAL_FILE="$MAP_DIR/1min/1min.visual.nc"        # Signed int8 channel-pixel categories.
 LOCATION_FILE="$MAP_DIR/1min/location.csv"       # 1-minute grid geometry.
-PARAMS_FILE="$MAP_DIR/params.txt"                # Coarse grid dimensions and bounds.
+PARAMS_FILE="$MAP_DIR/params.nml"                # Coarse grid dimensions and bounds.
 
 # User settings: line widths [points], ordered from smallest to largest class.
 MAIN_WIDTHS="1.5,2.0,2.5,3.0"       # Main-channel upstream-area classes.

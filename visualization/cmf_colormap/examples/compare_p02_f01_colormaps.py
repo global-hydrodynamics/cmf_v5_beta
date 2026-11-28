@@ -32,7 +32,7 @@ P02_MODULE = importlib.util.module_from_spec(P02_SPEC)
 P02_SPEC.loader.exec_module(P02_MODULE)
 
 DEFAULT_SAMPLE = OUTPUT_ANALYSIS_DIR / "out_sample" / "outflw_2001-09-01.nc"
-DEFAULT_PARAMS = REPO_ROOT / "map" / "mekong_15min" / "params.txt"
+DEFAULT_PARAMS = REPO_ROOT / "map" / "mekong_15min" / "params.nml"
 DEFAULT_OUTPUT = Path(__file__).resolve().parent / "diverge_outflow_comparison.png"
 PALETTE_NAMES = ("diverge_spectral", "diverge_asymmetry")
 
@@ -75,7 +75,7 @@ def _read_sample(path: Path, geometry):
             raise ValueError("Expected outflw units m3/s")
         nx, ny = geometry[:2]
         if variable.shape[1:] != (ny, nx):
-            raise ValueError(f"outflw grid {variable.shape[1:]} does not match params.txt")
+            raise ValueError(f"outflw grid {variable.shape[1:]} does not match params.nml")
         time = sample.variables["time"]
         selected_time = num2date(
             time[:], time.units, calendar=getattr(time, "calendar", "standard"),

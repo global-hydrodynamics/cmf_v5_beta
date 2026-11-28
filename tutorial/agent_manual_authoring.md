@@ -2,6 +2,8 @@
 
 These evolving instructions implement the framework principles in the [tutorial README](README.md); the human-facing process is in [How to develop tutorials](how_to_develop_tutorials.md). They apply to learner-facing manuals under `tutorial/`. Each tutorial's `tutorial_design.md` and `design/manual_design.md` own its scientific and educational intent; manuals are derived from those specifications and verified evidence. Follow the root [`AGENTS.md`](../AGENTS.md) for repository development rules.
 
+Write or update the learner manual at `<tutorial>/README.md`, following the canonical naming and migration rule in [How to develop tutorials](how_to_develop_tutorials.md). Do not create a new `manual_*.md` learner manual.
+
 ## Ground the manual in evidence
 
 - Inspect current scripts, source interfaces, configuration, metadata, bundled data, and generated outputs.

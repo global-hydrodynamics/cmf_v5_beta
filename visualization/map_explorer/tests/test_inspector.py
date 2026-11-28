@@ -246,7 +246,7 @@ def test_unavailable_ids_endpoints_and_selected_network_when_hidden(map_dir):
 ROOT = Path(__file__).resolve().parents[3]
 
 
-@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.txt").exists(), reason="Mekong unavailable")
+@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.nml").exists(), reason="Mekong unavailable")
 def test_mekong_profile_ids_graph_counts_outlets_and_source_switch(tmp_path):
     app = Explorer(ROOT / "map/mekong_15min", tmp_path)
     app.apply_preset("p01-f04b", True)

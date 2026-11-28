@@ -80,7 +80,7 @@ def test_png_receives_both_exact_selection_geometries(products, tmp_path, monkey
 ROOT = Path(__file__).resolve().parents[3]
 
 
-@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.txt").exists(), reason="Mekong unavailable")
+@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.nml").exists(), reason="Mekong unavailable")
 def test_mekong_all_backgrounds_assignment_and_rectangle(tmp_path):
     app = Explorer(ROOT / "map/mekong_15min", tmp_path)
     app.set_extent((104.5, 107, 9.5, 12))

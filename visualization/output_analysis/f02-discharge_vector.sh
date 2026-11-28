@@ -42,7 +42,7 @@ printf '\n[STEP 2/4] Draw signed main-channel and bifurcation discharge without 
 "$PYTHON" "$PROJECT_DIR/script/f02-discharge_vector.py" \
     --sample "$SAMPLES/outflw_${TARGET_DATE}.nc" \
     --pthflw "$SAMPLES/pthflw_${TARGET_DATE}.nc" \
-    --params "$REPO_ROOT/map/mekong_15min/params.txt" \
+    --params "$REPO_ROOT/map/mekong_15min/params.nml" \
     --output "$PANEL_A" --figure-height "$FIGURE_HEIGHT" --dpi "$DPI" \
     --title-size "$TITLE_SIZE" --axis-label-size "$AXIS_LABEL_SIZE" \
     --tick-label-size "$TICK_LABEL_SIZE" --legend-size "$LEGEND_SIZE" \
@@ -55,7 +55,7 @@ printf '\n[STEP 3/4] Draw direction-aware main-channel and bifurcation flow.\n'
     --sample "$SAMPLES/outflw_${TARGET_DATE}.nc" \
     --pthflw "$SAMPLES/pthflw_${TARGET_DATE}.nc" \
     --direction-aware \
-    --params "$REPO_ROOT/map/mekong_15min/params.txt" \
+    --params "$REPO_ROOT/map/mekong_15min/params.nml" \
     --output "$PANEL_B" --figure-height "$FIGURE_HEIGHT" --dpi "$DPI" \
     --title-size "$TITLE_SIZE" --axis-label-size "$AXIS_LABEL_SIZE" \
     --tick-label-size "$TICK_LABEL_SIZE" --legend-size "$LEGEND_SIZE" \

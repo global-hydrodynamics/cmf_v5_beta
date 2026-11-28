@@ -366,7 +366,8 @@ def discover_tiles(map_dir, messages):
                     cog_path = root / "COG" / canonical / f"{name}.{field_name}.tif"
                     if cog_path.is_file():
                         try:
-                            source = COGSource.open(cog_path, field_name, g, cog_cache, root / canonical.with_name(canonical.name + "_nc") / f"{name}.{field_name}.nc")
+                            source_path = nc_path if nc_path.is_file() else location.parent / f"{name}.{field_name}.nc"
+                            source = COGSource.open(cog_path, field_name, g, cog_cache, source_path)
                             tile.files[field_name] = cog_path
                             tile.cog[field_name] = source
                             tile.netcdf.pop(field_name, None)

@@ -1,6 +1,6 @@
 # CaMa-Flood v5 Tutorials
 
-Each tutorial is a reproducible model experiment paired with an educational manual. Its specifications define the scientific workflow and the intended learning; the manual guides learners through the executable materials and helps them check their progress. Operational success is not, by itself, scientific validation.
+Each tutorial is a reproducible model experiment paired with an educational manual. The tutorial directory's `README.md` is the complete learner manual; its specifications define the scientific workflow and intended learning. The manual guides learners through the executable materials and helps them check their progress. Operational success is not, by itself, scientific validation.
 
 This is the primary learning environment for general CaMa-Flood users. The repository's [`gosh_test/`](../gosh_test/) directory is for developers who need to run model examples and perform operational checks; tutorials should not depend on outputs created there.
 
@@ -70,7 +70,7 @@ repository ZIP as the package.
 
 | Tutorial | Learning objective | Manual |
 | --- | --- | --- |
-| [Tutorial01 — Get Started](tutorial01-get_started/tutorial_design.md) | Navigate the v5 repository, locate GOSH inputs, build and run a short Mekong example, and find its outputs. | [Beginner manual](tutorial01-get_started/manual_tutorial01-get_started.md) |
+| [Tutorial01 — Get Started](tutorial01-get_started/tutorial_design.md) | Navigate the v5 repository, locate GOSH inputs, build and run a short Mekong example, and find its outputs. | [Beginner manual](tutorial01-get_started/README.md) |
 | [Tutorial02 — Mekong NetCDF four-experiment comparison](tutorial02-mekong_netcdf_4exp/tutorial_design.md) | Run annual NetCDF experiments and compare model configurations through hydrograph and spatial output analyses. | Manual not yet prepared. |
 
 ## Contributor learning resource
@@ -92,7 +92,7 @@ validated Tutorial03 package.
 | [`how_to_develop_tutorials.md`](how_to_develop_tutorials.md) | Human-facing development and review workflow. |
 | [`agent_tutorial_development.md`](agent_tutorial_development.md), [`agent_manual_authoring.md`](agent_manual_authoring.md) | Reusable AI instructions for executable tutorials and learner manuals. |
 | `<tutorial>/tutorial_design.md`, `<tutorial>/design/manual_design.md` | Tutorial-specific experiment and educational design, including required learner actions and completion criteria. |
-| `<tutorial>/manual_*.md` | Learner-facing guide to performing the experiment and checking its learning goals. |
+| `<tutorial>/README.md` | Complete learner-facing manual for performing the experiment and checking its learning goals. |
 | [`tutorial_requirements.csv`](tutorial_requirements.csv) | One-row-per-tutorial summary and design review of learner objectives, required operations, provided materials, intentionally absent artifacts, learner results, and compliance checks. It is a review aid, not a replacement for the individual specifications. |
 
 The registry columns group as follows:

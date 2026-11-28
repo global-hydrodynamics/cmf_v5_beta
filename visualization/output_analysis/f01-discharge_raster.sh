@@ -8,9 +8,9 @@ VISUALIZATION_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 REPO_ROOT="$(cd "$VISUALIZATION_DIR/.." && pwd)"
 
 # User settings: source experiment and selected output timestamp.
-SOURCE_DIR="$REPO_ROOT/out/mek02-2year_netcdf" # Annual NetCDF model outputs.
+SOURCE_DIR="$REPO_ROOT/gosh_test/out/mek02" # Annual NetCDF model outputs.
 TARGET_DATE="2001-09-01"                     # CF time-coordinate date [model calendar].
-PARAMS_FILE="$REPO_ROOT/map/mekong_15min/params.txt" # Full 15-minute grid geometry.
+PARAMS_FILE="$REPO_ROOT/map/mekong_15min/params.nml" # Full 15-minute grid geometry.
 
 # User settings: signed outflow color scale.
 # Ascending comma-separated ticks [m3/s]; the first and last values set the range.

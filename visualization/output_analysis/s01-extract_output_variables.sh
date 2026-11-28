@@ -7,8 +7,8 @@ VISUALIZATION_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 REPO_ROOT="$(cd "$VISUALIZATION_DIR/.." && pwd)"
 
 # User settings: simulation output source and compact sample destination.
-SOURCE_DIR="$REPO_ROOT/out/mek02-2year_netcdf" # Annual o_<variable><year>.nc outputs.
-PARAMS_FILE="$REPO_ROOT/map/mekong_15min/params.txt" # Grid geometry for spatial checks.
+SOURCE_DIR="$REPO_ROOT/gosh_test/out/mek02" # Annual o_<variable><year>.nc outputs.
+PARAMS_FILE="$REPO_ROOT/map/mekong_15min/params.nml" # Grid geometry for spatial checks.
 OUTPUT_DIR="$SCRIPT_DIR/out_sample" # One-record NetCDF files and extraction log.
 STATION_CSV="$SCRIPT_DIR/station_map_locations.csv" # Selected Mekong station locations.
 

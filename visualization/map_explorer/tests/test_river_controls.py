@@ -219,7 +219,7 @@ def test_roundtrip_legacy_arrow_and_palette_semantics(products):
 ROOT = Path(__file__).resolve().parents[3]
 
 
-@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.txt").exists(), reason="Mekong unavailable")
+@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.nml").exists(), reason="Mekong unavailable")
 def test_mekong_gallery_exceptions_and_custom_palette(tmp_path):
     app = Explorer(ROOT / "map/mekong_15min", tmp_path)
     app.apply_preset("p01-f03a", use_gallery_extent=True)

@@ -32,16 +32,16 @@ def _validate_grid(lon: np.ndarray, lat: np.ndarray, params_path: Path):
     if lon.shape != (nx,) or lat.shape != (ny,):
         raise ValueError(
             f"Coordinate lengths lon={lon.size}, lat={lat.size} do not match "
-            f"params.txt grid {nx}x{ny}"
+            f"params.nml grid {nx}x{ny}"
         )
     if not (np.all(np.diff(lon) > 0) and np.all(np.diff(lat) < 0)):
         raise ValueError("Expected longitude ascending eastward and latitude north-first")
     if (not np.allclose(lon, expected_lon, rtol=0, atol=1e-5) or
             not np.allclose(lat, expected_lat, rtol=0, atol=1e-5)):
-        raise ValueError("NetCDF cell centers do not match the map params.txt grid")
+        raise ValueError("NetCDF cell centers do not match the map params.nml grid")
     if (not np.isclose(east, west + nx * resolution) or
             not np.isclose(north, south + ny * resolution)):
-        raise ValueError("params.txt dimensions, resolution, and bounds are inconsistent")
+        raise ValueError("params.nml dimensions, resolution, and bounds are inconsistent")
     return nx, ny
 
 
@@ -122,7 +122,7 @@ def extract_output_variable(
             if data_var.shape[1:] != (ny, nx):
                 raise ValueError(
                     f"outflw grid shape {data_var.shape[1:]} does not match "
-                    f"params.txt grid {(ny, nx)}"
+                    f"params.nml grid {(ny, nx)}"
                 )
         elif variable_name == "pthflw":
             if len(data_var.dimensions) != 3:
@@ -214,7 +214,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--source-dir", type=Path, required=True)
     parser.add_argument("--variable", required=True, help="NetCDF output variable name")
     parser.add_argument("--date", required=True, help="Requested CF date, YYYY-MM-DD")
-    parser.add_argument("--params", type=Path, required=True, help="Map params.txt")
+    parser.add_argument("--params", type=Path, required=True, help="Map params.nml")
     parser.add_argument("--output", type=Path, required=True, help="One-record NetCDF path")
     return parser.parse_args()
 

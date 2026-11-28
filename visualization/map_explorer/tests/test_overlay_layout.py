@@ -212,7 +212,7 @@ def test_overlay_roundtrip_and_defaults_for_older_files(products):
 ROOT = Path(__file__).resolve().parents[3]
 
 
-@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.txt").exists(), reason="Mekong unavailable")
+@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.nml").exists(), reason="Mekong unavailable")
 def test_mekong_gallery_legacy_palette_and_mixed_overlay_export(tmp_path):
     app = Explorer(ROOT / "map/mekong_15min", tmp_path)
     app.apply_preset("p01-f03a", use_gallery_extent=True)

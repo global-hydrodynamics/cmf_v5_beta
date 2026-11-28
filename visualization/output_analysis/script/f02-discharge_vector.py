@@ -99,7 +99,7 @@ def read_outflow(path: Path, geometry):
     expected_lon = west + (np.arange(nx) + 0.5) * resolution
     expected_lat = north - (np.arange(ny) + 0.5) * resolution
     if values.shape != (ny, nx) or not np.allclose(lon, expected_lon) or not np.allclose(lat, expected_lat):
-        raise ValueError(f"{path}: grid coordinates or shape do not match params.txt")
+        raise ValueError(f"{path}: grid coordinates or shape do not match params.nml")
     return values, selected_time
 
 

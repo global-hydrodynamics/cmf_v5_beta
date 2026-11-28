@@ -136,10 +136,13 @@ directory. No source data are written, restored or converted when switching.
 Existing numeric `MAP_DIR/COG/RESOLUTION/AREA.FIELD.tif` files supply both display
 and native inspection. Discovery validates COG layout, EPSG:4326, native dimensions,
 pixel edges, signed dtype, band variable names, units and source filename.
-Compatible COGs are preferred regardless of the associated NetCDF's modification
-time, which can change during data copying. These compatibility checks do not
-prove content equivalence. Compatible COGs prevent opening that field's high-res
-NetCDF; only filesystem metadata may be checked. No conversion runs in Explorer.
+`location.csv` declares the native tile and matching NetCDF products in the same
+resolution directory (for example, `1min/1min.catmxy.nc`); COGs remain under
+`COG/1min/`. Compatible COGs are preferred regardless of the associated NetCDF's
+modification time, which can change during data copying. These compatibility
+checks do not prove content equivalence. Compatible COGs prevent opening that
+field's high-res NetCDF; only filesystem metadata may be checked. No conversion
+runs in Explorer.
 Missing/incompatible COGs show diagnostics and preserve the existing NetCDF/Binary
 fallback display; fallback does not enable native Catchment interaction.
 
@@ -864,8 +867,12 @@ style metadata: preset loading supplies the new optional defaults.
 Bifurcations use the first valid record of each unique directed endpoint pair,
 following Gallery f04. Reversed pairs remain distinct records. Invalid indices,
 widths, outlets, duplicates and conflicting duplicate widths are reported.
-No stored record is changed. Bifurcation link picking is deferred; rendering,
-class distinctions, unique counts and error diagnostics are implemented.
+Supplementary `bifprm.csv` `end_lon`/`end_lat` values are serialized to three
+decimal places; Explorer checks them at that stored precision. Destination
+indices and the `lonlat` product continue to define the actual connections and
+rendered endpoint coordinates. No stored record is changed. Bifurcation link
+picking is deferred; rendering, class distinctions, unique counts and error
+diagnostics are implemented.
 
 ### Navigation, native inspection and export
 

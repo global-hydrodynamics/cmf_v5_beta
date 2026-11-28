@@ -217,7 +217,7 @@ def test_saved_controls_and_png_alpha_handoff(products, monkeypatch):
 ROOT = Path(__file__).resolve().parents[3]
 
 
-@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.txt").exists(), reason="Mekong unavailable")
+@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.nml").exists(), reason="Mekong unavailable")
 def test_mekong_display_controls_and_preset_defaults(tmp_path):
     app = Explorer(ROOT / "map/mekong_15min", tmp_path)
     app.set_extent((104.5, 107, 9.5, 12))

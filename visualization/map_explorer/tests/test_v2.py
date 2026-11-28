@@ -139,6 +139,32 @@ def test_outlet_geometry_and_bifurcation_validation(products):
     assert p.network_view(net, "outlet_vector") is vector
 
 
+def test_bifurcation_outlet_coordinates_follow_three_decimal_csv_precision(products):
+    reader = MapReader(products)
+    products_reader = Products(reader)
+    outlon, outlat = products_reader.outlets
+    path = products / "netcdf/bifprm.nc"
+    with Dataset(path, "a") as dataset:
+        ix, iy, jx, jy = (np.asarray(dataset[name][:]).astype(int) for name in ("ix", "iy", "jx", "jy"))
+        valid = (ix >= 1) & (ix <= reader.geometry.nx) & (iy >= 1) & (iy <= reader.geometry.ny)
+        valid &= (jx >= 1) & (jx <= reader.geometry.nx) & (jy >= 1) & (jy <= reader.geometry.ny)
+        end_lon = np.full(len(ix), -9999, dtype="f4")
+        end_lat = np.full(len(ix), -9999, dtype="f4")
+        end_lon[valid] = np.round(outlon[jy[valid] - 1, jx[valid] - 1], 3)
+        end_lat[valid] = np.round(outlat[jy[valid] - 1, jx[valid] - 1], 3)
+        lon_var = dataset.createVariable("end_lon", "f4", ("path",))
+        lat_var = dataset.createVariable("end_lat", "f4", ("path",))
+        lon_var[:] = end_lon
+        lat_var[:] = end_lat
+
+    assert Products(reader).bifurcations["channel"].tolist() == [True, False]
+
+    with Dataset(path, "a") as dataset:
+        dataset["end_lon"][0] = np.float32(end_lon[0] + 0.001)
+    with pytest.raises(ValueError, match="destination indices disagree"):
+        Products(reader).bifurcations
+
+
 def test_area_classes_are_full_network_and_styles_independent(products):
     r = MapReader(products)
     n = RiverNetwork(r)
@@ -239,7 +265,7 @@ def test_native_centroid_and_sampled_boundaries(products):
 ROOT = Path(__file__).resolve().parents[3]
 
 
-@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.txt").exists(), reason="actual Mekong fixture absent")
+@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.nml").exists(), reason="actual Mekong fixture absent")
 def test_mekong_gallery_numerical_and_multilayer_integration(tmp_path, monkeypatch):
     from time import perf_counter
 
@@ -262,7 +288,7 @@ def test_mekong_gallery_numerical_and_multilayer_integration(tmp_path, monkeypat
     a.set_extent((104.5, 107, 9.5, 12))
     a.representation.value = "outlet_vector"
     reference = f03.read_network(
-        root / "uparea.nc", root / "nextxy.nc", root / "lonlat.nc", root / "params.txt"
+        root / "uparea.nc", root / "nextxy.nc", root / "lonlat.nc", root / "params.nml"
     )
     np.testing.assert_array_equal(a.network.x0, reference[1])
     np.testing.assert_array_equal(a.network.y1, reference[4])

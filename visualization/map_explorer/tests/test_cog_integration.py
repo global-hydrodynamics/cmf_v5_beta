@@ -20,11 +20,11 @@ from map_reader import Geometry, MapReader
 from selection import visible_catchment_boundary
 
 
-def write_tile(root, prefix='a', west=10, east=14, n=128, optional=True):
+def write_tile(root, prefix='a', west=10, east=14, n=128, optional=True, directory_name='1min_nc'):
     # Full map extent; extra tiles can partition longitude with same native spacing.
     step = (east-west)/n
     ny = round(3/step)
-    directory = root/'1min_nc'
+    directory = root/directory_name
     directory.mkdir(exist_ok=True)
     arrays = {}
     yy,xx = np.indices((ny,n))
@@ -101,6 +101,26 @@ def test_discovery_native_values_and_no_highres_netcdf(cog_map,monkeypatch):
     app.inspect(10+34.5/32,23-34.5/32)
     assert app.selected==(2,3) and app.selection.native_pixel==(34,34)
     assert 'native hires elevtn [m]' in app._selection_values
+
+
+def test_standard_location_csv_uses_current_netcdf_provenance(map_dir):
+    arrays, area = write_tile(map_dir, directory_name='1min')
+    prefix, west, east, south, north, nx, ny, step = area
+    location = map_dir/'1min/location.csv'
+    location.write_text(
+        'iarea,carea,west,east,south,north,nx,ny,csize\n'
+        f'1,{prefix},{west},{east},{south},{north},{nx},{ny},{step}\n'
+    )
+
+    messages = []
+    tile = discover_tiles(map_dir, messages)['1min/a']
+
+    assert not messages
+    assert tile.storage == 'COG'
+    for name in ('catmxy', 'visual'):
+        assert tile.cog[name].netcdf_path == map_dir/'1min'/f'{prefix}.{name}.nc'
+    np.testing.assert_array_equal(tile.sample('catmxy', np.array([34]), np.array([34]))[:, 0, 0], [4, 3])
+    assert tile.sample('visual', np.array([3]), np.array([3]))[0, 0] == arrays['visual'][3, 3]
 
 
 def test_overview_selection_both_axes_and_decimation(cog_map):

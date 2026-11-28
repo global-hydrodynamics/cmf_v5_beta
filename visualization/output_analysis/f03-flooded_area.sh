@@ -39,8 +39,8 @@ TICK_LABEL_SIZE=9            # Axis and colorbar tick labels [pt].
 COLORBAR_LABEL_SIZE=11      # Colorbar quantity and units [pt].
 
 SAMPLE_DIR="$SCRIPT_DIR/out_sample"
-MAP_DIR="$REPO_ROOT/map/mekong_15min/netcdf"
-PARAMS_FILE="$REPO_ROOT/map/mekong_15min/params.txt"
+MAP_DIR="$REPO_ROOT/map/mekong_15min"
+PARAMS_FILE="$REPO_ROOT/map/mekong_15min/params.nml"
 FIGURE_DIR="$SCRIPT_DIR/figure"
 PANEL_A="$FIGURE_DIR/f03a-flooded_area-area_raw.png"
 PANEL_B="$FIGURE_DIR/f03b-flooded_area-flood_frac.png"

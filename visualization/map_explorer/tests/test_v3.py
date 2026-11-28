@@ -184,7 +184,7 @@ def test_persistent_layout_and_json_compatibility(products):
 ROOT = Path(__file__).resolve().parents[3]
 
 
-@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.txt").exists(), reason="Mekong map not beside app")
+@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.nml").exists(), reason="Mekong map not beside app")
 def test_mekong_presets_native_outline_and_png(tmp_path):
     app = Explorer(ROOT / "map/mekong_15min", tmp_path)
     plot = app.plot

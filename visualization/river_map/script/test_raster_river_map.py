@@ -66,7 +66,7 @@ class RasterRiverMapTest(unittest.TestCase):
                     argv = [str(SCRIPTS / (name + ".py")),
                             "--input", str(MAP / "subcol-sample.nc" if variable == "subcol"
                                            else MAP / (variable + ".nc")),
-                            "--params", str(MAP / "params.txt"),
+                            "--params", str(MAP / "params.nml"),
                             "--west", "90", "--east", "110", "--south", "5", "--north", "35",
                             f"--{mode}-height", str(height), f"--{mode}-width", str(width),
                             "--dpi", "100", "--output", str(output)]

@@ -32,8 +32,8 @@ SAMPLE_DIR="$SCRIPT_DIR/out_sample"
 FIGURE_DIR="$SCRIPT_DIR/figure"
 MAP_DIR="$REPO_ROOT/map/mekong_15min"
 MAP1_DIR="$MAP_DIR/1min"
-PARAMS_FILE="$MAP_DIR/params.txt"
-LOCATION_FILE="$MAP1_DIR/location.txt"
+PARAMS_FILE="$MAP_DIR/params.nml"
+LOCATION_FILE="$MAP1_DIR/location.csv"
 SOURCE_NC="$SAMPLE_DIR/flddph_${TARGET_DATE}.nc"
 DOWNSCALED_NC="$SAMPLE_DIR/flddph_1min_${TARGET_DATE}.nc"
 PANEL_A="$FIGURE_DIR/f04a-flood_depth-raster.png"
@@ -50,7 +50,7 @@ printf '\n[STEP 1/3] Run the standalone Python downscaler.\n'
 printf '\n[STEP 2/3] Render both panels with the established visualization.\n'
 "$PYTHON" "$PLOTTER" plot --source "$SOURCE_NC" --date "$TARGET_DATE" \
     --downscaled-netcdf "$DOWNSCALED_NC" \
-    --flddif "$MAP1_DIR/1min.flddif.bin" --elevtn "$MAP1_DIR/1min.elevtn.bin" \
+    --flddif "$MAP1_DIR/1min.flddif.nc" --elevtn "$MAP1_DIR/1min.elevtn.nc" \
     --location "$LOCATION_FILE" --params "$PARAMS_FILE" \
     --panel-a "$PANEL_A" --panel-b "$PANEL_B" \
     --west "$WEST" --east "$EAST" --south "$SOUTH" --north "$NORTH" \

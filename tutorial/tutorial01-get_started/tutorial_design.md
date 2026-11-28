@@ -67,7 +67,7 @@ cmf_v5_beta/
 └── tutorial/tutorial01-get_started/
     ├── tutorial_design.md
     ├── tutorial01-get_started.sh    # Standalone educational GOSH experiment
-    ├── manual_tutorial01-get_started.md
+    ├── README.md                   # Learner-facing tutorial manual
     └── out/tutorial01-get_started/   # Default project results; Git-ignored
 ```
 

@@ -175,7 +175,7 @@ def test_legacy_and_new_json_round_trip(products):
 ROOT = Path(__file__).resolve().parents[3]
 
 
-@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.txt").exists(), reason="Mekong unavailable")
+@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.nml").exists(), reason="Mekong unavailable")
 def test_mekong_hierarchy_all_modes_and_f05e(tmp_path):
     app = Explorer(ROOT / "map/mekong_15min", tmp_path)
     app.set_extent((104.5, 107, 9.5, 12))

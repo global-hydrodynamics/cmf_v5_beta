@@ -1013,6 +1013,10 @@ Geometry/orientation/types/band metadata/units/source filename and freshness are
 checked; optional absent products have reasoned fallback. Metadata stat calls to
 an NC source are not native NC reads. No rendered RGB or assignment overview is
 ever a scientific input. Coarse/model-grid readers retain their original contract.
+For current maps, the paired NetCDF source is resolved from the same resolution
+directory declared by `location.csv` (for example `1min/1min.catmxy.nc`), while
+the cached COG resides under `COG/1min/`. Legacy `_nc`-suffixed tile directories
+remain discoverable from their own location metadata.
 
 `Sampling` records native window edges, output shape, overview factor, both pixel
 screen scales and actual native/decimated state. Screen size is the fitted Bokeh

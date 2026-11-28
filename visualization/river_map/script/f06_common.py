@@ -107,12 +107,11 @@ def draw_osm(ax, extent, cache: Path, alpha: float, white_mix: float) -> bool:
 
 
 def read_network(map_dir: Path, extent):
-    geometry = _f03.read_geometry(map_dir / "params.txt")
+    geometry = _f03.read_geometry(map_dir / "params.nml")
     validate_extent(extent[0], extent[2], extent[1], extent[3], geometry)
-    netcdf = map_dir / "netcdf"
     (_, source_lon, source_lat, destination_lon, destination_lat,
      _, area_classes, _, _, _) = _f03.read_network(
-        netcdf / "uparea.nc", netcdf / "nextxy.nc", netcdf / "lonlat.nc", map_dir / "params.txt"
+        map_dir / "uparea.nc", map_dir / "nextxy.nc", map_dir / "lonlat.nc", map_dir / "params.nml"
     )
     west, south, east, north = extent
     inside = (
@@ -125,7 +124,7 @@ def read_network(map_dir: Path, extent):
         np.column_stack((source_lon[inside], source_lat[inside])),
         np.column_stack((destination_lon[inside], destination_lat[inside])),
     ), axis=1)
-    return geometry, netcdf, segments, area_classes[inside]
+    return geometry, map_dir, segments, area_classes[inside]
 
 
 def draw_network(ax, segments, classes):

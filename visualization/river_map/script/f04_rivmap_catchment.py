@@ -19,6 +19,7 @@ import numpy as np
 from river_map_common import (
     add_map_arguments,
     read_geometry,
+    read_high_resolution_areas,
     read_map_raster,
     save_panel,
 )
@@ -49,25 +50,24 @@ def read_catchment_mapping(path: Path, location_path: Path, geometry,
                            river_cells: np.ndarray):
     """Read 1-minute coarse-cell assignments and identify unassigned land."""
     nx, ny, _, west, east, south, north = geometry
-    lines = location_path.read_text(encoding="utf-8").splitlines()
-    if len(lines) < 3:
-        raise ValueError(f"{location_path} does not contain the 1-minute grid descriptor")
-    fields = lines[2].split()
-    if len(fields) < 9 or fields[1] != "1min":
+    areas = read_high_resolution_areas(location_path)
+    if len(areas) != 1 or areas[0].carea != "1min":
         raise ValueError(f"{location_path} does not describe a 1-minute grid")
-    hires_west, hires_east, hires_south, hires_north = map(float, fields[2:6])
-    nxhi, nyhi = map(int, fields[6:8])
-    hires_resolution = float(fields[8])
+    area = areas[0]
+    hires_west, hires_east = area.west, area.east
+    hires_south, hires_north = area.south, area.north
+    nxhi, nyhi = area.nx, area.ny
+    hires_resolution = area.csize
     if (not np.isclose(hires_resolution, 1 / 60) or nxhi != nx * 15 or nyhi != ny * 15 or
             not np.allclose((hires_west, hires_east, hires_south, hires_north),
                             (west, east, south, north))):
-        raise ValueError(f"{location_path} grid geometry does not match params.txt")
+        raise ValueError(f"{location_path} grid geometry does not match params.nml")
 
     with Dataset(path) as dataset:
-        if not {"catmx", "catmy"}.issubset(dataset.variables):
-            raise ValueError(f"{path} must contain catmx and catmy NetCDF variables")
-        catmx = np.ma.asarray(dataset.variables["catmx"][:]).filled(-999).astype(np.int32)
-        catmy = np.ma.asarray(dataset.variables["catmy"][:]).filled(-999).astype(np.int32)
+        if not {"catmxx", "catmyy"}.issubset(dataset.variables):
+            raise ValueError(f"{path} must contain catmxx and catmyy NetCDF variables")
+        catmx = np.ma.asarray(dataset.variables["catmxx"][:]).filled(-999).astype(np.int32)
+        catmy = np.ma.asarray(dataset.variables["catmyy"][:]).filled(-999).astype(np.int32)
     if catmx.shape != (nyhi, nxhi) or catmy.shape != (nyhi, nxhi):
         raise ValueError(f"{path} assignment grids must have shape {(nyhi, nxhi)}")
 
@@ -292,8 +292,8 @@ def read_bifurcations(path: Path, outlon, outlat):
             (x0 >= -180) & (x0 <= 360) & (x1 >= -180) & (x1 <= 360) &
             (y0 >= -90) & (y0 <= 90) & (y1 >= -90) & (y1 <= 90))
     ids, x0, y0, x1, y1 = ids[good], x0[good], y0[good], x1[good], y1[good]
-    if not (np.allclose(x1, end_lon[ids], rtol=0, atol=1e-5) and
-            np.allclose(y1, end_lat[ids], rtol=0, atol=1e-5)):
+    if not (np.allclose(x1, end_lon[ids], rtol=0, atol=0.0006) and
+            np.allclose(y1, end_lat[ids], rtol=0, atol=0.0006)):
         raise ValueError(f"{path} destination indices do not match stored outlet coordinates")
 
     segments = np.stack((np.column_stack((x0, y0)),

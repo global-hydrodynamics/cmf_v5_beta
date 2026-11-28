@@ -6,6 +6,44 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Visualization readers use current NetCDF Map metadata and placement (DT-0238, 2026-11-28; branch-local proposal)
+
+River Map and output-analysis scripts now use the shared `params.nml` geometry
+reader, current root-level map NetCDF files, and `location.csv` inventories.
+High-resolution catchment readers also use the standard `catmxx`/`catmyy`
+NetCDF variables. Mekong f01 and focused current-map paths were exercised; the
+full p01-f04 workflow still stops at a separate `bifprm.nc` endpoint/outlet
+coordinate consistency error. See [DT-0238](../research/records/DT-0238.md)
+and [VR-0285](../research/records/validation_runs/VR-0285.md).
+
+### Define Development Levels by their guarantee boundary (DT-0237, 2026-11-28; branch-local proposal)
+
+The `large-model-refactoring` Skill now distinguishes local edits (L0), target
+functionality (L1), related-component impact (L2), and the distributed product
+and supported workflows (L3). Scientific risk adjusts validation depth without
+automatically widening component scope. Root `AGENTS.md` remains authoritative
+for explicit L0 limits. See [DT-0237](../research/records/DT-0237.md) and
+[VR-0284](../research/records/validation_runs/VR-0284.md).
+
+### Map Explorer L1 follow-up: Mekong COG and p01-f04b rendering (DT-0236, 2026-11-28; branch-local proposal)
+
+The current Mekong `location.csv` and `catmxy`/`visual` COGs load and pass the
+Gallery missing-product check. The paired NetCDF reference now follows the
+declared tile directory; the Explorer also checks supplementary bifurcation
+outlet coordinates at their stored three-decimal precision. The real p01-f04b
+frame and PNG export were rendered and visually reviewed. See
+[DT-0236](../research/records/DT-0236.md) and
+[VR-0283](../research/records/validation_runs/VR-0283.md).
+
+### Root Fortran setup readiness uses current Mekong map files (DT-0235, 2026-11-28; branch-local proposal)
+
+The mek01/mek02 readiness checks now point to `params.nml`, map-root NetCDF
+products, and NetCDF INPMAT while retaining each experiment's runoff format.
+Only Bash syntax, whitespace, and referenced-file existence checks were run;
+no setup, build, or simulation was started. See
+[DT-0235](../research/records/DT-0235.md) and
+[VR-0282](../research/records/validation_runs/VR-0282.md).
+
 ### Map Explorer uses the shared high-resolution location.csv reader (DT-0234, 2026-11-28; branch-local proposal)
 
 Explorer tile discovery already preferred `location.csv`; its CSV row parsing

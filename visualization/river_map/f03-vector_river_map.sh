@@ -18,7 +18,7 @@ LONLAT_FILE="$MAP_DIR/lonlat.nc"                 # Unit-catchment outlet coordin
 SUBCOL_FILE="$MAP_DIR/subcol-sample.nc"          # Subbasin display-color categories.
 BSNCOL_FILE="$MAP_DIR/bsncol.nc"                 # Categorical basin display colors.
 BIFPRM_FILE="$MAP_DIR/bifprm.nc"                 # Bifurcation paths and layer widths.
-PARAMS_FILE="$MAP_DIR/params.txt"                # Coarse grid dimensions and bounds.
+PARAMS_FILE="$MAP_DIR/params.nml"                # Coarse grid dimensions and bounds.
 CATMXY_FILE="$MAP_DIR/1min/1min.catmxy.nc"        # 1-minute to coarse-cell assignment.
 LOCATION_FILE="$MAP_DIR/1min/location.csv"       # High-resolution grid bounds and size.
 

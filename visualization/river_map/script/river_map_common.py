@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 import os
 from pathlib import Path
+import sys
 import tempfile
 
 import matplotlib.pyplot as plt
@@ -16,10 +17,17 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from netCDF4 import Dataset
 from PIL import Image
 
+REPOSITORY = Path(__file__).resolve().parents[3]
+MAP_TOOLS_CODE = REPOSITORY / "map" / "tools" / "code"
+if str(MAP_TOOLS_CODE) not in sys.path:
+    sys.path.insert(0, str(MAP_TOOLS_CODE))
+from hires_metadata import read_location_csv  # noqa: E402
+from map_metadata import read_map_geometry  # noqa: E402
+
 
 def add_map_arguments(parser) -> None:
     """Add settings shared by the independent panel scripts."""
-    parser.add_argument("--params", type=Path, required=True, help="Map params.txt")
+    parser.add_argument("--params", type=Path, required=True, help="Map params.nml")
     parser.add_argument("--west", type=float, required=True, help="Displayed western edge")
     parser.add_argument("--east", type=float, required=True, help="Displayed eastern edge")
     parser.add_argument("--south", type=float, required=True, help="Displayed southern edge")
@@ -38,22 +46,25 @@ def add_map_arguments(parser) -> None:
 
 
 def read_geometry(path: Path) -> tuple[int, int, float, float, float, float, float]:
-    """Read grid dimensions, resolution, and map-edge coordinates."""
-    try:
-        values = [float(line.split()[0]) for line in path.read_text().splitlines()
-                  if line.split() and not line.lstrip().startswith("#")]
-    except (OSError, ValueError, IndexError) as exc:
-        raise ValueError(f"Cannot read map geometry from {path}: {exc}") from exc
-    if len(values) < 8:
-        raise ValueError(f"Expected at least eight parameter values in {path}")
-    return (int(values[0]), int(values[1]), values[3], values[4], values[5],
-            values[6], values[7])
+    """Read authoritative v5 map geometry, retaining the shared legacy fallback."""
+    geometry = read_map_geometry(path)
+    return (geometry.nx, geometry.ny, geometry.resolution, geometry.west,
+            geometry.east, geometry.south, geometry.north)
+
+
+def read_high_resolution_areas(path: Path):
+    """Read the standard map-tools location.csv inventory."""
+    if path.name == "location.csv":
+        return read_location_csv(path)
+    # Explicit legacy Binary workflows may still provide location.txt.
+    from hires_metadata import read_location_txt
+    return read_location_txt(path)
 
 
 def read_map_raster(path: Path, variable_name: str, expected_units: str,
                     geometry: tuple[int, int, float, float, float, float, float]
                     ) -> tuple[np.ndarray, np.ndarray, np.ma.MaskedArray]:
-    """Read one 2-D NetCDF map raster and verify its grid against params.txt."""
+    """Read one 2-D NetCDF map raster and verify its grid against params.nml."""
     nx, ny, resolution, west, east, south, north = geometry
     with Dataset(path) as source:
         for name in ("lon", "lat", variable_name):
@@ -82,12 +93,12 @@ def read_map_raster(path: Path, variable_name: str, expected_units: str,
     expected_lon = west + (np.arange(nx) + 0.5) * resolution
     expected_lat = north - (np.arange(ny) + 0.5) * resolution
     if not np.allclose(lon, expected_lon, rtol=0, atol=1e-5):
-        raise ValueError("NetCDF longitude centers do not match params.txt geometry")
+        raise ValueError("NetCDF longitude centers do not match params.nml geometry")
     if not np.allclose(lat, expected_lat, rtol=0, atol=1e-5):
-        raise ValueError("NetCDF latitude centers do not match params.txt geometry")
+        raise ValueError("NetCDF latitude centers do not match params.nml geometry")
     if (not np.isclose(east, west + nx * resolution) or
             not np.isclose(north, south + ny * resolution)):
-        raise ValueError("params.txt bounds, dimensions, and resolution are inconsistent")
+        raise ValueError("params.nml bounds, dimensions, and resolution are inconsistent")
     return lon, lat, values
 
 

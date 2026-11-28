@@ -245,7 +245,7 @@ test -f map/mekong_15min/diminfo_repo-mek_1deg.nml
 
 These checks confirm that expected files are present; they do not validate
 scientific correctness. For a first model smoke test, follow the tested
-40-day [Tutorial01 manual](../tutorial01-get_started/manual_tutorial01-get_started.md):
+40-day [Tutorial01 manual](../tutorial01-get_started/README.md):
 build with `make -C src_main all`, then run the script from its own directory:
 
 ```bash
@@ -259,7 +259,7 @@ validation. The Guide01 worked river-depth tutorial is now a sibling of
 Tutorial01 and Tutorial02 at `tutorial/guide01_workflow_example/`. It uses
 NetCDF inputs and outputs, Python analysis, and one-minute downscaling; after
 setup, reuse the same executable and follow its
-[learner manual](../guide01_workflow_example/manual_workflow_example.md) for
+[learner manual](../guide01_workflow_example/README.md) for
 those additional steps. The repository root [README](../../README.md) distinguishes
 these development samples from the official data-rich distribution package.
 

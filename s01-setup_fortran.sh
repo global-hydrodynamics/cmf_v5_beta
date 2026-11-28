@@ -369,37 +369,33 @@ printf '  These labels describe compiler/library readiness only.\n'
 
 MEK01_DATA=yes
 for file in \
-    map/mekong_15min/params.txt map/mekong_15min/nextxy_noedge.bin \
-    map/mekong_15min/ctmare.bin map/mekong_15min/elevtn.bin \
-    map/mekong_15min/nxtdst.bin map/mekong_15min/rivlen.bin \
-    map/mekong_15min/fldhgt.bin map/mekong_15min/rivwth_merit.bin \
-    map/mekong_15min/rivhgt.bin map/mekong_15min/rivman.bin \
+    map/mekong_15min/params.nml map/mekong_15min/nextxy_noedge.nc \
+    map/mekong_15min/ctmare.nc map/mekong_15min/elevtn.nc \
+    map/mekong_15min/nxtdst.nc map/mekong_15min/rivlen.nc \
+    map/mekong_15min/fldhgt.nc map/mekong_15min/rivwth_merit.nc \
+    map/mekong_15min/rivhgt.nc map/mekong_15min/rivman.nc \
     map/mekong_15min/diminfo_repo-mek_1deg.nml \
-    map/mekong_15min/inpmat_repo-mek_1deg.bin \
+    map/mekong_15min/inpmat_repo-mek_1deg.nc \
     inp/repo-mek_1deg_bin/runoff/Roff____200001.one \
     inp/repo-mek_1deg_bin/runoff/Roff____200002.one; do
     if [ ! -f "$SCRIPT_DIR/$file" ]; then
         MEK01_DATA=no
     fi
 done
-if [ -f "$SCRIPT_DIR/map/mekong_15min/bifprm.csv" ]; then
-    :
-elif [ -f "$SCRIPT_DIR/map/mekong_15min/bifprm.txt" ]; then
-    :
-else
+if [ ! -f "$SCRIPT_DIR/map/mekong_15min/bifprm.csv" ]; then
     MEK01_DATA=no
 fi
 
 MEK02_DATA=yes
 for file in \
-    map/mekong_15min/params.txt map/mekong_15min/diminfo_repo-mek_1deg.nml \
-    map/mekong_15min/inpmat_repo-mek_1deg.bin \
-    map/mekong_15min/netcdf/nextxy.nc \
-    map/mekong_15min/netcdf/ctmare.nc map/mekong_15min/netcdf/elevtn.nc \
-    map/mekong_15min/netcdf/nxtdst.nc map/mekong_15min/netcdf/rivlen.nc \
-    map/mekong_15min/netcdf/fldhgt.nc map/mekong_15min/netcdf/rivwth_merit.nc \
-    map/mekong_15min/netcdf/rivhgt.nc map/mekong_15min/netcdf/rivman.nc \
-    map/mekong_15min/netcdf/bifprm.nc \
+    map/mekong_15min/params.nml map/mekong_15min/diminfo_repo-mek_1deg.nml \
+    map/mekong_15min/inpmat_repo-mek_1deg.nc \
+    map/mekong_15min/nextxy.nc \
+    map/mekong_15min/ctmare.nc map/mekong_15min/elevtn.nc \
+    map/mekong_15min/nxtdst.nc map/mekong_15min/rivlen.nc \
+    map/mekong_15min/fldhgt.nc map/mekong_15min/rivwth_merit.nc \
+    map/mekong_15min/rivhgt.nc map/mekong_15min/rivman.nc \
+    map/mekong_15min/bifprm.nc \
     inp/repo-mek_1deg/runoff2000.nc inp/repo-mek_1deg/runoff2001.nc; do
     if [ ! -f "$SCRIPT_DIR/$file" ]; then
         MEK02_DATA=no

@@ -151,9 +151,12 @@ class Products:
             expected_x = endpoints["end_lon"][ids]
             if g.periodic:
                 expected_x = g.west + (expected_x - g.west) % 360
+            # Standard bifprm.csv serializes supplementary outlet coordinates
+            # to three decimals; compare at that declared precision while the
+            # integer destination indices remain the authoritative connection.
             if not (
-                np.allclose(x1, expected_x, rtol=0, atol=1e-5)
-                and np.allclose(y1, endpoints["end_lat"][ids], rtol=0, atol=1e-5)
+                np.array_equal(np.round(x1, 3), np.round(expected_x, 3))
+                and np.array_equal(np.round(y1, 3), np.round(endpoints["end_lat"][ids], 3))
             ):
                 raise ValueError("Bifurcation destination indices disagree with recorded outlet coordinates")
         # Gallery f04 keeps the first valid directed endpoint pair. Preserve

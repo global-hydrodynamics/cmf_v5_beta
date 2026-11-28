@@ -221,7 +221,7 @@ def test_selection_style_png_receives_identical_geometry(products, monkeypatch):
 ROOT = Path(__file__).resolve().parents[3]
 
 
-@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.txt").exists(), reason="Mekong unavailable")
+@pytest.mark.skipif(not (ROOT / "map/mekong_15min/params.nml").exists(), reason="Mekong unavailable")
 def test_seven_visible_gallery_renderings_and_legacy_library(tmp_path):
     app = Explorer(ROOT / "map/mekong_15min", tmp_path)
     assert tuple(app.preset_choice.options.values()) == VISIBLE_PRESETS

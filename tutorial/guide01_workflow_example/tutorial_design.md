@@ -189,7 +189,7 @@ learner-created Deep Channel GOSH are absent. Generated outputs are ignored.
 tutorial/guide01_workflow_example/
 ├── tutorial_design.md
 ├── design/                         developer references and reset
-├── manual_workflow_example.md      learner instructions
+├── README.md                       learner instructions
 ├── s01-prepare_map.py              starter; learner changes increment to 3.0
 ├── run-experiment.sh               working Control GOSH template
 ├── s02-run_control.sh

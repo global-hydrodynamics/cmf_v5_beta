@@ -39,7 +39,7 @@ class NetworkLayoutTest(unittest.TestCase):
                     argv = [str(SCRIPTS / f"f02{suffix}.py"),
                             "--uparea", str(MAP / "uparea.nc"),
                             "--nextxy", str(MAP / "nextxy.nc"),
-                            "--params", str(MAP / "params.txt"),
+                            "--params", str(MAP / "params.nml"),
                             "--west", "99", "--east", "109", "--south", "9", "--north", "19",
                             "--dpi", "100", "--max-height", str(height),
                             "--max-width", str(width), "--output", str(output)]

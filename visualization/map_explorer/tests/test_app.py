@@ -79,7 +79,7 @@ def test_settings_validation_before_mutation(map_dir):
     assert app.variable.value == 'uparea'
 
 
-@pytest.mark.skipif(not (Path(__file__).resolve().parents[3]/'map/mekong_15min/params.txt').exists(), reason='Mekong map not beside application')
+@pytest.mark.skipif(not (Path(__file__).resolve().parents[3]/'map/mekong_15min/params.nml').exists(), reason='Mekong map not beside application')
 def test_mekong_integration(tmp_path):
     root=Path(__file__).resolve().parents[3]/'map/mekong_15min'
     app=Explorer(root,tmp_path)

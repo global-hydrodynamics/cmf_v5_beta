@@ -8,7 +8,7 @@
 
 - Bug reports and suggestions for useful features are very welcome. Contact the maintainer or use [GitHub Issues](https://github.com/global-hydrodynamics/cmf_v5_beta/issues).
 - When reporting a problem, include the package version (`v5b01`), OS/compiler, reproduction steps and relevant logs.
-- Not all platforms and optional features have been tested. Start with [Tutorial01](tutorial/tutorial01-get_started/manual_tutorial01-get_started.md) and check your intended configuration.
+- Not all platforms and optional features have been tested. Start with [Tutorial01](tutorial/tutorial01-get_started/README.md) and check your intended configuration.
 - The GitHub contribution/push policy is still being organized. **Please hold off on pushing code to GitHub until the guidance is ready.** Feedback is welcome in the meantime.
 
 ## Project Overview
@@ -86,7 +86,7 @@ deactivate
 
 The basic experiment uses the tracked `map/mekong_15min/` map, daily Binary forcing in monthly files under `inp/repo-mek_1deg_bin/`, and their matching input matrix. It runs 40 days from 2000-01-01 to 2000-02-10 (end exclusive), without the large additional-data package. Results go to `gosh_test/out/mek01/` (override the project with `PROJ`, or the complete path with `RUNDIR`); reruns replace this sample's known generated outputs. The script must run from `gosh_test/`, as shown above.
 
-For settings and the two-year NetCDF example, see the [developer execution guide](gosh_test/README.md). For an explained first experiment, use the [Tutorial01 manual](tutorial/tutorial01-get_started/manual_tutorial01-get_started.md). Current v5 execution starts in `gosh_test/`, not the historical `legacy/gosh/`. The full current-revision clean-clone build/run/visualization sequence is not yet verified as an integrated procedure.
+For settings and the two-year NetCDF example, see the [developer execution guide](gosh_test/README.md). For an explained first experiment, use the [Tutorial01 manual](tutorial/tutorial01-get_started/README.md). Current v5 execution starts in `gosh_test/`, not the historical `legacy/gosh/`. The full current-revision clean-clone build/run/visualization sequence is not yet verified as an integrated procedure.
 
 ## Repository and Package Distribution
 

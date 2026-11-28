@@ -13,7 +13,13 @@ from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib.lines import Line2D
 from netCDF4 import Dataset
 
-from river_map_common import create_map_axes, read_geometry, read_map_raster, save_panel
+from river_map_common import (
+    create_map_axes,
+    read_geometry,
+    read_high_resolution_areas,
+    read_map_raster,
+    save_panel,
+)
 from river_network_common import read_river_network
 
 
@@ -94,8 +100,8 @@ def read_bifurcations(path: Path, outlon: np.ndarray, outlat: np.ndarray):
     destination_lat = destination_lat[valid_outlets]
     first_layer_width = widths[0, path_ids]
 
-    if not (np.allclose(destination_lon, end_lon[path_ids], rtol=0, atol=1e-5) and
-            np.allclose(destination_lat, end_lat[path_ids], rtol=0, atol=1e-5)):
+    if not (np.allclose(destination_lon, end_lon[path_ids], rtol=0, atol=0.0006) and
+            np.allclose(destination_lat, end_lat[path_ids], rtol=0, atol=0.0006)):
         raise ValueError(f"{path}: destination indices do not match stored outlet coordinates")
 
     segments = np.stack((np.column_stack((source_lon, source_lat)),
@@ -113,15 +119,13 @@ def read_catchment_mapping(path: Path, location_path: Path, geometry,
     """Read 1-minute catchment assignments and calculate pixel-centre centroids."""
     nx, ny, _, _, _, _, _ = geometry
     _, _, _, map_west, map_east, map_south, map_north = geometry
-    location_lines = location_path.read_text().splitlines()
-    if len(location_lines) < 3:
-        raise ValueError(f"{location_path} does not contain a grid descriptor")
-    fields = location_lines[2].split()
-    if len(fields) < 9 or fields[1] != "1min":
+    areas = read_high_resolution_areas(location_path)
+    if len(areas) != 1 or areas[0].carea != "1min":
         raise ValueError(f"{location_path} does not describe the expected 1-minute grid")
-    west, east, south, north = map(float, fields[2:6])
-    nxhi, nyhi = map(int, fields[6:8])
-    resolution = float(fields[8])
+    area = areas[0]
+    west, east, south, north = area.west, area.east, area.south, area.north
+    nxhi, nyhi = area.nx, area.ny
+    resolution = area.csize
     if (not np.isclose(resolution, 1.0 / 60.0) or
             nxhi != nx * 15 or nyhi != ny * 15 or
             not np.isclose(east, west + nxhi * resolution) or
@@ -130,8 +134,8 @@ def read_catchment_mapping(path: Path, location_path: Path, geometry,
                             (map_west, map_east, map_south, map_north))):
         raise ValueError(f"{location_path} has inconsistent 1-minute grid geometry")
     with Dataset(path) as source:
-        catmx = np.ma.asarray(source.variables["catmx"][:]).filled(-999).astype(np.int32)
-        catmy = np.ma.asarray(source.variables["catmy"][:]).filled(-999).astype(np.int32)
+        catmx = np.ma.asarray(source.variables["catmxx"][:]).filled(-999).astype(np.int32)
+        catmy = np.ma.asarray(source.variables["catmyy"][:]).filled(-999).astype(np.int32)
     if catmx.shape != (nyhi, nxhi) or catmy.shape != (nyhi, nxhi):
         raise ValueError(f"{path} assignment grids must have shape {(nyhi, nxhi)}")
 

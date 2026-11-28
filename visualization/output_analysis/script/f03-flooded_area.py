@@ -99,7 +99,7 @@ def read_sample(path: Path, name: str, expected_units: str, geometry):
     expected_lat = north - (np.arange(ny) + 0.5) * resolution
     if (not np.allclose(lon, expected_lon, rtol=0, atol=1e-5) or
             not np.allclose(lat, expected_lat, rtol=0, atol=1e-5)):
-        raise ValueError(f"{path}: coordinates do not match {nx}x{ny} params.txt grid")
+        raise ValueError(f"{path}: coordinates do not match {nx}x{ny} params.nml grid")
     return values, selected
 
 

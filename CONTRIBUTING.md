@@ -23,7 +23,7 @@ Use the current target ref when it differs from local main. Stage only intended 
 
 GitHub Actions is temporarily disabled while the v5 regression strategy is redesigned. Use the [retained manual checks](docs/migration_consistency_audit.md#manual-checks-retained-from-the-retired-workflow) and report what you actually ran; do not assume an automated PR check has executed.
 
-The intended Level 1 is a fresh-clone build and small Mekong model test with independently approved regression references. Existing [developer workflows](gosh_test/README.md) and [Tutorial01](tutorial/tutorial01-get_started/manual_tutorial01-get_started.md) provide build/run instructions; a unified model regression command is not yet established. Report the actual workflow, revision, configuration, inputs and comparisons you used rather than claiming the planned test environment is complete.
+The intended Level 1 is a fresh-clone build and small Mekong model test with independently approved regression references. Existing [developer workflows](gosh_test/README.md) and [Tutorial01](tutorial/tutorial01-get_started/README.md) provide build/run instructions; a unified model regression command is not yet established. Report the actual workflow, revision, configuration, inputs and comparisons you used rather than claiming the planned test environment is complete.
 
 The following existing component checks were executed successfully during this documentation update. Run from the repository root with Python 3; they check metadata/data contracts and CTL generation, not model science or the full Level 1 workflow:
 

@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import importlib.util
 from pathlib import Path
 
@@ -17,7 +16,7 @@ from matplotlib.ticker import LogFormatterMathtext, LogLocator
 from netCDF4 import Dataset
 
 from cmf_colormap import get_cmap
-from river_map_common import read_geometry, read_map_raster
+from river_map_common import read_geometry, read_high_resolution_areas, read_map_raster
 from river_network_common import read_river_network
 from river_network_layout import create_network_axes, save_network_panel
 
@@ -45,23 +44,20 @@ BIFURCATION_COLORS = ("#F4A582", "#D6604D", "#B2182B", "#FF0000")
 
 def read_high_resolution_grid(location_path: Path, geometry):
     """Read and validate the 1-minute grid geometry from location.csv."""
-    with location_path.open(newline='', encoding='utf-8-sig') as stream:
-        reader = csv.DictReader(stream)
-        fields = [{key.strip(): (value or '').strip() for key, value in row.items() if key is not None}
-                  for row in reader]
-    if len(fields) != 1 or fields[0].get('carea') != '1min':
+    areas = read_high_resolution_areas(location_path)
+    if len(areas) != 1 or areas[0].carea != '1min':
         raise ValueError(f"{location_path} does not describe a 1-minute grid")
-    area = fields[0]
-    west, east, south, north = (float(area[key]) for key in ('west', 'east', 'south', 'north'))
-    nx, ny = int(area['nx']), int(area['ny'])
-    resolution = float(area['csize'])
+    area = areas[0]
+    west, east, south, north = area.west, area.east, area.south, area.north
+    nx, ny = area.nx, area.ny
+    resolution = area.csize
     coarse_nx, coarse_ny, coarse_res, cw, ce, cs, cn = geometry
     if (not np.isclose(resolution, 1 / 60) or nx != coarse_nx * 15 or
             ny != coarse_ny * 15 or not np.isclose(east - west, nx * resolution) or
             not np.isclose(north - south, ny * resolution) or
             not np.allclose((west, east, south, north), (cw, ce, cs, cn)) or
             not np.isclose(coarse_res, 0.25)):
-        raise ValueError(f"{location_path} is inconsistent with params.txt")
+        raise ValueError(f"{location_path} is inconsistent with params.nml")
     return nx, ny, resolution, west, east, south, north
 
 

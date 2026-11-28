@@ -50,7 +50,7 @@ Tutorial01 and Tutorial02, not a subdirectory of this development guide:
   requirements.
 - [`../guide01_workflow_example/design/manual_design.md`](../guide01_workflow_example/design/manual_design.md)
   specifies the intended learner operations and completion evidence.
-- [`../guide01_workflow_example/manual_workflow_example.md`](../guide01_workflow_example/manual_workflow_example.md)
+- [`../guide01_workflow_example/README.md`](../guide01_workflow_example/README.md)
   is the learner-facing experimental walkthrough.
 - `tutorial/guide01_workflow_example/` owns the executable scripts, design
   references, data/analysis inputs, and `sample_figure/`. Its `design/`
@@ -109,7 +109,7 @@ record in full:
    learner's needs from scientific and implementation specifications.
 4. Compare implementation prompts with Codex's repository checks, scripts,
    test results, and execution records.
-5. Read the [learner manual](../guide01_workflow_example/manual_workflow_example.md)
+5. Read the [learner manual](../guide01_workflow_example/README.md)
    and inspect its six reference figures. The learner-generated analysis
    products are absent until the workflow is performed.
 6. Follow the review records to see how human feedback is translated into
@@ -138,7 +138,7 @@ students continuing the work.
 
 ## How the example relates to the other tutorials
 
-[Tutorial01](../tutorial01-get_started/manual_tutorial01-get_started.md)
+[Tutorial01](../tutorial01-get_started/README.md)
 and [Tutorial02](../tutorial02-mekong_netcdf_4exp/README.md) teach
 particular CaMa-Flood operations and scientific comparisons. Guide01 teaches
 how such tutorials and manuals can be developed. Its river-depth experiment
