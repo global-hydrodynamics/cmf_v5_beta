@@ -5,11 +5,16 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
 TUTORIAL_DIR="$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)"
-CMF_BASE=$(CDPATH= cd "$TUTORIAL_DIR/../.." && pwd -P)
+
+# CaMa-Flood general setting (check CMF root, import CMF common shell functions)
+PYTHON_CMD="python3"
+: "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
+. "$CMF_V50_ROOT/tools/cmf_shell_functions.sh"
+
+cmf_check_init "Prepare the Rhine 2021 run directory"
 
 # -------------------------- User settings ------------------------------
-PYTHON="python3" # Python for reading Step13 metadata; no model computation.
-EXEC_CMF="${CMF_BASE}/src_main/MAIN_cmf" # Existing executable; not rebuilt here.
+EXEC_CMF="${CMF_V50_ROOT}/src_main/MAIN_cmf" # Existing executable; not rebuilt here.
 RESTART_INPUT="NONE" # Restart file path, or NONE for the default cold start.
 PROJ="Rhine2021"                                                     # Experiment directory name (not the independent output COUTTAG).
 RUNDIR=${RUNDIR:-"${TUTORIAL_DIR}/experiment/${PROJ}"}                 # Run directory; existing RUNDIR override supported; nonempty directories are preserved.
@@ -23,14 +28,13 @@ END_YEAR=2021                                                        # Exclusive
 END_MONTH=8                                                          # Exclusive end month [1–12 UTC].
 END_DAY=1                                                            # Exclusive end day [calendar day UTC].
 END_HOUR=0                                                           # Exclusive end hour [0–23 UTC].
-MAPDIR="${CMF_BASE}/map/Rhine_15min"                                 # Matching regional map root.
-MAP_NETCDF_DIR="${MAPDIR}/netcdf"                                    # Individual NetCDF map directory.
-NEXTXY="${MAP_NETCDF_DIR}/nextxy.nc"                                 # Stored downstream connectivity; select an existing map product.
-RIVWTH="${MAP_NETCDF_DIR}/rivwth_merit.nc"                           # River-channel width map [m].
+MAPDIR="${CMF_V50_ROOT}/map/Rhine_15min"                                 # Matching regional map root.
+NEXTXY="${MAPDIR}/nextxy.nc"                                 # Stored downstream connectivity; select an existing map product.
+RIVWTH="${MAPDIR}/rivwth_merit.nc"                           # River-channel width map [m].
 
 # Step 13 metadata is the source of the regional matrix tag and paired file paths.
 STEP13_METADATA="${TUTORIAL_DIR}/metadata/13_runoff_input_matrix.json" # Authoritative regional Input Matrix/diminfo handoff; do not duplicate its values.
-RUNOFF_DIR="${CMF_BASE}/inp/tutorial11-ERA5land-Rhine2021Jul"        # Runoff input directory matching the matrix grid.
+RUNOFF_DIR="${CMF_V50_ROOT}/inp/tutorial11-ERA5land-Rhine2021Jul"        # Runoff input directory matching the matrix grid.
 IFRQ_INP=1                                                           # Runoff update interval [hours].
 DROFUNIT=3600000                                                     # Divide input values by this factor to obtain depth rate [m/s]; current mm/hour.
 CVNROF="runoff"                                                      # Input NetCDF runoff variable name.
@@ -61,46 +65,21 @@ CVNREST="restart"                                                    # Restart f
 # User settings end here. Paths and the one continuous model run follow.
 # ----------------------------------------------------------------------
 
-ROFFTAG=$("$PYTHON" -c 'import json,sys; print(json.load(open(sys.argv[1]))["generator"]["settings"]["ROFFTAG"])' "$STEP13_METADATA")
-INPMAT_REL=$("$PYTHON" -c 'import json,sys; print(json.load(open(sys.argv[1]))["outputs"]["input_matrix"])' "$STEP13_METADATA")
-DIMINFO_REL=$("$PYTHON" -c 'import json,sys; print(json.load(open(sys.argv[1]))["outputs"]["dimension_info"])' "$STEP13_METADATA")
-INPMAT="${CMF_BASE}/${INPMAT_REL}"
-DIMINFO="${CMF_BASE}/${DIMINFO_REL}"
+ROFFTAG=$("$PYTHON_CMD" -c 'import json,sys; print(json.load(open(sys.argv[1]))["current_workflow_contract"]["runoff_tag"])' "$STEP13_METADATA")
+INPMAT_REL=$("$PYTHON_CMD" -c 'import json,sys; print(json.load(open(sys.argv[1]))["current_workflow_contract"]["outputs"]["input_matrix"])' "$STEP13_METADATA")
+DIMINFO_REL=$("$PYTHON_CMD" -c 'import json,sys; print(json.load(open(sys.argv[1]))["current_workflow_contract"]["outputs"]["dimension_info"])' "$STEP13_METADATA")
+INPMAT="${CMF_V50_ROOT}/${INPMAT_REL}"
+DIMINFO="${CMF_V50_ROOT}/${DIMINFO_REL}"
 NAMELIST="${RUNDIR}/input_cmf.nam"
 CONSOLE_LOG="${RUNDIR}/console.log"
 RUNTIME_LOG="${RUNDIR}/run_time.log"
-SCRIPT_NAME=${0##*/}
-STEP="Prepare the Rhine 2021 run directory"
-
-trap '
-    EXIT_STATUS=$?
-    trap - 0
-    if [ "$EXIT_STATUS" -ne 0 ]; then
-        printf "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" >&2
-        printf "!!! ERROR: %s FAILED !!!\n" "$SCRIPT_NAME" >&2
-        printf "!!! Step: %s\n" "$STEP" >&2
-        printf "!!! Exit status: %s\n" "$EXIT_STATUS" >&2
-        printf "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" >&2
-    fi
-    exit "$EXIT_STATUS"
-' 0
-trap 'exit 129' HUP
-trap 'exit 130' INT
-trap 'exit 143' TERM
-
-# ----------------------------------------------------------------------
-# End of error handling.
-# ----------------------------------------------------------------------
-
+cmf_check_step 1 3 "Prepare the Rhine 2021 experiment"
 if [ -d "$RUNDIR" ] && [ -n "$(find "$RUNDIR" -mindepth 1 -maxdepth 1 -print -quit)" ]; then
     printf '[ERROR] Run directory is not empty; preserving its contents: %s\n' "$RUNDIR" >&2
     printf 'Set RUNDIR to a new directory to start another run.\n' >&2
     exit 2
 fi
 
-printf '\n==================================================\n'
-printf '[STEP 1/3] Prepare the Rhine 2021 experiment\n'
-printf '==================================================\n\n'
 printf 'RUNDIR = %s\n' "$RUNDIR"
 printf 'MAPDIR = %s\n' "$MAPDIR"
 printf 'RUNOFF_DIR = %s\n' "$RUNOFF_DIR"
@@ -140,15 +119,15 @@ EHOUR = ${END_HOUR}       ! Exclusive simulation end hour.
 &NMAP
 LMAPCDF = .FALSE.                          ! Read individual map files by their extensions.
 CNEXTXY = "${NEXTXY}"                     ! Standard Rhine network.
-CGRAREA = "${MAP_NETCDF_DIR}/ctmare.nc"   ! Unit-catchment area [m2].
-CELEVTN = "${MAP_NETCDF_DIR}/elevtn.nc"   ! Channel-top elevation [m].
-CNXTDST = "${MAP_NETCDF_DIR}/nxtdst.nc"   ! Distance to downstream unit catchment [m].
-CRIVLEN = "${MAP_NETCDF_DIR}/rivlen.nc"   ! River-channel length [m].
-CFLDHGT = "${MAP_NETCDF_DIR}/fldhgt.nc"   ! Floodplain elevation thresholds by layer [m].
+CGRAREA = "${MAPDIR}/ctmare.nc"            ! Unit-catchment area [m2].
+CELEVTN = "${MAPDIR}/elevtn.nc"            ! Channel-top elevation [m].
+CNXTDST = "${MAPDIR}/nxtdst.nc"            ! Distance to downstream unit catchment [m].
+CRIVLEN = "${MAPDIR}/rivlen.nc"            ! River-channel length [m].
+CFLDHGT = "${MAPDIR}/fldhgt.nc"            ! Floodplain elevation thresholds by layer [m].
 CRIVWTH = "${RIVWTH}"                     ! MERIT-based river-channel width [m].
-CRIVHGT = "${MAP_NETCDF_DIR}/rivhgt.nc"   ! River-channel depth [m].
-CRIVMAN = "${MAP_NETCDF_DIR}/rivman.nc"   ! River Manning roughness map.
-CPTHOUT = "${MAP_NETCDF_DIR}/bifprm.nc"   ! Bifurcation channel parameters.
+CRIVHGT = "${MAPDIR}/rivhgt.nc"            ! River-channel depth [m].
+CRIVMAN = "${MAPDIR}/rivman.nc"            ! River Manning roughness map.
+CPTHOUT = "${MAPDIR}/bifprm.nc"            ! Bifurcation channel parameters.
 /
 &NRESTART
 CRESTSTO = "${RESTART_INPUT}"        ! No Restart input; this is a cold-start run.
@@ -171,7 +150,7 @@ CROFPRE  = "${CROFPRE}"   ! Daily filename prefix before YYYYMMDD.
 CROFSUF  = "${CROFSUF}"   ! Daily filename suffix.
 /
 &NOUTPUT
-CMF_BASE = "${CMF_BASE}"  ! Repository root used for output-variable metadata.
+CMF_BASE = "${CMF_V50_ROOT}"  ! Repository root used for output-variable metadata.
 COUTVAR_TABLE = ""        ! Empty selects the maintained output variable table.
 COUTDIR  = "./"            ! Output files are written in the run directory.
 CVARSOUT = "${CVARSOUT}"  ! Hourly gridded output variables.
@@ -182,10 +161,7 @@ IFRQ_OUT = ${IFRQ_OUT}     ! Output interval [hours].
 /
 EOF
 
-printf '\n==================================================\n'
-printf '[STEP 2/3] Run CaMa-Flood: %04d-%02d-%02d %02d:00 to %04d-%02d-%02d %02d:00 UTC (end exclusive)\n' \
-    "$START_YEAR" "$START_MONTH" "$START_DAY" "$START_HOUR" "$END_YEAR" "$END_MONTH" "$END_DAY" "$END_HOUR"
-printf '==================================================\n\n'
+cmf_check_step 2 3 "Run CaMa-Flood: ${START_YEAR}-${START_MONTH}-${START_DAY} ${START_HOUR}:00 to ${END_YEAR}-${END_MONTH}-${END_DAY} ${END_HOUR}:00 UTC (end exclusive)"
 cd "$RUNDIR"
 START_DATETIME=$(date)
 printf 'Start: %s\n' "$START_DATETIME" | tee "$RUNTIME_LOG"
@@ -205,18 +181,15 @@ ELAPSED_SECONDS=$(($(date +%s) - START_SECONDS))
 } | tee -a "$RUNTIME_LOG"
 
 if [ "$RUN_STATUS" -ne 0 ]; then
-    STEP="Run the Rhine 2021 simulation"
     printf '[ERROR] CaMa-Flood failed; inspect %s and %s\n' \
-        "$CONSOLE_LOG" "${RUNDIR}/log_CaMa.nml" >&2
+        "$CONSOLE_LOG" "${RUNDIR}/log_CaMa.txt" >&2
     exit "$RUN_STATUS"
 fi
 
-printf '\n==================================================\n'
-printf '[STEP 3/3] Report run products\n'
-printf '==================================================\n\n'
-printf '[SUCCESS] %s completed\n' "$SCRIPT_NAME"
+cmf_check_step 3 3 "Report run products"
+cmf_check_success
 printf 'Results: %s\n' "$RUNDIR"
 printf 'Namelist: %s\n' "$NAMELIST"
-printf 'Model log: %s\n' "${RUNDIR}/log_CaMa.nml"
+printf 'Model log: %s\n' "${RUNDIR}/log_CaMa.txt"
 printf 'Console log: %s\n' "$CONSOLE_LOG"
 printf 'Runtime log: %s\n' "$RUNTIME_LOG"

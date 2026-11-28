@@ -99,3 +99,8 @@ provenance of every output, regenerate products, compare every binary value to
 the global source, validate hydrologic completeness, or test a model run.
 The status of existing map outputs for Step 13 matrix use and Step 14 simulation
 configuration remains conditional on those later checks.
+
+
+## Current v5 map-interface follow-up — 2026-11-28
+
+Updated the map README and Step 11 prompt to describe the maintained contract: `params.nml`, base individual NetCDF files at the map root, and resolution-specific NetCDF files with `location.csv`. The regional map was not regenerated. Retained `params.txt`/legacy references in this report remain historical evidence of the earlier preparation.

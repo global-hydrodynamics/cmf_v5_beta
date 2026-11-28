@@ -25,6 +25,12 @@ from pathlib import Path
 from netCDF4 import Dataset
 import numpy as np
 
+ROOT = Path(__file__).resolve().parents[3]
+MAP_HELPERS = ROOT / "visualization/river_map/script"
+if str(MAP_HELPERS) not in sys.path:
+    sys.path.insert(0, str(MAP_HELPERS))
+from river_map_common import read_geometry
+
 
 def read_csv(path: Path) -> list[dict[str, str]]:
     """Read source/metadata rows while preserving their field values."""
@@ -34,8 +40,7 @@ def read_csv(path: Path) -> list[dict[str, str]]:
 
 def load_map(map_dir: Path):
     """Read aligned north-first maps, outlet degrees, uparea [m2] and stored nextxy."""
-    netcdf = map_dir
-    with Dataset(netcdf / "lonlat.nc") as data:
+    with Dataset(map_dir / "lonlat.nc") as data:
         lon = np.asarray(data.variables["lon"][:], dtype=np.float64)
         lat = np.asarray(data.variables["lat"][:], dtype=np.float64)
         outlon_var = data.variables["outlon"]
@@ -47,12 +52,12 @@ def load_map(map_dir: Path):
             raise ValueError("lonlat.nc outlet coordinate metadata is not as expected")
         outlon = np.ma.asarray(outlon_var[:], dtype=np.float64).filled(np.nan)
         outlat = np.ma.asarray(outlat_var[:], dtype=np.float64).filled(np.nan)
-    with Dataset(netcdf / "uparea.nc") as data:
+    with Dataset(map_dir / "uparea.nc") as data:
         variable = data.variables["uparea"]
         if variable.dimensions != ("lat", "lon") or getattr(variable, "units", "") != "m2":
             raise ValueError("uparea.nc must be a lat/lon grid with units m2")
         uparea = np.ma.asarray(variable[:], dtype=np.float64).filled(np.nan)
-    with Dataset(netcdf / "nextxy.nc") as data:
+    with Dataset(map_dir / "nextxy.nc") as data:
         nextx = np.ma.asarray(data.variables["nextx"][:]).filled(-9999).astype(np.int32)
         nexty = np.ma.asarray(data.variables["nexty"][:]).filled(-9999).astype(np.int32)
         grid_lon = np.asarray(data.variables["lon"][:], dtype=np.float64)
@@ -325,22 +330,21 @@ def trace_downstream(start: tuple[int, int], targets: dict[str, tuple[int, int]]
 
 
 def load_catchments(map_dir: Path, lon, lat, uparea):
-    """Reuse p01-f04's Binary geometry, sentinels and one-based assignment reader."""
+    """Reuse p01-f04 geometry checks and one-based NetCDF assignment reader."""
     helper_dir = map_dir.parents[1] / "visualization/river_map/script"
     sys.path.insert(0, str(helper_dir))
     try:
         import f04_rivmap_catchment as catchment
     finally:
         sys.path.pop(0)
-    values = [line.split()[0] for line in (map_dir / "params.txt").read_text().splitlines()]
-    geometry = (int(values[0]), int(values[1]), float(values[3]), *map(float, values[4:8]))
+    geometry = read_geometry(map_dir / "params.nml")
     nx, ny, res, west, east, south, north = geometry
     if ((nx, ny) != (len(lon), len(lat)) or
             not np.allclose(lon, west + (np.arange(nx) + .5) * res) or
             not np.allclose(lat, north - (np.arange(ny) + .5) * res)):
-        raise ValueError("params.txt and model NetCDF cell centers disagree")
+        raise ValueError("params.nml and model NetCDF cell centers disagree")
     result = catchment.read_catchment_mapping(
-        map_dir / "1min/1min.catmxy.nc", map_dir / "1min/location.txt",
+        map_dir / "1min/1min.catmxy.nc", map_dir / "1min/location.csv",
         geometry, np.isfinite(uparea) & (uparea > 0))
     return (*result, catchment)
 
@@ -562,14 +566,14 @@ def add_catchment_allocations(map_dir: Path, map_data, output_path: Path):
                 "outlet_lon_lat": [[float(outlon[cell]), float(outlat[cell])] for cell in path],
                 "termination": termination,
             }
-    sources = ["params.txt", "1min/location.txt", "1min/1min.catmxy.nc",
+    sources = ["params.nml", "1min/location.csv", "1min/1min.catmxy.nc",
                "nextxy.nc", "lonlat.nc", "uparea.nc",
                "rivwth_merit.nc", "basin.nc"]
     summary = {
         "review_status": "proposed",
-        "method": "Existing p01-f04 Binary catchment reader; point containment in 1-minute pixels; no snapping",
+        "method": "Existing p01-f04 NetCDF catchment reader; point containment in 1-minute pixels; no snapping",
         "map": "map/Rhine_15min", "highres_grid": hires,
-        "binary_layout": "little-endian int16: complete catmx plane then catmy plane; one-based regional model x/y",
+        "catmxy_format": "NetCDF catmxx/catmyy(lat,lon); one-based regional model x/y",
         "pixel_edges": "west/north inclusive; east/south exclusive; north-first rows, west-first columns",
         "report_count": len(rows),
         "assigned_count": sum(row["catmxy_status"] == "assigned" for row in rows),

@@ -54,6 +54,9 @@ pass on 15 July 2021, approximately 05:49–05:52 UTC; verify exact times and th
 ### Part B — Inundation downscaling
 
 Reuse the maintained `tools/downscale_flddph` method with matching map inputs.
+The current map interface uses `params.nml`, `1min/location.csv`, and
+individual NetCDF products in the map root and `1min/`; do not assume a
+`netcdf/` subdirectory.
 Confirm flddph meaning/units, original simulation resolution, output resolution,
 geometry, required terrain/connectivity layers and calculation options. Do not
 substitute interpolation or a different algorithm. Current implementation uses

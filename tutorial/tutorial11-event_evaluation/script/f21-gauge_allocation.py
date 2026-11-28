@@ -28,6 +28,12 @@ from matplotlib.lines import Line2D
 import numpy as np
 from netCDF4 import Dataset
 
+ROOT = Path(__file__).resolve().parents[3]
+MAP_HELPERS = ROOT / "visualization/river_map/script"
+if str(MAP_HELPERS) not in sys.path:
+    sys.path.insert(0, str(MAP_HELPERS))
+from river_map_common import read_geometry
+
 
 def load_helper(path: Path, module_name: str):
     """Load and register an existing shared river/catchment implementation."""
@@ -57,15 +63,14 @@ def read_impact_allocations(path: Path) -> list[dict[str, str]]:
 
 def read_map(map_dir: Path):
     """Read north-first map fields; keep invalid outlet/area values as NaN."""
-    netcdf = map_dir / "netcdf"
-    with Dataset(netcdf / "lonlat.nc") as data:
+    with Dataset(map_dir / "lonlat.nc") as data:
         lon = np.asarray(data.variables["lon"][:], dtype=np.float64)
         lat = np.asarray(data.variables["lat"][:], dtype=np.float64)
         outlon = np.ma.asarray(data.variables["outlon"][:], dtype=np.float64).filled(np.nan)
         outlat = np.ma.asarray(data.variables["outlat"][:], dtype=np.float64).filled(np.nan)
-    with Dataset(netcdf / "uparea.nc") as data:
+    with Dataset(map_dir / "uparea.nc") as data:
         uparea = np.ma.asarray(data.variables["uparea"][:], dtype=np.float64).filled(np.nan)
-    with Dataset(netcdf / "nextxy.nc") as data:
+    with Dataset(map_dir / "nextxy.nc") as data:
         nextx = np.ma.asarray(data.variables["nextx"][:]).filled(-9999).astype(np.int32)
         nexty = np.ma.asarray(data.variables["nexty"][:]).filled(-9999).astype(np.int32)
     return lon, lat, uparea, nextx, nexty, outlon, outlat
@@ -386,16 +391,9 @@ def main() -> None:
     segments, area, invalid_links = build_river_segments(map_dir, map_data)
     print(f"River links drawn: {len(segments)}; invalid links omitted by shared helper: {invalid_links}")
 
-    params = (map_dir / "params.txt").read_text(encoding="utf-8").splitlines()
-    dims = [int(params[i].split()[0]) for i in range(3)]
-    nx, ny = dims[: 2]
-    resolution = float(params[3].split()[0])
-    west = float(params[4].split()[0])
-    east = float(params[5].split()[0])
-    south = float(params[6].split()[0])
-    north = float(params[7].split()[0])
+    nx, ny, resolution, west, east, south, north = read_geometry(map_dir / "params.nml")
     if (len(lon), len(lat)) != (nx, ny):
-        raise ValueError("Map coordinate dimensions differ from params.txt")
+        raise ValueError("Map coordinate dimensions differ from params.nml")
     overview_extent = (west, east, south, north)
 
     #*** 2. Draw the regional overview and local context panels

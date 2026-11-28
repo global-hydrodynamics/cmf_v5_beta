@@ -276,6 +276,9 @@ available; their preparation history is not inferred from their presence. See
 [p11](p11-regional_map_preparation.md), the [Survey Report](AI_survey_report/11_regional_map_preparation.md),
 the [Work Report](AI_work_report/11_regional_map_preparation.md), and
 [`map/Rhine_15min/README.md`](../../map/Rhine_15min/README.md).
+The maintained map interface uses `params.nml`, base NetCDF files at the map
+root, and `location.csv` plus resolution-specific NetCDF products under the
+high-resolution directory. The regional map README describes this layout.
 
 ### Step 12 — ERA5-Land Hourly Runoff Preparation
 
@@ -297,7 +300,9 @@ converted files are ignored by Git.
 
 Use the Tutorial-local [runoff dataset Registry](runoff_dataset.csv), the
 observed NetCDF grid and the selected regional map to generate a separate
-map-specific Input Matrix and `diminfo`. The global `ERA5land_global` matrix
+map-specific NetCDF Input Matrix and Namelist `diminfo`. The retained current
+pair is checked against the actual regional grid and can be reused; the earlier
+Binary generation and Step 14 consumption remain historical records. The global `ERA5land_global` matrix
 uses 3600 × 1801 input cells and is not interchangeable with the 111 × 91
 regional subset. Record the actual map/grid pairing and index checks for Step
 14. See [p13](p13-runoff_input_matrix.md), the [Survey Report](AI_survey_report/13_runoff_input_matrix.md), the [Work Report](AI_work_report/13_runoff_input_matrix.md), and [`metadata/13_runoff_input_matrix.json`](metadata/13_runoff_input_matrix.json).
@@ -472,7 +477,7 @@ but preparation outputs must not be confused with evaluation results.
 | **6–10 — Reserved** | No activities are specified. | Future research stages. |
 | **11 — Regional map** | Local `map/Rhine_15min/` contains map, parameter, NetCDF/COG products and map-local workflow copies matching the requested domain; outputs were inspected, not regenerated for this Step. | Existing products are available to Steps 12–14; upstream hydrology and parameter scientific validation are not established by this inspection. |
 | **12 — Runoff preparation** | Existing local Rhine ERA5-Land source and converted data, Step 12 Prompt, metadata and reports are recorded; data were inspected, not reacquired or reconverted for this Step. | Hourly labels and grid structure are documented; KG-0019 remains open, and spin-up adequacy is not established by the Step 14 dates. |
-| **13 — Runoff Input Matrix** | Rhine-specific 111 × 91 matrix/diminfo were generated from the actual ERA5-Land grid using the map-local 1-minute catchment assignment; focused dimensions and index checks are recorded. | Step 14 loaded the retained matrix for the 31-day run; this operational check is not independent scientific validation. |
+| **13 — Runoff Input Matrix** | Historical records document Binary generation and use in the 2026-11-24 run. A retained NetCDF matrix/DIMINFO pair was structurally inspected against the 111 × 91 regional ERA5-Land grid during the 2026-11-28 interface update; no matrix was regenerated. | The current Step 14 script reads the explicit NetCDF handoff in `current_workflow_contract`. The historical model run and its Binary input record remain unchanged; operational input checks are not independent scientific validation. |
 | **14 — Simulation setup and execution** | `run_script/s14-run_simulation.sh` ran the 31-day hourly cold-start experiment; 744-record NetCDF outputs and the Restart at 2021-08-01 00:00 were inspected. | Operational completion only; cold-start sensitivity and ERA5-Land time attribution remain unresolved. |
 | **15 — Simulation output visualization** | Signed local peak discharge was calculated from the retained `outflw`/`pthflw` outputs; regional and AOI figures and the reusable plotting workflow are recorded. | Spatial output patterns were inspected; no simultaneous snapshot, spin-up assessment or skill evaluation is implied. |
 | **16 — Matching** | No matching method or implementation is recorded. | Spatial, temporal and variable correspondence remains to be designed. |

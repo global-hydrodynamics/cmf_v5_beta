@@ -96,28 +96,23 @@ def resolve_step14_inputs(step14: dict, tutorial_dir: Path, root: Path):
 
 
 def read_map_data(map_dir: Path):
-    """Read north-first map arrays, stored outlets/connectivity and bifurcation fields."""
-    netcdf_dir = map_dir / "netcdf"
-    with Dataset(netcdf_dir / "uparea.nc") as data:
+    """Read north-first base map arrays, stored outlets and connectivity."""
+    with Dataset(map_dir / "uparea.nc") as data:
         lon = np.asarray(data.variables["lon"][:], dtype=np.float64)
         lat = np.asarray(data.variables["lat"][:], dtype=np.float64)
         uparea = np.asarray(np.ma.filled(data.variables["uparea"][:], np.nan), dtype=np.float64)
-    with Dataset(netcdf_dir / "nextxy.nc") as data:
+    with Dataset(map_dir / "nextxy.nc") as data:
         nextx = np.asarray(np.ma.filled(data.variables["nextx"][:], -9999), dtype=np.int32)
         nexty = np.asarray(np.ma.filled(data.variables["nexty"][:], -9999), dtype=np.int32)
-    with Dataset(netcdf_dir / "lonlat.nc") as data:
+    with Dataset(map_dir / "lonlat.nc") as data:
         outlon = np.asarray(np.ma.filled(data.variables["outlon"][:], -9999), dtype=np.float64)
         outlat = np.asarray(np.ma.filled(data.variables["outlat"][:], -9999), dtype=np.float64)
-    with Dataset(netcdf_dir / "bifprm.nc") as data:
-        bif = {name: np.asarray(data.variables[name][:]) for name in (
-            "pth_id", "ix", "iy", "jx", "jy", "width",
-        )}
     shape = (lat.size, lon.size)
     if any(array.shape != shape for array in (uparea, nextx, nexty, outlon, outlat)):
         raise ValueError("Rhine map fields do not match the lon/lat grid")
     if not (np.all(np.diff(lon) > 0) and np.all(np.diff(lat) < 0)):
         raise ValueError("Expected map longitude eastward and latitude north-first")
-    return lon, lat, uparea, nextx, nexty, outlon, outlat, bif
+    return lon, lat, uparea, nextx, nexty, outlon, outlat
 
 
 def parse_time_axis(variable, path: Path, expected_count: int):
@@ -181,15 +176,16 @@ def read_outflow(path: Path, geometry, expected_records: int):
     return peak, indices, peak_times, values, time_numeric, dates, int(np.ma.count(values)), int(np.count_nonzero(all_missing))
 
 
-def read_bifurcation_peak(path: Path, bif: dict, expected_time: np.ndarray,
+def read_bifurcation_peak(path: Path, expected_time: np.ndarray,
                           expected_records: int):
-    """Match pth_id/endpoints, sum active signed layers, then select absolute maxima.
+    """Use the run's stored path table and widths to select absolute maxima.
 
-    Input pthflw is (time, NPTHLEV, NPTHOUT) [m3/s]; positive map widths
-    select active layers. Hours without a valid active layer remain masked.
-    The returned path order follows output IDs, not an assumed map row order."""
+    NetCDF pthflw stores the path IDs, endpoints, coordinates and widths used
+    by that run. This paired metadata keeps retained output interpretable if
+    the local map's bifurcation table has since changed.
+    """
 
-    #*** 1. Read the hourly layer/path contract and match endpoint IDs
+    #*** 1. Read the hourly flow and the static pathway contract written with it
     with Dataset(path) as data:
         variable = data.variables["pthflw"]
         if variable.dimensions != ("time", "NPTHLEV", "NPTHOUT"):
@@ -202,38 +198,55 @@ def read_bifurcation_peak(path: Path, bif: dict, expected_time: np.ndarray,
         if not np.array_equal(time_numeric, expected_time):
             raise ValueError(f"{path}: pthflw time coordinate differs from outflw")
         path_ids = np.asarray(data.variables["pth_id"][:], dtype=np.int32)
-        if len(np.unique(path_ids)) != len(path_ids):
-            raise ValueError(f"{path}: pth_id values are not unique")
-        output_endpoints = {
-            name: np.asarray(data.variables[name][:], dtype=np.int32)
-            for name in ("ix", "iy", "jx", "jy")
+        if (data.variables["pth_id"].dimensions != ("NPTHOUT",) or
+                len(np.unique(path_ids)) != len(path_ids)):
+            raise ValueError(f"{path}: pth_id must be a unique NPTHOUT vector")
+        endpoint_names = ("ix", "iy", "jx", "jy")
+        coordinate_names = ("start_lon", "start_lat", "end_lon", "end_lat")
+        static_names = endpoint_names + coordinate_names
+        if any(data.variables[name].dimensions != ("NPTHOUT",) for name in static_names):
+            raise ValueError(f"{path}: pthflw path metadata dimensions are invalid")
+        expected_units = {
+            "ix": "1", "iy": "1", "jx": "1", "jy": "1",
+            "start_lon": "degrees_east", "end_lon": "degrees_east",
+            "start_lat": "degrees_north", "end_lat": "degrees_north",
         }
+        if any(getattr(data.variables[name], "units", "") != units
+               for name, units in expected_units.items()):
+            raise ValueError(f"{path}: pthflw static coordinate/index units do not match its path contract")
+        endpoints = {
+            name: np.asarray(data.variables[name][:], dtype=np.int32)
+            for name in endpoint_names
+        }
+        start_lon = np.asarray(data.variables["start_lon"][:], dtype=np.float64)
+        start_lat = np.asarray(data.variables["start_lat"][:], dtype=np.float64)
+        end_lon = np.asarray(data.variables["end_lon"][:], dtype=np.float64)
+        end_lat = np.asarray(data.variables["end_lat"][:], dtype=np.float64)
+        width_variable = data.variables["width"]
+        if (width_variable.dimensions != ("NPTHLEV", "NPTHOUT") or
+                getattr(width_variable, "units", "") != "m"):
+            raise ValueError(f"{path}: static path width must be (NPTHLEV, NPTHOUT) in metres")
+        widths = np.ma.asarray(width_variable[:], dtype=np.float64).filled(np.nan)
         q = np.ma.masked_invalid(np.ma.asarray(variable[:], dtype=np.float64))
-        for name, output_values in output_endpoints.items():
-            map_by_id = {int(pid): int(value) for pid, value in zip(bif["pth_id"], bif[name])}
-            if any(map_by_id.get(int(pid)) != int(value)
-                   for pid, value in zip(path_ids, output_values)):
-                raise ValueError(f"{path}: {name} endpoints do not match Rhine bifprm by pth_id")
 
     #*** 2. Sum signed flow over positive-width active layers
-    map_ids = np.asarray(bif["pth_id"], dtype=np.int32)
-    map_index = {int(pid): i for i, pid in enumerate(map_ids)}
-    if set(path_ids.tolist()) != set(map_ids.tolist()):
-        raise ValueError(f"{path}: output pth_id values do not match Rhine bifprm.nc")
-    widths = np.asarray(bif["width"], dtype=np.float64)
-    widths = widths[:, [map_index[int(pid)] for pid in path_ids]]
+    if widths.shape != (q.shape[1], q.shape[2]):
+        raise ValueError(f"{path}: static path-width shape does not match pthflw layers/paths")
+    if any(values.shape != path_ids.shape for values in (*endpoints.values(), start_lon,
+                                                         start_lat, end_lon, end_lat)):
+        raise ValueError(f"{path}: static path metadata does not match pth_id")
+    segments = np.stack((np.column_stack((start_lon, start_lat)),
+                         np.column_stack((end_lon, end_lat))), axis=1)
+    if not np.all(np.isfinite(widths)) or not np.all(np.isfinite(segments)):
+        raise ValueError(f"{path}: static path metadata contains nonfinite values")
     active_layers = widths > 0
     valid_layer_values = ~np.ma.getmaskarray(q) & np.broadcast_to(active_layers[None, :, :], q.shape)
     summed = np.ma.sum(np.ma.array(q.data, mask=~valid_layer_values), axis=1)
     no_valid_layer = ~np.any(valid_layer_values, axis=1)
     summed = np.ma.array(summed.data, mask=np.ma.getmaskarray(summed) | no_valid_layer)
 
-    #*** 3. Select signed local absolute maxima and retain path order
+    #*** 3. Select signed local absolute maxima and retain the stored path order
     peak, indices, peak_times, all_missing = maximum_absolute_signed(summed, time_numeric)
-
-    map_bif = {name: np.asarray(bif[name], dtype=np.int32) for name in ("ix", "iy", "jx", "jy")}
-    reorder = [map_index[int(pid)] for pid in path_ids]
-    endpoints = {name: values[reorder] for name, values in map_bif.items()}
     channel = widths[0, :] > 0
     eligible = np.any(active_layers, axis=0)
     return {
@@ -242,12 +255,12 @@ def read_bifurcation_peak(path: Path, bif: dict, expected_time: np.ndarray,
         "peak_time_index": indices,
         "peak_time": peak_times,
         "endpoints": endpoints,
+        "segments": segments,
         "channel": channel,
         "eligible": eligible & ~all_missing,
         "active_layer_count": np.count_nonzero(active_layers, axis=0),
         "valid_layer_record_count": int(np.count_nonzero(valid_layer_values)),
     }
-
 
 def write_analysis(path: Path, lon: np.ndarray, lat: np.ndarray, time_numeric: np.ndarray,
                    time_units: str, out_peak, out_index, out_time, path_result,
@@ -315,7 +328,7 @@ def draw_regional(map_dir: Path, peak: np.ndarray, geometry, map_data, path_resu
                   linear_frac: float, dpi: int, figure_height=10.0):
     """Draw signed cell peaks and stored bifurcation pathways over the regional map."""
     nx, ny, _, west, east, south, north = geometry
-    lon, lat, uparea, nextx, nexty, outlon, outlat, _ = map_data
+    lon, lat, uparea, nextx, nexty, outlon, outlat = map_data
     norm = VECTOR.RASTER.AsymmetricSignedLogNorm(
         float(color_levels[0]), float(color_levels[-1]), linthresh, linear_frac,
     )
@@ -350,18 +363,14 @@ def draw_regional(map_dir: Path, peak: np.ndarray, geometry, map_data, path_resu
     # Keep the full 40x32 network legible at the regional scale.
     main_widths = np.asarray([0.45, 0.62, 0.82, 1.05])[area_class] * 1.60
 
-    endpoints = path_result["endpoints"]
     pth_values = path_result["peak"]
     pth_eligible = path_result["eligible"] & np.isfinite(pth_values)
-    ix, iy, jx, jy = (endpoints[name].astype(int) - 1 for name in ("ix", "iy", "jx", "jy"))
-    if np.any((ix < 0) | (ix >= len(lon)) | (jx < 0) | (jx >= len(lon)) |
-              (iy < 0) | (iy >= len(lat)) | (jy < 0) | (jy >= len(lat))):
-        raise ValueError("A Rhine bifurcation path endpoint lies outside the map")
-    bif_segments = np.stack((
-        np.column_stack((outlon[iy, ix], outlat[iy, ix])),
-        np.column_stack((outlon[jy, jx], outlat[jy, jx])),
-    ), axis=1)
-    valid_bif = np.all(np.isfinite(bif_segments), axis=(1, 2)) & np.all(bif_segments != -9999, axis=(1, 2))
+    bif_segments = path_result["segments"]
+    valid_bif = (
+        np.all(np.isfinite(bif_segments), axis=(1, 2)) &
+        np.all((bif_segments[:, :, 0] >= west) & (bif_segments[:, :, 0] <= east), axis=1) &
+        np.all((bif_segments[:, :, 1] >= south) & (bif_segments[:, :, 1] <= north), axis=1)
+    )
     pth_eligible &= valid_bif
     channel_paths = path_result["channel"]
     bif_width = 1.50
@@ -451,7 +460,7 @@ def draw_aoi(map_dir: Path, extent, map_data, out_peak: np.ndarray, path_result,
              output: Path, color_levels: np.ndarray, linthresh: float,
              linear_frac: float, dpi: int, line_width_scale: float, figure_height=9.0):
     """Draw the satellite-AOI view of the same independently timed signed peaks."""
-    lon, lat, uparea, nextx, nexty, outlon, outlat, bif = map_data
+    lon, lat, uparea, nextx, nexty, outlon, outlat = map_data
     west, east, south, north = extent
     norm = VECTOR.RASTER.AsymmetricSignedLogNorm(
         float(color_levels[0]), float(color_levels[-1]), linthresh, linear_frac,
@@ -484,19 +493,15 @@ def draw_aoi(map_dir: Path, extent, map_data, out_peak: np.ndarray, path_result,
     main_segments, main_values, area_class = main_segments[order], main_values[order], area_class[order]
     main_widths = np.asarray([0.55, 0.78, 1.08, 1.48])[area_class] * line_width_scale
 
-    endpoints = path_result["endpoints"]
     path_ids = path_result["path_ids"]
     pth_values = path_result["peak"]
     pth_eligible = path_result["eligible"] & np.isfinite(pth_values)
-    ix, iy, jx, jy = (endpoints[name].astype(int) - 1 for name in ("ix", "iy", "jx", "jy"))
-    if np.any((ix < 0) | (ix >= len(lon)) | (jx < 0) | (jx >= len(lon)) |
-              (iy < 0) | (iy >= len(lat)) | (jy < 0) | (jy >= len(lat))):
-        raise ValueError("A Rhine bifurcation path endpoint lies outside the map")
-    bif_segments = np.stack((
-        np.column_stack((outlon[iy, ix], outlat[iy, ix])),
-        np.column_stack((outlon[jy, jx], outlat[jy, jx])),
-    ), axis=1)
-    valid_bif = np.all(np.isfinite(bif_segments), axis=(1, 2)) & np.all(bif_segments != -9999, axis=(1, 2))
+    bif_segments = path_result["segments"]
+    valid_bif = (
+        np.all(np.isfinite(bif_segments), axis=(1, 2)) &
+        np.all((bif_segments[:, :, 0] >= west) & (bif_segments[:, :, 0] <= east), axis=1) &
+        np.all((bif_segments[:, :, 1] >= south) & (bif_segments[:, :, 1] <= north), axis=1)
+    )
     pth_eligible &= valid_bif
     channel_paths = path_result["channel"]
     background_path = map_dir / "1min" / "1min.elevtn.nc"
@@ -600,7 +605,7 @@ def main() -> None:
         raise ValueError(
             f"Shell map directory {configured_map_dir} differs from Step 14 metadata {map_dir}"
         )
-    geometry = read_geometry(map_dir / "params.txt")
+    geometry = read_geometry(map_dir / "params.nml")
     nx, ny, _, map_west, map_east, map_south, map_north = geometry
     sim_bbox = domain["simulation"]["domain"]["bbox_west_south_east_north"]
     expected_sim_extent = (map_west, map_south, map_east, map_north)
@@ -616,13 +621,19 @@ def main() -> None:
     map_data = read_map_data(map_dir)
     lon, lat = map_data[0], map_data[1]
     if (lon.size, lat.size) != (nx, ny):
-        raise ValueError("Rhine map NetCDF dimensions do not match params.txt")
+        raise ValueError("Rhine map NetCDF dimensions do not match params.nml")
     out_peak, out_index, out_time, out_values, time_numeric, dates, valid_out_records, all_missing_cells = read_outflow(
         outflw_path, geometry, expected_records,
     )
-    pth_result = read_bifurcation_peak(
-        pthflw_path, map_data[7], time_numeric, expected_records,
-    )
+    pth_result = read_bifurcation_peak(pthflw_path, time_numeric, expected_records)
+    for name, values, limit in (
+        ("ix", pth_result["endpoints"]["ix"], nx),
+        ("jx", pth_result["endpoints"]["jx"], nx),
+        ("iy", pth_result["endpoints"]["iy"], ny),
+        ("jy", pth_result["endpoints"]["jy"], ny),
+    ):
+        if np.any((values < 1) | (values > limit)):
+            raise ValueError(f"{pthflw_path}: stored pathway {name} indices are outside params.nml geometry")
     levels = VECTOR.RASTER.parse_color_levels(args.color_levels)
     VECTOR.RASTER.AsymmetricSignedLogNorm(
         float(levels[0]), float(levels[-1]), args.linthresh, args.linear_frac,

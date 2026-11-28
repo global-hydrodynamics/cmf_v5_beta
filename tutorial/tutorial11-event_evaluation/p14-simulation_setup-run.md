@@ -25,15 +25,16 @@ Instructions; it is not a standalone Prompt.
 
 - The Rhine regional map from Step 11.
 - The Tutorial-local ERA5-Land runoff Registry row and converted daily NetCDF files from Step 12.
-- The regional `inpmat` and `diminfo` pair from Step 13.
+- The regional NetCDF `inpmat` and Namelist `diminfo` pair from Step 13.
 - The built CaMa-Flood v5 executable and its current output-variable Registry.
 
 **Tasks**
 
 - Review the actual map, forcing, matrix and model interfaces.
-- Use the standard regional river network `map/Rhine_15min/nextxy.nc`;
-  do not use `nextxy_noedge.nc` for this Rhine run.
-- Read the runoff tag and matrix/diminfo paths from Step 13 metadata; do not substitute the global ERA5-Land matrix.
+- Use `map/Rhine_15min/params.nml` and the standard regional river network
+  `map/Rhine_15min/nextxy.nc`; do not use `nextxy_noedge.nc` for this run.
+  Individual base-map NetCDF files are stored directly under `map/Rhine_15min/`.
+- Read the current runoff tag and matrix/diminfo paths from `current_workflow_contract` in Step 13 metadata; the historical `outputs` and `generator` fields preserve the original Binary-generation record. `CINPMAT` is NetCDF with `LITRPCDF=.TRUE.`, and DIMINFO is Namelist. Do not substitute the global ERA5-Land matrix.
 - Configure and run the specified single 31-day, hourly cold-start experiment.
 - Inspect the run log, hourly NetCDF outputs and end-of-run NetCDF Restart.
 - Record exact settings, observed execution results, and limitations.
@@ -86,7 +87,7 @@ or the Input Matrix.
 Create or update run_script/s14-run_simulation.sh to perform the specified one-time
 31-day hourly cold-start run from 2021-07-01 00:00 to the exclusive end
 2021-08-01 00:00. Use daily NetCDF runoff, the regional Step 13 matrix,
-individual NetCDF map products, hourly NetCDF model output, and one NetCDF
+individual NetCDF map products at the map root, hourly NetCDF model output, and one NetCDF
 Restart at the end. Protect existing experiment results.
 
 Run CaMa-Flood once. Verify successful completion, actual time coverage and

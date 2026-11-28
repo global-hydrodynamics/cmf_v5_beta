@@ -89,3 +89,6 @@ behavior, initial conditions, forcing availability, and model configuration. Fil
 complete upstream coverage, correct outlet treatment, scientifically suitable
 parameter values, or simulation readiness. No Rhine event simulation or
 performance evaluation was performed here.
+
+
+> **Current map-interface note (2026-11-28).** This report preserves the earlier map inventory and preparation evidence. The maintained interface now uses `params.nml`, map-root individual NetCDF files, and `location.csv`/resolution-specific NetCDF products; the map was not regenerated for this update. See the dated follow-up in [Step 11 Work Report](../AI_work_report/11_regional_map_preparation.md).

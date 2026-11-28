@@ -218,5 +218,80 @@
     ],
     "simulation_period": "2021-07-01T00:00:00 to 2021-08-01T00:00:00 exclusive; 744 hours"
   },
-  "step14_execution_reference": "metadata/14_simulation_setup.json"
+  "step14_execution_reference": "metadata/14_simulation_setup.json",
+  "current_workflow_contract": {
+    "format": "NetCDF Input Matrix with Fortran Namelist DIMINFO",
+    "runoff_tag": "ERA5land_Rhine2021Jul",
+    "outputs": {
+      "input_matrix": "map/Rhine_15min/inpmat_ERA5land_Rhine2021Jul.nc",
+      "dimension_info": "map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.nml"
+    },
+    "matrix_state": "retained_existing_files; not regenerated during the 2026-11-28 map-interface update",
+    "validation": {
+      "variables": {
+        "inpx": {
+          "dimensions": [
+            "inpn",
+            "lat",
+            "lon"
+          ],
+          "shape": [
+            30,
+            32,
+            40
+          ],
+          "dtype": "int32"
+        },
+        "inpy": {
+          "dimensions": [
+            "inpn",
+            "lat",
+            "lon"
+          ],
+          "shape": [
+            30,
+            32,
+            40
+          ],
+          "dtype": "int32"
+        },
+        "inpa": {
+          "dimensions": [
+            "inpn",
+            "lat",
+            "lon"
+          ],
+          "shape": [
+            30,
+            32,
+            40
+          ],
+          "dtype": "float32"
+        }
+      },
+      "diminfo_groups": [
+        "DIMINFO",
+        "INPUTDIM"
+      ],
+      "model_grid_nx_ny": [
+        40,
+        32
+      ],
+      "input_grid_nx_ny": [
+        111,
+        91
+      ],
+      "input_grid_bounds_west_south_east_north_degrees": [
+        2.45,
+        44.45,
+        13.55,
+        53.55
+      ],
+      "input_latitude_order": "NtoS",
+      "positive_contribution_pairs": 16963,
+      "active_river_cells_with_contributions": 1245,
+      "all_contributing_indices_within_1_based_input_grid": true,
+      "all_contribution_areas_finite_and_positive": true
+    }
+  }
 }

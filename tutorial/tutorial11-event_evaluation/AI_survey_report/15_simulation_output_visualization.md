@@ -43,3 +43,6 @@ evaluation was performed.
 The derived variables, input checks and exact method are recorded in
 [`metadata/15_simulation_output_visualization.json`](../metadata/15_simulation_output_visualization.json).
 The technical execution record is the [Step 15 Work Report](../AI_work_report/15_simulation_output_visualization.md).
+
+
+> **Current map-interface note (2026-11-28).** The retained model output includes its run-specific pathway IDs, endpoints, coordinates and widths. The current local map has a revised bifurcation table, so the updated reader uses those paired output fields for the existing calculation and display. The simulation and scientific findings were not changed; see the [Step 15 Work Report follow-up](../AI_work_report/15_simulation_output_visualization.md).

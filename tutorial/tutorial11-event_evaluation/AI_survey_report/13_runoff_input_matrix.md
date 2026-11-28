@@ -111,3 +111,6 @@ The machine-readable results are in
 The map binaries and diminfo remain local/ignored; this Survey Report includes
 the actual diminfo text so Tutorial readers can inspect it without the local
 map-data installation.
+
+
+> **Current handoff note (2026-11-28).** The generation format and run facts in this report describe the historical Binary matrix workflow. The retained NetCDF matrix/DIMINFO pair was structurally inspected separately and is now the current Step 14 script contract; no matrix was regenerated. See the [Step 13 Work Report follow-up](../AI_work_report/13_runoff_input_matrix.md) and [`current_workflow_contract`](../metadata/13_runoff_input_matrix.json).

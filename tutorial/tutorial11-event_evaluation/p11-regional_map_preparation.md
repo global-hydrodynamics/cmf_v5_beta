@@ -31,6 +31,17 @@ The execution block is part of this full document, not a standalone Prompt.
 - Configure the region from the Step 2 domain and prepare or verify routing, runoff mappings and map formats.
 - Record what was newly generated separately from retained outputs and identify unresolved inputs.
 
+### Current v5 Map interface
+
+Use `params.nml` for map geometry and `location.csv` for high-resolution grid
+geometry. Individual base-resolution NetCDF files are stored in the map root;
+resolution-specific products are stored under their resolution directory (for
+example, `1min/1min.catmxy.nc`). Do not assume a `netcdf/`, `1min_nc/`, or
+Binary-only layout. Retained Binary/legacy metadata may be historical evidence,
+but must not be selected as the current workflow input when a maintained v5
+product exists. Confirm actual variable names, dimensions, orientation and
+index conventions from the current map documentation and files before use.
+
 ### Outputs
 - Local `map/Rhine_15min/` regional map and map-local scripts
 - `AI_survey_report/11_regional_map_preparation.md`
@@ -67,6 +78,9 @@ NORTH=53.0, at 15 arc-minute resolution.
 2. Copy shared `script_region`, `script_params`, and `script_format_conv`
    templates only when missing; preserve existing map-local configuration and
    review differences from the current shared templates.
+   Use the current NetCDF-first Python map utilities and standard metadata
+   formats documented under `map/tools/`; do not reference retired Fortran
+   generators as the maintained implementation.
 3. If required products are missing and all inputs/executables are available,
    prepare only those products using documented shared workflows. Keep
    `test-1deg` (ELSE_GPCC climatology) distinct from `ERA5land_global` runoff

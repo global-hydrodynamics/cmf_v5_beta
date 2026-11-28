@@ -138,3 +138,8 @@ discharge from the retained `outflw` and `pthflw` files; see
 and the [Step 15 Work Report](15_simulation_output_visualization.md). Step 16
 will design observation matching. Do not treat these outputs or figures as a
 validated event simulation.
+
+
+## Current script interface follow-up — 2026-11-28
+
+Updated the reusable Step 14 Shell to the shared `CMF_V50_ROOT`/common-function convention and the current map-root NetCDF layout. It now reads `runoff_tag`, `outputs.input_matrix`, and `outputs.dimension_info` from Step 13 `current_workflow_contract`, which points to the retained NetCDF matrix and Namelist DIMINFO. The recorded 2026-11-24 model execution consumed the historical Binary matrix; its settings, output fingerprints, execution facts and JSON fields were not changed. `sh -n` passed. The simulation was not rerun, and no files in `experiment/Rhine2021/` were changed.

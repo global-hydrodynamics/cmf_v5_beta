@@ -23,7 +23,7 @@ The execution block depends on the full file and is not a standalone Prompt.
 
 - Step 14 hourly `outflw` and `pthflw` NetCDF outputs, located using
   `metadata/14_simulation_setup.json`.
-- The `Rhine_15min` map and its network, bifurcation, and elevation products.
+- The `Rhine_15min` map (`params.nml`), individual base NetCDF network/bifurcation fields directly under the map root, and 1-minute elevation under `1min/`.
 - The Step 2 satellite-analysis AOI in `metadata/02_domain_selection.json`.
 - The standard `nextxy.nc` network and visualization method from Gallery
   p02-f02b.
@@ -51,6 +51,14 @@ own time of maximum absolute hourly mean. They independently show each
 bifurcation path's local peak. These peaks may occur at different times;
 neither figure is a simultaneous flow snapshot or a model skill assessment. The run has no spin-up, and the ERA5-Land timing issue
 KG-0019 remains unresolved.
+
+For pathway flow, use the static `pth_id`, endpoint, coordinate and `width`
+metadata embedded in the same `pthflw` NetCDF as the time series. It records
+the pathway table and layer widths used by that simulation. The current map's
+`bifprm.nc` is a separate current map product and may have been revised since a
+retained run; do not silently join it to historical pathway output by row order.
+The `outflw` base grid, main-network maps and `params.nml` still come from the
+current map interface.
 
 ## Human Instructions
 
@@ -90,7 +98,7 @@ maxima. Keep main-channel and bifurcation peak times independent.
 Generate Fig. 15a as the direction-aware signed-peak Rhine river network over
 the full map extent and Fig. 15b as the same network over the Step 2
 satellite-analysis AOI, using the map's 1-minute elevation background. Read
-the standard `nextxy.nc` topology specified in Step 14. Use upstream-area-scaled lines that remain visibly distinct across the
+the standard `nextxy.nc` topology specified in Step 14 and `params.nml` geometry. Use the static path IDs, endpoints, coordinates and widths stored in `pthflw` for that run's bifurcation aggregation and display; do not substitute a changed map table. Use upstream-area-scaled lines that remain visibly distinct across the
 full basin at overview scale.
 Reuse existing Gallery helpers without using Mekong-specific paths or data.
 Record that local peaks are not a simultaneous state and that this cold-start

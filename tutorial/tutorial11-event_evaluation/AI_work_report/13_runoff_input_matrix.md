@@ -74,3 +74,10 @@ The subsequent Step 14 cold-start run consumed this regional matrix and
 completed. Its experiment settings, generated outputs and operational checks
 are recorded in `metadata/14_simulation_setup.json` and
 `AI_work_report/14_simulation_setup.md`; that run does not resolve KG-0019.
+
+
+## Current NetCDF handoff follow-up — 2026-11-28
+
+The original generation and inspection described above are historical: the Step 13 matrix was generated as Binary using the then-current Binary map assignment. Those execution facts and source fingerprints were not rewritten. The current local map now provides `params.nml`, `1min/location.csv` and `1min/1min.catmxy.nc`; the maintained generator is `map/tools/code/param_inpmat_generate.py`, which reads the NetCDF catchment assignment and writes a NetCDF matrix with Namelist DIMINFO. The existing pair `map/Rhine_15min/inpmat_ERA5land_Rhine2021Jul.nc` and `diminfo_ERA5land_Rhine2021Jul.nml` was retained, not regenerated.
+
+Focused read-only inspection confirmed `inpx`, `inpy`, and `inpa` on `(inpn,lat,lon)` with shape 30×32×40 and types int32, int32 and float32; DIMINFO has `DIMINFO`/`INPUTDIM`, model size 40×32 and input size 111×91. The 16,963 positive-area input pairs use one-based indices within 111×91, all areas are finite and positive, and all 1,245 active river cells have contributions. The updated metadata exposes this as `current_workflow_contract`; the original `generator`, `outputs` and Binary checks remain the historical record.

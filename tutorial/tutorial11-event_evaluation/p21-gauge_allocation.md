@@ -72,7 +72,9 @@ not snap small-tributary locations to a nearby mainstem or nearest outlet.
 Reports without coordinates or outside the map remain in the CSV without an
 inferred location, with their status explained.
 
-Use `catmxy` for the stored high-resolution pixel-to-river-cell assignment;
+Read geometry from `params.nml` and the auxiliary grid from `location.csv`.
+Use `1min/1min.catmxy.nc` (`catmxx` and `catmyy` on `(lat, lon)`) for the
+stored high-resolution pixel-to-river-cell assignment;
 use `nextxy` for downstream connectivity and downstream paths, not to infer
 the pixel's catchment membership. Keep three distinct layers in the impact CSV:
 
@@ -103,13 +105,13 @@ Use the simulation's current `map/Rhine_15min/` map: 15 arcmin (0.25°),
 - `metadata/01_impact_locations.csv` and
   `metadata/01_reported_flood_timing.csv` for the existing 22 impact/timing
   report/location records.
-- `1min/location.txt`, `1min/1min.catmxy.bin` and base NetCDF network/outlet
-  fields under the current map, together with available existing allocation
-  products.
+- `params.nml`, `1min/location.csv`, `1min/1min.catmxy.nc` and base individual
+  NetCDF network/outlet fields stored directly under the map root, together
+  with available existing allocation products.
 
-Reuse the unchanged p01-f04 Binary reader and pixel-edge boundary method.
+Reuse the p01-f04 current NetCDF reader and pixel-edge boundary method.
 One-minute pixels use west/north-inclusive and east/south-exclusive edges,
-north-first rows and west-first columns. Stored int16 catmx/catmy are one-based
+north-first rows and west-first columns. Stored `catmxx`/`catmyy` are one-based
 regional model x/y, so row=y−1 and col=x−1. Where the 0.25-degree map cannot
 establish a local tributary match, mark named-river correspondence as uncertain.
 These are the current Rhine map's contracts, not assumed properties of every

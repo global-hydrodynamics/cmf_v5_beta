@@ -181,3 +181,6 @@ checked 2026-11-24:
 - EODC, GFM Product User Manual, section 4, Recommendations.
   [Official service guidance](https://extwiki.eodc.eu/GFM/PUM/Recommendations).
   Used for general SAR caveats, not a version-specific validation of the 2021 data.
+
+
+> **Current map-interface note (2026-11-28).** The retained scientific result and its historical provenance are unchanged. The current NetCDF map read path was exercised with temporary outputs only; this was an interface check, not a new retained analysis. See the [Step 24 Work Report follow-up](../AI_work_report/24_inundation_downscaling.md).

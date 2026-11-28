@@ -67,3 +67,10 @@ The maintainer subsequently authorized Step23 re-execution. It now contains
 The earlier integration-only stale-output statement above is historical;
 23_handoff_status.json records current input/output fingerprints. The Step23
 Work Report describes the execution; Step21 allocations were unchanged.
+
+
+## Current map-interface follow-up — 2026-11-28
+
+Updated the Step 21 scripts to use shared `params.nml` geometry, current map-root NetCDF layers, and `location.csv` plus NetCDF `catmxx/catmyy` through the maintained p01-f04 reader. The current-format catchment-only processing and both figures completed using a temporary copy of the allocation CSV and outputs under `/tmp`; retained CSVs, metadata and figures were not overwritten. The Figure 21 outputs were visually inspected.
+
+The current local map produces one changed direct assignment relative to the retained allocation: `impact-pruem-pruemzurlay` changes from one-based (x=14,y=12), zero-based row/column (11,13), outlet (6.447917°E,49.850418°N), upstream area 580.627 km² to (x=14,y=13), row/column (12,13), outlet (6.499584°E,49.811249°N), upstream area 4,221.565 km². The old Binary catmxy/location files referenced by the preserved historical hashes are absent locally, so exact Binary-versus-NetCDF equivalence cannot be checked. This map/data-dependent scientific difference was not adopted; the retained allocation and Step 23 handoff remain unchanged and require researcher review before any refresh.

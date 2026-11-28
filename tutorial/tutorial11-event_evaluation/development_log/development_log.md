@@ -1088,3 +1088,16 @@ and time conventions are not generalized or resolved by these edits. The
 knowledge-gap review found no additional scientific decision introduced here.
 Publication is restricted to existing feature/package-builder; no new branch,
 shared-history rewrite or main push is authorized.
+
+
+## 2026-11-28 — Tutorial 11 current Map interface migration
+
+**Objective:** Bring active Tutorial 11 map consumers and Step 11–15/21/24 handoffs into alignment with the current v5 NetCDF map layout while preserving retained scientific outputs and execution history.
+
+**Work performed:** Updated the Step 11/13/14/15/21/24 Prompts, Tutorial/map READMEs, Step 13 current handoff, and the directly affected scripts. Current scripts use `params.nml`, map-root NetCDF, `location.csv`, and NetCDF `catmxx/catmyy`. Step 14 now sources the common Shell functions and reads its current NetCDF pair from `current_workflow_contract`; the prior Binary generation and simulation remain explicitly historical. Step 15 uses static bifurcation identity/width/coordinates embedded in the paired `pthflw` output so a changed local `bifprm.nc` cannot be silently joined to an older simulation.
+
+**Validation:** `sh -n` passed for the Step 14 Shell; Python syntax compilation passed for Step 15, Step 21 processing/plotting, and Step 24. The retained regional NetCDF Input Matrix and DIMINFO passed structural/index checks. Step 15 completed against retained hourly outputs and generated two temporary figures plus a temporary analysis NetCDF; Step 21 processing/figures completed with temporary files; Step 24 downscaling and plotting completed with temporary files. All generated execution products remained under `/tmp` and were visually inspected where applicable. `git diff --check` passed. No simulation, map generation, or source-observation processing was run.
+
+**Findings and decisions:** The current local map bifurcation table has 23 pathways, while retained Step 14 `pthflw` has 20; seven shared path IDs differ in endpoint indices. Step 15 therefore uses the run-paired static table for its unchanged historical calculation. Step 21's current map produces a different Prümzurlay catchment assignment than the retained table. Historical Binary catchment files are absent, preventing an exact binary-versus-NetCDF equivalence check. The changed Prümzurlay assignment was not adopted; saved Step 21/23 scientific products and fingerprints remain unchanged for maintainer review.
+
+**Files updated:** `map/Rhine_15min/README.md`; Tutorial 11 README, Step 11/13/14/15/21/24 Prompts, Step 13 metadata, Step 14 Shell, Step 15/21/24 Python consumers, affected Survey/Work Reports, and this log. No large datasets or experiment outputs were added to Git.

@@ -151,3 +151,8 @@ The Survey flags source-time discrepancies without treating either as resolved.
 
 This completion is scientific synthesis and source checking, not independent
 scientific validation of the existing simulation or inundation product.
+
+
+## Current map-interface follow-up — 2026-11-28
+
+Updated Step 24 provenance inputs from `params.txt`/`location.txt` to `params.nml`/`location.csv`; retained historical metadata hashes were not rewritten. The existing model output was processed with the maintained downscaler using the current root/1min NetCDF layout, with all derived data, metadata and the diagnostic PNG written under `/tmp`. The run completed at the recorded 2021-07-15 06 UTC time and produced 180×240 Float32 metre values, with 42,960 valid pixels and 240 missing pixels. The Figure 24 PNG was visually inspected. This temporary rerun is an interface check, not a new retained scientific result or evaluation.

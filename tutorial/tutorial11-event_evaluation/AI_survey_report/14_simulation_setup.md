@@ -48,3 +48,6 @@ discharge fields as signed local peaks; see the [Step 15 Survey
 Report](15_simulation_output_visualization.md). Step 16 must define spatial
 and temporal correspondence with discharge and satellite observations before
 quantitative evaluation.
+
+
+> **Current script note (2026-11-28).** This report documents the completed 2026-11-24 run, which used its recorded Binary Input Matrix. The updated reusable script now reads the retained NetCDF matrix/Namelist DIMINFO pair from the separate current Step 13 contract. No model run was repeated and the recorded experiment is unchanged; see the [Step 14 Work Report follow-up](../AI_work_report/14_simulation_setup.md).

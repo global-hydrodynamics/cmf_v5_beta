@@ -102,3 +102,10 @@ All map-cell and pathway peaks can occur at different hours; Fig. 15b is not
 a simultaneous network state. The run was cold-started without spin-up, and
 KG-0019 remains unresolved. Step 16 must establish defensible spatial,
 temporal, and variable correspondence before evaluation.
+
+
+## Current map-interface follow-up — 2026-11-28
+
+Updated Step 15 base-map reads to the current map-root NetCDF layout and `params.nml`. The retained `pthflw` NetCDF carries the exact static path IDs, endpoints, coordinates and layer widths used by its simulation; Step 15 now uses that paired metadata for unchanged active-layer aggregation and path display. This was necessary because the current local `bifprm.nc` has 23 paths while the retained run has 20; seven shared path IDs have changed endpoint indices, and current IDs 21–23 are absent from the run. Joining the current table to the retained time series would misrepresent that result. No model output or map data was changed.
+
+A focused run to `/tmp` succeeded: all 744 records were read; 1,245 valid outflow peak cells and 20 bifurcation paths were processed; 1,181 main-network links and all 20 retained bifurcation paths were drawn regionally. Figures 15a/15b and the derived NetCDF were opened/inspected; visual layout was readable. This validates the map-format interface for the retained outputs, not equivalence of the current revised bifurcation map to the historical run.

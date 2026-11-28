@@ -1,6 +1,6 @@
 # Tutorial01 Manual Generation and Validation Log
 
-Developer record for the learner manual at [`../manual_tutorial01-get_started.md`](../manual_tutorial01-get_started.md). Keep machine-specific commands, environment details, execution results, and limits here rather than in the beginner manual.
+Developer record for the learner manual at [`../README.md`](../README.md). Keep machine-specific commands, environment details, execution results, and limits here rather than in the beginner manual.
 
 ## Evidence carried forward from the first generation
 
@@ -50,3 +50,12 @@ Developer record for the learner manual at [`../manual_tutorial01-get_started.md
 - **Official distribution:** the [official website](https://global-hydrodynamics.github.io/CaMa-Flood/) currently describes package access via Google Form registration; the supported v5 package for Tutorial01 remains a future release. Older packages are not presented as compatible.
 - **Listing evidence:** captured actual root output with `ls -lF` on the verified development checkout. It shows directories with `/` and executable setup scripts with `*`. Captured `ls -lhF` outputs for the executable, map, runoff, and mapping files. The generated Tutorial01 output directory is absent from this checkout, so its existing prior-run example is labeled as earlier evidence; `-F` adds `*` to its executable entry.
 - **Validation:** checked all Tutorial01 Learning Checks for the introductory scope, updated the three specifications/instructions and learner manual for acquisition and listing behavior, and ran `git diff --check` plus local Markdown-link checks. Verified branch file availability from fetched `origin/master` and `origin/feature/gosh-refactor`. No model run or scientific setting change was needed.
+
+## Revised runoff/output I/O decision validation
+
+- **Date:** 2026-11-28.
+- **Decision:** preserve monthly Binary runoff (`repo-mek_1deg_bin`, `LINPCDF=.FALSE.`, `CROFFREQ="MON"`, `Roff____YYYYMM.one`, `IFRQ_INP=24`, `DROFUNIT=86400000`) while retaining the NetCDF input matrix, daily five-variable NetCDF model output, and end-of-run NetCDF Restart.
+- **Implementation review:** the current standalone script, Tutorial Design, Manual Design, and learner README already match this decision; no Tutorial01 configuration or learner-document edits were needed.
+- **Execution:** with the current checkout's `src_main/MAIN_cmf` and bundled Binary runoff, copied the script to `/tmp/tutorial01-io-check.rv8mwO/run/` and ran it with `CMF_V50_ROOT` pointing to this checkout. The run returned status 0 and `log_CaMa.txt` reached `CALCULATION END`.
+- **Output checks:** five expected NetCDF files were produced, each with 40 records on a 120 × 80 grid. The configured runoff settings in the generated Namelist were Binary/monthly as specified. One `restart2000021000.nc` was produced with one time record. Generated products remained in the temporary output directory; the existing Tutorial01 `out/` was untouched.
+- **Limitations:** this confirms operational execution and file contracts for the local macOS environment; it is not scientific validation or a clean-package test.

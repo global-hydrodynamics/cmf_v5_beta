@@ -91,3 +91,6 @@ the previous stale-output notice. See the current Step23 reports for results
 and timing caveats. No model run, map regeneration or Gallery publication was
 performed. Existing time/units and forcing-attribution limitations, town-coordinate
 precision, and lower-Ahr exact reach representation remain open.
+
+
+> **Current map-review note (2026-11-28).** The retained allocation and conclusions remain unchanged. A temporary read using the current local map found a different direct catmxy row for Prümzurlay; this map-dependent difference has not been adopted pending researcher review. See the [Step 21 Work Report follow-up](../AI_work_report/21_gauge_allocation.md).

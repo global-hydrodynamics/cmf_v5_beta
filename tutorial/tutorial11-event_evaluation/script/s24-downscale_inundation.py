@@ -155,8 +155,8 @@ def main():
         method = d.downscaling_method
         map_sources = json.loads(d.map_source_files) if "map_source_files" in d.ncattrs() else {k: str(d.getncattr(k)) for k in d.ncattrs() if "map" in k}
     inputs = [
-        args.map_dir / "params.txt",
-        args.map_dir / "1min/location.txt",
+        args.map_dir / "params.nml",
+        args.map_dir / "1min/location.csv",
         *[args.map_dir / p for p in map_sources.values()],
         source,
         args.selection_json or t / "metadata/03a_selected_passes.json",
