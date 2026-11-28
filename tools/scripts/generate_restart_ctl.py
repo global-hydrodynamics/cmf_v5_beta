@@ -9,22 +9,14 @@ import math
 import re
 import struct
 import sys
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+
+from map_geometry import MapGeometry, MapMetadataError, read_map_geometry as load_map_geometry
 
 
 class RestartCtlError(Exception):
     """An input or output condition prevents reliable CTL generation."""
-
-
-@dataclass(frozen=True)
-class MapGeometry:
-    nx: int
-    ny: int
-    resolution: float
-    west: float
-    south: float
 
 
 GRADS_DESCRIPTIONS = {
@@ -92,35 +84,6 @@ def required(values: dict[str, str], key: str, default: str | None = None) -> st
     if value is None or not value.strip():
         raise RestartCtlError(f"Required namelist value {key} is missing.")
     return value.strip()
-
-
-def find_params(run_dir: Path, values: dict[str, str]) -> Path:
-    for key in ("CNEXTXY", "CGRAREA", "CDIMINFO"):
-        value = values.get(key)
-        if not value:
-            continue
-        path = Path(value)
-        if not path.is_absolute():
-            path = run_dir / path
-        directory = path if path.is_dir() else path.parent
-        for parent in (directory, *directory.parents):
-            candidate = parent / "params.txt"
-            if candidate.is_file():
-                return candidate
-    raise RestartCtlError("Could not locate map params.txt using CNEXTXY, CGRAREA, or CDIMINFO.")
-
-
-def read_geometry(path: Path) -> MapGeometry:
-    try:
-        tokens = [line.split()[0] for line in path.read_text(encoding="utf-8").splitlines() if line.split()]
-        nx, ny = int(tokens[0]), int(tokens[1])
-        resolution = float(tokens[3])
-        west, south = float(tokens[4]), float(tokens[6])
-    except (OSError, IndexError, ValueError) as exc:
-        raise RestartCtlError(f"Cannot read grid dimensions and bounds from {path}: {exc}") from exc
-    if nx <= 0 or ny <= 0 or resolution <= 0:
-        raise RestartCtlError(f"Grid dimensions and resolution must be positive in {path}.")
-    return MapGeometry(nx, ny, resolution, west, south)
 
 
 def read_registry(path: Path) -> list[dict[str, str]]:
@@ -253,7 +216,10 @@ def generate(args: argparse.Namespace) -> int:
     if not variables:
         raise RestartCtlError("No main-file Restart variables were selected from the registry.")
 
-    geometry = read_geometry(find_params(run_dir, values))
+    try:
+        geometry = load_map_geometry(run_dir, values)
+    except MapMetadataError as exc:
+        raise RestartCtlError(str(exc)) from exc
     prefix = required(values, "CVNREST", "restart")
     suffix = required(values, "CSUFBIN", ".bin")
     if suffix != ".bin":

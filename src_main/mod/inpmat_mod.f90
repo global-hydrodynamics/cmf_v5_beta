@@ -64,7 +64,7 @@ subroutine load_inpmat_files(obj, diminfo_file, inpmat_file)
     type(Inpmat), intent(out) :: obj
     character(len=*), intent(in) :: diminfo_file, inpmat_file
     integer(kind=JPIM) :: nx_dst, ny_dst, nlfp_dst, nxin, nyin
-    real(kind=JPRB) :: bounds(4)
+    real(kind=JPRB) :: bounds(8)
 
     call read_inpmat_diminfo(diminfo_file, nx_dst, ny_dst, nlfp_dst, nxin, nyin, obj%inpn, bounds)
     if (nx_dst /= MODEL_NX .or. ny_dst /= MODEL_NY .or. nlfp_dst /= MODEL_NLFP) then
@@ -84,14 +84,15 @@ end subroutine load_inpmat_files
 subroutine read_inpmat_diminfo(path, nx_dst, ny_dst, nlfp_dst, nxin_out, nyin_out, inpn_out, bounds)
     character(len=*), intent(in) :: path
     integer(kind=JPIM), intent(out) :: nx_dst, ny_dst, nlfp_dst, nxin_out, nyin_out, inpn_out
-    real(kind=JPRB), intent(out) :: bounds(4)
+    real(kind=JPRB), intent(out) :: bounds(8)
     integer(kind=JPIM) :: NX, NY, NLFP, NXIN, NYIN, INPN
-    real(kind=JPRB) :: WEST, EAST, NORTH, SOUTH
+    real(kind=JPRB) :: WEST, EAST, NORTH, SOUTH, WESTIN, EASTIN, NORTHIN, SOUTHIN
     character(len=512) :: INPMAT_FILE
+    character(len=8) :: OLATIN
     integer :: unit, ios
 
-    namelist /DIMINFO/ NX, NY, NLFP, NXIN, NYIN, INPN, INPMAT_FILE, &
-        WEST, EAST, NORTH, SOUTH
+    namelist /DIMINFO/ NX, NY, NLFP, WEST, EAST, NORTH, SOUTH
+    namelist /INPUTDIM/ INPMAT_FILE, NXIN, NYIN, INPN, WESTIN, EASTIN, NORTHIN, SOUTHIN, OLATIN
 
     unit = INQUIRE_FID()
     open(unit, file=trim(path), form='formatted', status='old', action='read', iostat=ios)
@@ -102,18 +103,30 @@ subroutine read_inpmat_diminfo(path, nx_dst, ny_dst, nlfp_dst, nxin_out, nyin_ou
     NX = -1
     NY = -1
     NLFP = -1
-    NXIN = -1
-    NYIN = -1
-    INPN = -1
-    INPMAT_FILE = ''
     WEST = 1.0E30_JPRB
     EAST = -1.0E30_JPRB
     NORTH = -1.0E30_JPRB
     SOUTH = 1.0E30_JPRB
+    NXIN = -1
+    NYIN = -1
+    INPN = -1
+    INPMAT_FILE = ''
+    WESTIN = 1.0E30_JPRB
+    EASTIN = -1.0E30_JPRB
+    NORTHIN = -1.0E30_JPRB
+    SOUTHIN = 1.0E30_JPRB
+    OLATIN = ''
     read(unit, nml=DIMINFO, iostat=ios)
-    close(unit)
     if (ios /= 0) then
         write(LOGNAM, '(2a)') '[inpmat_mod/read_inpmat_diminfo ERROR] invalid DIMINFO Namelist: ', trim(path)
+        close(unit)
+        stop 1
+    endif
+    rewind(unit)
+    read(unit, nml=INPUTDIM, iostat=ios)
+    close(unit)
+    if (ios /= 0) then
+        write(LOGNAM, '(2a)') '[inpmat_mod/read_inpmat_diminfo ERROR] invalid INPUTDIM Namelist: ', trim(path)
         stop 1
     endif
     if (min(NX, NY, NLFP, NXIN, NYIN, INPN) < 1 .or. len_trim(INPMAT_FILE) == 0) then
@@ -125,13 +138,19 @@ subroutine read_inpmat_diminfo(path, nx_dst, ny_dst, nlfp_dst, nxin_out, nyin_ou
         write(LOGNAM, '(2a)') '[inpmat_mod/read_inpmat_diminfo ERROR] non-finite or invalid model-grid bounds: ', trim(path)
         stop 1
     endif
+    if (.not. all(ieee_is_finite([WESTIN, EASTIN, NORTHIN, SOUTHIN])) .or. &
+        EASTIN <= WESTIN .or. NORTHIN <= SOUTHIN .or. &
+        (trim(OLATIN) /= 'NtoS' .and. trim(OLATIN) /= 'StoN')) then
+        write(LOGNAM, '(2a)') '[inpmat_mod/read_inpmat_diminfo ERROR] invalid INPUTDIM grid metadata: ', trim(path)
+        stop 1
+    endif
     nx_dst = NX
     ny_dst = NY
     nlfp_dst = NLFP
     nxin_out = NXIN
     nyin_out = NYIN
     inpn_out = INPN
-    bounds = [WEST, EAST, NORTH, SOUTH]
+    bounds = [WEST, EAST, NORTH, SOUTH, WESTIN, EASTIN, NORTHIN, SOUTHIN]
 end subroutine read_inpmat_diminfo
 
 

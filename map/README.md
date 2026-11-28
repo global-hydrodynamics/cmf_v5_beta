@@ -122,7 +122,7 @@ Examples of maps used by sample runs are listed in [the v5 workflow guide](../go
 
 [`variable_table/map_variables.csv`](../variable_table/map_variables.csv) is the source-linked variable and data-product registry for CaMa-Flood maps. It uses symbolic dimensions such as `NX`, `NY`, and `NLFP`, so the definitions apply across map resolutions and regional domains. It is the primary source for variable names, proposed long names and units, data types, record layouts, numeric stored missing values, meaningful special codes, product variants, distribution roles, and current model-reader mappings.
 
-[`variable_table/map_metadata_spec.md`](../variable_table/map_metadata_spec.md) explains the CSV schema and how it relates to per-map authoritative `params.nml` (and legacy `params.txt`), `mapdim.txt`, runoff/input-grid descriptors, and GrADS CTL files. v5 workflows pair `diminfo_<ROFFTAG>.nml` with `inpmat_<ROFFTAG>.nc`; historical v4 `diminfo_*.txt` files are not read by maintained v5 tools and can be converted with the explicit migration utility. `ROFFTAG` identifies the runoff/input-grid configuration, while `HIRES_TAG` selects high-resolution map data. The s03 standard is now `ROFFTAG=ERA5land_global`, matching the converted `repo-ERA5land-glb_2day` 0.1-degree runoff grid (3600 × 1801). The tag describes spatial geometry, not a time period or the model-map name (`glb_15min`, for example). Generate the paired matrix/descriptor separately for each model map; identical runoff geometry/order allows reuse across periods on that map. Global-map products are intended for Package Additional Data, and are not generated here.
+[`variable_table/map_metadata_spec.md`](../variable_table/map_metadata_spec.md) explains the CSV schema and how it relates to per-map authoritative `params.nml` (and legacy `params.txt`), `mapdim.txt`, runoff/input-grid descriptors, and GrADS CTL files. v5 workflows pair the two-group `diminfo_<ROFFTAG>.nml` with `inpmat_<ROFFTAG>.nc`; legacy positional `diminfo_*.txt` files lack the input-grid bounds/order required by the new schema, so regenerate the pair through the Parameter `s01` workflow rather than converting the TXT file. `ROFFTAG` identifies the runoff/input-grid configuration, while `HIRES_TAG` selects high-resolution map data. The s03 standard is now `ROFFTAG=ERA5land_global`, matching the converted `repo-ERA5land-glb_2day` 0.1-degree runoff grid (3600 × 1801). The tag describes spatial geometry, not a time period or the model-map name (`glb_15min`, for example). Generate the paired matrix/descriptor separately for each model map; identical runoff geometry/order allows reuse across periods on that map. Global-map products are intended for Package Additional Data, and are not generated here.
 
 The bifurcation workflow writes authoritative named `bifprm.csv` at the map root and its static NetCDF-4 counterpart at `bifprm.nc`; the simulation reader accepts both plus legacy `bifprm.txt`. IDs in these products are configuration-specific row IDs, with endpoint indices used to identify paths across configurations. The channel-parameter entries describe products users generate or verify for a target map. Data-rich packages may include prepared examples; check the actual package contents before generating replacements. The v5 workflow writes the alternative MERIT Hydro merged width as `rivwth_merit.bin`; the preserved v4 workflow retains its historical `rivwth_gwdlr.bin` output.
 
@@ -232,16 +232,17 @@ When combining or generating map products, keep dimensions, grid spacing, geogra
 
 ## Simulation dimension information
 
-`diminfo_<TAG>.nml` is **Simulation dimension information**, a native
-`&DIMINFO` Namelist with `NX`, `NY`, `NLFP`, `NXIN`, `NYIN`, `INPN`,
-`INPMAT_FILE`, and model-grid bounds `WEST`, `EAST`, `NORTH`, and `SOUTH`.
-The bounds describe the CaMa-Flood map, not the runoff grid. `inpmat_<TAG>.nc`
-separately stores input-to-model cell correspondence; an optional Binary copy
-may be stored as `binary/inpmat_<TAG>.bin`. `INPMAT_FILE` records the paired
-matrix name but does not override the independently configured matrix path.
-`CDIMINFO` and per-input `diminfo_file` remain separate readers. Python tools
-use `f90nml`; legacy eleven-record TXT files require explicit conversion with
-`map/tools/code/migrate_diminfo.py`. See the [metadata specification](../variable_table/map_metadata_spec.md#diminfo_rofftag-nml-simulation-dimension-information).
+`diminfo_<TAG>.nml` is **Simulation dimension information** with native
+Fortran Namelist groups `&DIMINFO` (model dimensions and bounds) and
+`&INPUTDIM` (paired matrix name, input-grid dimensions, bounds, and latitude
+row order). `inpmat_<TAG>.nc` separately stores input-to-model cell
+correspondence; an optional Binary copy may be stored as
+`binary/inpmat_<TAG>.bin`. `INPMAT_FILE` records the paired matrix name but
+does not override independently configured matrix paths. `CDIMINFO` and
+per-input `diminfo_file` remain separate readers of the groups they need.
+Legacy positional TXT files do not include all new input-grid fields; regenerate
+DIMINFO with the configured Parameter input-matrix wrapper. See the
+[metadata specification](../variable_table/map_metadata_spec.md#diminfo_rofftag-nml-simulation-dimension-information).
 
 
 ## Numeric visualization caches

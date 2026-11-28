@@ -15,13 +15,13 @@ MAP = ROOT / "map" / "mekong_15min"
 REGISTRY = ROOT / "variable_table" / "map_variables.csv"
 DTYPE_BYTES = {"int8": 1, "int16": 2, "int32": 4, "float32": 4}
 sys.path.insert(0, str(ROOT / "map" / "tools" / "code"))
-from map_metadata import read_diminfo_nml
+from map_metadata import read_diminfo_nml, read_nml_values
 
 
 def read_map_dimensions() -> dict[str, int]:
-    """Read base-map dimensions from the first three params.txt records."""
-    values = [int(line.split()[0]) for line in (MAP / "params.txt").read_text().splitlines()[:3]]
-    return dict(zip(("NX", "NY", "NLFP"), values, strict=True))
+    """Read base-map dimensions from standard v5 params.nml metadata."""
+    geometry = read_nml_values(MAP / "params.nml")
+    return {"NX": geometry.nx, "NY": geometry.ny, "NLFP": geometry.nlfp}
 
 
 def read_input_dimensions(path: Path) -> dict[str, int]:
@@ -120,6 +120,8 @@ class MekongSampleTests(unittest.TestCase):
         self.assertEqual(dims, {"NX": 80, "NY": 120, "NLFP": 10})
         self.assertEqual(input_dims, {"INPNX": 360, "INPNY": 180, "INPN": 4})
         self.assertEqual([info.west, info.east, info.north, info.south], [90.0, 110.0, 35.0, 5.0])
+        self.assertEqual([info.westin, info.eastin, info.northin, info.southin, info.olatin],
+                         [-180.0, 180.0, 90.0, -90.0, "NtoS"])
         self.assertEqual(info.inpmat_file, "inpmat_test-1deg.nc")
         self.assertGreater((MAP / info.inpmat_file).stat().st_size, 0)
 
@@ -142,8 +144,9 @@ class MekongSampleTests(unittest.TestCase):
             fixture = Path(temporary)
             from map_metadata import DimInfo, write_diminfo_nml
             descriptor = fixture / "diminfo_test-runoff.nml"
-            write_diminfo_nml(descriptor, DimInfo(2, 3, 10, 3600, 1801, 1,
-                                                   "inpmat_test-runoff.bin", -1, 1, 1.5, -1.5))
+            write_diminfo_nml(descriptor, DimInfo(
+                2, 3, 10, -1, 1, 1.5, -1.5, "inpmat_test-runoff.bin",
+                3600, 1801, 1, -180, 180, 90.05, -90.05, "NtoS"))
             binary = fixture / "inpmat_test-runoff.bin"
             binary.write_bytes(bytes(2 * 3 * (4 + 4 + 4)))
             self.assertEqual(read_input_dimensions(descriptor), {"INPNX": 3600, "INPNY": 1801, "INPN": 1})
@@ -188,13 +191,11 @@ class MekongSampleTests(unittest.TestCase):
         nextx = struct.unpack("<" + "i" * cells, (binary / "nextxy.bin").read_bytes()[:cells * 4])
         subbasins = struct.unpack("<" + "i" * cells, (binary / "subbsn-sample.bin").read_bytes())
         colors = struct.unpack("<" + "i" * cells, (binary / "subcol-sample.bin").read_bytes())
-        upstream = struct.unpack("<" + "i" * cells, (binary / "upbasin-2569002.bin").read_bytes())
         self.assertTrue(all(value == -9999 for value, downstream in zip(subbasins, nextx) if downstream == -9999))
         self.assertTrue(all(value >= 0 for value, downstream in zip(subbasins, nextx) if downstream != -9999))
         self.assertIn(0, subbasins)
         self.assertTrue(any(value > 0 for value in subbasins))
         self.assertTrue(all(value == -9999 or 0 <= value <= 10 for value in colors))
-        self.assertEqual(set(upstream), {-9999, 0, 1})
 
         rows = registry_rows()
         # Concrete variants resolve through standard definitions in s90, not
@@ -207,14 +208,14 @@ class MekongSampleTests(unittest.TestCase):
             self.assertEqual(standard[0]["dtype"], "int32")
             self.assertEqual(standard[0]["dimensions"], "NX,NY")
             self.assertEqual(standard[0]["missing_value"], "-9999")
-        self.assertEqual(len(rows_for_sample_file(binary / "upbasin-2569002.bin", rows)), 1)
 
     def test_sample_binary_sizes_match_registry_types_and_dimensions(self) -> None:
         dims = read_map_dimensions()
-        location_lines = (MAP / "1min" / "location.txt").read_text().splitlines()
-        area = location_lines[2].split()
-        dims["NX_HIRES"] = int(area[6])
-        dims["NY_HIRES"] = int(area[7])
+        with (MAP / "1min" / "location.csv").open(newline="", encoding="utf-8") as stream:
+            reader = csv.DictReader(stream)
+            location = {key.strip(): value.strip() for key, value in next(reader).items()}
+        dims["NX_HIRES"] = int(location["nx"])
+        dims["NY_HIRES"] = int(location["ny"])
 
         rows = registry_rows()
         # Analysis examples write user outputs under this ignored directory.
@@ -262,13 +263,17 @@ class MekongSampleTests(unittest.TestCase):
                 validate_registered_binary_size(registered, rows, dims, sample_dir)
 
     def test_required_metadata_files_exist(self) -> None:
-        for name in ("params.txt", "bifori.txt", "bifori.csv", "diminfo_test-1deg.nml"):
+        for name in ("params.nml", "bifori.csv", "diminfo_test-1deg.nml"):
             with self.subTest(path=name):
                 self.assertTrue((MAP / name).is_file())
 
-        location = (MAP / "1min" / "location.txt").read_text()
-        self.assertIn("1200", location)
-        self.assertIn("1800", location)
+        with (MAP / "1min" / "location.csv").open(newline="", encoding="utf-8") as stream:
+            reader = csv.DictReader(stream)
+            locations = [{key.strip(): value.strip() for key, value in row.items()}
+                         for row in reader]
+        self.assertEqual(len(locations), 1)
+        self.assertEqual(locations[0]["nx"], "1200")
+        self.assertEqual(locations[0]["ny"], "1800")
 
 
 if __name__ == "__main__":

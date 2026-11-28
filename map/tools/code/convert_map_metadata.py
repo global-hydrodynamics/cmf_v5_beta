@@ -13,8 +13,8 @@ import stat
 import tempfile
 
 from hires_metadata import read_location_csv, read_location_txt, write_location_csv, write_location_txt
-from map_metadata import (read_diminfo_nml, read_legacy_diminfo, read_legacy_values,
-                          read_nml_values, render_diminfo_nml, render_legacy, render_nml)
+from map_metadata import (read_diminfo_nml, read_legacy_values, read_nml_values,
+                          render_legacy, render_nml)
 from mod_bifori_csv import read_bifori_csv, write_bifori_csv
 from mod_bifprm_csv import read_bifprm_csv
 
@@ -220,10 +220,15 @@ def _field_slices(layout):
 
 
 def _legacy_diminfo(value) -> str:
+    # The v4 positional descriptor stores dimensions, matrix filename, and
+    # model-grid bounds. New input-grid provenance has no v4 field.
+    legacy_values = (value.nx, value.ny, value.nlfp, value.nxin, value.nyin,
+                     value.inpn, value.inpmat_file, value.west, value.east,
+                     value.north, value.south)
     labels = ('nXX', 'nYY', 'floodplain layer', 'input nXX', 'input nYY', 'input num',
               'inpmat file', 'west edge', 'east edge', 'north edge', 'south edge')
     rows = []
-    for item, label in zip(value.values(), labels):
+    for item, label in zip(legacy_values, labels):
         token = str(item) if isinstance(item, int) else str(item)
         rows.append(f'{token:>24}     !! {label}\n')
     return ''.join(rows)
@@ -349,11 +354,11 @@ def _convert_families(map_dir: Path, direction: str) -> list[Conversion]:
               (lambda p: read_legacy_values(p)[1]) if txt_to_meta else read_nml_values,
               render_nml if txt_to_meta else render_legacy, 8)
 
-    for source in sorted(map_dir.glob('diminfo_*.txt' if txt_to_meta else 'diminfo_*.nml')):
-        suffix = source.name.removeprefix('diminfo_').removesuffix('.txt' if txt_to_meta else '.nml')
-        destination = map_dir / f'diminfo_{suffix}.{"nml" if txt_to_meta else "txt"}'
-        text_pair(source, destination, read_legacy_diminfo if txt_to_meta else read_diminfo_nml,
-                  render_diminfo_nml if txt_to_meta else _legacy_diminfo, 11)
+    if not txt_to_meta:
+        for source in sorted(map_dir.glob('diminfo_*.nml')):
+            suffix = source.name.removeprefix('diminfo_').removesuffix('.nml')
+            destination = map_dir / f'diminfo_{suffix}.txt'
+            text_pair(source, destination, read_diminfo_nml, _legacy_diminfo, 11)
 
     for folder in sorted(path for path in map_dir.iterdir()
                          if path.is_dir() and not path.is_symlink()

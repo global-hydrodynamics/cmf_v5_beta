@@ -30,7 +30,8 @@ def sample_arrays():
 
 
 def sample_diminfo(matrix_name: str = "inpmat_test-1deg.bin") -> DimInfo:
-    return DimInfo(2, 2, 1, 4, 2, 1, matrix_name, -1.0, 1.0, 1.0, -1.0)
+    return DimInfo(2, 2, 1, -1.0, 1.0, 1.0, -1.0, matrix_name,
+                   4, 2, 1, -180.0, 180.0, 90.0, -90.0, "NtoS")
 
 
 class InpmatConversionTests(unittest.TestCase):
@@ -50,7 +51,8 @@ class InpmatConversionTests(unittest.TestCase):
             write_diminfo_nml(source_diminfo, sample_diminfo(source.name))
             source_bytes = source.read_bytes()
             source_metadata = source_diminfo.read_bytes()
-            conflicting = DimInfo(3, 2, 1, 4, 2, 1, "old_matrix.nc", -2.0, 1.0, 1.0, -1.0)
+            conflicting = DimInfo(3, 2, 1, -2.0, 1.0, 1.0, -1.0, "old_matrix.nc",
+                                  4, 2, 1, -180.0, 180.0, 90.0, -90.0, "NtoS")
             write_diminfo_nml(destination_diminfo, conflicting)
             shutil.copyfile(SCRIPT, script_dir / SCRIPT.name)
 
@@ -92,7 +94,8 @@ class InpmatConversionTests(unittest.TestCase):
             source_bytes = source.read_bytes()
             source_metadata = source_diminfo.read_bytes()
             write_diminfo_nml(destination_diminfo,
-                              DimInfo(3, 2, 1, 4, 2, 1, "old_matrix.bin", -2.0, 1.0, 1.0, -1.0))
+                              DimInfo(3, 2, 1, -2.0, 1.0, 1.0, -1.0, "old_matrix.bin",
+                                      4, 2, 1, -180.0, 180.0, 90.0, -90.0, "NtoS"))
 
             convert(source, destination, source_diminfo, "netcdf-to-binary")
 

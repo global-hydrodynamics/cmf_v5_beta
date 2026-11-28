@@ -13,20 +13,11 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from map_geometry import MapGeometry, MapMetadataError, read_map_geometry as load_map_geometry
+
 
 class CtlError(Exception):
     """An input or output condition prevents reliable CTL generation."""
-
-
-@dataclass(frozen=True)
-class MapGeometry:
-    nx: int
-    ny: int
-    resolution: float
-    west: float
-    east: float
-    south: float
-    north: float
 
 
 @dataclass(frozen=True)
@@ -166,54 +157,6 @@ def read_run_config(run_dir: Path, namelist_path: Path) -> tuple[RunConfig, dict
         dt_seconds=dt_seconds,
     )
     return config, values
-
-
-def find_params_file(run_dir: Path, values: dict[str, str]) -> Path:
-    """Find map params.txt through the namelist's map and dimension paths."""
-    candidates = []
-    for key in ("CNEXTXY", "CGRAREA", "CDIMINFO"):
-        raw = values.get(key)
-        if raw:
-            path = Path(raw)
-            if not path.is_absolute():
-                path = run_dir / path
-            candidates.append(path.resolve())
-
-    for candidate in candidates:
-        directory = candidate if candidate.is_dir() else candidate.parent
-        for parent in (directory, *directory.parents):
-            params = parent / "params.txt"
-            if params.is_file():
-                return params
-    raise CtlError(
-        "Could not locate map params.txt from CNEXTXY, CGRAREA, or CDIMINFO in the namelist."
-    )
-
-
-def read_map_geometry(path: Path) -> MapGeometry:
-    """Read NX, NY and map bounds from the standard eight-line params.txt."""
-    try:
-        tokens = [line.split()[0] for line in path.read_text(encoding="utf-8").splitlines() if line.split()]
-    except OSError as exc:
-        raise CtlError(f"Cannot read map metadata {path}: {exc}") from exc
-    if len(tokens) < 8:
-        raise CtlError(f"Expected at least 8 numeric records in {path}, found {len(tokens)}.")
-    try:
-        nx, ny = int(tokens[0]), int(tokens[1])
-        geometry = MapGeometry(
-            nx=nx,
-            ny=ny,
-            resolution=float(tokens[3]),
-            west=float(tokens[4]),
-            east=float(tokens[5]),
-            south=float(tokens[6]),
-            north=float(tokens[7]),
-        )
-    except ValueError as exc:
-        raise CtlError(f"Invalid numeric field in {path}: {exc}") from exc
-    if nx <= 0 or ny <= 0 or geometry.resolution <= 0:
-        raise CtlError(f"Grid dimensions and resolution in {path} must be positive.")
-    return geometry
 
 
 def read_registry(path: Path) -> dict[str, dict[str, str]]:
@@ -363,7 +306,10 @@ def generate(args: argparse.Namespace) -> int:
     namelist_path = args.namelist.resolve() if args.namelist else run_dir / "input_cmf.nam"
     registry_path = args.registry.resolve()
     config, values = read_run_config(run_dir, namelist_path)
-    geometry = read_map_geometry(find_params_file(run_dir, values))
+    try:
+        geometry = load_map_geometry(run_dir, values)
+    except MapMetadataError as exc:
+        raise CtlError(str(exc)) from exc
     registry = read_registry(registry_path)
 
     if not config.binary_output:

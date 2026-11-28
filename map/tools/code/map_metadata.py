@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
-from io import StringIO
 import math
 from pathlib import Path
 
 import f90nml
+import numpy as np
 
 
 @dataclass(frozen=True)
@@ -173,88 +173,72 @@ def write_nml(path: str | Path, geometry: MapGeometry) -> None:
 
 
 def read_diminfo_nml(path: str | Path) -> DimInfo:
-    """Read and validate the maintained &DIMINFO schema with f90nml."""
+    """Read and validate the standard &DIMINFO and &INPUTDIM groups."""
     source = Path(path)
     try:
         data = f90nml.read(source)
-        group = data["diminfo"]
-        fields = ("nx", "ny", "nlfp", "nxin", "nyin", "inpn", "inpmat_file",
-                  "west", "east", "north", "south")
-        if set(group) != set(fields):
-            raise ValueError(f"{source}: DIMINFO must contain exactly the eleven documented fields")
-        values = [group[field] for field in fields]
+        if set(data) != {"diminfo", "inputdim"}:
+            raise ValueError(f"{source}: expected exactly &DIMINFO and &INPUTDIM groups")
+        model = data["diminfo"]
+        input_grid = data["inputdim"]
+        model_fields = ("nx", "ny", "nlfp", "west", "east", "north", "south")
+        input_fields = ("inpmat_file", "nxin", "nyin", "inpn", "westin", "eastin",
+                        "northin", "southin", "olatin")
+        if set(model) != set(model_fields):
+            raise ValueError(f"{source}: DIMINFO must contain exactly the seven model-grid fields")
+        if set(input_grid) != set(input_fields):
+            raise ValueError(f"{source}: INPUTDIM must contain exactly the nine input-grid fields")
+        values = [model[field] for field in model_fields]
+        values.extend(input_grid[field] for field in input_fields)
     except (OSError, ValueError, TypeError, KeyError) as exc:
-        raise ValueError(f"Cannot read required &DIMINFO fields from {source}: {exc}") from exc
-    if any(type(value) is not int for value in values[:6]):
-        raise ValueError(f"{source}: DIMINFO dimensions and INPN must be integers")
-    if not isinstance(values[6], str) or not values[6].strip():
-        raise ValueError(f"{source}: INPMAT_FILE must be a non-empty string")
-    if any(type(value) not in (int, float) for value in values[7:]):
-        raise ValueError(f"{source}: DIMINFO bounds must be real numbers")
-    return _validated_diminfo(*values[:7], *(float(value) for value in values[7:]), source=source)
+        raise ValueError(f"Cannot read required DIMINFO/INPUTDIM fields from {source}: {exc}") from exc
+    return _validated_diminfo(*values, source=source)
 
 
 def read_legacy_diminfo(path: str | Path) -> DimInfo:
-    """Read the eleven positional records only for explicit one-time migration."""
-    source = Path(path)
-    try:
-        records = []
-        for line_no, line in enumerate(source.read_text(encoding="utf-8").splitlines(), 1):
-            value = line.split("!!", 1)[0].split("#", 1)[0].strip()
-            if value:
-                records.append((line_no, value))
-    except OSError as exc:
-        raise ValueError(f"Cannot read legacy diminfo {source}: {exc}") from exc
-    if len(records) != 11:
-        raise ValueError(f"{source}: expected exactly 11 non-empty legacy records")
-    try:
-        dimensions = [int(records[index][1].split()[0]) for index in range(6)]
-        matrix_file = records[6][1]
-        bounds = [float(records[index][1].split()[0]) for index in range(7, 11)]
-    except (ValueError, IndexError) as exc:
-        raise ValueError(f"{source}: invalid legacy diminfo record") from exc
-    if any(len(records[index][1].split()) != 1 for index in range(6)):
-        raise ValueError(f"{source}: dimension records must each contain one value")
-    if len(matrix_file.split()) != 1 or any(
-        len(records[index][1].split()) != 1 for index in range(7, 11)
-    ):
-        raise ValueError(f"{source}: matrix filename and bounds must each contain one value")
-    return _validated_diminfo(*dimensions, matrix_file, *bounds, source=source)
+    """Reject positional metadata that omits required input-grid provenance."""
+    raise ValueError(
+        f"{path}: legacy DIMINFO does not record separate input-grid bounds and latitude order; "
+        "regenerate it with param_inpmat_generate.py using the original grid settings"
+    )
 
 
 def render_diminfo_nml(diminfo: DimInfo) -> str:
-    """Serialize the canonical v5 &DIMINFO group through f90nml."""
+    """Render the canonical two-group descriptor in documented order."""
     checked = _validated_diminfo(*diminfo.values(), source="DIMINFO")
-    namelist = f90nml.Namelist({"diminfo": {
-        "nx": checked.nx,
-        "ny": checked.ny,
-        "nlfp": checked.nlfp,
-        "nxin": checked.nxin,
-        "nyin": checked.nyin,
-        "inpn": checked.inpn,
-        "inpmat_file": checked.inpmat_file,
-        "west": checked.west,
-        "east": checked.east,
-        "north": checked.north,
-        "south": checked.south,
-    }})
-    output = StringIO()
-    f90nml.write(namelist, output)
-    return output.getvalue()
+    return (
+        "! CaMa-Flood model grid and runoff input-grid mapping\n"
+        "! DIMINFO describes the model grid; INPUTDIM describes its runoff input.\n\n"
+        "&DIMINFO\n"
+        "  ! CaMa-Flood model grid\n"
+        f"  NX    = {checked.nx}\n"
+        f"  NY    = {checked.ny}\n"
+        f"  NLFP  = {checked.nlfp}\n"
+        f"  WEST  = {_real_token(checked.west)}\n"
+        f"  EAST  = {_real_token(checked.east)}\n"
+        f"  NORTH = {_real_token(checked.north)}\n"
+        f"  SOUTH = {_real_token(checked.south)}\n"
+        "/\n\n"
+        "&INPUTDIM\n"
+        "  ! Runoff input grid and mapping\n"
+        f"  INPMAT_FILE = '{_namelist_string(checked.inpmat_file)}'\n"
+        f"  NXIN    = {checked.nxin}\n"
+        f"  NYIN    = {checked.nyin}\n"
+        f"  INPN    = {checked.inpn}\n"
+        f"  WESTIN  = {_real_token(checked.westin)}\n"
+        f"  EASTIN  = {_real_token(checked.eastin)}\n"
+        f"  NORTHIN = {_real_token(checked.northin)}\n"
+        f"  SOUTHIN = {_real_token(checked.southin)}\n"
+        f"  OLATIN  = '{checked.olatin}'\n"
+        "/\n"
+    )
 
 
 def write_diminfo_nml(path: str | Path, diminfo: DimInfo) -> None:
     """Write a canonical v5 diminfo Namelist."""
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    checked = _validated_diminfo(*diminfo.values(), source="DIMINFO")
-    namelist = f90nml.Namelist({"diminfo": {
-        "nx": checked.nx, "ny": checked.ny, "nlfp": checked.nlfp,
-        "nxin": checked.nxin, "nyin": checked.nyin, "inpn": checked.inpn,
-        "inpmat_file": checked.inpmat_file, "west": checked.west,
-        "east": checked.east, "north": checked.north, "south": checked.south,
-    }})
-    f90nml.write(namelist, destination, force=True)
+    destination.write_text(render_diminfo_nml(diminfo), encoding="utf-8")
 
 
 def _validated_geometry(nx, ny, nlfp, resolution, west, east, south, north, *, source):
@@ -268,22 +252,40 @@ def _validated_geometry(nx, ny, nlfp, resolution, west, east, south, north, *, s
     return MapGeometry(nx, ny, nlfp, *(float(value) for value in values))
 
 
-def _validated_diminfo(nx, ny, nlfp, nxin, nyin, inpn, inpmat_file,
-                       west, east, north, south, *, source):
-    dimensions = (nx, ny, nlfp, nxin, nyin, inpn)
-    if any(type(value) is not int for value in dimensions) or min(dimensions) < 1:
-        raise ValueError(f"{source}: NX, NY, NLFP, NXIN, NYIN, and INPN must be positive integers")
-    bounds = (west, east, north, south)
-    if any(not math.isfinite(float(value)) for value in bounds):
-        raise ValueError(f"{source}: model-grid bounds must be finite")
+def _validated_diminfo(nx, ny, nlfp, west, east, north, south, inpmat_file,
+                       nxin, nyin, inpn, westin, eastin, northin, southin, olatin, *, source):
+    model_dimensions = (nx, ny, nlfp)
+    input_dimensions = (nxin, nyin, inpn)
+    if any(type(value) is not int for value in model_dimensions + input_dimensions):
+        raise ValueError(f"{source}: grid dimensions, NLFP, and INPN must be integers")
+    if min(model_dimensions + input_dimensions) < 1:
+        raise ValueError(f"{source}: grid dimensions, NLFP, and INPN must be positive")
+    model_bounds = (west, east, north, south)
+    input_bounds = (westin, eastin, northin, southin)
+    if any(not math.isfinite(float(value)) for value in model_bounds + input_bounds):
+        raise ValueError(f"{source}: model-grid and input-grid bounds must be finite")
     if east <= west or north <= south:
         raise ValueError(f"{source}: invalid model-grid extent")
+    if eastin <= westin or northin <= southin:
+        raise ValueError(f"{source}: invalid runoff input-grid extent")
     if not isinstance(inpmat_file, str) or not inpmat_file.strip():
         raise ValueError(f"{source}: INPMAT_FILE must be a non-empty filename")
-    return DimInfo(*dimensions, inpmat_file.strip(), *(float(value) for value in bounds))
+    if Path(inpmat_file).name != inpmat_file.strip():
+        raise ValueError(f"{source}: INPMAT_FILE must be a filename, not a path")
+    if not isinstance(olatin, str) or olatin not in {"NtoS", "StoN"}:
+        raise ValueError(f"{source}: OLATIN must be 'NtoS' or 'StoN'")
+    return DimInfo(
+        nx, ny, nlfp, *model_bounds, inpmat_file.strip(),
+        nxin, nyin, inpn, *input_bounds, olatin,
+    )
 
 
 def _real_token(value: float) -> str:
-    """Keep enough digits to round-trip a Python float and retain real syntax."""
-    token = repr(value)
+    """Write the shortest decimal preserving the value's available precision."""
+    token = np.format_float_positional(value, unique=True, trim="-")
     return token if any(character in token.lower() for character in (".", "e")) else token + ".0"
+
+
+def _namelist_string(value: str) -> str:
+    """Escape a single-quoted Fortran Namelist character value."""
+    return value.replace("'", "''")

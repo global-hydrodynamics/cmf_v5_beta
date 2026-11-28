@@ -11,7 +11,8 @@ CODE = ROOT / 'map' / 'tools' / 'code'
 sys.path.insert(0, str(CODE))
 
 import convert_map_metadata as converter
-from map_metadata import DimInfo, MapGeometry, read_diminfo_nml, read_nml_values, render_diminfo_nml, render_nml
+from map_metadata import (DimInfo, MapGeometry, read_diminfo_nml, read_nml_values,
+                          render_diminfo_nml, render_nml, write_diminfo_nml)
 
 
 def test_geometry_and_diminfo_convert_both_directions_and_overwrite(tmp_path):
@@ -22,15 +23,32 @@ def test_geometry_and_diminfo_convert_both_directions_and_overwrite(tmp_path):
     original_diminfo = (tmp_path / 'diminfo_test.txt').read_text()
     (tmp_path / 'params.nml').write_text('old destination')
     result = converter._convert_families(tmp_path, 'txt2meta')
-    assert {item.destination.name for item in result} >= {'params.nml', 'diminfo_test.nml'}
+    assert {item.destination.name for item in result} == {'params.nml'}
     assert read_nml_values(tmp_path / 'params.nml') == MapGeometry(80, 120, 10, .25, 90, 110, 5, 35)
-    assert read_diminfo_nml(tmp_path / 'diminfo_test.nml') == DimInfo(
-        80, 120, 10, 360, 180, 4, 'inpmat_test.nc', 90, 110, 35, 5)
     assert (tmp_path / 'params.txt').read_text() == original_params
     assert (tmp_path / 'diminfo_test.txt').read_text() == original_diminfo
+    assert not (tmp_path / 'diminfo_test.nml').exists()
+
+    write_diminfo_nml(tmp_path / 'diminfo_test.nml', DimInfo(
+        80, 120, 10, 90, 110, 35, 5, 'inpmat_test.nc', 360, 180, 4,
+        -180, 180, 90, -90, 'NtoS'))
     converter._convert_families(tmp_path, 'meta2txt')
     assert len((tmp_path / 'params.txt').read_text().splitlines()) == 8
     assert len((tmp_path / 'diminfo_test.txt').read_text().splitlines()) == 11
+    legacy_values = [line.split()[0] for line in (tmp_path / 'diminfo_test.txt').read_text().splitlines()]
+    assert legacy_values == ['80', '120', '10', '360', '180', '4', 'inpmat_test.nc',
+                             '90.0', '110.0', '35.0', '5.0']
+
+
+def test_diminfo_text_is_excluded_from_txt_to_meta_conversion(tmp_path):
+    source = tmp_path / 'diminfo_test.txt'
+    destination = tmp_path / 'diminfo_test.nml'
+    source.write_text('80\n120\n10\n360\n180\n4\ninpmat_test.nc\n90\n110\n35\n5\n')
+    destination.write_text('authoritative generated metadata')
+    result = converter._convert_families(tmp_path, 'txt2meta')
+    assert result == []
+    assert source.is_file()
+    assert destination.read_text() == 'authoritative generated metadata'
 
 
 def test_location_inventory_is_converted_but_binary_tree_is_untouched(tmp_path):

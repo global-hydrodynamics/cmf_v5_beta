@@ -24,40 +24,26 @@ CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 
 cmf_check_init "Regional map preparation"
 
-cmf_check_step 1 6 "Save source-map path and requested geographic bounds"
+cmf_check_step 1 5 "Save source-map path and requested geographic bounds"
 printf '%s\n' "$SOURCE" "$WEST" "$EAST" "$SOUTH" "$NORTH" > region_info.txt
 
-cmf_check_step 2 6 "Crop the source map to the requested region"
+cmf_check_step 2 5 "Crop the source map to the requested region"
 "$PYTHON_CMD" "$CODE_DIR/region_cut_domain.py"
 
-cmf_check_step 3 6 "Retain bifurcation pathways inside the regional domain"
+cmf_check_step 3 5 "Retain bifurcation pathways inside the regional domain"
 "$PYTHON_CMD" "$CODE_DIR/region_cut_bifway.py"
 
-cmf_check_step 4 6 "Derive regional river and basin maps"
+cmf_check_step 4 5 "Derive regional river and basin maps"
 "$PYTHON_CMD" "$CODE_DIR/region_set_map.py"
 
 # Process each supported high-resolution source when its standard CSV inventory exists.
 for HIRES in 1min 30sec 15sec 5sec 3sec 1sec; do
     if [ -f "$SOURCE/$HIRES/location.csv" ]; then
 
-        cmf_check_step 5 6 "Crop the $HIRES high-resolution data"
+        cmf_check_step 5 5 "Crop the $HIRES high-resolution data"
         mkdir -p "../$HIRES"
         "$PYTHON_CMD" "$CODE_DIR/region_combine_hires.py" "$HIRES"
     fi
 done
-
-# Create the standard climatology matrix from the first available resolution.
-INPMAT_HIRES=""
-for HIRES in 1min 30sec 15sec 5sec 3sec 1sec; do
-    if [ -f "../$HIRES/location.csv" ]; then
-        INPMAT_HIRES=$HIRES
-        break
-    fi
-done
-if [ -n "$INPMAT_HIRES" ]; then
-
-    cmf_check_step 6 6 "Build the standard runoff-climatology matrix from $INPMAT_HIRES data"
-    "$PYTHON_CMD" "$CODE_DIR/region_default_inpmat.py" "$INPMAT_HIRES"
-fi
 
 cmf_check_success

@@ -12,7 +12,7 @@ cd map/<MAPNAME>/script_params
 "$PYTHON_CMD" "$CODE_DIR/param_channel_set_merit_width.py" "../$DIMINFO"
 ```
 
-`map/src/` is preserved as the historical v4 tree; v5 migrations belong under `map/tools/` and do not rewrite those legacy workflows. The `diminfo_` naming convention is shared with v4, while the maintained v5 descriptor now uses native Fortran Namelist (`.nml`) instead of positional TXT records. v5 workflows derive the descriptor and matrix names from `ROFFTAG`.
+`map/src/` is preserved as the historical v4 tree; v5 migrations belong under `map/tools/` and do not rewrite those legacy workflows. The `diminfo_` naming convention is shared with v4, while the maintained v5 descriptor uses two native Fortran Namelist groups: `&DIMINFO` for model dimensions/bounds and `&INPUTDIM` for the paired matrix, input-grid dimensions, geographic edges, and actual latitude ordering. v5 workflows derive descriptor and matrix names from `ROFFTAG`. Because old positional TXT descriptors do not contain all `&INPUTDIM` fields, `txt2meta` does not convert DIMINFO; regenerate it with the configured Parameter s01 wrapper. The reverse `meta2txt` output retains the legacy v4 fields.
 
 Base-map geometry is read from authoritative `params.nml`. TXT-only legacy
 maps remain supported; when both files are present, their eight numeric values
@@ -64,6 +64,12 @@ Extra:
 ```
 
 This diagram is conceptual; it is not a workflow runner.
+
+Regionalization stops after creating the base map and available high-resolution
+layers. Run standard `s01-inpmat_default.sh` after regionalization and before
+`s02-channel_params.sh`; it creates the INPMAT/DIMINFO pair from the runoff
+grid configured in the wrapper. Alternative `i01-` recipes create other
+input-grid mappings and are selected downstream with their matching `ROFFTAG`.
 
 | Group | Script | Purpose | Status |
 | --- | --- | --- | --- |

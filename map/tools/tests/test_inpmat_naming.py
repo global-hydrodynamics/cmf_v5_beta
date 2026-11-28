@@ -31,7 +31,10 @@ class InputMatrixNamingTests(unittest.TestCase):
                 "#!/bin/sh\n"
                 "hires=$1; diminfo=$8; inpmat=$9\n"
                 "printf '%s\\n%s\\n%s\\n' \"$hires\" \"$diminfo\" \"$inpmat\" > ../called.args\n"
-                "printf '&DIMINFO\\n NX=3, NY=2, NLFP=2, NXIN=360, NYIN=180, INPN=1,\\n INPMAT_FILE=\\\'%s\\\', WEST=-1.5, EAST=1.5, NORTH=1, SOUTH=-1\\n/\\n' \"$inpmat\" > ../\"$diminfo\"\n"
+                "cat > ../\"$diminfo\" <<EOF\n"
+                "&DIMINFO\n NX=3, NY=2, NLFP=2, WEST=-1.5, EAST=1.5, NORTH=1, SOUTH=-1\n/\n"
+                "&INPUTDIM\n INPMAT_FILE=\"$inpmat\", NXIN=360, NYIN=180, INPN=1, WESTIN=-180, EASTIN=180, NORTHIN=90, SOUTHIN=-90, OLATIN=\"NtoS\"\n/\n"
+                "EOF\n"
                 "printf x > ../\"$inpmat\"\n",
                 encoding="ascii",
             )
@@ -44,7 +47,8 @@ class InputMatrixNamingTests(unittest.TestCase):
             (tools_dir / "cmf_shell_functions.sh").write_bytes(
                 (ROOT / "tools" / "cmf_shell_functions.sh").read_bytes()
             )
-            for name in ("cmf_check_shell_error.sh", "cmf_select_hires_tag.sh"):
+            for name in ("cmf_check_shell_error.sh", "cmf_select_hires_tag.sh",
+                         "cmf_select_hires_for_conversion.sh"):
                 (shell_functions / name).write_bytes(
                     (ROOT / "tools" / "shell_functions" / name).read_bytes()
                 )

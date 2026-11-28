@@ -265,8 +265,9 @@ class GenerateCtlTests(unittest.TestCase):
         write_registry(self.registry, matrix_rows)
         write_diminfo_nml(
             self.map_dir / "diminfo_test-1deg.nml",
-            DimInfo(3, 2, 2, 360, 180, 4, "inpmat_test-1deg.bin",
-                    -1.5, 1.5, 1.0, -1.0),
+            DimInfo(3, 2, 2, -1.5, 1.5, 1.0, -1.0,
+                    "inpmat_test-1deg.bin", 360, 180, 4,
+                    -180.0, 180.0, 90.0, -90.0, "NtoS"),
         )
         (self.map_dir / "inpmat_test-1deg.bin").write_bytes(b"\0" * (3 * 2 * 4 * 3 * 4))
         result = self.run_generator()

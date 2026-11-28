@@ -20,8 +20,14 @@ returns a nonzero status and writes an error to stderr.
 ## `generate_output_ctl.py`
 
 Create GrADS CTL files for configured Binary XY model outputs. The command
-reads `input_cmf.nam`, map metadata, and
-`variable_table/output_variables.csv`.
+reads `input_cmf.nam`, map geometry, and `variable_table/output_variables.csv`.
+It locates the map from `CNEXTXY`, `CGRAREA`, or `CDIMINFO`, preferring the
+map's authoritative `params.nml` (`&GRID` and `&DOMAIN`). If that file is absent,
+it can derive model-grid spacing from the configured `diminfo_<ROFFTAG>.nml`
+`&DIMINFO` group after checking longitude and latitude spacing. `&INPUTDIM`
+describes runoff geometry and is not used for CTL axes. Legacy `params.txt`
+remains supported where no v5 geometry file is available. When both v5 files
+are available, their model-grid dimensions and bounds must agree.
 
 ```sh
 ./tools/scripts/generate_output_ctl.py --help

@@ -132,8 +132,9 @@ def prepare(case, *, index=1, count=4, dim='member', explicit=None, order=None,
     if mapped:
         nml = nml.replace('is_catm=.true.', "diminfo_file='mapping.nml', inpmat_file='mapping.bin'")
         (case / 'mapping.nml').write_text(
-            "&DIMINFO\n NX=3, NY=2, NLFP=1, NXIN=3, NYIN=2, INPN=2,\n"
-            " INPMAT_FILE='mapping.bin', WEST=0, EAST=3, NORTH=2, SOUTH=0\n/\n"
+            "&DIMINFO\n NX=3, NY=2, NLFP=1, WEST=0, EAST=3, NORTH=2, SOUTH=0\n/\n"
+            "&INPUTDIM\n INPMAT_FILE='mapping.bin', NXIN=3, NYIN=2, INPN=2,\n"
+            " WESTIN=0, EASTIN=3, NORTHIN=2, SOUTHIN=0, OLATIN='NtoS'\n/\n"
         )
         x = np.array([[1, 2, 3, 1, 2, 3], [2, 0, 0, 0, 0, 0]], dtype='i4')
         y = np.array([[1, 1, 1, 2, 2, 2], [1, 0, 0, 0, 0, 0]], dtype='i4')

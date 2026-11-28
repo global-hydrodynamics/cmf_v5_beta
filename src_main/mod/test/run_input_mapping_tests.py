@@ -33,8 +33,9 @@ def run(cmd, cwd):
 
 
 def fixtures(path, mode):
-    info = "&DIMINFO\n NX=2, NY=1, NLFP=1, NXIN=2, NYIN=2, INPN=2,\n"
-    info += " INPMAT_FILE='ignored_embedded_filename.bin', WEST=0, EAST=2, NORTH=2, SOUTH=0\n/\n"
+    info = "&DIMINFO\n NX=2, NY=1, NLFP=1, WEST=0, EAST=2, NORTH=2, SOUTH=0\n/\n"
+    info += "&INPUTDIM\n INPMAT_FILE='ignored_embedded_filename.bin', NXIN=2, NYIN=2, INPN=2,\n"
+    info += " WESTIN=0, EASTIN=2, NORTHIN=2, SOUTHIN=0, OLATIN='NtoS'\n/\n"
     (path / "a.nml").write_text(info)
     (path / "b.nml").write_text(info)
     (path / "other").mkdir()
@@ -101,7 +102,7 @@ def main():
         "size": "incorrect file size", "destination": "destination shape mismatch",
         "source-shape": "source shape mismatch", "cache-shape": "source shape mismatch",
         "indices": "out of range", "weights": "finite and non-negative", "nonfinite": "finite and non-negative",
-        "padding": "inconsistent zero padding", "holes": "non-contiguous", "metadata": "missing or non-positive field",
+        "padding": "inconsistent zero padding", "holes": "non-contiguous", "metadata": "invalid INPUTDIM Namelist",
         "no-mapping": "gridded input requires diminfo_file and inpmat_file", "nonpositive": "non-positive field", "bounds": "non-finite or invalid model-grid bounds",
     }
     for single in (False, True):

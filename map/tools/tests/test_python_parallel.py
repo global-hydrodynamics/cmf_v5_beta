@@ -324,6 +324,8 @@ class FallbackParityTests(unittest.TestCase):
             self.assertEqual((info.nx, info.ny, info.nlfp, info.nxin, info.nyin, info.inpn),
                              (80, 120, 10, 720, 360, 1))
             self.assertEqual(info.inpmat_file, 'inpmat_trial.bin')
+            self.assertEqual((info.westin, info.eastin, info.northin, info.southin, info.olatin),
+                             (-180.0, 180.0, 90.0, -90.0, 'StoN'))
 
 
 if __name__=='__main__':unittest.main(verbosity=2)

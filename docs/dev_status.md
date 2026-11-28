@@ -6,6 +6,18 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Model output and Restart CTLs use v5 map metadata (DT-0229, 2026-11-28; branch-local proposal)
+
+Both tools/scripts CTL generators now use a shared reader that prefers
+params.nml GRID/DOMAIN, checks paired DIMINFO, and derives square-grid spacing
+from DIMINFO only when needed. INPUTDIM is excluded from map axes; legacy
+params.txt remains supported. Five focused tests and actual Mekong
+output/Restart CTL checks pass. The isolated sample passed CTL generation, then
+the available copied model executable stopped reading NML DIMINFO; the current
+src_main/MAIN_cmf was unavailable. See [DT-0229](../research/records/DT-0229.md)
+and [VR-0276](../research/records/validation_runs/VR-0276.md).
+
+
 ### Generic user-map format converters (DT-0204, 2026-11-26; branch-local proposal)
 
 Added registry-reference `conv_nc2bin.sh` / `conv_bin2nc.sh`; simplified s08/s18
@@ -1577,9 +1589,22 @@ and sample validations plus five focused tests pass (VR-0247); tests requiring
 `netCDF4` or `pytest` were unavailable. No scientific values or map data were
 changed. Work remains uncommitted.
 
-### Current map metadata update — `diminfo.nml` (2026-11-27)
+### Paired INPMAT metadata redesign — DT-0228 (2026-11-28; branch-local proposal)
 
-The maintained v5 input-dimension descriptor is now `diminfo_<ROFFTAG>.nml` with one `&DIMINFO` Namelist group. Python reads/writes it through the shared `f90nml` interface; model initialization (`CDIMINFO`) and each input's independent `diminfo_file` use native Fortran Namelist readers. Current v5 producers and model configurations no longer generate or reference positional diminfo TXT. A safe explicit migrator verifies legacy files before optional removal. Twelve local descriptors were converted and compared exactly; eight obsolete files were removed after checking current v5 consumers, while four remain for ignored Global/Japan Binary legacy map-local scripts. See [DT-0210](../research/records/DT-0210.md) and [the metadata contract](../variable_table/map_metadata_spec.md#diminfo_rofftag-nml-simulation-dimension-information). Work remains uncommitted.
+`diminfo_<ROFFTAG>.nml` now separates map geometry (`&DIMINFO`) from actual
+runoff-grid dimensions, bounds, ordering, and paired INPMAT name (`&INPUTDIM`).
+The Parameter input-matrix generator is the authoritative producer. Both model
+initialization and per-input readers parse and validate both groups. Regional
+map generation no longer creates a default matrix implicitly; users run the
+configured Parameter s01 workflow after regionalization. Legacy positional
+DIMINFO is excluded from `s31-txt2meta.sh` because its missing runoff-grid
+metadata cannot be reconstructed; `s32-meta2txt.sh` retains reverse export for
+v4. Mekong sample descriptors, tests, and documentation were updated. Fortran
+input-reader tests passed 44/44; Mekong NetCDF generation and focused metadata,
+conversion, CTL, and sample validators passed. See [DT-0228](../research/records/DT-0228.md),
+[VR-0275](../research/records/validation_runs/VR-0275.md), and [the metadata
+contract](../variable_table/map_metadata_spec.md#diminfo-rofftag-nml-simulation-dimension-information).
+Working tree remains uncommitted.
 
 
 ### Python dependency audit — DT-0215 (2026-11-27)

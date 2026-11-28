@@ -132,8 +132,12 @@ def generate(grid, source, out, size, west, east, north, south, order,
     for descriptor in descriptor_paths:
         write_diminfo_nml(
             descriptor,
-            DimInfo(grid.nx, grid.ny, grid.nlfp, nxin, nyin, maximum, matrix_name,
-                    float(grid.west), float(grid.east), float(grid.north), float(grid.south)),
+            DimInfo(
+                grid.nx, grid.ny, grid.nlfp,
+                grid.west, grid.east, grid.north, grid.south,
+                matrix_name, nxin, nyin, maximum,
+                west, east, north, south, order,
+            ),
         )
     return out/inpmat_path, sorted(descriptor_paths)
 

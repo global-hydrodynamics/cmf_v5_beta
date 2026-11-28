@@ -304,26 +304,54 @@ The external algorithm's source is not included in this repository. The reposito
 
 ### `diminfo_<ROFFTAG>.nml` — Simulation dimension information
 
-The maintained v5 dimension descriptor is a native Fortran Namelist with one
-group, `&DIMINFO`, and exactly eleven named fields:
+The maintained v5 dimension descriptor is a native Fortran Namelist with
+exactly two groups, in the order `&DIMINFO` then `&INPUTDIM`:
 
-| Field | Type | Meaning |
-| --- | --- | --- |
-| `NX`, `NY` | integer | CaMa-Flood model-grid dimensions, east-west and north-south |
-| `NLFP` | integer | Floodplain layer count |
-| `NXIN`, `NYIN` | integer | Runoff/input-grid dimensions |
-| `INPN` | integer | Maximum input-grid contributors per model cell |
-| `INPMAT_FILE` | character | Name of the paired input-matrix file; descriptive only |
-| `WEST`, `EAST`, `NORTH`, `SOUTH` | real | Model-grid edge bounds in degrees |
+```fortran
+&DIMINFO
+  ! CaMa-Flood model grid
+  NX    = 40
+  NY    = 32
+  NLFP  = 10
+  WEST  = 3.0
+  EAST  = 13.0
+  NORTH = 53.0
+  SOUTH = 45.0
+/
 
-The bounds describe the CaMa-Flood map domain, not the runoff grid. The
-descriptor does not specify runoff spacing, source bounds, longitude convention,
-or row order; those remain part of the forcing dataset/workflow. `ROFFTAG`
-identifies the runoff product/mapping configuration; `HIRES_TAG` independently
-selects high-resolution lookup data such as `1min` or `15sec`.
+&INPUTDIM
+  ! Runoff input grid and mapping
+  INPMAT_FILE = 'inpmat_event.nc'
+  NXIN    = 111
+  NYIN    = 91
+  INPN    = 30
+  WESTIN  = 5.6
+  EASTIN  = 10.0
+  NORTHIN = 52.9
+  SOUTHIN = 49.5
+  OLATIN  = 'NtoS'
+/
+```
 
-`INPMAT_FILE` preserves the role of record 7 in the former eleven-record TXT
-format. It does not override the independently configured `inpmat_file` or
+| Group | Field | Type | Meaning |
+| --- | --- | --- | --- |
+| DIMINFO | `NX`, `NY` | integer | CaMa-Flood model-grid dimensions, east-west and north-south |
+| DIMINFO | `NLFP` | integer | Floodplain layer count |
+| DIMINFO | `WEST`, `EAST`, `NORTH`, `SOUTH` | real | Model-grid outer edges in degrees |
+| INPUTDIM | `INPMAT_FILE` | character | Paired input-matrix filename; descriptive only |
+| INPUTDIM | `NXIN`, `NYIN` | integer | Runoff/input-grid dimensions |
+| INPUTDIM | `INPN` | integer | Maximum input-grid contributors per model cell |
+| INPUTDIM | `WESTIN`, `EASTIN`, `NORTHIN`, `SOUTHIN` | real | Runoff input-grid outer edges in degrees |
+| INPUTDIM | `OLATIN` | character | Input-grid latitude row order: `NtoS` or `StoN` |
+
+The `IN` suffix denotes input-grid properties. Bounds are geographic outer
+edges, not first/last cell centers. `OLATIN` records the order used to build the
+matrix. These coordinates document the input grid; runtime mapping continues
+to use stored `inpx`, `inpy`, and `inpa` values without a new transformation.
+`ROFFTAG` identifies the runoff mapping configuration; `HIRES_TAG`
+independently selects high-resolution lookup data such as `1min` or `15sec`.
+
+`INPMAT_FILE` does not override the independently configured `inpmat_file` or
 `CINPMAT` path. The mapping matrix remains separate. Its variables/records are
 `INPN` x-index levels, `INPN` y-index levels, and `INPN` float32 overlap-area
 levels, each covering `NX × NY`. `params.nml` describes the base map geometry;
@@ -339,12 +367,17 @@ stores `NXIN`, `NYIN`, and `INPN` with that input mapping. They may point to
 the same file but are independent interfaces. `INPMAT_FILE` is not used to
 select the matrix; each interface retains its established explicit path.
 
-Python tools read and write the same schema through the shared `f90nml`
-dependency and `map/tools/code/map_metadata.py`. Normal v5 workflows produce
-only `.nml`; they do not generate a positional TXT copy. The explicit
-`map/tools/code/migrate_diminfo.py` utility converts legacy eleven-record
-`diminfo_*.txt` files and verifies all fields before an optional removal. This explicit migration utility is the only maintained reader of the positional v5-era format.
-Arbitrary TXT files are not accepted by maintained readers.
+Python tools read and write the same two-group schema through the shared
+`f90nml` dependency and `map/tools/code/map_metadata.py`. Parameter input-matrix
+generation is the authoritative producer because it has the actual input-grid
+edges and row order. The `txt2meta` converter intentionally excludes DIMINFO:
+the legacy positional TXT form does not contain the input-grid provenance
+required by `&INPUTDIM`. Regenerate it with `s01-inpmat_default.sh` or the
+appropriate configured Parameter wrapper; do not infer these fields from the
+model grid. The reverse `meta2txt` conversion emits the legacy fields needed by
+v4, but that format cannot represent input-grid bounds/order. Maintained v5
+readers require the new two-group schema and do not accept the former
+single-group Namelist.
 
 ### GrADS `.ctl` files — binary visualization metadata
 

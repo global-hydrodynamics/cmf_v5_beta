@@ -110,16 +110,20 @@ cd map/<MAPNAME>/script_format_conv
 ./s32-meta2txt.sh
 ```
 
-The converters cover `params`, `diminfo_<ROFFTAG>`, high-resolution
-`<resolution>/location`, bifurcation tables (`bifori` and `bifprm`), and the
-GRDC, GRanD, and MLIT allocation tables. Missing source files are skipped.
-Existing destinations are replaced after the source has passed format and
-value validation. Original source files are retained. Each run reports each
-converted file and its number of fields, tiles, paths, or records; invalid
-sources are reported and make the command fail after the other candidates have
-been checked. These tools only read and write the named metadata files; they do
-not inspect or modify numerical raster data. No options or confirmation
-prompts are used.
+The converters cover `params`, high-resolution `<resolution>/location`,
+bifurcation tables (`bifori` and `bifprm`), and the GRDC, GRanD, and MLIT
+allocation tables. `s31-txt2meta.sh` deliberately skips
+`diminfo_<ROFFTAG>.txt`: the old positional descriptor does not contain
+input-grid bounds or latitude order. Generate its `.nml` together with the
+matrix using the configured Parameter s01 wrapper. `s32-meta2txt.sh` can emit
+the legacy DIMINFO fields from a new descriptor for v4 consumers, but that
+format cannot carry the additional input-grid provenance. Missing source files
+are skipped. Existing destinations are replaced after the source has passed
+format and value validation. Original source files are retained. Each run
+reports converted files and record counts; invalid sources are reported and
+make the command fail after other candidates have been checked. These tools
+only read and write the named metadata files; they do not inspect or modify
+numerical raster data. No options or confirmation prompts are used.
 
 Some legacy formats cannot represent every standard CSV field. Reverse
 conversion rejects populated extra fields and non-row-ordered bifurcation IDs.
