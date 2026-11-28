@@ -2,16 +2,17 @@
 
 This directory is a physical, self-contained Guide01 copy of the shared
 [`tools/downscale_flddph/`](../../../tools/downscale_flddph/) package. The
-copy was taken from repository snapshot commit
-`750cf35bed7617b8a7597a0aa17a8e005181dbc5` (the shared downscaler's latest
-source change at that revision is `b344e6e2658dc173520d43ffefa187575c576342`). It includes the scientific depth
-calculator, snapshot aggregator, depth visualizer, and the required
-`hires_metadata.py` and `map_metadata.py` readers. The calculation code is
-retained; only helper-module lookup was made local, and the visualizer was
-adapted to the current NetCDF-first map layout. It does not import Python code
+copy was refreshed from shared Downscaler commit
+`04b8e112ba46b78a0789eec170c795d8dfe6810a`, after the original repository
+snapshot `750cf35bed7617b8a7597a0aa17a8e005181dbc5`. It includes the scientific
+depth calculator, snapshot aggregator, NetCDF-first depth visualizer, and the
+required `hires_metadata.py` and `map_metadata.py` readers. The calculation
+code is retained; only helper-module lookup was made local. The visualizer
+reads `params.nml`, `location.csv`, and the `flddif`, `elevtn`, and `catmxy`
+NetCDF tiles, while retaining legacy Binary reads when available. It does not import Python code
 from the repository at runtime, use symlinks, or receive later shared-tool
 updates automatically. `sample_mekong/` retains its own physical copies of the
-depth scripts.
+depth scripts, synchronized from the same shared commit.
 
 ## Contents
 

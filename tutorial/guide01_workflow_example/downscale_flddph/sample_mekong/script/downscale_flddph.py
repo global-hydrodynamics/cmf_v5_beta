@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-
 from netCDF4 import Dataset
 import numpy as np
 
@@ -179,8 +178,8 @@ def read_netcdf_tile(path: Path, tile: dict[str, object], layer: str) -> dict[st
     names = {
         "catmxy": ("catmxx", "catmyy"),
         "downxy": ("downx", "downy"),
-        "flwdir": ("flwdir",),
         "elevtn": ("elevtn",),
+        "flwdir": ("flwdir",),
         "flddif": ("flddif",),
         "rivwth": ("rivwth",),
     }[layer]

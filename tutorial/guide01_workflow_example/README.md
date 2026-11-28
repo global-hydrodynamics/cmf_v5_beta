@@ -478,10 +478,12 @@ percentile; colorbar labels identify that cap.
 ### One-minute postprocessing
 
 The example uses the Tutorial-local copy of the Python `downscale_flddph`
-package. It was copied from `tools/downscale_flddph/` at repository snapshot
-commit `750cf35bed7617b8a7597a0aa17a8e005181dbc5` (latest shared downscaler
-source change `b344e6e2658dc173520d43ffefa187575c576342`), including the depth calculator,
-snapshot aggregation, NetCDF map metadata readers, and depth visualizer. The
+package. Its visualization and Map-reading code were refreshed from shared
+Downscaler commit
+`04b8e112ba46b78a0789eec170c795d8dfe6810a`, after original snapshot
+`750cf35bed7617b8a7597a0aa17a8e005181dbc5`. The copy includes the depth
+calculator, snapshot aggregation, NetCDF map metadata readers, and NetCDF-first
+depth visualizer. The
 copy is tutorial-specific and does not update automatically when the common
 tool changes. Its scripts import only files inside this copied directory. Its
 input adapter reads the selected NetCDF `rivdph` record and the

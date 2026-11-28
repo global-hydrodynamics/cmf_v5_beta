@@ -6,6 +6,18 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Guide01 downscaler visualization reads NetCDF-first Map data (DT-0248, 2026-11-28; branch-local proposal)
+
+The shared flood-depth visualizer now reads `params.nml`, `location.csv`, and
+the high-resolution NetCDF `flddif`, `elevtn`, and `catmxy` layers while keeping
+its legacy Binary path. Guide01 and its sample contain physical copies refreshed
+from shared commit `04b8e112ba46b78a0789eec170c795d8dfe6810a`; those copies use
+local reader modules and do not update automatically. A representative Control
+event was downscaled and rendered identically by both copies. The complete
+paired Guide01 figure set remains unverified because Deep Channel products were
+unavailable. See [DT-0248](../research/records/DT-0248.md) and
+[VR-0296](../research/records/validation_runs/VR-0296.md).
+
 ### Guide01 uses current NetCDF-first Map data and a local downscaler copy (DT-0247, 2026-11-28; branch-local proposal)
 
 Guide01 experiment and one-event workflows now use `params.nml`, map-root
