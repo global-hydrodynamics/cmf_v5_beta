@@ -16,7 +16,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 SOURCE = SCRIPT_DIR.parents[1] / "map/mekong_15min/rivhgt.nc"
 OUTPUT = SCRIPT_DIR / "map_modify/rivhgt_deep.nc"
 # Learner activity: change this to 3.0 before creating the Deep Channel map.
-RIVHGT_INCREMENT_M = 0.0
+RIVHGT_INCREMENT_M = 3.0
 
 
 def sha256(path: Path) -> str:

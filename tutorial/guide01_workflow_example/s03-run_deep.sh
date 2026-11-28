@@ -16,8 +16,8 @@ DT=600
 YEAR=2000
 
 # Control settings. Copy this file to create another independent experiment.
-PROJ="control"
-RIVHGT="$MAPDIR/rivhgt.nc"
+PROJ="deep_channel"
+RIVHGT="$SCRIPT_DIR/map_modify/rivhgt_deep.nc"
 RUNDIR="$SCRIPT_DIR/out/$PROJ"
 FORCE=0
 if [ "$#" -gt 0 ]; then
@@ -44,7 +44,7 @@ if [ "$FORCE" -eq 1 ]; then
     rm -f "$RUNDIR"/o_outflw2000.nc "$RUNDIR"/o_rivdph2000.nc \
           "$RUNDIR"/o_sfcelv2000.nc "$RUNDIR"/o_fldfrc2000.nc \
           "$RUNDIR"/restart*.nc "$RUNDIR"/input_cmf*.nam \
-          "$RUNDIR"/console_2000.log "$RUNDIR"/log_CaMa*.nml \
+          "$RUNDIR"/console_2000.log "$RUNDIR"/log_CaMa*.txt \
           "$RUNDIR"/run_time_2000.log "$RUNDIR"/MAIN_cmf "$RUNDIR"/mapdata.nml
 fi
 cmf_check_step 1 4 "Prepare the run directory and current NetCDF-first map inputs"
@@ -144,7 +144,7 @@ if [ "$STATUS" -ne 0 ]; then
 fi
 cmf_check_step 3 4 "Record the run configuration and runtime"
 cp "$RUNDIR/input_cmf.nam" "$RUNDIR/input_cmf_2000.nam"
-cp "$RUNDIR/log_CaMa.nml" "$RUNDIR/log_CaMa_2000.nml"
+cp "$RUNDIR/log_CaMa.txt" "$RUNDIR/log_CaMa_2000.txt"
 cmf_check_step 4 4 "Confirm expected NetCDF output files"
 for var in outflw rivdph sfcelv fldfrc; do
     [ -s "$RUNDIR/o_${var}2000.nc" ] || { echo "[ERROR] Missing model output: $RUNDIR/o_${var}2000.nc" >&2; exit 1; }
