@@ -55,7 +55,11 @@ Event directory: [PATH]
    WGS84 1-arc-minute cells. Flood Fraction is Code 1 divided by valid classes
    0–4, in percent. Codes 5, 6 and 255 are not denominator pixels; no valid
    support is NoData, while a supported zero fraction is 0. Do not describe
-   this statistic as a full-cell inundated area fraction.
+   this statistic as a full-cell inundated area fraction. If the native
+   classification raster is absent but the saved 1-minute Flood Fraction
+   exists, the launcher renders the figure from that saved product without
+   rerunning aggregation. If both are absent, restore the source or rerun
+   classification before continuing.
 4. Review flood-pixel counts and valid support to select compact focus boxes
    inside the satellite-analysis candidate area. Do not use impact-location
    proximity as a selection criterion. Save proposed boxes/diagnostics in

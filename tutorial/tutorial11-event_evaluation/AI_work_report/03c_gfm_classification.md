@@ -62,3 +62,23 @@ handoff/fingerprint records are untouched; comments explain existing source
 behavior rather than new scientific validation. Research validator retains15
 pre-existing unrelated errors. No new scientific/architectural knowledge gap.
 Changes remain uncommitted for review. Validation index: VR-0220.
+
+
+## 2026-11-28 — Missing native raster fallback for Figure 3c
+
+The reported `f03c-flood_fraction_1min.sh` error was caused by the absent
+monolithic 20 m classification TIFF, not an incorrect filename. The saved
+1-minute Flood Fraction TIFF remains available, as do the fifteen focus-area
+classification crops. Updated the launcher so it automatically selects the
+existing Python `--render-only` path when the native source is missing but the
+saved fraction exists. It prints that aggregation is skipped. If neither file
+exists, it exits with a concise message directing the user to restore the source
+or rerun Step 03c classification. No classification or aggregation logic,
+scientific input, or retained raster was changed.
+
+**Verification:** `bash -n` passed. Ran the patched launcher from a temporary
+mirror with the saved fraction raster and `SHOW_OSM=0`; it selected render-only,
+completed successfully, and wrote a temporary Figure 3c. The repository's
+existing Figure 3c and all source artifacts were untouched. This verifies figure
+regeneration from the retained derived raster, not recomputation of the fraction
+or pixel-level verification against the absent native source.

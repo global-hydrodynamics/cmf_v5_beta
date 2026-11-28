@@ -1101,3 +1101,15 @@ shared-history rewrite or main push is authorized.
 **Findings and decisions:** The current local map bifurcation table has 23 pathways, while retained Step 14 `pthflw` has 20; seven shared path IDs differ in endpoint indices. Step 15 therefore uses the run-paired static table for its unchanged historical calculation. Step 21's current map produces a different Prümzurlay catchment assignment than the retained table. Historical Binary catchment files are absent, preventing an exact binary-versus-NetCDF equivalence check. The changed Prümzurlay assignment was not adopted; saved Step 21/23 scientific products and fingerprints remain unchanged for maintainer review.
 
 **Files updated:** `map/Rhine_15min/README.md`; Tutorial 11 README, Step 11/13/14/15/21/24 Prompts, Step 13 metadata, Step 14 Shell, Step 15/21/24 Python consumers, affected Survey/Work Reports, and this log. No large datasets or experiment outputs were added to Git.
+
+
+## 2026-11-28 — Step03c Figure regeneration without the native mosaic
+
+The full 20 m GFM classification raster recorded by Step03c is absent locally,
+while the saved 1-minute Flood Fraction and fifteen focus crops remain. Updated
+the `f03c` launcher to render from the existing fraction when aggregation input
+is unavailable, and to stop with an actionable error when both source and saved
+fraction are missing. Documented the fallback and refreshed the artifact
+availability check. A run in a temporary mirror completed and generated a
+temporary Figure 3c; no classification, aggregation, raster, or repository
+figure was regenerated or changed.

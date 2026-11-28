@@ -37,6 +37,17 @@ EXTRA_ARGS=()
 if [[ "${1:-}" == "--figure-only" ]]; then EXTRA_ARGS+=(--render-only);
 elif [[ "$#" -gt 0 ]]; then printf 'Usage: %s [--figure-only]\n' "$0" >&2; exit 2; fi
 if [[ "$SHOW_OSM" == "0" ]]; then EXTRA_ARGS+=(--no-osm); fi
+if [[ ! -f "$INPUT" ]]; then
+    if [[ -f "$OUTPUT" ]]; then
+        printf '[INFO] Native classification raster is unavailable; reusing the saved 1min Flood Fraction for figure rendering only.\n'
+        EXTRA_ARGS+=(--render-only)
+    else
+        printf '[ERROR] Native classification raster not found: %s\n' "$INPUT" >&2
+        printf '[ERROR] Existing 1min Flood Fraction raster also not found: %s\n' "$OUTPUT" >&2
+        printf '[INFO] Restore the source raster or run run_script/s03c-classify_gfm_extent.sh before aggregation.\n' >&2
+        exit 1
+    fi
+fi
 "$PYTHON_CMD" "$TUTORIAL_DIR/script/f03c-flood_fraction_1min.py"  \
     --input "$INPUT" \
     --domain-config "$DOMAIN_CONFIG" \
