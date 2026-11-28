@@ -31,9 +31,9 @@ Instructions; it is not a standalone Prompt.
 **Tasks**
 
 - Review the actual map, forcing, matrix and model interfaces.
-- Use `map/Rhine_15min/params.nml` and the standard regional river network
-  `map/Rhine_15min/nextxy.nc`; do not use `nextxy_noedge.nc` for this run.
-  Individual base-map NetCDF files are stored directly under `map/Rhine_15min/`.
+- Use `tutorial/tutorial11-event_evaluation/map/Rhine_15min/params.nml` and the standard regional river network
+  `tutorial/tutorial11-event_evaluation/map/Rhine_15min/nextxy.nc`; do not use `nextxy_noedge.nc` for this run.
+  Individual base-map NetCDF files are stored directly under `tutorial/tutorial11-event_evaluation/map/Rhine_15min/`.
 - Read the current runoff tag and matrix/diminfo paths from `current_workflow_contract` in Step 13 metadata; the historical `outputs` and `generator` fields preserve the original Binary-generation record. `CINPMAT` is NetCDF with `LITRPCDF=.TRUE.`, and DIMINFO is Namelist. Do not substitute the global ERA5-Land matrix.
 - Configure and run the specified single 31-day, hourly cold-start experiment.
 - Inspect the run log, hourly NetCDF outputs and end-of-run NetCDF Restart.
@@ -80,7 +80,7 @@ Complete Tutorial 11 Step 14 using p14-simulation_setup-run.md and the existing
 Rhine 2021 sample configuration. Inspect the current branch, local rules,
 Step 11–13 artifacts, actual map/forcing/matrix files, and current model
 Namelist/output interfaces before implementation. Set `CNEXTXY` to the
-standard Rhine `map/Rhine_15min/nextxy.nc`. Reuse the existing v5
+standard Rhine `tutorial/tutorial11-event_evaluation/map/Rhine_15min/nextxy.nc`. Reuse the existing v5
 GOSH defaults and do not change model source, map products, runoff conversion,
 or the Input Matrix.
 

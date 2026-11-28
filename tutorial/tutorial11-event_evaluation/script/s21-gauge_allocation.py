@@ -331,7 +331,7 @@ def trace_downstream(start: tuple[int, int], targets: dict[str, tuple[int, int]]
 
 def load_catchments(map_dir: Path, lon, lat, uparea):
     """Reuse p01-f04 geometry checks and one-based NetCDF assignment reader."""
-    helper_dir = map_dir.parents[1] / "visualization/river_map/script"
+    helper_dir = ROOT / "visualization/river_map/script"
     sys.path.insert(0, str(helper_dir))
     try:
         import f04_rivmap_catchment as catchment
@@ -442,7 +442,7 @@ def select_evaluation_cells(rows, map_data):
         row["ai_notes"] += " [Evaluation cell] " + method + "; " + reason
 
 
-def add_catchment_allocations(map_dir: Path, map_data, output_path: Path):
+def add_catchment_allocations(tutorial: Path, map_dir: Path, map_data, output_path: Path):
     """Enrich retained geographic assignments, never replacing their fields or notes."""
 
     #*** 1. Read native assignments while retaining previous review fields
@@ -572,7 +572,7 @@ def add_catchment_allocations(map_dir: Path, map_data, output_path: Path):
     summary = {
         "review_status": "proposed",
         "method": "Existing p01-f04 NetCDF catchment reader; point containment in 1-minute pixels; no snapping",
-        "map": "map/Rhine_15min", "highres_grid": hires,
+        "map": map_dir.relative_to(tutorial).as_posix(), "highres_grid": hires,
         "catmxy_format": "NetCDF catmxx/catmyy(lat,lon); one-based regional model x/y",
         "pixel_edges": "west/north inclusive; east/south exclusive; north-first rows, west-first columns",
         "report_count": len(rows),
@@ -626,12 +626,12 @@ def main() -> None:
         raise ValueError("basin/rivwth map arrays do not match the current map grid")
     map_data = (lon, lat, outlon, outlat, uparea, nextx, nexty, river_width, basin)
     if args.catchment_only:
-        add_catchment_allocations(map_dir, map_data, args.impact_output.resolve())
+        add_catchment_allocations(tutorial, map_dir, map_data, args.impact_output.resolve())
         return
     map_resolution = float(np.median(np.diff(lon)))
     if not np.allclose(np.diff(lon), map_resolution) or not np.allclose(-np.diff(lat), map_resolution):
         raise ValueError("Map grid is not a regular square degree grid")
-    grdc = parse_grdc_outputs(map_dir.parent / "data/GRDC_allocated.csv",
+    grdc = parse_grdc_outputs(ROOT / "map/data/GRDC_allocated.csv",
                               map_dir / "GRDC_alloc.csv")
 
     #*** 2. Crosswalk supplied global cells and check retained gauge correspondence
@@ -764,7 +764,7 @@ def main() -> None:
         (lon, lat, outlon, outlat, uparea, nextx, nexty, river_width, basin),
         args.impact_output.resolve(),
     )
-    add_catchment_allocations(map_dir, map_data, args.impact_output.resolve())
+    add_catchment_allocations(tutorial, map_dir, map_data, args.impact_output.resolve())
 
 
 if __name__ == "__main__":

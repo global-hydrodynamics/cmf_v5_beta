@@ -269,5 +269,20 @@
       "figure/f15a-maximum_discharge-regional.png",
       "figure/f15b-maximum_discharge-aoi.png"
     ]
+  },
+  "current_workflow_contract": {
+    "map": {
+      "path": "tutorial/tutorial11-event_evaluation/map/Rhine_15min/"
+    },
+    "runoff": {
+      "dataset_id": "ERA5land-Rhine2021Jul",
+      "directory": "tutorial/tutorial11-event_evaluation/inp/ERA5land-Rhine2021Jul/"
+    },
+    "input_matrix": {
+      "metadata_source": "metadata/13_runoff_input_matrix.json#current_workflow_contract",
+      "matrix": "tutorial/tutorial11-event_evaluation/map/Rhine_15min/inpmat_ERA5land_Rhine2021Jul.nc",
+      "dimension_info": "tutorial/tutorial11-event_evaluation/map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.nml"
+    },
+    "note": "Current file locations after Tutorial-local relocation; execution records above retain the paths used during the historical run."
   }
 }

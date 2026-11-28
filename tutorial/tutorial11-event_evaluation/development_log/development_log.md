@@ -1113,3 +1113,30 @@ fraction are missing. Documented the fallback and refreshed the artifact
 availability check. A run in a temporary mirror completed and generated a
 temporary Figure 3c; no classification, aggregation, raster, or repository
 figure was regenerated or changed.
+
+
+## 2026-11-28 — Relocate Tutorial 11 Map and Runoff data
+
+Moved the Rhine regional Map to `map/Rhine_15min/` and event Runoff to
+`inp/ERA5land-Rhine2021Jul/` under the Tutorial, and moved the event-specific
+Step12 launcher to `run_script/s12-prepare_runoff.sh`. Added optional
+`--inp-root` to the shared downloader while retaining repository `inp/` as its
+default. Updated current workflow paths, registry, Prompts, READMEs, Shell/Python
+consumers and explicit metadata handoffs; historical execution records and the
+old dataset ID remain identified as historical. Removed the old map ignore
+entry and added Tutorial-local data ignores while allowing reproducibility
+scripts and documentation to be tracked.
+
+All 126 runoff files match their pre-move sizes and SHA-256 hashes. All map
+files are present and numerical products are unchanged; seven README/Shell
+files contain only the intended path/documentation updates. Step12 dry-run,
+Step15 rendering, Step21 allocation/plotting on a disposable map copy, and
+Step24 downscaling/rendering completed with outputs directed to `/tmp`. Shell,
+Python, metadata/registry, NetCDF structure, links and ignore checks passed.
+One pre-existing README link targets the already deleted local English case
+study file; that deletion and its link were left untouched and excluded from
+this commit.
+No download, map generation, or model simulation was run. The original Step21
+`GRDC_alloc.csv` prerequisite was absent in the retained Map and was generated
+only in the disposable test copy. No scientific content or preserved Step24
+metadata was changed.

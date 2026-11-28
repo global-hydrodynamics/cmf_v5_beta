@@ -9,19 +9,20 @@ PYTHON_CMD="python3"
 # ----------------------------------------------------------------------
 # User settings
 # ----------------------------------------------------------------------
-DAM_IN="../../data/GRanD_allocated.csv"  # MERIT Hydro-preallocated reservoir table.
+GAUGE_IN="$CMF_V50_ROOT/map/data/GRDC_allocated.csv"  # Shared MERIT Hydro-preallocated GRDC station table.
+GAUGE_MODE="multi"                     # Allocation mode: multi or single.
 HIRES_TAG=""                            # Empty selects the coarsest installed NetCDF resolution.
 # ----------------------------------------------------------------------
 # User settings end here. Program paths and processing steps follow.
 # ----------------------------------------------------------------------
 CODE_DIR="$CMF_V50_ROOT/map/tools/code"
 
-cmf_check_init "Allocate GRanD reservoirs to CaMa-Flood catchments"
+cmf_check_init "Allocate GRDC flow gauges to CaMa-Flood catchments"
 HIRES_TAG=$(cmf_select_hires_tag "$HIRES_TAG" --single-area)  # Select a single-area high-res map.
 
-cmf_check_step 1 1 "Allocate GRanD reservoirs using the $HIRES_TAG map"
-"$PYTHON_CMD" "$CODE_DIR/allocate_dam.py" "$DAM_IN" "$HIRES_TAG" \
-    --map-dir .. --output-dir ..
+cmf_check_step 1 1 "Allocate GRDC gauges using the $HIRES_TAG map"
+"$PYTHON_CMD" "$CODE_DIR/allocate_flow_gauge.py" "$GAUGE_IN" "$GAUGE_MODE" \
+    "$HIRES_TAG" --map-dir .. --output-dir ..
 
 cmf_check_success
 

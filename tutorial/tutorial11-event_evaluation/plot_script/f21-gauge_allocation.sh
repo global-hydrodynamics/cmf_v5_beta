@@ -9,7 +9,7 @@ REPO_ROOT="$(cd "$TUTORIAL_DIR/../.." && pwd -P)"
 # User settings
 # ----------------------------------------------------------------------
 PYTHON="${PYTHON:-$REPO_ROOT/.venv/bin/python}"                       # Python with required libraries; existing PYTHON override is supported.
-MAP_DIR="$REPO_ROOT/map/Rhine_15min"                                  # Matching coarse/high-resolution map root.
+MAP_DIR="$TUTORIAL_DIR/map/Rhine_15min"                               # Tutorial-local matching coarse/high-resolution map root.
 ALLOCATION="$TUTORIAL_DIR/metadata/21_gauge_allocation.csv"             # Step21 station allocation handoff.
 IMPACT_ALLOCATION="$TUTORIAL_DIR/metadata/21_impact_location_allocation.csv" # Final geographic/direct/proxy allocations; no reallocation here.
 OUTPUT="$TUTORIAL_DIR/figure/f21a-gauge_allocation.png"                 # Regional allocation PNG destination.

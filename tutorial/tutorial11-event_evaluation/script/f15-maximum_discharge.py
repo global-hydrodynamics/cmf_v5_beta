@@ -91,7 +91,10 @@ def resolve_step14_inputs(step14: dict, tutorial_dir: Path, root: Path):
     for path in (output_paths["outflw"], output_paths["pthflw"]):
         if not path.is_file():
             raise FileNotFoundError(f"Step 14 output does not exist: {path}")
-    map_dir = root / step14["map"]["path"].rstrip("/")
+    map_path = step14.get("current_workflow_contract", {}).get("map", {}).get(
+        "path", step14["map"]["path"]
+    )
+    map_dir = root / map_path.rstrip("/")
     return output_paths["outflw"], output_paths["pthflw"], map_dir
 
 
@@ -452,8 +455,8 @@ def draw_regional(map_dir: Path, peak: np.ndarray, geometry, map_data, path_resu
         "bifurcation_paths_displayed": int(np.count_nonzero(pth_eligible)),
         "channel_bifurcation_paths": int(np.count_nonzero(pth_eligible & channel_paths)),
         "overland_only_paths": int(np.count_nonzero(pth_eligible & ~channel_paths)),
-        "network_file": "map/Rhine_15min/nextxy.nc",
-        "elevation_background": "map/Rhine_15min/1min/1min.elevtn.nc",
+        "network_file": f"{map_dir.relative_to(ROOT).as_posix()}/nextxy.nc",
+        "elevation_background": f"{map_dir.relative_to(ROOT).as_posix()}/1min/1min.elevtn.nc",
     }
 
 def draw_aoi(map_dir: Path, extent, map_data, out_peak: np.ndarray, path_result,
@@ -585,7 +588,7 @@ def draw_aoi(map_dir: Path, extent, map_data, out_peak: np.ndarray, path_result,
         "bifurcation_paths_displayed": int(np.count_nonzero(pth_eligible)),
         "channel_bifurcation_paths": int(np.count_nonzero(pth_eligible & channel_paths)),
         "overland_only_paths": int(np.count_nonzero(pth_eligible & ~channel_paths)),
-        "elevation_background": "map/Rhine_15min/1min/1min.elevtn.nc",
+        "elevation_background": f"{map_dir.relative_to(ROOT).as_posix()}/1min/1min.elevtn.nc",
     }
 
 

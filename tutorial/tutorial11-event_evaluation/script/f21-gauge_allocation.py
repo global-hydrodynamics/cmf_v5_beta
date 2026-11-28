@@ -78,8 +78,7 @@ def read_map(map_dir: Path):
 
 def build_river_segments(map_dir: Path, map_data):
     """Build valid stored outlet links and their source uparea [km2] for display."""
-    root = map_dir.parents[1]
-    helper_path = root / "visualization/output_analysis/script/f02-discharge_vector.py"
+    helper_path = ROOT / "visualization/output_analysis/script/f02-discharge_vector.py"
     vector = load_helper(helper_path, "tutorial11_gauge_vector_helper")
     lon, lat, uparea, nextx, nexty, outlon, outlat = map_data
     links = vector.NETWORK.downstream_links(lon, lat, uparea, nextx, nexty)

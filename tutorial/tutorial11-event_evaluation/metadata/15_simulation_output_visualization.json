@@ -148,5 +148,10 @@
     "KG-0019 remains open for ERA5-Land accumulation timing and converter period-boundary handling.",
     "A local maximum map combines values selected at different hours; do not interpret it as a simultaneous flow field.",
     "No hydraulic interpretation of individual negative values or scientific assessment of the simulated Rhine flood was performed."
-  ]
+  ],
+  "current_workflow_contract": {
+    "map": "tutorial/tutorial11-event_evaluation/map/Rhine_15min/",
+    "map_location_source": "metadata/14_simulation_setup.json#current_workflow_contract.map.path",
+    "note": "Current file location after Tutorial-local relocation; recorded visualization inputs above remain historical."
+  }
 }

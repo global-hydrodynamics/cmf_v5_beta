@@ -8,7 +8,7 @@ REPO_ROOT="$(cd "$TUTORIAL_DIR/../.." && pwd)"
 # User settings
 # ----------------------------------------------------------------------
 PYTHON="${PYTHON:-$REPO_ROOT/.venv/bin/python}" # Python executable; existing env override supported.
-MAP_DIR="$REPO_ROOT/map/Rhine_15min" # Matching coarse/high-resolution map root.
+MAP_DIR="$TUTORIAL_DIR/map/Rhine_15min" # Tutorial-local matching coarse/high-resolution map root.
 OUTPUT="$TUTORIAL_DIR/metadata/21_gauge_allocation.csv" # Gauge allocation CSV destination.
 IMPACT_OUTPUT="$TUTORIAL_DIR/metadata/21_impact_location_allocation.csv" # Report-linked impact allocation CSV destination.
 # ----------------------------------------------------------------------

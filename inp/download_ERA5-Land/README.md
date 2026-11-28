@@ -141,9 +141,12 @@ stage has independent scientific/experiment defaults to edit; the Product Shell
 passes them explicitly to both stages.
 
 The Tutorial 11 Rhine Product Shell is a study-specific example, not a reusable
-registry dataset. Its local output is `inp/tutorial11-ERA5land-Rhine2021Jul/`;
-raw files, converted event data and logs remain ignored. See the [Tutorial 11
-Step 12 Prompt](../../tutorial/tutorial11-event_evaluation/p12-era5land_runoff_preparation.md)
+registry dataset. It is maintained at
+`tutorial/tutorial11-event_evaluation/run_script/s12-prepare_runoff.sh` and
+writes to the Tutorial-local `inp/ERA5land-Rhine2021Jul/` directory by passing
+`--inp-root`. Without that option, the shared workflow retains its default
+`$CMF_V50_ROOT/inp/` output root. Raw files, converted event data and logs
+remain ignored. See the [Tutorial 11 Step 12 Prompt](../../tutorial/tutorial11-event_evaluation/p12-era5land_runoff_preparation.md)
 and its metadata for the observed grid and scientific limitations.
 
 The only supported format is `FORMAT="netcdf"` / `--format netcdf`. Binary

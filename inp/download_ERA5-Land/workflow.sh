@@ -5,7 +5,8 @@
 era5_usage() {
     cat <<'HELP'
 Stage options (normally supplied by a product Shell):
-  --dataset NAME                   Dataset directory name directly under inp/
+  --inp-root PATH                  Dataset parent directory (default: inp/ beside this tool)
+  --dataset NAME                   Dataset directory name directly under --inp-root
   --start-date YYYY-MM-DD --end-date YYYY-MM-DD
   --west N --east N --south N --north N
   --tstep HOURS                    One of 1,2,3,4,6,8,12,24
@@ -132,6 +133,7 @@ era5_main() {
     shift
     DRY_RUN=0
     OVERWRITE=0
+    INP_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd -P)
     while [ "$#" -gt 0 ]; do
         case "$1" in
             --help|-h) era5_usage; return 0 ;;
@@ -140,7 +142,7 @@ era5_main() {
         esac
         if [ "$#" -lt 2 ]; then printf '[ERROR] Missing value for %s\n' "$1" >&2; return 2; fi
         case "$1" in
-            --dataset) DATASET=$2 ;; --start-date) START_DATE=$2 ;; --end-date) END_DATE=$2 ;;
+            --inp-root) INP_ROOT=$2 ;; --dataset) DATASET=$2 ;; --start-date) START_DATE=$2 ;; --end-date) END_DATE=$2 ;;
             --west) WEST=$2 ;; --east) EAST=$2 ;; --south) SOUTH=$2 ;; --north) NORTH=$2 ;;
             --tstep) TSTEP=$2 ;; --download-unit) DOWNLOAD_UNIT=$2 ;; --output-unit) OUTPUT_UNIT=$2 ;;
             --ncpus) NCPUS=$2 ;; --python) PYTHON_CMD=$2 ;; --format) FORMAT=$2 ;;
@@ -157,8 +159,7 @@ era5_main() {
     if ! [[ "$NCPUS" =~ ^[1-9][0-9]*$ ]] || [ "${#NCPUS}" -gt 6 ]; then echo '[ERROR] NCPUS must be positive' >&2; return 2; fi
     case "$DOWNLOAD_UNIT" in daily|monthly) ;; *) echo '[ERROR] Invalid DOWNLOAD_UNIT' >&2; return 2 ;; esac
     case "$OUTPUT_UNIT" in daily|monthly|yearly) ;; *) echo '[ERROR] Invalid OUTPUT_UNIT' >&2; return 2 ;; esac
-    # Command substitution and CDPATH avoid dependence on the caller's directory.
-    INP_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd -P)
+    # plan_periods resolves the selected root and rejects escaping dataset paths.
     DATADIR="$INP_ROOT/$DATASET"
     printf '\n[INFO] Dataset: %s\n[INFO] Period: %s – %s; timestep: %sh; jobs: %s\n' "$DATADIR" "$START_DATE" "$END_DATE" "$TSTEP" "$NCPUS"
     PIDS=()

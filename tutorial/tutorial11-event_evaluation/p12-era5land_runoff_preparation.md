@@ -24,10 +24,10 @@ Prompt. Completed Rhine downloads do not authorize skipping a new event's needs.
 ## Workflow Summary
 
 ### Inputs
-- Step 11 regional map: `map/Rhine_15min/`
+- Step 11 regional map: `tutorial/tutorial11-event_evaluation/map/Rhine_15min/`
 - Step 2 event/domain context: `metadata/02_domain_selection.json`
 - Existing ERA5-Land Product/Download/Convert tools under `inp/download_ERA5-Land/`
-- Rhine Product Shell: `inp/download_ERA5-Land/tutorial11-Rhine_2021Jul.sh`
+- Rhine Product Shell: `tutorial/tutorial11-event_evaluation/run_script/s12-prepare_runoff.sh`
 - Existing local ERA5-Land data, if available
 
 ### Tasks
@@ -49,8 +49,11 @@ Prompt. Completed Rhine downloads do not authorize skipping a new event's needs.
 
 For Rhine 2021, the researcher has already downloaded and converted the data.
 Ask the AI agent to inspect and reuse the files in
-`inp/tutorial11-ERA5land-Rhine2021Jul/`; avoid repeating successful download or
+`tutorial/tutorial11-event_evaluation/inp/ERA5land-Rhine2021Jul/`; avoid repeating successful download or
 conversion work. Keep all downloaded data and logs local and ignored by Git.
+The former dataset ID `tutorial11-ERA5land-Rhine2021Jul` is retained in the
+historical Step 12 metadata; the current Tutorial registry and Product Shell
+use `ERA5land-Rhine2021Jul` for the same data under its Tutorial-local path.
 
 The researcher-selected acquisition period is July 1–31, 2021, to retain a
 pre-event preparation interval before the initial July 10–25 candidate analysis
@@ -65,7 +68,7 @@ separate regional Input Matrix for the actual 111 × 91 subset; the global
 `ERA5land_global` pair is not interchangeable:
 
 ```sh
-bash inp/download_ERA5-Land/tutorial11-Rhine_2021Jul.sh
+bash tutorial/tutorial11-event_evaluation/run_script/s12-prepare_runoff.sh
 ```
 
 Use an appropriately named copy for a different event. Do not edit the shared
@@ -89,8 +92,8 @@ before running anything. Existing complete files must be reused; do not
 redownload or reconvert them without a concrete need.
 
 For Rhine 2021, preserve these researcher settings in
-`inp/download_ERA5-Land/tutorial11-Rhine_2021Jul.sh`:
-- Dataset `tutorial11-ERA5land-Rhine2021Jul`
+`tutorial/tutorial11-event_evaluation/run_script/s12-prepare_runoff.sh`:
+- Dataset `ERA5land-Rhine2021Jul`
 - 2021-07-01 through 2021-07-31 inclusive
 - Requested area 2.5–13.5°E, 44.5–53.5°N (0.5° beyond each Step 11 map edge)
 - Timestep 1 hour, daily download grouping, daily output grouping

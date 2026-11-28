@@ -1,3 +1,24 @@
 # Atlantis catalogue caches, downloaded source data and generated intermediates.
 /Atlantis/
 /experiment/
+
+# Tutorial-local Rhine map: retain reproducibility scripts and documentation,
+# while keeping generated map metadata and numerical products local.
+/map/Rhine_15min/*
+!/map/Rhine_15min/README.md
+!/map/Rhine_15min/script_rhine/
+!/map/Rhine_15min/script_params/
+!/map/Rhine_15min/script_format_conv/
+/map/Rhine_15min/script_rhine/*
+!/map/Rhine_15min/script_rhine/*.sh
+!/map/Rhine_15min/script_rhine/README.md
+/map/Rhine_15min/script_params/*
+!/map/Rhine_15min/script_params/*.sh
+!/map/Rhine_15min/script_params/README.md
+/map/Rhine_15min/script_format_conv/*
+!/map/Rhine_15min/script_format_conv/*.sh
+!/map/Rhine_15min/script_format_conv/*.txt
+!/map/Rhine_15min/script_format_conv/README.md
+
+# Tutorial-specific ERA5-Land originals, conversions and logs are local data.
+/inp/ERA5land-Rhine2021Jul/

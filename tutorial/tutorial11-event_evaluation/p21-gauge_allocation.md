@@ -96,7 +96,7 @@ are in Section 4; do not mix impact records into the gauge-only CSV.
 
 ### 2.1 Inputs and native-grid contract
 
-Use the simulation's current `map/Rhine_15min/` map: 15 arcmin (0.25°),
+Use the simulation's current `tutorial/tutorial11-event_evaluation/map/Rhine_15min/` map: 15 arcmin (0.25°),
 40 × 32 cells, with a 600 × 480 one-minute auxiliary grid. Inputs are:
 
 - Selected gauges in `metadata/02_gauges.csv` and provider station table

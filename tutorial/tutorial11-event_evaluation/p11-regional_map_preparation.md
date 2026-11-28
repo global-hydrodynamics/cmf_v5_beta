@@ -20,9 +20,9 @@ The execution block is part of this full document, not a standalone Prompt.
 ## Workflow Summary
 
 ### Inputs
-- `map/glb_15min/` source map and required auxiliary data
+- `$CMF_V50_ROOT/map/glb_15min/` source map and required auxiliary data
 - `metadata/02_domain_selection.json`
-- Existing local `map/Rhine_15min/` products, if present
+- Existing local `tutorial/tutorial11-event_evaluation/map/Rhine_15min/` products, if present
 - Shared v5 workflows and documentation under `map/tools/`
 
 ### Tasks
@@ -43,7 +43,7 @@ product exists. Confirm actual variable names, dimensions, orientation and
 index conventions from the current map documentation and files before use.
 
 ### Outputs
-- Local `map/Rhine_15min/` regional map and map-local scripts
+- Local `tutorial/tutorial11-event_evaluation/map/Rhine_15min/` regional map and map-local scripts
 - `AI_survey_report/11_regional_map_preparation.md`
 - `AI_work_report/11_regional_map_preparation.md`
 - A reproducible handoff to Step 12 runoff preparation, Step 13 Input Matrix preparation, and Step 14 simulation setup
@@ -54,7 +54,7 @@ This Step prepares the regional map used by the Rhine event experiment. The
 global source map and generated regional products may be outside Git. Inspect
 an existing regional map first; reuse valid products and do not overwrite
 valuable local outputs without an explicit need. For this event the requested
-source is `../../glb_15min/`, with outer bounds WEST/EAST/SOUTH/NORTH of
+source is `$CMF_V50_ROOT/map/glb_15min/`, with outer bounds WEST/EAST/SOUTH/NORTH of
 3.0/13.0/45.0/53.0 degrees. Do not copy the former cell-center candidate
 bounds from another event or earlier settings.
 
@@ -70,7 +70,7 @@ Prepare Step 11, the regional map for this event.
 
 Read the event's Step 2 machine-readable domain, map and map-tools READMEs, and
 the target map directory before editing or executing anything. For Rhine 2021
-use source `../../glb_15min/` and outer edges WEST=3.0, EAST=13.0, SOUTH=45.0,
+use source `$CMF_V50_ROOT/map/glb_15min/` and outer edges WEST=3.0, EAST=13.0, SOUTH=45.0,
 NORTH=53.0, at 15 arc-minute resolution.
 
 1. Inspect existing map files and parameters. Reuse matching outputs. Do not

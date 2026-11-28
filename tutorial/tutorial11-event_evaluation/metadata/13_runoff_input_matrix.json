@@ -207,8 +207,8 @@
   ],
   "step14_handoff": {
     "files": [
-      "map/Rhine_15min/inpmat_ERA5land_Rhine2021Jul.bin",
-      "map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.nml",
+      "tutorial/tutorial11-event_evaluation/map/Rhine_15min/inpmat_ERA5land_Rhine2021Jul.nc",
+      "tutorial/tutorial11-event_evaluation/map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.nml",
       "tutorial/tutorial11-event_evaluation/runoff_dataset.csv",
       "tutorial/tutorial11-event_evaluation/metadata/12_era5land_runoff.json"
     ],
@@ -223,8 +223,8 @@
     "format": "NetCDF Input Matrix with Fortran Namelist DIMINFO",
     "runoff_tag": "ERA5land_Rhine2021Jul",
     "outputs": {
-      "input_matrix": "map/Rhine_15min/inpmat_ERA5land_Rhine2021Jul.nc",
-      "dimension_info": "map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.nml"
+      "input_matrix": "tutorial/tutorial11-event_evaluation/map/Rhine_15min/inpmat_ERA5land_Rhine2021Jul.nc",
+      "dimension_info": "tutorial/tutorial11-event_evaluation/map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.nml"
     },
     "matrix_state": "retained_existing_files; not regenerated during the 2026-11-28 map-interface update",
     "validation": {
@@ -292,6 +292,9 @@
       "active_river_cells_with_contributions": 1245,
       "all_contributing_indices_within_1_based_input_grid": true,
       "all_contribution_areas_finite_and_positive": true
-    }
+    },
+    "map": "tutorial/tutorial11-event_evaluation/map/Rhine_15min/",
+    "runoff_dataset_id": "ERA5land-Rhine2021Jul",
+    "runoff_directory": "tutorial/tutorial11-event_evaluation/inp/ERA5land-Rhine2021Jul/"
   }
 }

@@ -21,10 +21,10 @@ is retained example context, not a new-event completion statement.
 ## Workflow Summary
 
 ### Inputs
-- Step 11 regional model map: `map/Rhine_15min/`
+- Step 11 regional model map: `tutorial/tutorial11-event_evaluation/map/Rhine_15min/`
 - Step 12 dataset row: `runoff_dataset.csv`
 - Step 12 execution record: `metadata/12_era5land_runoff.json`
-- Local ERA5-Land files under `inp/tutorial11-ERA5land-Rhine2021Jul/`
+- Local ERA5-Land files under `tutorial/tutorial11-event_evaluation/inp/ERA5land-Rhine2021Jul/`
 - Shared generator: `map/tools/code/param_inpmat_generate.py`
 
 ### Tasks
@@ -35,8 +35,8 @@ is retained example context, not a new-event completion statement.
 - Record outputs, evidence, limitations and the Step 14 handoff.
 
 ### Outputs
-- `map/Rhine_15min/inpmat_ERA5land_Rhine2021Jul.nc` (local NetCDF map data)
-- `map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.nml` (local Namelist metadata)
+- `tutorial/tutorial11-event_evaluation/map/Rhine_15min/inpmat_ERA5land_Rhine2021Jul.nc` (local NetCDF map data)
+- `tutorial/tutorial11-event_evaluation/map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.nml` (local Namelist metadata)
 - Reproduction command using the shared generator (below)
 - `metadata/13_runoff_input_matrix.json`
 - `AI_survey_report/13_runoff_input_matrix.md`
@@ -56,7 +56,10 @@ regenerating it automatically. Ask the agent to inspect those actual inputs and 
 The current map interface is `params.nml`, `1min/location.csv`, and
 `1min/1min.catmxy.nc` (`catmxx` and `catmyy` on `(lat, lon)`, one-based x/y).
 The map-local `1min/` layer is the high-resolution catchment assignment used
-by the shared Python generator. The settings must use the runoff **cell edges**
+by the shared Python generator. The Rhine-specific wrapper is
+`map/Rhine_15min/script_rhine/i02-inpmat_ERA5land_Rhine.sh`; the similarly
+named `script_params/i01-inpmat_ERA5land.sh` configures the global grid and is
+not suitable for this subset. The settings must use the runoff **cell edges**
 (2.45–13.55°E, 44.45–53.55°N), derived from the inspected coordinate centers;
 they are not the requested-download bounds or the first/last cell centers.
 
@@ -84,14 +87,14 @@ at 0.25° with outer edges 3–13°E and 45–53°N. Confirm these values from
 
 The global `ERA5land_global` pair uses 3600 × 1801 input cells and is not the
 matrix for this regional subset. Choose a distinct `ROFFTAG` and use the existing
-map-local 1-minute catchment NetCDF. Do not repurpose
-`map/Rhine_15min/script_params/i01-inpmat_ERA5land.sh`; it configures the
-global runoff grid. Run the shared Python generator from the repository root
-with these current event-specific settings (change only after inspecting another
-event's input grid and map):
+map-local 1-minute catchment NetCDF. The Rhine-specific wrapper is
+`map/Rhine_15min/script_rhine/i02-inpmat_ERA5land_Rhine.sh`. Alternatively, run
+the shared Python generator from the repository root with these current
+event-specific settings (change only after inspecting another event's input
+grid and map):
 
 ```sh
-.venv/bin/python map/tools/code/param_inpmat_generate.py 1min 0.1 2.45 13.55 53.55 44.45 NtoS diminfo_ERA5land_Rhine2021Jul.nml inpmat_ERA5land_Rhine2021Jul.nc --map-dir map/Rhine_15min
+.venv/bin/python map/tools/code/param_inpmat_generate.py 1min 0.1 2.45 13.55 53.55 44.45 NtoS tutorial/tutorial11-event_evaluation/map/Rhine_15min/diminfo_ERA5land_Rhine2021Jul.nml tutorial/tutorial11-event_evaluation/map/Rhine_15min/inpmat_ERA5land_Rhine2021Jul.nc --map-dir tutorial/tutorial11-event_evaluation/map/Rhine_15min
 ```
 
 The generator reads `location.csv` and `catmxx/catmyy` from the map, writes the

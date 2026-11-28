@@ -266,6 +266,10 @@ not currently specified or implemented.
 
 ### Step 11 — Regional Map Preparation
 
+All Tutorial 11-specific regional Map products and event-specific runoff files
+are kept under this Tutorial's own `map/` and `inp/` directories. Do not place
+them in the repository-wide `map/` or `inp/` directories.
+
 Prepare or verify the event-specific regional CaMa-Flood map from the selected
 source map and Step 2 outer-edge bounds. Inspect existing map outputs before
 running generators; reuse matching products and do not overwrite a retained
@@ -275,7 +279,10 @@ candidate 3–13°E, 45–53°N outer-edge window. Existing regional products ar
 available; their preparation history is not inferred from their presence. See
 [p11](p11-regional_map_preparation.md), the [Survey Report](AI_survey_report/11_regional_map_preparation.md),
 the [Work Report](AI_work_report/11_regional_map_preparation.md), and
-[`map/Rhine_15min/README.md`](../../map/Rhine_15min/README.md).
+[`map/Rhine_15min/README.md`](map/Rhine_15min/README.md).
+The Rhine regional Map and ERA5-Land runoff are Tutorial-owned local data under
+`map/Rhine_15min/` and `inp/ERA5land-Rhine2021Jul/`, respectively; they are not
+stored in the repository-wide `map/` or `inp/` data directories.
 The maintained map interface uses `params.nml`, base NetCDF files at the map
 root, and `location.csv` plus resolution-specific NetCDF products under the
 high-resolution directory. The regional map README describes this layout.

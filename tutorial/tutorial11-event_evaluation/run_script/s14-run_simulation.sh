@@ -28,13 +28,13 @@ END_YEAR=2021                                                        # Exclusive
 END_MONTH=8                                                          # Exclusive end month [1–12 UTC].
 END_DAY=1                                                            # Exclusive end day [calendar day UTC].
 END_HOUR=0                                                           # Exclusive end hour [0–23 UTC].
-MAPDIR="${CMF_V50_ROOT}/map/Rhine_15min"                                 # Matching regional map root.
+MAPDIR="${TUTORIAL_DIR}/map/Rhine_15min"                                 # Tutorial-local matching regional map root.
 NEXTXY="${MAPDIR}/nextxy.nc"                                 # Stored downstream connectivity; select an existing map product.
 RIVWTH="${MAPDIR}/rivwth_merit.nc"                           # River-channel width map [m].
 
 # Step 13 metadata is the source of the regional matrix tag and paired file paths.
 STEP13_METADATA="${TUTORIAL_DIR}/metadata/13_runoff_input_matrix.json" # Authoritative regional Input Matrix/diminfo handoff; do not duplicate its values.
-RUNOFF_DIR="${CMF_V50_ROOT}/inp/tutorial11-ERA5land-Rhine2021Jul"        # Runoff input directory matching the matrix grid.
+RUNOFF_DIR="${TUTORIAL_DIR}/inp/ERA5land-Rhine2021Jul"                  # Tutorial-local runoff matching the matrix grid.
 IFRQ_INP=1                                                           # Runoff update interval [hours].
 DROFUNIT=3600000                                                     # Divide input values by this factor to obtain depth rate [m/s]; current mm/hour.
 CVNROF="runoff"                                                      # Input NetCDF runoff variable name.

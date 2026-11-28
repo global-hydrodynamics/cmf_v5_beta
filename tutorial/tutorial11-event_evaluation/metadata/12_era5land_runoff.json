@@ -114,5 +114,15 @@
     "metadata": "metadata/12_era5land_runoff.json",
     "do_not_treat_as": "Simulation configuration or simulation-period approval.",
     "result_metadata": "metadata/13_runoff_input_matrix.json"
+  },
+  "current_workflow_contract": {
+    "dataset_id": "ERA5land-Rhine2021Jul",
+    "historical_dataset_id": "tutorial11-ERA5land-Rhine2021Jul",
+    "dataset_id_change": "Location and dataset-folder naming only; the existing ERA5-Land data content and scientific settings are unchanged.",
+    "directory": "tutorial/tutorial11-event_evaluation/inp/ERA5land-Rhine2021Jul/",
+    "product_shell": "tutorial/tutorial11-event_evaluation/run_script/s12-prepare_runoff.sh",
+    "shared_workflow": "inp/download_ERA5-Land/",
+    "input_root_option": "--inp-root (Tutorial-local; shared default remains repository inp/)",
+    "registry": "tutorial/tutorial11-event_evaluation/runoff_dataset.csv"
   }
 }
