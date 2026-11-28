@@ -4,13 +4,14 @@
 # Run from gosh_test/: ./mek02-2year_netcdf.sh
 set -eu
 
-SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
-CMF_BASE=$(CDPATH= cd "$SCRIPT_DIR/.." && pwd -P)
+# CaMa-Flood general setting (check CMF root, import CMF common shell functions)
+: "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
+. "$CMF_V50_ROOT/tools/cmf_shell_functions.sh"
 
 # -------------------------- User settings ------------------------------
 # Project/output settings. ${VAR:-default} uses the environment value when nonempty.
 PROJ=${PROJ:-mek02} # Project name; override with PROJ=name when launching.
-RUNDIR=${RUNDIR:-"${CMF_BASE}/gosh_test/out/${PROJ}"} # Explicit RUNDIR takes precedence.
+RUNDIR=${RUNDIR:-"${CMF_V50_ROOT}/gosh_test/out/${PROJ}"} # Explicit RUNDIR takes precedence.
 
 # Simulation years are inclusive; the model ends at January 1 of END_YEAR+1.
 START_YEAR=2000                  # First simulation year; starts at January 1 00:00.
@@ -21,7 +22,7 @@ ROFFTAG="repo-mek_1deg"     # Selects inp/repo-mek_1deg/ with one NetCDF file pe
 INPMAT_TAG="repo-mek_1deg"     # Selects the existing input matrix for the same 1-degree grid.
 
 # Map input files; LMAPCDF=.FALSE. reads individual NetCDF products by extension.
-MAPDIR="${CMF_BASE}/map/mekong_15min"  # Mekong river-map root containing params.nml and bifprm.csv.
+MAPDIR="${CMF_V50_ROOT}/map/mekong_15min"  # Mekong river-map root containing params.nml and bifprm.csv.
 MAP_NETCDF_DIR="${MAPDIR}"             # Standard individual NetCDF map products.
 NEXTXY="${MAP_NETCDF_DIR}/nextxy.nc"       # Includes boundary-affected river networks (mek02 default).
 #NEXTXY="${MAP_NETCDF_DIR}/nextxy_noedge.nc" # Excludes boundary-affected networks (mek01 uses this choice).
@@ -58,22 +59,25 @@ LRESTCDF=".TRUE."               # TRUE: NetCDF restart; FALSE: Binary restart.
 # ----------------------------------------------------------------------
 
 NAMELIST="${RUNDIR}/input_cmf.nam"
-RUNOFF_DIR="${CMF_BASE}/inp/${ROFFTAG}"
+RUNOFF_DIR="${CMF_V50_ROOT}/inp/${ROFFTAG}"
 DIMINFO="${MAPDIR}/diminfo_${INPMAT_TAG}.nml"
 INPMAT="${MAPDIR}/inpmat_${INPMAT_TAG}.nc"
 
-EXEC_CMF="${CMF_BASE}/src_main/MAIN_cmf"
+EXEC_CMF="${CMF_V50_ROOT}/src_main/MAIN_cmf"
 
-printf '\n==================================================\n'
-printf '[STEP 1/3] Prepare the individual map test\n'
-printf '==================================================\n'
-printf 'CMF_BASE = %s\n' "$CMF_BASE"
+YEAR_COUNT=$((END_YEAR - START_YEAR + 1))
+TOTAL_STEPS=$((1 + 2 * YEAR_COUNT))
+STEP_NUMBER=1
+cmf_check_init "Two-year Mekong NetCDF simulation"
+
+printf 'CMF_V50_ROOT = %s\n' "$CMF_V50_ROOT"
 printf 'PROJ = %s\n' "$PROJ"
 printf 'RUNDIR = %s\n' "$RUNDIR"
 printf 'MAPDIR = %s\n' "$MAPDIR"
 printf 'RUNOFF_DIR = %s\n' "$RUNOFF_DIR"
 printf '\nOverwriting previous sample results in: %s\n' "$RUNDIR"
 
+cmf_check_step "$STEP_NUMBER" "$TOTAL_STEPS" "Prepare the individual map test"
 mkdir -p "$RUNDIR"
 # NetCDF names are o_<variable><year>.nc; derive exact names from current settings.
 CLEAN_YEAR=$START_YEAR
@@ -87,7 +91,7 @@ done
 rm -f "$RUNDIR"/restart*.bin* \
       "$RUNDIR"/restart*.nc \
       "$RUNDIR"/input_cmf*.nam "$RUNDIR"/console_*.log \
-      "$RUNDIR"/log_CaMa*.nml "$RUNDIR"/run_time_*.log \
+      "$RUNDIR"/log_CaMa*.txt "$RUNDIR"/run_time_*.log \
       "$RUNDIR"/MAIN_cmf "$RUNDIR"/mapdata.nml \
       "$RUNDIR"/year*.complete "$RUNDIR"/signature_*.tmp \
       "$RUNDIR"/summary.tsv
@@ -99,14 +103,12 @@ while [ "$YEAR" -le "$END_YEAR" ]; do
     NEXT_YEAR=$((YEAR + 1))
     RUNOFF_FILE="${RUNOFF_DIR}/runoff${YEAR}.nc"
     YEAR_NAMELIST="${RUNDIR}/input_cmf_${YEAR}.nam"
+    STEP_NUMBER=$((STEP_NUMBER + 1))
+    cmf_check_step "$STEP_NUMBER" "$TOTAL_STEPS" "Configure year ${YEAR}"
     if [ ! -f "$RUNOFF_FILE" ]; then
         printf '[ERROR] Missing annual runoff file: %s\n' "$RUNOFF_FILE" >&2
         exit 1
     fi
-
-    printf '\n==================================================\n'
-    printf '[STEP 2/3] Configure year %s\n' "$YEAR"
-    printf '==================================================\n'
 
     if [ "$YEAR" -eq "$START_YEAR" ]; then
         LRESTART=".FALSE."
@@ -180,7 +182,7 @@ CROFPRE = "runoff"         ! Annual filename prefix: runoffYYYY.nc.
 CROFSUF = ".nc"            ! Annual filename suffix.
 /
 &NOUTPUT
-CMF_BASE = "${CMF_BASE}"     ! CaMa-Flood repository/package root.
+CMF_BASE = "${CMF_V50_ROOT}" ! CaMa-Flood repository/package root.
 COUTVAR_TABLE = ""            ! Defaults to CMF_BASE/variable_table/output_variables.csv.
 COUTDIR = "./"            ! Output directory relative to the model run directory.
 CVARSOUT = "${CVARSOUT}"  ! Comma-separated list of output variables to write.
@@ -192,9 +194,8 @@ IFRQ_OUT = ${IFRQ_OUT}     ! Model-output interval [hours], separate from IFRQ_I
 EOF
     cp "$NAMELIST" "$YEAR_NAMELIST"
 
-    printf '\n==================================================\n'
-    printf '[STEP 3/3] Run year %s\n' "$YEAR"
-    printf '==================================================\n'
+    STEP_NUMBER=$((STEP_NUMBER + 1))
+    cmf_check_step "$STEP_NUMBER" "$TOTAL_STEPS" "Run year ${YEAR}"
     RUN_START_SECONDS=$(date +%s)
     printf 'Start: %s\n' "$(date)" | tee "${RUNDIR}/run_time_${YEAR}.log"
 
@@ -212,14 +213,14 @@ EOF
     } | tee -a "${RUNDIR}/run_time_${YEAR}.log"
 
     if [ "$RUN_STATUS" -ne 0 ]; then
-        printf '[ERROR] Model run failed for year %s (status %s).\n' "$YEAR" "$RUN_STATUS" >&2
         exit "$RUN_STATUS"
     fi
 
-    cp "${RUNDIR}/log_CaMa.nml" "${RUNDIR}/log_CaMa_${YEAR}.nml"
-    printf '[SUCCESS] Year %s completed.\n' "$YEAR"
+    cp "${RUNDIR}/log_CaMa.txt" "${RUNDIR}/log_CaMa_${YEAR}.txt"
+    printf 'Year %s completed.\n' "$YEAR"
     YEAR=$NEXT_YEAR
 done
 
-printf '\n[SUCCESS] Annual simulations %s-%s completed.\n' "$START_YEAR" "$END_YEAR"
+cmf_check_success
+printf 'Annual simulations %s-%s completed.\n' "$START_YEAR" "$END_YEAR"
 printf 'Results: %s\n' "$RUNDIR"

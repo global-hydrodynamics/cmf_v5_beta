@@ -1219,7 +1219,12 @@ certification remain future work.
 
 ### High-resolution and vector input details
 
-`location.csv` uses ordered fields `iarea,carea,west,east,south,north,nx,ny,csize`; each row describes a tile, and readers strip aligned field padding. Each supported named
+`location.csv` is the standard tile inventory and is parsed with the shared Map
+metadata reader. It uses ordered fields
+`iarea,carea,west,east,south,north,nx,ny,csize`; each row describes a tile,
+and aligned field padding is stripped. When a directory contains both formats,
+the CSV is used and its sibling legacy `location.txt` is ignored. TXT discovery
+remains only for older Binary maps with no CSV. Each supported named
 prefix may have `.catmxy.bin` (two little-endian Int16 assignment planes),
 `.visual.bin` (one signed Int8 plane; missing -9), `.elevtn.bin` and `.flddif.bin`
 (one little-endian Float32 plane each; missing -9999). All use X-fastest,

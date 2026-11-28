@@ -6,6 +6,26 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Map Explorer uses the shared high-resolution location.csv reader (DT-0234, 2026-11-28; branch-local proposal)
+
+Explorer tile discovery already preferred `location.csv`; its CSV row parsing
+now delegates to Map's shared metadata reader, which validates the standard
+inventory fields and geometry. Legacy TXT discovery remains for older
+Binary-only maps and is skipped when a sibling CSV exists. Only syntax/diff
+checks were run under L0; Gallery/runtime validation remains with the user.
+See [DT-0234](../research/records/DT-0234.md) and
+[VR-0281](../research/records/validation_runs/VR-0281.md).
+
+### mek02 uses common Shell infrastructure (DT-0233, 2026-11-28; branch-local proposal)
+
+`mek02-2year_netcdf.sh` now requires `CMF_V50_ROOT`, uses the shared
+`cmf_check_*` functions, and reports preparation plus per-year configuration
+and execution with sequential step numbers. Its Fortran NAMELIST key remains
+`CMF_BASE`, populated from the root variable. Only Shell syntax/diff checks
+were run under L0; user functional validation remains pending. See
+[DT-0233](../research/records/DT-0233.md) and
+[VR-0280](../research/records/validation_runs/VR-0280.md).
+
 ### Bifurcation layer count separates channel and overland widths (DT-0232, 2026-11-28; branch-local proposal)
 
 `BIF_OVL_LAYER` now counts overland fields only; `riv_width` remains the

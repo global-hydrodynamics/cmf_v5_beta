@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-import csv
 from pathlib import Path
 import tempfile
 import hashlib
@@ -13,6 +12,7 @@ import os
 import numpy as np
 
 from map_reader import Geometry
+from hires_metadata import read_location_csv
 from hires_netcdf import NetCDFSource
 from hires_cog import COGSource, RasterCache, sampling, signature
 
@@ -305,14 +305,7 @@ def discover_tiles(map_dir, messages):
     for location in sorted(locations, key=lambda p: (p.parent.name.endswith("_nc"), str(p))):
         try:
             if location.suffix.lower() == '.csv':
-                with location.open(newline='', encoding='utf-8-sig') as stream:
-                    reader = csv.DictReader(stream)
-                    if tuple(field.strip() for field in (reader.fieldnames or ())) != (
-                        'iarea', 'carea', 'west', 'east', 'south', 'north', 'nx', 'ny', 'csize'
-                    ):
-                        raise ValueError('invalid location.csv header')
-                    records = [{key.strip(): (value or '').strip() for key, value in row.items()
-                                if key is not None} for row in reader]
+                records = [area.as_dict() for area in read_location_csv(location)]
             else:
                 lines = [line.split() for line in location.read_text().splitlines() if line.strip()]
                 count = int(lines[0][0])

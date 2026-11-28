@@ -20,6 +20,10 @@ when `params.nml` is absent. Discovery, launch validation, map switching,
 coarse-grid coordinates, and high-resolution tile alignment use the same
 resolved geometry.
 
+High-resolution tile inventories use Map's standard `location.csv` contract
+and shared metadata reader. CSV takes precedence when both CSV and legacy
+`location.txt` exist; TXT discovery remains for older Binary-only maps.
+
 ## Historical Inspector/navigation/statistics refinement (DT-0120, 2026-11-17)
 
 Maintainer authorizes implementation, validation, commit and push on the current
