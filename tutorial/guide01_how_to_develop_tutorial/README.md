@@ -145,9 +145,10 @@ how such tutorials and manuals can be developed. Its river-depth experiment
 is the worked example for the development process; it is not, by that fact
 alone, an independently maintained or fully validated Tutorial03 package.
 The early design records use the name Tutorial03 while exploring the idea;
-later repository-informed documents place the worked example under
-`workflow_example/`. Those records represent different stages and should not
-be read as evidence that a separate Tutorial03 package exists.
+the current repository-informed documents place the worked example at
+`tutorial/guide01_workflow_example/`. Those records represent different
+stages and should not be read as evidence that a separate Tutorial03 package
+exists.
 
 For the broader tutorial framework and its documentation roles, see the
 [tutorial collection README](../README.md).

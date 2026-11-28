@@ -2,7 +2,7 @@
 
 **Guide01: How to Develop CaMa-Flood Tutorials with AI Assistance**  
 **Phase:** Human review, iterative improvement, and learning from the process  
-**Target:** `tutorial/guide01_how_to_develop_tutorial/workflow_example/`
+**Target:** `tutorial/guide01_workflow_example/`
 
 ## 1. Purpose
 
@@ -25,13 +25,13 @@ Repeat until the tutorial is scientifically sound, reproducible, and understanda
 
 ## 2. Start with a learner's review
 
-Read the current `workflow_example/README.md` as if you had never used this example before. Check whether the commands can be followed from the stated working directory, whether every input and output has a clear purpose, and whether each figure answers a meaningful question. Refer to:
+Read the current `../guide01_workflow_example/README.md` as if you had never used this example before. Check whether the commands can be followed from the stated working directory, whether every input and output has a clear purpose, and whether each figure answers a meaningful question. Refer to:
 
-- `workflow_example/tutorial_design.md` — scientific and implementation requirements.
-- The current reviewed manual-design document under `workflow_example/design/` — learning objectives and explanation sequence.
+- `../guide01_workflow_example/tutorial_design.md` — scientific and implementation requirements.
+- The current reviewed manual-design document under `../guide01_workflow_example/design/` — learning objectives and explanation sequence.
 - `tutorial/README.md` and Guide01's authoring guidance — common tutorial conventions.
 - `22implementation_record.md` and the Step 23 agent report — actual execution records and provisional choices.
-- `workflow_example/figure/f01-*.png` through `f06-*.png` — initial results.
+- `../guide01_workflow_example/figure/f01-*.png` through `f06-*.png` — initial results.
 
 The original first version is valuable evidence. **Do not silently replace it with a polished version without recording what changed and why.** Check whether a snapshot or Git revision is needed before substantial edits.
 
@@ -94,13 +94,13 @@ There are three distinct working documents, with different roles:
 
 | Document | When to update it |
 |---|---|
-| `workflow_example/tutorial_design.md` | When approved experiment settings, analysis definitions, datasets, or implementation requirements change. |
-| Reviewed Manual Design in `workflow_example/design/` | When the learning objectives, chapter sequence, figure purposes, or teaching approach change. |
-| `workflow_example/README.md` | When tested commands, actual outputs, figure descriptions, interpretation, or troubleshooting information change. |
+| `../guide01_workflow_example/tutorial_design.md` | When approved experiment settings, analysis definitions, datasets, or implementation requirements change. |
+| Reviewed Manual Design in `../guide01_workflow_example/design/` | When the learning objectives, chapter sequence, figure purposes, or teaching approach change. |
+| `../guide01_workflow_example/README.md` | When tested commands, actual outputs, figure descriptions, interpretation, or troubleshooting information change. |
 
 Do not edit documents reflexively: a colormap-only change may require only its figure caption, while a different regional mask may require changes to all three. Always check consistency after a substantive revision.
 
-Keep tutorial-generated outputs within `workflow_example/` wherever practical. The shared `map/mekong_15min/` and other repository inputs are read-only for this example. Exceptions to the general tutorial-local principle must be justified and documented before implementation.
+Keep tutorial-generated outputs within `../guide01_workflow_example/` wherever practical. The shared `map/mekong_15min/` and other repository inputs are read-only for this example. Exceptions to the general tutorial-local principle must be justified and documented before implementation.
 
 ## 7. Record difficulties and learning outcomes
 
