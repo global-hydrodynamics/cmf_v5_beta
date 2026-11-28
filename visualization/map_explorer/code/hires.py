@@ -355,7 +355,7 @@ def discover_tiles(map_dir, messages):
                 if not data_directory.is_dir():
                     data_directory = root / 'binary' / canonical
                 if tile is None:
-                    tile = Tile(key, data_directory, name, g, coarse_geometry=Geometry.read(root / "params.txt"))
+                    tile = Tile(key, data_directory, name, g, coarse_geometry=Geometry.read(root))
                 for field_name, bytes_per_pixel in [
                     ("catmxy", 4),
                     ("visual", 1),

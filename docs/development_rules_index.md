@@ -25,7 +25,7 @@ source and link to it.
 
 | Area | `AGENTS.md` | Primary guidance | Document role / notes |
 | --- | --- | --- | --- |
-| Repository-wide development | [`../AGENTS.md`](../AGENTS.md) | [`docs/ai_development_workflow.md`](ai_development_workflow.md); [`docs/development_and_distribution_design.md`](development_and_distribution_design.md) | Root AGENTS is authoritative policy. AI workflow is a handoff/evidence process; development and distribution document is the maintained architecture/design specification. |
+| Repository-wide development | [`../AGENTS.md`](../AGENTS.md) | [`docs/ai_development_workflow.md`](ai_development_workflow.md); [`docs/development_and_distribution_design.md`](development_and_distribution_design.md) | Root AGENTS is authoritative policy, including explicit L0 / user-validation limits. AI workflow is a handoff/evidence process; development and distribution document is the maintained architecture/design specification. |
 | Repository-wide Python | Root [`AGENTS.md`](../AGENTS.md#python-source-readability), plus applicable component instructions | [Python Design](python_design.md); [Python Style](python_style.md) | Design covers scientific meaning, workflow architecture, configuration ownership, data contracts and implementation decisions; Style covers file-local layout, comments, docstrings and readability. Apply to new/substantially modified scripts and assigned cleanup, without retroactive reformatting. Tutorial, preprocessing and visualization contracts remain more specific; Fortran language/model conventions are not transferred. |
 | `src_main/` model Fortran | [`src_main/AGENTS.md`](../src_main/AGENTS.md) | [`src_main/FORTRAN_DESIGN.md`](../src_main/FORTRAN_DESIGN.md); [`src_main/FORTRAN_STYLE.md`](../src_main/FORTRAN_STYLE.md) | Design conventions cover scientific/runtime architecture and contracts; style guide covers source readability and formatting. |
 | `map/` preprocessing | [`map/AGENTS.md`](../map/AGENTS.md) | [`docs/preprocessing_code_conventions.md`](preprocessing_code_conventions.md); [`variable_table/map_metadata_spec.md`](../variable_table/map_metadata_spec.md); [`variable_table/map_variables.csv`](../variable_table/map_variables.csv); component READMEs | Shared code conventions and map-data contracts; local READMEs document commands and map-specific paths. |
@@ -43,7 +43,7 @@ source and link to it.
 | Skill | Responsibility |
 | --- | --- |
 | [`cama-development`](../.agents/skills/cama-development/SKILL.md) | Discover and apply the CaMa-Flood repository and component rules. |
-| [`large-model-refactoring`](../.agents/skills/large-model-refactoring/SKILL.md) | Choose scope and validation effort based on development stage and scientific risk. |
+| [`large-model-refactoring`](../.agents/skills/large-model-refactoring/SKILL.md) | Choose scope and validation effort based on development stage and scientific risk; explicit L0 tasks defer functional validation to the user under root AGENTS. |
 | [`cama-visualization`](../.agents/skills/cama-visualization/SKILL.md) | Implement and review visualization-specific structure, science, graphics, and publication. |
 
 For example, a `src_main/` numerical change uses the repository and Fortran

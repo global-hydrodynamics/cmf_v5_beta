@@ -91,9 +91,10 @@ class ExplorerSession:
     def _prepare(self, path):
         if not path.is_dir():
             raise ValueError(f"Map directory not found: {path}. Enter a server-side map directory.")
-        if not (path / "params.txt").is_file():
-            raise ValueError(f"params.txt is missing: {path}")
-        Geometry.read(path / "params.txt")
+        try:
+            Geometry.read(path)
+        except (OSError, ValueError) as exc:
+            raise ValueError(f"Map geometry metadata is missing or invalid: {path}: {exc}") from exc
         explorer = self.factory(path, self.output_dir)
         try:
             if explorer.frame is None or explorer.layer is None or explorer._background_error:

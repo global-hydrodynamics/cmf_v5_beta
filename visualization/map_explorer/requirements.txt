@@ -10,3 +10,4 @@ rasterio>=1.4,<1.5
 # Direct imports used by the Explorer; do not rely on transitive Panel/Matplotlib installs.
 Pillow  # Direct image import; exact minimum has not been tested.
 param>=2.1,<3
+f90nml>=1.4,<2  # Shared reader for the maintained params.nml geometry contract.

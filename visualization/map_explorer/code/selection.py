@@ -41,7 +41,7 @@ class SelectionState:
 
 
 def coarse_cell_outline(geometry, row, col):
-    """Four exact params.txt cell edges; inputs are Python zero-based indices."""
+    """Four exact map-metadata cell edges; indices are Python zero-based."""
     west = geometry.west + col * geometry.resolution
     east = west + geometry.resolution
     north = geometry.north - row * geometry.resolution

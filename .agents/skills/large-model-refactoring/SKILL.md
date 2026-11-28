@@ -19,7 +19,7 @@ Choose the level from the task's actual purpose, not from code size or the numbe
 
 | Level | Stage | Proportionate default |
 | --- | --- | --- |
-| **L0** | Exploration or prototype | Minimal execution, a representative visual check, or another check that answers the immediate feasibility question. Keep prototype results distinct from validated production behavior. |
+| **L0** | Local fix / user validation | Smallest fix for a clearly identified problem. The user performs functional validation; follow the explicit no-functional-testing limits below. |
 | **L1** | Feature development | Focused functional checks plus a representative real-data case when data is available and the change consumes it. Check only directly affected interfaces and outputs. |
 | **L2** | Integration or stabilization | Relevant regression tests and cross-component consistency checks for the integrated scope. |
 | **L3** | Release or distribution | Comprehensive validation of reproducibility, compatibility, supported environments, and release contents. |
@@ -70,7 +70,16 @@ Leave routine implementation details to Codex. Do not prescribe a test suite, fu
 
 ## Use by Codex during direct implementation
 
-When assigned implementation directly, make the same level and risk decisions before changing files. Respect explicit scope and authorization. Inspect enough to understand the target and immediate dependencies; broaden investigation only when required to avoid a scientific, compatibility, data-loss, or security failure. Convert the acceptance evidence into focused checks, then execute those checks against the actual changed behavior rather than producing a broad audit.
+When assigned implementation directly, make the same level and risk decisions before changing files. Respect explicit scope and authorization. Inspect enough to understand the target and immediate dependencies; broaden investigation only when required to avoid a scientific, compatibility, data-loss, or security failure. For non-L0 tasks, convert acceptance evidence into focused checks and execute them against changed behavior rather than producing a broad audit.
+
+For a task explicitly designated **L0**, follow the authoritative L0 policy in
+the repository-root [`AGENTS.md`](../../../AGENTS.md#explicit-l0--local-fix--user-validation):
+make the smallest local fix, do not run functional/regression/end-to-end tests,
+and do not create tests or fixtures. Functional validation belongs to the
+user. A directly detectable syntax or compilation error may be corrected; a
+focused syntax check is permitted. If scientific calculations, data integrity,
+or established numerical behavior may be affected, explain why L0 is
+insufficient and stop before such a risky change.
 
 Implement the requested behavior, run the selected checks, and stop when the stated acceptance conditions are met. Record non-blocking findings for a later task rather than fixing neighboring components. If a missing scientific decision blocks correctness, do not guess; continue independent work and raise the decision with its consequence.
 

@@ -7,8 +7,6 @@ positive selected width, then write finalized bifprm.csv plus optional maps.
 The existing depth formula and endpoint-depth cap use float32 operations.
 """
 from pathlib import Path
-import sys
-
 import numpy as np
 
 from mod_map_io import Grid, input_path, output_root, parser, write_raster
@@ -26,7 +24,7 @@ def main():
     p = parser(__doc__,'.')
     p.add_argument('river_depth',type=Path)
     p.add_argument('output',type=Path)
-    p.add_argument('layers',type=int)
+    p.add_argument('bif_ovl_layer', type=int, metavar='BIF_OVL_LAYER')
     p.add_argument('diminfo',nargs='?',type=Path,default=Path('diminfo_test-1deg.nml'))
     p.add_argument(
         '--check-map',
@@ -34,8 +32,8 @@ def main():
         help='Generate optional diagnostic maps.',
     )
     args = p.parse_args()
-    if not 1 <= args.layers <= 10:
-        p.error('BIFLAYER must be 1..10')
+    if args.bif_ovl_layer < 0:
+        p.error('BIF_OVL_LAYER must be zero or greater')
     #*** 1. Read bifurcation metadata and map fields
     diminfo_path = args.diminfo.resolve()
     input_paths = {
@@ -51,18 +49,19 @@ def main():
     basin = grid.raster(input_paths['basin'], '<i4')
     lonlat = grid.raster(input_paths['lonlat'], '<f4', 2)
     bifori = read_bifori_csv(bifori_path)
-    selected_width_count = min(bifori.width_count, args.layers)
-    if args.layers > bifori.width_count:
-        print(f'WARNING: BIFLAYER={args.layers} exceeds {bifori.width_count} stored widths; using available widths.',
-              file=sys.stderr)
-    selected_overland_fields = bifori.overland_fields[:selected_width_count - 1]
+    if args.bif_ovl_layer > len(bifori.overland_fields):
+        p.error(
+            f'BIF_OVL_LAYER={args.bif_ovl_layer} requests more overland layers than '
+            f'the {len(bifori.overland_fields)} stored in {bifori_path}'
+        )
+    selected_overland_fields = bifori.overland_fields[:args.bif_ovl_layer]
     print('Inputs:')
     print(f'  DIMINFO: {diminfo_path}')
     print(f'  River depth: {depth_path.resolve()}')
     for name, path in input_paths.items():
         print(f'  {name}: {path.resolve()}')
     print(f'  Bifurcation pathways: {bifori_path}')
-    print(f'Parameters: BIFLAYER={args.layers}; selected stored width layers={selected_width_count}; diagnostic maps={"enabled" if args.check_map else "disabled"}.')
+    print(f'Parameters: BIF_OVL_LAYER={args.bif_ovl_layer}; selected overland layers={len(selected_overland_fields)}; total width fields={1 + len(selected_overland_fields)}; diagnostic maps={"enabled" if args.check_map else "disabled"}.')
 
     #*** 2. Filter pathways and estimate bifurcation depths
     print('Calculation: retain rows with at least one positive selected width; for positive channel width use clipped depth 2.5*log10(width)-4, limited by 0.5 m and endpoint river depths.')

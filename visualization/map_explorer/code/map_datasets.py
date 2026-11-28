@@ -20,7 +20,7 @@ class MapOption:
 
 def discover_maps(repository=REPOSITORY):
     """Inspect immediate children only; MapReader validates headers, not full fields."""
-    from map_reader import MapReader
+    from map_reader import MapReader, has_map_geometry
 
     root = Path(repository) / "map"
     options = []
@@ -28,7 +28,7 @@ def discover_maps(repository=REPOSITORY):
         return options
     for path in sorted(root.iterdir(), key=lambda p: (p.name != "mekong_15min", p.name.lower())):
         if (path.name in ("tools", "src") or path.name.startswith((".", "tmp", "temp"))
-                or not path.is_dir() or not (path / "params.txt").is_file()):
+                or not path.is_dir() or not has_map_geometry(path)):
             continue
         try:
             reader = MapReader(path)

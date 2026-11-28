@@ -76,7 +76,10 @@ def letter(number):
 
 def fingerprint(app, tile_key):
     """Paths and size/mtime identity; no content rescans of large scientific files."""
-    paths = {app.reader.path / "params.txt"}
+    geometry_file = app.reader.path / "params.nml"
+    if not geometry_file.is_file():
+        geometry_file = app.reader.path / "params.txt"
+    paths = {geometry_file}
     for source in list(app.reader.sources.values()) + list(app.reader.network_sources.values()):
         paths.add(source.path)
     tile = app.scene.tiles.get(tile_key)

@@ -6,6 +6,38 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Bifurcation layer count separates channel and overland widths (DT-0232, 2026-11-28; branch-local proposal)
+
+`BIF_OVL_LAYER` now counts overland fields only; `riv_width` remains the
+separate channel field. Zero is accepted, requests beyond the fields in
+`bifori.csv` produce an error, and the default value five selects five
+overland columns. Only syntax/diff checks were run under L0; functional
+validation remains with the user. See [DT-0232](../research/records/DT-0232.md)
+and [VR-0279](../research/records/validation_runs/VR-0279.md).
+
+### Map Explorer reads v5 params.nml geometry (DT-0231, 2026-11-28; branch-local proposal)
+
+Map Explorer now resolves geometry from `params.nml` first and reuses the
+maintained `map_metadata.py` reader for `&GRID`/`&DOMAIN`; legacy TXT is used
+only when NML is absent. Launch validation, dataset discovery, map switching,
+reader geometry and high-resolution alignment use the shared path. `f90nml`
+was added to each app dependency profile; launcher setup behavior is unchanged.
+Only syntax/diff checks and source review were performed under L0; user
+functional validation remains pending. See [DT-0231](../research/records/DT-0231.md)
+and [VR-0278](../research/records/validation_runs/VR-0278.md).
+
+### mek01 shared Shell reporting and explicit L0 user-validation rule (DT-0230, 2026-11-28; branch-local proposal)
+
+`mek01-default_run.sh` now uses the common Shell error/progress/success
+functions, `CMF_V50_ROOT` for Shell paths, and consistent 5-step Binary / 4-step
+NetCDF progress numbering. The generated Fortran NAMELIST still assigns its
+unchanged `CMF_BASE` variable. The root `AGENTS.md` now defines explicit L0 as
+a minimal local fix with functional validation left to the user; Skills and
+workflow/component guidance link to that rule. Only Shell syntax and record
+structure checks were run, as functional checks are excluded by L0. See
+[DT-0230](../research/records/DT-0230.md) and
+[VR-0277](../research/records/validation_runs/VR-0277.md).
+
 ### Model output and Restart CTLs use v5 map metadata (DT-0229, 2026-11-28; branch-local proposal)
 
 Both tools/scripts CTL generators now use a shared reader that prefers

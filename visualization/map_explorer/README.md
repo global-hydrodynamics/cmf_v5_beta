@@ -101,7 +101,8 @@ enter **Map Directory**, then press **Load Map**. Click **Map dataset** again to
 hide the controls. This drawer is independent of Visualization/Inspector mode
 and the Settings panel, and opening it preserves the plot, extent and selection.
 Dropdown/path edits alone do not switch.
-Candidate maps are immediate children of repository `map/`, with valid params.txt
+Candidate maps are immediate children of repository `map/`, with valid `params.nml`
+(or legacy `params.txt`)
 and at least one supported readable core raster; tools/src, hidden/temporary and
 invalid map directories are omitted. The name, native dimensions and spacing
 come from metadata. The installed datasets currently include Mekong15min,
@@ -109,7 +110,7 @@ TE-Japan1min and global15min; the list is discovered, not hardcoded.
 
 Custom server-side directories may be absolute or relative to the **repository
 root**, independently of the terminal/browser working directory. Select the map
-root containing params.txt, not its netcdf subdirectory. In WSL, custom GUI paths
+root containing `params.nml`, not its netcdf subdirectory. In WSL, custom GUI paths
 are Linux paths such as `/mnt/d/maps/TE-Japan_01min`.
 
 Loading shows status and disables repeated requests. A complete new Explorer is
@@ -837,7 +838,7 @@ Each overlay remains independent of the background and main-network style:
   not confirmed physical headwaters/channels. They support COG/Global at native
   detail, cache bounded windows, and defer wide/downsampled views without scanning
   the full high-res source. Centroid scope and periodic behavior are detailed above.
-- **Coarse Grid** draws every native computational edge from params.txt only
+- **Coarse Grid** draws every native computational edge from the map geometry
   while both displayed map spans are below30 cells. At30 or more cells on either
   axis, the entire grid overlay is hidden: lines are never thinned. Span is the
   displayed width/height clipped to map bounds divided by native resolution, so
@@ -1005,7 +1006,7 @@ Selection uses the one automatic **Inspector → Point Select** status:
 
 | Point Select | Selection method | Selected river-map Grid |
 | --- | --- | --- |
-| Grid | Coarse Grid geographic containment | params.txt rectangle containing the click |
+| Grid | Coarse Grid geographic containment | params.nml rectangle containing the click |
 | Catchment | Native catmxy assignment | river cell assigned to the exact clicked native pixel |
 
 A high-resolution pixel can lie inside geographic Grid A while its catmxy points
@@ -1036,7 +1037,7 @@ or the profile survives new clicks; panes update without rebuilding the map.
 **River and Floodplain Geometry** uses elevtn/rivwth/rivhgt in metres,
 rivlen/nxtdst converted from metres to kilometres, and ctmare from m² to km².
 Valid negative elevations and zeros are retained. The expandable **fldhgt [m]**
-table lists **all native layers**, using NLFP from params.txt. fldhgt is the
+table lists **all native layers**, using NLFP from `params.nml` (`&GRID`). fldhgt is the
 floodplain height-profile thresholds, not simulated flooded fraction fldfrc.
 Layers are labeled by native layer index; no area percentages are inferred.
 Mekong supplies ten layers; other maps may have a different count. Missing
@@ -1128,9 +1129,12 @@ data stay read-only.
 
 ## Supported data contracts
 
-Only `MAP_DIR/params.txt` and at least one supported raster are required.
-Files may be outside the repository. The runtime does not need the map-variable
-registry or import any existing visualization or preprocessing module.
+`MAP_DIR/params.nml` and at least one supported raster are required for current
+v5 maps. The maintained `map/tools/code/map_metadata.py` reader supplies the
+`&GRID`/`&DOMAIN` geometry contract; a legacy `params.txt` remains readable when
+no `params.nml` is present. Files may be outside the repository. The runtime
+does not need the map-variable registry or import other visualization/workflow
+implementations.
 
 | Product | Meaning / display | Binary dtype | NetCDF variable |
 | --- | --- | --- | --- |
@@ -1148,7 +1152,7 @@ NetCDF files are preferred at `MAP_DIR/NAME.nc`, then legacy
 `MAP_DIR/netcdf/NAME.nc`, then Binary at `MAP_DIR/binary/NAME.bin` (with
 legacy `MAP_DIR/NAME.bin` also accepted). Invalid candidates are skipped with a diagnostic;
 valid Binary fallback is allowed and the selected raster source is reported.
-NetCDF must have named one-dimensional lon/lat axes matching params.txt centers,
+NetCDF must have named one-dimensional lon/lat axes matching `params.nml` centers,
 32-bit fields of the declared type, and compatible units. Both axis directions
 and both `(lat,lon)` / `(lon,lat)` orders are normalized. Missing units on
 nextxy are accepted according to the explicit dimensionless index contract.
@@ -1191,7 +1195,8 @@ for scientific conventions, executed checks and limits.
   and the reported Python version. The macOS automatic profiles require binary
   wheels and do not request a GDAL/compiler installation. Use `--no-setup` to
   disable automatic installation where that launcher exposes the option.
-- **Cannot open map / no supported rasters**: check params.txt and the source
+- **Cannot open map / no supported rasters**: check `params.nml` (or legacy
+  `params.txt`) and the source
   diagnostics. A missing optional file is harmless; a known file with wrong
   geometry, units, type or record count is rejected, never guessed.
 - **Log limits**: all Auto paths use positive P5 (otherwise0.01) / P95 from finite values before
@@ -1282,7 +1287,8 @@ visualization\map_explorer\launch_windows_wsl.cmd "D:\CaMa data\map\mekong_15min
 ```
 
 With no argument WSL starts bundled `map/mekong_15min` without a folder chooser.
-Explicit Windows/Linux map paths remain supported. The map must contain a valid `params.txt`.
+Explicit Windows/Linux map paths remain supported. The map must contain valid
+geometry in `params.nml` (or legacy `params.txt`).
 The minimal CMD delegates to a repository PowerShell helper; its execution-policy
 bypass is process-local and does not change machine/user execution policy.
 
@@ -1296,7 +1302,7 @@ preferred. If startup fails, the CMD retains the error for inspection.
 
 Troubleshooting: check `wsl --list --quiet`, distro initialization and
 `CMF_WSL_DISTRO`; check the chosen Linux Python/version/requirements; check map
-`params.txt`; check Windows-executable interop and WSL localhost forwarding when
+`params.nml` (or legacy `params.txt`); check Windows-executable interop and WSL localhost forwarding when
 Windows cannot reach the printed URL. The server stays in the terminal if browser
 opening fails. No automatic port forwarding or firewall modification is attempted.
 A small OS bind race remains between port reservation and Panel binding; a startup

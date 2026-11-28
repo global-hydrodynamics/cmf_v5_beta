@@ -10,7 +10,7 @@ Each maintained simulation defines `PROJ` in its user settings and defaults to:
 ${CMF_BASE}/gosh_test/out/${PROJ}/
 ```
 
-`CMF_BASE` is always the repository root. The project directory contains the copied executable, generated Namelist, model outputs, Restart files, logs and other generated run files. `COUTDIR="./"` and `CRESTDIR="./"` remain relative to the model's working directory, which is `RUNDIR`. The entire `gosh_test/out/` tree is Git-ignored.
+The Shell scripts resolve the repository root from their own location. `mek01-default_run.sh` stores it in `CMF_V50_ROOT`; `mek02-2year_netcdf.sh` retains its existing Shell variable `CMF_BASE`. In both generated model Namelists, the Fortran variable remains `CMF_BASE` and receives the repository root. The project directory contains the copied executable, generated Namelist, model outputs, Restart files, logs and other generated run files. `COUTDIR="./"` and `CRESTDIR="./"` remain relative to the model's working directory, which is `RUNDIR`. The entire `gosh_test/out/` tree is Git-ignored.
 
 | Script | Default PROJ | Default directory from repository root |
 | --- | --- | --- |

@@ -613,7 +613,7 @@ class Scene:
         if not columns or not rows:
             return
         # Count cell-width spans, so panning alone cannot toggle visibility.
-        # Tolerate sub-pixel rounding of minute spacing in printed params.txt.
+        # Tolerate sub-pixel rounding of minute spacing in serialized metadata.
         if columns >= 30 - 1e-5 or rows >= 30 - 1e-5:
             frame.diagnostics.append(
                 f"Coarse Grid hidden: span {columns:g} columns × {rows:g} rows; "

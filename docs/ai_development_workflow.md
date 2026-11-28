@@ -22,6 +22,9 @@ For architecture, packaging, test-data or contribution-workflow changes, consult
 
 Test selection follows the repository's [CaMa-Flood v5 test design principles](../AGENTS.md#cama-flood-v5-test-design-principles). In handoffs, name the CaMa-Flood-specific risk each check addresses and choose validation proportional to that risk. Do not spend tests rechecking guarantees inside standard tools or external libraries; verify CaMa-Flood's inputs, outputs, interpretation, and interfaces at those boundaries.
 
+If the maintainer explicitly designates a task **L0 — Local Fix / User
+Validation**, follow the stricter [root L0 policy](../AGENTS.md#explicit-l0--local-fix--user-validation): make the smallest local fix, do not run functional/regression/end-to-end checks or add tests/fixtures, and clearly leave functional validation to the user. Do not infer L0 from a task merely being small.
+
 ## Knowledge-gap review at milestones
 
 At completion of a substantial task or development stage, include this short review in the completion handoff:

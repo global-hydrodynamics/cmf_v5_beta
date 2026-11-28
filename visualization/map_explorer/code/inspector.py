@@ -97,7 +97,7 @@ class InspectorProducts:
         if var.ndim != 3 or set(var.dimensions) != {"layer", *spatial}:
             raise ValueError("fldhgt requires layer and the native latitude/longitude dimensions")
         if len(ds.dimensions["layer"]) != self.reader.geometry.layers:
-            raise ValueError("fldhgt layer count disagrees with params.txt NLFP")
+            raise ValueError("fldhgt layer count disagrees with map NLFP")
         if var.dtype.kind != "f" or var.dtype.itemsize != 4 or canonical_units(getattr(var, "units", "")) != "m":
             raise ValueError("fldhgt requires Float32 metres")
         if any(hasattr(var, key) for key in ("scale_factor", "add_offset")):

@@ -5,9 +5,18 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
+import sys
 
 import numpy as np
 from netCDF4 import Dataset
+
+# Reuse the maintained v5 metadata parser instead of maintaining a second
+# interpretation of the GRID/DOMAIN Namelist contract here.
+REPOSITORY = Path(__file__).resolve().parents[3]
+MAP_TOOLS_CODE = REPOSITORY / "map" / "tools" / "code"
+if str(MAP_TOOLS_CODE) not in sys.path:
+    sys.path.insert(0, str(MAP_TOOLS_CODE))
+from map_metadata import geometry_paths, read_legacy_values, read_nml_values
 
 
 @dataclass(frozen=True)
@@ -23,16 +32,15 @@ class Geometry:
 
     @classmethod
     def read(cls, path):
-        try:
-            values = [float(line.split()[0]) for line in Path(path).read_text().splitlines()
-                      if line.strip() and not line.lstrip().startswith(('#', '!'))]
-        except (OSError, ValueError) as exc:
-            raise ValueError(f'{path}: cannot parse params.txt: {exc}') from exc
-        if len(values) != 8 or not np.isfinite(values).all():
-            raise ValueError(f'{path}: expected eight finite numeric parameter lines')
-        if any(v < 1 or v != int(v) for v in values[:3]):
-            raise ValueError(f'{path}: NX, NY and NLFP must be positive integers')
-        g = cls(*(int(v) for v in values[:3]), *values[3:])
+        nml_path, txt_path = geometry_paths(path)
+        if nml_path.is_file():
+            source = read_nml_values(nml_path)
+        elif txt_path.is_file():
+            source = read_legacy_values(txt_path)[1]
+        else:
+            raise FileNotFoundError(f'No params.nml or params.txt found for map geometry at {Path(path)}')
+        g = cls(source.nx, source.ny, source.nlfp, source.resolution,
+                source.west, source.east, source.south, source.north)
         # Parameter writers print rounded decimal degrees. Permit only tiny
         # edge-rounding error, not a whole missing/extra cell.
         tol = max(1e-5, g.resolution * 1e-4)
@@ -83,6 +91,11 @@ class Variable:
     logarithmic: bool = False
 
 
+def has_map_geometry(path):
+    """Return whether a map directory contains supported geometry metadata."""
+    return any(candidate.is_file() for candidate in geometry_paths(path))
+
+
 # A deliberately small format contract, verified against map_variables.csv.
 # Size validates this contract; it never determines the dtype or record layout.
 SCHEMA = {
@@ -120,7 +133,7 @@ class MapReader:
     """
     def __init__(self, map_dir, cache_size=4):
         self.path = Path(map_dir).expanduser().resolve()
-        self.geometry = Geometry.read(self.path / 'params.txt')
+        self.geometry = Geometry.read(self.path)
         self.sources = {}
         self.network_sources = {}
         self.messages = []
@@ -181,7 +194,7 @@ class MapReader:
             elif np.allclose(coords[::-1], expected, rtol=0, atol=tol):
                 reverse = True
             else:
-                raise ValueError(f'{key}: cell centers disagree with params.txt')
+                raise ValueError(f'{key}: cell centers disagree with the map geometry metadata')
             axes.append((var.dimensions[0], reverse))
         if axes[0][0] == axes[1][0]:
             raise ValueError('lon and lat must have separate dimensions')

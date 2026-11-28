@@ -4,6 +4,11 @@
 
 The main goals are correct model execution, scientific validity, and reproducibility. Readability supports those goals, but formatting consistency alone is not a reason to change a working script. Follow the repository-wide rules in the root [`AGENTS.md`](../AGENTS.md); this draft records observations specific to `gosh_test/`.
 
+When a task is explicitly designated L0, use the root [Local Fix / User
+Validation policy](../AGENTS.md#explicit-l0--local-fix--user-validation).
+Do not run functional workflows or add tests/fixtures; state clearly that
+functional validation remains with the user.
+
 ## Applicability
 
 - Apply the readability principles below by default to new v5 scripts and scripts that are substantially revised under `gosh_test/`.

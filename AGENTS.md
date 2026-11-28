@@ -227,6 +227,21 @@ Prioritize tests in this order:
 
 Choose test depth in proportion to the changed behavior and risk. Test runtime, compute, and maintenance burden are design costs; do not treat test count or coverage percentage as goals. Prefer small, deterministic synthetic inputs and representative samples. Use focused syntax/path checks for documentation or file-organization changes, small executions for workflow changes, contract checks for I/O changes, independent scientific validation plus appropriate regression coverage for algorithm changes, and state/order/consistency checks for Restart or Driver/Coupler changes. Run expensive integration tests explicitly when their broader coverage is needed; a full test suite is not required for every change. Treat execution and file integrity as evidence of those checks only, not as proof of scientific validity.
 
+### Explicit L0 — Local Fix / User Validation
+
+When a maintainer explicitly designates a task as **L0**, make the smallest
+change that fixes the clearly identified problem. Inspect only the target and
+its immediate dependencies. Do not run functional, regression, or end-to-end
+tests, and do not create tests or fixtures; the user performs functional
+validation. Do not broaden the investigation to unrelated components. A
+directly detectable syntax or compilation error may be corrected, and a
+focused syntax check may be used. If the change could affect scientific
+calculations, data integrity, or established numerical behavior, stop and
+explain why L0 is insufficient. Mandatory repository safety, approval, and
+research-record rules still apply. In the completion report, state that
+functional validation remains with the user. Tasks not explicitly designated
+L0 continue to follow the proportionate validation guidance above.
+
 Use a staged validation workflow: during an individual development task, run the smallest focused checks that address its CaMa-Flood-specific risks. Before a pull request or merge, run the broader relevant regression, build, and integration checks for the affected workflows and supported configurations. Reserve full-package or global-scale runs for changes whose scale or interaction risks justify them; record clearly which level was actually run.
 
 Avoid redundant tests, tests of dependency algorithms that their providers already guarantee, duplicate coverage of existing tests, and tests brittle to harmless internal refactoring. Before adding a test, an AI coding agent must identify the CaMa-Flood-specific failure it detects, check whether existing tests or dependency guarantees already cover it, consider a smaller maintainable alternative, and judge the cost against the risk. Do not add tests that detect no implementation risk. Do not delete existing tests or weaken CI without explicit maintainer instruction.

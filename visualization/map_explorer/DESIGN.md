@@ -11,6 +11,15 @@ Manual limits, discrete categories, Gallery palette/transfer and River coloring 
 unchanged. This supersedes DT-0120's P3/P97 and Gallery Auto exceptions below, which
 are retained as historical design rationale. See the DT-0122 investigation at the end.
 
+## Current map geometry metadata
+
+`params.nml` is the authoritative v5 map geometry source. `map_reader.py` uses
+the shared `map/tools/code/map_metadata.py` reader for `&GRID` (`NX`, `NY`,
+`NLFP`, `RESOLUTION`) and `&DOMAIN` bounds. Legacy `params.txt` is read only
+when `params.nml` is absent. Discovery, launch validation, map switching,
+coarse-grid coordinates, and high-resolution tile alignment use the same
+resolved geometry.
+
 ## Historical Inspector/navigation/statistics refinement (DT-0120, 2026-11-17)
 
 Maintainer authorizes implementation, validation, commit and push on the current
@@ -531,7 +540,10 @@ autonomous implementation on the existing checkout, without commit/push.
 Researchers need to inspect raster attributes and explicit river connectivity
 without modifying scripts, maps, or running the model. A local Panel/Bokeh app
 accepts only MAP_DIR. It does not import river_map modules or execute map tools.
-The initial scope is coarse regular geographic CaMa-Flood maps with params.txt.
+The initial implementation supported coarse regular geographic CaMa-Flood maps
+with params.txt; current v5 maps use params.nml as described above. The Explorer
+reuses the shared metadata reader only for geometry and does not invoke map
+preprocessing or river-map implementations.
 Bifurcation tables, outlet-coordinate vector maps and high-resolution layers
 are deferred; their geometry and units differ from the coarse grid.
 
@@ -765,9 +777,9 @@ The hidden `--test-setup-profile 2024` launcher option safely exercises the
 standalone 2024 profile without replacing other environments. The full 2022 GUI
 compatibility exercise is deferred to Cloud. On this local checkout, a synthetic
 map successfully initializes and serves through the 2024 profile. The bundled
-Mekong directory currently contains `params.nml` rather than the Explorer's
-expected `params.txt`, so the default-map launch cannot be used as evidence for
-this setup task. Native Windows/WSL execution remains unverified on this macOS host.
+The Mekong map's `params.nml` geometry is now accepted by startup validation,
+map discovery, and the internal reader. Native Windows/WSL execution remains
+unverified on this macOS host.
 
 
 ## DT-0122 — All-background Auto P5/P95 (2026-11-17)

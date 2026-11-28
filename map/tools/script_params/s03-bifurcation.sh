@@ -13,7 +13,7 @@ PYTHON_CMD="python3"
 # ----------------------------------------------------------------------
 # User settings
 # ----------------------------------------------------------------------
-BIFLAYER=5                       # Total width fields including channel width (1-10).
+BIF_OVL_LAYER=5                  # Number of overland layers, excluding riv_width; 0 is valid.
 ROFFTAG="test-1deg"             # Must match the runoff grid used for the paired diminfo file.
 DIMINFO="../diminfo_${ROFFTAG}.nml"
 RIVHGT="../rivhgt.nc"           # Channel-depth map for bifurcation-depth estimates.
@@ -29,7 +29,7 @@ cmf_check_init "Bifurcation parameter calculation"
 
 cmf_check_step 1 3 "Generate the finalized bifurcation CSV"
 "$PYTHON_CMD" "$CODE_DIR/param_bif_set_params.py" \
-    "$RIVHGT" "$BIFPRM_CSV" "$BIFLAYER" "$DIMINFO" --map-dir ..
+    "$RIVHGT" "$BIFPRM_CSV" "$BIF_OVL_LAYER" "$DIMINFO" --map-dir ..
 
 cmf_check_step 2 3 "Convert the finalized bifurcation CSV to NetCDF"
 "$PYTHON_CMD" "$CODE_DIR/convert_bifprm_csv_to_netcdf.py" "$BIFPRM_CSV" "$BIFPRM_NC"

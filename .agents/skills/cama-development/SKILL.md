@@ -9,6 +9,11 @@ Use this Skill for CaMa-Flood v5 development planning, Codex handoffs, and
 direct implementation. Its job is to find and apply the right project rules,
 not to create a second policy.
 
+For tasks explicitly designated L0, apply the repository-root
+[`AGENTS.md` L0 rule](../../../AGENTS.md#explicit-l0--local-fix--user-validation)
+and the `large-model-refactoring` Skill: keep the fix local, leave functional
+validation to the user, and do not add tests or fixtures.
+
 ## Find current authority first
 
 1. Read the repository-root `AGENTS.md`. It controls repository boundaries,

@@ -23,7 +23,7 @@ def choose_map(default):
         window.withdraw()
         try:
             folder = filedialog.askdirectory(
-                title="CaMa-Flood: select a map folder containing params.txt",
+                title="CaMa-Flood: select a map folder containing params.nml",
                 initialdir=str(default if default.is_dir() else default.parent),
                 mustexist=True,
             )
@@ -406,8 +406,11 @@ def main(argv=None):
     if selected is None:
         print("Launch cancelled.")
         return 0
-    if not (selected/"params.txt").is_file():
-        print(f"Not a CaMa-Flood map folder (params.txt missing): {selected}", file=sys.stderr)
+    from map_reader import Geometry
+    try:
+        Geometry.read(selected)
+    except (OSError, ValueError) as exc:
+        print(f"Not a CaMa-Flood map folder (invalid geometry metadata): {selected}: {exc}", file=sys.stderr)
         return 2
     if not 0 <= args.port <= 65535:
         print("Port must be between 0 and 65535.", file=sys.stderr)
@@ -429,9 +432,8 @@ def main(argv=None):
             port = listener.getsockname()[1]
     sys.argv = [str(directory/"code"/"app.py"), str(selected), "--port", str(port)]
     if args.windows_browser:
-        from map_reader import Geometry
         try:
-            Geometry.read(selected / "params.txt")
+            Geometry.read(selected)
         except ValueError as exc:
             print(f"[ERROR] Invalid map: {exc}", file=sys.stderr)
             return 2
