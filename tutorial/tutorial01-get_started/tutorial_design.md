@@ -26,7 +26,7 @@ Tutorial01 introduces repository navigation and a first model run; it does not t
 | Prepare the environment | Run `s01`, optionally set up Python with `s02`, and register/activate `cmfpy` with `s03`. | The suggested root `Mkinclude` is separate from active `config/Mkinclude`; Python is optional for the Fortran simulation. | The learner can follow the setup prompts, protect an active configuration, and activate/deactivate the optional Python environment. |
 | Build the model | Run `make all` in `src_main/` and locate `MAIN_cmf`. | Identify that the executable is produced in `src_main/` from model source. | The learner can find the executable after building. |
 | Read experiment settings | Read this specification and inspect the standalone GOSH script. | Identify where experiment details are described and where the script settings are written. | The learner can locate a setting in the script after finding it in the experiment information. |
-| Locate runoff files | List the annual NetCDF runoff file and find the dataset and variable settings. | Match the `runoff2000.nc` file, `runoff` variable, and `time` coordinate to the script settings. | The learner can locate the input file and identify its runoff and time variables. |
+| Locate runoff files | List the monthly Binary runoff files and find the dataset and filename settings. | Match `Roff____200001.one` and `Roff____200002.one` to the dataset and script settings. | The learner can locate both monthly input files and identify the daily Binary record convention. |
 | Locate river-map files | List representative individual NetCDF map files and CSV bifurcation parameters; inspect `MAPDIR`, `NEXTXY`, and `RIVWTH`. | Match the script paths and filenames to products in the map directory. | The learner can point out the selected map directory, connectivity file, and width file. |
 | Locate runoff-mapping files | List the input-dimension descriptor and NetCDF matrix and find `DIMINFO` and `INPMAT`. | Match those settings to the files in the map directory; distinguish the model grid from the runoff input grid. | The learner can find each referenced file and its setting in the GOSH script. |
 | Run an experiment | Execute the Tutorial01 script from its documented directory and identify `PROJ` and `RUNDIR`. | Match the project name to the output directory shown by the script. | The learner can run the script, recognize its success message, and locate the selected run directory. |
@@ -47,7 +47,7 @@ cmf_v5_beta/
 │   ├── nextxy_noedge.nc             # River connectivity
 │   ├── diminfo_repo-mek_1deg.nml    # Model and runoff-input grid metadata
 │   └── inpmat_repo-mek_1deg.nc      # Runoff-to-map input matrix
-├── inp/repo-mek_1deg/              # Annual NetCDF runoff dataset
+├── inp/repo-mek_1deg_bin/runoff/    # Daily Binary runoff grouped by month
 ├── gosh_test/                        # Developer GOSH workflows and operational checks
 └── tutorial/tutorial01-get_started/
     ├── tutorial_design.md
@@ -71,10 +71,10 @@ The repository also contains root setup scripts and shared tools; include them i
 
 - Map: `map/mekong_15min/`, 80 × 120 cells, 0.25-degree grid, and 10 floodplain layers. Geometry is in `params.nml`; individual map variables are NetCDF files and bifurcation metadata is in `bifprm.csv`.
 - Selected map inputs: `nextxy_noedge.nc`, `rivwth_merit.nc`, and other individual NetCDF variables. High-resolution tile inventory is `map/mekong_15min/1min/location.csv`.
-- Runoff: `inp/repo-mek_1deg/runoff2000.nc`, annual NetCDF `runoff(time, latitude, longitude)` daily `mm day-1`; the runoff grid is 20 × 30 and time uses `proleptic_gregorian` CF coordinates with interval bounds. The 2000 file has 366 daily records, including February 29.
+- Runoff: `inp/repo-mek_1deg_bin/runoff/Roff____200001.one` and `Roff____200002.one`, daily Binary records in monthly files. The grid is 20 × 30 and values are daily `mm day-1`; the sample covers January 1 through February 29, 2000.
 - Runoff-to-map files: `map/mekong_15min/diminfo_repo-mek_1deg.nml` and `inpmat_repo-mek_1deg.nc`, generated for this map/runoff grid pairing. `&DIMINFO` describes the model grid; `&INPUTDIM` describes the external runoff input grid.
 - Simulation: 2000-01-01 00:00 to 2000-02-10 00:00 exclusive (40 days), non-MPI, base timestep 3600 seconds, adaptive timestep and bifurcation enabled, reservoir operation disabled, one OpenMP thread.
-- Preserve the scientific settings of `gosh_test/mek01-default_run.sh`, while using NetCDF for runoff, matrix input, model output, and Restart. The tutorial's standalone script keeps the same 40-day period, Mekong map, routing options, and physical parameters; it uses annual NetCDF runoff and one OpenMP thread. The maintained GOSH `mek01-default_run.sh` remains a developer-facing Binary I/O check and is unchanged.
+- Preserve the scientific settings of `gosh_test/mek01-default_run.sh`, using Binary runoff and NetCDF for the input matrix, model output, and Restart. The tutorial's standalone script keeps the same 40-day period, Mekong map, routing options, and physical parameters, and uses one OpenMP thread. The maintained GOSH `mek01-default_run.sh` remains a developer-facing Binary I/O check and is unchanged.
 - Require `CMF_V50_ROOT`, source `tools/cmf_shell_functions.sh`, and use `cmf_check_init`, `cmf_check_step`, and `cmf_check_success` for shared Shell error/progress reporting. Preserve the Fortran NAMELIST variable name `CMF_BASE`; populate it from `${CMF_V50_ROOT}`.
 - Define `PROJ="tutorial01-get_started"` using the established experiment-name convention. Construct `RUNDIR` as the Tutorial01 script directory's `out/${PROJ}/`. Generated executable copy, Namelist, logs, five NetCDF model outputs, and final NetCDF Restart all belong there.
 - A rerun of the same project may replace only that project's known generated files. Changing `PROJ` creates a separate experiment directory and must preserve the previous project directory. Do not remove the shared `out/` parent or other project subdirectories.
@@ -87,7 +87,7 @@ The repository also contains root setup scripts and shared tools; include them i
 3. Prepare the Fortran environment with `s01-setup_fortran.sh`. Optionally create the Python environment with `s02-python_setup.sh`, then register it using `s03-activate_cmf_pyenv.sh`; source the selected shell configuration or open a new terminal before using `cmfpy`. Python is not needed for the simulation itself.
 4. Activate `config/Mkinclude` by copying the reviewed staged `Mkinclude` manually; `config/` already exists.
 5. From `${CMF_V50_ROOT}`, enter `src_main/` and run `make all` to build or update the current model executable.
-6. Inspect the annual NetCDF runoff file, then the individual NetCDF river map, bifurcation CSV, and paired input-dimension and input-matrix files; relate their names to the GOSH settings.
+6. Inspect the two monthly Binary runoff files, then the individual NetCDF river map, bifurcation CSV, and paired input-dimension and input-matrix files; relate their names to the GOSH settings.
 7. Read `tutorial_design.md`, then inspect the plain-text standalone Tutorial01 GOSH configuration and its experiment settings.
 8. From `tutorial/tutorial01-get_started/`, execute `./tutorial01-get_started.sh`; the default project output is `out/tutorial01-get_started/`.
 9. Inspect the generated Namelist, logs, five NetCDF model outputs, and final NetCDF Restart under the project-specific directory.
@@ -101,7 +101,7 @@ Map generation and visualization are not required.
 - The root-directory demonstration uses `ls -lF`, with observed output showing directory and executable markers and an explanation that suffixes are not part of filenames.
 - The standalone tutorial script defines the default `PROJ`, constructs its `RUNDIR` under `out/${PROJ}/`, does not call or source `gosh_test/mek01-default_run.sh`, and runs from its documented directory.
 - The script requires `CMF_V50_ROOT`, uses the shared Shell functions for errors, progress and success, and assigns the existing NAMELIST `CMF_BASE` from the environment variable.
-- The tutorial uses `params.nml`, individual NetCDF map variables, CSV bifurcation parameters, `diminfo_repo-mek_1deg.nml`, `inpmat_repo-mek_1deg.nc`, and annual NetCDF runoff.
+- The tutorial uses `params.nml`, individual NetCDF map variables, CSV bifurcation parameters, `diminfo_repo-mek_1deg.nml`, `inpmat_repo-mek_1deg.nc`, and monthly Binary runoff.
 - Tutorial01 and the model return zero; `log_CaMa.txt` reaches normal calculation completion.
 - Five expected daily NetCDF output files, the Namelist, logs, executable copy, and one end-of-run NetCDF Restart are created under only `tutorial/tutorial01-get_started/out/tutorial01-get_started/`; no GrADS CTLs are generated.
 - Each daily output contains 40 records for the 40-day interval. The end time is exclusive; output timestamps follow the model's NetCDF convention. The 2000 forcing file's 366 records include the leap day, though the experiment ends before February 29.

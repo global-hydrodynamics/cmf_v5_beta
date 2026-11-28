@@ -91,7 +91,10 @@ def read_map_data():
 def read_grid_geometry():
     """Read coarse and high-resolution grid bounds from map descriptors."""
     grid = read_map_geometry(MAP_ROOT)
-    nx, ny, _, resolution, west, east, south, north = grid.values()
+    nx, ny = grid.nx, grid.ny
+    resolution = grid.resolution
+    west, east = grid.west, grid.east
+    south, north = grid.south, grid.north
     areas = read_location_csv(HIRES_DIR / "location.csv")
     matching_areas = [area for area in areas if area.carea == "1min"]
     if len(matching_areas) != 1:

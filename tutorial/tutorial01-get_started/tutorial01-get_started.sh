@@ -1,6 +1,6 @@
 #!/bin/sh
 # Run a 40-day, non-MPI CaMa-Flood simulation on the Mekong sample.
-# Map: map/mekong_15min; forcing: inp/repo-mek_1deg/runoff2000.nc (daily mm/day).
+# Map: map/mekong_15min; forcing: monthly files under inp/repo-mek_1deg_bin/runoff (daily mm/day).
 # Outputs, executable, and namelist: out/${PROJ}/ under this tutorial directory.
 #
 # Execution requirement:
@@ -61,19 +61,17 @@ LDAMOUT=".FALSE."             # TRUE: enable reservoir operation; FALSE: disable
 LRESTART=".FALSE."            # TRUE: read restart initial conditions; FALSE: initialize without restart data.
 DT=3600                       # Base timestep [s], multiple of 60; adaptive stepping may adjust it.
 
-# Annual NetCDF runoff and its matching map-specific input matrix.
-ROFFTAG="repo-mek_1deg"      # Runoff dataset/grid identifier.
+# Monthly Binary runoff and its matching map-specific input matrix.
+ROFFTAG="repo-mek_1deg_bin"  # Runoff dataset/grid identifier.
 INPMAT_TAG="repo-mek_1deg"    # Unchanged matrix for the same 20 x 30 runoff grid.
 IFRQ_INP=24                   # Runoff update interval [hours]; examples: 1, 2, 3, 6, 12, 24.
 DROFUNIT=86400000             # Input runoff units / DROFUNIT -> m/s; 86400000 converts mm/day.
-LINPCDF=".TRUE."              # TRUE: read NetCDF runoff; FALSE: read binary runoff.
-CROFFREQ="YEAR"              # One runoff file per calendar year.
+LINPCDF=".FALSE."             # FALSE: read Binary runoff.
+CROFFREQ="MON"                # Daily Binary records are grouped by calendar month.
 LINTERP=".TRUE."              # TRUE: map runoff with input matrix; FALSE: use nearest-grid conversion.
 LITRPCDF=".TRUE."             # TRUE: read the input-mapping matrix from NetCDF.
-CVNROF="runoff"               # Runoff variable name in the annual NetCDF file.
-CVNTIME="time"                # CF time-coordinate variable name.
-CROFPRE="runoff"              # Annual filename prefix: runoffYYYY.nc.
-CROFSUF=".nc"                 # NetCDF filename suffix.
+CROFPRE="Roff____"            # Monthly filename prefix: Roff____YYYYMM.one.
+CROFSUF=".one"                # Binary runoff filename suffix.
 LLEAPYR=".TRUE."              # Use the Gregorian leap-year calendar.
 
 # Daily NetCDF output settings.
@@ -97,8 +95,8 @@ IFRQ_RST=0                    # 0=end only; 1-24=hour interval; 30=monthly (nonz
 TOTAL_STEPS=3
 cmf_check_init "Tutorial01 40-day Mekong simulation"
 
-# Reference input directory for the annual runoff NetCDF file.
-RUNOFF_DIR="${CMF_V50_ROOT}/inp/${ROFFTAG}"
+# Reference input directory for monthly Binary runoff files.
+RUNOFF_DIR="${CMF_V50_ROOT}/inp/${ROFFTAG}/runoff"
 
 # The dimension descriptor and matrix were generated for this map/runoff pair.
 DIMINFO="${MAPDIR}/diminfo_${INPMAT_TAG}.nml"
@@ -191,17 +189,15 @@ LRESTCDF = ${LRESTCDF}        ! TRUE: write NetCDF Restart; FALSE: write Binary 
 IFRQ_RST = ${IFRQ_RST}       ! 0=end only; 1-24=hour interval; 30=monthly (nonzero also writes at end).
 /
 &NFORCE
-LINPCDF  = ${LINPCDF}         ! TRUE: read NetCDF runoff; FALSE: read binary runoff.
-CROFFREQ = "${CROFFREQ}"     ! One annual NetCDF runoff file.
+LINPCDF  = ${LINPCDF}         ! FALSE: read Binary runoff; TRUE: read NetCDF runoff.
+CROFFREQ = "${CROFFREQ}"     ! Monthly files contain daily records indexed from month start.
 LINTERP  = ${LINTERP}         ! TRUE: map runoff with input matrix; FALSE: use nearest-grid conversion.
 LITRPCDF  = ${LITRPCDF}        ! TRUE: read the input-mapping matrix from NetCDF.
 CINPMAT  = "${INPMAT}"        ! NetCDF runoff-to-river input-mapping matrix.
 DROFUNIT = ${DROFUNIT}        ! Input runoff units / DROFUNIT -> m/s; 86400000 converts mm/day.
 CROFDIR  = "${RUNOFF_DIR}"    ! Directory containing runoff input files.
-CROFPRE  = "${CROFPRE}"      ! Annual filename prefix before the year.
-CROFSUF  = "${CROFSUF}"      ! NetCDF filename suffix.
-CVNROF   = "${CVNROF}"       ! Runoff variable in the NetCDF file.
-CVNTIME  = "${CVNTIME}"      ! Time-coordinate variable in the NetCDF file.
+CROFPRE  = "${CROFPRE}"      ! Monthly Binary filename prefix before YYYYMM.
+CROFSUF  = "${CROFSUF}"      ! Binary runoff filename suffix.
 /
 &NOUTPUT
 CMF_BASE = "${CMF_V50_ROOT}"   ! CaMa-Flood repository/package root.

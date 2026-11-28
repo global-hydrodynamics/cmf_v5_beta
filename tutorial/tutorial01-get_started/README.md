@@ -206,8 +206,8 @@ If available, you can inspect without saving using `nano tutorial01-get_started.
 |---|---|
 | Project | `PROJ="tutorial01-get_started"` |
 | River map | `map/mekong_15min/` |
-| Runoff | `inp/repo-mek_1deg/runoff2000.nc`, annual NetCDF with daily `runoff` values in `mm day-1` |
-| Runoff time | CF `time` coordinate and `time_bounds`; `proleptic_gregorian`; 366 records in leap year 2000 |
+| Runoff | Monthly Binary files `inp/repo-mek_1deg_bin/runoff/Roff____200001.one` and `Roff____200002.one`, daily values in `mm day-1` |
+| Runoff grid and records | 20 × 30 grid; little-endian float32, longitude-fastest, north-to-south; January and February 2000 files contain 31 and 29 daily records |
 | Runoff-to-map mapping | `diminfo_repo-mek_1deg.nml` and NetCDF `inpmat_repo-mek_1deg.nc` in the map directory |
 | Period | 2000-01-01 00:00 to 2000-02-10 00:00; end time is exclusive (40 days) |
 | Time step | Base `DT=3600` seconds; adaptive time stepping enabled |
@@ -224,38 +224,36 @@ The rest of the tutorial locates the real input files and shows how the GOSH set
 
 ## 5. Inspect runoff forcing
 
-The model input is one annual NetCDF file containing daily runoff. The file covers the complete Gregorian year, including February 29, while this 40-day experiment reads only the records needed from January 1 through February 9. The variable stores daily surface runoff depth in `mm day-1`; its CF `time` coordinate has interval bounds and uses the `proleptic_gregorian` calendar.
+The model input is daily Binary runoff grouped into one file per month. The January and February 2000 files contain 31 and 29 daily records, respectively. Each record is a 20 × 30 grid of little-endian float32 values in `mm day-1`; the 40-day experiment reads January 1 through February 9. The Binary sample includes February 29, although that record is outside this experiment.
 
 ```bash
 cd "${CMF_V50_ROOT}"
-cd inp/repo-mek_1deg
+cd inp/repo-mek_1deg_bin/runoff
 pwd
-ls -lhF runoff2000.nc
-ncdump -h runoff2000.nc
+ls -lhF Roff____200001.one Roff____200002.one
 ```
 
 ### Expected output
 
-The NetCDF header identifies dimensions `time = 366`, `latitude = 30`, and `longitude = 20`. It lists `runoff(time, latitude, longitude)` with units `mm day-1`, and a `time` coordinate with `time_bounds` and `calendar = "proleptic_gregorian"`. The file size and listing details depend on the checkout.
+The two files are monthly containers of consecutive daily grid records. Each record has 2,400 bytes (20 × 30 float32 values), stored longitude-fastest with rows ordered north to south. File sizes are 74,400 bytes for January and 69,600 bytes for February; filesystem display details can vary.
 
 The Shell settings select the annual file and its variables:
 
 ```sh
-ROFFTAG="repo-mek_1deg"
-RUNOFF_DIR="${CMF_V50_ROOT}/inp/${ROFFTAG}"
-CROFFREQ="YEAR"
-CROFPRE="runoff"
-CROFSUF=".nc"
-CVNROF="runoff"
-CVNTIME="time"
+ROFFTAG="repo-mek_1deg_bin"
+RUNOFF_DIR="${CMF_V50_ROOT}/inp/${ROFFTAG}/runoff"
+LINPCDF=".FALSE."
+CROFFREQ="MON"
+CROFPRE="Roff____"
+CROFSUF=".one"
 DROFUNIT=86400000
 ```
 
-The model resolves `runoff2000.nc` from the directory, frequency, prefix, and suffix. `IFRQ_INP=24` reads daily forcing. `DROFUNIT=86400000` converts daily `mm day-1` depth to the model's `m s-1` rate. The source file has 366 daily records because 2000 is a leap year; February 29 is after the Tutorial01 end time and is not part of this 40-day run.
+The model resolves each monthly file from the directory, `CROFFREQ`, prefix, and suffix. `IFRQ_INP=24` reads daily forcing, and records are indexed from 00:00 on the first day of each month. `DROFUNIT=86400000` converts daily `mm day-1` depth to the model's `m s-1` rate. The unchanged `repo-mek_1deg` input matrix describes the same 20 × 30 grid.
 
 ### Learning Check
 
-- [ ] I can locate the annual NetCDF runoff file and identify its runoff variable and time coordinate.
+- [ ] I can locate the January and February Binary runoff files and identify their monthly naming convention.
 - [ ] I can find the Shell settings that select the file and convert its units.
 
 ## 6. Inspect the river map
@@ -349,19 +347,19 @@ LINTERP=".TRUE."
 
 ## 8. Inspect the NetCDF I/O settings
 
-After locating the input files, inspect how the Shell config selects each format. The map uses individual NetCDF variables with CSV bifurcation parameters; runoff and its mapping matrix are NetCDF; model outputs and the final Restart are also NetCDF. This section identifies the settings without requiring you to edit them.
+After locating the input files, inspect how the Shell config selects each format. The map uses individual NetCDF variables with CSV bifurcation parameters; runoff is Binary, its mapping matrix is NetCDF, and model outputs and the final Restart are NetCDF. This section identifies the settings without requiring you to edit them.
 
 ```bash
 cd "${CMF_V50_ROOT}"
 cd tutorial/tutorial01-get_started
-grep -nE 'LMAPCDF|CPTHOUT|LINPCDF|CROFFREQ|CROFPRE|CROFSUF|CVNROF|CVNTIME|CINPMAT|LOUTCDF|CVARSOUT|LRESTCDF|IFRQ_RST' tutorial01-get_started.sh
+grep -nE 'LMAPCDF|CPTHOUT|LINPCDF|CROFFREQ|CROFPRE|CROFSUF|CINPMAT|LITRPCDF|LOUTCDF|CVARSOUT|LRESTCDF|IFRQ_RST' tutorial01-get_started.sh
 ```
 
-The important assignments are `LMAPCDF=.FALSE.` for individual map files, `LINPCDF=.TRUE.` and `CROFFREQ="YEAR"` for annual NetCDF runoff, `CINPMAT` with `LITRPCDF=.TRUE.` for the NetCDF matrix, `LOUTCDF=.TRUE.` for daily NetCDF output, and `LRESTCDF=.TRUE.` with `IFRQ_RST=0` for a NetCDF Restart at the end. `CPTHOUT` points to `bifprm.csv`. The script retains `CMF_BASE` as the model NAMELIST variable and fills it from `CMF_V50_ROOT`.
+The important assignments are `LMAPCDF=.FALSE.` for individual map files, `LINPCDF=.FALSE.` and `CROFFREQ="MON"` for monthly Binary runoff, `CINPMAT` with `LITRPCDF=.TRUE.` for the NetCDF matrix, `LOUTCDF=.TRUE.` for daily NetCDF output, and `LRESTCDF=.TRUE.` with `IFRQ_RST=0` for a NetCDF Restart at the end. `CPTHOUT` points to `bifprm.csv`. The script retains `CMF_BASE` as the model NAMELIST variable and fills it from `CMF_V50_ROOT`.
 
 ### Learning Check
 
-- [ ] I can find the settings that select NetCDF runoff, matrix input, model output, and Restart.
+- [ ] I can identify the Binary runoff setting and the NetCDF matrix, model output, and Restart settings.
 - [ ] I can identify `bifprm.csv` as the bifurcation-parameter file.
 
 ## 9. Run the experiment
@@ -381,7 +379,7 @@ pwd
 
 ### Expected output
 
-This abbreviated excerpt was captured from a 40-day NetCDF run. The temporary validation output path is shortened; in your checkout `RUNDIR` is under the Tutorial01 directory.
+This abbreviated excerpt was captured from a 40-day run with monthly Binary runoff and NetCDF model output. The temporary validation output path is shortened; in your checkout `RUNDIR` is under the Tutorial01 directory.
 
 ```text
 PROJ = tutorial01-get_started
