@@ -2,9 +2,12 @@
 # Run the mek_default Tutorial 02 experiment for 2000-2003.
 set -eu
 
-# Resolve project paths from this script so it can run from any directory.
+# CaMa-Flood general setting (check CMF root, import CMF common shell functions)
+: "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
+. "$CMF_V50_ROOT/tools/cmf_shell_functions.sh"
+
+# Keep tutorial outputs beside this script, regardless of the launch directory.
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
-CMF_BASE=$(CDPATH= cd "$SCRIPT_DIR/../.." && pwd -P)
 
 # ----------------------------------------------------------------------
 # User settings
@@ -25,14 +28,22 @@ LADPSTP=".TRUE."           # TRUE: adaptive timestep; FALSE: fixed DT.
 # ----------------------------------------------------------------------
 # User settings end here. Input paths and annual execution follow.
 # ----------------------------------------------------------------------
-MAPDIR="${CMF_BASE}/map/mekong_15min"
+MAPDIR="${CMF_V50_ROOT}/map/mekong_15min"
 MAP_NETCDF_DIR="${MAPDIR}"
-RUNOFF_DIR="${CMF_BASE}/inp/repo-mek_1deg"
+RUNOFF_DIR="${CMF_V50_ROOT}/inp/repo-mek_1deg"
 RUNDIR="${SCRIPT_DIR}/out/${PROJ}"
 # Reuse the NetCDF-enabled model already built in Tutorial01; do not compile here.
-EXEC_CMF="${CMF_BASE}/src_main/MAIN_cmf"
+EXEC_CMF="${CMF_V50_ROOT}/src_main/MAIN_cmf"
 DIMINFO="${MAPDIR}/diminfo_repo-mek_1deg.nml"
 INPMAT="${MAPDIR}/inpmat_repo-mek_1deg.nc"
+
+YEAR_COUNT=$((END_YEAR - START_YEAR + 1))
+TOTAL_STEPS=$((1 + 2 * YEAR_COUNT))
+STEP_NUMBER=0
+cmf_check_init "Tutorial02 ${PROJ} annual NetCDF simulation"
+
+STEP_NUMBER=$((STEP_NUMBER + 1))
+cmf_check_step "$STEP_NUMBER" "$TOTAL_STEPS" "Prepare ${PROJ} experiment directory"
 
 if [ ! -x "$EXEC_CMF" ]; then
     printf '[ERROR] Tutorial01 model executable not found: %s\n' "$EXEC_CMF" >&2
@@ -43,7 +54,7 @@ fi
 mkdir -p "$RUNDIR"
 rm -f "$RUNDIR"/o_outflw*.nc "$RUNDIR"/o_pthflw*.nc "$RUNDIR"/restart*.nc \
       "$RUNDIR"/input_cmf*.nam "$RUNDIR"/console_*.log \
-      "$RUNDIR"/log_CaMa*.nml "$RUNDIR"/run_time_*.log \
+      "$RUNDIR"/log_CaMa*.nml "$RUNDIR"/log_CaMa*.txt "$RUNDIR"/run_time_*.log \
       "$RUNDIR"/MAIN_cmf "$RUNDIR"/mapdata.nml
 cp "$EXEC_CMF" "$RUNDIR/MAIN_cmf"
 
@@ -53,6 +64,8 @@ while [ "$YEAR" -le "$END_YEAR" ]; do
     NEXT_YEAR=$((YEAR + 1))
     RUNOFF_FILE="${RUNOFF_DIR}/runoff${YEAR}.nc"
     YEAR_NAMELIST="${RUNDIR}/input_cmf_${YEAR}.nam"
+    STEP_NUMBER=$((STEP_NUMBER + 1))
+    cmf_check_step "$STEP_NUMBER" "$TOTAL_STEPS" "Configure year ${YEAR}"
     if [ ! -f "$RUNOFF_FILE" ]; then
         printf '[ERROR] Missing annual runoff file: %s\n' "$RUNOFF_FILE" >&2
         exit 1
@@ -71,7 +84,6 @@ while [ "$YEAR" -le "$END_YEAR" ]; do
         CRESTSTO="$PREVIOUS_RESTART"
     fi
 
-    printf '\n[STEP] Configure and run %s\n' "$YEAR"
     cat > "$RUNDIR/input_cmf.nam" <<EOF
 &NRUNVER
 LKINE = $LKINE             ! Routing formulation: Kinematic Wave or Local Inertial.
@@ -106,7 +118,7 @@ EDAY = 1                   ! Exclusive end day.
 EHOUR = 0                  ! Exclusive end hour.
 /
 &NMAP
-LMAPCDF = .FALSE.                         ! FALSE: individual Binary/NetCDF map files.
+LMAPCDF = .FALSE.                         ! FALSE: read individual map files by their extensions.
 CNEXTXY = "$MAP_NETCDF_DIR/nextxy_noedge.nc" ! River-network downstream indices.
 CGRAREA = "$MAP_NETCDF_DIR/ctmare.nc"     ! Unit-catchment area [m2].
 CELEVTN = "$MAP_NETCDF_DIR/elevtn.nc"     ! Channel-top elevation [m].
@@ -139,7 +151,7 @@ CROFPRE = "runoff"          ! Annual filename prefix: runoffYYYY.nc.
 CROFSUF = ".nc"             ! Annual filename suffix.
 /
 &NOUTPUT
-CMF_BASE = "$CMF_BASE"      ! CaMa-Flood repository root.
+CMF_BASE = "${CMF_V50_ROOT}" ! CaMa-Flood repository root.
 COUTVAR_TABLE = ""           ! Use the output-variable registry under CMF_BASE.
 COUTDIR = "./"               ! Write model output in this annual run directory.
 CVARSOUT = "outflw,pthflw"   ! Daily means: grid discharge and bifurcation-path discharge [m3/s].
@@ -151,6 +163,8 @@ IFRQ_OUT = 24                 ! Daily output interval [hours].
 EOF
     cp "$RUNDIR/input_cmf.nam" "$YEAR_NAMELIST"
 
+    STEP_NUMBER=$((STEP_NUMBER + 1))
+    cmf_check_step "$STEP_NUMBER" "$TOTAL_STEPS" "Run year ${YEAR}"
     START_SECONDS=$(date +%s)
     printf 'Start %s: %s\n' "$YEAR" "$(date)" | tee "$RUNDIR/run_time_${YEAR}.log"
     if (cd "$RUNDIR" && OMP_NUM_THREADS="$OMP_NUM_THREADS" ./MAIN_cmf > "console_${YEAR}.log" 2>&1); then
@@ -168,11 +182,12 @@ EOF
             "$PROJ" "$YEAR" "$RUNDIR" "$YEAR" >&2
         exit "$RUN_STATUS"
     fi
-    cp "$RUNDIR/log_CaMa.nml" "$RUNDIR/log_CaMa_${YEAR}.nml"
+    cp "$RUNDIR/log_CaMa.txt" "$RUNDIR/log_CaMa_${YEAR}.txt"
     printf '[SUCCESS] %s %s complete: %s/o_outflw%s.nc and %s/o_pthflw%s.nc\n' \
         "$PROJ" "$YEAR" "$RUNDIR" "$YEAR" "$RUNDIR" "$YEAR"
     YEAR=$NEXT_YEAR
 done
 
-printf '\n[SUCCESS] %s completed for %s-%s.\n' "$PROJ" "$START_YEAR" "$END_YEAR"
+cmf_check_success
+printf 'Annual simulations %s-%s completed.\n' "$START_YEAR" "$END_YEAR"
 printf 'Results: %s\n' "$RUNDIR"
