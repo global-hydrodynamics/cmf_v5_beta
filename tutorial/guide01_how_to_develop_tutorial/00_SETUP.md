@@ -237,10 +237,11 @@ input matrix used by the examples. From the repository root, check their
 presence:
 
 ```bash
-test -f map/mekong_15min/params.txt
+test -f map/mekong_15min/params.nml
 test -f inp/repo-mek_1deg/runoff2000.nc
-test -f map/mekong_15min/inpmat_repo-mek_1deg.bin
+test -f map/mekong_15min/inpmat_repo-mek_1deg.nc
 test -f map/mekong_15min/diminfo_repo-mek_1deg.nml
+test -f map/mekong_15min/1min/location.csv
 ```
 
 These checks confirm that expected files are present; they do not validate

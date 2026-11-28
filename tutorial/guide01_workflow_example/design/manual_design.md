@@ -12,9 +12,21 @@
 
 The only intended scientific experiment difference remains the approved `+3 m` change to valid river-depth cells. Learners are not asked to change the scientific setting or infer an expected response. Their transferable skills are editing a map-generation setting, preserving shared inputs, and constructing an isolated GOSH experiment by changing `PROJ` and an input-path setting.
 
+The workflow uses the current NetCDF-first Mekong map (`params.nml`, map-root
+NetCDF layers, `1min/location.csv` and high-resolution NetCDF tiles), paired
+with `inpmat_repo-mek_1deg.nc` and `diminfo_repo-mek_1deg.nml`. Control and
+Deep Channel use the same model settings and inputs except for `CRIVHGT`.
+Guide01 includes a physical copy of `tools/downscale_flddph/` and its required
+metadata readers; the copy is self-contained and does not update automatically.
+
 ## Package state
 
-Include the editable learner scripts and approved example images under `sample_figure/`. The starting package has no `map_modify/rivhgt_deep.nc`, no learner-created Deep Channel runner, no model outputs or analysis tables, and no generated figures under `figure/`. The complete map, runner, test, and analysis references are kept under `design/` in the GitHub repository. Generated outputs and modified map data are ignored by Git.
+Include the editable learner scripts, the tutorial-local downscaler and its
+sample, and approved example images under `sample_figure/`. The starting
+package has no `map_modify/rivhgt_deep.nc`, no learner-created Deep Channel
+runner, no model outputs or analysis tables, and no generated figures under
+`figure/`. Completed map, runner, and analysis references remain in `design/`;
+generated outputs and modified map data are ignored by Git.
 
 The general beta Package Builder exists and retains developer references; no dedicated learner-profile tutorial assembler exists. A temporary learner snapshot can verify the intended file set, but a complete learner-follow-through has not been performed after this intentional incompleteness change; package reproducibility remains partial.
 
@@ -26,6 +38,7 @@ The general beta Package Builder exists and retains developer references; no ded
 
 
 Executable prerequisite: as in Tutorial02, reuse NetCDF-enabled
-src_main/MAIN_cmf already compiled during Tutorial01, without a separate compile
-wrapper. Prepare repository .venv for the existing analysis/runner paths. Keep
-Python-package NetCDF downscaling and approved learner edits unchanged.
+`src_main/MAIN_cmf` already compiled during Tutorial01, without a separate
+compile wrapper. Prepare the repository `.venv` and set `CMF_V50_ROOT` for the
+runner and analysis paths. Keep the tutorial-local Python NetCDF downscaling
+implementation and approved learner edits unchanged.

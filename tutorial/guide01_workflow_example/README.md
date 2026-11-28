@@ -99,7 +99,7 @@ An excerpt from a temporary learner-file snapshot's `ls -lhF` output is:
 -rwxr-xr-x  1 yamadai  wheel   5.2K Nov 10 05:28 a02-prepare_downscale_input.py*
 drwxr-xr-x  3 yamadai  wheel    96B Nov 10 08:52 analysis/
 drwxr-xr-x  3 yamadai  wheel    96B Nov 10 08:50 figure/
--rw-r--r--  1 yamadai  wheel    24K Nov 10 13:21 manual_workflow_example.md
+-rw-r--r--  1 yamadai  wheel    24K Nov 10 13:21 README.md
 drwxr-xr-x  3 yamadai  wheel    96B Nov 10 08:52 map_modify/
 -rwxr-xr-x  1 yamadai  wheel   4.0K Nov 10 08:48 run-experiment.sh*
 -rwxr-xr-x  1 yamadai  wheel   5.9K Nov 10 08:48 s01-prepare_map.py*
@@ -116,10 +116,10 @@ package assembler exists yet.
 
 The sample inputs used by the runner are repository-level files:
 
-- Mekong map files under `map/mekong_15min/` and
-  `map/mekong_15min/`;
+- Mekong NetCDF Map files under `map/mekong_15min/`, with geometry in
+  `params.nml` and one-minute tile inventory in `1min/location.csv`;
 - runoff file `inp/repo-mek_1deg/runoff2000.nc`;
-- input matrix `map/mekong_15min/inpmat_repo-mek_1deg.bin` and its dimension
+- input matrix `map/mekong_15min/inpmat_repo-mek_1deg.nc` and its dimension
   description `map/mekong_15min/diminfo_repo-mek_1deg.nml`.
 
 These are inputs, not files produced by this tutorial. The original
@@ -138,6 +138,13 @@ bash s02-python_setup.sh
 source .venv/bin/activate
 ```
 
+Set the standard v5 repository-root variable in the same terminal if it is not
+already configured:
+
+```bash
+export CMF_V50_ROOT="${cmf_root}"
+```
+
 The setup script is interactive when it needs to create or update the
 environment; follow its displayed confirmation prompt. In a non-interactive
 terminal it diagnoses the environment without changing it. See the
@@ -151,8 +158,8 @@ executable is required. The run scripts copy this shared executable into each
 experiment directory. Tutorial01's build must enable `UseCDF_CMF`; see the
 [v5 build guide](../../config/README.md) if configuration needs review.
 
-The example scripts still use the repository `.venv/bin/python` by absolute
-path. Prepare that environment with the setup above before running the scripts;
+The example scripts use the repository `.venv/bin/python` by absolute path and
+`CMF_V50_ROOT` for repository paths. Prepare those settings before running the scripts;
 activating a different environment does not replace this explicit path. No
 Python installation or environment fallback is performed by the run scripts.
 
@@ -236,7 +243,7 @@ nano tutorial/guide01_workflow_example/run-deep-channel.sh
 ```
 
 In the copy, change `PROJ="control"` to `PROJ="deep_channel"`, and change
-`RIVHGT="$MAP_NC/rivhgt.nc"` to
+`RIVHGT="$MAPDIR/rivhgt.nc"` to
 `RIVHGT="$SCRIPT_DIR/map_modify/rivhgt_deep.nc"`. Keep other experiment
 settings unchanged. Now run both configurations:
 
@@ -471,7 +478,13 @@ percentile; colorbar labels identify that cap.
 ### One-minute postprocessing
 
 The example uses the Tutorial-local copy of the Python `downscale_flddph`
-package. Its input adapter reads the selected NetCDF `rivdph` record and the
+package. It was copied from `tools/downscale_flddph/` at repository snapshot
+commit `750cf35bed7617b8a7597a0aa17a8e005181dbc5` (latest shared downscaler
+source change `b344e6e2658dc173520d43ffefa187575c576342`), including the depth calculator,
+snapshot aggregation, NetCDF map metadata readers, and depth visualizer. The
+copy is tutorial-specific and does not update automatically when the common
+tool changes. Its scripts import only files inside this copied directory. Its
+input adapter reads the selected NetCDF `rivdph` record and the
 matching static `rivhgt`, checks their grid, units, event time, and missing
 cells, then derives floodplain depth as
 

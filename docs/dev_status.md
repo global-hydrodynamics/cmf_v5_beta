@@ -6,6 +6,19 @@ Working-tree updates remain proposals until published. V4 maintenance is separat
 
 ## Current v5 work
 
+### Guide01 uses current NetCDF-first Map data and a local downscaler copy (DT-0247, 2026-11-28; branch-local proposal)
+
+Guide01 experiment and one-event workflows now use `params.nml`, map-root
+NetCDF, paired NetCDF INPMAT/DIMINFO, and `1min/location.csv`. The maintained
+depth downscaler is physically copied into Guide01 with local metadata readers;
+its calculation is not imported from the repository at runtime. Focused checks
+loaded the current Mekong map, preserved the valid/missing `rivhgt` mask for
+the +3 m variant, and processed and visually reviewed one event. Guide01's
+paired Control/Deep Channel outputs were absent, so the complete sensitivity
+run and comparison figures remain unverified. See
+[DT-0247](../research/records/DT-0247.md) and
+[VR-0295](../research/records/validation_runs/VR-0295.md).
+
 ### Visualization readers use current NetCDF Map metadata and placement (DT-0238, 2026-11-28; branch-local proposal)
 
 River Map and output-analysis scripts now use the shared `params.nml` geometry

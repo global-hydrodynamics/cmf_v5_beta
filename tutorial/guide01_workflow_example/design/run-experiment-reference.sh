@@ -2,14 +2,14 @@
 # Shared implementation for the controlled 2000 experiments.
 set -eu
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd -P)
-CMF_BASE=$(CDPATH= cd "$SCRIPT_DIR/../../.." && pwd -P)
-PYTHON="$CMF_BASE/.venv/bin/python"
+: "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
+. "$CMF_V50_ROOT/tools/cmf_shell_functions.sh"
+PYTHON="$CMF_V50_ROOT/.venv/bin/python"
 # Reuse the NetCDF-enabled model built in Tutorial01, as in Tutorial02.
-MODEL="$CMF_BASE/src_main/MAIN_cmf"
-MAPDIR="$CMF_BASE/map/mekong_15min"
-MAP_NC="$MAPDIR/netcdf"
-RUNOFF_DIR="$CMF_BASE/inp/repo-mek_1deg"
-INPMAT="$MAPDIR/inpmat_repo-mek_1deg.bin"
+MODEL="$CMF_V50_ROOT/src_main/MAIN_cmf"
+MAPDIR="$CMF_V50_ROOT/map/mekong_15min"
+RUNOFF_DIR="$CMF_V50_ROOT/inp/repo-mek_1deg"
+INPMAT="$MAPDIR/inpmat_repo-mek_1deg.nc"
 DIMINFO="$MAPDIR/diminfo_repo-mek_1deg.nml"
 OMP_NUM_THREADS=4
 DT=600
@@ -29,7 +29,7 @@ fi
 case "$CASE" in
   control)
     PROJ=control
-    RIVHGT="$MAP_NC/rivhgt.nc"
+    RIVHGT="$MAPDIR/rivhgt.nc"
     ;;
   deep_channel)
     PROJ=deep_channel
@@ -38,11 +38,12 @@ case "$CASE" in
   *) echo "Unknown experiment: $CASE" >&2; exit 2 ;;
 esac
 RUNDIR="$SCRIPT_DIR/../out/$PROJ"
+cmf_check_init "Guide01 $CASE experiment"
 
 for required in "$PYTHON" "$MODEL" "$INPMAT" "$DIMINFO" "$RUNOFF_DIR/runoff2000.nc" \
-                "$MAP_NC/nextxy_noedge.nc" "$MAP_NC/ctmare.nc" "$MAP_NC/elevtn.nc" \
-                "$MAP_NC/nxtdst.nc" "$MAP_NC/rivlen.nc" "$MAP_NC/fldhgt.nc" \
-                "$MAP_NC/rivwth_merit.nc" "$MAP_NC/rivman.nc" "$MAP_NC/bifprm.nc" "$RIVHGT"; do
+                "$MAPDIR/params.nml" "$MAPDIR/nextxy_noedge.nc" "$MAPDIR/ctmare.nc" "$MAPDIR/elevtn.nc" \
+                "$MAPDIR/nxtdst.nc" "$MAPDIR/rivlen.nc" "$MAPDIR/fldhgt.nc" \
+                "$MAPDIR/rivwth_merit.nc" "$MAPDIR/rivman.nc" "$MAPDIR/bifprm.nc" "$RIVHGT"; do
     [ -f "$required" ] || { echo "[ERROR] Required input is missing: $required" >&2; exit 1; }
 done
 [ -x "$MODEL" ] || { echo "[ERROR] Model executable is not executable: $MODEL" >&2; exit 1; }
@@ -59,6 +60,7 @@ if [ "$FORCE" -eq 1 ]; then
           "$RUNDIR"/console_2000.log "$RUNDIR"/log_CaMa*.nml \
           "$RUNDIR"/run_time_2000.log "$RUNDIR"/MAIN_cmf "$RUNDIR"/mapdata.nml
 fi
+cmf_check_step 1 4 "Prepare the run directory and current NetCDF-first map inputs"
 cp "$MODEL" "$RUNDIR/MAIN_cmf"
 cat > "$RUNDIR/input_cmf.nam" <<EOF
 &NRUNVER
@@ -95,16 +97,16 @@ EHOUR = 0
 /
 &NMAP
 LMAPCDF = .FALSE.
-CNEXTXY = "$MAP_NC/nextxy_noedge.nc"
-CGRAREA = "$MAP_NC/ctmare.nc"
-CELEVTN = "$MAP_NC/elevtn.nc"
-CNXTDST = "$MAP_NC/nxtdst.nc"
-CRIVLEN = "$MAP_NC/rivlen.nc"
-CFLDHGT = "$MAP_NC/fldhgt.nc"
-CRIVWTH = "$MAP_NC/rivwth_merit.nc"
+CNEXTXY = "$MAPDIR/nextxy_noedge.nc"
+CGRAREA = "$MAPDIR/ctmare.nc"
+CELEVTN = "$MAPDIR/elevtn.nc"
+CNXTDST = "$MAPDIR/nxtdst.nc"
+CRIVLEN = "$MAPDIR/rivlen.nc"
+CFLDHGT = "$MAPDIR/fldhgt.nc"
+CRIVWTH = "$MAPDIR/rivwth_merit.nc"
 CRIVHGT = "$RIVHGT"
-CRIVMAN = "$MAP_NC/rivman.nc"
-CPTHOUT = "$MAP_NC/bifprm.nc"
+CRIVMAN = "$MAPDIR/rivman.nc"
+CPTHOUT = "$MAPDIR/bifprm.nc"
 /
 &NRESTART
 CRESTSTO = "NONE"
@@ -127,7 +129,7 @@ CROFPRE = "runoff"
 CROFSUF = ".nc"
 /
 &NOUTPUT
-CMF_BASE = "$CMF_BASE"
+CMF_BASE = "$CMF_V50_ROOT"
 COUTVAR_TABLE = ""
 COUTDIR = "$RUNDIR/"
 CVARSOUT = "outflw,rivdph,sfcelv,fldfrc"
@@ -139,6 +141,7 @@ IFRQ_OUT = 24
 EOF
 
 echo "[STEP] Running $CASE with CRIVHGT=$RIVHGT"
+cmf_check_step 2 4 "Run the 2000 simulation for $CASE"
 START=$(date +%s)
 if (cd "$RUNDIR" && OMP_NUM_THREADS="$OMP_NUM_THREADS" ./MAIN_cmf > console_2000.log 2>&1); then
     STATUS=0
@@ -152,9 +155,12 @@ if [ "$STATUS" -ne 0 ]; then
     tail -80 "$RUNDIR/console_2000.log" >&2 || true
     exit "$STATUS"
 fi
+cmf_check_step 3 4 "Record the run configuration and runtime"
 cp "$RUNDIR/input_cmf.nam" "$RUNDIR/input_cmf_2000.nam"
 cp "$RUNDIR/log_CaMa.nml" "$RUNDIR/log_CaMa_2000.nml"
+cmf_check_step 4 4 "Confirm expected NetCDF output files"
 for var in outflw rivdph sfcelv fldfrc; do
     [ -s "$RUNDIR/o_${var}2000.nc" ] || { echo "[ERROR] Missing model output: $RUNDIR/o_${var}2000.nc" >&2; exit 1; }
 done
-echo "[SUCCESS] $CASE completed in ${ELAPSED}s; outputs are under $RUNDIR"
+echo "$CASE completed in ${ELAPSED}s; outputs are under $RUNDIR"
+cmf_check_success

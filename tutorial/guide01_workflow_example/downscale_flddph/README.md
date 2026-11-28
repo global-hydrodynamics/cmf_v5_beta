@@ -1,8 +1,17 @@
-# Python flood-depth downscaling
+# Tutorial-local Python flood-depth downscaler
 
-This standalone package prepares a two-dimensional CaMa-Flood `flddph` field and maps it to the native grid of a higher-resolution CaMa-Flood map. Its scientific method is a Python port of `etc/downscale_flddph/src/downscale_flddph_trib.F90`.
-
-Copy the complete `downscale_flddph/` directory into a research project. The Shell entry points resolve package files relative to their own location; edit their settings at the top to point to the project's map, input, output, extent, and Python environment. No Python module in the repository outside this directory is imported. The map itself remains an external input. `sample_mekong/` is an independent copied example, including copies of the package scripts.
+This directory is a physical, self-contained Guide01 copy of the shared
+[`tools/downscale_flddph/`](../../../tools/downscale_flddph/) package. The
+copy was taken from repository snapshot commit
+`750cf35bed7617b8a7597a0aa17a8e005181dbc5` (the shared downscaler's latest
+source change at that revision is `b344e6e2658dc173520d43ffefa187575c576342`). It includes the scientific depth
+calculator, snapshot aggregator, depth visualizer, and the required
+`hires_metadata.py` and `map_metadata.py` readers. The calculation code is
+retained; only helper-module lookup was made local, and the visualizer was
+adapted to the current NetCDF-first map layout. It does not import Python code
+from the repository at runtime, use symlinks, or receive later shared-tool
+updates automatically. `sample_mekong/` retains its own physical copies of the
+depth scripts.
 
 ## Contents
 
@@ -13,6 +22,8 @@ downscale_flddph/
 ├── s02-visualize.sh
 ├── script/
 │   ├── aggregate_flddph.py
+│   ├── hires_metadata.py
+│   ├── map_metadata.py
 │   ├── downscale_flddph.py
 │   └── visualize_flddph.py
 └── sample_mekong/
@@ -30,7 +41,7 @@ downscale_flddph/
 - Python 3 with NumPy and netCDF4 for snapshot/period selection and downscaling.
 - Matplotlib is additionally required to render the comparison figure.
 - The low-resolution input is a CaMa-Flood `flddph` NetCDF with `lat`, `lon`, `flddph`, and CF `time` when selecting a record. `flddph` must be in metres and use the map's grid dimensions, cell centres, and north-first row order. The downscaler accepts a 2-D field or exactly one time record; aggregate multi-time inputs before calling it.
-- `MAPDIR` points to a matching CaMa-Flood map containing `params.txt`, `nextxy.bin`, `uparea.bin`, and the selected high-resolution map directory. The high-resolution map needs `location.txt`, `catmxy.bin`, `downxy.bin` (or `flwdir.bin`), `flddif.bin`, and `rivwth.bin` for each intersecting tile.
+- The Guide01 workflow uses the current NetCDF-first Mekong map: `params.nml`, map-root `nextxy.nc` and `uparea.nc`, and `<resolution>/location.csv` with per-tile NetCDF layers such as `catmxy.nc`, `downxy.nc`, `flddif.nc`, `rivwth.nc`, and `elevtn.nc`. The shared depth calculator can also read explicit legacy Binary inputs, but Guide01 does not require them.
 - The current implementation expects a regular geographic map grid whose requested extent and five-coarse-cell buffer align to the selected high-resolution pixel size. It does not reproject or resample.
 
 ## Select or aggregate time separately
@@ -53,6 +64,8 @@ The `--start` and `--end` bounds are inclusive timestamps present on the CF time
 
 ## Run the package
 
+The Guide01 event path is configured in `../s04-downscale_event.sh`; it uses the repository `.venv`, NetCDF inputs and maps, and invokes this local calculator. The sample wrappers in this directory are examples for the included sample, and require `CMF_V50_ROOT` to select the repository Python environment.
+
 Edit the settings near the top of `s01-downscale.sh`: `PYTHON`, `MAPDIR`, `INPUT_NC`, `OUTPUT_NC`, the west/east/south/north output edges, and `RES`. Then run:
 
 ```sh
@@ -72,7 +85,7 @@ bash s01-downscale.sh
 bash s02-visualize.sh
 ```
 
-The sample was tested against the pre-migration p02-f04 Fortran output and a fresh run of the unchanged legacy Fortran reference. Its comparison establishes port fidelity for one Mekong date/map/extent only; it does not independently validate the hydrologic method or demonstrate global-map compatibility.
+The existing sample's documented comparison is against the pre-migration p02-f04 Fortran output and a run of the unchanged legacy Fortran reference. It establishes port fidelity for that Mekong date/map/extent only; it does not independently validate the hydrologic method or demonstrate global-map compatibility. The present Guide01 validation exercises the current NetCDF map on one retained tutorial event, when run outputs are available.
 
 ## Method and limits
 

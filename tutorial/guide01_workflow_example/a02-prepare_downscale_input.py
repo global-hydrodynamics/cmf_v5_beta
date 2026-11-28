@@ -113,7 +113,7 @@ def main() -> None:
     case_dir = ROOT / "out" / args.case
     rivhgt = (REPO / "map/mekong_15min/rivhgt.nc" if args.case == "control"
               else ROOT / "map_modify/rivhgt_deep.nc")
-    destination = args.output or OUTPUT_DIR / args.case / "input" / f"flddph{event.strftime('%Y%m%d')}.bin"
+    destination = args.output or OUTPUT_DIR / args.case / "input" / f"flddph{event.strftime('%Y%m%d')}.nc"
     result = prepare_input(case_dir / "o_rivdph2000.nc", rivhgt, event, destination)
     print(f"[SUCCESS] Derived flddph=max(rivdph-rivhgt,0) for {result['timestamp']}")
     print(f"[CHECK] time index={result['time_index_zero_based']}; shape={result['shape']}; "

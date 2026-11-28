@@ -1,15 +1,15 @@
 # Workflow Example — Learner Manual Design
 
-**Status:** Repository-informed design for a future learner manual. The
-workflow example has not been implemented or run.
+**Status:** Historical authoring draft. The current learner manual is
+[`../README.md`](../README.md); implementation and validation status are
+recorded in the current Tutorial Design and development records.
 
 **Scientific authority:** [`../tutorial_design.md`](../tutorial_design.md)
 defines the approved experiment and technical specification. This document
 defines how to teach that workflow. It must not override the scientific design
 or present proposed files and steps as already available.
 
-**Planned learner manual:** `../README.md` (write only after the workflow has
-been implemented and verified).
+**Learner manual:** `../README.md`.
 
 ## Purpose and audience
 
@@ -53,13 +53,10 @@ planned analysis. Do not duplicate its implementation-level specifications
 in full. Link to it for technical details and keep this manual focused on the
 learner's purpose, actions, observations, and interpretation.
 
-Repository inspection confirms that the design is not yet an executable
-workflow: no Tutorial03 preparation, run, analysis, or visualization scripts
-or results are established here. Script names, commands, paths, resource
-requirements, expected numeric results, and troubleshooting fixes must be
-filled in only after implementation and execution. The existing Tutorial02
-README and scripts are examples of repository conventions, not proof that the
-new workflow has run.
+The runnable workflow and its current paths, data formats, and evidence are
+described by [`../tutorial_design.md`](../tutorial_design.md) and the learner
+manual. Historical proposals in this draft must not override those current
+documents.
 
 ## File ownership and map-path design
 
@@ -69,7 +66,9 @@ input; the modified river-depth parameter belongs to `workflow_example/`.
 
 | File or directory | Role and owner |
 |---|---|
-| `map/mekong_15min/rivhgt.nc` | Shared baseline map; read-only input used by Control |
+| `map/mekong_15min/params.nml` and map-root `*.nc` | Current shared NetCDF-first Mekong map; read-only input |
+| `map/mekong_15min/inpmat_repo-mek_1deg.nc` and `diminfo_repo-mek_1deg.nml` | Current paired NetCDF input matrix and namelist metadata |
+| `map/mekong_15min/rivhgt.nc` | Shared baseline river-depth map; read-only Control input |
 | Shared Mekong map, runoff, input matrix, and model executable | Repository/sample inputs; do not edit as part of this example |
 | `workflow_example/sNN-*`, `aNN-*`, `vNN-*` | Tutorial-owned preparation, run, analysis, and plotting scripts; exact names are set during implementation |
 | `workflow_example/map_modify/rivhgt_deep.nc` | Tutorial-generated input selected only by Deep Channel |
@@ -77,13 +76,10 @@ input; the modified river-depth parameter belongs to `workflow_example/`.
 | `workflow_example/analysis/` | Tutorial-generated derived datasets |
 | `workflow_example/figure/` | Tutorial-generated figures |
 
-The model's `CRIVHGT` map reader passes the configured filename directly to
-the Binary/NetCDF reader; the NetCDF reader opens the supplied path and does
-not prepend `MAPDIR`. Since the sample runner starts the executable from its
-run directory, the future Deep Channel script should derive an absolute path
-to `map_modify/rivhgt_deep.nc` from its own location and write that path into
-the namelist. The manual should show the exact tested implementation only
-after it exists. Do not add a copy or symlink under the shared map directory.
+The model's `CRIVHGT` reader opens the configured NetCDF path directly. The
+runner derives an absolute path to `map_modify/rivhgt_deep.nc` from its own
+location and writes that path into the namelist. Do not add a copy or symlink
+under the shared map directory.
 
 The preparation step should record a reproducible integrity check of the
 shared baseline before and after generation, in addition to validating that
@@ -291,15 +287,12 @@ for both experiments. Record the cell, coordinates, timestamp, value, and
 tie rule. The reference cell and 1-minute crop (including required map
 coverage/buffer) still need maintainer approval.
 
-The existing downscaler uses high-resolution binary map inputs and daily
-binary floodplain-depth input. A NetCDF input adapter for this example is
-planned, not implemented or validated. The approved design avoids writing
-redundant `flddph` model output: for the selected physics, derive
-`flddph = max(rivdph - rivhgt, 0)` from `rivdph` and static `rivhgt`, respecting
-their masks. Preserve the existing Binary workflow. Do not provide a runnable
-NetCDF downscaling command until that adapter and its compatibility checks
-exist. The downscaled product is postprocessing on finer terrain, not a
-1-minute hydrodynamic simulation.
+The Guide01 workflow uses its tutorial-local copy of the current Python
+`downscale_flddph` implementation with NetCDF `rivdph`, `rivhgt`, coarse map,
+and high-resolution tile inputs. The adapter selects the event record and
+derives `flddph = max(rivdph - rivhgt, 0)` on overlapping valid cells. The
+output is postprocessing on finer terrain, not a 1-minute hydrodynamic
+simulation.
 
 `prmwat` is optional coarse per-catchment permanent-water area in m². It is
 not a high-resolution water-pixel mask and is not an input to the existing

@@ -2,9 +2,10 @@
 set -eu
 
 PACKAGE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+: "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
 
 # User settings: input fields, map context, plot extent and display scale.
-PYTHON="python3"                                      # Python with NumPy, netCDF4 and Matplotlib.
+PYTHON="${CMF_V50_ROOT}/.venv/bin/python"            # Repository Python environment with NumPy, netCDF4 and Matplotlib.
 MAPDIR="${PACKAGE_DIR}/../../../map/mekong_15min"     # Matching coarse and high-resolution maps.
 INPUT_NC="${PACKAGE_DIR}/sample_mekong/out/flddph_2001-09-01.nc" # Native-grid flddph.
 DOWNSCALED_NC="${PACKAGE_DIR}/sample_mekong/downscaled/flddph_1min_2001-09-01.nc" # Existing result.

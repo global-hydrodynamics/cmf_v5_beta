@@ -96,10 +96,10 @@ not by itself imply an increase in absolute `sfcelv`.
 
 ### Verified map contract
 
-The current `map/mekong_15min/params.txt` declares an 80 × 120 grid at 0.25°
+The current `map/mekong_15min/params.nml` declares an 80 × 120 grid at 0.25°
 covering 90–110°E and 5–35°N. Cell centers are 90.125–109.875°E and
 5.125–34.875°N. The existing
-[`netcdf/rivhgt.nc`](../../map/mekong_15min/rivhgt.nc) has a Float32
+[`rivhgt.nc`](../../map/mekong_15min/rivhgt.nc) at the map root has a Float32
 `rivhgt(lat,lon)` variable in metres with `_FillValue` and `missing_value`
 `-9999`; its coordinates and missing mask match the corresponding map fields.
 The inspected sample has 6,566 nonmissing cells and 3,034 masked cells. The
@@ -129,10 +129,10 @@ The reference Tutorial02 runner is
 verified settings include `LKINE=.FALSE.` (Local Inertial routing),
 `LFPLAIN=.TRUE.`, `LPTHOUT=.TRUE.`, `LFLDOUT=.TRUE.`, `LSLPMIX=.FALSE.`,
 `LADPSTP=.TRUE.`, `DT=600` s, 4 OpenMP threads, and Gregorian leap-year
-handling. It reads individual map NetCDF files under
-`map/mekong_15min/`, the 2000 annual runoff file
+handling. It reads individual map NetCDF files from the root of
+`map/mekong_15min/` (geometry in `params.nml`), the 2000 annual runoff file
 `inp/repo-mek_1deg/runoff2000.nc`, and the existing
-`inpmat_repo-mek_1deg.bin` / `diminfo_repo-mek_1deg.nml` pair. Its forcing setup
+`inpmat_repo-mek_1deg.nc` / `diminfo_repo-mek_1deg.nml` pair. Its forcing setup
 uses `CROFFREQ="YEAR"`, `IFRQ_INP=24`, `CVNROF="runoff"`, and
 `DROFUNIT=86400000` for the sample's daily `mm day-1` values.
 
@@ -250,7 +250,7 @@ aggregate catchment area as a pixel mask or double-counting standing water.
 
 ### Implemented Python package workflow
 
-The reusable package source is [`tools/downscale_flddph/`](../../tools/downscale_flddph/). Guide01 keeps a self-contained copy under [`downscale_flddph/`](downscale_flddph/) so its learner workflow does not import Python code from `tools/`. The package implements the tributary-aware Python port of the legacy `downscale_flddph_trib.F90` algorithm; the legacy source under `etc/` remains unchanged for reference and other users.
+The reusable package source is [`tools/downscale_flddph/`](../../tools/downscale_flddph/). Guide01 includes a physical, tutorial-local copy under [`downscale_flddph/`](downscale_flddph/), including its required `hires_metadata.py` and `map_metadata.py` readers. Runtime scripts do not import repository code from `tools/` or `map/tools/`. The local copy records repository snapshot commit `750cf35bed7617b8a7597a0aa17a8e005181dbc5`; the shared downscaler's latest source change at that revision is `b344e6e2658dc173520d43ffefa187575c576342`. Later common-tool updates are not applied automatically. The package implements the tributary-aware Python port of the legacy `downscale_flddph_trib.F90` algorithm; the legacy source under `etc/` remains unchanged for reference and other users.
 
 `s04-downscale_event.sh` processes Control and Deep Channel in sequence. For each case, `a02-prepare_downscale_input.py` selects the event time from the matching `rivdph` output, checks coordinates, units and missing masks against that case's `rivhgt`, and writes a one-record `(time,lat,lon)` NetCDF with `flddph = max(rivdph - rivhgt, 0)`. It then invokes the Tutorial-local `downscale_flddph/script/downscale_flddph.py` with the shared Mekong map layers and the fixed 102–108°E, 9–15°N domain. The downscaler writes `flddph_1min_provisional.nc`; no Fortran compile or intermediate Binary file is used. Its existing five-model-cell buffer and high-resolution map interpretation are retained.
 

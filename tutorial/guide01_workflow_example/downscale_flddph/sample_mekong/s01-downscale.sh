@@ -2,9 +2,10 @@
 set -eu
 
 PACKAGE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+: "${CMF_V50_ROOT:?CMF_V50_ROOT is not set. Run s00-configure_cama_root.sh first.}"
 
 # User settings: source snapshot, target map, output domain and resolution.
-PYTHON="python3"                                      # Python with NumPy and netCDF4.
+PYTHON="${CMF_V50_ROOT}/.venv/bin/python"            # Repository Python environment with NumPy and netCDF4.
 MAPDIR="${PACKAGE_DIR}/../../../../map/mekong_15min" # Coarse and high-resolution CaMa-Flood map root.
 INPUT_NC="${PACKAGE_DIR}/out/flddph_2001-09-01.nc" # 2D flddph or one-record NetCDF.
 OUTPUT_NC="${PACKAGE_DIR}/downscaled/flddph_1min_2001-09-01.nc" # High-resolution result.
@@ -18,7 +19,7 @@ RES="1min"                                              # Existing high-resoluti
 
 printf '\n[STEP 1/1] Downscale one 2D flood-depth field.\n'
 "$PYTHON" "$PACKAGE_DIR/script/downscale_flddph.py" \
-    --input "$INPUT_NC" --map-dir "$MAPDIR" --resolution "$RES" \
+    --input "$INPUT_NC" --map-dir "$MAPDIR" --resolution "$RES" --map-format netcdf \
     --west "$WEST" --east "$EAST" --south "$SOUTH" --north "$NORTH" \
     --output "$OUTPUT_NC"
 
